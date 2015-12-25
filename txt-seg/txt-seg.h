@@ -8,4 +8,6 @@ struct term_list_node {
 	struct list_node ln;
 };
 
-list text_segment(wchar_t *text, size_t len);
+int   text_segment_init();
+list  text_segment(wchar_t *text, size_t len);
+void  text_segment_free();
