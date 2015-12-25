@@ -1,3 +1,6 @@
+#ifndef TXT_SEG_H
+#define TXT_SEG_H
+
 #include <stddef.h>
 #include <wchar.h>
 #include "../config/config.h"
@@ -11,3 +14,5 @@ struct term_list_node {
 int   text_segment_init();
 list  text_segment(char *text);
 void  text_segment_free();
+
+#endif

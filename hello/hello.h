@@ -1,3 +1,6 @@
+#ifndef HELLO_H
+#define HELLO_H
+
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -9,5 +12,6 @@ void print_world();
 
 #ifdef __cplusplus
 }
+#endif
 
 #endif
