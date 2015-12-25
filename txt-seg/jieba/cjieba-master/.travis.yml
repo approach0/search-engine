@@ -1,0 +1,15 @@
+language: cpp
+script: 
+  - make
+  - ./demo
+os:
+  - linux
+compiler:
+  - clang
+  - gcc
+notifications:
+  recipients:
+    - i@yanyiwu.com
+  email:
+    on_success: change
+    on_failure: always
