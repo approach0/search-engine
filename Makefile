@@ -6,16 +6,20 @@ EXT_MODULES := cjieba
 MODULES := $(MODULES:=-module)
 EXT_MODULES := $(EXT_MODULES:=-module)
 
-MODULES_LIBS := $(MODULES:=-lib) $(EXT_MODULES:=-bin)
+EXT_MODULES_LIBS := $(EXT_MODULES:=-extlib)
+MODULES_LIBS := $(MODULES:=-lib)
 MODULES_BINS := $(MODULES:=-bin)
 MODULES_CLEAN := $(MODULES:=-clean) $(EXT_MODULES:=-clean)
 
-all: tags $(MODULES_LIBS) $(MODULES_BINS) 
+all: tags $(MODULES_BINS)
 
 %-module-lib:
 	make -C $* lib
 
-%-module-bin: $(MODULES_LIBS)
+%-module-extlib:
+	make -C $*
+
+%-module-bin: $(MODULES_LIBS) $(EXT_MODULES_LIBS)
 	make -C $*
 
 %-module-clean:
