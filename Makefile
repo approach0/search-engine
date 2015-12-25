@@ -1,12 +1,21 @@
 include rules.mk
 
-MODULES := hello hello2 list da-trie txt-seg cjieba
+MODULES := hello hello2 list da-trie txt-seg wstring
+EXT_MODULES := cjieba
+
 MODULES := $(MODULES:=-module)
-MODULES_CLEAN := $(MODULES:=-clean)
+EXT_MODULES := $(EXT_MODULES:=-module)
 
-all: tags $(MODULES)
+MODULES_LIBS := $(MODULES:=-lib) $(EXT_MODULES:=-bin)
+MODULES_BINS := $(MODULES:=-bin)
+MODULES_CLEAN := $(MODULES:=-clean) $(EXT_MODULES:=-clean)
 
-%-module:
+all: tags $(MODULES_LIBS) $(MODULES_BINS) 
+
+%-module-lib:
+	make -C $* lib
+
+%-module-bin: $(MODULES_LIBS)
 	make -C $*
 
 %-module-clean:

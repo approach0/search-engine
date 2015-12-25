@@ -1,28 +1,32 @@
-.PHONY: all clean common-clean
+.PHONY: all clean regular-clean
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
-CC = @ echo '[compile C source]' $< && gcc 
-CXX = @ echo '[compile C++ source]' $< && g++
+CC =  @ tput setaf 5 && echo -n '[compile C source] ' && \
+       tput sgr0 && echo $< && gcc
+CXX = @ tput setaf 5 && echo -n '[compile C++ source] ' && \
+       tput sgr0 && echo $< && g++
 CC_DEP = @ gcc
 CXX_DEP = @ g++
 
 # linker
-LD = @ echo '[link $(LDLIBS) $(LDOBJS)] $@' && gcc
+LD = @ tput setaf 5 && echo -n '[link $(LDLIBS) $(LDOBJS)] ' \
+     && tput sgr0 && echo $@ && gcc
 
 LINK = $(LD) $(LDFLAGS) $^ $(LDOBJS) \
 	-Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
 
 # archive
-AR = @ echo '[archiev $^]' $@ && ar rcs $@ $^
+AR = @ tput setaf 5 && echo -n '[archiev $^] ' \
+     && tput sgr0 && echo $@ && ar rcs $@ $^
 
 # Bison/Flex
 LEX = @ echo '[lex]' $< && flex $<
 YACC = @ echo '[yacc]' $< && bison -v -d --report=itemset -g $< -o y.tab.c
 
-# common rules
+# regular rules
 all: 
-	@echo "[done $(CURDIR)]" 
+	@echo "[done $(CURDIR)]"
 
 include $(wildcard *.d)
 
@@ -38,8 +42,8 @@ include $(wildcard *.d)
 	$(LINK)
 
 FIND := @ find . -type d \( -path './.git' \) -prune -o
-common-clean:
-	@ echo [common clean]
+regular-clean:
+	@ tput setaf 5 && echo -n [regular clean] && tput sgr0
 	$(FIND) -type f \( -name '*.[dao]' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.output' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.tmp' \) -print | xargs rm -f
@@ -50,4 +54,4 @@ common-clean:
 	$(FIND) -type l \( -name '*.ln' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.so' \) -print | xargs rm -f
 
-clean: common-clean
+clean: regular-clean

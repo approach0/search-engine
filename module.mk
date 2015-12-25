@@ -33,4 +33,5 @@ LDLIBS := $(foreach dep_link, ${DEP_LINKS}, ${dep_link:.mk=})
 LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep%=%})
 
 # summary what a module needs to make
-module := $(SRC_OBJS) $(RUN_OBJS) $(ARCHIVE) $(RUN_BINS)
+module_lib := $(SRC_OBJS) $(ARCHIVE)
+module_bin := $(RUN_OBJS) $(RUN_BINS)
