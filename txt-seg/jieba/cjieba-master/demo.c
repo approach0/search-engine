@@ -2,20 +2,20 @@
 #include <stdlib.h>
 
 #include "src/jieba.h"
-
+static const char* DICT_PATH = "./dict/jieba.dict.utf8";
+static const char* HMM_PATH = "./dict/hmm_model.utf8";
+static const char* USER_DICT = "./dict/user.dict.utf8";
+Jieba handle;
+void init() {
+  handle= NewJieba(DICT_PATH, HMM_PATH, USER_DICT);
+}
 void CutDemo() {
   printf("CutDemo:\n");
-  static const char* DICT_PATH = "./dict/jieba.dict.utf8";
-  static const char* HMM_PATH = "./dict/hmm_model.utf8";
-  static const char* USER_DICT = "./dict/user.dict.utf8";
-
   // init will take a few seconds to load dicts.
-  Jieba handle = NewJieba(DICT_PATH, HMM_PATH, USER_DICT);
   char input[300];
   printf("Please input some chinese: ");//add
   fgets (input, 300, stdin);
   //scanf ("%[^\n]%*c", input);
-
 //"I love NYC. new york is a big city. hello world? 南京市长江大桥.有一只快速狐狸跳过了懒惰狗狗，又有一个孟尧吃了能量棒，地下室的电视机不停地播放着电视节目，但是我们不爱看，究竟爱上一个男人需要花上多少时间"
 
   char** words = Cut(handle, input);
@@ -25,7 +25,7 @@ void CutDemo() {
     x++;
   }
   FreeWords(words);
-  FreeJieba(handle);
+//  FreeJieba(handle);
 }
 
 void ExtractDemo() {
@@ -54,6 +54,10 @@ void ExtractDemo() {
 }
 
 int main(int argc, char** argv) {
+  init();
+  CutDemo();
+  CutDemo();
+  CutDemo();
   CutDemo();
   //ExtractDemo();
   return 0;
