@@ -25,4 +25,5 @@ clean:
 	rm -f gen-*.l
 	rm -f gen-*.h
 	rm -f gen-*.c
+	rm -f *.dot
 	@ echo 'clean'

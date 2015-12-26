@@ -26,7 +26,7 @@ LEX = @ tput setaf 5 && echo -n '[lex] ' \
 
 YACC = @ tput setaf 5 && echo -n '[yacc] ' \
          && tput sgr0 && echo $< \
-         && bison -v -d --report=itemset -g $< -o y.tab.c
+         && bison -v -d --report=itemset $< -o y.tab.c
 
 # regular rules
 all: 
