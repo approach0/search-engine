@@ -1,5 +1,6 @@
 #include "wstring.h"
 #include <stdio.h>
+#include <string.h>
 
 int main()
 {
@@ -8,6 +9,9 @@ int main()
 	for (i = 0; i < mbstr_len(w); i++) {
 		printf("%C\n", w[i]);
 	}
+
+	char* s = wstr2mbstr(w);
+	printf("%s\n", s);
 
 	return 0;
 }
