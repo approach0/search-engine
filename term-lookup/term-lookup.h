@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <wchar.h>
-#include "config.h"
+#include "../config/config.h"
 
 void *term_lookup_open(char *path);
 
