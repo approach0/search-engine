@@ -21,8 +21,12 @@ AR = @ tput setaf 5 && echo -n '[archiev $^] ' \
      && tput sgr0 && echo $@ && ar rcs $@ $^
 
 # Bison/Flex
-LEX = @ echo '[lex]' $< && flex $<
-YACC = @ echo '[yacc]' $< && bison -v -d --report=itemset -g $< -o y.tab.c
+LEX = @ tput setaf 5 && echo -n '[lex] ' \
+        && tput sgr0 && echo $< && flex $<
+
+YACC = @ tput setaf 5 && echo -n '[yacc] ' \
+         && tput sgr0 && echo $< \
+         && bison -v -d --report=itemset -g $< -o y.tab.c
 
 # regular rules
 all: 
@@ -43,7 +47,7 @@ include $(wildcard *.d)
 
 FIND := @ find . -type d \( -path './.git' \) -prune -o
 regular-clean:
-	@ tput setaf 5 && echo -n [regular clean] && tput sgr0
+	@ tput setaf 5 && echo [regular clean] && tput sgr0
 	$(FIND) -type f \( -name '*.[dao]' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.output' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.tmp' \) -print | xargs rm -f
