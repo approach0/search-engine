@@ -1,6 +1,6 @@
 include rules.mk
 
-MODULES := hello hello2 list da-trie txt-seg wstring
+MODULES := hello hello2 list term-lookup txt-seg wstring
 EXT_MODULES := cjieba
 
 MODULES := $(MODULES:=-module)
