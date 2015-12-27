@@ -1,5 +1,5 @@
-#ifndef DA_TRIE_H
-#define DA_TRIE_H
+#ifndef TERM_LOOKUP_H
+#define TERM_LOOKUP_H
 
 #include <stdio.h>
 #include <wchar.h>

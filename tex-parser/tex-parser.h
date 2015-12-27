@@ -1,3 +1,6 @@
+#ifndef TEX_PARSER_H
+#define TEX_PARSER_H
+
 #include <stdlib.h>
 #include "../list/list.h"
 #include "../config/config.h"
@@ -20,3 +23,5 @@ void *tex_parse(const char *, size_t len);
 void           *op_tr_print(void *tr);
 struct subpath *op_tr_subpaths(void *);
 void            op_tr_subpaths_print(struct subpath *);
+
+#endif
