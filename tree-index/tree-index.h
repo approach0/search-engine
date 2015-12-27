@@ -2,9 +2,10 @@
 #define TREE_INDEX_H
 
 #include "../config/config.h"
+#include "../list/list.h"
 
 struct dir_path_item {
-	char             name[MAX_TR_INDEX_DIR_PATH_LEN];
+	char             name[MAX_TR_INDEX_PATH_LEN];
 	struct list_node ln;
 };
 
