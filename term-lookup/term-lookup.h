@@ -5,8 +5,15 @@
 #include <wchar.h>
 #include "../config/config.h"
 
-void *term_lookup_open(char *path);
+/*
+open dbname and return the connection
+*/
+void *term_lookup_open(char *dbname);
 
+/*
+if term exists in the database, return term id
+otherwise, insert the term into the database.
+*/
 term_id_t term_lookup(void *, wchar_t *term);
 
 int term_lookup_flush(void *);
