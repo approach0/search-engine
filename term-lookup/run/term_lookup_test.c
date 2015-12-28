@@ -2,13 +2,14 @@
 #include <mysql/mysql.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main() 
 {
    /*
    test term look up open; print all tables in the database
    */
-   char* dbname = "search_engine_db";
+   char *dbname = "search_engine_db:root:123";
    MYSQL *conn;
    conn = (MYSQL *)term_lookup_open(dbname);
    MYSQL_RES *res;
@@ -23,8 +24,11 @@ int main()
       printf("%s \n", row[0]);
     }
    mysql_free_result(res);
-   term_id_t test1 = term_lookup(conn, L"house");
+   term_id_t test1 = term_lookup(conn, L"happy");
    printf("%d\n", test1);
    term_lookup_close(conn);
+
    /*******************************/
+
+    return 0;
 }
