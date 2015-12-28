@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include "../list/list.h"
-#include "../config/config.h"
+#include "../include/config.h"
 
 struct subpath {
 	uint32_t         node_id[MAX_TEX_TR_DEPTH]; 
@@ -14,11 +14,11 @@ struct subpath {
 };
 
 struct tex_parse_ret {
-	uint32_t         ret_code;	
-	char             ret_msg[MAX_PARSER_ERR_STR];
+	uint32_t         code;	
+	char             msg[MAX_PARSER_ERR_STR];
 };
 
-void *tex_parse(const char *, size_t len);
+struct tex_parse_ret tex_parse(const char *, size_t len);
 
 void           *op_tr_print(void *tr);
 struct subpath *op_tr_subpaths(void *);

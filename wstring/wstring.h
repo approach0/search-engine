@@ -5,7 +5,7 @@
 #include <string.h>
 #include <locale.h>
 #include <wchar.h>
-#include "../config/config.h"
+#include "../include/config.h"
 
 size_t   mbstr_len(wchar_t *multibyte_string);
 wchar_t *mbstr_copy(wchar_t *dest, const wchar_t *src);

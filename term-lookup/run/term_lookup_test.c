@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-main() {
+int main() 
+{
    /*
    test term look up open; print all tables in the database
    */

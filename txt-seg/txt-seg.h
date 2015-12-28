@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <wchar.h>
-#include "../config/config.h"
+#include "../include/config.h"
 #include "../list/list.h"
 
 struct term_list_node {

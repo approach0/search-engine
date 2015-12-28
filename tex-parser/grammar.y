@@ -1,32 +1,35 @@
 %{
+#include <stdio.h>
 #include "enum-symbol.h"
 #include "enum-token.h"
-#include <stdio.h>
-
-extern int yyparse();
-extern int yyerror(const char *);
-extern int yylex();
+#include "yy.h"
 %}
 
 %union {
-	int t;
+	char t[128];
 }
 
 %error-verbose
+%start doc /* start rule */
 
 %token <t> NUM 
 
 %type <t> tex
 
 %%
-doc: tex '\n';
+doc: line | doc line; 
 
-tex: 
-NUM {
-	printf("a+b\n");
+line: tex '\n';
+
+tex:
+{
+	printf("null\n");
+}
+| NUM {
+	printf("%s\n", $1);
 }
 |tex '+' NUM {
-	printf("a+b\n");
+	printf("+%s\n", $3);
 };
 %%
 

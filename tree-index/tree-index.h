@@ -1,7 +1,7 @@
 #ifndef TREE_INDEX_H
 #define TREE_INDEX_H
 
-#include "../config/config.h"
+#include "../include/config.h"
 #include "../list/list.h"
 
 struct dir_path_item {
@@ -19,10 +19,17 @@ enum level_merge_ret_t {
 	LEVEL_MERGE_STOP
 };
 
+enum tree_index_open_option {
+	ONLY_READ,
+	WRITE_APPEND	
+};
+
 typedef enum level_merge_ret_t 
 (*level_merge)(list level_postinglists, void *args);
 
-void *tree_index_open(const char *index_path);
+void *
+tree_index_open(const char *index_path, 
+                enum tree_index_open_option option);
 
 FILE *
 tree_index_map_postinglist(void *tr_index, char *dir_path);
@@ -31,6 +38,7 @@ int
 tree_index_level_merge(void *tr_index, list dir_path_list,
                        level_merge callbk, void *args);
 
-void  tree_index_close(void *tr_index);
+void 
+tree_index_close(void *tr_index);
 
 #endif

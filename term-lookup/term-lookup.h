@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <wchar.h>
-#include "../config/config.h"
+#include "../include/config.h"
 
 /*
 open dbname and return the connection

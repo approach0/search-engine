@@ -1,4 +1,5 @@
 %{
+#include <string.h>
 #include "y.tab.h"
 #include "enum-symbol.h"
 #include "enum-token.h"
@@ -9,6 +10,6 @@
 
 \n                                      { return yytext[0]; }
 "+"                                     { return yytext[0]; }
-[0-9]                                   { return NUM; }
+[0-9]               { strcpy(yylval.t, yytext); return NUM; }
 .                                       { }
 %%

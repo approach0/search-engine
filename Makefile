@@ -34,8 +34,8 @@ SRC_LIST := $(shell test -e ${SRC_LIST_FILE} && \
 
 tags: $(SRC_LIST)
 	@ echo '[create ctags]'
-	$(FIND) -name '*.[hcly]' -o \
-	-name '*.cpp' -o -print > $(SRC_LIST_FILE)
+	$(FIND) \( -name '*.[hcly]' -o \
+	-name '*.cpp' \) -a -print > $(SRC_LIST_FILE)
 	@ if command -v ctags; then \
 		ctags --langmap=c:.c.y -L $(SRC_LIST_FILE); \
 	else \
