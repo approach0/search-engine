@@ -1,16 +1,23 @@
 include ../rules.mk
 
-OTHER_OBJS := lex.yy.o y.tab.o
+OTHER_OBJS := lex.yy.o y.tab.o gen-trans.o
 include ../module.mk
 
 all: $(module_lib) $(module_bin)
 
 lib: $(module_lib)
 
-enum-symbol.h gen-lexer.l: lexer.l symbol.h
-	./gen-symbol-tab.sh $^
-	rm -f enum-symbol.h
+$(module_lib): enum-symbol.h enum-token.h gen-trans.c
+
+enum-symbol.h: gen-symbol.h 
 	ln -s gen-symbol.h enum-symbol.h
+
+gen-lexer.l: gen-symbol.h 
+gen-symbol.h: lexer.l symbol.h.template
+	./gen-symbol.sh $^ gen-lexer.l gen-symbol.h 
+
+gen-trans.c: enum-symbol.h enum-token.h trans.c.template
+	./gen-trans.sh $^ $@
 
 lex.yy.c: gen-lexer.l y.tab.h
 	$(LEX)

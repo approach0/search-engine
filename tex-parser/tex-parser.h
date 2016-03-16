@@ -16,12 +16,8 @@ struct subpath {
 struct tex_parse_ret {
 	uint32_t         code;	
 	char             msg[MAX_PARSER_ERR_STR];
+	list             subpaths;
 };
 
 struct tex_parse_ret tex_parse(const char *, size_t len);
-
-void           *op_tr_print(void *tr);
-struct subpath *op_tr_subpaths(void *);
-void            op_tr_subpaths_print(struct subpath *);
-
 #endif

@@ -5,38 +5,38 @@ then
 	echo 'auto-generate token/symbol translation .c file.'
 	echo ''
 	echo 'SYNOPSIS:'
-	echo "$0 <symbol header> <token header> <.c file>"
+	echo "$0 <symbol header> <token header> <C template file> <output file>"
 	echo ''
 	echo 'OUTPUT:'
-	echo "gen-<.c file>"
+	echo "<output file>"
 	exit
 fi
 
-[ $# -ne 3 ] && echo "bad arg." && exit
+[ $# -ne 4 ] && echo "bad arg." && exit
 [ ! -e ${1} ] && echo "$1 not exists" && exit
 [ ! -e ${2} ] && echo "$2 not exists" && exit
 [ ! -e ${3} ] && echo "$3 not exists" && exit
 
 sym_header="${1}"
 tok_header="${2}"
-c_original="${3}"
+C_template="${3}"
+output="${4}"
 tmpfile='name-list.tmp'
 
-cp $c_original gen-${c_original}
+cp $C_template ${output}
 
 gen_fun() {
 	prefix=${1}
 	header=${2}
 	grep -oP '(?<='"${prefix}"').*(?=,)' ${header} > ${tmpfile}
 
-	while read name 
-	do 
+	while read name; do 
 		echo "${prefix}: gen translation item ${name}"
 		sed -i "/${prefix}INSERT_HERE/a \
 		\\\tcase ${prefix}${name}:\n \
 		\tsprintf(ret, \"${name}\");\n \
 		\tbreak;\n" \
-			   gen-${c_original}
+			   ${output}
 	done < ${tmpfile}
 }
 
