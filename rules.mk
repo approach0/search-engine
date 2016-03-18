@@ -1,4 +1,4 @@
-.PHONY: all clean regular-clean
+.PHONY: all lib clean regular-clean
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function

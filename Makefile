@@ -14,35 +14,30 @@ MODULE_ENTER_PRINT =  @ tput setaf 1 && echo -n '[module $*] ' && tput sgr0;
 	$(MODULE_ENTER_PRINT)
 	make -C $* lib
 
-# we separate external library with project library because the command 
-# 'make lib' is our own convention which is not used in external library module
-%-extmodule:
-	$(MODULE_ENTER_PRINT)
-	make -C $*
+# specify modules to be included for building
+TARGETS_FILE = targets.mk
 
-# project specific target/prerequisite is emphasized in frame.mk
-include frame.mk
+# list the module names you want to compile
+MODULE_NAMES := $(shell cat ${TARGETS_FILE})
 
-# expand variables after we get MODULE_NAMES and EXT_MODULE_NAMES in frame.mk
+# expand variables after we get MODULE_NAMES
 MODULE_NAMES := $(MODULE_NAMES:=-module)
-EXT_MODULE_NAMES := $(EXT_MODULE_NAMES:=-extmodule)
 MODULE_BINS := $(MODULE_NAMES:=-bin)
-MODULE_CLEAN := $(MODULE_NAMES:=-clean) $(EXT_MODULE_NAMES:=-clean)
+MODULE_CLEAN := $(MODULE_NAMES:=-clean)
+
+# force some dependencies in dep.mk
+-include dep.mk
 
 # now we can list all prerequisites
 frame_all: $(MODULE_BINS)
 
 # binary files are dependent on library files (second pass)
-%-module-bin: $(MODULE_NAMES) $(EXT_MODULE_NAMES)
+%-module-bin: $(MODULE_NAMES)
 	$(MODULE_ENTER_PRINT)
 	make -C $* all
 
 # clean rules
 %-module-clean:
-	$(MODULE_ENTER_PRINT)
-	make -C $* clean
-
-%-extmodule-clean:
 	$(MODULE_ENTER_PRINT)
 	make -C $* clean
 

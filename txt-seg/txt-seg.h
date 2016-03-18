@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <wchar.h>
 #include "../include/config.h"
-#include "../list/list.h"
+#include "list.h"
 
 struct term_list_node {
 	wchar_t          term[MAX_TERM_STR_LEN];

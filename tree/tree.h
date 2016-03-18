@@ -1,7 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 
-#include "../list/list.h"
+#include "list.h"
 
 struct tree_node {
 	struct tree_node *father;

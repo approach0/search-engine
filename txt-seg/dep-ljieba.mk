@@ -1,2 +1,2 @@
-CFLAGS += -I "../cjieba/src"
-LDFLAGS += -L "../cjieba"
+CFLAGS += -I "../jieba/clone/src"
+LDFLAGS += -L "../jieba/clone"

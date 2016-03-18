@@ -34,8 +34,13 @@ LDOBJS := $(ALL_OBJS)
 DEP_LINKS := $(wildcard dep-*.mk)
 -include $(DEP_LINKS)
 
-# strip off suffix ".mk" from DEP_LINKS
-LDLIBS := $(foreach dep_link, ${DEP_LINKS}, ${dep_link:.mk=})
+# strip off suffix ".mk" from DEP_LINKS where "LDFLAGS" can be found.
+LDLIBS := $(foreach dep_link, ${DEP_LINKS}, \
+              $(if $(findstring LDFLAGS, $(shell cat $(dep_link))), \
+                  ${dep_link:.mk=} \
+              ) \
+          )
+
 # further strip off leading "dep"
 LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep%=%})
 

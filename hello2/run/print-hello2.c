@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include "hello.h"
+#include "hello2.h"
 
 int main()
 {
-	int i;
 	/* print hello world twice */
-	for (i = 0; i < 2; i++) {
-		print_hello();
-		print_world();
-	}
+	print_hello();
+	print_world();
+	printf("\n");
+	print_hello_world();
+	printf("\n");
+
 	return 0;
 }
