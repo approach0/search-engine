@@ -13,7 +13,7 @@ for target in targets_li:
 	if not path.exists(target):
 		continue	
 	files = listdir(target)
-	regex = re.compile("dep-l(.*)\.mk")
+	regex = re.compile("dep-(.*)\.mk")
 	dep_li = [] 
 	ext_dep_li = [] 
 	for name in files:
@@ -30,6 +30,7 @@ for target in targets_li:
 			print('\t"{}" -> "{}"'.format(target, dep))
 	if len(ext_dep_li):
 		for dep in ext_dep_li:
-			print('\t"{}"[shape="box"]'.format(dep))
-			print('\t"{}" -> "{}"'.format(target, dep))
+			libdep = 'lib' + dep
+			print('\t"{}"[shape="box"]'.format(libdep))
+			print('\t"{}" -> "{}"'.format(target, libdep))
 print("}")
