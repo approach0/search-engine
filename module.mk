@@ -41,8 +41,8 @@ LDLIBS := $(foreach dep_link, ${DEP_LINKS}, \
               ) \
           )
 
-# further strip off leading "dep"
-LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep%=%})
+# further strip off leading "dep-" and append "-l" in the front.
+LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep-%=-l%})
 
 # summary what a module needs to make
 module_lib := $(ALL_OBJS) $(ARCHIVE)
