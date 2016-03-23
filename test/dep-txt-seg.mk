@@ -1,2 +1,2 @@
-CFLAGS += -I "../txt-seg"
+CFLAGS +=
 LDFLAGS += -L "../txt-seg"

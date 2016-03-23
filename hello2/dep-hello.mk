@@ -1,2 +1,2 @@
-CFLAGS += -I ".."
+CFLAGS +=
 LDFLAGS += -L "../hello"

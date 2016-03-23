@@ -1,2 +1,2 @@
-CFLAGS += -I "../tree"
+CFLAGS +=
 LDFLAGS += -L "../tree"

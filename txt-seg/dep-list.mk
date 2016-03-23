@@ -1,1 +1,1 @@
-CFLAGS += -I "../list"
+CFLAGS +=

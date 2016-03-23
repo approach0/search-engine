@@ -1,2 +1,2 @@
-CFLAGS += -I "../wstring"
+CFLAGS +=
 LDFLAGS += -L "../wstring"

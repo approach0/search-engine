@@ -13,7 +13,6 @@ RUN_BINS := $(RUN_OBJS:.o=.out)
 # when you run gcc ./path/main.c with a "path", you need 
 # to specify current include directory.
 CFLAGS = -I .
-# but alternatively:
 # a good practice is to write #include "module/module.h" 
 # instead of just #include "module.h", so that another 
 # module who uses this will also find the header file.
