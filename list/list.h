@@ -1,5 +1,4 @@
-#ifndef LIST_H
-#define LIST_H
+#pragma once
 #include <stddef.h> /* NULL */
 #include <stdint.h> 
 #include <stdbool.h>
@@ -355,5 +354,3 @@ list_sort(struct list_it *head, struct list_sort_arg *sort)
 	{ \
 		list_foreach(head, &_ ## _fun_name, NULL); \
 	} LIST_DECL_FREE_FUN(_fun_name)
-
-#endif

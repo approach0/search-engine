@@ -1,18 +1,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "jieba.h"
+#include "wstring/wstring.h"
 #include "txt-seg.h"
-#include "wstring.h"
-
-static char DICT_PATH[] = "../cjieba/dict/jieba.dict.utf8";
-static char HMM_PATH[] = "../cjieba/dict/hmm_model.utf8";
-static char USER_DICT[] = "../cjieba/dict/user.dict.utf8";
 
 static Jieba jieba;
 
-int text_segment_init()
+int text_segment_init(const char *dict_path)
 {
-	jieba = NewJieba(DICT_PATH, HMM_PATH, USER_DICT); 
+	char paths[3][MAX_DICT_PATH_STR_LEN];
+
+	sprintf(paths[0], "%s/" DEFAULT_DICT_NAME, dict_path);
+	sprintf(paths[1], "%s/" DEFAULT_HMM_NAME, dict_path);
+	sprintf(paths[2], "%s/" DEFAULT_USER_DICT_NAME, dict_path);
+
+	jieba = NewJieba(paths[0], paths[1], paths[2]); 
+
 	return 0;
 }
 
@@ -21,12 +24,12 @@ void text_segment_free()
 	FreeJieba(jieba);
 }
 
-list text_segment(char *text)
+list text_segment(const char *text)
 {
 	char **words = Cut(jieba, text);
 	int i;
 	struct term_list_node *tln;
-	list ret;
+	list ret = LIST_NULL;
 
 	for (i = 0; words[i]; i++) {
 		tln = malloc(sizeof(struct term_list_node));

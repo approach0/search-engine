@@ -1,6 +1,6 @@
 #include "enum-token.h"
 #include "enum-symbol.h"
-#include "../tree/tree.h"
+#include "tree/tree.h"
 
 struct tex_tr {
 	uint32_t          node_id;

@@ -1,18 +1,13 @@
-#ifndef TXT_SEG_H
-#define TXT_SEG_H
-
-#include <stddef.h>
+#pragma once
 #include <wchar.h>
-#include "../include/config.h"
-#include "list.h"
+#include "config.h"
+#include "list/list.h"
 
 struct term_list_node {
-	wchar_t          term[MAX_TERM_STR_LEN];
+	wchar_t          term[MAX_TERM_WSTR_LEN];
 	struct list_node ln;
 };
 
-int   text_segment_init();
-list  text_segment(char *text);
+int   text_segment_init(const char *dict_path);
+list  text_segment(const char *text);
 void  text_segment_free();
-
-#endif

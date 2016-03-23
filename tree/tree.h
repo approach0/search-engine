@@ -1,7 +1,5 @@
-#ifndef TREE_H
-#define TREE_H
-
-#include "list.h"
+#pragma once
+#include "list/list.h"
 
 struct tree_node {
 	struct tree_node *father;
@@ -85,5 +83,3 @@ tree_foreach(struct tree_node *, list_it_fun *,
 
 #define TREE_OBJ(_type, _name, _tree_node_name) \
 	_type* _name = MEMBER_2_STRUCT(pa_now->now, _type, _tree_node_name .ln)
-
-#endif

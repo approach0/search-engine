@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "tex-tr.h"
-#include "../include/config.h"
+#include "tex-parser.h"
 #include "trans.h"
 
 struct tex_tr *

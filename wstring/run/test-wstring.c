@@ -1,6 +1,5 @@
-#include "wstring.h"
 #include <stdio.h>
-#include <string.h>
+#include "wstring.h"
 
 int main()
 {

@@ -1,6 +1,7 @@
 #include "hello.h"
+#include <iostream>
 
 void print_world()
 {
-	printf("world");
+	std::cout<<WORLD_STR<<std::endl;
 }

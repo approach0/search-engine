@@ -1,3 +1,5 @@
+#pragma once
+
 /* handy ASCII/VT100 color control sequences */
 #define C_RST     "\033[0m"
 #define C_RED     "\033[1m\033[31m"      /* Bold Red */

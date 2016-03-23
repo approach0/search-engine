@@ -10,22 +10,19 @@ RUN_SRC := $(wildcard run/*.c)
 RUN_OBJS := $(RUN_SRC:.c=.o)
 RUN_BINS := $(RUN_OBJS:.o=.out)
 
-# some target has a path in its name, e.g. ./path/main.o,
-# which needs to specify current include directory.
+# when you run gcc ./path/main.c with a "path", you need 
+# to specify current include directory.
 CFLAGS = -I .
+# but alternatively:
+# a good practice is to write #include "module/module.h" 
+# instead of just #include "module.h", so that another 
+# module who uses this will also find the header file.
+CFLAGS += -I ..
 
 # union set of all objects (make all the elements unique),
 # OTHER_OBJS is for objects files generated from something
 # like Bison/Flex.
 ALL_OBJS := $(sort $(SRC_OBJS) $(OTHER_OBJS))
-
-# make an archive only if SRC_OBJS is non-empty.
-ifneq ($(ALL_OBJS), )
-CURDIRNAME := $(notdir $(CURDIR))
-ARCHIVE := lib$(CURDIRNAME).a
-$(ARCHIVE): $(ALL_OBJS)
-	$(AR)
-endif
 
 # use object files in this module to link RUN_BINS
 LDOBJS := $(ALL_OBJS)
@@ -43,6 +40,26 @@ LDLIBS := $(foreach dep_link, ${DEP_LINKS}, \
 
 # further strip off leading "dep-" and append "-l" in the front.
 LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep-%=-l%})
+
+# remove any trailing slash, e.g. "path/" to "path" in LDFLAGS
+LDFLAGS := $(shell echo $(LDFLAGS)) # don't know why this is necessary :(
+LDFLAGS := $(LDFLAGS:/=)
+
+# define function to list dependency library paths (only list those exist).
+# example input: -L ../hello -L ../world
+# output: ../hello/libhello.a ../world/libworld.a
+lib_paths = $(foreach lpath, $(filter-out -L, $(1:%/=%)), \
+               $(wildcard ${lpath}/lib$(subst ../,,${lpath}).a) \
+             )
+
+# make an archive only if SRC_OBJS is non-empty.
+ifneq ($(ALL_OBJS), )
+CURDIRNAME := $(notdir $(CURDIR))
+ARCHIVE := lib$(CURDIRNAME).a
+MERGE_AR = $(call lib_paths, $(LDFLAGS))
+$(ARCHIVE): $(ALL_OBJS)
+	$(AR)
+endif
 
 # summary what a module needs to make
 module_lib := $(ALL_OBJS) $(ARCHIVE)

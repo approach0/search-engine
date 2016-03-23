@@ -1,9 +1,9 @@
-#ifndef TEX_PARSER_H
-#define TEX_PARSER_H
-
+#pragma once
 #include <stdlib.h>
-#include "../list/list.h"
-#include "../include/config.h"
+#include "tree/tree.h"
+
+#define MAX_TEX_TR_DEPTH   32
+#define MAX_PARSER_ERR_STR 1024
 
 struct subpath {
 	uint32_t         node_id[MAX_TEX_TR_DEPTH]; 
@@ -20,4 +20,3 @@ struct tex_parse_ret {
 };
 
 struct tex_parse_ret tex_parse(const char *, size_t len);
-#endif

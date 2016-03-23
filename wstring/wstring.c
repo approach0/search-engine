@@ -1,4 +1,7 @@
-#include <wstring.h>
+#include <stdlib.h>
+#include <locale.h>
+#include "wstring.h"
+#include "config.h"
 
 size_t mbstr_len(wchar_t *multibyte_string)
 {

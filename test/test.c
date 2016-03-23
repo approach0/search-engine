@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "txt-seg.h"
+#include "txt-seg/txt-seg.h"
 
 static LIST_IT_CALLBK(print)
 {
@@ -16,14 +16,13 @@ static LIST_IT_CALLBK(print)
 	LIST_GO_OVER;
 }
 
-LIST_DEF_FREE_FUN(list_release, struct term_list_node, 
+LIST_DEF_FREE_FUN(list_release, struct term_list_node,
                   ln, free(p));
 
-int main()
+void test()
 {
-	char txt[] = "我爱北京天安门";
+	char txt[] = "这是一个100分之99标准的a测试";
 	list li = LIST_NULL;
-
 	text_segment_init("../jieba/clone/dict");
 	li = text_segment(txt);
 	text_segment_free();
@@ -32,6 +31,4 @@ int main()
 	printf("\n");
 
 	list_release(&li);
-
-	return 0;
 }

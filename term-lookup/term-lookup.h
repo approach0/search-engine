@@ -1,9 +1,8 @@
-#ifndef TERM_LOOKUP_H
-#define TERM_LOOKUP_H
-
-#include <stdio.h>
+#pragma once
 #include <wchar.h>
-#include "../include/config.h"
+#include <stdint.h>
+
+typedef uint32_t term_id_t;
 
 /*
 open dbname and return the connection
@@ -18,5 +17,3 @@ term_id_t term_lookup(void *, wchar_t *term);
 
 int term_lookup_flush(void *);
 int term_lookup_close(void *);
-
-#endif

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "term-lookup.h"
-#include "wstring.h"
+#include "wstring/wstring.h"
 
 /*
 split a string by delimiliter

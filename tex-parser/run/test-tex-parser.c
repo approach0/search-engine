@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "../include/vt100-color.h"
+#include "vt100-color.h"
 #include "tex-parser.h"
 
 int main()

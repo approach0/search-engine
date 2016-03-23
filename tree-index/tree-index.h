@@ -1,8 +1,6 @@
-#ifndef TREE_INDEX_H
-#define TREE_INDEX_H
-
-#include "../include/config.h"
-#include "list.h"
+#pragma once
+#include "config.h"
+#include "list/list.h"
 
 struct dir_path_item {
 	char             name[MAX_TR_INDEX_PATH_LEN];
@@ -40,5 +38,3 @@ tree_index_level_merge(void *tr_index, list dir_path_list,
 
 void 
 tree_index_close(void *tr_index);
-
-#endif
