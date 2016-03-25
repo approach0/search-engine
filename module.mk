@@ -1,6 +1,9 @@
 # source files can have mixed code of C and CPP
 SRC := $(wildcard *.c) $(wildcard *.cpp)
 
+# filter out excluded source files
+SRC := $(filter-out $(EXCLUDE_SRC),$(SRC))
+
 SRC_OBJS := $(SRC)
 SRC_OBJS := $(SRC_OBJS:.c=.o)
 SRC_OBJS := $(SRC_OBJS:.cpp=.o)

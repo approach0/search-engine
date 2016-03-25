@@ -1,17 +1,20 @@
 include ../rules.mk
 
-# these objects are generated at compile-time.
+# objects below are generated at compile-time.
 OTHER_OBJS := lex.yy.o y.tab.o gen-trans.o
+# source file below is excluded from compiling.
+EXCLUDE_SRC := trans.template.c
+
 include ../module.mk
 
 enum-symbol.h: gen-symbol.h 
 	ln -s gen-symbol.h enum-symbol.h
 
 gen-lexer.l: gen-symbol.h 
-gen-symbol.h: lexer.l symbol.h.template
+gen-symbol.h: lexer.l symbol.template.h
 	./gen-symbol.sh $^ gen-lexer.l gen-symbol.h 
 
-gen-trans.c: enum-symbol.h enum-token.h trans.c.template
+gen-trans.c: enum-symbol.h enum-token.h trans.template.c
 	./gen-trans.sh $^ $@
 
 lex.yy.c: gen-lexer.l y.tab.h

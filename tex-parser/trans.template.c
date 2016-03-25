@@ -29,7 +29,8 @@ char *trans_token(enum token_id id)
 		break;
 	*/
 
-	/* T_INSERT_HERE */
+	/* generated code to be inserted below */
+	/* => */ T_INSERT_HERE /* <= */
 
 	default:
 		sprintf(ret, "unknown");
@@ -55,7 +56,8 @@ char *trans_symbol(enum symbol_id id)
 		break;
 	*/
 
-	/* S_INSERT_HERE */
+	/* generated code to be inserted below */
+	/* => */ S_INSERT_HERE /* <= */
 
 	default:
 		if (id < S_N) {

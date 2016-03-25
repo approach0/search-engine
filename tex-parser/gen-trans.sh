@@ -32,7 +32,7 @@ gen_fun() {
 
 	while read name; do 
 		echo "${prefix}: gen translation item ${name}"
-		sed -i "/${prefix}INSERT_HERE/a \
+		sed -i "/${prefix}INSERT_HERE/c \
 		\\\tcase ${prefix}${name}:\n \
 		\tsprintf(ret, \"${name}\");\n \
 		\tbreak;\n" \
