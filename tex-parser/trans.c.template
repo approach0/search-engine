@@ -8,6 +8,17 @@ char *trans_token(enum token_id id)
 {
 	static char ret[TRANS_BUF_LEN];
 
+	/* degree symbols */
+	if (id > T_NIL) {
+		if (id < T_DEGREE_VALVE) {
+			sprintf(ret, "%d", id);
+			return ret;
+		} else if (id == T_DEGREE_VALVE) {
+			sprintf(ret, "ge%d", T_DEGREE_VALVE);
+			return ret;
+		}
+	}
+
 	switch (id) {
 	/* example:
 	case T_NIL:

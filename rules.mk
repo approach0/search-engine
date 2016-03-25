@@ -1,4 +1,4 @@
-.PHONY: all lib clean regular-clean
+.PHONY: all clean regular-clean
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
@@ -12,16 +12,16 @@ CC_DEP = @ gcc
 CXX_DEP = @ g++
 
 # linker
-LD = @ tput setaf 5 && echo -n '[link $(strip $(LDLIBS) $(LDOBJS))] ' \
+LD = @ tput setaf 5 && echo -n '[link $(strip $*.o $(LDOBJS) $(LDLIBS))] ' \
      && tput sgr0 && echo $@ && gcc
 
-LINK = $(LD) $(LDFLAGS) $^ $(LDOBJS) \
+LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
 	-Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
 
 # archive
-AR = @ tput setaf 5 && echo -n '[archive $(strip $(MERGE_AR) $(OTHER_MERGE_AR) $^)] ' \
+AR = @ tput setaf 5 && echo -n '[archive $(strip $(AROBJS) $(ARLIBS))] ' \
      && tput sgr0 && echo $@ && \
-	 ar -rcT $@ $(MERGE_AR) $(OTHER_MERGE_AR) $^ && ar -t $@
+	 ar -rcT $@ $(AROBJS) $(ARLIBS) && ar -t $@
 
 # Bison/Flex
 LEX = @ tput setaf 5 && echo -n '[lex] ' \
@@ -67,8 +67,10 @@ regular-clean:
 	$(FIND) -type d \( -name 'tmp' \) -print | xargs rm -rf
 
 grep-%:
-	$(FIND) -type f \( -name '*.[ch]' \) -exec grep --color -nH $* {} \;
-	$(FIND) -type f \( -name '*.cpp' \)  -exec grep --color -nH $* {} \;
-	$(FIND) -type f \( -name '*.[ly]' \) -exec grep --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.cpp' \)    -exec grep --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.[ly]' \)   -exec grep --color -nH $* {} \;
+	$(FIND) -type f \( -name 'Makefile' \) -exec grep --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.mk' \)     -exec grep --color -nH $* {} \;
 
 clean: regular-clean

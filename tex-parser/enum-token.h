@@ -1,6 +1,11 @@
+#include "config.h"
+
 enum token_id {
 	/* nil token */
 	T_NIL,
+
+	/* index tree degree valve */
+	T_DEGREE_VALVE = OPTR_INDEX_TREE_DEGREE_VALVE,
 
 	/* token with commutative law */
 	T_ADD,

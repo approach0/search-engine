@@ -1,19 +1,22 @@
 #include "enum-token.h"
 #include "enum-symbol.h"
+#include "trans.h"
+
 #include "tree/tree.h"
+#include "stdbool.h"
 
-struct tex_tr {
-	uint32_t          node_id;
-	enum token_id     token_id;
-	enum symbol_id    symbol_id;
-	uint32_t          n_fan;
-	uint32_t          rank; /* used to assign son's rank */
-	struct tree_node  tnd;
+struct optr_node {
+	union {
+		bool         commutative;
+		bool         wildcard;
+	};
+	enum symbol_id   symbol_id;
+	enum token_id    token_id;
+	uint32_t         sons;
+	uint32_t         rank;
+	uint8_t          br_hash;
+	struct tree_node tnd;
 };
-
-struct tex_tr *tex_tr_alloc(enum symbol_id, enum token_id);
-
-void tex_tr_attatch(struct tex_tr*, struct tex_tr*);
 
 /*
 uint32_t tex_tr_assign(struct tex_tr*);

@@ -1,13 +1,8 @@
 include ../rules.mk
 
+# these objects are generated at compile-time.
 OTHER_OBJS := lex.yy.o y.tab.o gen-trans.o
 include ../module.mk
-
-all: $(module_lib) $(module_bin)
-
-lib: $(module_lib)
-
-$(module_lib): enum-symbol.h enum-token.h gen-trans.c
 
 enum-symbol.h: gen-symbol.h 
 	ln -s gen-symbol.h enum-symbol.h

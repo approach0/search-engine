@@ -15,14 +15,14 @@ static char *mk_scan_buf(const char *str, size_t *out_sz)
 }
 
 struct tex_parse_ret
-tex_parse(const char *math_str, size_t len)
+tex_parse(const char *tex_str, size_t len)
 {
 	struct tex_parse_ret ret; 
 	YY_BUFFER_STATE state_buf;
 	char *scan_buf;
 	size_t scan_buf_sz;
 
-	scan_buf = mk_scan_buf(math_str, &scan_buf_sz);
+	scan_buf = mk_scan_buf(tex_str, &scan_buf_sz);
 	state_buf = yy_scan_buffer(scan_buf, scan_buf_sz);
 
 	yyparse();

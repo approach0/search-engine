@@ -1,54 +1,63 @@
 #include <stdlib.h>
-#include "tex-tr.h"
+#include "optr-tr.h"
 #include "tex-parser.h"
-#include "trans.h"
 
-struct tex_tr *
-tex_tr_alloc(enum symbol_id s_id, enum token_id t_id)
+struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 {
-	struct tex_tr *n = malloc(sizeof(struct tex_tr));
-	n->node_id = 0;
-	n->token_id = t_id;
+	struct optr_node *n = malloc(sizeof(struct optr_node));
+
+	n->wildcard = uwc;
 	n->symbol_id = s_id;
-	n->n_fan = 0;
+	n->token_id = t_id;
+	n->sons = 0;
 	n->rank = 0;
+	n->br_hash = 0;
 	TREE_NODE_CONS(n->tnd);
-	return n;
 }
 
 static LIST_IT_CALLBK(pass_children_to_father)
 {
-	TREE_OBJ(struct tex_tr, son, tnd);
+	TREE_OBJ(struct optr_node, child, tnd);
 	bool res;
 
-	P_CAST(gf/* grandfather */, struct tex_tr, pa_extra); 
+	P_CAST(gf/* grandfather */, 
+	       struct optr_node, pa_extra); 
 
 	if (gf == NULL)
-		return LIST_RET_BREAK;
+		return LIST_RET_BREAK; /* no children to pass */
 
-	res = tree_detach(&son->tnd, pa_now, pa_fwd);
-	tree_attach(&son->tnd, &gf->tnd, pa_now, pa_fwd);
+	res = tree_detach(&child->tnd, pa_now, pa_fwd);
+	tree_attach(&child->tnd, &gf->tnd, pa_now, pa_fwd);
 
 	return res;
 }
 
-bool is_sequential(enum token_id id) 
+struct optr_node* optr_attach(struct optr_node *c /* child */, 
+                              struct optr_node *f /* father */)
 {
+	if (c == NULL || f == NULL)
+		return NULL;
+	
+	if (f->commutative) {
+		if (c->token_id == f->token_id) {
+			/* apply commutative rule */
+			list_foreach(&c->tnd.sons, &pass_children_to_father, f);
+			free(c);
+		}
+
+		tree_attach(&c->tnd, &f->tnd, NULL, NULL);
+	} else {
+		//optr_alloc();
+	}
+}
+
+#if 0
+
 	return (id == T_CHOOSE || id == T_SQRT || id == T_FRAC ||
 	        id == T_MODULAR);
-}
-
-bool is_commutative(enum token_id id) 
-{
 	return (id == T_ADD || id == T_TIMES || id == T_TAB || 
 	        id == T_SEP_CLASS || id == T_HANGER);
-}
 
-void tex_tr_attatch(struct tex_tr *f /* father */, 
-                    struct tex_tr *s /* son */)
-{
-	if (f == NULL || s == NULL)
-		return;
 
 	if (s->token_id == f->token_id) {
 		if (is_commutative(f->token_id)) {
@@ -143,7 +152,6 @@ void tex_tr_print(struct tex_tr *tr, FILE *fh)
 	             &print, 0, fh);
 }
 
-#if 0
 static TREE_IT_CALLBK(release)
 {
 	TREE_OBJ(struct tex_tr, p, tnd);

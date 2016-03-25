@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 extern int yyparse();
 extern int yyerror(const char *);
 extern int yylex();
