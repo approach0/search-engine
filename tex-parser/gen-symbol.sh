@@ -21,17 +21,36 @@ sym_header="${2}"
 output_lexer="${3}"
 output_header="${4}"
 tmpfile=replace-lines.tmp
+auto_macro=_AUTOGEN_
 
 cp $lexer_file ${output_lexer}
 cp $sym_header ${output_header}
 
-grep -n 'RET_TOK(NIL' ${lexer_file} | awk '{print $1}' | awk 'BEGIN {FS=":|\\\\"} {print $1, $4 }' > ${tmpfile}
+grep -nP '(?<!define) RET_OPTR' ${lexer_file} | \
+	awk 'BEGIN {FS=":|,|\\(| +"} {print $1, $2, $5 }' > ${tmpfile}
 
-while read line
-do 
-	num=`echo $line | cut -d' ' -f1`
-	sym=`echo $line | cut -d' ' -f2`
-	echo "gen symbol table item ${sym}"
-	sed -i "${num}s/NIL/${sym}/" ${output_lexer}
-	sed -i "/INSERT_HERE/a\\\tS_${sym}," ${output_header}
+function insert_into_header()
+{
+	item="S_${1}"
+	output="$2"
+	# if this symbol has not been inserted, insert it.
+	grep "\<${item}\>" ${output} 1>/dev/null || \
+		sed -i "/INSERT_HERE/a\\\t${item}," ${output}
+}
+
+while read -r line
+do
+	number=`echo $line | cut -d' ' -f1`
+	match=`echo $line | cut -d' ' -f2 | sed -e 's/\\\\//g'` # strip backslashes
+	symbol=`echo $line | cut -d' ' -f3`
+
+	echo "gen token item ${match}..."
+
+	# for auto-gen symbol, replace $auto_macro with $match.
+	if [ "$symbol" == "$auto_macro" ]; then
+		sed -i "${number}s/${auto_macro}/${match}/" ${output_lexer}
+		insert_into_header "${match}" "${output_header}"
+	else
+		insert_into_header "${symbol}" "${output_header}"
+	fi
 done < ${tmpfile}

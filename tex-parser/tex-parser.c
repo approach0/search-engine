@@ -2,6 +2,9 @@
 #include <string.h>
 #include "tex-parser.h"
 #include "yy.h"
+#include "optr.h"
+
+extern struct optr_node *grammar_optr_root;
 
 static char *mk_scan_buf(const char *str, size_t *out_sz)
 {
@@ -29,6 +32,12 @@ tex_parse(const char *tex_str, size_t len)
 
 	yy_delete_buffer(state_buf);
 	free(scan_buf);
+
+
+	if (grammar_optr_root) {
+		optr_print(grammar_optr_root, stdout);
+		optr_release(grammar_optr_root);
+	}
 
 	ret.code = 0;
 	return ret;

@@ -8,6 +8,7 @@ EXCLUDE_SRC := trans.template.c
 include ../module.mk
 
 enum-symbol.h: gen-symbol.h 
+	rm -f enum-symbol.h
 	ln -s gen-symbol.h enum-symbol.h
 
 gen-lexer.l: gen-symbol.h 

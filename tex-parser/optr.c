@@ -1,5 +1,6 @@
 #include <stdlib.h>
-#include "optr-tr.h"
+#include "optr.h"
+#include "config.h"
 #include "tex-parser.h"
 
 struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
@@ -15,6 +16,13 @@ struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 	TREE_NODE_CONS(n->tnd);
 }
 
+static __inline__ void update(struct optr_node *c, struct optr_node *f)
+{
+	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
+	f->sons++;
+	c->rank = f->sons;
+}
+
 static LIST_IT_CALLBK(pass_children_to_father)
 {
 	TREE_OBJ(struct optr_node, child, tnd);
@@ -27,7 +35,9 @@ static LIST_IT_CALLBK(pass_children_to_father)
 		return LIST_RET_BREAK; /* no children to pass */
 
 	res = tree_detach(&child->tnd, pa_now, pa_fwd);
+
 	tree_attach(&child->tnd, &gf->tnd, pa_now, pa_fwd);
+	update(child, gf);
 
 	return res;
 }
@@ -38,44 +48,21 @@ struct optr_node* optr_attach(struct optr_node *c /* child */,
 	if (c == NULL || f == NULL)
 		return NULL;
 	
-	if (f->commutative) {
-		if (c->token_id == f->token_id) {
-			/* apply commutative rule */
-			list_foreach(&c->tnd.sons, &pass_children_to_father, f);
-			free(c);
-		}
+	if (f->commutative && c->token_id == f->token_id) {
+		/* apply commutative rule */
+		list_foreach(&c->tnd.sons, &pass_children_to_father, f);
+		free(c);
+		return f;
+	} 
 
-		tree_attach(&c->tnd, &f->tnd, NULL, NULL);
-	} else {
-		//optr_alloc();
-	}
-}
-
-#if 0
-
-	return (id == T_CHOOSE || id == T_SQRT || id == T_FRAC ||
-	        id == T_MODULAR);
-	return (id == T_ADD || id == T_TIMES || id == T_TAB || 
-	        id == T_SEP_CLASS || id == T_HANGER);
-
-
-	if (s->token_id == f->token_id) {
-		if (is_commutative(f->token_id)) {
-			/* token with associative law */
-			list_foreach(&s->tnd.sons, 
-			             &pass_children_to_father, f);
-			free(s);
-		}
-		else {
-			goto attach;
-		}
-	} else {
 attach:
-		tree_attach(&s->tnd, &f->tnd, NULL, NULL);
-	}
+	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
+	update(c, f);
+
+	return f;
 }
 
-static int depth_flag[MAX_TEX_TR_DEPTH];
+static int depth_flag[MAX_OPTR_DEPTH];
 
 enum {
 	depth_end,
@@ -85,7 +72,7 @@ enum {
 
 static TREE_IT_CALLBK(print)
 {
-	TREE_OBJ(struct tex_tr, p, tnd);
+	TREE_OBJ(struct optr_node, p, tnd);
 	P_CAST(fh, FILE, pa_extra);
 	int i;
 	bool is_leaf;
@@ -100,7 +87,7 @@ static TREE_IT_CALLBK(print)
 	else if (pa_now->now == pa_head->now)
 		depth_flag[pa_depth] = depth_begin;
 	
-	for (i = 0; i<pa_depth; i++) { 
+	for (i = 0; i < pa_depth; i++) { 
 		switch (depth_flag[i + 1]) {
 		case depth_end:
 			fprintf(fh, "    ");
@@ -117,27 +104,25 @@ static TREE_IT_CALLBK(print)
 	}
 	
 	if (is_leaf) 
-		fprintf(fh, "──[");
+		if (p->wildcard)
+			fprintf(fh, "──{");
+		else
+			fprintf(fh, "──[");
 	else 
 		fprintf(fh, "──(");
 
-#if (DEBUG_TEX_TR_PRINT_ID)
-	fprintf(fh, "s%d, t%d, #%d, *%d, @%d", p->symbol_id, 
-	        p->token_id, p->node_id, p->n_fan, p->rank);
-#else
-	fprintf(fh, "%s, %s, #%d, *%d, @%d", 
-	        trans_symbol(p->symbol_id), 
-	        trans_token(p->token_id), 
-	        p->node_id, p->n_fan, p->rank);
-#endif
+	fprintf(fh, "sym=%s, tok=%s, wc=%d, @%d, *%d, #%d",
+	        trans_symbol(p->symbol_id),
+	        trans_token(p->token_id),
+	        p->commutative, p->rank, p->sons, p->br_hash);
 
-	if (is_leaf) 
-		fprintf(fh, "]");
+	if (is_leaf)
+		if (p->wildcard)
+			fprintf(fh, "}");
+		else
+			fprintf(fh, "]");
 	else 
 		fprintf(fh, ")");
-	
-	if (p->n_fan == 0 && is_leaf)
-		fprintf(fh, " (grouped)");
 	
 	fprintf(fh, "\n");
 
@@ -146,26 +131,36 @@ static TREE_IT_CALLBK(print)
 	LIST_GO_OVER;
 }
 
-void tex_tr_print(struct tex_tr *tr, FILE *fh)
+void optr_print(struct optr_node *tr, FILE *fh)
 {
+	if (tr == NULL)
+		return;
 	tree_foreach(&tr->tnd, &tree_pre_order_DFS, 
 	             &print, 0, fh);
 }
 
 static TREE_IT_CALLBK(release)
 {
-	TREE_OBJ(struct tex_tr, p, tnd);
+	TREE_OBJ(struct optr_node, p, tnd);
 	bool res;
 	res = tree_detach(&p->tnd, pa_now, pa_fwd);
 	free(p);
 	return res;
 }
 
-void tex_tr_release(struct tex_tr *tr)
+void optr_release(struct optr_node *tr)
 {
 	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
 	             &release, 0, NULL);
 }
+
+#if 0
+
+	return (id == T_CHOOSE || id == T_SQRT || id == T_FRAC ||
+	        id == T_MODULAR);
+	return (id == T_ADD || id == T_TIMES || id == T_TAB || 
+	        id == T_SEP_CLASS || id == T_HANGER);
+
 
 static LIST_IT_CALLBK(count_sons)
 {

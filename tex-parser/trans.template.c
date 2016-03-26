@@ -29,11 +29,10 @@ char *trans_token(enum token_id id)
 		break;
 	*/
 
-	/* generated code to be inserted below */
-	/* => */ T_INSERT_HERE /* <= */
+	/* T_INSERT_HERE */
 
 	default:
-		sprintf(ret, "unknown");
+		sprintf(ret, "unlisted");
 	}
 
 	return ret;
@@ -42,6 +41,29 @@ char *trans_token(enum token_id id)
 char *trans_symbol(enum symbol_id id)
 {
 	static char ret[TRANS_BUF_LEN];
+
+	if (id > S_NIL) {
+		/* degree symbols */
+		if (id < S_DEGREE_VALVE) {
+			sprintf(ret, "#%d", id);
+			return ret;
+		} else if (id == S_DEGREE_VALVE) {
+			sprintf(ret, "ge#%d", S_DEGREE_VALVE);
+			return ret;
+		} else if (id >= S_N) {
+			/* number symbols */
+			if (id < S_N + 26 /* is lowercase alphabet */) {
+				sprintf(ret, "`%c'", id - S_N + 'a');
+				return ret;
+			} else if (id < S_N + 52 /* is uppercase alphabet */) {
+				sprintf(ret, "`%c'", id - S_N - 26 + 'A');
+				return ret;
+			} else /* is small number */ {
+				sprintf(ret, "`%u'", id - S_N - 52);
+				return ret;
+			}
+		}
+	}
 
 	switch (id) {
 	/* example:
@@ -56,19 +78,10 @@ char *trans_symbol(enum symbol_id id)
 		break;
 	*/
 
-	/* generated code to be inserted below */
-	/* => */ S_INSERT_HERE /* <= */
+	/* S_INSERT_HERE */
 
 	default:
-		if (id < S_N) {
-			sprintf(ret, "unlisted");
-		} else if (id < S_N + 26 /* is lowercase alphabet */) {
-			sprintf(ret, "`%c'", id - S_N + 'a');
-		} else if (id < S_N + 52 /* is uppercase alphabet */) {
-			sprintf(ret, "`%c'", id - S_N - 26 + 'A');
-		} else /* is small number */ {
-			sprintf(ret, "`%u'", id - S_N - 52);
-		}
+		sprintf(ret, "unlisted");
 	}
 
 	return ret;

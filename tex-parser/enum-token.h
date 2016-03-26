@@ -1,3 +1,4 @@
+#pragma once
 #include "config.h"
 
 enum token_id {

@@ -21,6 +21,7 @@ LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
 # archive
 AR = @ tput setaf 5 && echo -n '[archive $(strip $(AROBJS) $(ARLIBS))] ' \
      && tput sgr0 && echo $@ && \
+	 rm -f $@ && \
 	 ar -rcT $@ $(AROBJS) $(ARLIBS) && ar -t $@
 
 # Bison/Flex

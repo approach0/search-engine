@@ -3,33 +3,69 @@
 #include "enum-symbol.h"
 #include "enum-token.h"
 #include "yy.h"
+#include "optr.h"
+
+struct optr_node *grammar_optr_root = NULL;
+
+#define OPTR_ATTACH(_ret, _child1, _child2, _father) \
+	struct optr_node *_n = _father; \
+	optr_attach(_child1, _n); \
+	optr_attach(_child2, _n); \
+	_ret = grammar_optr_root = _n;
 %}
 
 %union {
-	char t[128];
+	struct optr_node* nd;
 }
 
 %error-verbose
 %start doc /* start rule */
 
-%token <t> NUM 
+%token <nd> NUM 
+%token <nd> VAR
 
-%type <t> tex
+%token <nd> ADD 
+
+%type <nd> tex
+%type <nd> term 
+%type <nd> factor 
+%type <nd> pack 
+%type <nd> atom 
+
+%left NULL_REDUCE
 
 %%
 doc: line | doc line; 
 
 line: tex '\n';
 
-tex:
-{
-	printf("null\n");
+tex: %prec NULL_REDUCE {
+	OPTR_ATTACH($$, NULL, NULL, optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF));	
+}
+| term {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+}
+| tex ADD term {
+	OPTR_ATTACH($$, $1, $3, $2);	
+};
+
+term: factor {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+};
+
+factor: pack {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+}
+
+pack: atom {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+};
+
+atom: VAR {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
 }
 | NUM {
-	printf("%s\n", $1);
-}
-|tex '+' NUM {
-	printf("+%s\n", $3);
+	OPTR_ATTACH($$, NULL, NULL, $1);	
 };
 %%
 
