@@ -1,6 +1,6 @@
 #include "config.h"
-#include "enum-token.h"
-#include "enum-symbol.h"
+#include "gen-token.h"
+#include "gen-symbol.h"
 #include "trans.h"
 #include <stdio.h>
 #include <limits.h>

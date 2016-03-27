@@ -7,16 +7,13 @@ EXCLUDE_SRC := trans.template.c
 
 include ../module.mk
 
-enum-symbol.h: gen-symbol.h 
-	rm -f enum-symbol.h
-	ln -s gen-symbol.h enum-symbol.h
+gen-symbol.h: gen-lexer.l
+gen-token.h: gen-lexer.l
+gen-lexer.l: lexer.template.l symbol.template.h token.template.h
+	./auto-gen.sh $^
 
-gen-lexer.l: gen-symbol.h 
-gen-symbol.h: lexer.l symbol.template.h
-	./gen-symbol.sh $^ gen-lexer.l gen-symbol.h 
-
-gen-trans.c: enum-symbol.h enum-token.h trans.template.c
-	./gen-trans.sh $^ $@
+gen-trans.c: gen-symbol.h gen-token.h trans.template.c
+	./trans-gen.sh $^ $@
 
 lex.yy.c: gen-lexer.l y.tab.h
 	$(LEX)
@@ -27,9 +24,6 @@ y.tab.h y.tab.c: grammar.y
 clean:
 	rm -f *.tab.[ch]
 	rm -f lex.yy.c
-	rm -f enum-symbol.h
-	rm -f gen-*.l
-	rm -f gen-*.h
-	rm -f gen-*.c
+	rm -f gen-*
 	rm -f *.dot
 	@ echo 'clean'

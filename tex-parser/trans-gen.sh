@@ -28,7 +28,7 @@ cp $C_template ${output}
 gen_fun() {
 	prefix=${1}
 	header=${2}
-	grep -oP '(?<='"${prefix}"')\w+' ${header} > ${tmpfile}
+	grep -oP '(?<='"${prefix}"')[\w ]+(?=,|=)' ${header} > ${tmpfile}
 
 	while read name; do 
 		echo "${prefix}: gen translation item ${name}"

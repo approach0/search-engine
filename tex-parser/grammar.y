@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
-#include "enum-symbol.h"
-#include "enum-token.h"
+#include "gen-symbol.h"
+#include "gen-token.h"
 #include "yy.h"
 #include "optr.h"
 
@@ -23,8 +23,12 @@ struct optr_node *grammar_optr_root = NULL;
 
 %token <nd> NUM 
 %token <nd> VAR
-
 %token <nd> ADD 
+%token <nd> NEG 
+%token <nd> SUM_CLASS 
+%token <nd> SEP_CLASS 
+%token <nd> REL_CLASS 
+%token <nd> FUN_CLASS 
 
 %type <nd> tex
 %type <nd> term 

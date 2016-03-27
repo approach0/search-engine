@@ -1,5 +1,5 @@
-#include "enum-token.h"
-#include "enum-symbol.h"
+#include "gen-token.h"
+#include "gen-symbol.h"
 #include <stdio.h>
 
 #define TRANS_BUF_LEN 1024

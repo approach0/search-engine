@@ -8,13 +8,12 @@ enum symbol_id {
 	/* index tree degree valve */
 	S_DEGREE_VALVE = OPTR_INDEX_TREE_DEGREE_VALVE,
 
-	/* core symbols */
+	/* special symbols */
 	S_bignum,
-	S_usr_fun,
 	S_zero,
 	S_one,
 	S_float,
-	
+
 	/* auto-generated symbol set */
 	/* INSERT_HERE */
 
