@@ -39,6 +39,25 @@ int ret_float_num(char*, struct optr_node **);
 \\barwedge                         { RET_TOK(_AUTOGEN_, NEG, WC_NONCOM_OPERATOR, NEG); }
 
  /* ==================
+  *  star and times
+  * ================*/
+\\ast                                 { RET_TOK(_AUTOGEN_, STAR, WC_NORMAL_LEAF, VAR); }
+"*"                                         { RET_TOK(ast, STAR, WC_NORMAL_LEAF, VAR); }
+\\times                            { RET_TOK(times, TIMES, WC_COMMUT_OPERATOR, TIMES); }
+\\cdot                             { RET_TOK(times, TIMES, WC_COMMUT_OPERATOR, TIMES); }
+\\otimes                       { RET_TOK(_AUTOGEN_, TIMES, WC_COMMUT_OPERATOR, TIMES); }
+\\ltimes                       { RET_TOK(_AUTOGEN_, TIMES, WC_COMMUT_OPERATOR, TIMES); }
+\\rtimes                       { RET_TOK(_AUTOGEN_, TIMES, WC_COMMUT_OPERATOR, TIMES); }
+\\odot                         { RET_TOK(_AUTOGEN_, TIMES, WC_COMMUT_OPERATOR, TIMES); }
+
+ /* =====================
+  *  div and fraction
+  * ===================*/
+\/                                     { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, DIV); }
+\\div                                  { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, DIV); }
+\\divideontimes                   { RET_TOK(_AUTOGEN_, FRAC, WC_NONCOM_OPERATOR, DIV); }
+
+ /* ==================
   *  numbers
   * ================*/
 
