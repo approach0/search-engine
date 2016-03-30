@@ -13,6 +13,7 @@ enum symbol_id {
 	S_zero,
 	S_one,
 	S_float,
+	S_hanger,
 
 	/* auto-generated symbol set */
 	/* INSERT_HERE */

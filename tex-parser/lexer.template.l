@@ -57,6 +57,70 @@ int ret_float_num(char*, struct optr_node **);
 \\div                                  { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, DIV); }
 \\divideontimes                   { RET_TOK(_AUTOGEN_, FRAC, WC_NONCOM_OPERATOR, DIV); }
 
+ /* =====================
+  *  bracket/pair
+  * ===================*/
+
+ /* left */
+"("|"\\{"                     { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"."                    { RET_TOK(l_dot, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"("                 { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\lgroup            { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"["                 { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"\{"                { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\langle             { RET_TOK(l_angle, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"<"                  { RET_TOK(l_angle, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"/"                  { RET_TOK(l_slash, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*"\\"                { RET_TOK(l_bslash, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\backslash         { RET_TOK(l_bslash, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\lmoustache          { RET_TOK(l_hair, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\[Uu]parrow         { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\[Dd]ownarrow       { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left[ ]*\\[Uu]pdownarrow     { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+\\left                         { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+
+ TODO: left operator type, hanger operator pass son, left right.
+ /* right */
+")"|"\\}"                                     { return ')'; }
+\\right[ ]*"."                                { return ')'; }
+\\right[ ]*")"                                { return ')'; }
+\\right[ ]*\\rgroup                           { return ')'; }
+\\right[ ]*"]"                                { return ')'; }
+\\right[ ]*"\}"                              { return ')'; }
+\\right[ ]*\\rangle                           { return ')'; }
+\\right[ ]*">"                                { return ')'; }
+\\right[ ]*"/"                                { return ')'; }
+\\right[ ]*"\\"                               { return ')'; }
+\\right[ ]*\\backslash                        { return ')'; }
+\\right[ ]*\\rmoustache                       { return ')'; }
+\\right[ ]*\\[Uu]parrow                       { return ')'; }
+\\right[ ]*\\[Dd]ownarrow                     { return ')'; }
+\\right[ ]*\\[Uu]pdownarrow                   { return ')'; }
+\\right                                       { return ')'; }
+ /* shorter pair */
+\\lgroup                                      { return '('; }
+\\langle                                      { return '('; }
+\\lmoustache                                  { return '('; }
+\\lbrace                                      { return '('; }
+\\lbrack                                      { return '('; }
+\\rgroup                                      { return ')'; }
+\\rangle                                      { return ')'; }
+\\rmoustache                                  { return ')'; }
+\\rbrace                                      { return ')'; }
+\\rbrack                                      { return ')'; }
+"{"|"}"                                 { return yytext[0]; }
+"["|"]"                                 { return yytext[0]; }
+
+ /* =========================
+  * prime and su[bp]scripts
+  * ========================*/
+
+"'"                                { RET_TOK(prime, PRIME, WC_NONCOM_OPERATOR, PRIME); }
+\\prime                        { RET_TOK(_AUTOGEN_, PRIME, WC_NONCOM_OPERATOR, PRIME); }
+"_"                    { RET_TOK(subscript, SUBSCRIPT, WC_NONCOM_OPERATOR, SUBSCRIPT); }
+"^"                    { RET_TOK(supscript, SUPSCRIPT, WC_NONCOM_OPERATOR, SUPSCRIPT); }
+
+
  /* ==================
   *  numbers
   * ================*/

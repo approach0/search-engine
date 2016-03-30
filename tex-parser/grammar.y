@@ -30,18 +30,25 @@ struct optr_node *grammar_optr_root = NULL;
 %token <nd> SEP_CLASS 
 %token <nd> REL_CLASS 
 %token <nd> FUN_CLASS 
+%token <nd> PRIME
+%token <nd> SUBSCRIPT
+%token <nd> SUPSCRIPT 
 
 %type <nd> tex
 %type <nd> term 
 %type <nd> factor 
 %type <nd> pack 
 %type <nd> atom 
+%type <nd> script 
+%type <nd> s_atom 
 
 %right SEP_CLASS
 %right REL_CLASS
 
 %left NULL_REDUCE
 %left ADD NEG
+%nonassoc PRIME
+%right    '^' '_' 
 %left TIMES DIV
 
 %%
@@ -96,6 +103,23 @@ term: factor {
 factor: pack {
 	OPTR_ATTACH($$, NULL, NULL, $1);	
 }
+ /* 
+  * legal prime/script combination:
+  * a''^2_2 \\
+  * a''^2   \\
+  * a''_2 
+  */
+| factor PRIME {
+	OPTR_ATTACH($$, $1, NULL, $2);	
+}
+| factor script {
+	OPTR_ATTACH($$, $1, NULL, $2);	
+}
+| factor PRIME script {
+	OPTR_ATTACH($$, $1, NULL, $3);	
+	OPTR_ATTACH($$, $3, NULL, $2);	
+}
+;
 
 pack: atom {
 	OPTR_ATTACH($$, NULL, NULL, $1);	
@@ -107,6 +131,49 @@ atom: VAR {
 }
 | NUM {
 	OPTR_ATTACH($$, NULL, NULL, $1);	
+}
+;
+
+s_atom: atom {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+} 
+| ADD {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+}
+| NEG {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+}
+| TIMES {
+	OPTR_ATTACH($$, NULL, NULL, $1);	
+}
+;
+
+script
+: SUBSCRIPT s_atom {
+	struct optr_node *hanger;
+	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, $1);
+	OPTR_ATTACH($$, $1, NULL, hanger);
+}
+| SUPSCRIPT s_atom {
+	struct optr_node *hanger;
+	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, $1);
+	OPTR_ATTACH($$, $1, NULL, hanger);
+}
+| SUBSCRIPT s_atom SUPSCRIPT s_atom {
+	struct optr_node *hanger;
+	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, $1);
+	OPTR_ATTACH($$, $4, NULL, $3);
+	OPTR_ATTACH($$, $1, $3, hanger);
+}
+| SUPSCRIPT s_atom SUBSCRIPT s_atom {
+	struct optr_node *hanger;
+	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, $1);
+	OPTR_ATTACH($$, $4, NULL, $3);
+	OPTR_ATTACH($$, $1, $3, hanger);
 }
 ;
 %%

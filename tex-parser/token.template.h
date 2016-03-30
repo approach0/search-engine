@@ -13,6 +13,7 @@ enum token_id {
 	T_ONE,
 	T_NUM,
 	T_FLOAT,
+	T_HANGER,
 
 	/* auto-generated token set */
 	/* INSERT_HERE */
