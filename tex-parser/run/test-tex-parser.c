@@ -13,13 +13,15 @@ int main()
 	rl_bind_key('\t', rl_abort);
 
 	while (1) {
-		line = readline(C_CYAN "edit: " C_RST); 
+		line = readline(C_CYAN "edit: " C_RST);
 
 		if (NULL == line)
 			break;
 
 		add_history(line);
-		ret = tex_parse(line, 0);	
+		ret = tex_parse(line, 0);
+		printf("return code:%s\n", (ret.code == PARSER_RETCODE_SUCC) ? "SUCC" : "ERR");
+		printf("return message:%s\n", ret.msg);
 		free(line);
 	}
 

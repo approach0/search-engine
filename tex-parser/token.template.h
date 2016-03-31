@@ -14,6 +14,12 @@ enum token_id {
 	T_NUM,
 	T_FLOAT,
 	T_HANGER,
+	T_BASE,
+
+	/* pair tokens */
+	T_GROUP,
+	T_CEIL,
+	T_FLOOR,
 
 	/* auto-generated token set */
 	/* INSERT_HERE */

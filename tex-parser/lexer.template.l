@@ -12,9 +12,14 @@
 
 #define LVAL (&yylval.nd)
 
+#define RET_HACK(_symbol, _token, _wc, _gram_token) \
+	hack_attach(optr_alloc(S_ ## _symbol, T_ ## _token, _wc), \
+	            yytext, LVAL, _gram_token);
+
 int ret_var(char*, struct optr_node **, char);
 int ret_num(char*, struct optr_node **);
 int ret_float_num(char*, struct optr_node **);
+int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
 %}
 
@@ -53,78 +58,104 @@ int ret_float_num(char*, struct optr_node **);
  /* =====================
   *  div and fraction
   * ===================*/
+ /* div */
 \/                                     { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, DIV); }
 \\div                                  { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, DIV); }
 \\divideontimes                   { RET_TOK(_AUTOGEN_, FRAC, WC_NONCOM_OPERATOR, DIV); }
 
+ /* over/above */
+\\over                                                                 { return _OVER; }
+\\above                              { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, ABOVE); }
+
+ /* frac */
+\\frac                                { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
+\\dfrac                               { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
+\\cfrac                               { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
+\\tfrac                               { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
+\\frac[ ]*[0-9][0-9]        { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\dfrac[ ]*[0-9][0-9]       { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\cfrac[ ]*[0-9][0-9]       { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\tfrac[ ]*[0-9][0-9]       { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+
  /* =====================
-  *  bracket/pair
+  *  group and pairs
   * ===================*/
+ /* left long match */
+"("|"\\{"                                                         { return _L_BRACKET; }
+\\left[ ]*"."                                                         { return _L_DOT; }
+\\left[ ]*"("                                                     { return _L_BRACKET; }
+\\left[ ]*\\lgroup                                                { return _L_BRACKET; }
+\\left[ ]*"["                                                     { return _L_BRACKET; }
+\\left[ ]*"\{"                                                    { return _L_BRACKET; }
+\\left[ ]*\\langle                                                  { return _L_ANGLE; }
+\\left[ ]*"<"                                                       { return _L_ANGLE; }
+\\left[ ]*"/"                                                       { return _L_SLASH; }
+\\left[ ]*"\\"                                                      { return _L_SLASH; }
+\\left[ ]*\\backslash                                               { return _L_SLASH; }
+\\left[ ]*\\lmoustache                                               { return _L_HAIR; }
+\\left[ ]*\\[Uu]parrow                                              { return _L_ARROW; }
+\\left[ ]*\\[Dd]ownarrow                                            { return _L_ARROW; }
+\\left[ ]*\\[Uu]pdownarrow                                          { return _L_ARROW; }
+ /* left short match */
+\\left                                                                { return _L_DOT; }
+\\lgroup                                                          { return _L_BRACKET; }
+\\langle                                                            { return _L_ANGLE; }
+\\lmoustache                                                         { return _L_HAIR; }
+\\lbrace                                                          { return _L_BRACKET; }
+\\lbrack                                                          { return _L_BRACKET; }
 
- /* left */
-"("|"\\{"                     { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"."                    { RET_TOK(l_dot, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"("                 { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\lgroup            { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"["                 { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"\{"                { RET_TOK(l_braket, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\langle             { RET_TOK(l_angle, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"<"                  { RET_TOK(l_angle, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"/"                  { RET_TOK(l_slash, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*"\\"                { RET_TOK(l_bslash, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\backslash         { RET_TOK(l_bslash, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\lmoustache          { RET_TOK(l_hair, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\[Uu]parrow         { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\[Dd]ownarrow       { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left[ ]*\\[Uu]pdownarrow     { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
-\\left                         { RET_TOK(l_arrow, FRAC, WC_NONCOM_OPERATOR, L_PAIR); }
+ /* right long match */
+")"|"\\}"                                                         { return _R_BRACKET; }
+\\right[ ]*"."                                                        { return _R_DOT; }
+\\right[ ]*")"                                                    { return _R_BRACKET; }
+\\right[ ]*\\rgroup                                               { return _R_BRACKET; }
+\\right[ ]*"]"                                                    { return _R_BRACKET; }
+\\right[ ]*"\}"                                                   { return _R_BRACKET; }
+\\right[ ]*\\rangle                                                 { return _R_ANGLE; }
+\\right[ ]*">"                                                      { return _R_ANGLE; }
+\\right[ ]*"/"                                                      { return _R_SLASH; }
+\\right[ ]*"\\"                                                     { return _R_SLASH; }
+\\right[ ]*\\backslash                                              { return _R_SLASH; }
+\\right[ ]*\\rmoustache                                              { return _R_HAIR; }
+\\right[ ]*\\[Uu]parrow                                             { return _R_ARROW; }
+\\right[ ]*\\[Dd]ownarrow                                           { return _R_ARROW; }
+\\right[ ]*\\[Uu]pdownarrow                                         { return _R_ARROW; }
+ /* right short match */
+\\right                                                               { return _R_DOT; }
+\\rgroup                                                          { return _R_BRACKET; }
+\\rangle                                                            { return _R_ANGLE; }
+\\rmoustache                                                         { return _R_HAIR; }
+\\rbrace                                                          { return _R_BRACKET; }
+\\rbrack                                                          { return _R_BRACKET; }
 
- TODO: left operator type, hanger operator pass son, left right.
- /* right */
-")"|"\\}"                                     { return ')'; }
-\\right[ ]*"."                                { return ')'; }
-\\right[ ]*")"                                { return ')'; }
-\\right[ ]*\\rgroup                           { return ')'; }
-\\right[ ]*"]"                                { return ')'; }
-\\right[ ]*"\}"                              { return ')'; }
-\\right[ ]*\\rangle                           { return ')'; }
-\\right[ ]*">"                                { return ')'; }
-\\right[ ]*"/"                                { return ')'; }
-\\right[ ]*"\\"                               { return ')'; }
-\\right[ ]*\\backslash                        { return ')'; }
-\\right[ ]*\\rmoustache                       { return ')'; }
-\\right[ ]*\\[Uu]parrow                       { return ')'; }
-\\right[ ]*\\[Dd]ownarrow                     { return ')'; }
-\\right[ ]*\\[Uu]pdownarrow                   { return ')'; }
-\\right                                       { return ')'; }
- /* shorter pair */
-\\lgroup                                      { return '('; }
-\\langle                                      { return '('; }
-\\lmoustache                                  { return '('; }
-\\lbrace                                      { return '('; }
-\\lbrack                                      { return '('; }
-\\rgroup                                      { return ')'; }
-\\rangle                                      { return ')'; }
-\\rmoustache                                  { return ')'; }
-\\rbrace                                      { return ')'; }
-\\rbrack                                      { return ')'; }
-"{"|"}"                                 { return yytext[0]; }
-"["|"]"                                 { return yytext[0]; }
+ /* tex bracket */
+"{"                                                             { return _L_TEX_BRACE; }
+"}"                                                             { return _R_TEX_BRACE; }
+"["                                                           { return _L_TEX_BRACKET; }
+"]"                                                           { return _R_TEX_BRACKET; }
+
+ /* ceil and floor */
+\\left[ ]*\\lceil                                                    { return _L_CEIL; }
+\\left[ ]*\\lfloor                                                  { return _L_FLOOR; }
+\\right[ ]*\\rceil                                                   { return _R_CEIL; }
+\\right[ ]*\\rfloor                                                 { return _R_FLOOR; }
+ /* shorter ceil and floor */
+\\lceil                                                              { return _L_CEIL; }
+\\lfloor                                                            { return _L_FLOOR; }
+\\rceil                                                              { return _R_CEIL; }
+\\rfloor                                                            { return _R_FLOOR; }
 
  /* =========================
   * prime and su[bp]scripts
   * ========================*/
-
 "'"                                { RET_TOK(prime, PRIME, WC_NONCOM_OPERATOR, PRIME); }
 \\prime                        { RET_TOK(_AUTOGEN_, PRIME, WC_NONCOM_OPERATOR, PRIME); }
 "_"                    { RET_TOK(subscript, SUBSCRIPT, WC_NONCOM_OPERATOR, SUBSCRIPT); }
 "^"                    { RET_TOK(supscript, SUPSCRIPT, WC_NONCOM_OPERATOR, SUPSCRIPT); }
 
-
  /* ==================
   *  numbers
   * ================*/
-
 [0-9]+\.[0-9]*                               { return ret_float_num(yytext, LVAL);     }
 [0-9]+                                       { return ret_num(yytext, LVAL);           }
 
@@ -221,10 +252,82 @@ int ret_float_num(char*, struct optr_node **);
 \\zeta                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\backepsilon                          { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 
+ /* ==================================
+  *  miscellaneous special variables
+  * =================================*/
+ /* partial */
+\\partial                          { RET_TOK(_AUTOGEN_, PARTIAL, WC_NORMAL_LEAF, VAR); }
+\\nabla                            { RET_TOK(_AUTOGEN_, PARTIAL, WC_NORMAL_LEAF, VAR); }
+
+ /* PI */
+\\pi                                    { RET_TOK(_AUTOGEN_, PI, WC_NORMAL_LEAF, VAR); }
+
+ /* infty */
+\\infty                              { RET_TOK(_AUTOGEN_, INFTY, WC_NORMAL_LEAF, VAR); }
+∞                                        { RET_TOK(infty, INFTY, WC_NORMAL_LEAF, VAR); }
+
+ /* empty */
+\\empty                              { RET_TOK(_AUTOGEN_, EMPTY, WC_NORMAL_LEAF, VAR); }
+\\emptyset                           { RET_TOK(_AUTOGEN_, EMPTY, WC_NORMAL_LEAF, VAR); }
+\\varnothing                         { RET_TOK(_AUTOGEN_, EMPTY, WC_NORMAL_LEAF, VAR); }
+
+ /* angle */
+\\triangledown                       { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\triangle                           { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\angle                              { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\vartriangleleft                    { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\vartriangleright                   { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\vartriangle                        { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\triangleleft                       { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\triangleright                      { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\measuredangle                      { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+\\sphericalangle                     { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
+
+ /* perpendicular */
+\\perp                                { RET_TOK(_AUTOGEN_, PERP, WC_NORMAL_LEAF, VAR); }
+\\bot                                 { RET_TOK(_AUTOGEN_, PERP, WC_NORMAL_LEAF, VAR); }
+
+ /* circle */
+\\circ                                { RET_TOK(_AUTOGEN_, CIRC, WC_NORMAL_LEAF, VAR); }
+
+ /* percentage */
+\\%                                  { RET_TOK(percent, PERCENT, WC_NORMAL_LEAF, VAR); }
+
+ /* long dots */
+\.\.\.                                     { RET_TOK(dots, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dots                                { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\ldots                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\vdots                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\cdots                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\ddots                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\ddot                                { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dddot                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\ddddot                              { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dotsb                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dotsc                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dotsi                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dotsm                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\dotso                               { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+\\iddots                              { RET_TOK(_AUTOGEN_, DOTS, WC_NORMAL_LEAF, VAR); }
+
+ /* vertical lines */
+"|"                                        { RET_TOK(vert, VERT, WC_NORMAL_LEAF, VAR); }
+"\\|"                                      { RET_TOK(Vert, VERT, WC_NORMAL_LEAF, VAR); }
+\\vert                                { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+\\Vert                                { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+\\Arrowvert                           { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+\\arrowvert                           { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+\\bracevert                           { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+\\rvert                                    { RET_TOK(vert, VERT, WC_NORMAL_LEAF, VAR); }
+\\lvert                                    { RET_TOK(vert, VERT, WC_NORMAL_LEAF, VAR); }
+\\rVert                                    { RET_TOK(Vert, VERT, WC_NORMAL_LEAF, VAR); }
+\\lVert                                    { RET_TOK(Vert, VERT, WC_NORMAL_LEAF, VAR); }
+\\mid                                 { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+\\nmid                                { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
+
  /* ======================
   *  seperation class
   * ====================*/
-
  /* forall and exists */
 \\exists                  { RET_TOK(_AUTOGEN_, EXISTS, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\nexists                 { RET_TOK(_AUTOGEN_, EXISTS, WC_NONCOM_OPERATOR, SEP_CLASS); }
@@ -568,21 +671,6 @@ int ret_float_num(char*, struct optr_node **);
  /* proportional to */
 \\propto                  { RET_TOK(_AUTOGEN_, PROPTO, WC_COMMUT_OPERATOR, REL_CLASS); }
 
- /* ================
-  *  vertical bar
-  * ===============*/
-\\vert                                { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-\\Vert                                { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-"|"                                        { RET_TOK(vert, VERT, WC_NORMAL_LEAF, VAR); }
-"\\|"                                      { RET_TOK(vert, VERT, WC_NORMAL_LEAF, VAR); }
-\\Arrowvert                           { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-\\arrowvert                           { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-\\bracevert                           { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-\\r[vV]ert                                { RET_TOK(rvert, VERT, WC_NORMAL_LEAF, VAR); }
-\\l[vV]ert                                { RET_TOK(lvert, VERT, WC_NORMAL_LEAF, VAR); }
-\\mid                                 { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-\\nmid                                { RET_TOK(_AUTOGEN_, VERT, WC_NORMAL_LEAF, VAR); }
-
  /* ============================
   *  evironment statements
   * ===========================*/
@@ -636,15 +724,12 @@ int ret_float_num(char*, struct optr_node **);
 .                                    { fprintf(stderr, "parser: `%s' esc.\n", yytext); }
 %%
 
-/*
-Symbol ID Space:
-	0 ... S_N - 1:                         enum symbols 
-	S_N ... S_N + 51:                      a - Z 
-	S_N + 52 ... SYMBOL_ID_VOLUME - 1:     small number 
-	S_bignum:                              big number
-(the first big number is not far from 65303)
-*/
-
+/* =======================================================
+ * Symbol ID Space:
+ *  0 ... S_N - 1:                         enum symbols
+ *  S_N ... S_N + 51:                      a - Z
+ *  S_N + 52 ... SYMBOL_ID_VOLUME - 1:     small number
+ * ======================================================*/
 int ret_var(char *text, struct optr_node **tr, char offset)
 {
 	int c = (int)(text[0] - offset);
@@ -655,9 +740,9 @@ int ret_var(char *text, struct optr_node **tr, char offset)
 
 static uint32_t num2symbol_id(uint32_t n)
 {
-	if (n >= SYMBOL_ID_VOLUME - S_N - 52) 
+	if (n >= SYMBOL_ID_VOLUME - S_N - 52)
 		n = S_bignum;
-	else 
+	else
 		n = n + S_N + 52;
 	return n;
 }
@@ -668,12 +753,12 @@ int ret_num(char *text, struct optr_node **tr)
 	sscanf(text, "%u", &n);
 
 	if (n == 0) {
-		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF); 
+		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF);
 	} else if (n == 1) {
-		*tr = optr_alloc(S_one, T_ONE, WC_NORMAL_LEAF); 
+		*tr = optr_alloc(S_one, T_ONE, WC_NORMAL_LEAF);
 	} else {
 		n = num2symbol_id(n);
-		*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF); 
+		*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF);
 	}
 
 	return NUM;
@@ -686,20 +771,38 @@ int ret_float_num(char *text, struct optr_node **tr)
 
 	if (strlen(text) < MAX_FLOAT_STR_LEN) {
 		sscanf(text, "%u.%u", &intger, &decimal);
-		
+
 		*tr = optr_alloc(S_float, T_FLOAT, WC_NONCOM_OPERATOR);
-		tr_intger = optr_alloc(num2symbol_id(intger), T_NUM, WC_NORMAL_LEAF); 
-		tr_decimal = optr_alloc(num2symbol_id(decimal), T_NUM, WC_NORMAL_LEAF); 
-		
+		tr_intger = optr_alloc(num2symbol_id(intger), T_NUM, WC_NORMAL_LEAF);
+		tr_decimal = optr_alloc(num2symbol_id(decimal), T_NUM, WC_NORMAL_LEAF);
+
 		optr_attach(tr_intger, *tr);
 		optr_attach(tr_decimal, *tr);
 
 		return NUM;
 	} else {
-		fprintf(stderr, "%s is too long to cast into float number (len=%d).\n", 
+		fprintf(stderr, "%s is too long to cast into float number (len=%d).\n",
 		        text, strlen(text));
 
-		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF); 
+		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF);
 		return NUM;
 	}
+}
+
+int hack_attach(struct optr_node *tr, char *text, struct optr_node **ret_tr, int ret_tok)
+{
+	struct optr_node  *tr_a, *tr_b;
+	uint32_t a, b, l = strlen(text);
+
+	a = (uint32_t)(text[l - 2] - '0');
+	b = (uint32_t)(text[l - 1] - '0');
+
+	tr_a = optr_alloc(num2symbol_id(a), T_NUM, WC_NORMAL_LEAF);
+	tr_b = optr_alloc(num2symbol_id(b), T_NUM, WC_NORMAL_LEAF);
+
+	optr_attach(tr_a, tr);
+	optr_attach(tr_b, tr);
+
+	*ret_tr = tr;
+	return ret_tok;
 }
