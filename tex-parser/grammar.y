@@ -43,6 +43,15 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %token <nd> PRIME
 %token <nd> SUBSCRIPT
 %token <nd> SUPSCRIPT
+%token <nd> BINOM
+%token <nd> BINOM__
+%token <nd> CHOOSE
+%token <nd> SQRT
+%token <nd> ROOT
+%token _OF
+%token <nd> VECT
+%token <nd> MODULAR
+%token <nd> FACT
 
 %token _L_BRACKET
 %token _L_DOT
@@ -71,19 +80,32 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %type <nd> s_atom
 %type <nd> pair
 
-/* associativity rules (order-sensitive)  */
-%right _OVER
+/* ======================================
+ * associativity rules (order-sensitive)
+ * =====================================*/
 
+/* tex precedence */
+%right _OVER
+%right CHOOSE
 %right SEP_CLASS
 %right REL_CLASS
-
 %right ABOVE
+%left     NULL_REDUCE
+%left     ADD NEG
 
-%left NULL_REDUCE
-%left ADD NEG
+/* factor precedence */
+%nonassoc FACT
 %nonassoc PRIME
 %right    SUPSCRIPT SUBSCRIPT
-%left TIMES DIV
+%left     TIMES DIV
+
+/* atom precedence */
+%right    MODULAR
+%right    BINOM
+%right    FRAC
+%right    VECT
+%right    SQRT
+%right    ROOT _OF
 %nonassoc _L_BRACKET     _R_BRACKET
 %nonassoc _L_DOT         _R_DOT
 %nonassoc _L_ANGLE       _R_ANGLE
@@ -126,13 +148,15 @@ tex: %prec NULL_REDUCE {
 | tex SEP_CLASS tex {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
+| tex ABOVE tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
 | tex _OVER tex {
 	struct optr_node *frac;
 	frac = optr_alloc(S_frac, T_FRAC, WC_NONCOM_OPERATOR);
 	OPTR_ATTACH($$, $1, $3, frac);
 }
-| tex ABOVE tex {
-	/* example: {a \above 2pt c} */
+| tex CHOOSE tex {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
 ;
@@ -156,6 +180,9 @@ term: factor {
 factor: pack {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
+| factor FACT {
+	OPTR_ATTACH($$, $1, NULL, $2);
+}
 | factor PRIME {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
@@ -173,10 +200,6 @@ pack: atom {
 | pair {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
-| _L_TEX_BRACE tex _R_TEX_BRACE {
-	/* tex braces is invisible in math rendering */
-	OPTR_ATTACH($$, NULL, NULL, $2);
-}
 ;
 
 atom: VAR {
@@ -184,6 +207,13 @@ atom: VAR {
 }
 | NUM {
 	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| _L_TEX_BRACE tex _R_TEX_BRACE {
+	/* tex braces is invisible in math rendering,
+	 * and it is treated as atom. Think about that
+	 * the command "\frac a {b+c}" works, but the
+	 * command "\frac a (b+c)" does not. */
+	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 | FUN_CLASS {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -197,14 +227,33 @@ atom: VAR {
 | FRAC atom atom {
 	OPTR_ATTACH($$, $2, $3, $1);
 }
+| BINOM__ {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| BINOM atom atom {
+	OPTR_ATTACH($$, $2, $3, $1);
+}
+| VECT atom {
+	OPTR_ATTACH($$, $2, NULL, $1);
+}
+| SQRT atom {
+	OPTR_ATTACH($$, $2, NULL, $1);
+}
+| SQRT _L_TEX_BRACKET tex _R_TEX_BRACKET atom {
+	/* example: \sqrt[3] 8 = 2 */
+	OPTR_ATTACH($$, $5, $3, $1);
+}
+| ROOT atom _OF atom {
+	/* example: \root 3 \of 8 = 2 */
+	OPTR_ATTACH($$, $4, $2, $1);
+}
+| atom MODULAR atom {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
 ;
 
 s_atom: atom {
 	OPTR_ATTACH($$, NULL, NULL, $1);
-}
-| _L_TEX_BRACE tex _R_TEX_BRACE {
-	/* tex braces is invisible in math rendering */
-	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 | ADD {
 	OPTR_ATTACH($$, NULL, NULL, $1);

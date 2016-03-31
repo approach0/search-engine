@@ -13,8 +13,8 @@
 #define LVAL (&yylval.nd)
 
 #define RET_HACK(_symbol, _token, _wc, _gram_token) \
-	hack_attach(optr_alloc(S_ ## _symbol, T_ ## _token, _wc), \
-	            yytext, LVAL, _gram_token);
+	return hack_attach(optr_alloc(S_ ## _symbol, T_ ## _token, _wc), \
+	                              yytext, LVAL, _gram_token);
 
 int ret_var(char*, struct optr_node **, char);
 int ret_num(char*, struct optr_node **);
@@ -22,6 +22,18 @@ int ret_float_num(char*, struct optr_node **);
 int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
 %}
+ /* ==================
+  *  start conditions
+  * =================*/
+
+ /* for dimension (include cm, mm, in and pt) */
+%x dim
+ /* command (\example{...}) to be ignored */
+%x ign
+ /* TeX comments (begin with a "%") */
+%x cmt
+ /* matrix domain */
+%s mat
 
 %%
  /* ==================
@@ -63,22 +75,92 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 \\div                                  { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, DIV); }
 \\divideontimes                   { RET_TOK(_AUTOGEN_, FRAC, WC_NONCOM_OPERATOR, DIV); }
 
- /* over/above */
+ /* over */
 \\over                                                                 { return _OVER; }
-\\above                              { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, ABOVE); }
+
+ /* \above command example:
+  * {a \above 2pt b + c}
+  * it needs a dimension (e.g. cm, mm and pt) argument right after,
+  * we need to filter this argument out since it is irrelevant to
+  * math semantics.
+  */
+\\above                  { BEGIN(dim); RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, ABOVE); }
 
  /* frac */
 \\frac                                { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
 \\dfrac                               { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
 \\cfrac                               { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
 \\tfrac                               { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
-\\frac[ ]*[0-9][0-9]        { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
-\\dfrac[ ]*[0-9][0-9]       { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
-\\cfrac[ ]*[0-9][0-9]       { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
-\\tfrac[ ]*[0-9][0-9]       { return RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\frac[ ]*[0-9][0-9]               { RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\dfrac[ ]*[0-9][0-9]              { RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\cfrac[ ]*[0-9][0-9]              { RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+\\tfrac[ ]*[0-9][0-9]              { RET_HACK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC__); }
+
+ /* ============================
+  *  dimension condition state
+  * ===========================*/
+\\hspace                                                                 { BEGIN(dim); }
+\\hskip                                                                  { BEGIN(dim); }
+\\mspace                                                                 { BEGIN(dim); }
+\\mskip                                                                  { BEGIN(dim); }
+\\mkern                                                                  { BEGIN(dim); }
+\\kern                                                                   { BEGIN(dim); }
+
+<dim>em\}?                                                           { BEGIN(INITIAL); }
+<dim>ex\}?                                                           { BEGIN(INITIAL); }
+<dim>pt\}?                                                           { BEGIN(INITIAL); }
+<dim>pc\}?                                                           { BEGIN(INITIAL); }
+<dim>mu\}?                                                           { BEGIN(INITIAL); }
+<dim>cm\}?                                                           { BEGIN(INITIAL); }
+<dim>mm\}?                                                           { BEGIN(INITIAL); }
+<dim>in\}?                                                           { BEGIN(INITIAL); }
+<dim>px\}?                                                           { BEGIN(INITIAL); }
+<dim>.                                                                                {}
+
+ /* ==========
+  * binomials
+  * =========*/
+ /* example: {a \choose b + c} */
+\\choose                          { RET_TOK(binom, BINOM, WC_NONCOM_OPERATOR, CHOOSE); }
+ /* example: {a \brack b + c} */
+\\brack                           { RET_TOK(binom, BINOM, WC_NONCOM_OPERATOR, CHOOSE); }
+
+\\dbinom[ ]*[0-9][0-9]          { RET_HACK(binom, BINOM, WC_NONCOM_OPERATOR, BINOM__); }
+\\tbinom[ ]*[0-9][0-9]          { RET_HACK(binom, BINOM, WC_NONCOM_OPERATOR, BINOM__); }
+\\binom[ ]*[0-9][0-9]           { RET_HACK(binom, BINOM, WC_NONCOM_OPERATOR, BINOM__); }
+\\dbinom                           { RET_TOK(binom, BINOM, WC_NONCOM_OPERATOR, BINOM); }
+\\tbinom                           { RET_TOK(binom, BINOM, WC_NONCOM_OPERATOR, BINOM); }
+\\binom                            { RET_TOK(binom, BINOM, WC_NONCOM_OPERATOR, BINOM); }
+
+ /* ===============
+  *  sqrt and root
+  * ==============*/
+\\sqrt                                { RET_TOK(root, ROOT, WC_NONCOM_OPERATOR, SQRT); }
+\\root                                { RET_TOK(root, ROOT, WC_NONCOM_OPERATOR, ROOT); }
+\\of                                                                     { return _OF; }
+
+ /* ===============
+  *  modular
+  * ==============*/
+\\pmod                           { RET_TOK(mod, MODULAR, WC_NONCOM_OPERATOR, MODULAR); }
+\\bmod                           { RET_TOK(mod, MODULAR, WC_NONCOM_OPERATOR, MODULAR); }
+\\mod                            { RET_TOK(mod, MODULAR, WC_NONCOM_OPERATOR, MODULAR); }
+\\pod                            { RET_TOK(mod, MODULAR, WC_NONCOM_OPERATOR, MODULAR); }
+
+ /* =========
+  *  vector
+  * ========*/
+\\vec                                { RET_TOK(rvect, VECT, WC_NONCOM_OPERATOR, VECT); }
+\\overrightarrow                     { RET_TOK(rvect, VECT, WC_NONCOM_OPERATOR, VECT); }
+\\overleftarrow                      { RET_TOK(lvect, VECT, WC_NONCOM_OPERATOR, VECT); }
+
+ /* ===========
+  * factorial
+  * ==========*/
+"!"                                   { RET_TOK(fact, FACT, WC_NONCOM_OPERATOR, FACT); }
 
  /* =====================
-  *  group and pairs
+  *  groups and pairs
   * ===================*/
  /* left long match */
 "("|"\\{"                                                         { return _L_BRACKET; }
@@ -146,22 +228,22 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 \\rfloor                                                            { return _R_FLOOR; }
 
  /* =========================
-  * prime and su[bp]scripts
+  * primes and su[bp]scripts
   * ========================*/
 "'"                                { RET_TOK(prime, PRIME, WC_NONCOM_OPERATOR, PRIME); }
 \\prime                        { RET_TOK(_AUTOGEN_, PRIME, WC_NONCOM_OPERATOR, PRIME); }
 "_"                    { RET_TOK(subscript, SUBSCRIPT, WC_NONCOM_OPERATOR, SUBSCRIPT); }
 "^"                    { RET_TOK(supscript, SUPSCRIPT, WC_NONCOM_OPERATOR, SUPSCRIPT); }
 
- /* ==================
+ /* =================
   *  numbers
   * ================*/
 [0-9]+\.[0-9]*                               { return ret_float_num(yytext, LVAL);     }
 [0-9]+                                       { return ret_num(yytext, LVAL);           }
 
- /* ==================
+ /* =============
   *  variables
-  * ================*/
+  * ============*/
 
  /* single letter variables */
 [a-z]                                        { return ret_var(yytext, LVAL, 'a');      }
@@ -712,7 +794,7 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 \\end\{subarray\}                                                                     {}
 
  /* ======================
-  *  invisible/space
+  *  some invisibles left
   * =====================*/
 \n                                                                 { return yytext[0]; }
 \\[a-zA-Z]+                                    { /* omit undefined control sequence */ }
