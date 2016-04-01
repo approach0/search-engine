@@ -30,23 +30,3 @@ struct optr_node* optr_attach(struct optr_node*, struct optr_node*);
 void optr_print(struct optr_node*, FILE*);
 
 void optr_release(struct optr_node*);
-
-/*
-uint32_t tex_tr_assign(struct tex_tr*);
-
-uint32_t tex_tr_prune(struct tex_tr*);
-
-void tex_tr_group(struct tex_tr*);
-
-uint32_t tex_tr_update(struct tex_tr*);
-
-void tex_tr_print(struct tex_tr*, FILE*);
-
-void tex_tr_release();
-
-struct list_it tex_tr_subpaths(struct tex_tr*, int*);
-
-void subpaths_print(struct list_it*, FILE*);
-
-LIST_DECL_FREE_FUN(subpaths_free);
-*/

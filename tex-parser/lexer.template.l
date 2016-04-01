@@ -38,9 +38,32 @@ extern unsigned int mat_stack;
 %s mat
 
 %%
- /* ==================
+ /* ============
+  *  comments
+  * ===========*/
+"%"                                           { BEGIN(cmt); }
+<cmt>\n                      { BEGIN(INITIAL); return '\n'; }
+<cmt>.                                       { /* ignore */ }
+
+ /* ========================
+  *  commands to be ignored
+  * ========================*/
+\\color\{                       { BEGIN(ign); ign_stack ++; } 
+\\mbox\{                        { BEGIN(ign); ign_stack ++; }
+\\hbox\{                        { BEGIN(ign); ign_stack ++; }
+\\label\{                       { BEGIN(ign); ign_stack ++; }
+\\tag\{                         { BEGIN(ign); ign_stack ++; }
+\\text\{                        { BEGIN(ign); ign_stack ++; }
+\\leftroot\{                    { BEGIN(ign); ign_stack ++; }
+\\uproot\{                      { BEGIN(ign); ign_stack ++; }
+
+<ign>\{                         { ign_stack ++; }
+<ign>\}     { ign_stack --; if (!ign_stack) BEGIN(INITIAL); }
+<ign>.                                                     {}
+
+ /* =============
   *  add/minus
-  * ================*/
+  * ============*/
 "+"                                { RET_TOK(plus,      ADD, WC_COMMUT_OPERATOR, ADD); }
 "±"                                { RET_TOK(pm,        ADD, WC_COMMUT_OPERATOR, ADD); }
 \\oplus                            { RET_TOK(_AUTOGEN_, ADD, WC_COMMUT_OPERATOR, ADD); }

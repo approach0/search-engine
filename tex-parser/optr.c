@@ -2,6 +2,7 @@
 #include "optr.h"
 #include "config.h"
 #include "tex-parser.h"
+#include "vt100-color.h"
 
 struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 {
@@ -70,17 +71,42 @@ enum {
 	depth_going_end
 };
 
+static __inline__ void
+print_node(FILE *fh, struct optr_node *p, bool is_leaf)
+{
+	struct optr_node *f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+
+	fprintf(fh, "──");
+
+	if (f && !f->commutative)
+		fprintf(fh, "#%u", p->rank);
+
+	if (is_leaf) {
+		fprintf(fh, "[");
+		fprintf(fh, C_GREEN "%s" C_RST, trans_symbol(p->symbol_id));
+
+		if (p->wildcard)
+			fprintf(fh, C_RED "(wildcard)" C_RST);
+		fprintf(fh, "] ");
+	} else {
+		fprintf(fh, "(");
+		fprintf(fh, C_RST "%s" C_RST, trans_symbol(p->symbol_id));
+		fprintf(fh, ") ");
+
+		fprintf(fh, "%u son(s), ", p->sons);
+	}
+
+	fprintf(fh, "token=%s, ", trans_token(p->token_id));
+	fprintf(fh, "hash=" C_GRAY "%s" C_RST ".", "efa6589e");
+	fprintf(fh, "\n");
+}
+
 static TREE_IT_CALLBK(print)
 {
 	TREE_OBJ(struct optr_node, p, tnd);
 	P_CAST(fh, FILE, pa_extra);
 	int i;
 	bool is_leaf;
-	
-	if (p->tnd.sons.now == NULL /* is leaf */)
-		is_leaf = 1;
-	else
-		is_leaf = 0;
 
 	if (pa_now->now == pa_head->last)
 	depth_flag[pa_depth] = depth_going_end;
@@ -90,41 +116,25 @@ static TREE_IT_CALLBK(print)
 	for (i = 0; i < pa_depth; i++) { 
 		switch (depth_flag[i + 1]) {
 		case depth_end:
-			fprintf(fh, "    ");
+			fprintf(fh, "      ");
 			break;
 		case depth_begin:
-			fprintf(fh, "   │");
+			fprintf(fh, "     │");
 			break;
 		case depth_going_end:
-			fprintf(fh, "   └");
+			fprintf(fh, "     └");
 			break;
 		default:
 			break;
 		}
 	}
 	
-	if (is_leaf) 
-		if (p->wildcard)
-			fprintf(fh, "──{");
-		else
-			fprintf(fh, "──[");
-	else 
-		fprintf(fh, "──(");
-
-	fprintf(fh, "sym=%s, tok=%s, wc=%d, @%d, *%d, #%d",
-	        trans_symbol(p->symbol_id),
-	        trans_token(p->token_id),
-	        p->commutative, p->rank, p->sons, p->br_hash);
-
-	if (is_leaf)
-		if (p->wildcard)
-			fprintf(fh, "}");
-		else
-			fprintf(fh, "]");
-	else 
-		fprintf(fh, ")");
+	if (p->tnd.sons.now == NULL /* is leaf */)
+		is_leaf = 1;
+	else
+		is_leaf = 0;
 	
-	fprintf(fh, "\n");
+	print_node(fh, p, is_leaf);
 
 	if (depth_flag[pa_depth] == depth_going_end)
 		depth_flag[pa_depth] = depth_end;

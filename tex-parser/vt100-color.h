@@ -8,3 +8,4 @@
 #define C_MAGENTA "\033[1m\033[35m"      /* Bold Magenta */
 #define C_CYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define C_GRAY    "\033[1m\033[30m"      /* Bold Gray */
+#define C_BROWN   "\033[1m\033[0;33m"    /* brown */
