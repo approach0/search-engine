@@ -52,6 +52,13 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %token <nd> VECT
 %token <nd> MODULAR
 %token <nd> FACT
+%token _QVAR
+%token <nd> TAB_ROW TAB_COL
+%token _BEGIN_MAT _END_MAT
+%token _STACKREL
+%token _BUILDREL
+%token _SET_REL
+%token <nd> X_ARROW
 
 %token _L_BRACKET
 %token _L_DOT
@@ -79,19 +86,29 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %type <nd> script
 %type <nd> s_atom
 %type <nd> pair
+%type <nd> mat_tex
+%type <nd> rel
+%type <nd> abv_tex
 
 /* ======================================
  * associativity rules (order-sensitive)
  * =====================================*/
+/* table/matrix has the lowest precedence */
+%right TAB_ROW
+%right TAB_COL
 
 /* tex precedence */
 %right _OVER
 %right CHOOSE
 %right SEP_CLASS
 %right REL_CLASS
+%right _STACKREL
+%right _BUILDREL
+%right _SET_REL
+%right X_ARROW
 %right ABOVE
-%left     NULL_REDUCE
-%left     ADD NEG
+%left  NULL_REDUCE
+%left  ADD NEG
 
 /* factor precedence */
 %nonassoc FACT
@@ -159,6 +176,102 @@ tex: %prec NULL_REDUCE {
 | tex CHOOSE tex {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
+/* "stack-above" rules */
+| tex _STACKREL atom rel tex {
+	OPTR_ATTACH($$, $1, $5, $4);
+	optr_release($3);
+}
+| tex _BUILDREL abv_tex _OVER rel tex {
+	OPTR_ATTACH($$, $1, $6, $5);
+	optr_release($3);
+}
+| tex _SET_REL atom rel tex {
+	OPTR_ATTACH($$, $1, $5, $4);
+	optr_release($3);
+}
+| tex X_ARROW atom tex {
+	OPTR_ATTACH($$, $1, $4, $2);
+	optr_release($3);
+}
+| tex X_ARROW _L_TEX_BRACKET abv_tex _R_TEX_BRACKET atom tex {
+	OPTR_ATTACH($$, $1, $7, $2);
+	optr_release($4);
+	optr_release($6);
+}
+;
+
+rel: atom {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| REL_CLASS {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+;
+
+abv_tex: %prec NULL_REDUCE {
+	OPTR_ATTACH($$, NULL, NULL, optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF));
+}
+| term {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| abv_tex ADD term {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+| abv_tex ADD {
+	OPTR_ATTACH($$, $1, NULL, $2);
+}
+| abv_tex NEG term {
+	struct optr_node *neg;
+	OPTR_ATTACH(neg, $3, NULL, $2);
+	OPTR_ATTACH($$, neg, NULL, $1);
+}
+| abv_tex NEG {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| abv_tex REL_CLASS abv_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+| abv_tex SEP_CLASS abv_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+
+mat_tex: %prec NULL_REDUCE {
+	OPTR_ATTACH($$, NULL, NULL, optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF));
+}
+| term {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| mat_tex ADD term {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+| mat_tex ADD {
+	OPTR_ATTACH($$, $1, NULL, $2);
+}
+| mat_tex NEG term {
+	struct optr_node *neg;
+	OPTR_ATTACH(neg, $3, NULL, $2);
+	OPTR_ATTACH($$, neg, NULL, $1);
+}
+| mat_tex NEG {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| mat_tex SEP_CLASS mat_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+| mat_tex ABOVE mat_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+| mat_tex _OVER mat_tex {
+	struct optr_node *frac;
+	frac = optr_alloc(S_frac, T_FRAC, WC_NONCOM_OPERATOR);
+	OPTR_ATTACH($$, $1, $3, frac);
+}
+| mat_tex TAB_ROW mat_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
+| mat_tex TAB_COL mat_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
 ;
 
 term: factor {
@@ -199,6 +312,9 @@ pack: atom {
 }
 | pair {
 	OPTR_ATTACH($$, NULL, NULL, $1);
+}
+| _BEGIN_MAT mat_tex _END_MAT {
+	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 ;
 
@@ -249,6 +365,11 @@ atom: VAR {
 }
 | atom MODULAR atom {
 	OPTR_ATTACH($$, $1, $3, $2);
+}
+| _QVAR VAR {
+	struct optr_node *var = $2;
+	var->wildcard = true;
+	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 ;
 

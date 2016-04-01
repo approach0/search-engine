@@ -21,6 +21,8 @@ int ret_num(char*, struct optr_node **);
 int ret_float_num(char*, struct optr_node **);
 int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
+extern unsigned int ign_stack;
+extern unsigned int mat_stack;
 %}
  /* ==================
   *  start conditions
@@ -116,6 +118,46 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 <dim>in\}?                                                           { BEGIN(INITIAL); }
 <dim>px\}?                                                           { BEGIN(INITIAL); }
 <dim>.                                                                                {}
+
+ /* ===============
+  *  table/matrix
+  * ===============*/
+\\begin\{matrix\}                       { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{vmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{Vmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{bmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{Bmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{pmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{smallmatrix\}                  { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{cases\}                        { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+
+\\end\{matrix\}                       { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{vmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{Vmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{bmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{Bmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{pmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{smallmatrix\}                  { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\end\{cases\}                        { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+
+\\array\{                               { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+
+<mat>"{"                                             { mat_stack ++; return yytext[0]; }
+
+<mat>\\\\                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
+<mat>\\cr                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
+<mat>\\newline                   { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
+<mat>&                        { RET_TOK(column, TAB_COL, WC_COMMUT_OPERATOR, TAB_COL); }
+
+<mat>"}" { 
+	mat_stack --; 
+	if (!mat_stack) { 
+		BEGIN(INITIAL);
+		return _END_MAT; 
+	} else {
+		return yytext[0]; 
+	}
+}
 
  /* ==========
   * binomials
@@ -238,15 +280,20 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
  /* =================
   *  numbers
   * ================*/
-[0-9]+\.[0-9]*                               { return ret_float_num(yytext, LVAL);     }
-[0-9]+                                       { return ret_num(yytext, LVAL);           }
+[0-9]+\.[0-9]*                                   { return ret_float_num(yytext, LVAL); }
+[0-9]+                                                 { return ret_num(yytext, LVAL); }
+
+ /* =============
+  *  wildcard 
+  * ============*/
+\\qvar                                                                 { return _QVAR; }
 
  /* =============
   *  variables
   * ============*/
 
  /* single letter variables */
-[a-z]                                        { return ret_var(yytext, LVAL, 'a');      }
+[a-z]                                             { return ret_var(yytext, LVAL, 'a'); }
 [A-Z]                                        { return ret_var(yytext, LVAL, 'A' - 26); }
 
  /* unicode variables */
@@ -752,9 +799,19 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
  /* proportional to */
 \\propto                  { RET_TOK(_AUTOGEN_, PROPTO, WC_COMMUT_OPERATOR, REL_CLASS); }
+ 
+ /* ============================
+  *  "stack-above" operations
+  * ===========================*/
+\\stackrel                                                         { return _STACKREL; }
+\\buildrel                                                         { return _BUILDREL; }
+\\overset                                                           { return _SET_REL; }
+\\underset                                                          { return _SET_REL; }
+\\xleftarrow                 { RET_TOK(_AUTOGEN_, ARROW, WC_NONCOM_OPERATOR, X_ARROW); }
+\\xrightarrow                { RET_TOK(_AUTOGEN_, ARROW, WC_NONCOM_OPERATOR, X_ARROW); }
 
  /* ============================
-  *  evironment statements
+  *  skip evironment statements
   * ===========================*/
 \\begin\{align\}                                                                      {}
 \\end\{align\}                                                                        {}
@@ -805,6 +862,9 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 [\t ]                                                               { /* omit space */ }
 .                                    { fprintf(stderr, "parser: `%s' esc.\n", yytext); }
 %%
+/* self-defined stack values */
+unsigned int ign_stack = 0;
+unsigned int mat_stack = 0;
 
 /* =======================================================
  * Symbol ID Space:
