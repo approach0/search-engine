@@ -371,6 +371,11 @@ atom: VAR {
 	var->wildcard = true;
 	OPTR_ATTACH($$, NULL, NULL, $2);
 }
+| _QVAR _L_TEX_BRACE VAR _R_TEX_BRACE {
+	struct optr_node *var = $3;
+	var->wildcard = true;
+	OPTR_ATTACH($$, NULL, NULL, $3);
+}
 ;
 
 s_atom: atom {
