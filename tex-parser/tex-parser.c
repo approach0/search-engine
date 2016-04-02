@@ -22,7 +22,7 @@ static char *mk_scan_buf(const char *str, size_t *out_sz)
 struct tex_parse_ret
 tex_parse(const char *tex_str, size_t len)
 {
-	struct tex_parse_ret ret; 
+	struct tex_parse_ret ret;
 	YY_BUFFER_STATE state_buf;
 	char *scan_buf;
 	size_t scan_buf_sz;
@@ -37,6 +37,7 @@ tex_parse(const char *tex_str, size_t len)
 	free(scan_buf);
 
 	if (grammar_optr_root) {
+		optr_ge_hash(grammar_optr_root);
 		optr_print(grammar_optr_root, stdout);
 		optr_release(grammar_optr_root);
 	}

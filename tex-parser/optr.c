@@ -13,8 +13,10 @@ struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 	n->token_id = t_id;
 	n->sons = 0;
 	n->rank = 0;
-	n->br_hash = 0;
+	n->fr_hash = s_id;
+	n->ge_hash = 0;
 	TREE_NODE_CONS(n->tnd);
+	return n;
 }
 
 static __inline__ void update(struct optr_node *c, struct optr_node *f)
@@ -22,6 +24,7 @@ static __inline__ void update(struct optr_node *c, struct optr_node *f)
 	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
 	f->sons++;
 	c->rank = f->sons;
+	c->fr_hash = f->fr_hash + c->symbol_id;
 }
 
 static LIST_IT_CALLBK(pass_children_to_father)
@@ -56,7 +59,6 @@ struct optr_node* optr_attach(struct optr_node *c /* child */,
 		return f;
 	} 
 
-attach:
 	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
 	update(c, f);
 
@@ -70,6 +72,21 @@ enum {
 	depth_begin,
 	depth_going_end
 };
+
+char *optr_hash_str(symbol_id_t hash)
+{
+#define LEN (sizeof(symbol_id_t))
+	int i;
+	static char str[LEN * 2 + 1];
+	uint8_t *c = (uint8_t*)&hash;
+	str[LEN * 2] = '\0';
+	
+	for (i = 0; i < LEN; i++, c++) {
+		sprintf(str + (i << 1), "%02x", *c);
+	}
+
+	return str;
+}
 
 static __inline__ void
 print_node(FILE *fh, struct optr_node *p, bool is_leaf)
@@ -90,14 +107,15 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 		fprintf(fh, "] ");
 	} else {
 		fprintf(fh, "(");
-		fprintf(fh, C_RST "%s" C_RST, trans_symbol(p->symbol_id));
+		fprintf(fh, C_BROWN "%s" C_RST, trans_symbol(p->symbol_id));
 		fprintf(fh, ") ");
 
 		fprintf(fh, "%u son(s), ", p->sons);
 	}
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
-	fprintf(fh, "hash=" C_GRAY "%s" C_RST ".", "efa6589e");
+	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->fr_hash));
+	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->ge_hash));
 	fprintf(fh, "\n");
 }
 
@@ -145,7 +163,7 @@ void optr_print(struct optr_node *tr, FILE *fh)
 {
 	if (tr == NULL)
 		return;
-	tree_foreach(&tr->tnd, &tree_pre_order_DFS, 
+	tree_foreach(&tr->tnd, &tree_pre_order_DFS,
 	             &print, 0, fh);
 }
 
@@ -160,186 +178,54 @@ static TREE_IT_CALLBK(release)
 
 void optr_release(struct optr_node *tr)
 {
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
+	tree_foreach(&tr->tnd, &tree_post_order_DFS,
 	             &release, 0, NULL);
 }
 
-#if 0
-
-	return (id == T_CHOOSE || id == T_SQRT || id == T_FRAC ||
-	        id == T_MODULAR);
-	return (id == T_ADD || id == T_TIMES || id == T_TAB || 
-	        id == T_SEP_CLASS || id == T_HANGER);
-
-
-static LIST_IT_CALLBK(count_sons)
+static LIST_IT_CALLBK(digest_children)
 {
-	TREE_OBJ(struct tex_tr, p, tnd);
-	P_CAST(cnt, uint32_t, pa_extra);
-	p->rank = (*cnt) ++;
+	LIST_OBJ(struct optr_node, p, tnd.ln);
+	P_CAST(children_hash, symbol_id_t, pa_extra);
+
+	*children_hash += p->symbol_id;
+
+#ifdef OPTR_HASH_DEBUG
+	printf("after digest %s: %s\n", trans_symbol(p->symbol_id),
+	       optr_hash_str(*children_hash));
+#endif
+
 	LIST_GO_OVER;
 }
 
-struct assign_id_arg {
-	uint32_t cur_id; /* current ID to be assigned */
-	uint32_t tot_brw; /* total branch words, including grouped */
-};
-
-static TREE_IT_CALLBK(assign_leaf_id)
+static TREE_IT_CALLBK(assign_ge_hash)
 {
-	TREE_OBJ(struct tex_tr, p, tnd);
-	P_CAST(aia, struct assign_id_arg, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+	symbol_id_t children_hash;
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
-		p->node_id = ++(aia->cur_id);
-		aia->tot_brw += p->n_fan;
+		p->ge_hash = p->symbol_id;
+	} else {
+		children_hash = 0;
+		list_foreach(&p->tnd.sons, &digest_children, &children_hash);
+		p->ge_hash = p->symbol_id * children_hash;
+
+#ifdef OPTR_HASH_DEBUG
+		printf("%s * %s ", trans_symbol(p->symbol_id),
+			   optr_hash_str(children_hash));
+		printf("= %s\n", optr_hash_str(p->ge_hash));
+#endif
 	}
 
 	LIST_GO_OVER;
 }
 
-static TREE_IT_CALLBK(assign_internal)
+void optr_ge_hash(struct optr_node *tr)
 {
-	TREE_OBJ(struct tex_tr, p, tnd);
-	P_CAST(aia, struct assign_id_arg, pa_extra);
-	uint32_t sons;
-
-	if (p->tnd.sons.now != NULL /* is internal */ &&
-	    p->n_fan == 0 /* not assigned */) {
-		/* assign id */
-		p->node_id = ++(aia->cur_id); /* assign node id */
-
-		/* assign n_fan ant the rank of sons */
-		sons = 0;
-		list_foreach(&p->tnd.sons, &count_sons, &sons);
-		p->n_fan = sons;
-	}
-
-	LIST_GO_OVER;
+	tree_foreach(&tr->tnd, &tree_post_order_DFS, &assign_ge_hash,
+	             1 /* excluding root */, NULL);
 }
 
-/* assign id/fan/rank to tree nodes. */
-uint32_t tex_tr_assign(struct tex_tr *tr)
-{
-	struct assign_id_arg aia = {0, 0};
-
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
-	             &assign_leaf_id, 0, &aia);
-	
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
-	             &assign_internal, 0, &aia);
-
-	return aia.tot_brw;
-}
-
-static TREE_IT_CALLBK(leaf_n_fan_set_1)
-{
-	TREE_OBJ(struct tex_tr, p, tnd);
-
-	if (p->tnd.sons.now == NULL /* is leaf */)
-		p->n_fan = 1;
-	
-	LIST_GO_OVER;
-}
-
-static LIST_IT_CALLBK(update_same_brothers)
-{
-	TREE_OBJ(struct tex_tr, bro, tnd);
-	P_CAST(l, struct tex_tr, pa_extra);
-
-	if (bro != l && bro->symbol_id == l->symbol_id) {
-		l->n_fan ++;
-		bro->n_fan = 0; /* mark it as grouped */
-	}
-
-	LIST_GO_OVER;
-}
-
-static void leaf_group(struct tex_tr *l)
-{
-	struct tex_tr *f /* father */
-	     = MEMBER_2_STRUCT(l->tnd.father, struct tex_tr, tnd);
-
-	/* 
-	 * for leaf, n_fan means the number of brothers 
-	 * with same symbol_id. 
-	 */
-	list_foreach(&f->tnd.sons, &update_same_brothers, l);
-}
-
-
-static TREE_IT_CALLBK(group_leaf)
-{
-	TREE_OBJ(struct tex_tr, p, tnd);
-
-	if (p->tnd.sons.now == NULL /* is leaf */ &&
-	    p->n_fan != 0 /* not grouped */) {
-		if (NULL != p->tnd.father)
-			leaf_group(p);
-	}
-
-	LIST_GO_OVER;
-}
-
-void tex_tr_group(struct tex_tr *tr) 
-{
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
-	             &leaf_n_fan_set_1, 0, NULL);
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
-	             &group_leaf, 0, NULL);
-}
-
-static TREE_IT_CALLBK(prune)
-{
-	TREE_OBJ(struct tex_tr, p, tnd);
-	P_CAST(n_pruned, uint32_t, pa_extra);
-	bool res;
-
-	if (p->tnd.sons.now == NULL /* is leaf */ &&
-	    NULL != p->tnd.father /* can be pruned */) {
-		/* prune ... */
-		if (p->n_fan == 0 /* grouped nodes */ ||
-		    p->token_id == T_NIL /* nil nodes */) {
-			res = tree_detach(&p->tnd, pa_now, pa_fwd);	
-			tex_tr_release(p);
-			++(*n_pruned);
-			return res;
-		}
-	}
-
-	LIST_GO_OVER;
-}
-
-uint32_t tex_tr_prune(struct tex_tr *tr)
-{
-/* prune nil and grouped nodes, and
- * return number of nodes pruned. */
-	uint32_t n_pruned;
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
-	             &prune, 0, &n_pruned);
-	return n_pruned;
-}
-
-uint32_t tex_tr_update(struct tex_tr *tr)
-{
-	uint32_t n_leaves;
-	tex_tr_group(tr);
-	tex_tr_prune(tr);
-	n_leaves = tex_tr_assign(tr);
-
-	if (n_leaves > MAX_TEX_TR_LEAVES) {
-		trace(LIMIT, "%d > max leaves\n", n_leaves);
-		return 0;
-	}
-
-	return n_leaves;
-}
-
-struct gen_subpath_arg {
-	struct list_it *li;
-	struct tex_tr  *rot;
-	int             err;
-};
+#if 0
 
 static TREE_IT_CALLBK(gen_subpath)
 {

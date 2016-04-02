@@ -168,4 +168,6 @@ int term_lookup_close(void *conn){
   if(conn != NULL){
     mysql_close(conn);
   }
+
+  return 0;
 }

@@ -11,6 +11,7 @@ size_t mbstr_len(wchar_t *multibyte_string)
 wchar_t *mbstr_copy(wchar_t *dest, const wchar_t *src)
 {
 	wcscpy(dest, src);
+	return dest;
 }
 
 wchar_t *mbstr2wstr(const char *multibyte_string)

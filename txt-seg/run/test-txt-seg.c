@@ -5,7 +5,6 @@
 static LIST_IT_CALLBK(print)
 {
 	LIST_OBJ(struct term_list_node, p, ln);
-	wchar_t *term = p->term;
 
 	printf("%S", p->term);
 	if (pa_now->now == pa_head->last)

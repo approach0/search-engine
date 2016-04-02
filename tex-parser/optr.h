@@ -19,7 +19,7 @@ struct optr_node {
 	enum token_id    token_id;
 	uint32_t         sons;
 	uint32_t         rank;
-	uint8_t          br_hash;
+	symbol_id_t      fr_hash, ge_hash;
 	struct tree_node tnd;
 };
 
@@ -30,3 +30,7 @@ struct optr_node* optr_attach(struct optr_node*, struct optr_node*);
 void optr_print(struct optr_node*, FILE*);
 
 void optr_release(struct optr_node*);
+
+char *optr_hash_str(symbol_id_t);
+
+void optr_ge_hash(struct optr_node*);

@@ -2,7 +2,7 @@
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
-CC =  @ tput setaf 5 && echo -n '[compile C source] ' && \
+CC =  @ tput setaf 5 && echo -n "[compile C source] " && \
        tput sgr0 && echo $< && gcc
 CXX = @ tput setaf 5 && echo -n '[compile C++ source] ' && \
        tput sgr0 && echo $< && g++

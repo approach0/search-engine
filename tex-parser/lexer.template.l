@@ -946,7 +946,7 @@ int ret_float_num(char *text, struct optr_node **tr)
 
 		return NUM;
 	} else {
-		fprintf(stderr, "%s is too long to cast into float number (len=%d).\n",
+		fprintf(stderr, "%s is too long to cast into float number (len=%lu).\n",
 		        text, strlen(text));
 
 		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF);
