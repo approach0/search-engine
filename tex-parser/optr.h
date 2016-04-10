@@ -1,10 +1,3 @@
-#include "gen-token.h"
-#include "gen-symbol.h"
-#include "trans.h"
-
-#include "tree/tree.h"
-#include "stdbool.h"
-
 #define WC_NORMAL_LEAF      0
 #define WC_WILDCD_LEAF      1
 #define WC_NONCOM_OPERATOR  0
@@ -20,6 +13,7 @@ struct optr_node {
 	uint32_t         sons;
 	uint32_t         rank;
 	symbol_id_t      fr_hash, ge_hash;
+	uint32_t         path_id;
 	struct tree_node tnd;
 };
 
@@ -33,4 +27,8 @@ void optr_release(struct optr_node*);
 
 char *optr_hash_str(symbol_id_t);
 
-void optr_ge_hash(struct optr_node*);
+void optr_assign_values(struct optr_node*);
+
+struct subpaths optr_subpaths(struct optr_node*);
+
+void subpaths_print(struct subpaths*, FILE*);

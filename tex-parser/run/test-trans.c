@@ -1,16 +1,11 @@
-#include "config.h"
-#include "gen-token.h"
-#include "gen-symbol.h"
-#include "trans.h"
-#include <stdio.h>
-#include <limits.h>
+#include "head.h"
 
 int main()
 {
 	enum token_id  t_id = T_NIL;
 	enum symbol_id s_id = S_NIL;
 
-	for (s_id = S_NIL; s_id <= UCHAR_MAX; s_id++) {
+	for (s_id = S_NIL; s_id <= 550; s_id++) {
 		printf("s_id=%d: %s\n", s_id, trans_symbol(s_id));
 	}
 

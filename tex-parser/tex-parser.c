@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-#include "tex-parser.h"
-#include "yy.h"
-#include "optr.h"
+#include "head.h"
 
 extern struct optr_node *grammar_optr_root;
 extern bool grammar_err_flag;
@@ -37,8 +33,13 @@ tex_parse(const char *tex_str, size_t len)
 	free(scan_buf);
 
 	if (grammar_optr_root) {
-		optr_ge_hash(grammar_optr_root);
+		optr_assign_values(grammar_optr_root);
 		optr_print(grammar_optr_root, stdout);
+
+		struct subpaths res = 
+		optr_subpaths(grammar_optr_root);
+		subpaths_print(&res, stdout);
+
 		optr_release(grammar_optr_root);
 	}
 

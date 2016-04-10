@@ -1,10 +1,6 @@
 %{
-#include <string.h>
-#include <stdio.h>
+#include "head.h"
 #include "y.tab.h"
-#include "gen-symbol.h"
-#include "gen-token.h"
-#include "optr.h"
 
 #define RET_TOK(_symbol, _token, _wc, _gram_token) \
 	yylval.nd = optr_alloc(S_ ## _symbol, T_ ## _token, _wc); \

@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include "optr.h"
-#include "config.h"
-#include "tex-parser.h"
-#include "vt100-color.h"
+#include "head.h"
 
 struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 {
@@ -15,6 +11,7 @@ struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 	n->rank = 0;
 	n->fr_hash = s_id;
 	n->ge_hash = 0;
+	n->path_id = 0;
 	TREE_NODE_CONS(n->tnd);
 	return n;
 }
@@ -114,8 +111,9 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 	}
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
-	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->fr_hash));
-	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->ge_hash));
+	fprintf(fh, "path_id=%u, ", p->path_id);
+	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->ge_hash));
+	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->fr_hash));
 	fprintf(fh, "\n");
 }
 
@@ -159,11 +157,13 @@ static TREE_IT_CALLBK(print)
 	LIST_GO_OVER;
 }
 
-void optr_print(struct optr_node *tr, FILE *fh)
+void optr_print(struct optr_node *optr, FILE *fh)
 {
-	if (tr == NULL)
+	printf("Operator tree:\n");
+	if (optr == NULL)
 		return;
-	tree_foreach(&tr->tnd, &tree_pre_order_DFS,
+
+	tree_foreach(&optr->tnd, &tree_pre_order_DFS,
 	             &print, 0, fh);
 }
 
@@ -176,9 +176,9 @@ static TREE_IT_CALLBK(release)
 	return res;
 }
 
-void optr_release(struct optr_node *tr)
+void optr_release(struct optr_node *optr)
 {
-	tree_foreach(&tr->tnd, &tree_post_order_DFS,
+	tree_foreach(&optr->tnd, &tree_post_order_DFS,
 	             &release, 0, NULL);
 }
 
@@ -197,13 +197,25 @@ static LIST_IT_CALLBK(digest_children)
 	LIST_GO_OVER;
 }
 
-static TREE_IT_CALLBK(assign_ge_hash)
+static TREE_IT_CALLBK(assign_value)
 {
+	struct optr_node *q;
+	P_CAST(lcnt, uint32_t, pa_extra);
 	TREE_OBJ(struct optr_node, p, tnd);
 	symbol_id_t children_hash;
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
 		p->ge_hash = p->symbol_id;
+		p->path_id = ++(*lcnt);
+
+		q = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+		while (q) {
+			if (q->sons > 1 && q->path_id == 0) {
+				q->path_id = p->path_id;
+				break;
+			}
+			q = MEMBER_2_STRUCT(q->tnd.father, struct optr_node, tnd);
+		}
 	} else {
 		children_hash = 0;
 		list_foreach(&p->tnd.sons, &digest_children, &children_hash);
@@ -219,147 +231,183 @@ static TREE_IT_CALLBK(assign_ge_hash)
 	LIST_GO_OVER;
 }
 
-void optr_ge_hash(struct optr_node *tr)
+void optr_assign_values(struct optr_node *optr)
 {
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, &assign_ge_hash,
-	             1 /* excluding root */, NULL);
+	uint32_t leaf_cnt = 0;
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
+	             1 /* excluding root */, &leaf_cnt);
 }
 
-#if 0
-
-static TREE_IT_CALLBK(gen_subpath)
+struct subpath *create_subpath(struct optr_node *p, bool leaf)
 {
-	TREE_OBJ(struct tex_tr, p, tnd);
-	P_CAST(gsa, struct gen_subpath_arg, pa_extra);
-	struct tex_tr *last_p = NULL;
-	bool  reach_rot = 0;
-	struct subpath *sp;
-	uint32_t i;
-	char *d;
+	struct subpath *subpath = malloc(sizeof(struct subpath));
 
-	if (p->tnd.sons.now == NULL /* is leaf */ &&
-	    p->n_fan != 0 /* not grouped */) {
-		
-		/* limit checks before allocate new subpath */
-		if (p->symbol_id > MAX_BRW_SYMBOL_ID_SZ) {
-			trace(LIMIT, "%d > max symol id sz\n", p->symbol_id);
+	subpath->path_id = p->path_id;
+	LIST_CONS(subpath->path_nodes);
 
-			gsa->err = 1;
-			return LIST_RET_BREAK;
-		} else if (p->node_id > MAX_BRW_PIN_SZ ||
-		           p->n_fan > MAX_BRW_FAN_SZ) {
-			trace(LIMIT, "node_id, n_fan (%d, %d) exceeds limit.\n", 
-			      p->node_id, p->n_fan);
-
-			gsa->err = 1;
-			return LIST_RET_BREAK;
-		} else if (pa_depth >= MAX_TEX_TR_DEPTH) {
-			trace(LIMIT, "%d >= max textr depth.\n", pa_depth);
-
-			gsa->err = 1;
-			return LIST_RET_BREAK;
-		}
-
-		/* a new subpath being added */
-		sp = malloc(sizeof(struct subpath));
-		sp->dir[0] = '\0';
-		LIST_NODE_CONS(sp->ln);
-		d = sp->dir;
-		d += sprintf(d, "./");
-
-		{ /* limit already checked */
-			sp->brw.symbol_id = p->symbol_id;
-		}
-
-		i = 0;
-
-		/* go up through subpath from leaf to specified root */
-		do {
-#if (DEBUG_TEX_TR_PRINT_ID)
-			if (is_sequential(p->token_id) && last_p) {
-				d += sprintf(d, "%d_%d", p->token_id, last_p->rank);
-			} else {
-				d += sprintf(d, "%d", p->token_id);
-			}
-#else
-			if (is_sequential(p->token_id) && last_p) {
-				d += sprintf(d, "%s_%d", trans_token(p->token_id), 
-				             last_p->rank);
-			} else {
-				d += sprintf(d, "%s", trans_token(p->token_id));
-			}
-#endif
-
-			{ /* limit already checked */
-				sp->brw.pin[i] = p->node_id;
-				sp->brw.fan[i] = p->n_fan;
-			}
-
-			if (p == gsa->rot)
-				reach_rot = 1;
-			else
-				d += sprintf(d, "/");
-
-			last_p = p;
-			p = MEMBER_2_STRUCT(p->tnd.father, struct tex_tr, tnd);
-
-			if (p == NULL) /* safe guard */
-				reach_rot = 1;
-
-			i ++;
-		} while (!reach_rot);
-		
-		/* append a zero at the end */
-		sp->brw.pin[i] = 0;
-		sp->brw.fan[i] = 0;
-		
-		/* update max_depth statistics */
-		if (i >= MAX_TEX_TR_DEPTH) {
-			trace(LIMIT, "exceeding depth %d after checking %d.\n", 
-			      i, pa_depth);
-			CP_FATAL;
-		}
-
-		list_insert_one_at_tail(&sp->ln, gsa->li, NULL, NULL);
+	if (leaf) {
+		subpath->type = (p->wildcard) ? \
+		     SUBPATH_TYPE_WILDCARD : SUBPATH_TYPE_NORMAL;
+		subpath->lf_symbol_id = p->symbol_id;
+	} else {
+		subpath->type = SUBPATH_TYPE_GENERNODE;
+		subpath->ge_hash = p->ge_hash;
 	}
 
+	subpath->fr_hash = p->fr_hash;
+	LIST_NODE_CONS(subpath->ln);
+
+	return subpath;
+}
+
+struct subpath_node *create_subpath_node(enum token_id token_id, uint32_t sons)
+{
+	struct subpath_node *nd;
+	nd = malloc(sizeof(struct subpath_node));
+	nd->token_id = token_id;
+	nd->sons = sons;
+	LIST_NODE_CONS(nd->ln);
+
+	return nd;
+}
+
+void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
+{
+	struct subpath_node *nd;
+	struct optr_node *f;
+
+	do {
+		f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+
+		/* create and insert token node */
+		nd = create_subpath_node(p->token_id, p->sons);
+		list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
+
+		/* create and insert rank node if necessary */
+		if (f && !f->commutative) {
+			nd = create_subpath_node(T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank), 1);
+			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
+		}
+
+		p = f;
+	} while(p);
+}
+
+static bool gen_subpaths_bitmap[MAX_SUBPATH_ID * 2];
+
+static TREE_IT_CALLBK(gen_subpaths)
+{
+	P_CAST(ret, struct subpaths, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+	struct subpath   *subpath;
+	struct optr_node *f;
+	uint32_t          bitmap_idx;
+	bool              is_leaf;
+
+	if (p->tnd.sons.now == NULL /* is leaf */) {
+		is_leaf = true;
+
+		/* count leaf-root paths */
+		ret->n_lr_paths ++;
+
+		do {
+			f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+
+			/* create a subpath */
+			if (is_leaf || (p->sons > 1 && f != NULL)) {
+				/* calculate bitmap index */
+				if (is_leaf)
+					bitmap_idx = p->path_id;
+				else
+					bitmap_idx = p->path_id + MAX_SUBPATH_ID;
+
+				/* insert only when not inserted before (by looking at bitmap)  */
+				if (!gen_subpaths_bitmap[bitmap_idx]) {
+					subpath = create_subpath(p, is_leaf);
+					insert_subpath_nodes(subpath, p);
+					list_insert_one_at_tail(&subpath->ln, &ret->li, NULL, NULL);
+					gen_subpaths_bitmap[bitmap_idx] = 1;
+				}
+			}
+
+			is_leaf = false;
+			p = f;
+		} while(p);
+	
+	}
+	
 	LIST_GO_OVER;
 }
 
-/* 
- * This function generates branch words to be written 
- * in the posting file, it is crucial to include some 
- * limits check before the subpaths are written into
- * posting file. 
- */
-struct list_it tex_tr_subpaths(struct tex_tr *tr, int *err)
+struct subpaths optr_subpaths(struct optr_node* optr)
 {
-	struct list_it li = LIST_NULL;
-	struct gen_subpath_arg gsa = {&li, tr, 0};
+	struct subpaths subpaths;
+	LIST_CONS(subpaths.li);
+	subpaths.n_lr_paths = 0;
 
-	tree_foreach(&tr->tnd, &tree_post_order_DFS, 
-	             &gen_subpath, 0, &gsa);
+	/* clear bitmap */
+	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
 
-	*err = gsa.err;
-	return li;
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
+	             1 /* excluding root */, &subpaths);
+	return subpaths;
 }
 
-LIST_DEF_FREE_FUN(subpaths_free, struct subpath, ln, free(p));
+//void subpaths_release(struct subpaths *subpaths)
+//{
+//	tree_foreach(&optr->tnd, &tree_post_order_DFS,
+//	             &release, 0, NULL);
+//}
+//
 
-static LIST_IT_CALLBK(subpath_print)
+static __inline__ char *subpath_type_str(enum subpath_type t)
 {
-	LIST_OBJ(struct subpath, p, ln);
-	P_CAST(fh, FILE, pa_extra);
+	static char type_map_str[][TYPE_MAP_STR_MAX] = {
+		"gener",
+		"wildcard",
+		"normal",
+	};
 
-	fprintf(fh, "%s ", p->dir);
-	print_brw(&p->brw, fh);
-	fprintf(fh, "\n");
+	return type_map_str[t];
+}
+
+static LIST_IT_CALLBK(print_subpath_path_node)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(fh, FILE, pa_extra); 
+
+	fprintf(fh, C_BROWN "%s" C_RST "(%u)/", trans_token(sp_nd->token_id), sp_nd->sons);
 
 	LIST_GO_OVER;
 }
 
-void subpaths_print(struct list_it *li, FILE *fh)
+static LIST_IT_CALLBK(print_subpath_list_item)
 {
-	list_foreach(li, &subpath_print, fh);
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(fh, FILE, pa_extra); 
+
+	fprintf(fh, "* ");
+	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
+
+	fprintf(fh, "[");
+	fprintf(fh, "path_id=%u: type=%s, ", sp->path_id, subpath_type_str(sp->type));
+
+	if (sp->type == SUBPATH_TYPE_GENERNODE)
+		fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ", 
+		        optr_hash_str(sp->ge_hash));
+	else
+		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST ", ", 
+		        trans_symbol(sp->lf_symbol_id));
+
+	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST, optr_hash_str(sp->fr_hash));
+	
+	fprintf(fh, "]\n");
+
+	LIST_GO_OVER;
 }
-#endif
+
+void subpaths_print(struct subpaths *subpaths, FILE *fh)
+{
+	printf("Subpaths (%u leaf-root paths):\n", subpaths->n_lr_paths);
+	list_foreach(&subpaths->li, &print_subpath_list_item, fh);
+}

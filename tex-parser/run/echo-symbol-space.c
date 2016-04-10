@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include "gen-symbol.h"
-#include "gen-token.h"
+#include "head.h"
 
 int main()
 {

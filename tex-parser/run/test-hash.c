@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #define OPTR_HASH_DEBUG
-#include "optr.h"
+#include "head.h"
 
 int main()
 {

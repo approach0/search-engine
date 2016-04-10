@@ -1,5 +1,4 @@
-#include "tex-parser.h"
-#include "yy.h"
+#include "head.h"
 
 int main()
 {

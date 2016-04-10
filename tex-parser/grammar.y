@@ -1,12 +1,5 @@
 %{
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include "gen-symbol.h"
-#include "gen-token.h"
-#include "yy.h"
-#include "optr.h"
-#include "config.h"
+#include "head.h"
 
 /* global interfaces */
 struct optr_node *grammar_optr_root = NULL;

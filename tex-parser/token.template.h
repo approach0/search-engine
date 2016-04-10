@@ -1,12 +1,12 @@
-#pragma once
-#include "config.h"
-
 enum token_id {
 	/* nil token */
 	T_NIL,
 
 	/* index tree degree valve */
 	T_DEGREE_VALVE = OPTR_INDEX_TREE_DEGREE_VALVE,
+	
+	/* index tree rank valve */
+	T_MAX_RANK = OPTR_INDEX_TREE_DEGREE_VALVE + OPTR_INDEX_RANK_MAX,
 
 	/* special tokens */
 	T_ZERO,
