@@ -32,3 +32,5 @@ void optr_assign_values(struct optr_node*);
 struct subpaths optr_subpaths(struct optr_node*);
 
 void subpaths_print(struct subpaths*, FILE*);
+
+void subpaths_release(struct subpaths*);

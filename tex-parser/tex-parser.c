@@ -39,6 +39,7 @@ tex_parse(const char *tex_str, size_t len)
 		struct subpaths res = 
 		optr_subpaths(grammar_optr_root);
 		subpaths_print(&res, stdout);
+		subpaths_release(&res);
 
 		optr_release(grammar_optr_root);
 	}

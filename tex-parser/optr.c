@@ -353,12 +353,17 @@ struct subpaths optr_subpaths(struct optr_node* optr)
 	return subpaths;
 }
 
-//void subpaths_release(struct subpaths *subpaths)
-//{
-//	tree_foreach(&optr->tnd, &tree_post_order_DFS,
-//	             &release, 0, NULL);
-//}
-//
+LIST_DEF_FREE_FUN(_subpath_nodes_release, struct subpath_node, ln, free(p));
+
+LIST_DEF_FREE_FUN(_subpaths_release, struct subpath, ln,
+	_subpath_nodes_release(&p->path_nodes);
+	free(p);
+);
+
+void subpaths_release(struct subpaths *subpaths)
+{
+	_subpaths_release(&subpaths->li);
+}
 
 static __inline__ char *subpath_type_str(enum subpath_type t)
 {
