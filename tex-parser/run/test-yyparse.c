@@ -2,6 +2,6 @@
 
 int main()
 {
-	tex_parse("1+2+3", 0);
+	tex_parse("1+2+3", 0, 0);
 	return 0;
 }

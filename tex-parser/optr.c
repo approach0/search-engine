@@ -154,12 +154,12 @@ static TREE_IT_CALLBK(print)
 
 	if (depth_flag[pa_depth] == depth_going_end)
 		depth_flag[pa_depth] = depth_end;
+
 	LIST_GO_OVER;
 }
 
 void optr_print(struct optr_node *optr, FILE *fh)
 {
-	printf("Operator tree:\n");
 	if (optr == NULL)
 		return;
 
@@ -323,6 +323,7 @@ static TREE_IT_CALLBK(gen_subpaths)
 
 				/* insert only when not inserted before (by looking at bitmap)  */
 				if (!gen_subpaths_bitmap[bitmap_idx]) {
+					ret->n_subpaths ++; /* count total subpaths generated. */
 					subpath = create_subpath(p, is_leaf);
 					insert_subpath_nodes(subpath, p);
 					list_insert_one_at_tail(&subpath->ln, &ret->li, NULL, NULL);
@@ -344,6 +345,7 @@ struct subpaths optr_subpaths(struct optr_node* optr)
 	struct subpaths subpaths;
 	LIST_CONS(subpaths.li);
 	subpaths.n_lr_paths = 0;
+	subpaths.n_subpaths = 0;
 
 	/* clear bitmap */
 	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
@@ -413,6 +415,5 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 
 void subpaths_print(struct subpaths *subpaths, FILE *fh)
 {
-	printf("Subpaths (%u leaf-root paths):\n", subpaths->n_lr_paths);
 	list_foreach(&subpaths->li, &print_subpath_list_item, fh);
 }

@@ -37,12 +37,18 @@ struct subpath {
 struct subpaths {
 	list      li;
 	uint32_t  n_lr_paths;
+	uint32_t  n_subpaths;
 };
 
 struct tex_parse_ret {
 	uint32_t         code;
 	char             msg[MAX_PARSER_ERR_STR];
 	struct subpaths  subpaths;
+	void            *operator_tree;
 };
 
-struct tex_parse_ret tex_parse(const char *, size_t len);
+struct tex_parse_ret tex_parse(const char *, size_t, bool);
+
+void subpaths_print(struct subpaths*, FILE*);
+
+void subpaths_release(struct subpaths*);

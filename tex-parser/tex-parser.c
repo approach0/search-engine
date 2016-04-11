@@ -16,7 +16,7 @@ static char *mk_scan_buf(const char *str, size_t *out_sz)
 }
 
 struct tex_parse_ret
-tex_parse(const char *tex_str, size_t len)
+tex_parse(const char *tex_str, size_t len, bool keep_optr)
 {
 	struct tex_parse_ret ret;
 	YY_BUFFER_STATE state_buf;
@@ -32,24 +32,26 @@ tex_parse(const char *tex_str, size_t len)
 	yy_delete_buffer(state_buf);
 	free(scan_buf);
 
-	if (grammar_optr_root) {
-		optr_assign_values(grammar_optr_root);
-		optr_print(grammar_optr_root, stdout);
-
-		struct subpaths res = 
-		optr_subpaths(grammar_optr_root);
-		subpaths_print(&res, stdout);
-		subpaths_release(&res);
-
-		optr_release(grammar_optr_root);
-	}
-
 	if (grammar_err_flag) {
 		ret.code = PARSER_RETCODE_ERR;
 		strcpy(ret.msg, grammar_last_err_str);
 	} else {
-		ret.code = PARSER_RETCODE_SUCC;
-		strcpy(ret.msg, "no error.");
+		if (grammar_optr_root) {
+			optr_assign_values(grammar_optr_root);
+			ret.subpaths = optr_subpaths(grammar_optr_root);
+			if (keep_optr) {
+				ret.operator_tree = grammar_optr_root;
+			} else {
+				optr_release(grammar_optr_root);
+				ret.operator_tree = NULL;
+			}
+
+			ret.code = PARSER_RETCODE_SUCC;
+			strcpy(ret.msg, "no error.");
+		} else {
+			ret.code = PARSER_RETCODE_ERR;
+			strcpy(ret.msg, "operator tree not generated.");
+		}
 	}
 
 	return ret;
