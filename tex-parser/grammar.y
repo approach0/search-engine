@@ -1,24 +1,37 @@
 %{
 #include "head.h"
 
-/* global interfaces */
+/* parser interfaces */
 struct optr_node *grammar_optr_root = NULL;
 bool grammar_err_flag = 0;
 char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 
+/* handy macro */
 #define OPTR_ATTACH(_ret, _child1, _child2, _father) \
 	optr_attach(_child1, _father); \
 	optr_attach(_child2, _father); \
 	_ret = grammar_optr_root = _father;
 %}
 
+/* =========================
+ * data type and destructor
+ * ========================*/
 %union {
 	struct optr_node* nd;
 }
 
-%error-verbose
-%start doc /* start rule */
+%destructor {
+	if ($$) {
+		optr_release($$);
+		$$ = NULL;
+	}
+} <nd>
 
+%error-verbose
+
+/* ====================
+ * token definitions
+ * ===================*/
 %token <nd> NUM
 %token <nd> VAR
 %token <nd> ADD
@@ -71,6 +84,7 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %token _R_TEX_BRACE
 %token _R_TEX_BRACKET
 
+%start doc /* start rule */
 %type <nd> tex
 %type <nd> term
 %type <nd> factor
@@ -151,6 +165,7 @@ tex: %prec NULL_REDUCE {
 }
 | tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
+	optr_release($2);
 }
 | tex REL_CLASS tex {
 	OPTR_ATTACH($$, $1, $3, $2);
@@ -220,6 +235,7 @@ abv_tex: %prec NULL_REDUCE {
 }
 | abv_tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
+	optr_release($2);
 }
 | abv_tex REL_CLASS abv_tex {
 	OPTR_ATTACH($$, $1, $3, $2);
@@ -247,6 +263,7 @@ mat_tex: %prec NULL_REDUCE {
 }
 | mat_tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
+	optr_release($2);
 }
 | mat_tex SEP_CLASS mat_tex {
 	OPTR_ATTACH($$, $1, $3, $2);
@@ -294,7 +311,7 @@ factor: pack {
 }
 | factor script {
 	struct optr_node *base;
-	base = optr_alloc(S_base, T_BASE, WC_NONCOM_OPERATOR);
+	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $1, NULL, base);
 	OPTR_ATTACH($$, base, NULL, $2);
 }
@@ -415,70 +432,71 @@ script: SUBSCRIPT s_atom {
 
 pair: _L_BRACKET tex _R_BRACKET {
 	struct optr_node *pair;
-	pair = optr_alloc(S_bracket, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_bracket, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 /* bracket array */
 | _L_DOT tex _R_BRACKET {
 	struct optr_node *pair;
-	pair = optr_alloc(S_array, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_array, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_BRACKET tex _R_DOT {
 	struct optr_node *pair;
-	pair = optr_alloc(S_array, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_array, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 /* range */
 | _L_BRACKET tex _R_TEX_BRACKET {
 	struct optr_node *pair;
-	pair = optr_alloc(S_bracket, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_bracket, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_TEX_BRACKET tex _R_BRACKET {
 	struct optr_node *pair;
-	pair = optr_alloc(S_bracket, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_bracket, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 /* others */
 | _L_ANGLE tex _R_ANGLE {
 	struct optr_node *pair;
-	pair = optr_alloc(S_angle, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_SLASH tex _R_SLASH {
 	struct optr_node *pair;
-	pair = optr_alloc(S_slash, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_slash, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_HAIR tex _R_HAIR {
 	struct optr_node *pair;
-	pair = optr_alloc(S_hair, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_hair, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_ARROW tex _R_ARROW {
 	struct optr_node *pair;
-	pair = optr_alloc(S_arrow, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_arrow, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_TEX_BRACKET tex _R_TEX_BRACKET {
 	struct optr_node *pair;
-	pair = optr_alloc(S_bracket, T_GROUP, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_bracket, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_CEIL tex _R_CEIL {
 	struct optr_node *pair;
-	pair = optr_alloc(S_ceil, T_CEIL, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_ceil, T_CEIL, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_FLOOR tex _R_FLOOR {
 	struct optr_node *pair;
-	pair = optr_alloc(S_floor, T_FLOOR, WC_NONCOM_OPERATOR);
+	pair = optr_alloc(S_floor, T_FLOOR, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 ;
 %%
 
+/* yyerror shows grammar error */
 int yyerror(const char *msg)
 {
 	strcpy(grammar_last_err_str, msg);

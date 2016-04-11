@@ -293,8 +293,8 @@ extern unsigned int mat_stack;
   * ========================*/
 "'"                                { RET_TOK(prime, PRIME, WC_NONCOM_OPERATOR, PRIME); }
 \\prime                        { RET_TOK(_AUTOGEN_, PRIME, WC_NONCOM_OPERATOR, PRIME); }
-"_"                    { RET_TOK(subscript, SUBSCRIPT, WC_NONCOM_OPERATOR, SUBSCRIPT); }
-"^"                    { RET_TOK(supscript, SUPSCRIPT, WC_NONCOM_OPERATOR, SUPSCRIPT); }
+"_"                    { RET_TOK(subscript, SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
+"^"                    { RET_TOK(supscript, SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
 
  /* =================
   *  numbers
