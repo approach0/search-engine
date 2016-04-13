@@ -32,9 +32,10 @@ int main()
 	term_index_doc_begin(ti);
 	term_index_doc_add(ti, "dog");
 	term_index_doc_add(ti, "in");
-	term_index_doc_add(ti, "chinese");
-	term_index_doc_add(ti, "is"); /* known bug: no upper case */
-	term_index_doc_add(ti, "一个字");
+	term_index_doc_add(ti, "chinese"); /* known bug: no upper case */
+	term_index_doc_add(ti, "is");
+	term_index_doc_add(ti, "一个字"); /* this utf-8 string has some problem when you
+	                                     lookup the term and display, FIXIT. */
 	term_index_doc_add(ti, "狗");
 	term_index_doc_end(ti);
 
