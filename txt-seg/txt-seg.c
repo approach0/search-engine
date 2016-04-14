@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "jieba.h"
 #include "wstring/wstring.h"
 #include "txt-seg.h"
@@ -24,16 +25,28 @@ void text_segment_free()
 	FreeJieba(jieba);
 }
 
+bool text_segment_insert_usrterm(const char *term)
+{
+	return JiebaInsertUserWord(jieba, term);
+}
+
 list text_segment(const char *text)
 {
-	char **words = Cut(jieba, text);
+	CJiebaWord *words = CutNoPunc(jieba, text, strlen(text));
 	int i;
 	struct term_list_node *tln;
 	list ret = LIST_NULL;
+	const int max_word_bytes = 128;
+	char word[max_word_bytes + 1];
 
-	for (i = 0; words[i]; i++) {
+	for (i = 0; words[i].word; i++) {
+		if (words[i].len > max_word_bytes)
+			continue;
+
 		tln = malloc(sizeof(struct term_list_node));
-		mbstr_copy(tln->term, mbstr2wstr(words[i]));
+		memcpy(word, words[i].word, words[i].len);
+		word[words[i].len] = '\0';
+		mbstr_copy(tln->term, mbstr2wstr(word));
 
 		LIST_NODE_CONS(tln->ln);
 		list_insert_one_at_tail(&tln->ln, &ret, NULL, NULL);

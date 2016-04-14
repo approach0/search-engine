@@ -1,5 +1,6 @@
 #pragma once
 #include <wchar.h>
+#include <stdbool.h>
 #include "config.h"
 #include "list/list.h"
 
@@ -10,4 +11,5 @@ struct term_list_node {
 
 int   text_segment_init(const char *dict_path);
 list  text_segment(const char *text);
+bool  text_segment_insert_usrterm(const char *term);
 void  text_segment_free();

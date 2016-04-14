@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "jieba.h"
 
 #define JIEBA(_text) \
-	words = Cut(jieba, _text); \
-	for (i = 0; words[i]; i++) \
-	printf("%s\n", words[i]); \
+	words = Cut(jieba, _text, strlen(_text)); \
+	for (i = 0; words[i].word; i++) \
+	printf("%*.*s\n", (int)words[i].len, (int)words[i].len, words[i].word); \
 	FreeWords(words)
 
 int main()
@@ -16,7 +17,7 @@ int main()
 		
 	Jieba jieba = NewJieba(DICT_PATH, HMM_PATH, USER_DICT); 
 	int i;
-	char** words;
+	CJiebaWord *words;
 	
 	JIEBA("南京市长江大桥");
 	JIEBA("C++和c#是什么关系？11+122=133，是吗？PI=3.14159");

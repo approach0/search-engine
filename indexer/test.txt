@@ -1,0 +1,5 @@
+hello world!
+If you want to fire up several lines of code as an action, include them in 2 braces. The Lex global "yytext" always contains the token you just read in.
+我觉得吧，要看情况。比如你这种stop sign ticket，如果你基本上停了而警察吹毛求疵说你没停稳，那估计不会有人骂你233；而如果是完全没停冲过去的吃了ticket，那就是欠骂。
+&nbsp;和&gt;
+#痘#
