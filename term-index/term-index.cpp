@@ -6,6 +6,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <limits.h>
+#include <string.h>
+#include <vector>
 
 using namespace std;
 
@@ -15,6 +17,7 @@ struct term_index {
 	indri::api::ParsedDocument     document;
 	indri::index::Index           *index;
 	uint32_t                       avgDocLen;
+	vector<char*>                  save;
 };
 
 void *term_index_open(const char *path, enum term_index_open_flag flag)
@@ -79,24 +82,38 @@ void term_index_close(void *handle)
 	struct term_index *ti = (struct term_index*)handle;
 	ti->repo.close();
 	delete ti;
+
 }
 
 void term_index_doc_begin(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
 	ti->document.terms.clear();
+
+	ti->save.clear();
 }
 
 void term_index_doc_add(void *handle, char *term)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	ti->document.terms.push_back(term);
+	char *p = strdup(term);
+	ti->document.terms.push_back(p);
+
+	//printf("%s address: %p\n", p, p);
+	ti->save.push_back(p);
 }
 
 void term_index_doc_end(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
 	ti->repo.addDocument(&ti->document);
+
+	vector<char*>::iterator it;
+	vector<char*> &terms = ti->save;
+	for (it = terms.begin(); it != terms.end(); it++) {
+		//printf("free %s address: %p\n", *it, *it);
+		free(*it);
+	}
 }
 
 uint32_t term_index_get_termN(void *handle)

@@ -38,6 +38,7 @@ int main()
 	term_index_doc_add(ti, "狗");
 	term_index_doc_end(ti);
 
+	printf("closing term index...\n");
 	term_index_close(ti);
 	return 0;
 }

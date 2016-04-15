@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include "wstring/wstring.h"
 #include "txt-seg/txt-seg.h"
@@ -14,7 +13,7 @@ static LIST_IT_CALLBK(handle_chinese_word)
 	char *term = wstr2mbstr(p->term);
 
 	printf("Chinese word: `%s'\n", term);
-	term_index_doc_add(term_index, strdup(term));
+	term_index_doc_add(term_index, term);
 
 	LIST_GO_OVER;
 }
@@ -38,7 +37,7 @@ int handle_english(char *term)
 	for(int i = 0; term[i]; i++)
 		term[i] = tolower(term[i]);
 	printf("English word:`%s'\n", term);
-	term_index_doc_add(term_index, strdup(term));
+	term_index_doc_add(term_index, term);
 	return 0;
 }
 
