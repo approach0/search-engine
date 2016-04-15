@@ -31,7 +31,7 @@ gen_fun() {
 	grep -oP '(?<='"${prefix}"')[\w ]+(?=,|=)' ${header} > ${tmpfile}
 
 	while read name; do 
-		echo "${prefix}: gen translation item ${name}"
+		echo -n "${prefix}${name} "
 		sed -i "/${prefix}INSERT_HERE/a \
 		\\\tcase ${prefix}${name}:\n \
 		\tsprintf(ret, \"${name}\");\n \
@@ -42,3 +42,4 @@ gen_fun() {
 
 gen_fun S_ ${sym_header}
 gen_fun T_ ${tok_header}
+echo "done."

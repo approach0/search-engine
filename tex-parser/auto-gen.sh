@@ -55,15 +55,16 @@ do
 
 	# for auto-gen symbol, replace $auto_macro with $match.
 	if [ "$symbol" == "$auto_macro" ]; then
-		echo "gen symbol item ${match} (AUTOGEN)..."
+		echo -n "S_${match} "
 		sed -i "${number}s/${auto_macro}/${match}/" ${out_l}
 		insert_into_header "S_" "${match}" "${out_sym_h}"
 	else
-		echo "gen symbol item ${symbol}..."
+		echo -n "S_${symbol} "
 		insert_into_header "S_" "${symbol}" "${out_sym_h}"
 	fi
 
 	# for auto-gen token
-	echo "gen token item ${symbol}..."
+	echo -n "T_${token} "
 	insert_into_header "T_" "${token}" "${out_tok_h}"
 done < ${tmpfile}
+echo "done."
