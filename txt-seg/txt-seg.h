@@ -4,6 +4,8 @@
 #include "config.h"
 #include "list/list.h"
 
+#define MAX_TERM_WSTR_LEN 32
+
 struct term_list_node {
 	wchar_t          term[MAX_TERM_WSTR_LEN];
 	struct list_node ln;

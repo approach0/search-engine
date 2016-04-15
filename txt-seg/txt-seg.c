@@ -36,7 +36,7 @@ list text_segment(const char *text)
 	int i;
 	struct term_list_node *tln;
 	list ret = LIST_NULL;
-	const int max_word_bytes = 128;
+	const int max_word_bytes = MAX_TERM_BYTES;
 	char word[max_word_bytes + 1];
 
 	for (i = 0; words[i].word; i++) {
@@ -46,7 +46,7 @@ list text_segment(const char *text)
 		tln = malloc(sizeof(struct term_list_node));
 		memcpy(word, words[i].word, words[i].len);
 		word[words[i].len] = '\0';
-		mbstr_copy(tln->term, mbstr2wstr(word));
+		wstr_copy(tln->term, mbstr2wstr(word));
 
 		LIST_NODE_CONS(tln->ln);
 		list_insert_one_at_tail(&tln->ln, &ret, NULL, NULL);

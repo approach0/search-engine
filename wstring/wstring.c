@@ -1,17 +1,23 @@
 #include <stdlib.h>
 #include <locale.h>
+#include <string.h>
 #include "wstring.h"
 #include "config.h"
 
-size_t mbstr_len(wchar_t *multibyte_string)
+size_t wstr_len(wchar_t *wstr)
 {
-	return wcslen(multibyte_string);
+	return wcslen(wstr);
 }
 
-wchar_t *mbstr_copy(wchar_t *dest, const wchar_t *src)
+wchar_t *wstr_copy(wchar_t *dest, const wchar_t *src)
 {
 	wcscpy(dest, src);
 	return dest;
+}
+
+size_t mbstr_chars(char *mbstr)
+{
+	return mbstowcs(NULL, mbstr, 0);
 }
 
 wchar_t *mbstr2wstr(const char *multibyte_string)

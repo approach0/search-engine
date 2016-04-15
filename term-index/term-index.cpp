@@ -135,10 +135,10 @@ term_id_t term_lookup(void *handle, char *term)
 	return ti->index->term(term);
 }
 
-const char *term_lookup_r(void *handle, term_id_t term_id)
+char *term_lookup_r(void *handle, term_id_t term_id)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->term(term_id).c_str();
+	return strdup(ti->index->term(term_id).c_str());
 }
 
 void *term_index_get_posting(void *handle, term_id_t term_id)

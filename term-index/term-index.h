@@ -27,7 +27,7 @@ uint32_t term_index_get_avgDocLen(void *); /* average doc len (in words) */
 uint32_t term_index_get_df(void *, term_id_t); /* get document frequency */
 
 term_id_t term_lookup(void *, char *);
-const char *term_lookup_r(void *, term_id_t);
+char *term_lookup_r(void *, term_id_t);
 
 void *term_index_get_posting(void *, term_id_t);
 
