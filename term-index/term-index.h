@@ -16,6 +16,8 @@ enum term_index_open_flag {
 void *term_index_open(const char *, enum term_index_open_flag);
 void term_index_close(void *);
 
+int term_index_maintain(void*);
+
 void term_index_doc_begin(void *);
 void term_index_doc_add(void *, char *);
 void term_index_doc_end(void *);
