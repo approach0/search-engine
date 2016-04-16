@@ -22,7 +22,7 @@ LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
 AR = @ tput setaf 5 && echo -n '[archive $(strip $(AROBJS) $(ARLIBS))] ' \
      && tput sgr0 && echo $@ && \
 	 rm -f $@ && \
-	 ar -rcT $@ $(AROBJS) $(ARLIBS) && ar -t $@
+	 ar -rcT $@ $(AROBJS) $(ARLIBS) && ar -t $@ | tr '\n' ' ' && echo ''
 
 # Bison/Flex
 LEX = @ tput setaf 5 && echo -n '[lex] ' \
@@ -38,7 +38,8 @@ YACC = @ tput setaf 5 && echo -n '[yacc] ' \
 all: 
 	@echo "[done $(CURDIR)]"
 
-include $(wildcard *.d)
+-include $(wildcard *.d)
+-include $(wildcard run/*.d)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $*.c -c -o $@
