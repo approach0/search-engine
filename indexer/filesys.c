@@ -22,9 +22,47 @@ int file_exists(const char *path)
 	return S_ISREG(s.st_mode);
 }
 
+char *filename_ext(const char *name)
+{
+	static char buf[MAX_FILE_NAME_LEN];
+	uint32_t i, len = strlen(name);
+	strcpy(buf, name);
+
+	for (i = len; i != 0; i--) {
+		if (buf[i] == '.')
+			return buf + i;
+	}
+
+	return NULL;
+}
+
+int foreach_files_in(const char *path, ffi_callbk fun, void *arg)
+{
+	char *fname;
+	struct dirent *dent;
+	DIR  *dir = opendir(path);
+	if (dir == NULL)
+		return 1;
+	
+	while (1) {
+		dent = readdir(dir);
+		if (!dent)
+			break;
+
+		fname = dent->d_name;
+		if (dent->d_type & DT_REG) {
+			if (fun(fname, arg))
+				break;
+		}
+	}
+
+	closedir(dir);
+	return 0;
+}
+
 static enum ds_ret
 _dir_search_podfs(const char *path, const char *srchpath, uint32_t level,
-                  ds_callbk callbk_fun, char *arg)
+                  ds_callbk fun, char *arg)
 {
 	struct dirent *dent;
 	char *dname;
@@ -36,7 +74,7 @@ _dir_search_podfs(const char *path, const char *srchpath, uint32_t level,
 	if (dir == NULL)
 		return 1;
 
-	ret = callbk_fun(path, srchpath, level, arg);
+	ret = fun(path, srchpath, level, arg);
 	if (ret == DS_RET_STOP_SUBDIR)
 		goto exit;
 	else if (ret == DS_RET_STOP_ALLDIR)
@@ -44,8 +82,10 @@ _dir_search_podfs(const char *path, const char *srchpath, uint32_t level,
 
 	while (1) {
 		dent = readdir(dir);
-		if (!dent)
-			return DS_RET_CONTINUE;
+		if (!dent) {
+			ret = DS_RET_CONTINUE;
+			break;
+		}
 
 		dname = dent->d_name;
 		if (dent->d_type & DT_DIR) {
@@ -56,7 +96,7 @@ _dir_search_podfs(const char *path, const char *srchpath, uint32_t level,
 			sprintf(newpath[0], "%s/%s", path, dname);
 			sprintf(newpath[1], "%s/%s", srchpath, dname);
 			res = _dir_search_podfs(newpath[0], newpath[1],
-			                        level + 1, callbk_fun, arg);
+			                        level + 1, fun, arg);
 			if (res == DS_RET_STOP_ALLDIR) {
 				ret = res;
 				break;
@@ -70,7 +110,7 @@ exit:
 }
 
 int
-dir_search_podfs(const char *path, ds_callbk callbk_fun, void *arg)
+dir_search_podfs(const char *path, ds_callbk fun, void *arg)
 {
 	char legal_path[MAX_DIR_PATH_NAME_LEN];
 	const char *use_path = path;
@@ -85,7 +125,7 @@ dir_search_podfs(const char *path, ds_callbk callbk_fun, void *arg)
 	}
 
 	if (DS_RET_STOP_ALLDIR == _dir_search_podfs(use_path, srchpath,
-	                                            0, callbk_fun, arg))
+	                                            0, fun, arg))
 		return 1;
 	else
 		return 0;

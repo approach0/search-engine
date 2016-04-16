@@ -2,11 +2,16 @@
 #include <ctype.h>
 #include <string.h>
 #include <getopt.h>
+
 #include "wstring/wstring.h"
 #include "txt-seg/txt-seg.h"
 #include "term-index/term-index.h"
+
 #define  LEX_PREFIX(_name) txt ## _name
 #include "lex.h"
+
+#include "filesys.h"
+#include "config.h"
 
 static void *term_index;
 
@@ -55,6 +60,33 @@ void lexer_file_input(const char *path)
 	}
 }
 
+int foreach_file_callbk(const char *filename, void *arg)
+{
+	char *path = (char*) arg;
+	char *ext = filename_ext(filename);
+	char fullpath[MAX_FILE_NAME_LEN];
+
+	if (ext && strcmp(ext, ".txt") == 0) {
+		sprintf(fullpath, "%s/%s", path, filename);
+		printf("[txt file] %s\n", fullpath);
+
+		term_index_doc_begin(term_index);
+		lexer_file_input(fullpath);
+		term_index_doc_end(term_index);
+	}
+
+	return 0;
+}
+
+enum ds_ret
+dir_search_callbk(const char* path, const char *srchpath,
+                  uint32_t level, void *arg)
+{
+	printf("[directory] %s\n", path);
+	foreach_files_in(path, &foreach_file_callbk, (void*)path);
+	return DS_RET_CONTINUE;
+}
+
 int main(int argc, char* argv[])
 {
 	int opt;
@@ -86,7 +118,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (path) {
-		printf("index at %s\n", path);
+		printf("index path %s\n", path);
 	} else {
 		printf("no path specified.\n");
 		goto exit;
@@ -102,9 +134,16 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	term_index_doc_begin(term_index);
-	lexer_file_input("./test2.txt");
-	term_index_doc_end(term_index);
+	if (file_exists(path)) {
+		printf("[file] %s\n", path);
+		term_index_doc_begin(term_index);
+		lexer_file_input(path);
+		term_index_doc_end(term_index);
+	} else if (dir_exists(path)) {
+		dir_search_podfs(path, &dir_search_callbk, NULL);
+	} else {
+		printf("not file/directory.\n");
+	}
 
 	printf("closing term index...\n");
 	term_index_close(term_index);

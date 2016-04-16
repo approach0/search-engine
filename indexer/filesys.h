@@ -11,6 +11,11 @@ enum ds_ret {
 	DS_RET_CONTINUE
 };
 
-typedef enum ds_ret (*ds_callbk)(const char*, const char *, uint32_t, void *);
-
+typedef enum ds_ret (*ds_callbk)(const char*, const char *,
+                                 uint32_t, void *);
 int dir_search_podfs(const char*, ds_callbk, void *);
+
+typedef int (*ffi_callbk)(const char*, void *);
+int foreach_files_in(const char*, ffi_callbk, void*);
+
+char *filename_ext(const char*);

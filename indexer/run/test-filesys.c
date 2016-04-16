@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include "filesys.h"
 
+int foreach_file_callbk(const char *filename, void *arg)
+{
+	char *path = (char*) arg;
+	char *ext = filename_ext(filename);
+
+	printf("file=%s/%s (ext:`%s')\n", path, filename,
+	                                  (ext == NULL) ? "null": ext);
+	return 0;
+}
+
 enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
@@ -13,10 +23,15 @@ dir_search_callbk(const char* path, const char *srchpath,
 	printf("path=%s\n", path);
 	printf("search path=%s\n", srchpath);
 
-	if (level > 3)
+	printf("files in this directory:\n");
+	foreach_files_in(path, &foreach_file_callbk, (void*)path);
+
+	if (level > 3) {
+		printf("level too large, terminate search.\n");
 		return DS_RET_STOP_ALLDIR;
-	else
+	} else {
 		return DS_RET_CONTINUE;
+	}
 }
 
 int main(int argc, char* argv[])
