@@ -91,3 +91,5 @@ $ python3 proj-dep-graph.py > tmp/dep.dot
 $ dot -Tpng tmp/dep.dot > tmp/dep.png
 ```
 
+## License
+MIT
