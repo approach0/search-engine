@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <string.h>
 
 static void print_help(char *argv[])
 {
@@ -13,9 +14,10 @@ static void print_help(char *argv[])
 	printf("%s -h |"
 	       " -s (summary) |"
 	       " -t (unique terms) |"
-	       " -p (posting lists) |"
+	       " -l (posting lists) |"
 	       " -d (all document) |"
 	       " -a (dump all) |"
+	       " -p (index path) |"
 	       "\n", argv[0]);
 }
 
@@ -27,11 +29,12 @@ int main(int argc, char* argv[])
 	term_id_t i;
 	doc_id_t j;
 	char *term;
+	char *index_path = NULL;
 
 	int opt, opt_any = 0;
 	bool opt_summary = 0, opt_terms = 0, opt_postings = 0,
 	     opt_document = 0, opt_all = 0;
-	while ((opt = getopt(argc, argv, "hstpda")) != -1) {
+	while ((opt = getopt(argc, argv, "hstldap:")) != -1) {
 		opt_any = 1;
 		switch (opt) {
 		case 'h':
@@ -46,7 +49,7 @@ int main(int argc, char* argv[])
 			opt_terms = 1;
 			break;
 
-		case 'p':
+		case 'l':
 			opt_postings = 1;
 			break;
 
@@ -56,6 +59,10 @@ int main(int argc, char* argv[])
 
 		case 'a':
 			opt_all = 1;
+			break;
+		
+		case 'p':
+			index_path = strdup(optarg);
 			break;
 
 		default:
@@ -69,10 +76,17 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 
-	ti = term_index_open("./tmp", TERM_INDEX_OPEN_EXISTS);
+	if (index_path == NULL) {
+		printf("no index path specified.\n");
+		goto exit;
+	} else {
+		printf("open index: %s\n", index_path);
+	}
+
+	ti = term_index_open(index_path, TERM_INDEX_OPEN_EXISTS);
 	if (ti == NULL) {
 		printf("index does not exists.\n");
-		return 1;
+		goto exit;
 	}
 
 	termN = term_index_get_termN(ti);
@@ -118,5 +132,8 @@ int main(int argc, char* argv[])
 	term_index_close(ti);
 
 exit:
+	if (index_path)
+		free(index_path);
+
 	return 0;
 }
