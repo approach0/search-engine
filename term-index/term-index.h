@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,9 +40,10 @@ struct term_posting_item {
 };
 
 void term_posting_start(void *);
-void *term_posting_jump(void *, void * /* posting item */);
+bool term_posting_jump(void *, doc_id_t);
 void term_posting_next(void *);
-void *term_posting_current(void *);
+struct term_posting_item
+*term_posting_current(void *);
 void term_posting_finish(void *);
 
 #ifdef __cplusplus

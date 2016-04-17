@@ -191,7 +191,15 @@ void term_posting_next(void *posting)
 	po->nextEntry();
 }
 
-void *term_posting_current(void *posting)
+/* find the first document which contains an ID >= given ID.
+ * returns false if no such document exists. */
+bool term_posting_jump(void *posting, doc_id_t doc_id)
+{
+	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
+	return po->nextEntry(doc_id);
+}
+
+struct term_posting_item *term_posting_current(void *posting)
 {
 	static struct term_posting_item ret;
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;

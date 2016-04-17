@@ -38,10 +38,10 @@ Lemur/Indri is not likely to be in your distribution's official software reposit
 Lemur/Indri library is an important dependency for this project, currently this project relies on it to provide full-text index functionality (so that we avoid reinventing the wheel, and we can focus on math search implementation. To combine two search engines, simply merge their results and weight their scores accordingly). 
 
  
-After download indri-5.9 for example, build its libraries:
+After downloading Indri tarball (indri-5.9 for example), build its libraries:
 
 ```
-$ (cd indri-5.1 && chmod +x configure && ./configure && make)
+$ (cd indri-5.9 && chmod +x configure && ./configure && make)
 ```
 
 ### 2. Configure dependency path
