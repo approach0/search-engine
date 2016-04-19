@@ -30,8 +30,6 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 
 * [bison](http://ftp.gnu.org/gnu/bison/bison-3.0.tar.xz)
 * [flex and libfl](http://sourceforge.net/projects/flex/files/flex-2.5.39.tar.xz/download)
-* [libreadline](http://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz)
-* [libncurses](http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.7.tar.gz)
 * [Lemur/Indri](https://sourceforge.net/projects/lemur/files/lemur/indri-5.9/indri-5.9.tar.gz/download)
 
 For Debian/Ubuntu users, issue the following commands:
