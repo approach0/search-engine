@@ -1,3 +1,3 @@
-CFLAGS += -I "../jieba/clone/lib"
-LDFLAGS += -L "../jieba/clone"
-OTHER_MERGE_AR += "../jieba/clone/libjieba.a"
+CFLAGS += -I "../jieba/fork/lib"
+LDFLAGS += -L "../jieba/fork"
+OTHER_MERGE_AR += "../jieba/fork/libjieba.a"

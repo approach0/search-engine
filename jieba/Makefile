@@ -1,11 +1,10 @@
 include ../rules.mk
-include ../module.mk
 
 all: lib
 
 lib:
-	make -C clone all
+	make -C fork all
 
 clean:
-	make -C clone clean
+	make -C fork clean
 	@ echo 'clean'
