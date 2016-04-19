@@ -21,7 +21,7 @@ sym_header="${1}"
 tok_header="${2}"
 C_template="${3}"
 output="${4}"
-tmpfile='name-list.tmp'
+tmpfile='trans-gen.tmp'
 
 cp $C_template ${output}
 

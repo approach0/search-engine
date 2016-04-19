@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 #include "tex-parser.h"
 #include "vt100-color.h"
+#include "completion.h"
 
 struct optr_node;
 void optr_print(struct optr_node*, FILE*);
@@ -13,17 +12,19 @@ int main()
 {
 	char *line;
 	struct tex_parse_ret ret;
+	const char history_fname[] = "linenoise-history.txt";
 
-	/* disable readline auto-complete */
-	rl_bind_key('\t', rl_abort);
+	/* hook up completion callback */
+	linenoiseSetCompletionCallback(completion_callbk);
 
-	while (1) {
-		line = readline(C_CYAN "edit: " C_RST);
+	/* Load the history at startup */
+	linenoiseHistoryLoad(history_fname);
 
-		if (NULL == line)
-			break;
-
-		add_history(line);
+	while ((line = linenoise("edit: ")) != NULL) {
+		/* Add to the history. */
+		linenoiseHistoryAdd(line);
+		/* Save the history on disk. */
+		linenoiseHistorySave(history_fname);
 
 		ret = tex_parse(line, 0, true);
 

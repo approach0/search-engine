@@ -1,9 +1,9 @@
 include ../rules.mk
 
 # objects below are generated at compile-time.
-OTHER_OBJS := lex.yy.o y.tab.o gen-trans.o
+OTHER_OBJS := lex.yy.o y.tab.o gen-trans.o gen-completion.o
 # source file below is excluded from compiling.
-EXCLUDE_SRC := trans.template.c
+EXCLUDE_SRC := trans.template.c completion.template.c
 
 include ../module.mk
 
@@ -14,6 +14,9 @@ gen-lexer.l: lexer.template.l symbol.template.h token.template.h
 
 gen-trans.c: gen-symbol.h gen-token.h trans.template.c
 	./trans-gen.sh $^ $@
+
+gen-completion.c: lexer.template.l completion.template.c
+	./completion-gen.sh $^ $@
 
 lex.yy.c: gen-lexer.l y.tab.h
 	$(LEX)

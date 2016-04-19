@@ -24,7 +24,7 @@ out_l=gen-lexer.l
 out_sym_h=gen-symbol.h
 out_tok_h=gen-token.h
 
-tmpfile=replace-lines.tmp
+tmpfile=auto-gen.tmp
 auto_macro=_AUTOGEN_
 
 cp ${templ_l} ${out_l}
