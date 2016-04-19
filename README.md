@@ -77,7 +77,7 @@ This project is still in its early stage, nothing really to show you now. Howeve
 * Index a corpus/collection and see its index statistics:
 	1. Download some plain text corpus (e.g. *Reuters-21578* and *Ohsumed* from [University of Trento](http://disi.unitn.it/moschitti/corpora.htm)).
 	2. `cd $(PROJECT)/indexer` and run `run/test-txt-indexer.out -p /path/to/corpus` to index corpus files recursively from directory. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$(PROJECT)/indexer/tmp`).
-	3. `cd $(PROJECT)/indexer` and run `../term-index/run/test-read.out -s` to have a look at the summary of the index (termN, docN, avgDocLen etc.) you just build.
+	3. `cd $(PROJECT)/indexer` and run `../term-index/run/test-read.out -s -p $(PROJECT)/indexer/tmp` to have a look at the summary of the index (termN, docN, avgDocLen etc.) you just build.
 
 ## Module dependency
 ![module dependency](https://raw.githubusercontent.com/t-k-/cowpie-lab/master/dep.png)
