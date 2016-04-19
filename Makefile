@@ -5,7 +5,7 @@ include rules.mk
 all: frame_all tags
 
 # print colorful notice for make entering
-MODULE_ENTER_PRINT =  @ tput setaf 1 && echo -n '[module $*] ' && tput sgr0;
+MODULE_ENTER_PRINT =  @ tput setaf 1 && echo -n '[$@] ' && tput sgr0;
 
 # general rules are listed below 
 
