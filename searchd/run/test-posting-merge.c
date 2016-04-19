@@ -5,7 +5,7 @@
 #include <limits.h>
 
 #include "term-index/term-index.h"
-#include "search.h"
+#include "postmerge.h"
 
 uint64_t term_posting_current_id_wrap(void *posting)
 {

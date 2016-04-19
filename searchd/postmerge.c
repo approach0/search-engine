@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "search.h"
+#include "postmerge.h"
 
 void postmerge_arg_init(struct postmerge_arg *arg)
 {
