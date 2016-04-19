@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 	}
 
 	printf("opening dict...\n");
-	text_segment_init("../jieba/clone/dict");
+	text_segment_init("../jieba/fork/dict");
 	printf("dict opened.\n");
 
 	term_index = term_index_open("./tmp", TERM_INDEX_OPEN_CREATE);

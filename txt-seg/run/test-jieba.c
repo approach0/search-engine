@@ -11,9 +11,9 @@
 
 int main()
 {
-	const char* DICT_PATH = "../jieba/clone/dict/jieba.dict.utf8";
-	const char* HMM_PATH =  "../jieba/clone/dict/hmm_model.utf8";
-	const char* USER_DICT = "../jieba/clone/dict/user.dict.utf8";
+	const char* DICT_PATH = "../jieba/fork/dict/jieba.dict.utf8";
+	const char* HMM_PATH =  "../jieba/fork/dict/hmm_model.utf8";
+	const char* USER_DICT = "../jieba/fork/dict/user.dict.utf8";
 		
 	Jieba jieba = NewJieba(DICT_PATH, HMM_PATH, USER_DICT); 
 	int i;

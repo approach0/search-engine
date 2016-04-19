@@ -33,7 +33,7 @@ const char * txt[] = {
 int main()
 {
 	list li = LIST_NULL;
-	text_segment_init("../jieba/clone/dict");
+	text_segment_init("../jieba/fork/dict");
 	int i;
 
 	text_segment_insert_usrterm("人艰不拆");
