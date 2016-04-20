@@ -16,9 +16,24 @@ struct merge_score_arg {
 	keyval_db_t              keyval_db;
 };
 
+void term_posting_start_wrap(void *posting)
+{
+	if (posting)
+		term_posting_start(posting);
+}
+
+void term_posting_finish_wrap(void *posting)
+{
+	if (posting)
+		term_posting_finish(posting);
+}
+
 void *term_posting_current_wrap(void *posting)
 {
-	return term_posting_current(posting);
+	if (posting)
+		return term_posting_current(posting);
+	else
+		return NULL;
 }
 
 uint64_t term_posting_current_id_wrap(void *item)
@@ -36,6 +51,9 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 {
 	bool succ;
 
+	/* because uint64_t value can be greater than doc_id_t,
+	 * we need a wrapper function to safe-guard from
+	 * calling term_posting_jump with illegal argument. */
 	if (to_id >= UINT_MAX)
 		succ = 0;
 	else
@@ -76,7 +94,7 @@ void posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg, void* extr
 
 int main(int argc, char *argv[])
 {
-	int                     i, j, opt;
+	int                     i, opt;
 	void                   *ti, *posting;
 	term_id_t               term_id;
 	struct postmerge_arg    pm_arg;
@@ -172,25 +190,31 @@ int main(int argc, char *argv[])
 
 	docN = term_index_get_docN(ti);
 
-	for (i = 0, j = 0; i < n_terms; i++) {
+	for (i = 0; i < n_terms; i++) {
 		term_id = term_lookup(ti, terms[i]);
 		if (term_id != 0) {
 			posting = term_index_get_posting(ti, term_id);
-			postmerge_arg_add_post(&pm_arg, posting);
 
 			df = term_index_get_df(ti, term_id);
-			bm25args.idf[j] = BM25_idf((float)df, (float)docN);
+			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
 
 			printf("term `%s' ID = %u, df[%d] = %u.\n",
-			       terms[i], term_id, j, df);
-			j ++;
+			       terms[i], term_id, i, df);
 		} else {
-			printf("term `%s' not found.\n", terms[i]);
 			posting = NULL;
+
+			df = 0;
+			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
+
+
+			printf("term `%s' not found, df[%d] = %u.\n",
+			       terms[i], i, df);
 		}
+
+		postmerge_arg_add_post(&pm_arg, posting);
 	}
 
-	bm25args.n_postings = j;
+	bm25args.n_postings = i;
 	bm25args.avgDocLen = (float)term_index_get_avgDocLen(ti);
 	bm25args.b  = BM25_DEFAULT_B;
 	bm25args.k1 = BM25_DEFAULT_K1;
@@ -200,8 +224,8 @@ int main(int argc, char *argv[])
 	BM25_term_i_args_print(&bm25args);
 
 	pm_arg.extra_args = &bm25args;
-	pm_arg.post_start_fun = &term_posting_start;
-	pm_arg.post_finish_fun = &term_posting_finish;
+	pm_arg.post_start_fun = &term_posting_start_wrap;
+	pm_arg.post_finish_fun = &term_posting_finish_wrap;
 	pm_arg.post_jump_fun = &term_posting_jump_wrap;
 	pm_arg.post_next_fun = &term_posting_next;
 	pm_arg.post_now_fun = &term_posting_current_wrap;
