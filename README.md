@@ -59,7 +59,7 @@ Type `make` at project top level (i.e. `$PROJECT`) will do the job.
 ### 4. Test some commands you build
 This project is still in its early stage, nothing really to show you now. However, you can play with some existing commands:
 
-* Run our TeX parser to see the corresponding operator tree of a math expression:
+* Run our TeX parser to see the corresponding operator tree of a math expression
 	```
 	$ ./tex-parser/run/test-tex-parser.out
 	edit: a+b/c
@@ -78,13 +78,14 @@ This project is still in its early stage, nothing really to show you now. Howeve
 	* VAR(0)/rank2(1)/FRAC(2)/ADD(2)/[path_id=3: type=normal, leaf symbol=`c', fr_hash=7503]
 	```
 
-* Index a corpus/collection and see its index statistics:
+* Index a corpus/collection and see its index statistics
 	1. Download some plain text corpus (e.g. *Reuters-21578* and *Ohsumed* from [University of Trento](http://disi.unitn.it/moschitti/corpora.htm)).
 	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p /path/to/corpus` to index corpus files recursively from directory. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$PROJECT/indexer/tmp`).
 	3. `cd $PROJECT/indexer` and run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to have a look at the summary of the index (termN, docN, avgDocLen etc.) you just build.
 
-* Test posting list merge and score
-Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs (and its Okapi BM25 score) for the keywords you input.
+* Test merge and score of posting list 
+
+	Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs (and its Okapi BM25 score) for the keywords you input.
 	For AND merge:
 	```
 	$ $PROJECT/searchd/run/test-posting-merge.out -p ./indexer/tmp/ -t 'doctor' -t 'eat' -t 'apple' -o AND
