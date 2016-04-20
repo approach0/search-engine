@@ -32,12 +32,12 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 * [flex and libfl](http://sourceforge.net/projects/flex/files/flex-2.5.39.tar.xz/download)
 * [Lemur/Indri](https://sourceforge.net/projects/lemur/files/lemur/indri-5.9/indri-5.9.tar.gz/download)
 
-For Debian/Ubuntu users, issue the following commands:
+For Debian/Ubuntu users, you can type the following commands to install above external dependencies:
 ```
 $ sudo apt-get update
-$ sudo apt-get install bison flex libreadline-dev libncurses5-dev
+$ sudo apt-get install bison flex
 ```
-Lemur/Indri is not likely to be in your distribution's official software repository, so you may need to manually build it (see the next step).
+Lemur/Indri is not likely to be in your distribution's official software repository, so you may need to build and manually specify its library path (see the next step).
 
 Lemur/Indri library is an important dependency for this project, currently this project relies on it to provide full-text index functionality (so that we avoid reinventing the wheel, and we can focus on math search implementation. To combine two search engines, simply merge their results and weight their scores accordingly).
 
