@@ -3,7 +3,7 @@
 
 typedef void * blob_index_t;
 
-blob_index_t blob_index_open(const char *); /* a directory path, create it if not exists. */
+blob_index_t blob_index_open(const char* /* index path, create it if not exists */);
 
 size_t blob_index_write(blob_index_t, doc_id_t, const void *, size_t);
 

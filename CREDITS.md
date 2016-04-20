@@ -77,6 +77,13 @@ Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
   DAMAGE.
 
+## Tokyo Cabinet (publised under GNU Lesser General Public License: LGPL v2.1)
+Copyright (C) 2006-2011 FAL Labs
+
+Tokyo Cabinet was written and is maintained by FAL Labs. You can contact the author by e-mail to `info@fallabs.com'.
+
+Website: http://fallabs.com/tokyocabinet
+
 ## Linenoise
 Copyright (c) 2010-2014, Salvatore Sanfilippo <antirez at gmail dot com>
 Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>

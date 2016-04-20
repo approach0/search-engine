@@ -65,6 +65,7 @@ regular-clean:
 	$(FIND) -type f \( -name '*.gch' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.pyc' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.out' \) -print | xargs rm -f
+	$(FIND) -type f \( -name '*.bin' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.log' \) -print | xargs rm -f
 	$(FIND) -type l \( -name '*.ln' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.so' \) -print | xargs rm -f
