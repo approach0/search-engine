@@ -1,0 +1,2 @@
+1. Fix BM25 score's corner cases that posting[i] = NULL for some i.
+2. Implement blob-index.
