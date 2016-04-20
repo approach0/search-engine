@@ -137,7 +137,9 @@ posting_merge_AND(struct postmerge_arg *arg, void *extra_args)
 bool posting_merge(struct postmerge_arg *arg, void *extra_args)
 {
 	uint32_t i;
-	bool res = 1;
+
+	if (arg->n_postings == 0)
+		return 1;
 
 	/* initialize posting iterator */
 	for (i = 0; i < arg->n_postings; i++) {
@@ -157,5 +159,5 @@ bool posting_merge(struct postmerge_arg *arg, void *extra_args)
 	for (i = 0; i < arg->n_postings; i++)
 		arg->post_finish_fun(arg->postings[i]);
 
-	return res;
+	return 1;
 }

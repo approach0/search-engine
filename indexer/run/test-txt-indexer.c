@@ -6,6 +6,7 @@
 #include "wstring/wstring.h"
 #include "txt-seg/txt-seg.h"
 #include "term-index/term-index.h"
+#include "keyval-db/keyval-db.h"
 
 #define  LEX_PREFIX(_name) txt ## _name
 #include "lex.h"
@@ -14,6 +15,7 @@
 #include "config.h"
 
 static void *term_index;
+keyval_db_t  keyval_db;
 
 static LIST_IT_CALLBK(handle_chinese_word)
 {
@@ -49,7 +51,7 @@ int handle_english(char *term)
 	return 0;
 }
 
-void lexer_file_input(const char *path)
+static void lexer_file_input(const char *path)
 {
 	FILE *fh = fopen(path, "r");
 	if (fh) {
@@ -61,7 +63,23 @@ void lexer_file_input(const char *path)
 	}
 }
 
-int foreach_file_callbk(const char *filename, void *arg)
+static void index_txt_document(const char *fullpath)
+{
+	size_t val_sz = strlen(fullpath) + 1;
+	doc_id_t new_docID;
+
+	term_index_doc_begin(term_index);
+	lexer_file_input(fullpath);
+	new_docID = term_index_doc_end(term_index);
+
+	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
+	                 (void *)fullpath, val_sz)) {
+		printf("put error: %s\n", keyval_db_last_err(keyval_db));
+		return;
+	}
+}
+
+static int foreach_file_callbk(const char *filename, void *arg)
 {
 	char *path = (char*) arg;
 	//char *ext = filename_ext(filename);
@@ -71,10 +89,7 @@ int foreach_file_callbk(const char *filename, void *arg)
 		sprintf(fullpath, "%s/%s", path, filename);
 		//printf("[txt file] %s\n", fullpath);
 
-		term_index_doc_begin(term_index);
-		lexer_file_input(fullpath);
-		term_index_doc_end(term_index);
-
+		index_txt_document(fullpath);
 		if (term_index_maintain(term_index))
 			printf("\r[term index merging...]");
 	//}
@@ -82,7 +97,7 @@ int foreach_file_callbk(const char *filename, void *arg)
 	return 0;
 }
 
-enum ds_ret
+static enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
 {
@@ -94,7 +109,9 @@ dir_search_callbk(const char* path, const char *srchpath,
 int main(int argc, char* argv[])
 {
 	int opt;
-	char *path;
+	char *keyval_db_path /* key value DB tmp string*/;
+	char *path /* corpus path */;
+	const char index_path[] = "./tmp";
 
 	while ((opt = getopt(argc, argv, "hp:")) != -1) {
 		switch (opt) {
@@ -103,7 +120,7 @@ int main(int argc, char* argv[])
 			printf("index txt document from a specified path. \n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -p <path>\n", argv[0]);
+			printf("%s -h | -p <corpus path>\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -p ./some/where/file.txt\n", argv[0]);
@@ -121,9 +138,9 @@ int main(int argc, char* argv[])
 	}
 
 	if (path) {
-		printf("index path %s\n", path);
+		printf("corpus path %s\n", path);
 	} else {
-		printf("no path specified.\n");
+		printf("no corpus path specified.\n");
 		goto exit;
 	}
 
@@ -131,23 +148,37 @@ int main(int argc, char* argv[])
 	text_segment_init("../jieba/fork/dict");
 	printf("dict opened.\n");
 
-	term_index = term_index_open("./tmp", TERM_INDEX_OPEN_CREATE);
+	printf("opening term index...\n");
+	term_index = term_index_open(index_path, TERM_INDEX_OPEN_CREATE);
 	if (NULL == term_index) {
 		printf("cannot create/open term index.\n");
 		return 1;
 	}
 
+	keyval_db_path = (char *)malloc(1024);
+	strcpy(keyval_db_path, index_path);
+	strcat(keyval_db_path, "/kv_doc_path.bin");
+	printf("opening key-value DB (%s)...\n", keyval_db_path);
+	keyval_db = keyval_db_open(keyval_db_path, KEYVAL_DB_OPEN_WR);
+	free(keyval_db_path);
+	if (keyval_db == NULL) {
+		printf("cannot create/open key-value DB.\n");
+		goto keyval_db_fails;
+	}
+
 	if (file_exists(path)) {
 		printf("[single file] %s\n", path);
-		term_index_doc_begin(term_index);
-		lexer_file_input(path);
-		term_index_doc_end(term_index);
+		index_txt_document(path);
 	} else if (dir_exists(path)) {
 		dir_search_podfs(path, &dir_search_callbk, NULL);
 	} else {
 		printf("not file/directory.\n");
 	}
 
+	printf("closing key-value DB...\n");
+	keyval_db_close(keyval_db);
+
+keyval_db_fails:
 	printf("closing term index...\n");
 	term_index_close(term_index);
 

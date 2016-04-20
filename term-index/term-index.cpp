@@ -118,10 +118,10 @@ void term_index_doc_add(void *handle, char *term)
 	ti->save.push_back(p);
 }
 
-void term_index_doc_end(void *handle)
+doc_id_t term_index_doc_end(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	ti->repo.addDocument(&ti->document);
+	doc_id_t new_docID = ti->repo.addDocument(&ti->document);
 
 	vector<char*>::iterator it;
 	vector<char*> &terms = ti->save;
@@ -129,6 +129,8 @@ void term_index_doc_end(void *handle)
 		//printf("free %s address: %p\n", *it, *it);
 		free(*it);
 	}
+
+	return new_docID;
 }
 
 uint32_t term_index_get_termN(void *handle)

@@ -6,12 +6,14 @@
 
 #include "list/list.h"
 #include "term-index/term-index.h"
+#include "keyval-db/keyval-db.h"
 #include "postmerge.h"
 #include "bm25-score.h"
 
 struct merge_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
+	keyval_db_t              keyval_db;
 };
 
 void *term_posting_current_wrap(void *posting)
@@ -47,6 +49,8 @@ void posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg, void* extr
 	uint32_t i;
 	float score = 0.f;
 	doc_id_t docID = cur_min;
+	char *doc_path;
+	size_t val_sz;
 
 	P_CAST(ms_arg, struct merge_score_arg, extra_args);
 	float doclen = (float)term_index_get_docLen(ms_arg->term_index, docID);
@@ -59,7 +63,15 @@ void posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg, void* extr
 			score += BM25_term_i_score(ms_arg->bm25args, i, tpi->tf, doclen);
 		}
 
-	printf("BM25 score = %f\n", score);
+	if(NULL != (doc_path = keyval_db_get(ms_arg->keyval_db, &docID,
+	                                     sizeof(doc_id_t), &val_sz))) {
+		printf("`%s' ", doc_path);
+		free(doc_path);
+	} else {
+		printf("get error: %s\n", keyval_db_last_err(ms_arg->keyval_db));
+	}
+
+	printf("(BM25 score = %f)\n", score);
 }
 
 int main(int argc, char *argv[])
@@ -69,10 +81,12 @@ int main(int argc, char *argv[])
 	term_id_t               term_id;
 	struct postmerge_arg    pm_arg;
 	struct merge_score_arg  ms_arg;
+	keyval_db_t             keyval_db;
 
 	char    *index_path = NULL;
 	char    *terms[MAX_MERGE_POSTINGS];
-	uint32_t docN, n_terms = 0;
+	char    *keyval_db_path;
+	uint32_t docN, df, n_terms = 0;
 
 	struct BM25_term_i_args bm25args;
 
@@ -141,17 +155,34 @@ int main(int argc, char *argv[])
 		goto free_args;
 	}
 
+	keyval_db_path = (char *)malloc(1024);
+	strcpy(keyval_db_path, index_path);
+	/* trim trailing slash (user may specify path ending with a slash) */
+	if (keyval_db_path[strlen(keyval_db_path) - 1] == '/')
+		keyval_db_path[strlen(keyval_db_path) - 1] = '\0';
+	strcat(keyval_db_path, "/kv_doc_path.bin");
+	printf("opening key-value DB (%s)...\n", keyval_db_path);
+	keyval_db = keyval_db_open(keyval_db_path, KEYVAL_DB_OPEN_RD);
+	free(keyval_db_path);
+
+	if (keyval_db == NULL) {
+		printf("key-value DB open error.\n");
+		goto key_value_db_fails;
+	}
+
 	docN = term_index_get_docN(ti);
 
 	for (i = 0, j = 0; i < n_terms; i++) {
 		term_id = term_lookup(ti, terms[i]);
 		if (term_id != 0) {
-			printf("term `%s' ID = %u.\n", terms[i], term_id);
 			posting = term_index_get_posting(ti, term_id);
 			postmerge_arg_add_post(&pm_arg, posting);
 
-			bm25args.idf[j] = BM25_idf((float)term_index_get_df(ti, term_id),
-			                           (float)docN);
+			df = term_index_get_df(ti, term_id);
+			bm25args.idf[j] = BM25_idf((float)df, (float)docN);
+
+			printf("term `%s' ID = %u, df[%d] = %u.\n",
+			       terms[i], term_id, j, df);
 			j ++;
 		} else {
 			printf("term `%s' not found.\n", terms[i]);
@@ -167,7 +198,6 @@ int main(int argc, char *argv[])
 
 	printf("BM25 arguments:\n");
 	BM25_term_i_args_print(&bm25args);
-	printf("\n");
 
 	pm_arg.extra_args = &bm25args;
 	pm_arg.post_start_fun = &term_posting_start;
@@ -180,14 +210,18 @@ int main(int argc, char *argv[])
 
 	ms_arg.term_index = ti;
 	ms_arg.bm25args = &bm25args;
+	ms_arg.keyval_db = keyval_db;
 
 	printf("start merging...\n");
 	if (!posting_merge(&pm_arg, &ms_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
+key_value_db_fails:
+	printf("closing term index...\n");
 	term_index_close(ti);
 
 free_args:
+	printf("free arguments...\n");
 	for (i = 0; i < n_terms; i++)
 		free(terms[i]);
 

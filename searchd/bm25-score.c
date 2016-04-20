@@ -17,12 +17,15 @@ void BM25_term_i_args_print(struct BM25_term_i_args *args)
 	printf("avgDocLen = %f, b = %f, k1 = %f, b/avgDocLen = %f.\n",
 	       args->avgDocLen, args->b, args->k1, args->frac_b_avgDocLen);
 
-	for (i = 0; i < args->n_postings; i++) {
-		printf("idf[%d] = %f", i, args->idf[i]);
-		if (i + 1 != args->n_postings)
-			printf(", ");
+	if (args->n_postings > 0) {
+		for (i = 0; i < args->n_postings; i++) {
+			printf("idf[%d] = %f", i, args->idf[i]);
+			if (i + 1 != args->n_postings)
+				printf(", ");
+		}
+
+		printf(".\n");
 	}
-	printf(".");
 }
 
 float BM25_term_i_score(struct BM25_term_i_args* args, uint32_t i, float tf, float doclen)

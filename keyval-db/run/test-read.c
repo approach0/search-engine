@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include "keyval-db.h"
 
@@ -32,6 +33,7 @@ int main()
 		}
 
 		printf("%u => %u (value size = %lu)\n", key, *pval, val_sz);
+		free(pval);
 	}
 
 	keyval_db_close(db);
