@@ -83,12 +83,13 @@ This project is still in its early stage, nothing really to show you now. Howeve
 	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p /path/to/corpus` to index corpus files recursively from directory. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$PROJECT/indexer/tmp`).
 	3. `cd $PROJECT/indexer` and run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to have a look at the summary of the index (termN, docN, avgDocLen etc.) you just build.
 
-* Test posting list merge
-Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs for the keywords you input. For AND merge:
+* Test posting list merge and score
+Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs (and its Okapi BM25 score) for the keywords you input.
+	For AND merge:
 	```
 	$ $PROJECT/searchd/run/test-posting-merge.out -p ./indexer/tmp/ -t 'doctor' -t 'eat' -t 'apple' -o AND
 	```
-Alternatively, merge term posting lists using OR operation:
+	Alternatively, merge term posting lists using OR operation:
 	```
 	$ $PROJECT/searchd/run/test-posting-merge.out -p ./indexer/tmp/ -t 'nick' -t 'wilde' -o OR
 	```

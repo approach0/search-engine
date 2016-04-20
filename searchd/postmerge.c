@@ -64,7 +64,8 @@ next_id_OR(struct postmerge_arg *arg, uint32_t *cur_min_idx)
 	for (i = 0; i < arg->n_postings; i++) {
 		if (arg->curIDs[i] <= cur_min) {
 			arg->post_next_fun(arg->postings[i]);
-			arg->curIDs[i] = arg->post_now_id_fun(arg->postings[i]);
+			arg->cur_pos_item[i] = arg->post_now_fun(arg->postings[i]);
+			arg->curIDs[i] = arg->post_now_id_fun(arg->cur_pos_item[i]);
 		}
 	}
 
@@ -87,7 +88,8 @@ next_id_AND(struct postmerge_arg *arg,
 				if (!arg->post_jump_fun(arg->postings[i], cur_max))
 					break;
 
-			arg->curIDs[i] = arg->post_now_id_fun(arg->postings[i]);
+			arg->cur_pos_item[i] = arg->post_now_fun(arg->postings[i]);
+			arg->curIDs[i] = arg->post_now_id_fun(arg->cur_pos_item[i]);
 		}
 	}
 
@@ -140,7 +142,8 @@ bool posting_merge(struct postmerge_arg *arg, void *extra_args)
 	/* initialize posting iterator */
 	for (i = 0; i < arg->n_postings; i++) {
 		arg->post_start_fun(arg->postings[i]);
-		arg->curIDs[i] = arg->post_now_id_fun(arg->postings[i]);
+		arg->cur_pos_item[i] = arg->post_now_fun(arg->postings[i]);
+		arg->curIDs[i] = arg->post_now_id_fun(arg->cur_pos_item[i]);
 	}
 
 	if (arg->op == POSTMERGE_OP_AND)
