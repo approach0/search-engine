@@ -31,7 +31,6 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 * [bison](http://ftp.gnu.org/gnu/bison/bison-3.0.tar.xz)
 * [flex and libfl](http://sourceforge.net/projects/flex/files/flex-2.5.39.tar.xz/download)
 * [libtokyocabinet](http://fallabs.com/tokyocabinet/tokyocabinet-1.4.48.tar.gz)
-	* [libz](http://zlib.net/zlib-1.2.8.tar.gz)
 	* [libbz](http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz)
 * [Lemur/Indri](https://sourceforge.net/projects/lemur/files/lemur/indri-5.9/indri-5.9.tar.gz/download)
 
