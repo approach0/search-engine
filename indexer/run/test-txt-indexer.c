@@ -46,6 +46,7 @@ int handle_english(char *term)
 {
 	for(int i = 0; term[i]; i++)
 		term[i] = tolower(term[i]);
+
 	//printf("English word:`%s'\n", term);
 	term_index_doc_add(term_index, term);
 	return 0;

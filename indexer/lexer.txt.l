@@ -6,6 +6,10 @@
 
 int handle_chinese(char*);
 int handle_english(char*);
+
+extern size_t lex_seek_pos;
+
+#define YY_USER_ACTION { lex_seek_pos += txtleng; }
 %}
 
 engword [a-zA-Z]
@@ -18,3 +22,5 @@ chinese [\x80-\xf3]
 \n                                     {}
 .                                      {}
 %%
+
+size_t lex_seek_pos = 0;
