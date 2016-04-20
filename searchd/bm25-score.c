@@ -2,14 +2,25 @@
 #include <math.h>
 #include "bm25-score.h"
 
-/* This file implements a Okapi BM25 score function,
+/*
+ * This file implements an Okapi BM25 score function,
  * it is very standard and proven score function for
  * `bag of words' model. It is used as the next generation
  * of Lucene relevance score function.
  *
- * See https://en.wikipedia.org/wiki/Okapi_BM25 for its formula.
- * (formula yeils not-normalized score)
- * */
+ * BM25 yields a non-normalized score (not necessarily
+ * between zero and one. Also, BM25 does not penalize terms
+ * whose tf is zero. But if the query is long, then we
+ * might also need similar weighting for query terms, i.e.
+ * to add frequency of term in query (query term frequency)
+ * as another parameter. This is appropriate if the queries
+ * are paragraph long, but unnecessary for short queries.
+ *
+ * See links below for more:
+ * https://en.wikipedia.org/wiki/Okapi_BM25
+ * http://nlp.stanford.edu/IR-book/html/-
+ * htmledition/okapi-bm25-a-non-binary-model-1.html
+ */
 
 void BM25_term_i_args_print(struct BM25_term_i_args *args)
 {
