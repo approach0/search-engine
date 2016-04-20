@@ -13,6 +13,8 @@ enum ds_ret {
 
 typedef enum ds_ret (*ds_callbk)(const char*, const char *,
                                  uint32_t, void *);
+
+/* recursive post-order DFS of directory */
 int dir_search_podfs(const char*, ds_callbk, void *);
 
 typedef int (*ffi_callbk)(const char*, void *);
