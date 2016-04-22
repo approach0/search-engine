@@ -35,25 +35,25 @@ static LIST_IT_CALLBK(handle_chinese_word)
 LIST_DEF_FREE_FUN(list_release, struct term_list_node,
                   ln, free(p));
 
-int handle_chinese(struct lex_term *lt)
+void handle_math(struct lex_slice *slice)
 {
-	list li = LIST_NULL;
-
-	li = text_segment(lt->txt);
-	list_foreach(&li, &handle_chinese_word, lt);
-	list_release(&li);
-
-	return 0;
+	printf("math: %s (len=%lu)\n", slice->mb_str, slice->offset);
 }
-
-int handle_english(struct lex_term *lt)
+void handle_text(struct lex_slice *slice)
 {
-	for(int i = 0; lt->txt[i]; i++)
-		lt->txt[i] = tolower(lt->txt[i]);
+	printf("text: %s (len=%lu)\n", slice->mb_str, slice->offset);
+//	for(int i = 0; slice->offset; i++)
+//		slice->mb_str[i] = tolower(slice->mb_str[i]);
+
+
+//	list li = LIST_NULL;
+//
+//	li = text_segment(lt->txt);
+//	list_foreach(&li, &handle_chinese_word, lt);
+//	list_release(&li);
 
 	//printf("English word:`%s'\n", term);
-	term_index_doc_add(term_index, lt->txt);
-	return 0;
+	//term_index_doc_add(term_index, lt->txt);
 }
 
 static void lexer_file_input(const char *path)
@@ -70,18 +70,18 @@ static void lexer_file_input(const char *path)
 
 static void index_txt_document(const char *fullpath)
 {
-	size_t val_sz = strlen(fullpath) + 1;
-	doc_id_t new_docID;
-
-	term_index_doc_begin(term_index);
+//	size_t val_sz = strlen(fullpath) + 1;
+//	doc_id_t new_docID;
+//
+//	term_index_doc_begin(term_index);
 	lexer_file_input(fullpath);
-	new_docID = term_index_doc_end(term_index);
-
-	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
-	                 (void *)fullpath, val_sz)) {
-		printf("put error: %s\n", keyval_db_last_err(keyval_db));
-		return;
-	}
+//	new_docID = term_index_doc_end(term_index);
+//
+//	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
+//	                 (void *)fullpath, val_sz)) {
+//		printf("put error: %s\n", keyval_db_last_err(keyval_db));
+//		return;
+//	}
 }
 
 static int foreach_file_callbk(const char *filename, void *arg)
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 			printf("%s -p ./some/where/file.txt\n", argv[0]);
 			printf("%s -p ./some/where\n", argv[0]);
 			goto exit;
-		
+
 		case 'p':
 			path = strdup(optarg);
 			break;

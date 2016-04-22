@@ -20,22 +20,34 @@ struct position_node {
 	struct list_node ln;
 };
 
-list positions_list = LIST_NULL;
+static list positions_list = LIST_NULL;
 uint32_t cnt_positions = 0;
+
+static char bigbuf[MAX_TERM_BYTES + 4096 /* protect padding */];
 
 static LIST_IT_CALLBK(print_position)
 {
 	LIST_OBJ(struct position_node, p, ln);
 	P_CAST(fh, FILE, pa_extra);
-	char term[MAX_TERM_BYTES];
+	size_t n_read;
 
-	printf("#%u ", ++cnt_positions);
+	printf("checking #%u pos", ++cnt_positions);
 	printf("<%lu, %lu>: ", p->begin, p->offset);
 
-	fseek(fh, p->begin, SEEK_SET);
-	fread(&term, p->offset, 1, fh);
-	term[p->offset] = '\0';
-	printf("%s\n", term);
+	if (0 == fseek(fh, p->begin, SEEK_SET)) {
+		n_read = fread(&bigbuf, p->offset, 1, fh);
+		if (n_read == 1) {
+			bigbuf[p->offset] = '\0';
+			printf("{%s}\n", bigbuf);
+		} else {
+			printf("unexpected test offset %lu-%lu.\n",
+			       n_read, p->offset);
+			return LIST_RET_BREAK;
+		}
+	} else {
+		printf("bad fseek position.\n");
+		return LIST_RET_BREAK;
+	}
 
 	LIST_GO_OVER;
 }
@@ -52,23 +64,17 @@ static void insert_pos(size_t begin, size_t offset)
 	list_insert_one_at_tail(&nd->ln, &positions_list, NULL, NULL);
 }
 
-int handle_chinese(struct lex_term *lt)
+void handle_math(struct lex_slice *slice)
 {
-	printf("#%u ", ++cnt_positions);
-	printf("Chinese word:`%s' [byte pos, offset] = [%lu, %lu].\n",
-	       lt->txt, lt->begin, lt->offset);
-	insert_pos(lt->begin, lt->offset);
-
-	return 0;
+	printf("#%u math: %s <%lu,%lu>\n", ++cnt_positions, slice->mb_str,
+	       slice->begin, slice->offset);
+	insert_pos(slice->begin, slice->offset);
 }
-
-int handle_english(struct lex_term *lt)
+void handle_text(struct lex_slice *slice)
 {
-	printf("#%u ", ++cnt_positions);
-	printf("English word:`%s' [byte pos, offset] = [%lu, %lu].\n",
-	       lt->txt, lt->begin, lt->offset);
-	insert_pos(lt->begin, lt->offset);
-	return 0;
+	printf("#%u text: %s <%lu,%lu>\n", ++cnt_positions, slice->mb_str,
+	       slice->begin, slice->offset);
+	insert_pos(slice->begin, slice->offset);
 }
 
 static void lexer_file_input(const char *path)
@@ -100,8 +106,8 @@ int main(void)
 	list_foreach(&positions_list, &print_position, fh);
 
 	fclose(fh);
+
 free:
 	free_positions_list(&positions_list);
-
 	return 0;
 }
