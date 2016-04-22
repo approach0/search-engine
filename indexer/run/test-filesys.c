@@ -37,7 +37,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 int main(int argc, char* argv[])
 {
 	int opt;
-	char *path;
+	char *path = NULL;
 	char test_str[] = "test string";
 
 	/* handle program arguments */
