@@ -70,6 +70,7 @@ regular-clean:
 	$(FIND) -type l \( -name '*.ln' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.so' \) -print | xargs rm -f
 	$(FIND) -type d \( -name 'tmp' \) -print | xargs rm -rf
+	$(FIND) -type d \( -name '__pycache__' \) -print | xargs rm -rf
 
 grep-%:
 	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep --color -nH $* {} \;

@@ -13,15 +13,15 @@
 #define  LEX_PREFIX(_name) txt ## _name
 #include "lex.h"
 
-extern size_t lex_seek_pos;
-
-list positions_list = LIST_NULL;
-uint32_t cnt_positions = 0;
+#include "lex-term.h"
 
 struct position_node {
 	size_t begin, offset /* in bytes */;
 	struct list_node ln;
 };
+
+list positions_list = LIST_NULL;
+uint32_t cnt_positions = 0;
 
 static LIST_IT_CALLBK(print_position)
 {
@@ -52,25 +52,22 @@ static void insert_pos(size_t begin, size_t offset)
 	list_insert_one_at_tail(&nd->ln, &positions_list, NULL, NULL);
 }
 
-int handle_chinese(char *term)
+int handle_chinese(struct lex_term *lt)
 {
-	size_t   len = strlen(term); /* in bytes */
 	printf("#%u ", ++cnt_positions);
 	printf("Chinese word:`%s' [byte pos, offset] = [%lu, %lu].\n",
-	       term, lex_seek_pos - len, len);
-	insert_pos(lex_seek_pos - len, len);
+	       lt->txt, lt->begin, lt->offset);
+	insert_pos(lt->begin, lt->offset);
 
 	return 0;
 }
 
-int handle_english(char *term)
+int handle_english(struct lex_term *lt)
 {
-	size_t   len = strlen(term); /* in bytes */
-
 	printf("#%u ", ++cnt_positions);
 	printf("English word:`%s' [byte pos, offset] = [%lu, %lu].\n",
-	       term, lex_seek_pos - len, len);
-	insert_pos(lex_seek_pos - len, len);
+	       lt->txt, lt->begin, lt->offset);
+	insert_pos(lt->begin, lt->offset);
 	return 0;
 }
 
@@ -86,15 +83,18 @@ static void lexer_file_input(const char *path)
 	}
 }
 
-int main()
+int main(void)
 {
 	FILE *fh;
+	const char test_file_name[] = "text.tmp";
 
-	lexer_file_input("test.tmp");
+	lexer_file_input(test_file_name);
 
-	fh = fopen("test.tmp","r");
-	if (fh == NULL)
+	fh = fopen(test_file_name,"r");
+	if (fh == NULL) {
+		printf("cannot open test file for position checking.\n");
 		goto free;
+	}
 
 	cnt_positions = 0;
 	list_foreach(&positions_list, &print_position, fh);
@@ -102,4 +102,6 @@ int main()
 	fclose(fh);
 free:
 	free_positions_list(&positions_list);
+
+	return 0;
 }

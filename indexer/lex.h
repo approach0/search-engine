@@ -4,7 +4,7 @@
 #define LEX_PREFIX(_name) yy ## _name
 #endif
 
-extern int LEX_PREFIX(lex)();
+extern int LEX_PREFIX(lex)(void);
 extern FILE *LEX_PREFIX(in);
 
 #undef LEX_PREFIX

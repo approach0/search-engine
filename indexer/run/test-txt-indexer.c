@@ -11,6 +11,8 @@
 #define  LEX_PREFIX(_name) txt ## _name
 #include "lex.h"
 
+#include "lex-term.h"
+
 #include "filesys.h"
 #include "config.h"
 
@@ -20,10 +22,12 @@ keyval_db_t  keyval_db;
 static LIST_IT_CALLBK(handle_chinese_word)
 {
 	LIST_OBJ(struct term_list_node, p, ln);
-	char *term = wstr2mbstr(p->term);
+	//P_CAST(lt, struct lex_term, pa_extra);
+	char *mb_term = wstr2mbstr(p->term);
 
-	//printf("Chinese word: `%s'\n", term);
-	term_index_doc_add(term_index, term);
+	printf("Chinese word: `%s'<%u,%u>\n", mb_term,
+	        p->begin_pos, p->end_pos);
+	//term_index_doc_add(term_index, term);
 
 	LIST_GO_OVER;
 }
@@ -31,24 +35,24 @@ static LIST_IT_CALLBK(handle_chinese_word)
 LIST_DEF_FREE_FUN(list_release, struct term_list_node,
                   ln, free(p));
 
-int handle_chinese(char *txt)
+int handle_chinese(struct lex_term *lt)
 {
 	list li = LIST_NULL;
 
-	li = text_segment(txt);
-	list_foreach(&li, &handle_chinese_word, NULL);
+	li = text_segment(lt->txt);
+	list_foreach(&li, &handle_chinese_word, lt);
 	list_release(&li);
 
 	return 0;
 }
 
-int handle_english(char *term)
+int handle_english(struct lex_term *lt)
 {
-	for(int i = 0; term[i]; i++)
-		term[i] = tolower(term[i]);
+	for(int i = 0; lt->txt[i]; i++)
+		lt->txt[i] = tolower(lt->txt[i]);
 
 	//printf("English word:`%s'\n", term);
-	term_index_doc_add(term_index, term);
+	term_index_doc_add(term_index, lt->txt);
 	return 0;
 }
 
@@ -111,7 +115,7 @@ int main(int argc, char* argv[])
 {
 	int opt;
 	char *keyval_db_path /* key value DB tmp string*/;
-	char *path /* corpus path */;
+	char *path = NULL /* corpus path */;
 	const char index_path[] = "./tmp";
 
 	while ((opt = getopt(argc, argv, "hp:")) != -1) {
