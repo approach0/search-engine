@@ -116,3 +116,7 @@ $ dot -Tpng tmp/dep.dot > tmp/dep.png
 
 ## License
 MIT
+
+## Contributing
+Whoever wants an efficient math-aware search to be reality and interested in making digital math-related content (e.g. a math Q&A website) searchable is invited to contribute in this project.
+Start your contributing by writing an issue, contribute a line of code, or a typo fix.
