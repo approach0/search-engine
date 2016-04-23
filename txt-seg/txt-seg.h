@@ -13,7 +13,9 @@ enum term_type {
 
 struct term_list_node {
 	wchar_t          term[MAX_TERM_WSTR_LEN];
-	uint32_t         begin_pos, end_pos;
+	uint32_t         begin_pos, end_pos; /* in characters */
+	/* notice term[end_pos - 1] is actually the last character
+	 * of this term. */
 	enum term_type   type;
 	struct list_node ln;
 };

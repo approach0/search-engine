@@ -6,7 +6,7 @@
 
 %{
 #include <stdio.h>
-#include "lex-term.h"
+#include "lex-slice.h"
 
 extern size_t lex_seek_pos;
 
@@ -39,14 +39,13 @@ mathsym [\x20-\x7e]
 ({engword}|{chinese}|[\ ])+            { _handle_slice(txttext, yyleng, LEX_SLICE_TEXT); }
 
  /* inline math */
-"[imath]"                                                          { BEGIN(imath); MORE; }
+"[imath]"  { BEGIN(imath); MORE; /* Append (instead of replace) next tokens to yytext */ }
 <imath>"[/imath]"      { BEGIN(INITIAL); _handle_slice(txttext, yyleng, LEX_SLICE_MATH); }
-<imath>{mathsym}      { MORE; /* In case we encounter "[/imath]", match char by char. */ }
+<imath>{mathsym}      { /* In case we encounter "[/imath]", match char by char. */ MORE; }
 
  /* omitted */
-<imath>.                                                                                {}
 <imath>\n                                                                               {}
-
+<imath>.                                                                                {}
 \n                                                                                      {}
 .                                                                                       {}
 %%

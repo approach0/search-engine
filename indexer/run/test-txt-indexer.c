@@ -1,3 +1,6 @@
+#undef NDEBUG /* make sure assert() works */
+#include <assert.h>
+
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -11,7 +14,7 @@
 #define  LEX_PREFIX(_name) txt ## _name
 #include "lex.h"
 
-#include "lex-term.h"
+#include "lex-slice.h"
 
 #include "filesys.h"
 #include "config.h"
@@ -19,41 +22,77 @@
 static void *term_index;
 keyval_db_t  keyval_db;
 
-static LIST_IT_CALLBK(handle_chinese_word)
+static LIST_IT_CALLBK(get_term_pos)
 {
-	LIST_OBJ(struct term_list_node, p, ln);
-	//P_CAST(lt, struct lex_term, pa_extra);
-	char *mb_term = wstr2mbstr(p->term);
+	LIST_OBJ(struct term_list_node, t, ln);
+	P_CAST(s, struct lex_slice, pa_extra);
 
-	printf("Chinese word: `%s'<%u,%u>\n", mb_term,
-	        p->begin_pos, p->end_pos);
-	//term_index_doc_add(term_index, term);
+	wchar_t *tmp = mbstr2wstr(s->mb_str); /* first wstr2mbstr() */
+	const size_t slice_len = wstr_len(tmp);
+	const size_t slice_bytes = sizeof(wchar_t) * (slice_len + 1);
+	wchar_t *slice = malloc(slice_bytes);
 
+	char *mb_term = wstr2mbstr(t->term); /* second wstr2mbstr() */
+	const size_t term_bytes = strlen(mb_term);
+
+	//uint32_t i;
+	uint32_t slice_seg_bytes;
+	wchar_t save;
+	uint32_t file_offset;
+
+	memcpy(slice, tmp, slice_bytes);
+	save = slice[t->begin_pos];
+	slice[t->begin_pos] = L'\0';
+
+	printf("term `%s': ", mb_term);
+	slice_seg_bytes = strlen(wstr2mbstr(slice));
+	file_offset = s->begin + slice_seg_bytes;
+
+	slice[t->begin_pos] = save;
+
+	printf("%u[%lu]\n", file_offset, term_bytes);
+
+//	printf("%u <= %lu\n", t->end_pos, wstr_len(slice));
+//	printf("%u <= %u\n", slice_seg_bytes, s->offset);
+	assert(t->end_pos <= wstr_len(slice));
+	assert(term_bytes <= s->offset);
+	
+	free(slice);
+
+//	/* add term for inverted-index */
+//	term_index_doc_add(term_index, mb_term);
 	LIST_GO_OVER;
 }
 
 LIST_DEF_FREE_FUN(list_release, struct term_list_node,
                   ln, free(p));
 
-void handle_math(struct lex_slice *slice)
+extern void handle_math(struct lex_slice *slice)
 {
-	printf("math: %s (len=%lu)\n", slice->mb_str, slice->offset);
+	printf("math: %s (len=%u)\n", slice->mb_str, slice->offset);
 }
-void handle_text(struct lex_slice *slice)
+
+static void slice_eng_to_lower(struct lex_slice *slice)
 {
-	printf("text: %s (len=%lu)\n", slice->mb_str, slice->offset);
-//	for(int i = 0; slice->offset; i++)
-//		slice->mb_str[i] = tolower(slice->mb_str[i]);
+	for(size_t i = 0; i < slice->offset; i++)
+		slice->mb_str[i] = tolower(slice->mb_str[i]);
+}
 
+extern void handle_text(struct lex_slice *slice)
+{
+	// printf("text: %s (len=%u)\n", slice->mb_str, slice->offset);
 
-//	list li = LIST_NULL;
-//
-//	li = text_segment(lt->txt);
-//	list_foreach(&li, &handle_chinese_word, lt);
-//	list_release(&li);
+	/* convert english words to lower case */
+	slice_eng_to_lower(slice);
 
-	//printf("English word:`%s'\n", term);
-	//term_index_doc_add(term_index, lt->txt);
+	list li = LIST_NULL;
+	li = text_segment(slice->mb_str);
+
+	printf("slice<%u,%u>: %s\n",
+	       slice->begin, slice->offset, slice->mb_str);
+
+	list_foreach(&li, &get_term_pos, slice);
+	list_release(&li);
 }
 
 static void lexer_file_input(const char *path)
@@ -70,18 +109,18 @@ static void lexer_file_input(const char *path)
 
 static void index_txt_document(const char *fullpath)
 {
-//	size_t val_sz = strlen(fullpath) + 1;
-//	doc_id_t new_docID;
-//
-//	term_index_doc_begin(term_index);
+	size_t val_sz = strlen(fullpath) + 1;
+	doc_id_t new_docID;
+
+	term_index_doc_begin(term_index);
 	lexer_file_input(fullpath);
-//	new_docID = term_index_doc_end(term_index);
-//
-//	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
-//	                 (void *)fullpath, val_sz)) {
-//		printf("put error: %s\n", keyval_db_last_err(keyval_db));
-//		return;
-//	}
+	new_docID = term_index_doc_end(term_index);
+
+	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
+	                 (void *)fullpath, val_sz)) {
+		printf("put error: %s\n", keyval_db_last_err(keyval_db));
+		return;
+	}
 }
 
 static int foreach_file_callbk(const char *filename, void *arg)
@@ -151,6 +190,7 @@ int main(int argc, char* argv[])
 
 	printf("opening dict...\n");
 	text_segment_init("../jieba/fork/dict");
+	text_segment_insert_usrterm("当且仅当");
 	printf("dict opened.\n");
 
 	printf("opening term index...\n");

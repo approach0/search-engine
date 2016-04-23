@@ -13,10 +13,10 @@
 #define  LEX_PREFIX(_name) txt ## _name
 #include "lex.h"
 
-#include "lex-term.h"
+#include "lex-slice.h"
 
 struct position_node {
-	size_t begin, offset /* in bytes */;
+	uint32_t begin, offset /* in bytes */;
 	struct list_node ln;
 };
 
@@ -32,7 +32,7 @@ static LIST_IT_CALLBK(print_position)
 	size_t n_read;
 
 	printf("checking #%u pos", ++cnt_positions);
-	printf("<%lu, %lu>: ", p->begin, p->offset);
+	printf("<%u, %u>: ", p->begin, p->offset);
 
 	if (0 == fseek(fh, p->begin, SEEK_SET)) {
 		n_read = fread(&bigbuf, p->offset, 1, fh);
@@ -40,7 +40,7 @@ static LIST_IT_CALLBK(print_position)
 			bigbuf[p->offset] = '\0';
 			printf("{%s}\n", bigbuf);
 		} else {
-			printf("unexpected test offset %lu-%lu.\n",
+			printf("unexpected test offset %lu-%u.\n",
 			       n_read, p->offset);
 			return LIST_RET_BREAK;
 		}
@@ -66,13 +66,13 @@ static void insert_pos(size_t begin, size_t offset)
 
 void handle_math(struct lex_slice *slice)
 {
-	printf("#%u math: %s <%lu,%lu>\n", ++cnt_positions, slice->mb_str,
+	printf("#%u math: %s <%u,%u>\n", ++cnt_positions, slice->mb_str,
 	       slice->begin, slice->offset);
 	insert_pos(slice->begin, slice->offset);
 }
 void handle_text(struct lex_slice *slice)
 {
-	printf("#%u text: %s <%lu,%lu>\n", ++cnt_positions, slice->mb_str,
+	printf("#%u text: %s <%u,%u>\n", ++cnt_positions, slice->mb_str,
 	       slice->begin, slice->offset);
 	insert_pos(slice->begin, slice->offset);
 }
@@ -92,7 +92,7 @@ static void lexer_file_input(const char *path)
 int main(void)
 {
 	FILE *fh;
-	const char test_file_name[] = "text.tmp";
+	const char test_file_name[] = "test/1.txt";
 
 	lexer_file_input(test_file_name);
 

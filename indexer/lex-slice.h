@@ -8,6 +8,6 @@ enum lex_slice_type {
 
 struct lex_slice {
 	char  *mb_str;    /* in multi-bytes */
-	size_t begin, offset /* in bytes */;
+	uint32_t begin, offset /* in bytes */;
 	enum lex_slice_type type;
 };

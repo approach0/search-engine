@@ -2,9 +2,10 @@
 #include <stddef.h>
 #include <wchar.h>
 
-size_t   wstr_len(wchar_t *);
+size_t   wstr_len(wchar_t *); /* the number of wide characters */
 wchar_t *wstr_copy(wchar_t *dest, const wchar_t *src);
 
+/* The number of characters in multi-bytes string: */
 size_t mbstr_chars(char*);
 
 wchar_t *mbstr2wstr(const char *multibyte_string);

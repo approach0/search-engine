@@ -127,7 +127,6 @@ void foreach_tok(void *gen_toks, jieba_token_callbk callfun, void *arg)
 		Py_DECREF(tok);
 	}
 
-	printf("\n");
 	//PRINT_REF_CNT(it);
 	Py_DECREF(it);
 }
