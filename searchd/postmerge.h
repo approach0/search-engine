@@ -27,7 +27,6 @@ struct postmerge_arg {
 	uint64_t            curIDs[MAX_MERGE_POSTINGS];
 	void               *cur_pos_item[MAX_MERGE_POSTINGS];
 	uint32_t            n_postings;
-	void               *extra_args;
 	enum postmerge_op   op;
 
 	/* posting list current item move */

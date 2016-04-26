@@ -9,15 +9,18 @@
 #include "keyval-db/keyval-db.h"
 #include "postmerge.h"
 #include "bm25-score.h"
+#include "rank.h"
+#include "snippet.h"
 
 #include "txt-seg/txt-seg.h"
 #include "txt-seg/config.h"
 #include "indexer/doc-term-pos.h"
 
-struct merge_score_arg {
+struct merge_extra_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
 	keyval_db_t              keyval_db;
+	struct rank_set         *rk_set;
 };
 
 void term_posting_start_wrap(void *posting)
@@ -68,52 +71,107 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 
 void posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg, void* extra_args)
 {
-	uint32_t i;
+	uint32_t i, hit_terms = 0;
 	float score = 0.f;
 	doc_id_t docID = cur_min;
-	char *doc_path;
-	size_t val_sz;
 
-	docterm_t docterm = {docID, ""};
-	docterm_pos_t *termpos;
-
-	P_CAST(ms_arg, struct merge_score_arg, extra_args);
-	float doclen = (float)term_index_get_docLen(ms_arg->term_index, docID);
+	P_CAST(me_arg, struct merge_extra_arg, extra_args);
+	float doclen = (float)term_index_get_docLen(me_arg->term_index, docID);
 	struct term_posting_item *tpi;
 
 	for (i = 0; i < pm_arg->n_postings; i++)
 		if (pm_arg->curIDs[i] == cur_min) {
-			printf("merge docID#%lu from posting[%d] ", cur_min, i);
+			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			tpi = pm_arg->cur_pos_item[i];
-			score += BM25_term_i_score(ms_arg->bm25args, i, tpi->tf, doclen);
-
-			strcpy(docterm.term, pm_arg->posting_args[i]);
-			printf("(term `%s');", docterm.term);
-			
-			termpos = keyval_db_get(ms_arg->keyval_db, &docterm,
-			                        sizeof(doc_id_t) + strlen(docterm.term),
-			                        &val_sz);
-			if(NULL != termpos) {
-				printf("term `%s' ", docterm.term);
-				printf("pos = %u[%u]", termpos->doc_pos, termpos->n_bytes);
-				//FILE *fh = fopen("", "r");
-				free(termpos);
-			} else {
-				printf("get error: %s", keyval_db_last_err(ms_arg->keyval_db));
-			}
-
-			printf("\n");
+			score += BM25_term_i_score(me_arg->bm25args, i, tpi->tf, doclen);
+			hit_terms ++;
 		}
 
-	if(NULL != (doc_path = keyval_db_get(ms_arg->keyval_db, &docID,
-	                                     sizeof(doc_id_t), &val_sz))) {
-		printf("`%s' ", doc_path);
-		free(doc_path);
-	} else {
-		printf("get error: %s\n", keyval_db_last_err(ms_arg->keyval_db));
+	rank_cram(me_arg->rk_set, docID, score, hit_terms,
+	          (char**)pm_arg->posting_args, NULL);
+	//printf("(BM25 score = %f)\n", score);
+}
+
+char *get_doc_path(keyval_db_t kv_db, doc_id_t docID)
+{
+	char *doc_path;
+	size_t val_sz;
+
+	if(NULL == (doc_path = keyval_db_get(kv_db, &docID, sizeof(doc_id_t),
+	                                     &val_sz))) {
+		printf("get error: %s\n", keyval_db_last_err(kv_db));
+		return NULL;
 	}
 
-	printf("(BM25 score = %f)\n", score);
+	return doc_path;
+}
+
+void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
+                       keyval_db_t kv_db)
+{
+	uint32_t i;
+	size_t val_sz;
+	docterm_t docterm = {docID, ""};
+	docterm_pos_t *termpos;
+	char *doc_path;
+	FILE *doc_fh;
+	char *hl_str;
+
+	list  snippet_pos_list;
+	struct snippet snippet;
+	snippet_rst_pos(&snippet_pos_list);
+
+	doc_path = get_doc_path(kv_db, docID);
+	printf("@ %s\n", doc_path);
+
+	for (i = 0; i < n_terms; i++) {
+		strcpy(docterm.term, terms[i]);
+
+		termpos = keyval_db_get(kv_db, &docterm,
+								sizeof(doc_id_t) + strlen(docterm.term),
+								&val_sz);
+		if(NULL != termpos) {
+			//printf("`%s' ", docterm.term);
+			//printf("pos = %u[%u] ", termpos->doc_pos, termpos->n_bytes);
+			snippet_add_pos(&snippet_pos_list, docterm.term,
+			                termpos->doc_pos, termpos->n_bytes);
+			free(termpos);
+		}
+	}
+	//printf("\n");
+
+	doc_fh = fopen(doc_path, "r");
+	snippet = snippet_read(doc_fh, &snippet_pos_list);
+
+	hl_str = snippet_highlight(&snippet, &snippet_pos_list, "<<", ">>");
+	printf("%s\n", hl_str);
+	free(hl_str);
+
+	fclose(doc_fh);
+	free(doc_path);
+}
+
+void print_res_item(struct rank_set *rs, struct rank_item* ri,
+                    uint32_t cnt, void*arg)
+{
+	P_CAST(kv_db, keyval_db_t, arg);
+
+	printf("#%u: %.3f doc#%u\n", cnt, ri->score, ri->docID);
+	print_res_snippet(ri->docID, ri->terms, rs->n_terms, kv_db);
+}
+
+void print_all_rank_res(struct rank_set *rs, keyval_db_t keyval_db)
+{
+	struct rank_wind win;
+	uint32_t         total_pages, page = 0;
+	const uint32_t   res_per_page = DEFAULT_RES_PER_PAGE;
+
+	do {
+		printf("page#%u:\n", page + 1);
+		win = rank_window_calc(rs, page, res_per_page, &total_pages);
+		rank_window_foreach(&win, &print_res_item, keyval_db);
+		page ++;
+	} while (page < total_pages);
 }
 
 int main(int argc, char *argv[])
@@ -122,8 +180,9 @@ int main(int argc, char *argv[])
 	void                   *ti, *posting;
 	term_id_t               term_id;
 	struct postmerge_arg    pm_arg;
-	struct merge_score_arg  ms_arg;
+	struct merge_extra_arg  me_arg;
 	keyval_db_t             keyval_db;
+	struct rank_set         rk_set;
 
 	char    *index_path = NULL;
 	char    *terms[MAX_MERGE_POSTINGS];
@@ -210,6 +269,9 @@ int main(int argc, char *argv[])
 	if (keyval_db == NULL) {
 		printf("key-value DB open error.\n");
 		goto key_value_db_fails;
+	} else {
+		printf("%lu records in key-value DB.\n",
+		       keyval_db_records(keyval_db));
 	}
 
 	docN = term_index_get_docN(ti);
@@ -247,7 +309,6 @@ int main(int argc, char *argv[])
 	printf("BM25 arguments:\n");
 	BM25_term_i_args_print(&bm25args);
 
-	pm_arg.extra_args = &bm25args;
 	pm_arg.post_start_fun = &term_posting_start_wrap;
 	pm_arg.post_finish_fun = &term_posting_finish_wrap;
 	pm_arg.post_jump_fun = &term_posting_jump_wrap;
@@ -256,13 +317,21 @@ int main(int argc, char *argv[])
 	pm_arg.post_now_id_fun = &term_posting_current_id_wrap;
 	pm_arg.post_on_merge = &posting_on_merge;
 
-	ms_arg.term_index = ti;
-	ms_arg.bm25args = &bm25args;
-	ms_arg.keyval_db = keyval_db;
+	/* initialize ranking set given number of terms */
+	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, n_terms, 0);
+
+	me_arg.term_index = ti;
+	me_arg.bm25args = &bm25args;
+	me_arg.keyval_db = keyval_db;
+	me_arg.rk_set = &rk_set;
 
 	printf("start merging...\n");
-	if (!posting_merge(&pm_arg, &ms_arg))
+	if (!posting_merge(&pm_arg, &me_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
+
+	rank_sort(&rk_set);
+	print_all_rank_res(&rk_set, keyval_db);
+	rank_uninit(&rk_set);
 
 key_value_db_fails:
 	printf("closing term index...\n");
