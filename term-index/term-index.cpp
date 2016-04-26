@@ -89,7 +89,7 @@ int term_index_maintain(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
 	indri::collection::Repository::index_state state = ti->repo.indexes();
-	bool should_merge = state->size() > 3; //50;
+	bool should_merge = state->size() > 50; //3;
 
 	if (should_merge) {
 		ti->repo.write();

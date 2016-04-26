@@ -9,6 +9,8 @@ enum {
 typedef void* keyval_db_t;
 
 keyval_db_t keyval_db_open(const char *, int);
+keyval_db_t keyval_db_open_under(const char*, const char*, int);
+
 void        keyval_db_close(keyval_db_t);
 void        keyval_db_flush(keyval_db_t);
 

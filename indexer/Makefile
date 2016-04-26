@@ -1,6 +1,6 @@
 include ../rules.mk
 
-OTHER_OBJS := lex.txt.o
+OTHER_OBJS := lex.mix.o lex.eng.o
 include ../module.mk
 
 all: jieba-wrap.py
@@ -8,9 +8,12 @@ all: jieba-wrap.py
 jieba-wrap.py: ../txt-seg/jieba-wrap.py
 	ln -sf $<
 
-lex.txt.c: lexer.txt.l
+lex.mix.c: lexer.mix.l
+	$(LEX)
+
+lex.eng.c: lexer.eng.l
 	$(LEX)
 
 clean:
-	rm -f lex.txt.c
+	rm -f lex.*.c
 	@ echo 'clean'

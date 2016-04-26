@@ -24,3 +24,7 @@ int   text_segment_init(const char *dict_path);
 list  text_segment(const char *text);
 bool  text_segment_insert_usrterm(const char *term);
 void  text_segment_free(void);
+
+/* helper function to convert term positions in characters
+ * to term positions in bytes. */
+#include "term-offset-conv.h"

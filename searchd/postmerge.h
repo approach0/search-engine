@@ -23,6 +23,7 @@ enum postmerge_op {
 
 struct postmerge_arg {
 	void               *postings[MAX_MERGE_POSTINGS];
+	void               *posting_args[MAX_MERGE_POSTINGS];
 	uint64_t            curIDs[MAX_MERGE_POSTINGS];
 	void               *cur_pos_item[MAX_MERGE_POSTINGS];
 	uint32_t            n_postings;
@@ -49,7 +50,7 @@ void postmerge_arg_init(struct postmerge_arg*);
  * Even if a posting list is empty, you need to call postmerge_arg_add_post()
  * to add it for merge process, because AND merge may need NULL pointer to
  * indicate posting list is empty such that no results is going to be returned. */
-void postmerge_arg_add_post(struct postmerge_arg*, void*);
+void postmerge_arg_add_post(struct postmerge_arg*, void*, void*);
 
 /* posting list IDs must be incremental and *unique* for each item */
 bool posting_merge(struct postmerge_arg*, void*);

@@ -1,6 +1,7 @@
 #include <tcutil.h>
 #include <tcbdb.h>
 #include "keyval-db.h"
+#include "config.h"
 
 keyval_db_t keyval_db_open(const char *path, int mode)
 {
@@ -35,7 +36,6 @@ uint64_t keyval_db_records(keyval_db_t db)
 
 const char *keyval_db_last_err(keyval_db_t db)
 {
-	printf("code=%d\n", tcbdbecode(db));
 	return tcbdberrmsg(tcbdbecode(db));
 }
 
@@ -61,5 +61,22 @@ void *keyval_db_get(keyval_db_t db, const void *key, size_t key_sz,
 	void *ret;
 	ret = tcbdbget((TCBDB *)db, key, key_sz, &_val_sz);
 	*val_sz = (size_t)_val_sz;
+	return ret;
+}
+
+#include <string.h>
+keyval_db_t
+keyval_db_open_under(const char *name, const char *path, int mode)
+{
+	keyval_db_t ret;
+	char *loc = (char *)malloc(MAX_DIR_PATH_NAME_LEN);
+
+	strcpy(loc, path);
+	strcat(loc, "/");
+	strcat(loc, name);
+
+	ret = keyval_db_open(loc, mode);
+	free(loc);
+
 	return ret;
 }

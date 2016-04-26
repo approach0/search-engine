@@ -1,121 +1,82 @@
-#undef NDEBUG /* make sure assert() works */
-#include <assert.h>
-
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 #include <getopt.h>
 
-#include "wstring/wstring.h"
-#include "txt-seg/txt-seg.h"
-#include "term-index/term-index.h"
-#include "keyval-db/keyval-db.h"
+#include "indexer.h"
 
-#define  LEX_PREFIX(_name) txt ## _name
-#include "lex.h"
+static void *term_index = NULL;
+static keyval_db_t keyval_db = NULL;
+static doc_id_t new_docID = 0;
+static list splited_terms = LIST_NULL;
 
-#include "lex-slice.h"
-
-#include "filesys.h"
-#include "config.h"
-
-static void *term_index;
-keyval_db_t  keyval_db;
-
-static LIST_IT_CALLBK(get_term_pos)
+static LIST_IT_CALLBK(index_term)
 {
-	LIST_OBJ(struct term_list_node, t, ln);
-	P_CAST(s, struct lex_slice, pa_extra);
+	LIST_OBJ(struct splited_term, st, ln);
 
-	wchar_t *tmp = mbstr2wstr(s->mb_str); /* first wstr2mbstr() */
-	const size_t slice_len = wstr_len(tmp);
-	const size_t slice_bytes = sizeof(wchar_t) * (slice_len + 1);
-	wchar_t *slice = malloc(slice_bytes);
+//	printf("term `%s': ", st->term);
+//	printf("%u[%u]\n", st->doc_pos, st->n_bytes);
 
-	char *mb_term = wstr2mbstr(t->term); /* second wstr2mbstr() */
-	const size_t term_bytes = strlen(mb_term);
-
-	//uint32_t i;
-	uint32_t slice_seg_bytes;
-	wchar_t save;
-	uint32_t file_offset;
-
-	memcpy(slice, tmp, slice_bytes);
-	save = slice[t->begin_pos];
-	slice[t->begin_pos] = L'\0';
-
-	printf("term `%s': ", mb_term);
-	slice_seg_bytes = strlen(wstr2mbstr(slice));
-	file_offset = s->begin + slice_seg_bytes;
-
-	slice[t->begin_pos] = save;
-
-	printf("%u[%lu]\n", file_offset, term_bytes);
-
-//	printf("%u <= %lu\n", t->end_pos, wstr_len(slice));
-//	printf("%u <= %u\n", slice_seg_bytes, s->offset);
-	assert(t->end_pos <= wstr_len(slice));
-	assert(term_bytes <= s->offset);
-	
-	free(slice);
-
-//	/* add term for inverted-index */
-//	term_index_doc_add(term_index, mb_term);
+	/* add term for inverted-index */
+	term_index_doc_add(term_index, st->term);
 	LIST_GO_OVER;
 }
 
-LIST_DEF_FREE_FUN(list_release, struct term_list_node,
-                  ln, free(p));
+static LIST_IT_CALLBK(index_term_pos)
+{
+	LIST_OBJ(struct splited_term, st, ln);
+	P_CAST(nterms, size_t, pa_extra);
+	docterm_pos_t termpos = {st->doc_pos, st->n_bytes};
+	docterm_t docterm;
+
+	(*nterms) ++;
+
+	/* save term position */
+	docterm.docID = new_docID;
+	strcpy(docterm.term, st->term);
+
+	if(keyval_db_put(keyval_db,
+	                 &docterm,sizeof(doc_id_t) + st->n_bytes,
+	                 &termpos, sizeof(docterm_pos_t))) {
+		printf("put error: %s\n", keyval_db_last_err(keyval_db));
+		return LIST_RET_BREAK;
+	}
+
+	LIST_GO_OVER;
+}
 
 extern void handle_math(struct lex_slice *slice)
 {
-	printf("math: %s (len=%u)\n", slice->mb_str, slice->offset);
-}
-
-static void slice_eng_to_lower(struct lex_slice *slice)
-{
-	for(size_t i = 0; i < slice->offset; i++)
-		slice->mb_str[i] = tolower(slice->mb_str[i]);
+//	printf("math: %s (len=%u)\n", slice->mb_str, slice->offset);
 }
 
 extern void handle_text(struct lex_slice *slice)
 {
-	// printf("text: %s (len=%u)\n", slice->mb_str, slice->offset);
+//	printf("slice<%u,%u>: %s\n",
+//	       slice->begin, slice->offset, slice->mb_str);
 
 	/* convert english words to lower case */
-	slice_eng_to_lower(slice);
+	eng_to_lower_case(slice);
 
-	list li = LIST_NULL;
-	li = text_segment(slice->mb_str);
-
-	printf("slice<%u,%u>: %s\n",
-	       slice->begin, slice->offset, slice->mb_str);
-
-	list_foreach(&li, &get_term_pos, slice);
-	list_release(&li);
-}
-
-static void lexer_file_input(const char *path)
-{
-	FILE *fh = fopen(path, "r");
-	if (fh) {
-		txtin = fh;
-		txtlex();
-		fclose(fh);
-	} else {
-		printf("cannot open `%s'.\n", path);
-	}
+	/* split slice into terms */
+	split_into_terms(slice, &splited_terms);
 }
 
 static void index_txt_document(const char *fullpath)
 {
 	size_t val_sz = strlen(fullpath) + 1;
-	doc_id_t new_docID;
+	LIST_CONS(splited_terms);
+	size_t nterms = 0;
 
 	term_index_doc_begin(term_index);
-	lexer_file_input(fullpath);
+	lex_txt_file(fullpath);
+	list_foreach(&splited_terms, &index_term, NULL);
 	new_docID = term_index_doc_end(term_index);
 
+	list_foreach(&splited_terms, &index_term_pos, &nterms);
+	//printf("{%lu}", nterms);
+	release_splited_terms(&splited_terms);
+
+	/* save document path */
 	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
 	                 (void *)fullpath, val_sz)) {
 		printf("put error: %s\n", keyval_db_last_err(keyval_db));
@@ -129,14 +90,16 @@ static int foreach_file_callbk(const char *filename, void *arg)
 	//char *ext = filename_ext(filename);
 	char fullpath[MAX_FILE_NAME_LEN];
 
-	//if (ext && strcmp(ext, ".txt") == 0) {
+	if (1 /*ext && strcmp(ext, ".txt") == 0 */) {
 		sprintf(fullpath, "%s/%s", path, filename);
-		//printf("[txt file] %s\n", fullpath);
 
+		//printf("[file] %s\n", fullpath);
 		index_txt_document(fullpath);
-		if (term_index_maintain(term_index))
+		if (term_index_maintain(term_index)) {
 			printf("\r[term index merging...]");
-	//}
+			keyval_db_flush(keyval_db);
+		}
+	}
 
 	return 0;
 }
@@ -153,7 +116,6 @@ dir_search_callbk(const char* path, const char *srchpath,
 int main(int argc, char* argv[])
 {
 	int opt;
-	char *keyval_db_path /* key value DB tmp string*/;
 	char *path = NULL /* corpus path */;
 	const char index_path[] = "./tmp";
 
@@ -200,12 +162,8 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	keyval_db_path = (char *)malloc(1024);
-	strcpy(keyval_db_path, index_path);
-	strcat(keyval_db_path, "/kv_doc_path.bin");
-	printf("opening key-value DB (%s)...\n", keyval_db_path);
-	keyval_db = keyval_db_open(keyval_db_path, KEYVAL_DB_OPEN_WR);
-	free(keyval_db_path);
+	keyval_db = keyval_db_open_under("kv-termpos.bin", index_path,
+	                                 KEYVAL_DB_OPEN_WR);
 	if (keyval_db == NULL) {
 		printf("cannot create/open key-value DB.\n");
 		goto keyval_db_fails;

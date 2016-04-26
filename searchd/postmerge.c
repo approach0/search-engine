@@ -9,11 +9,12 @@ void postmerge_arg_init(struct postmerge_arg *arg)
 	memset(arg, 0, sizeof(struct postmerge_arg));
 }
 
-void postmerge_arg_add_post(struct postmerge_arg *arg, void *post)
+void postmerge_arg_add_post(struct postmerge_arg *pm_arg, void *post, void *arg)
 {
-	arg->postings[arg->n_postings] = post;
-	arg->curIDs[arg->n_postings] = 0;
-	arg->n_postings ++;
+	pm_arg->postings[pm_arg->n_postings] = post;
+	pm_arg->posting_args[pm_arg->n_postings] = arg;
+	pm_arg->curIDs[pm_arg->n_postings] = 0;
+	pm_arg->n_postings ++;
 }
 
 static bool

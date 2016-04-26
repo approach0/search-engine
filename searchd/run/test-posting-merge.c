@@ -10,6 +10,10 @@
 #include "postmerge.h"
 #include "bm25-score.h"
 
+#include "txt-seg/txt-seg.h"
+#include "txt-seg/config.h"
+#include "indexer/doc-term-pos.h"
+
 struct merge_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
@@ -70,15 +74,35 @@ void posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg, void* extr
 	char *doc_path;
 	size_t val_sz;
 
+	docterm_t docterm = {docID, ""};
+	docterm_pos_t *termpos;
+
 	P_CAST(ms_arg, struct merge_score_arg, extra_args);
 	float doclen = (float)term_index_get_docLen(ms_arg->term_index, docID);
 	struct term_posting_item *tpi;
 
 	for (i = 0; i < pm_arg->n_postings; i++)
 		if (pm_arg->curIDs[i] == cur_min) {
-			printf("merge docID#%lu from posting[%d]\n", cur_min, i);
+			printf("merge docID#%lu from posting[%d] ", cur_min, i);
 			tpi = pm_arg->cur_pos_item[i];
 			score += BM25_term_i_score(ms_arg->bm25args, i, tpi->tf, doclen);
+
+			strcpy(docterm.term, pm_arg->posting_args[i]);
+			printf("(term `%s');", docterm.term);
+			
+			termpos = keyval_db_get(ms_arg->keyval_db, &docterm,
+			                        sizeof(doc_id_t) + strlen(docterm.term),
+			                        &val_sz);
+			if(NULL != termpos) {
+				printf("term `%s' ", docterm.term);
+				printf("pos = %u[%u]", termpos->doc_pos, termpos->n_bytes);
+				//FILE *fh = fopen("", "r");
+				free(termpos);
+			} else {
+				printf("get error: %s", keyval_db_last_err(ms_arg->keyval_db));
+			}
+
+			printf("\n");
 		}
 
 	if(NULL != (doc_path = keyval_db_get(ms_arg->keyval_db, &docID,
@@ -178,7 +202,7 @@ int main(int argc, char *argv[])
 	/* trim trailing slash (user may specify path ending with a slash) */
 	if (keyval_db_path[strlen(keyval_db_path) - 1] == '/')
 		keyval_db_path[strlen(keyval_db_path) - 1] = '\0';
-	strcat(keyval_db_path, "/kv_doc_path.bin");
+	strcat(keyval_db_path, "/kv-termpos.bin");
 	printf("opening key-value DB (%s)...\n", keyval_db_path);
 	keyval_db = keyval_db_open(keyval_db_path, KEYVAL_DB_OPEN_RD);
 	free(keyval_db_path);
@@ -211,7 +235,7 @@ int main(int argc, char *argv[])
 			       terms[i], i, df);
 		}
 
-		postmerge_arg_add_post(&pm_arg, posting);
+		postmerge_arg_add_post(&pm_arg, posting, terms[i]);
 	}
 
 	bm25args.n_postings = i;
