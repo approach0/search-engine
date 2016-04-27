@@ -114,12 +114,9 @@ void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
 	docterm_t docterm = {docID, ""};
 	docterm_pos_t *termpos;
 	char *doc_path;
-	FILE *doc_fh;
-	char *hl_str;
 
-	list  snippet_pos_list;
-	struct snippet snippet;
-	snippet_rst_pos(&snippet_pos_list);
+	FILE *doc_fh;
+	list  snippet_div_list = LIST_NULL;
 
 	doc_path = get_doc_path(kv_db, docID);
 	printf("@ %s\n", doc_path);
@@ -133,7 +130,7 @@ void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
 		if(NULL != termpos) {
 			//printf("`%s' ", docterm.term);
 			//printf("pos = %u[%u] ", termpos->doc_pos, termpos->n_bytes);
-			snippet_add_pos(&snippet_pos_list, docterm.term,
+			snippet_add_pos(&snippet_div_list, docterm.term,
 			                termpos->doc_pos, termpos->n_bytes);
 			free(termpos);
 		}
@@ -141,13 +138,15 @@ void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
 	//printf("\n");
 
 	doc_fh = fopen(doc_path, "r");
-	snippet = snippet_read(doc_fh, &snippet_pos_list);
+	if (doc_fh) {
+		snippet_read_file(doc_fh, &snippet_div_list);
+		fclose(doc_fh);
 
-	hl_str = snippet_highlight(&snippet, &snippet_pos_list, "<<", ">>");
-	printf("%s\n", hl_str);
-	free(hl_str);
+		snippet_hi_print(&snippet_div_list);
+	}
 
-	fclose(doc_fh);
+	snippet_free_div_list(&snippet_div_list);
+
 	free(doc_path);
 }
 
