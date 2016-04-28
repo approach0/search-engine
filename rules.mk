@@ -2,9 +2,9 @@
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
-CC =  @ tput setaf 5 && echo -n "[compile C source] " && \
+CC =  @ tput setaf 5 && echo -n "[compile C $(strip $(CFLAGS))] " && \
        tput sgr0 && echo $< && gcc
-CXX = @ tput setaf 5 && echo -n '[compile C++ source] ' && \
+CXX = @ tput setaf 5 && echo -n '[compile C++ $(strip $(CFLAGS))] ' && \
        tput sgr0 && echo $< && g++
 CCDH =  @ tput setaf 5 && echo -n '[test C header] ' && \
        tput sgr0 && echo $< && gcc
