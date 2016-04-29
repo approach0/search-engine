@@ -5,8 +5,7 @@
 #include <dirent.h>
 #include <string.h>
 
-#include "filesys.h"
-#include "config.h"
+#include "dir-util.h"
 
 bool dir_exists(const char *path)
 {

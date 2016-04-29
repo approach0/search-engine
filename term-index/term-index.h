@@ -41,7 +41,7 @@ struct term_posting_item {
 };
 
 void term_posting_start(void *);
-bool term_posting_jump(void *, doc_id_t);
+bool term_posting_jump(void *, uint64_t);
 void term_posting_next(void *);
 struct term_posting_item
 *term_posting_current(void *);

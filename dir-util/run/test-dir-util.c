@@ -2,7 +2,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <stdlib.h>
-#include "filesys.h"
+#include "dir-util.h"
 
 int foreach_file_callbk(const char *filename, void *arg)
 {

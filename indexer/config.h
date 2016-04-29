@@ -1,2 +1,0 @@
-#define MAX_DIR_PATH_NAME_LEN 4096
-#define MAX_FILE_NAME_LEN     1024
