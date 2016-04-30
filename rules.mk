@@ -1,4 +1,4 @@
-.PHONY: all clean regular-clean
+.PHONY: all clean regular-clean new
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
@@ -37,6 +37,9 @@ YACC = @ tput setaf 5 && echo -n '[yacc] ' \
 # regular rules
 all: 
 	@echo "[done $(CURDIR)]"
+
+new: clean all
+	@echo "[re-make $(CURDIR)]"
 
 -include $(wildcard *.d)
 -include $(wildcard run/*.d)
