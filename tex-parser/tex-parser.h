@@ -47,7 +47,8 @@ struct tex_parse_ret {
 	void            *operator_tree;
 };
 
-struct tex_parse_ret tex_parse(const char *, size_t, bool);
+struct tex_parse_ret tex_parse(const char *, size_t,
+                               bool /* keep operator tree */);
 
 void subpaths_print(struct subpaths*, FILE*);
 

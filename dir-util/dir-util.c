@@ -35,6 +35,28 @@ char *filename_ext(const char *name)
 	return NULL;
 }
 
+void mkdir_p(const char *path)
+{
+	char dir[MAX_DIR_PATH_NAME_LEN];
+	char *p = NULL;
+	size_t len;
+
+	sprintf(dir, "%s", path);
+	len = strlen(dir);
+
+	if(dir[len - 1] == '/')
+		dir[len - 1] = '\0';
+
+	for(p = dir + 1; *p; p++)
+		if(*p == '/') {
+			*p = '\0';
+			mkdir(dir, S_IRWXU);
+			*p = '/';
+		}
+
+	mkdir(dir, S_IRWXU);
+}
+
 int foreach_files_in(const char *path, ffi_callbk fun, void *arg)
 {
 	char *fname;

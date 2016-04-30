@@ -24,3 +24,5 @@ typedef int (*ffi_callbk)(const char*, void *);
 int foreach_files_in(const char*, ffi_callbk, void*);
 
 char *filename_ext(const char*);
+
+void mkdir_p(const char*);

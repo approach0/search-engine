@@ -40,6 +40,8 @@ int main(int argc, char* argv[])
 	char *path = NULL;
 	char test_str[] = "test string";
 
+	mkdir_p("./tmp/1/2/3");
+
 	/* handle program arguments */
 	while ((opt = getopt(argc, argv, "hp:")) != -1) {
 		switch (opt) {

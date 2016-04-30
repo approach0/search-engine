@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "list/list.h"
 #include "tex-parser/tex-parser.h" /* for subpaths */
 #include "term-index/term-index.h" /* for doc_id_t */
 
@@ -23,13 +22,16 @@ enum math_index_open_opt {
 math_index_t
 math_index_open(const char *, enum math_index_open_opt);
 
-int math_index_add_tex(math_index_t, doc_id_t, exp_id_t, const char *);
+int math_index_add_tex(math_index_t, doc_id_t, exp_id_t, struct subpaths);
+
+int math_inex_probe(const char*, bool, FILE*);
 
 void math_index_close(math_index_t);
 
 /* ==================
  * math posting list
  * ================== */
+#pragma pack(push, 1)
 struct math_posting_item {
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
@@ -44,8 +46,10 @@ struct math_pathinfo {
 
 struct math_pathinfo_pack {
 	pathinfo_num_t        n_paths;
+	uint32_t              n_lr_paths;
 	struct math_pathinfo  pathinfo[0];
 };
+#pragma pack(pop)
 
 /* =============================
  * get/free posting list handle

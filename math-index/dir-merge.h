@@ -14,5 +14,5 @@ typedef enum dir_merge_ret
                     uint32_t /* level */, void *args);
 
 int math_index_dir_merge_df(math_index_t, enum dir_merge_type,
-                            list subpaths /* struct subpaths */,
-                            dir_merge_callbk, void *args);
+                            struct subpaths, dir_merge_callbk,
+                            void *args);
