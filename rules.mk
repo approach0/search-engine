@@ -9,14 +9,17 @@ CXX = @ tput setaf 5 && echo -n '[compile C++ $(strip $(CFLAGS))] ' && \
 CCDH =  @ tput setaf 5 && echo -n '[test C header] ' && \
        tput sgr0 && echo $< && gcc
 CC_DEP = @ gcc
-CXX_DEP = @ g++
+CXX_DEP = @ g++ -fpermissive
 
 # linker
-LD = @ tput setaf 5 && echo -n '[link $(strip $*.o $(LDOBJS) $(LDLIBS))] ' \
-     && tput sgr0 && echo $@ && gcc
+LD := gcc # try `g++' if does not find stdc++ library.
+_LD = @ tput setaf 5 && echo -n '[link $(strip $*.o $(LDOBJS) $(LDLIBS))] ' \
+     && tput sgr0 && echo $@ && $(LD)
 
-LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
+LINK_ARGS = $(LDFLAGS) $*.o $(LDOBJS) \
 	-Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
+
+LINK = $(_LD) $(LINK_ARGS)
 
 # archive
 AR = @ tput setaf 5 && echo -n '[archive $(strip $(AROBJS) $(ARLIBS))] ' \
@@ -35,7 +38,7 @@ YACC = @ tput setaf 5 && echo -n '[yacc] ' \
 		 && tput sgr0;
 
 # regular rules
-all: 
+all:
 	@echo "[done $(CURDIR)]"
 
 new: clean all
@@ -53,6 +56,7 @@ new: clean all
 	$(CXX_DEP) -MM -MT $@ $(CFLAGS) $*.cpp -o $*.d
 
 %.out: %.o
+	@echo '$(LD) $(LINK_ARGS)'
 	$(LINK)
 
 test-%.h: %.h
