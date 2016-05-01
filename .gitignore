@@ -1,2 +1,15 @@
 *.swp
 *.swo
+*.tmp
+*.o
+*.a
+*.d
+*.out
+gen-*
+y.output
+y.*.h
+y.*.c
+lex.*.c
+tags
+srclist.txt
+indexer/jieba-wrap.py
