@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <stdint.h>
 
 enum lex_slice_type {
 	LEX_SLICE_TEXT,

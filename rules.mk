@@ -1,7 +1,7 @@
 .PHONY: all clean regular-clean new
 
 # compiler
-CFLAGS = -Wall -Wno-unused-function
+CFLAGS = -Wall -Wno-unused-function -std=c99
 
 CC := gcc -c
 CC_DEP := @ gcc -MM -MT
@@ -18,12 +18,14 @@ COMPILE_CXX = $(CXX) $(CFLAGS) $*.cpp -o $@
 CCDH = gcc -dH
 
 # linker
-LD := gcc # try `g++' if does not find stdc++ library.
+LD := gcc
 COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
-LINK = $(LD) $(LDFLAGS) -Xlinker "-(" \
-	$(LDLIBS) $(LDOBJS) $*.o \
-	-Xlinker "-)" -o $@
+# cycling libraries even if we use "-( .. -)", this is necessary
+# to fix Ubuntu gcc linking problem.
+LINK = $(LD) $*.o $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" \
+	$(LDFLAGS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
+
 # archive
 AR := ar
 COLOR_AR = @ tput setaf 5 && echo '[archive] $@' && tput sgr0
