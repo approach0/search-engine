@@ -73,6 +73,7 @@ Type `make` at project top level (i.e. `$PROJECT`) will do the job.
 This project is still in its early stage, nothing really to show you now. However, you can play with some existing commands:
 
 * Run our TeX parser to see the corresponding operator tree of a math expression
+
 	```
 	$ ./tex-parser/run/test-tex-parser.out
 	edit: a+b/c
@@ -92,22 +93,26 @@ This project is still in its early stage, nothing really to show you now. Howeve
 	```
 
 * Index a corpus/collection and see its index statistics
-	1. Download some plain text corpus (e.g. *Reuters-21578* and *Ohsumed* from [University of Trento](http://disi.unitn.it/moschitti/corpora.htm)).
-	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p /path/to/corpus` to index corpus files recursively from directory. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$PROJECT/indexer/tmp`).
-	3. `cd $PROJECT/indexer` and run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to have a look at the summary of the index (termN, docN, avgDocLen etc.) you just build.
 
-* Test merge and score of posting list 
+	1. `$PROJECT/indexer/test-doc` includes a mini test corpus. Optionally, you are suggested to download a slightly larger plain text corpus (e.g. *Reuters-21578* and *Ohsumed* from [University of Trento CATEGORIZATION CORPORA](http://disi.unitn.it/moschitti/corpora.htm)) for performance evaluation. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$PROJECT/indexer/tmp`).
+	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p ./test-doc` to index corpus files recursively from our mini test corpus directory. 
+	3. run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to peek at the index (termN, docN, avgDocLen etc.) you just build. (Pass `-h` argument to see more options for `test-read.out` program)
 
-	Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs (and its Okapi BM25 score) for the keywords you input.
+* Test merge and score of posting list
+
+	Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs (and their Okapi BM25 scores as well as highlighted context) for the keywords you input.
+	```
+	$ cd $PROJECT/indexer
+	```
 	For AND merge:
 	```
-	$ $PROJECT/searchd/run/test-posting-merge.out -p ./indexer/tmp/ -t 'doctor' -t 'eat' -t 'apple' -o AND
+	$ ../searchd/run/test-posting-merge.out -p ./tmp -t 'hacker' -t 'news' -o AND
 	```
 	Alternatively, merge term posting lists using OR operation:
 	```
-	$ $PROJECT/searchd/run/test-posting-merge.out -p ./indexer/tmp/ -t 'nick' -t 'wilde' -o OR
+	$ ../searchd/run/test-posting-merge.out -p ./tmp -t 'hello' -t 'nick' -t 'wilde' -o OR
 	```
-Where `./indexer/tmp/` is the index path you want to perform search on. Refer to the previous point for how to generate an index.
+Where `-p` option passes the index path you want to perform search on. Refer to the previous point for how to generate an index.
 
 ## Module dependency
 ![module dependency](https://raw.githubusercontent.com/t-k-/cowpie-lab/master/dep.png)
