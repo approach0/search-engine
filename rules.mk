@@ -21,9 +21,9 @@ CCDH = gcc -dH
 LD := gcc # try `g++' if does not find stdc++ library.
 COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
-LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
-	-Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
-
+LINK = $(LD) $(LDFLAGS) -Xlinker "-(" \
+	$(LDLIBS) $(LDOBJS) $*.o \
+	-Xlinker "-)" -o $@
 # archive
 AR := ar
 COLOR_AR = @ tput setaf 5 && echo '[archive] $@' && tput sgr0
