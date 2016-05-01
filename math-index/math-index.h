@@ -2,13 +2,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "dir-util/dir-util.h" /* for MAX_DIR_PATH_NAME_LEN */
 #include "tex-parser/tex-parser.h" /* for subpaths */
 #include "term-index/term-index.h" /* for doc_id_t */
 
 #define MAX_MATH_PATHS 128
-typedef uint8_t  pathinfo_num_t;
 
-typedef void* math_index_t;
+typedef uint8_t  pathinfo_num_t;
 typedef uint32_t exp_id_t;
 
 /* ======================
@@ -19,12 +19,20 @@ enum math_index_open_opt {
 	MATH_INDEX_WRITE
 };
 
+typedef struct math_index {
+	enum math_index_open_opt open_opt;
+	char dir_gener[MAX_DIR_PATH_NAME_LEN];
+	char dir_token[MAX_DIR_PATH_NAME_LEN];
+} *math_index_t;
+
 math_index_t
 math_index_open(const char *, enum math_index_open_opt);
 
 int math_index_add_tex(math_index_t, doc_id_t, exp_id_t, struct subpaths);
 
-int math_inex_probe(const char*, bool, FILE*);
+bool math_index_mk_path_str(math_index_t, struct subpath*, char*);
+
+int math_inex_probe(const char*, bool, FILE*); /* mainly for debug */
 
 void math_index_close(math_index_t);
 

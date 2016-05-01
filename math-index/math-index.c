@@ -4,7 +4,6 @@
 #include <stdbool.h>
 
 #include "list/list.h"
-#include "dir-util/dir-util.h"
 #include "tex-parser/tex-parser.h"
 
 #include "tex-parser/config.h"
@@ -17,18 +16,12 @@
 #include "config.h"
 
 typedef struct {
-	enum math_index_open_opt open_opt;
-	char dir_gener[MAX_DIR_PATH_NAME_LEN];
-	char dir_token[MAX_DIR_PATH_NAME_LEN];
-} _math_index_t;
-
-typedef struct {
 	FILE *id_list;
 	FILE *path_info;
 } _math_posting_t;
 
 struct index_path_arg {
-	_math_index_t *index;
+	math_index_t   index;
 	uint32_t       n_lr_paths;
 	doc_id_t       docID;
 	exp_id_t       expID;
@@ -38,9 +31,9 @@ struct index_path_arg {
 math_index_t
 math_index_open(const char *path, enum math_index_open_opt open_opt)
 {
-	_math_index_t *index;
+	math_index_t index;
 
-	index = malloc(sizeof(_math_index_t));
+	index = malloc(sizeof(struct math_index));
 	sprintf(index->dir_gener, "%s/" GENER_PATH_NAME, path);
 	sprintf(index->dir_token, "%s/" TOKEN_PATH_NAME, path);
 
@@ -69,29 +62,52 @@ void math_index_close(math_index_t index)
 	free(index);
 }
 
-static LIST_IT_CALLBK(mk_path_str)
+struct _mk_path_str_arg {
+	char **p;
+	bool skip_one;
+};
+
+static LIST_IT_CALLBK(_mk_path_str)
 {
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
-	P_CAST(p, char*, pa_extra);
+	P_CAST(arg, struct _mk_path_str_arg, pa_extra);
 
-	*p += sprintf(*p, "/%s", trans_token(sp_nd->token_id));
+	if (arg->skip_one) {
+		arg->skip_one = 0;
+		goto next;
+	}
 
+	*(arg->p) += sprintf(*(arg->p), "/%s", trans_token(sp_nd->token_id));
+
+next:
 	LIST_GO_OVER;
 }
 
-bool math_index_mk_path_str(list *path_nodes, enum subpath_type type,
-                            char *dir_gener, char *dir_token, char *dest_path)
+bool
+math_index_mk_path_str(math_index_t index, struct subpath *sp,
+                       char *dest_path)
 {
 	char *p = dest_path;
+	struct _mk_path_str_arg arg = {&p, 0};
 
-	if (type == SUBPATH_TYPE_GENERNODE)
-		p += sprintf(dest_path, "%s", dir_gener);
-	else if (type  == SUBPATH_TYPE_NORMAL)
-		p += sprintf(dest_path, "%s", dir_token);
-	else
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		p += sprintf(dest_path, "%s", index->dir_gener);
+		arg.skip_one = 1;
+		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	} else if (sp->type  == SUBPATH_TYPE_WILDCARD) {
+		p += sprintf(dest_path, "%s", index->dir_gener);
+		arg.skip_one = 1;
+		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	} else if (sp->type  == SUBPATH_TYPE_NORMAL) {
+		p += sprintf(dest_path, "%s", index->dir_token);
+		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	} else {
 		return 1;
+	}
 
-	list_foreach(path_nodes, &mk_path_str, &p);
 	return 0;
 }
 
@@ -169,9 +185,7 @@ static LIST_IT_CALLBK(mk_dir_and_subpath_set)
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
 	struct math_posting_item po_item;
 
-	if (math_index_mk_path_str(&sp->path_nodes, sp->type,
-	                       arg->index->dir_gener, arg->index->dir_token,
-                           path)) {
+	if (math_index_mk_path_str(arg->index, sp, path)) {
 		LIST_GO_OVER;
 	}
 
@@ -191,10 +205,11 @@ static LIST_IT_CALLBK(index_pathinfo_head)
 	P_CAST(arg, struct index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
 	struct math_pathinfo_pack head;
+	struct subpath tmp;
 
-	if (0 == math_index_mk_path_str(&ele->path_nodes, ele->subpath_type,
-	                       arg->index->dir_gener, arg->index->dir_token,
-                           path)) {
+	tmp.type = ele->subpath_type;
+	tmp.path_nodes = ele->path_nodes;
+	if (0 == math_index_mk_path_str(arg->index, &tmp, path)) {
 		head.n_paths = ele->dup_cnt + 1;
 		head.n_lr_paths = arg->n_lr_paths;
 		write_pathinfo_head(path, &head);
@@ -210,9 +225,7 @@ static LIST_IT_CALLBK(index_pathinfo_payload)
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
 	struct math_pathinfo info = {sp->path_id, sp->ge_hash, sp->fr_hash};
 
-	if (math_index_mk_path_str(&sp->path_nodes, sp->type,
-	                       arg->index->dir_gener, arg->index->dir_token,
-                           path)) {
+	if (math_index_mk_path_str(arg->index, sp, path)) {
 		LIST_GO_OVER;
 	}
 
@@ -229,10 +242,12 @@ static LIST_IT_CALLBK(index_posting_item)
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(arg, struct index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	struct subpath tmp;
 
-	if (0 == math_index_mk_path_str(&ele->path_nodes, ele->subpath_type,
-	                       arg->index->dir_gener, arg->index->dir_token,
-                           path)) {
+	tmp.type = ele->subpath_type;
+	tmp.path_nodes = ele->path_nodes;
+
+	if (0 == math_index_mk_path_str(arg->index, &tmp, path)) {
 		wirte_posting_item(path, &ele->to_write);
 	}
 
@@ -244,7 +259,7 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
                    exp_id_t expID, struct subpaths subpaths)
 {
 	struct index_path_arg arg;
-	arg.index = (_math_index_t*)index;
+	arg.index = (math_index_t)index;
 	arg.docID = docID;
 	arg.expID = expID;
 	arg.n_lr_paths = subpaths.n_lr_paths;

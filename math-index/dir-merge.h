@@ -13,6 +13,6 @@ typedef enum dir_merge_ret
                     uint32_t /* number of postings list */,
                     uint32_t /* level */, void *args);
 
-int math_index_dir_merge_df(math_index_t, enum dir_merge_type,
-                            struct subpaths, dir_merge_callbk,
-                            void *args);
+int math_index_dir_merge(math_index_t, enum dir_merge_type,
+                         struct subpaths*, dir_merge_callbk,
+                         void *args);
