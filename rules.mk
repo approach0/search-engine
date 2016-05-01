@@ -2,65 +2,83 @@
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
-CC =  @ tput setaf 5 && echo -n "[compile C $(strip $(CFLAGS))] " && \
-       tput sgr0 && echo $< && gcc
-CXX = @ tput setaf 5 && echo -n '[compile C++ $(strip $(CFLAGS))] ' && \
-       tput sgr0 && echo $< && g++
-CCDH =  @ tput setaf 5 && echo -n '[test C header] ' && \
-       tput sgr0 && echo $< && gcc
-CC_DEP = @ gcc
-CXX_DEP = @ g++ -fpermissive
+
+CC := gcc -c
+CC_DEP := @ gcc -MM -MT
+COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
+       tput sgr0
+COMPILE_CC = $(CC) $(CFLAGS) $*.c -o $@
+
+CXX := g++ -c
+CXX_DEP = @ g++ -MM -MT
+COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
+       tput sgr0
+COMPILE_CXX = $(CXX) $(CFLAGS) $*.cpp -o $@
+
+CCDH = gcc -dH
 
 # linker
 LD := gcc # try `g++' if does not find stdc++ library.
-_LD = @ tput setaf 5 && echo -n '[link $(strip $*.o $(LDOBJS) $(LDLIBS))] ' \
-     && tput sgr0 && echo $@ && $(LD)
+COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
-LINK_ARGS = $(LDFLAGS) $*.o $(LDOBJS) \
+LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
 	-Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
 
-LINK = $(_LD) $(LINK_ARGS)
-
 # archive
-AR = @ tput setaf 5 && echo -n '[archive $(strip $(AROBJS) $(ARLIBS))] ' \
-     && tput sgr0 && echo $@ && \
-	 rm -f $@ && \
-	 ar -rcT $@ $(AROBJS) $(ARLIBS) && ar -t $@ | tr '\n' ' ' && echo ''
+AR := ar
+COLOR_AR = @ tput setaf 5 && echo '[archive] $@' && tput sgr0
+
+GEN_LIB = rm -f $@ && $(AR) -rcT $@ $(AROBJS) $(ARLIBS)
+COLOR_SHOW_LIB := @ tput setaf 5 && \
+	echo 'objects in this archive:' && tput sgr0
+SHOW_LIB = @ $(AR) -t $@ | tr '\n' ' ' && echo ''
+
+# make
+MAKE := make --no-print-directory
 
 # Bison/Flex
-LEX = @ tput setaf 5 && echo -n '[lex] ' \
-        && tput sgr0 && echo $< && flex $<
+LEX := flex
+COLOR_LEX = @ tput setaf 5 && echo '[lex] $<' && tput sgr0
+DO_LEX = flex $<
 
-YACC = @ tput setaf 5 && echo -n '[yacc] ' \
-         && tput sgr0 && echo $< \
-		 && tput setaf 3 \
-         && bison -v -d --report=itemset $< -o y.tab.c \
-		 && tput sgr0;
+YACC := bison
+COLOR_YACC = @ tput setaf 5 && echo '[yacc] $<' && tput sgr0
+DO_YACC = $(YACC) -v -d --report=itemset $< -o y.tab.c
+
+# high light shorhand
+HIGHLIGHT_BEGIN := @ tput setaf
+HIGHLIGHT_END := @ tput sgr0
 
 # regular rules
 all:
-	@echo "[done $(CURDIR)]"
+	$(HIGHLIGHT_BEGIN) 5
+	@echo "[done] $(CURDIR)"
+	$(HIGHLIGHT_END)
 
 new: clean all
-	@echo "[re-make $(CURDIR)]"
+	$(HIGHLIGHT_BEGIN) 5
+	@echo "[re-make done] $(CURDIR)"
+	$(HIGHLIGHT_END)
 
 -include $(wildcard *.d)
 -include $(wildcard run/*.d)
 
 %.o: %.c
-	$(CC) $(CFLAGS) $*.c -c -o $@
-	$(CC_DEP) -MM -MT $@ $(CFLAGS) $*.c -o $*.d
+	$(COLOR_CC)
+	$(strip $(COMPILE_CC))
+	$(CC_DEP) $@ $(CFLAGS) $*.c -o $*.d
 
 %.o: %.cpp
-	$(CXX) $(CFLAGS) $*.cpp -c -o $@
-	$(CXX_DEP) -MM -MT $@ $(CFLAGS) $*.cpp -o $*.d
+	$(COLOR_CXX)
+	$(strip $(COMPILE_CXX))
+	$(CXX_DEP) $@ $(CFLAGS) $*.cpp -o $*.d
 
 %.out: %.o
-	@echo '$(LD) $(LINK_ARGS)'
-	$(LINK)
+	$(COLOR_LINK)
+	$(strip $(LINK))
 
 test-%.h: %.h
-	$(CCDH) $(CFLAGS) -dH $*.h
+	$(CCDH) $(CFLAGS) $*.h
 
 FIND := @ find . -type d \( -path './.git' \) -prune -o
 

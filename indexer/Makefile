@@ -9,10 +9,12 @@ jieba-wrap.py: ../txt-seg/jieba-wrap.py
 	ln -sf $<
 
 lex.mix.c: lexer.mix.l
-	$(LEX)
+	$(COLOR_LEX)
+	$(strip $(DO_LEX))
 
 lex.eng.c: lexer.eng.l
-	$(LEX)
+	$(COLOR_LEX)
+	$(strip $(DO_LEX))
 
 clean:
 	rm -f lex.*.c

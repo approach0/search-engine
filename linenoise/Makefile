@@ -4,11 +4,12 @@ include ../rules.mk
 all: lib
 
 lib: fork/liblinenoise.a
-	make -C fork
+	$(MAKE) -C fork
 
 fork/liblinenoise.a: $(AROBJS)
-	$(AR)
+	$(COLOR_AR)
+	$(strip $(GEN_LIB))
 
 clean:
-	make -C fork clean
+	$(MAKE) -C fork clean
 	@ echo 'clean'

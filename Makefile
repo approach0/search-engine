@@ -5,14 +5,14 @@ include rules.mk
 all: frame_all tags
 
 # print colorful notice for make entering
-MODULE_ENTER_PRINT =  @ tput setaf 1 && echo -n '[$@] ' && tput sgr0;
+MODULE_ENTER_PRINT =  @ tput setaf 1 && echo '[$@] ' && tput sgr0;
 
 # general rules are listed below 
 
 # project library files
 %-module:
 	$(MODULE_ENTER_PRINT)
-	make -C $* lib
+	$(MAKE) -C $* lib
 
 # specify modules to be included for building
 TARGETS_FILE = targets.mk
@@ -34,12 +34,12 @@ frame_all: $(MODULE_BINS)
 # binary files are dependent on library files (second pass)
 %-module-bin: $(MODULE_NAMES)
 	$(MODULE_ENTER_PRINT)
-	make -C $* all
+	$(MAKE) -C $* all
 
 # clean rules
 %-module-clean:
 	$(MODULE_ENTER_PRINT)
-	make -C $* clean
+	$(MAKE) -C $* clean
 
 clean: tags-clean $(MODULE_CLEAN)
 
@@ -50,9 +50,14 @@ SRC_LIST := $(shell test -e ${SRC_LIST_FILE} && \
          cat ${SRC_LIST_FILE})
 
 tags: $(SRC_LIST)
-	@ echo '[create ctags]'
+	$(HIGHLIGHT_BEGIN) 5
+	@ echo '[create source list file]'
+	$(HIGHLIGHT_END)
 	$(FIND) \( -name '*.[hcly]' -o \
 	-name '*.cpp' \) -a -print > $(SRC_LIST_FILE)
+	$(HIGHLIGHT_BEGIN) 5
+	@ echo '[create ctags]'
+	$(HIGHLIGHT_END)
 	@ if command -v ctags; then \
 		ctags --langmap=c:.c.y -L $(SRC_LIST_FILE); \
 	else \
@@ -60,6 +65,11 @@ tags: $(SRC_LIST)
 	fi
 
 tags-clean:
-	@echo '[tags clean]'
+	$(HIGHLIGHT_BEGIN) 5
+	@echo '[clean ctags]'
+	$(HIGHLIGHT_END)
 	@$(FIND) -type f \( -name 'tags' \) -print | xargs rm -f
+	$(HIGHLIGHT_BEGIN) 5
+	@echo '[remove source list file]'
+	$(HIGHLIGHT_END)
 	@rm -f $(SRC_LIST_FILE)

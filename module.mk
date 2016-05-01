@@ -72,7 +72,10 @@ AROBJS = $(ALL_OBJS)
 ARLIBS = $(MERGE_AR) $(OTHER_MERGE_AR)
 
 $(ARCHIVE): $(ALL_OBJS)
-	$(AR)
+	$(COLOR_AR)
+	$(strip $(GEN_LIB))
+	$(COLOR_SHOW_LIB)
+	$(SHOW_LIB)
 endif
 
 # summary what a module needs to make.
