@@ -83,4 +83,7 @@ grep-%:
 	$(FIND) -type f \( -name 'Makefile' \) -exec grep --color -nH $* {} \;
 	$(FIND) -type f \( -name '*.mk' \)     -exec grep --color -nH $* {} \;
 
+show-swp:
+	$(FIND) -type f \( -name '*.swp' \) -print
+
 clean: regular-clean
