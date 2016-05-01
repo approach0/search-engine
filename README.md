@@ -31,7 +31,8 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 * [bison](http://ftp.gnu.org/gnu/bison/bison-3.0.tar.xz)
 * [flex and libfl](http://sourceforge.net/projects/flex/files/flex-2.5.39.tar.xz/download)
 * [libtokyocabinet](http://fallabs.com/tokyocabinet/tokyocabinet-1.4.48.tar.gz)
-	* [libbz](http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz)
+* [libz](http://zlib.net/zlib-1.2.8.tar.gz)
+* [libbz](http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz)
 * [Lemur/Indri](https://sourceforge.net/projects/lemur/files/lemur/indri-5.9/indri-5.9.tar.gz/download)
 * [libpython3](https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tar.xz)
 * [jieba](https://github.com/fxsjy/jieba/archive/v0.36.tar.gz)
@@ -39,8 +40,8 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 For Debian/Ubuntu users, you can instead type the following commands to automatically install above dependencies:
 ```
 $ sudo apt-get update
-$ sudo apt-get install bison flex python-pip python-dev \
-$                      libtokyocabinet-dev libbz2-dev
+$ sudo apt-get install ctags bison flex python3-pip python3-dev \
+$                      libtokyocabinet-dev libbz2-dev libz-dev
 $ sudo pip3 install jieba
 ```
 Lemur/Indri is not likely to be in your distribution's official software repository, so you may need to build and manually specify its library path (see the next step).
@@ -53,6 +54,12 @@ After downloading Indri tarball (indri-5.9 for example), build its libraries:
 ```
 $ (cd indri-5.9 && chmod +x configure && ./configure && make)
 ```
+
+If Indri reports `undefined reference to ...` when building/linking, install that library **and** rerun configure again:
+
+> After installing the zlib-devel package you must rerun configure
+> so that it correctly finds it and adds the library to the ld command.
+> (see https://sourceforge.net/p/lemur/discussion/546028/thread/e67752b2)
 
 ### 2. Configure dependency path
 Our project uses `dep-*.mk` files (you will get an idea of what it is by just opening one of it) to configure dependency paths  (or CFLAGS and LDFLAGS). For system build-in libraries and downloaded libraries which you have just installed to your system environment, no need to specify their paths, leave these `dep-*.mk` files unchanged.
