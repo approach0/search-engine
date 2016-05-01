@@ -1,9 +1,10 @@
 .PHONY: all clean regular-clean new
 
 # compiler
-CFLAGS = -Wall -Wno-unused-function -std=c99
+CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE
+# (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
-CC := gcc -c
+CC := gcc -std=c99 -c
 CC_DEP := @ gcc -MM -MT
 COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
        tput sgr0
