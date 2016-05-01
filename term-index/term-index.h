@@ -19,11 +19,12 @@ void term_index_close(void *);
 
 int term_index_maintain(void*);
 
-void term_index_doc_begin(void *);
-void term_index_doc_add(void *, char *);
-void term_index_doc_end(void *);
+void     term_index_doc_begin(void *);
+void     term_index_doc_add(void *, char *);
+doc_id_t term_index_doc_end(void *);
 
 uint32_t term_index_get_termN(void *); /* unique terms */
+/* Indri bug: call term_index_get_docN() during indexing will crash shortly */
 uint32_t term_index_get_docN(void *); /* number of document in the collection */
 uint32_t term_index_get_docLen(void *, doc_id_t); /* get document length */
 uint32_t term_index_get_avgDocLen(void *); /* average doc len (in words) */
@@ -40,7 +41,7 @@ struct term_posting_item {
 };
 
 void term_posting_start(void *);
-bool term_posting_jump(void *, doc_id_t);
+bool term_posting_jump(void *, uint64_t);
 void term_posting_next(void *);
 struct term_posting_item
 *term_posting_current(void *);

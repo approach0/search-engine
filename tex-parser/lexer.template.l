@@ -44,7 +44,7 @@ extern unsigned int mat_stack;
  /* ========================
   *  commands to be ignored
   * ========================*/
-\\color\{                       { BEGIN(ign); ign_stack ++; } 
+\\color\{                       { BEGIN(ign); ign_stack ++; }
 \\mbox\{                        { BEGIN(ign); ign_stack ++; }
 \\hbox\{                        { BEGIN(ign); ign_stack ++; }
 \\label\{                       { BEGIN(ign); ign_stack ++; }

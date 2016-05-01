@@ -1,0 +1,6 @@
+* malloc hook
+* faster Chinese tokenizer
+* blob-index (consider file size limit)
+* pfor-delta module
+* oprtr decompose (when no search result is found)
+* faster math-index/subpath-set

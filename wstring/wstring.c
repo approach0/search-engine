@@ -15,7 +15,7 @@ wchar_t *wstr_copy(wchar_t *dest, const wchar_t *src)
 	return dest;
 }
 
-size_t mbstr_chars(char *mbstr)
+size_t mbstr_chars(const char *mbstr)
 {
 	return mbstowcs(NULL, mbstr, 0);
 }
@@ -43,4 +43,9 @@ char *wstr2mbstr(const wchar_t *wide_string)
 	wcstombs(retstr, wide_string, MAX_STR_CONV_BUF_LEN);
 
 	return retstr;
+}
+
+size_t mbstr_bytes(const wchar_t *wstr)
+{
+	return wcstombs(NULL, wstr, 0);
 }

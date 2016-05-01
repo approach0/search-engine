@@ -1,10 +1,10 @@
-.PHONY: all clean regular-clean
+.PHONY: all clean regular-clean new
 
 # compiler
 CFLAGS = -Wall -Wno-unused-function
-CC =  @ tput setaf 5 && echo -n "[compile C source] " && \
+CC =  @ tput setaf 5 && echo -n "[compile C $(strip $(CFLAGS))] " && \
        tput sgr0 && echo $< && gcc
-CXX = @ tput setaf 5 && echo -n '[compile C++ source] ' && \
+CXX = @ tput setaf 5 && echo -n '[compile C++ $(strip $(CFLAGS))] ' && \
        tput sgr0 && echo $< && g++
 CCDH =  @ tput setaf 5 && echo -n '[test C header] ' && \
        tput sgr0 && echo $< && gcc
@@ -38,6 +38,9 @@ YACC = @ tput setaf 5 && echo -n '[yacc] ' \
 all: 
 	@echo "[done $(CURDIR)]"
 
+new: clean all
+	@echo "[re-make $(CURDIR)]"
+
 -include $(wildcard *.d)
 -include $(wildcard run/*.d)
 
@@ -65,10 +68,13 @@ regular-clean:
 	$(FIND) -type f \( -name '*.gch' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.pyc' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.out' \) -print | xargs rm -f
+	$(FIND) -type f \( -name '*.bin' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.log' \) -print | xargs rm -f
 	$(FIND) -type l \( -name '*.ln' \) -print | xargs rm -f
 	$(FIND) -type f \( -name '*.so' \) -print | xargs rm -f
+	$(FIND) -type l \( -name '*.py' \) -print | xargs rm -f
 	$(FIND) -type d \( -name 'tmp' \) -print | xargs rm -rf
+	$(FIND) -type d \( -name '__pycache__' \) -print | xargs rm -rf
 
 grep-%:
 	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep --color -nH $* {} \;

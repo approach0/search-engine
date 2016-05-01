@@ -1,57 +1,67 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "jieba.h"
+
+#include "jieba-wrap.h"
 #include "wstring/wstring.h"
 #include "txt-seg.h"
 
-static Jieba jieba;
-
 int text_segment_init(const char *dict_path)
 {
-	char paths[3][MAX_DICT_PATH_STR_LEN];
-
-	sprintf(paths[0], "%s/" DEFAULT_DICT_NAME, dict_path);
-	sprintf(paths[1], "%s/" DEFAULT_HMM_NAME, dict_path);
-	sprintf(paths[2], "%s/" DEFAULT_USER_DICT_NAME, dict_path);
-
-	jieba = NewJieba(paths[0], paths[1], paths[2]); 
-
+	dict_path = NULL; /* not supported yet */
+	jieba_init();
 	return 0;
 }
 
 void text_segment_free()
 {
-	FreeJieba(jieba);
+	jieba_release();
 }
 
 bool text_segment_insert_usrterm(const char *term)
 {
-	return JiebaInsertUserWord(jieba, term);
+	jieba_add_usr_word(term, strlen(term));
+	return 1;
+}
+
+void insert_token_to_list(char *term, long int begin,
+                          long int end, char *tag, void *arg)
+{
+	struct term_list_node *tln;
+	P_CAST(ret, list, arg);
+	size_t len = end - begin;    /* characters */
+
+	if (0 == strcmp(tag, "x")) /* drop unknown terms */
+		return;
+
+	if (0 == strcmp(tag, "m")) /* drop number terms */
+		return;
+
+	if (len + 1 > MAX_TERM_WSTR_LEN)
+		return;
+	
+	tln = malloc(sizeof(struct term_list_node));
+	wstr_copy(tln->term, mbstr2wstr(term));
+	tln->begin_pos = begin;
+	tln->end_pos = end;
+
+	if (0 == strcmp(tag, "eng")) /* drop number terms */
+		tln->type = TERM_T_ENGLISH;
+	else
+		tln->type = TERM_T_CHINESE;
+
+	LIST_NODE_CONS(tln->ln);
+	list_insert_one_at_tail(&tln->ln, ret, NULL, NULL);
 }
 
 list text_segment(const char *text)
 {
-	CJiebaWord *words = CutNoPunc(jieba, text, strlen(text));
-	int i;
-	struct term_list_node *tln;
 	list ret = LIST_NULL;
-	const int max_word_bytes = MAX_TERM_BYTES;
-	char word[max_word_bytes + 1];
-
-	for (i = 0; words[i].word; i++) {
-		if (words[i].len > max_word_bytes)
-			continue;
-
-		tln = malloc(sizeof(struct term_list_node));
-		memcpy(word, words[i].word, words[i].len);
-		word[words[i].len] = '\0';
-		wstr_copy(tln->term, mbstr2wstr(word));
-
-		LIST_NODE_CONS(tln->ln);
-		list_insert_one_at_tail(&tln->ln, &ret, NULL, NULL);
+	void *gen_toks = jieba_cut(text, strlen(text));
+	if (gen_toks) {
+		foreach_tok(gen_toks, &insert_token_to_list, &ret);
+		pyobj_refcnt(gen_toks);
 	}
 
-	FreeWords(words);
 	return ret;
 }
