@@ -8,7 +8,7 @@ static LIST_IT_CALLBK(add_into_set)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(set, list, pa_extra);
 
-	subpath_set_add(set, sp, &dummy);
+	subpath_set_add(set, sp);
 	LIST_GO_OVER;
 }
 

@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -10,15 +12,23 @@
 bool dir_exists(const char *path)
 {
 	struct stat s;
-	stat(path, &s);
-	return S_ISDIR(s.st_mode);
+	if (0 == stat(path, &s))
+		return S_ISDIR(s.st_mode);
+	else if (ENOENT == errno)
+		return 0;
+	else
+		assert(0);
 }
 
 int file_exists(const char *path)
 {
 	struct stat s;
-	stat(path, &s);
-	return S_ISREG(s.st_mode);
+	if (0 == stat(path, &s))
+		return S_ISREG(s.st_mode);
+	else if (ENOENT == errno)
+		return 0;
+	else
+		assert(0);
 }
 
 char *filename_ext(const char *name)

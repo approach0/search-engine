@@ -15,19 +15,9 @@
 #include "subpath-set.h"
 #include "config.h"
 
-typedef struct {
-	FILE *id_list;
-	FILE *path_info;
-} _math_posting_t;
-
-struct index_path_arg {
-	math_index_t   index;
-	uint32_t       n_lr_paths;
-	doc_id_t       docID;
-	exp_id_t       expID;
-	list           subpath_set;
-};
-
+/* ======================
+ * math index open/close
+ * ====================== */
 math_index_t
 math_index_open(const char *path, enum math_index_open_opt open_opt)
 {
@@ -62,6 +52,9 @@ void math_index_close(math_index_t index)
 	free(index);
 }
 
+/* ==========================
+ * make path string function
+ * ========================== */
 struct _mk_path_str_arg {
 	char **p;
 	bool skip_one;
@@ -111,6 +104,10 @@ math_index_mk_path_str(math_index_t index, struct subpath *sp,
 	return 0;
 }
 
+/* ================
+ * write functions
+ * ================ */
+
 static int
 write_pathinfo_payload(const char *path, struct math_pathinfo *pathinfo)
 {
@@ -143,24 +140,6 @@ write_pathinfo_head(const char *path, struct math_pathinfo_pack* pack)
 	fclose(fh);
 }
 
-static uint64_t read_pathinfo_fpos(const char *path)
-{
-	FILE *fh;
-	uint64_t ret;
-	char file_path[MAX_DIR_PATH_NAME_LEN];
-	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
-
-	fh = fopen(file_path, "r");
-	if (fh == NULL)
-		return 0;
-
-	fseek(fh, 0, SEEK_END);
-	ret = ftell(fh);
-	fclose(fh);
-
-	return ret;
-}
-
 static int
 wirte_posting_item(const char *path, struct math_posting_item *po_item)
 {
@@ -178,50 +157,85 @@ wirte_posting_item(const char *path, struct math_posting_item *po_item)
 	return 0;
 }
 
-static LIST_IT_CALLBK(mk_dir_and_subpath_set)
+/* ======================
+ * math path index steps
+ * ====================== */
+
+struct _index_path_arg {
+	math_index_t   index;
+	doc_id_t       docID;
+	exp_id_t       expID;
+	list           subpath_set;
+	uint32_t       n_lr_paths;
+};
+
+static LIST_IT_CALLBK(path_index_step1)
 {
 	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(arg, struct index_path_arg, pa_extra);
+	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	struct math_posting_item po_item;
 
 	if (math_index_mk_path_str(arg->index, sp, path)) {
 		LIST_GO_OVER;
 	}
 
 	mkdir_p(path);
-
-	po_item.doc_id = arg->docID;
-	po_item.exp_id = arg->expID;
-	po_item.pathinfo_pos = read_pathinfo_fpos(path);
-	subpath_set_add(&arg->subpath_set, sp, &po_item);
+	subpath_set_add(&arg->subpath_set, sp);
 
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(index_pathinfo_head)
+static uint64_t pathinfo_len(const char *path)
+{
+	FILE *fh;
+	uint64_t ret;
+	char file_path[MAX_DIR_PATH_NAME_LEN];
+	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
+
+	fh = fopen(file_path, "r");
+	if (fh == NULL)
+		return 0;
+
+	fseek(fh, 0, SEEK_END);
+	ret = ftell(fh);
+	fclose(fh);
+
+	return ret;
+}
+
+static LIST_IT_CALLBK(path_index_step2)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
-	P_CAST(arg, struct index_path_arg, pa_extra);
+	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	struct math_pathinfo_pack head;
-	struct subpath tmp;
 
-	tmp.type = ele->subpath_type;
-	tmp.path_nodes = ele->path_nodes;
+	struct math_posting_item  po_item;
+	struct math_pathinfo_pack pathinfo_hd;
+
+	struct subpath tmp;
+	tmp.type = ele->dup[0]->type;
+	tmp.path_nodes = ele->dup[0]->path_nodes;
+
 	if (0 == math_index_mk_path_str(arg->index, &tmp, path)) {
-		head.n_paths = ele->dup_cnt + 1;
-		head.n_lr_paths = arg->n_lr_paths;
-		write_pathinfo_head(path, &head);
+		/* wirte posting item */
+		po_item.doc_id = arg->docID;
+		po_item.exp_id = arg->expID;
+		po_item.pathinfo_pos = pathinfo_len(path);
+		wirte_posting_item(path, &po_item);
+
+		/* wirte pathinfo head */
+		pathinfo_hd.n_paths = ele->dup_cnt + 1;
+		pathinfo_hd.n_lr_paths = arg->n_lr_paths;
+		write_pathinfo_head(path, &pathinfo_hd);
 	}
 
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(index_pathinfo_payload)
+static LIST_IT_CALLBK(path_index_step3)
 {
 	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(arg, struct index_path_arg, pa_extra);
+	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
 	struct math_pathinfo info = {sp->path_id, sp->ge_hash, sp->fr_hash};
 
@@ -237,42 +251,27 @@ static LIST_IT_CALLBK(index_pathinfo_payload)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(index_posting_item)
-{
-	LIST_OBJ(struct subpath_ele, ele, ln);
-	P_CAST(arg, struct index_path_arg, pa_extra);
-	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	struct subpath tmp;
-
-	tmp.type = ele->subpath_type;
-	tmp.path_nodes = ele->path_nodes;
-
-	if (0 == math_index_mk_path_str(arg->index, &tmp, path)) {
-		wirte_posting_item(path, &ele->to_write);
-	}
-
-	LIST_GO_OVER;
-}
-
 int
 math_index_add_tex(math_index_t index, doc_id_t docID,
                    exp_id_t expID, struct subpaths subpaths)
 {
-	struct index_path_arg arg;
+	struct _index_path_arg arg;
 	arg.index = (math_index_t)index;
 	arg.docID = docID;
 	arg.expID = expID;
 	arg.n_lr_paths = subpaths.n_lr_paths;
 	LIST_CONS(arg.subpath_set);
 
-	list_foreach(&subpaths.li, &mk_dir_and_subpath_set, &arg);
-	subpath_set_print(&arg.subpath_set, stdout);
-	list_foreach(&arg.subpath_set, &index_pathinfo_head, &arg);
-	list_foreach(&subpaths.li, &index_pathinfo_payload, &arg);
-	list_foreach(&arg.subpath_set, &index_posting_item, &arg);
+	list_foreach(&subpaths.li, &path_index_step1, &arg);
+	list_foreach(&arg.subpath_set, &path_index_step2, &arg);
+	list_foreach(&subpaths.li, &path_index_step3, &arg);
 
 	return 0;
 }
+
+/* ===============================
+ * probe math index posting list
+ * =============================== */
 
 int math_inex_probe(const char* path, bool trans, FILE *fh_pri)
 {

@@ -2,7 +2,14 @@
 
 int main()
 {
-	const char *test[] = {"ab", "a+k(b+c)", "a+bc+xy", "a(b+cd)"};
+	const char *test[] = {
+		"ab",
+		"a+k(b+c)",
+		"a+bc+xy",
+		"a(b+cd)",
+		"\\sqrt{pq + m}"
+	};
+
 	doc_id_t docID = 1;
 	exp_id_t expID = 0;
 	uint32_t i, n_test = sizeof(test)/sizeof(char*);

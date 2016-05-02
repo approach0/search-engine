@@ -13,3 +13,4 @@ lex.*.c
 tags
 srclist.txt
 indexer/jieba-wrap.py
+linenoise-history.txt
