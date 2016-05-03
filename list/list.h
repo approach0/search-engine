@@ -102,14 +102,14 @@ typedef bool list_it_fun(struct list_it*,
 #define LIST_RET_BREAK    1
 #define LIST_RET_CONTINUE 0
 
-static __inline void
+static __inline struct list_it
 list_foreach(struct list_it *head, list_it_fun *each_do, 
 		void *extra) 
 {
 	struct list_it fwd, now = *head;
 
 	if (head->now == NULL)
-		return;
+		return now;
 
 	for(;;) {
 		fwd = list_get_it(now.now->next);
@@ -119,6 +119,8 @@ list_foreach(struct list_it *head, list_it_fun *each_do,
 
 		now = fwd;
 	}
+
+	return now;
 }
 
 /*

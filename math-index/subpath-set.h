@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 struct subpath_ele {
 	struct list_node ln;
@@ -8,5 +9,8 @@ struct subpath_ele {
 
 LIST_DECL_FREE_FUN(subpath_set_free);
 
-void subpath_set_add(list*, struct subpath*);
+bool subpath_set_add(list*, struct subpath*);
 void subpath_set_print(list*, FILE*);
+
+uint32_t /* return the number of unique subpaths added */
+subpath_set_from_subpaths(struct subpaths*, list* /* set output */);

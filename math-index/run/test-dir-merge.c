@@ -15,6 +15,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 int main(int argc, char *argv[])
 {
 	//const char tex[] = "\\qvar\\alpha+xy";
+	//const char tex[] = "\\alpha + \\sqrt b +xy";
 	const char tex[] = "\\alpha+xy";
 	struct tex_parse_ret parse_ret;
 
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
 	if (parse_ret.code == PARSER_RETCODE_SUCC) {
 		subpaths_print(&parse_ret.subpaths, stdout);
 
-		printf("start merging...\n");
+		printf("calling math_index_dir_merge()...\n");
 		math_index_dir_merge(index, DIR_MERGE_DEPTH_FIRST,
 		                     &parse_ret.subpaths, &on_dir_merge, NULL);
 		

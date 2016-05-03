@@ -9,6 +9,31 @@
 #include "subpath-set.h"
 #include "config.h"
 
+struct add_subpaths_args {
+	uint32_t            n_uniq;
+	list               *set;
+};
+
+static LIST_IT_CALLBK(add_subpaths)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(args, struct add_subpaths_args, pa_extra);
+
+	if (0 == subpath_set_add(args->set, sp))
+		args->n_uniq ++;
+
+	LIST_GO_OVER;
+}
+
+uint32_t
+subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
+{
+	struct add_subpaths_args args = {0, set};
+	list_foreach(&subpaths->li, &add_subpaths, &args);
+
+	return args.n_uniq;
+}
+
 static LIST_IT_CALLBK(print_subpath_nodes)
 {
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
@@ -155,23 +180,35 @@ static LIST_IT_CALLBK(set_add)
 			newele = new_ele(sp);
 			list_insert_one_at_tail(&newele->ln, pa_head,
 			                        pa_now, pa_fwd);
+
+			/* indicate we inserted one into set */
+			*pa_now = *pa_head;
 			return LIST_RET_BREAK;
 		} else {
+			/* not the last element */
 			return LIST_RET_CONTINUE;
 		}
 	}
 }
 
-void subpath_set_add(list *set, struct subpath *sp)
+bool subpath_set_add(list *set, struct subpath *sp)
 {
 	struct subpath_ele *newele;
+	struct list_it br;
 
 	if (set->now == NULL) {
 		newele = new_ele(sp);
 		list_insert_one_at_tail(&newele->ln, set, NULL, NULL);
+		return 0;
 	} else {
-		list_foreach(set, &set_add, sp);
+		br = list_foreach(set, &set_add, sp);
+
+		if (br.now == set->now)
+			/* we just inserted an unique element */
+			return 0;
 	}
+
+	return 1;
 }
 
 LIST_DEF_FREE_FUN(subpath_set_free, struct subpath_ele, ln, free(p));
