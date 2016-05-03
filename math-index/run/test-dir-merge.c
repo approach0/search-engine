@@ -3,13 +3,31 @@
 #include <string.h>
 
 #include "math-index.h"
+#include "math-posting.h"
 #include "config.h"
 
 enum dir_merge_ret
 on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
              uint32_t level, void *args)
 {
-	return DIR_MERGE_STOP;
+	uint32_t i, j;
+	struct _math_posting *po;
+	struct subpath *sp;
+
+	for (i = 0; i < n_postings; i++) {
+		po = postings[i];
+		printf("posting[%u]: %s ", i, po->full_path);
+
+		printf("(duplicates: ");
+		for (j = 0; j <= po->dup_cnt; j++) {
+			sp = po->dup[j];
+			printf("path#%u ", sp->path_id);
+		}
+		printf(")\n");
+	}
+	printf("======\n");
+
+	return DIR_MERGE_CONTINUE;
 }
 
 int main(int argc, char *argv[])

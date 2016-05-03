@@ -5,6 +5,7 @@
 #include "math-index.h"
 #include "subpath-set.h"
 #include "config.h" /* for debug macro */
+#include "math-posting.h"
 
 struct dir_merge_args {
 	math_index_t          index;
@@ -21,6 +22,9 @@ struct dir_merge_args {
 	char           (*full_paths)[MAX_DIR_PATH_NAME_LEN];
 };
 
+	uint32_t         dup_cnt;
+	struct subpath  *dup[MAX_MATH_PATHS];
+	char           (*full_paths)[MAX_DIR_PATH_NAME_LEN];
 /*
  * functions below are for debug purpose.
  */
@@ -51,10 +55,6 @@ print_all_dir_strings(struct dir_merge_args *dm_args, const char *srchpath)
 	struct subpath_ele *ele;
 
 	printf("======\n");
-	/* longpath is not generated yet, write it first. */
-	sprintf(dm_args->full_paths[dm_args->longpath], "%s/%s",
-	        dm_args->base_paths[dm_args->longpath], srchpath);
-
 	for (i = 0; i < dm_args->set_sz; i++) {
 		ele = dm_args->eles[i];
 		printf("[%u] %s ", i, dm_args->full_paths[i]);
@@ -75,19 +75,31 @@ dir_search_callbk(const char* path, const char *srchpath,
 {
 	uint32_t i;
 	P_CAST(dm_args, struct dir_merge_args, arg);
+	struct _math_posting _postings[MAX_MATH_PATHS];
+	math_posting_t       postings[MAX_MATH_PATHS];
+	struct subpath_ele  *ele;
 
 	for (i = 0; i < dm_args->set_sz; i++) {
-		if (i == dm_args->longpath)
-			continue; /* skip caller path (longpath) */
-
 		sprintf(dm_args->full_paths[i], "%s/%s",
 		        dm_args->base_paths[i], srchpath);
 
-		if (!dir_exists(dm_args->full_paths[i])) {
+		ele = dm_args->eles[i];
+		_postings[i].dup_cnt = ele->dup_cnt;
+		_postings[i].dup = ele->dup;
+		_postings[i].full_path = dm_args->full_paths[i];
+		postings[i] = _postings + i;
+
+		if (i == dm_args->longpath)
+			continue; /* caller path (longpath) must exist */
+		else if (!dir_exists(dm_args->full_paths[i])) {
+#ifdef DEBUG_DIR_MERGE
 			printf("stop subdir merging @ %s/%s.\n", path, srchpath);
+#endif
 			return DS_RET_STOP_SUBDIR;
 		}
 	}
+
+	dm_args->fun(postings, dm_args->set_sz, level, dm_args->args);
 
 #ifdef DEBUG_DIR_MERGE
 	print_all_dir_strings(dm_args, srchpath);
