@@ -96,7 +96,7 @@ This project is still in its early stage, nothing really to show you now. Howeve
 
 	1. `$PROJECT/indexer/test-doc` includes a mini test corpus. Optionally, you are suggested to download a slightly larger plain text corpus (e.g. *Reuters-21578* and *Ohsumed* from [University of Trento CATEGORIZATION CORPORA](http://disi.unitn.it/moschitti/corpora.htm)) for performance evaluation. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$PROJECT/indexer/tmp`).
 	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p ./test-doc` to index corpus files recursively from our mini test corpus directory. 
-	3. run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to peek at the index (termN, docN, avgDocLen etc.) you just build. (Pass `-h` argument to see more options for `test-read.out` program)
+	3. run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to take a peek at the index (termN, docN, avgDocLen etc.) you just build. (Pass `-h` argument to see more options for `test-read.out` program)
 
 * Test merge and score of posting list
 
