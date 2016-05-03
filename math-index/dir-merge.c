@@ -4,6 +4,7 @@
 #include <string.h>
 #include "math-index.h"
 #include "subpath-set.h"
+#include "config.h" /* for debug macro */
 
 struct dir_merge_args {
 	math_index_t          index;
@@ -37,7 +38,8 @@ static LIST_IT_CALLBK(dele_pathid)
 	LIST_GO_OVER;
 }
 
-static void del_subpath_of_path_id(struct subpaths *subpaths, uint32_t path_id)
+static void
+del_subpath_of_path_id(struct subpaths *subpaths, uint32_t path_id)
 {
 	list_foreach(&subpaths->li, &dele_pathid, &path_id);
 }
@@ -45,14 +47,23 @@ static void del_subpath_of_path_id(struct subpaths *subpaths, uint32_t path_id)
 static void
 print_all_dir_strings(struct dir_merge_args *dm_args, const char *srchpath)
 {
-	uint32_t i;
+	uint32_t i, j;
+	struct subpath_ele *ele;
 
 	printf("======\n");
+	/* longpath is not generated yet, write it first. */
 	sprintf(dm_args->full_paths[dm_args->longpath], "%s/%s",
 	        dm_args->base_paths[dm_args->longpath], srchpath);
 
-	for (i = 0; i < dm_args->set_sz; i++)
-		printf("[%u] %s\n", i, dm_args->full_paths[i]);
+	for (i = 0; i < dm_args->set_sz; i++) {
+		ele = dm_args->eles[i];
+		printf("[%u] %s ", i, dm_args->full_paths[i]);
+
+		printf("(duplicates: ");
+		for (j = 0; j <= ele->dup_cnt; j++)
+			printf("path#%u ", ele->dup[j]->path_id);
+		printf(")\n");
+	}
 }
 
 /*
@@ -78,7 +89,9 @@ dir_search_callbk(const char* path, const char *srchpath,
 		}
 	}
 
+#ifdef DEBUG_DIR_MERGE
 	print_all_dir_strings(dm_args, srchpath);
+#endif
 	return DS_RET_CONTINUE;
 }
 
@@ -99,23 +112,30 @@ static LIST_IT_CALLBK(dele_if_gener)
 	LIST_GO_OVER;
 }
 
-struct mk_subpath_strings_args {
-	uint32_t        i;
-	math_index_t    index;
-	uint32_t        longpath;
-	size_t          max_strlen;
-	char          (*paths)[MAX_DIR_PATH_NAME_LEN];
+struct assoc_ele_and_pathstr_args {
+	uint32_t             i;
+	math_index_t         index;
+	uint32_t             longpath;
+	size_t               max_strlen;
+	char               (*paths)[MAX_DIR_PATH_NAME_LEN];
+	struct subpath_ele **eles;
 };
 
-static LIST_IT_CALLBK(mk_subpath_strings)
+static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
-	P_CAST(args, struct mk_subpath_strings_args, pa_extra);
+	P_CAST(args, struct assoc_ele_and_pathstr_args, pa_extra);
 	size_t len;
 
 	/* make path string */
-	math_index_mk_path_str(args->index, ele->dup[0],
-	                       args->paths[args->i]);
+	if (math_index_mk_path_str(args->index, ele->dup[0],
+	                           args->paths[args->i])) {
+		args->i = 0; /* indicates error */
+		return LIST_RET_BREAK;
+	}
+
+	/* associate paths[i] with a subpath set element */
+	args->eles[args->i] = ele;
 
 	/* compare and update max string length */
 	len = strlen(args->paths[args->i]);
@@ -138,9 +158,13 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
                          struct subpaths *subpaths, dir_merge_callbk fun,
                          void *args)
 {
-	int  i, n_uniq_paths, ret = 0;
+#ifdef DEBUG_DIR_MERGE
+	int i;
+#endif
+
+	int  n_uniq_paths, ret = 0;
 	list subpath_set = LIST_NULL;
-	struct mk_subpath_strings_args mkstr_args;
+	struct assoc_ele_and_pathstr_args assoc_args;
 
 	struct dir_merge_args dm_args = {index, fun, args, 0 /* set size */,
 	                                 NULL /* set elements */,
@@ -162,35 +186,42 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	dm_args.full_paths = NEW_SUBPATHS_DIR_BUF(n_uniq_paths);
 
 	/* make unique subpath strings and return longest path index (longpath) */
-	mkstr_args.i = 0;
-	mkstr_args.index = index;
-	mkstr_args.longpath = 0;
-	mkstr_args.max_strlen = 0;
-	mkstr_args.paths = dm_args.base_paths;
-	list_foreach(&subpath_set, &mk_subpath_strings, &mkstr_args);
+	assoc_args.i = 0;
+	assoc_args.index = index;
+	assoc_args.longpath = 0;
+	assoc_args.max_strlen = 0;
+	assoc_args.paths = dm_args.base_paths;
+	assoc_args.eles = dm_args.eles;
 
-	if (mkstr_args.i == 0) {
-		fprintf(stderr, "no unique path for dir-merge.\n");
+	list_foreach(&subpath_set, &assoc_ele_and_pathstr, &assoc_args);
+
+	if (assoc_args.i == 0) {
+		/* last function fails for some reason */
+		fprintf(stderr, "path strings are not fully generated.\n");
 		ret = 1; goto exit;
 	}
 
+#ifdef DEBUG_DIR_MERGE
 	printf("base path strings:\n");
 	for (i = 0; i < n_uniq_paths; i++)
 		printf("path string [%u]: %s\n", i, dm_args.base_paths[i]);
+#endif
 
-	/* assign real longpath index */
-	dm_args.longpath = mkstr_args.longpath;
+	/* now we get longpath index, we can pass it to dir-merge */
+	dm_args.longpath = assoc_args.longpath;
+
+#ifdef DEBUG_DIR_MERGE
 	printf("longest path : [%u] %s (length=%lu)\n", dm_args.longpath,
-	       dm_args.base_paths[dm_args.longpath], mkstr_args.max_strlen);
+	       dm_args.base_paths[dm_args.longpath], assoc_args.max_strlen);
 	printf("\n");
 
 	printf("subpath set (size=%u):\n", dm_args.set_sz);
 	subpath_set_print(&subpath_set, stdout);
 	printf("\n");
+#endif
 
 	/* now we can start merge path directories */
 	if (type == DIR_MERGE_DEPTH_FIRST) {
-		printf("start merge directories...\n");
 		dir_search_podfs(dm_args.base_paths[dm_args.longpath],
 		                 &dir_search_callbk, &dm_args);
 	} else {

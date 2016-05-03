@@ -5,3 +5,5 @@
 #define PATH_INFO_FNAME    "pathinfo.bin"
 
 //#define DEBUG_SUBPATH_SET
+
+#define DEBUG_DIR_MERGE
