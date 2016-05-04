@@ -70,7 +70,7 @@ static enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
 {
-	uint32_t i;
+	uint32_t i, j;
 	enum ds_ret ret = DS_RET_CONTINUE;
 	P_CAST(dm_args, struct dir_merge_args, arg);
 	math_posting_t postings[MAX_MATH_PATHS];
@@ -87,6 +87,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 			printf("stop subdir merging @ %s/%s.\n", path, srchpath);
 #endif
 			ret = DS_RET_STOP_SUBDIR;
+			i ++;
 			goto free_postings;
 		}
 	}
@@ -94,8 +95,8 @@ dir_search_callbk(const char* path, const char *srchpath,
 	dm_args->fun(postings, dm_args->set_sz, level, dm_args->args);
 
 free_postings:
-	for (i = 0; i < dm_args->set_sz; i++)
-		math_posting_free(postings[i]);
+	for (j = 0; j < i; j++)
+		math_posting_free(postings[j]);
 
 #ifdef DEBUG_DIR_MERGE
 	print_all_dir_strings(dm_args, srchpath);
