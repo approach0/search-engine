@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 typedef void* math_posting_t;
 
@@ -23,20 +24,20 @@ struct math_pathinfo_pack {
 #pragma pack(pop)
 
 struct subpath_ele;
-math_posting_t math_posting_new(struct subpath_ele*, const char*);
+math_posting_t math_posting_new_reader(struct subpath_ele*, const char*);
+
+void math_posting_free_reader(math_posting_t);
 
 struct subpath_ele *math_posting_get_ele(math_posting_t);
 const char *math_posting_get_pathstr(math_posting_t);
 
-void math_posting_free(math_posting_t);
-
-void math_posting_start(math_posting_t);
+bool math_posting_start(math_posting_t);
 bool math_posting_jump(math_posting_t, uint64_t);
-void math_posting_next(math_posting_t);
+bool math_posting_next(math_posting_t);
 void math_posting_finish(math_posting_t);
 
 struct math_posting_item*
 math_posting_current(math_posting_t);
 
 struct math_pathinfo_pack*
-math_posting_get_pathinfo(math_posting_t, struct math_posting_item*);
+math_posting_pathinfo(math_posting_t, uint64_t);

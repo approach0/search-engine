@@ -79,7 +79,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 		sprintf(dm_args->full_paths[i], "%s/%s",
 		        dm_args->base_paths[i], srchpath);
 
-		postings[i] = math_posting_new(dm_args->eles[i],
+		postings[i] = math_posting_new_reader(dm_args->eles[i],
 		                               dm_args->full_paths[i]);
 
 		if (!dir_exists(dm_args->full_paths[i])) {
@@ -96,7 +96,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 free_postings:
 	for (j = 0; j < i; j++)
-		math_posting_free(postings[j]);
+		math_posting_free_reader(postings[j]);
 
 #ifdef DEBUG_DIR_MERGE
 	print_all_dir_strings(dm_args, srchpath);

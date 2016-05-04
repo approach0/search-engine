@@ -6,7 +6,7 @@
 #include "tex-parser/tex-parser.h" /* for subpaths */
 #include "term-index/term-index.h" /* for doc_id_t */
 
-#define MAX_MATH_PATHS 128
+#define MAX_MATH_PATHS 64
 
 typedef uint8_t  pathinfo_num_t;
 typedef uint32_t exp_id_t;

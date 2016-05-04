@@ -50,7 +50,7 @@ uint64_t term_posting_current_id_wrap(void *item)
 		doc_id = ((struct term_posting_item*)item)->doc_id;
 		return (uint64_t)doc_id;
 	} else {
-		return MAX_POST_ITEM_ID;
+		return MAX_POST_ITEM_ID; /* indicate end of posting list */
 	}
 }
 

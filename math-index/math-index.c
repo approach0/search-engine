@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -271,73 +272,73 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
  * probe math index posting list
  * =============================== */
 
-int math_inex_probe(const char* path, bool trans, FILE *fh_pri)
+int math_inex_probe(const char* path, bool trans, FILE *fh)
 {
 	int ret = 0;
-	pathinfo_num_t cnt;
-	FILE *fh_posting = NULL, *fh_pathinfo = NULL;
-	struct math_posting_item po_item;
-	struct math_pathinfo_pack pathinfo_head;
-	struct math_pathinfo pathinfo;
-	char file_path[MAX_DIR_PATH_NAME_LEN];
+	uint32_t i;
+	uint64_t pos;
+	math_posting_t *po;
 
-	sprintf(file_path, "%s/" MATH_POSTING_FNAME, path);
-	fh_posting = fopen(file_path, "r");
-	if (fh_posting == NULL) {
+	struct math_posting_item *po_item;
+	struct math_pathinfo_pack *pathinfo_pack;
+	struct math_pathinfo *pathinfo;
+
+	/* allocate memory for posting reader */
+	po = math_posting_new_reader(NULL, path);
+
+	/* start reading posting list (try to open file) */
+	if (!math_posting_start(po)) {
 		ret = 1;
+		fprintf(stderr, "cannot start reading posting list.\n");
 		goto free;
 	}
 
-	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
-	fh_pathinfo = fopen(file_path, "r");
-	if (fh_pathinfo == NULL) {
-		ret = 1;
-		goto free;
-	}
+	while (math_posting_next(po)) {
+		/* read posting list item */
+		po_item = math_posting_current(po);
+		pos = po_item->pathinfo_pos;
+		fprintf(fh, "doc#%u, exp#%u pathinfo@%lu;",
+		        po_item->doc_id, po_item->exp_id, pos);
 
-	while (1 == fread(&po_item, sizeof(struct math_posting_item),
-	                  1, fh_posting)) {
-		fprintf(fh_pri, "doc#%u, exp#%u pos@%lu;",
-		        po_item.doc_id, po_item.exp_id, po_item.pathinfo_pos);
-
-		fseek(fh_pathinfo, po_item.pathinfo_pos, SEEK_SET);
-		if (1 == fread(&pathinfo_head, sizeof(struct math_pathinfo_pack),
-		               1, fh_pathinfo)) {
-			fprintf(fh_pri, " {");
-			fprintf(fh_pri, "lr=%u; ", pathinfo_head.n_lr_paths);
-
-			for (cnt = 0; cnt < pathinfo_head.n_paths; cnt++) {
-				if (1 != fread(&pathinfo, sizeof(struct math_pathinfo),
-				       1, fh_pathinfo))
-					break;
-
-				if (!trans) {
-					fprintf(fh_pri, "[%u %x %x]",
-					        pathinfo.path_id, pathinfo.lf_symb,
-					        pathinfo.fr_hash);
-				} else {
-					fprintf(fh_pri, "[%u %s %x]",
-					        pathinfo.path_id,
-					        trans_symbol(pathinfo.lf_symb),
-					        pathinfo.fr_hash);
-				}
-
-				if (cnt + 1 != pathinfo_head.n_paths)
-					fprintf(fh_pri, ", ");
-			}
-
-			fprintf(fh_pri, "}");
+		/* then read path info items */
+		if (NULL == (pathinfo_pack = math_posting_pathinfo(po, pos))) {
+			ret = 1;
+			fprintf(stderr, "\n");
+			fprintf(stderr, "fails to read math posting pathinfo.\n");
+			goto free;
 		}
 
-		fprintf(fh_pri, "\n");
+		/* upon success, print path info items */
+		fprintf(fh, " %u lr_paths, {", pathinfo_pack->n_lr_paths);
+		for (i = 0; i < pathinfo_pack->n_paths; i++) {
+			pathinfo = pathinfo_pack->pathinfo + i;
+			if (!trans) {
+				fprintf(fh, "[%u %x %x]",
+				        pathinfo->path_id, pathinfo->lf_symb,
+				        pathinfo->fr_hash);
+			} else {
+				fprintf(fh, "[%u %s %x]",
+				        pathinfo->path_id,
+				        trans_symbol(pathinfo->lf_symb),
+				        pathinfo->fr_hash);
+			}
+
+			if (i + 1 != pathinfo_pack->n_paths)
+				fprintf(fh, ", ");
+		}
+		fprintf(fh, "}");
+
+		/* finish probing this posting item */
+		fprintf(fh, "\n");
 	}
 
-free:
-	if (fh_posting)
-		fclose(fh_posting);
+	/* a little double-check */
+	po_item = math_posting_current(po);
+	assert(po_item->doc_id == 0);
 
-	if (fh_pathinfo)
-		fclose(fh_pathinfo);
+free:
+	math_posting_finish(po);
+	math_posting_free_reader(po);
 
 	return ret;
 }

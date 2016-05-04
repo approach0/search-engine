@@ -40,9 +40,9 @@ struct term_posting_item {
 	uint32_t tf;
 };
 
-void term_posting_start(void *);
+bool term_posting_start(void *);
 bool term_posting_jump(void *, uint64_t);
-void term_posting_next(void *);
+bool term_posting_next(void *);
 struct term_posting_item
 *term_posting_current(void *);
 void term_posting_finish(void *);
