@@ -3,24 +3,28 @@
 #include <string.h>
 
 #include "math-index.h"
-#include "math-posting.h"
-#include "config.h"
+#include "subpath-set.h"
 
 enum dir_merge_ret
 on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
              uint32_t level, void *args)
 {
 	uint32_t i, j;
-	struct _math_posting *po;
+	math_posting_t po;
+	struct subpath_ele *ele;
 	struct subpath *sp;
+	const char *fullpath;
 
 	for (i = 0; i < n_postings; i++) {
 		po = postings[i];
-		printf("posting[%u]: %s ", i, po->full_path);
+		ele = math_posting_get_ele(po);
+		fullpath = math_posting_get_pathstr(po);
+
+		printf("posting[%u]: %s ", i, fullpath);
 
 		printf("(duplicates: ");
-		for (j = 0; j <= po->dup_cnt; j++) {
-			sp = po->dup[j];
+		for (j = 0; j <= ele->dup_cnt; j++) {
+			sp = ele->dup[j];
 			printf("path#%u ", sp->path_id);
 		}
 		printf(")\n");

@@ -4,10 +4,7 @@
 #include "tex-parser/gen-token.h"  /* for token_id */
 #include "tex-parser/gen-symbol.h" /* for symbol_id */
 #include "tex-parser/trans.h"      /* for trans_token() */
-
-#include "math-index.h"
-#include "subpath-set.h"
-#include "config.h"
+#include "head.h"
 
 struct add_subpaths_args {
 	uint32_t            n_uniq;

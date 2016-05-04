@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include "list/list.h"
 
 struct subpath_ele {
 	struct list_node ln;

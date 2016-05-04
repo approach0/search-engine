@@ -11,9 +11,7 @@
 #include "tex-parser/gen-symbol.h" /* for symbol_id */
 #include "tex-parser/trans.h"      /* for trans_token() */
 
-#include "math-index.h"
-#include "subpath-set.h"
-#include "config.h"
+#include "head.h"
 
 /* ======================
  * math index open/close

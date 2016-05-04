@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #include "math-index.h"
-#include "config.h"
+#include "config.h" /* for TOKEN_PATH_NAME */
 
 int main(int argc, char *argv[])
 {
