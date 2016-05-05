@@ -29,15 +29,35 @@ struct postmerge_arg {
 	uint32_t            n_postings;
 	enum postmerge_op   op;
 
-	/* posting list current item move */
+	/* The posting start function will place the current pointer
+	 * at the beginning of posting list. */
 	post_do_callbk      post_start_fun;
-	post_jump_callbk    post_jump_fun; /* jump to the item whose ID >= a given ID */
-	post_do_callbk      post_next_fun; /* go to the next item */
-	post_do_callbk      post_finish_fun;
 
-	/* posting list 'get' functions */
-	post_now_callbk     post_now_fun;  /* get current posting item */
-	post_now_id_callbk  post_now_id_fun; /* get docID of a posting item */
+	/*
+	 * The posting next function, will go one item further, and
+	 * return whether or not we are still in the buffer.
+	 */
+	post_do_callbk      post_next_fun;
+
+	/*
+	 * The posting jump function, is defined something like this:
+	 * do {
+	 *     if (item[i].ID >= target_ID)
+	 *         return true;
+	 * } while (posting_next());
+	 *
+	 * In another words, jump to the item whose ID >= a given ID.
+	 */
+	post_jump_callbk    post_jump_fun;
+
+	/* get current posting item */
+	post_now_callbk     post_now_fun;
+
+	/* get docID of a posting item */
+	post_now_id_callbk  post_now_id_fun;
+
+	/* posting list release function */
+	post_do_callbk      post_finish_fun;
 
 	/* posting list merge callback */
 	post_merge_callbk   post_on_merge;

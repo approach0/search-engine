@@ -293,7 +293,8 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 		goto free;
 	}
 
-	while (math_posting_next(po)) {
+	/* assume first item must exists, which is actually true. */
+	do {
 		/* read posting list item */
 		po_item = math_posting_current(po);
 		pos = po_item->pathinfo_pos;
@@ -330,7 +331,7 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 
 		/* finish probing this posting item */
 		fprintf(fh, "\n");
-	}
+	} while (math_posting_next(po));
 
 	/* a little double-check */
 	po_item = math_posting_current(po);
