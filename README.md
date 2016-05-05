@@ -118,7 +118,7 @@ This project is still in its early stage, nothing really to show you now. Howeve
 	```
 Where `-p` option passes the index path you want to perform search on. Refer to the previous point for how to generate an index.
 
-## Module dependency
+## Module dependencies
 ![module dependency](https://raw.githubusercontent.com/t-k-/cowpie-lab/master/dep.png)
 (boxes are external dependencies, circles are internal modules)
 

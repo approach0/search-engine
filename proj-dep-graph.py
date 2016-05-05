@@ -7,15 +7,17 @@ output_dot_file = "dep.dot"
 
 targets_str = open(targets_file).read().strip()
 targets_li = targets_str.split()
+save_extdep_li = []
 
-print("digraph G {")
+print("digraph G {") # begin graph
+
 for target in targets_li:
 	if not path.exists(target):
-		continue	
+		continue
 	files = listdir(target)
 	regex = re.compile("dep-(.*)\.mk")
-	dep_li = [] 
-	ext_dep_li = [] 
+	dep_li = []
+	ext_dep_li = []
 	for name in files:
 		m = regex.match(name)
 		if m is not None:
@@ -31,6 +33,15 @@ for target in targets_li:
 	if len(ext_dep_li):
 		for dep in ext_dep_li:
 			libdep = 'lib' + dep
-			print('\t"{}"[shape="box"]'.format(libdep))
+			# print('\t"{}"[shape="box"]'.format(libdep))
+			save_extdep_li.append('"{}"[shape="box"]'.format(libdep));
 			print('\t"{}" -> "{}"'.format(target, libdep))
-print("}")
+
+# write rank constraint for external module
+print('\t{')
+print('\t\trank = same;')
+for save in save_extdep_li:
+	print('\t\t' + save)
+print('\t}')
+
+print("}") # end of graph
