@@ -1,3 +1,7 @@
+![](https://travis-ci.org/t-k-/the-day-after-tomorrow.svg)
+[![HitCount](https://hitt.herokuapp.com/t-k-/the-day-after-tomorrow.svg)](https://hitt.herokuapp.com/t-k-/the-day-after-tomorrow)
+[![GitHub release](https://img.shields.io/github/release/t-k-/the-day-after-tomorrow.svg?maxAge=2592000)]()
+
 ## About
 This is a repo for a future math-aware search engine.
 
