@@ -4,7 +4,7 @@ include ../rules.mk
 all: lib
 
 lib: fork/liblinenoise.a
-	$(MAKE) -C fork
+	$(MAKE) -C fork CC=gcc
 
 fork/liblinenoise.a: $(AROBJS)
 	$(COLOR_AR)
