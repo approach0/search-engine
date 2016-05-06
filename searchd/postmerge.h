@@ -11,6 +11,7 @@ typedef void*          post_item_t;
 
 typedef void           (*post_do_callbk)(void *);
 typedef bool           (*post_jump_callbk)(void *, uint64_t);
+typedef bool           (*post_next_callbk)(void *);
 typedef post_item_t    (*post_now_callbk)(void *);
 typedef uint64_t       (*post_now_id_callbk)(post_item_t);
 typedef void           (*post_merge_callbk)(uint64_t, struct postmerge_arg*, void*);
@@ -37,7 +38,7 @@ struct postmerge_arg {
 	 * The posting next function, will go one item further, and
 	 * return whether or not we are still in the buffer.
 	 */
-	post_do_callbk      post_next_fun;
+	post_next_callbk      post_next_fun;
 
 	/*
 	 * The posting jump function, is defined something like this:
