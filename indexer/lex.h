@@ -1,6 +1,9 @@
 #include <stddef.h>
+#include "lex-slice.h"
 
 extern size_t lex_seek_pos;
+
+void _handle_slice(char*, size_t, enum lex_slice_type);
 
 void handle_text(struct lex_slice *);
 void handle_math(struct lex_slice *);

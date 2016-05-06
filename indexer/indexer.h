@@ -2,6 +2,7 @@
 
 #include "list/list.h"
 #include "term-index/term-index.h"
+#include "math-index/math-index.h"
 #include "keyval-db/keyval-db.h"
 #include "txt-seg/txt-seg.h"
 #include "dir-util/dir-util.h"

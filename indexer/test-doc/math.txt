@@ -1,0 +1,3 @@
+[imath]a+b/2[/imath]
+[imath]f(x) = a + x/2[/imath]
+[imath]g(x) = x/2[/imath]
