@@ -168,11 +168,13 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 
+	/* open text segmentation dictionary */
 	printf("opening dict...\n");
 	text_segment_init("../jieba/fork/dict");
 	text_segment_insert_usrterm("当且仅当");
 	printf("dict opened.\n");
 
+	/* open term index */
 	printf("opening term index...\n");
 	sprintf(term_index_path, "%s/term", index_path);
 
@@ -228,7 +230,6 @@ exit:
 		term_index_close(term_index);
 	}
 
-	printf("closing dict...\n");
 	text_segment_free();
 
 	if (path)

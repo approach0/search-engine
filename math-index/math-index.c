@@ -333,10 +333,6 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 		fprintf(fh, "\n");
 	} while (math_posting_next(po));
 
-	/* a little double-check */
-	po_item = math_posting_current(po);
-	assert(po_item->doc_id == 0);
-
 free:
 	math_posting_finish(po);
 	math_posting_free_reader(po);

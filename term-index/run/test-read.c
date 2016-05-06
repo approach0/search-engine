@@ -113,10 +113,10 @@ int main(int argc, char* argv[])
 			posting = term_index_get_posting(ti, i);
 			if (posting) {
 				term_posting_start(posting);
-				while ((pi = term_posting_current(posting)) != NULL) {
+				do {
+					pi = term_posting_current(posting);
 					printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
-					term_posting_next(posting);
-				}
+				} while (term_posting_next(posting));
 				term_posting_finish(posting);
 				printf("\n");
 			}

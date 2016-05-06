@@ -6,6 +6,7 @@
 
 #include "list/list.h"
 #include "term-index/term-index.h"
+#include "math-index/math-index.h"
 #include "keyval-db/keyval-db.h"
 #include "postmerge.h"
 #include "bm25-score.h"
@@ -23,35 +24,16 @@ struct merge_extra_arg {
 	struct rank_set         *rk_set;
 };
 
-void term_posting_start_wrap(void *posting)
-{
-	if (posting)
-		term_posting_start(posting);
-}
-
-void term_posting_finish_wrap(void *posting)
-{
-	if (posting)
-		term_posting_finish(posting);
-}
-
 void *term_posting_current_wrap(void *posting)
 {
-	if (posting)
-		return term_posting_current(posting);
-	else
-		return NULL;
+	return (void*)term_posting_current(posting);
 }
 
 uint64_t term_posting_current_id_wrap(void *item)
 {
 	doc_id_t doc_id;
-	if (item) {
-		doc_id = ((struct term_posting_item*)item)->doc_id;
-		return (uint64_t)doc_id;
-	} else {
-		return MAX_POST_ITEM_ID; /* indicate end of posting list */
-	}
+	doc_id = ((struct term_posting_item*)item)->doc_id;
+	return (uint64_t)doc_id;
 }
 
 bool term_posting_jump_wrap(void *posting, uint64_t to_id)
@@ -69,7 +51,9 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 	return succ;
 }
 
-void posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg, void* extra_args)
+void
+posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
+                 void* extra_args)
 {
 	uint32_t i, hit_terms = 0;
 	float score = 0.f;
@@ -155,39 +139,48 @@ void print_res_item(struct rank_set *rs, struct rank_item* ri,
 {
 	P_CAST(kv_db, keyval_db_t, arg);
 
-	printf("#%u: %.3f doc#%u\n", cnt, ri->score, ri->docID);
+	printf("result#%u: doc#%u score=%.3f\n", cnt, ri->docID, ri->score);
 	print_res_snippet(ri->docID, ri->terms, rs->n_terms, kv_db);
 }
 
-void print_all_rank_res(struct rank_set *rs, keyval_db_t keyval_db)
+uint32_t print_all_rank_res(struct rank_set *rs, keyval_db_t keyval_db)
 {
 	struct rank_wind win;
 	uint32_t         total_pages, page = 0;
 	const uint32_t   res_per_page = DEFAULT_RES_PER_PAGE;
 
 	do {
-		printf("page#%u:\n", page + 1);
 		win = rank_window_calc(rs, page, res_per_page, &total_pages);
-		rank_window_foreach(&win, &print_res_item, keyval_db);
-		page ++;
+		if (win.to > 0) {
+			printf("page#%u (from %u to %u):\n",
+			       page + 1, win.from, win.to);
+			rank_window_foreach(&win, &print_res_item, keyval_db);
+			page ++;
+		}
 	} while (page < total_pages);
+
+	return total_pages;
 }
 
 int main(int argc, char *argv[])
 {
 	int                     i, opt;
-	void                   *ti, *posting;
+	void                   *posting;
+	void                   *ti = NULL;
+	math_index_t            mi = NULL;
 	term_id_t               term_id;
 	struct postmerge_arg    pm_arg;
 	struct merge_extra_arg  me_arg;
 	keyval_db_t             keyval_db;
 	struct rank_set         rk_set;
+	uint32_t                res_pages;
 
 	char    *index_path = NULL;
-	char    *terms[MAX_MERGE_POSTINGS];
-	char    *keyval_db_path;
-	uint32_t docN, df, n_terms = 0;
+	const char kv_db_fname[] = "kvdb-offset.bin";
+	char     term_index_path[MAX_DIR_PATH_NAME_LEN];
 
+	char     terms[MAX_MERGE_POSTINGS][MAX_TERM_BYTES];
+	uint32_t docN, df, n_terms = 0;
 	struct BM25_term_i_args bm25args;
 
 	/* initially, set pm_arg.op to undefined */
@@ -205,14 +198,14 @@ int main(int argc, char *argv[])
 			printf("EXAMPLE:\n");
 			printf("%s -p ./tmp -t 'nick ' -t 'wilde' -o OR\n", argv[0]);
 			printf("%s -p ./tmp -t 'give ' -t 'up' -t 'dream' -o AND\n", argv[0]);
-			goto free_args;
+			goto exit;
 
 		case 'p':
 			index_path = strdup(optarg);
 			break;
 
 		case 't':
-			terms[n_terms ++] = strdup(optarg);
+			strcpy(terms[n_terms ++], optarg);
 			break;
 
 		case 'o':
@@ -229,15 +222,21 @@ int main(int argc, char *argv[])
 
 		default:
 			printf("bad argument(s). \n");
-			goto free_args;
+			goto exit;
 		}
 	}
 
+	/*
+	 * check program arguments.
+	 */
 	if (index_path == NULL || n_terms == 0) {
 		printf("not enough arguments.\n");
-		goto free_args;
+		goto exit;
 	}
 
+	/*
+	 * print program arguments.
+	 */
 	printf("index path: %s\n", index_path);
 	printf("terms: ");
 	for (i = 0; i < n_terms; i++) {
@@ -249,30 +248,46 @@ int main(int argc, char *argv[])
 	}
 	printf("\n");
 
-	ti = term_index_open(index_path, TERM_INDEX_OPEN_EXISTS);
+	/*
+	 * open term index.
+	 */
+	printf("opening term index ...\n");
+	sprintf(term_index_path, "%s/term", index_path);
+	mkdir_p(term_index_path);
+	ti = term_index_open(term_index_path, TERM_INDEX_OPEN_EXISTS);
 	if (ti == NULL) {
-		printf("index not found.\n");
-		goto free_args;
+		printf("cannot create/open term index.\n");
+		goto exit;
 	}
 
-	keyval_db_path = (char *)malloc(1024);
-	strcpy(keyval_db_path, index_path);
-	/* trim trailing slash (user may specify path ending with a slash) */
-	if (keyval_db_path[strlen(keyval_db_path) - 1] == '/')
-		keyval_db_path[strlen(keyval_db_path) - 1] = '\0';
-	strcat(keyval_db_path, "/kv-termpos.bin");
-	printf("opening key-value DB (%s)...\n", keyval_db_path);
-	keyval_db = keyval_db_open(keyval_db_path, KEYVAL_DB_OPEN_RD);
-	free(keyval_db_path);
+	/*
+	 * open math index.
+	 */
+	printf("opening math index ...\n");
+	mi = math_index_open(index_path, MATH_INDEX_READ_ONLY);
+	if (mi == NULL) {
+		printf("cannot create/open math index.\n");
+		goto exit;
+	}
 
+	/*
+	 * open document offset key-value database.
+	 */
+	printf("opening document offset key-value DB...\n");
+	keyval_db = keyval_db_open_under(kv_db_fname, index_path,
+	                                 KEYVAL_DB_OPEN_RD);
 	if (keyval_db == NULL) {
 		printf("key-value DB open error.\n");
-		goto key_value_db_fails;
+		goto exit;
 	} else {
 		printf("%lu records in key-value DB.\n",
 		       keyval_db_records(keyval_db));
 	}
 
+	/*
+	 * for each term posting list, pre-calculate some scoring
+	 * parameters and find associated posting list.
+	 */
 	docN = term_index_get_docN(ti);
 
 	for (i = 0; i < n_terms; i++) {
@@ -291,7 +306,6 @@ int main(int argc, char *argv[])
 			df = 0;
 			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
 
-
 			printf("term `%s' not found, df[%d] = %u.\n",
 			       terms[i], i, df);
 		}
@@ -299,6 +313,9 @@ int main(int argc, char *argv[])
 		postmerge_arg_add_post(&pm_arg, posting, terms[i]);
 	}
 
+	/*
+	 * prepare some scoring parameters.
+	 */
 	bm25args.n_postings = i;
 	bm25args.avgDocLen = (float)term_index_get_avgDocLen(ti);
 	bm25args.b  = BM25_DEFAULT_B;
@@ -308,41 +325,68 @@ int main(int argc, char *argv[])
 	printf("BM25 arguments:\n");
 	BM25_term_i_args_print(&bm25args);
 
-	pm_arg.post_start_fun = &term_posting_start_wrap;
-	pm_arg.post_finish_fun = &term_posting_finish_wrap;
+	/*
+	 * prepare term posting list merge callbacks.
+	 */
+	pm_arg.post_start_fun = &term_posting_start;
+	pm_arg.post_finish_fun = &term_posting_finish;
 	pm_arg.post_jump_fun = &term_posting_jump_wrap;
 	pm_arg.post_next_fun = &term_posting_next;
 	pm_arg.post_now_fun = &term_posting_current_wrap;
 	pm_arg.post_now_id_fun = &term_posting_current_id_wrap;
 	pm_arg.post_on_merge = &posting_on_merge;
 
-	/* initialize ranking set given number of terms */
+	/*
+	 * initialize ranking set given number of terms.
+	 */
 	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, n_terms, 0);
 
+	/*
+	 * merge extra arguments.
+	 */
 	me_arg.term_index = ti;
 	me_arg.bm25args = &bm25args;
 	me_arg.keyval_db = keyval_db;
 	me_arg.rk_set = &rk_set;
 
+	/*
+	 * merge and score.
+	 */
 	printf("start merging...\n");
 	if (!posting_merge(&pm_arg, &me_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
+	/*
+	 * rank top K hits.
+	 */
 	rank_sort(&rk_set);
-	print_all_rank_res(&rk_set, keyval_db);
+
+	/*
+	 * print ranked search results by page number.
+	 */
+	res_pages = print_all_rank_res(&rk_set, keyval_db);
+	printf("result(s): %u pages.\n", res_pages);
+
 	rank_uninit(&rk_set);
 
-key_value_db_fails:
-	printf("closing term index...\n");
-	term_index_close(ti);
-
-free_args:
-	printf("free arguments...\n");
-	for (i = 0; i < n_terms; i++)
-		free(terms[i]);
-
+exit:
 	if (index_path)
 		free(index_path);
+
+	if (ti) {
+		printf("closing term index...\n");
+		term_index_close(ti);
+	}
+
+	if (mi) {
+		printf("closing math index...\n");
+		math_index_close(mi);
+	}
+
+	if (keyval_db) {
+		printf("closing key-value DB...\n");
+		keyval_db_close(keyval_db);
+	}
 
 	return 0;
 }

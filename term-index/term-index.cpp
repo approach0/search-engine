@@ -184,9 +184,9 @@ void *term_index_get_posting(void *handle, term_id_t term_id)
 bool term_posting_start(void *posting)
 {
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
-	po->startIteration();
 
-	return 1;
+	po->startIteration();
+	return (0 == po->finished());
 }
 
 /* returns false if pass the last posting item. */

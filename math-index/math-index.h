@@ -1,6 +1,7 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include "dir-util/dir-util.h" /* for MAX_DIR_PATH_NAME_LEN */
 #include "tex-parser/tex-parser.h" /* for subpaths */
@@ -10,6 +11,8 @@
 
 typedef uint8_t  pathinfo_num_t;
 typedef uint32_t exp_id_t;
+
+#define MAX_EXP_ID UINT_MAX
 
 /* ===================
  * math index general

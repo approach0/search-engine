@@ -9,7 +9,8 @@ struct postmerge_arg;
 
 typedef void*          post_item_t;
 
-typedef void           (*post_do_callbk)(void *);
+typedef void           (*post_finish_callbk)(void *);
+typedef bool           (*post_start_callbk)(void *);
 typedef bool           (*post_jump_callbk)(void *, uint64_t);
 typedef bool           (*post_next_callbk)(void *);
 typedef post_item_t    (*post_now_callbk)(void *);
@@ -32,13 +33,13 @@ struct postmerge_arg {
 
 	/* The posting start function will place the current pointer
 	 * at the beginning of posting list. */
-	post_do_callbk      post_start_fun;
+	post_start_callbk   post_start_fun;
 
 	/*
 	 * The posting next function, will go one item further, and
 	 * return whether or not we are still in the buffer.
 	 */
-	post_next_callbk      post_next_fun;
+	post_next_callbk    post_next_fun;
 
 	/*
 	 * The posting jump function, is defined something like this:
@@ -51,14 +52,30 @@ struct postmerge_arg {
 	 */
 	post_jump_callbk    post_jump_fun;
 
+	/*
+	 * Note: after iterator goes out of scope, postmerge.c module
+	 * guarantees post_next_fun() and post_jump_fun() will not be
+	 * called again.
+	 */
+
 	/* get current posting item */
 	post_now_callbk     post_now_fun;
 
 	/* get docID of a posting item */
 	post_now_id_callbk  post_now_id_fun;
 
+	/*
+	 * Note: after iterator goes out of scope, postmerge.c module
+	 * guarantees post_now_fun() and post_now_id_fun() will not be
+	 * called.
+	 * Thus, never try to use things like:
+	 *   while ((pi = term_posting_current(posting)) != NULL)
+	 * because post_now_fun() callback is not supposed to implement
+	 * any NULL indicator as a flag of "end of posting list".
+	 */
+
 	/* posting list release function */
-	post_do_callbk      post_finish_fun;
+	post_finish_callbk  post_finish_fun;
 
 	/* posting list merge callback */
 	post_merge_callbk   post_on_merge;

@@ -166,15 +166,7 @@ bool math_posting_jump(math_posting_t po_, uint64_t target)
 struct math_posting_item* math_posting_current(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
-
-	if (po->buf_end == 0) {
-		/* (most possibly) the end of file,
-		 * we pass a zero docID as flag. */
-		po->buf[0].doc_id = 0;
-		return po->buf;
-	} else {
-		return po->buf + po->buf_idx;
-	}
+	return po->buf + po->buf_idx;
 }
 
 struct math_pathinfo_pack*
