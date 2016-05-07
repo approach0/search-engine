@@ -12,68 +12,53 @@ def pri_targets_mk(targets_file):
 	targets = ' '.join(targets_li)
 	print(targets)
 
+def mk_dep_list(targets_file):
+	targets_str = open(targets_file).read().strip()
+	targets_li = targets_str.split()
+	for target in targets_li:
+		dep_path = target + '/' + 'dep'
+		if not path.exists(target) or not path.exists(dep_path):
+			continue
+		files = listdir(target + '/dep')
+		regex = re.compile("dep-(.*)\.mk")
+		for name in files:
+			m = regex.match(name)
+			if m is not None:
+				dep = m.group(1)
+				if path.exists(dep):
+					yield (target, dep, 'internal')
+				else:
+					yield (target, dep, 'external')
 
 def pri_dep_mk(targets_file):
-	targets_str = open(targets_file).read().strip()
-	targets_li = targets_str.split()
-	for target in targets_li:
-		if not path.exists(target):
-			continue
-		files = listdir(target)
-		regex = re.compile("dep-(.*)\.mk")
-		dep_li = []
-		ext_dep_li = []
-		for name in files:
-			m = regex.match(name)
-			if m is not None:
-				dep = m.group(1)
-				if path.exists(dep):
-					dep_li.append(dep)
-		if len(dep_li):
-			for dep in dep_li:
-				print('{}-module: {}-module'.format(target, dep))
+	for module, dep, dep_type in mk_dep_list("targets.mk"):
+		if dep_type == 'internal':
+			print('{}-module: {}-module'.format(module, dep))
 
 def pri_dep_dot(targets_file):
-	targets_str = open(targets_file).read().strip()
-	targets_li = targets_str.split()
-	save_extdep_li = []
+	# begin graph
+	print("digraph G {")
 
-	print("digraph G {") # begin graph
+	for module, dep, dep_type in mk_dep_list("targets.mk"):
+		print('\t"{}"'.format(module))
+		if dep_type == 'external':
+			libdep = 'lib' + dep
+			print('\t"{}"[shape="box"]'.format(libdep))
+			print('\t"{}" -> "{}"'.format(module, libdep))
+		else:
+			print('\t"{}" -> "{}"'.format(module, dep))
 
-	for target in targets_li:
-		if not path.exists(target):
-			continue
-		files = listdir(target)
-		regex = re.compile("dep-(.*)\.mk")
-		dep_li = []
-		ext_dep_li = []
-		for name in files:
-			m = regex.match(name)
-			if m is not None:
-				dep = m.group(1)
-				if path.exists(dep):
-					dep_li.append(dep)
-				else:
-					ext_dep_li.append(dep)
-		print('\t"{}"'.format(target))
-		if len(dep_li):
-			for dep in dep_li:
-				print('\t"{}" -> "{}"'.format(target, dep))
-		if len(ext_dep_li):
-			for dep in ext_dep_li:
-				libdep = 'lib' + dep
-				# print('\t"{}"[shape="box"]'.format(libdep))
-				save_extdep_li.append('"{}"[shape="box"]'.format(libdep))
-				print('\t"{}" -> "{}"'.format(target, libdep))
-
-	# write rank constraint for external module
+	# write rank constraint for external modules
 	print('\t{')
 	print('\t\trank = same;')
-	for save in save_extdep_li:
-		print('\t\t' + save)
+	for module, dep, dep_type in mk_dep_list("targets.mk"):
+		if dep_type == 'external':
+			libdep = 'lib' + dep
+			print('\t\t' + '"{}"'.format(libdep))
 	print('\t}')
 
-	print("}") # end of graph
+	# end of graph
+	print("}")
 
 def help(arg0):
 	print('DESCRIPTION: generate project dependency .mk or .dot.' \

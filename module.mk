@@ -27,7 +27,7 @@ CFLAGS += -I ..
 ALL_OBJS := $(sort $(SRC_OBJS) $(OTHER_OBJS))
 
 # include dependency .mk files, e.g. dep-LDLIB.mk.
-DEP_LINKS := $(wildcard dep-*.mk)
+DEP_LINKS := $(wildcard dep/dep-*.mk)
 -include $(DEP_LINKS)
 
 # strip off suffix ".mk" from DEP_LINKS where "LDFLAGS" can be found.
@@ -38,7 +38,7 @@ LDLIBS := $(foreach dep_link, ${DEP_LINKS}, \
           )
 
 # further strip off leading "dep-" and append "-l" in the front.
-LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep-%=-l%})
+LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:dep/dep-%=-l%})
 
 # link to local .a only if ALL_OBJS is non-empty.
 ifneq ($(ALL_OBJS), )
