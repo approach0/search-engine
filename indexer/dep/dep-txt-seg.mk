@@ -1,2 +1,2 @@
-CFLAGS += -I "../txt-seg"
-LDFLAGS += -L "../txt-seg"
+CFLAGS +=
+LDFLAGS += -L "../txt-seg/$(BUILD_DIR)"

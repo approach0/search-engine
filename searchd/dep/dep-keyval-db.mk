@@ -1,2 +1,2 @@
 CFLAGS +=
-LDFLAGS += -L "../keyval-db"
+LDFLAGS += -L "../keyval-db/$(BUILD_DIR)"

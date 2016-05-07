@@ -1,2 +1,2 @@
-CFLAGS += -I "../tex-parser"
-LDFLAGS += -L "../tex-parser"
+CFLAGS +=
+LDFLAGS += -L "../tex-parser/$(BUILD_DIR)"

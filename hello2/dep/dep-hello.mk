@@ -1,2 +1,2 @@
 CFLAGS +=
-LDFLAGS += -L "../hello"
+LDFLAGS += -L "../hello/$(BUILD_DIR)"

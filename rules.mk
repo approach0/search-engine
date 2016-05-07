@@ -1,5 +1,18 @@
 .PHONY: all clean regular-clean new
 
+# .SECONDARY with no prerequisite prevents intermediate
+# objects (here *.main.o) from being deleted by GNU-make.
+.SECONDARY:
+
+# build files (e.g. .o/.d) directory
+BUILD_DIR := .build
+
+# executables (e.g. .out) directory
+RUN_DIR := run
+
+# create build directory
+CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
+
 # compiler
 CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
@@ -8,13 +21,13 @@ CC := gcc -std=c99 -c
 CC_DEP := @ gcc -MM -MT
 COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
        tput sgr0
-COMPILE_CC = $(CC) $(CFLAGS) $*.c -o $@
+COMPILE_CC = $(CC) $(CFLAGS) $(filter-out %.h, $^)  -o $@
 
 CXX := g++ -c
 CXX_DEP = @ g++ -MM -MT
 COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
        tput sgr0
-COMPILE_CXX = $(CXX) $(CFLAGS) $*.cpp -o $@
+COMPILE_CXX = $(CXX) $(CFLAGS) $(filter-out %.h, $^) -o $@
 
 CCDH = gcc -dH
 
@@ -24,7 +37,7 @@ COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
 # cycling libraries even if we use "-( .. -)", this is necessary
 # to fix Ubuntu gcc linking problem.
-LINK = $(LD) $*.o $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" \
+LINK = $(LD) $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" \
 	$(LDFLAGS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
 
 # archive
@@ -63,20 +76,27 @@ new: clean all
 	@echo "[re-make done] $(CURDIR)"
 	$(HIGHLIGHT_END)
 
--include $(wildcard *.d)
--include $(wildcard run/*.d)
+-include $(wildcard $(BUILD_DIR)/*.d)
 
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c
 	$(COLOR_CC)
+	$(CREAT_BUILD_DIR)
+	$(CC_DEP) $@ $(CFLAGS) $^ -o $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
-	$(CC_DEP) $@ $(CFLAGS) $*.c -o $*.d
 
-%.o: %.cpp
+$(BUILD_DIR)/%.main.o: $(RUN_DIR)/%.c
+	$(COLOR_CC)
+	$(CREAT_BUILD_DIR)
+	$(CC_DEP) $@ $(CFLAGS) $^ -o $(BUILD_DIR)/$*.d
+	$(strip $(COMPILE_CC))
+
+$(BUILD_DIR)/%.o: %.cpp
 	$(COLOR_CXX)
+	$(CREAT_BUILD_DIR)
+	$(CXX_DEP) $@ $(CFLAGS) $^ -o $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CXX))
-	$(CXX_DEP) $@ $(CFLAGS) $*.cpp -o $*.d
 
-%.out: %.o
+$(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
 	$(COLOR_LINK)
 	$(strip $(LINK))
 
@@ -100,6 +120,7 @@ regular-clean:
 	$(FIND) -type l \( -name '*.py' \) -print | xargs rm -f
 	$(FIND) -type d \( -name 'tmp' \) -print | xargs rm -rf
 	$(FIND) -type d \( -name '__pycache__' \) -print | xargs rm -rf
+	$(FIND) -type d \( -name '$(BUILD_DIR)' \) -print | xargs rm -rf
 
 grep-%:
 	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep --color -nH $* {} \;

@@ -14,5 +14,7 @@ tags
 srclist.txt
 linenoise-history.txt
 tmp/
+build/
+.build/
 proj-dep.mk
 targets.mk

@@ -1,2 +1,2 @@
-CFLAGS += -I "../dir-util"
-LDFLAGS += -L "../dir-util"
+CFLAGS +=
+LDFLAGS += -L "../dir-util/$(BUILD_DIR)"

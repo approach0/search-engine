@@ -1,2 +1,2 @@
 CFLAGS +=
-LDFLAGS += -L "../math-index"
+LDFLAGS += -L "../math-index/$(BUILD_DIR)"

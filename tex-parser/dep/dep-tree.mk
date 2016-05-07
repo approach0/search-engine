@@ -1,2 +1,2 @@
 CFLAGS +=
-LDFLAGS += -L "../tree"
+LDFLAGS += -L "../tree/$(BUILD_DIR)"

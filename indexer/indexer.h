@@ -10,5 +10,3 @@
 #include "lex-slice.h"
 #include "index-util.h"
 #include "doc-term-pos.h"
-
-#include "config.h"
