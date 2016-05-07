@@ -1,0 +1,58 @@
+#!/usr/bin/python3
+import getopt, sys, os
+
+default_indri_path = 'indri-5.9'
+indri_path_mk = 'indri-path.mk'
+proj_dep_mk = 'proj-dep.mk'
+proj_dep_py = 'proj-dep.py'
+
+def help(arg0):
+	print('DESCRIPTION: build configuration setup.' \
+	      '\n' \
+	      'SYNOPSIS:\n' \
+	      '%s [-h | --help] ' \
+	      '[--indri-path=<Indri source path>] ' \
+	      '\n' \
+	      % (arg0))
+	sys.exit(1)
+
+def main():
+	cmd = sys.argv[0]
+	args = sys.argv[1:]
+	indri_path = "{}/{}".format(os.environ['HOME'], default_indri_path)
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "h", ['help', 'indri-path='])
+	except:
+		help(cmd)
+
+	for opt, arg in opts:
+		if opt in ("-h", "--help"):
+			help(cmd)
+		if opt in ("--indri-path"):
+			indri_path = arg
+			indri_path = indri_path.replace('~', os.environ['HOME'])
+			break
+
+	if not os.path.exists(indri_path):
+		print("Error: Default/specified Indri source code path"
+		      " @ '%s' does not exists." % (indri_path))
+		print("This project currently relies on Lemur/Indri library"
+		      " as dependency to provide full-text index functionality."
+		      " Please download and build Lemur/Indri library from:\n\n"
+		      "https://sourceforge.net/projects/lemur/files/lemur/"
+		      "indri-5.9/indri-5.9.tar.gz/download\n")
+		print("type `%s --help' for how to specify Indri source code path." %
+		      (cmd))
+		exit(1)
+
+	print('Use Indri path: {}'.format(indri_path))
+
+	f = open('./term-index/' + indri_path_mk, 'w')
+	f.write("INDRI=%s" % (indri_path))
+	f.close()
+
+	os.system('python3 %s --mk | tee %s' % (proj_dep_py, proj_dep_mk))
+	print('[configuration done]')
+
+if __name__ == "__main__":
+	main()

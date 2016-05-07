@@ -66,9 +66,14 @@ If Indri reports `undefined reference to ...` when building/linking, install tha
 > (see https://sourceforge.net/p/lemur/discussion/546028/thread/e67752b2)
 
 ### 2. Configure dependency path
-Our project uses `dep-*.mk` files (you will get an idea of what it is by just opening one of it) to configure dependency paths  (or CFLAGS and LDFLAGS). For system build-in libraries and downloaded libraries which you have just installed to your system environment, no need to specify their paths, leave these `dep-*.mk` files unchanged.
+Our project uses `dep-*.mk` files to configure most dependency paths (or CFLAGS and LDFLAGS). If you have installed above dependency libraries in your system environment, chances are you can just leave these `dep-*.mk` files untouched.
 
-The only dependency you may need to specify manually upon building this project is the Lemur/Indri library: Given an example, if you download and compile Lemur/Indri at `~/indri-5.9`,  make sure there is a similar line `INDRI=/home/$(shell whoami)/indri-5.9` in file `$PROJECT/term-index/Makefile`.
+One dependency path you probably have to specify manually is the Lemur/Indri library. If you have downloaded and compiled Lemur/Indri source code at `~/indri-5.9`, type:
+
+```
+$ ./configure --indri-path=~/indri-5.9
+```
+to setup build configuration.
 
 ### 3. Compile/build
 Type `make` at project top level (i.e. `$PROJECT`) will do the job.
@@ -126,7 +131,7 @@ To generate this module dependency graph, issue commands below at the project to
 
 ```
 $ mkdir -p tmp
-$ python3 proj-dep-graph.py > tmp/dep.dot
+$ python3 proj-dep.py --dot > tmp/dep.dot
 $ dot -Tpng tmp/dep.dot > tmp/dep.png
 ```
 
