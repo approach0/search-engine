@@ -3,6 +3,16 @@ from os import path
 import re
 import getopt, sys
 
+def pri_targets_mk(targets_file):
+	targets_li = []
+	files = listdir('./')
+	for d in files:
+		if path.isdir(d) and path.exists(d + '/Makefile'):
+			targets_li.append(d)
+	targets = ' '.join(targets_li)
+	print(targets)
+
+
 def pri_dep_mk(targets_file):
 	targets_str = open(targets_file).read().strip()
 	targets_li = targets_str.split()
@@ -70,8 +80,9 @@ def help(arg0):
 	      '\n' \
 	      'SYNOPSIS:\n' \
 	      '%s [-h | --help] ' \
-	      '[-d | --dot] ' \
-	      '[-m | --mk]' \
+	      '[--dot] ' \
+	      '[--dep]' \
+	      '[--targets]' \
 	      '\n' \
 	      % (arg0))
 	sys.exit(1)
@@ -81,7 +92,8 @@ def main():
 	cmd = sys.argv[0]
 	args = sys.argv[1:]
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hdm", ['help', 'dot', 'mk'])
+		opts, args = getopt.getopt(sys.argv[1:], "h",
+		                           ['help', 'dot', 'dep', 'targets'])
 	except:
 		help(cmd)
 
@@ -91,11 +103,14 @@ def main():
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
 			help(cmd)
-		if opt in ("-d", "--dot"):
+		if opt in ("--dot"):
 			pri_dep_dot(config_targets_file)
 			break
-		if opt in ("-m", "--mk"):
+		if opt in ("--dep"):
 			pri_dep_mk(config_targets_file)
+			break
+		if opt in ("--targets"):
+			pri_targets_mk(config_targets_file)
 			break
 
 if __name__ == "__main__":

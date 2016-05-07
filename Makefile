@@ -49,6 +49,7 @@ all_modules: $(MODULE_BINS)
 	$(MAKE) -C $* clean
 
 clean: tags-clean $(MODULE_CLEAN)
+	rm -f linenoise-history.txt
 
 # ctag related files
 # (ctag is used for source code view using text editor like Vim)
