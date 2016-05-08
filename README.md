@@ -44,7 +44,7 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 For Debian/Ubuntu users, you can instead type the following commands to automatically install above dependencies:
 ```
 $ sudo apt-get update
-$ sudo apt-get install ctags bison flex python3-pip python3-dev \
+$ sudo apt-get install bison flex python3-pip python3-dev \
 $                      libtokyocabinet-dev libbz2-dev libz-dev
 $ sudo pip3 install jieba
 ```
@@ -73,9 +73,9 @@ One dependency path you probably have to specify manually is the Lemur/Indri lib
 ```
 $ ./configure --indri-path=~/indri-5.9
 ```
-to setup build configuration.
+to setup build configuration. This `configure` script also checks necessary libraries for building. If `configure` outputs any library that can not be located by the linker, you may need to double check and install the missing dependency before build.
 
-### 3. Compile/build
+### 3. Build
 Type `make` at project top level (i.e. `$PROJECT`) will do the job.
 
 ### 4. Test some commands you build

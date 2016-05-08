@@ -101,7 +101,7 @@ $(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
 	$(strip $(LINK))
 
 # header validity
-check-%.h: %.h
+validate-%.h: %.h
 	$(CCDH) $(CFLAGS) $*.h
 
 # library check

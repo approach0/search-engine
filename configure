@@ -6,6 +6,7 @@ indri_path_mk = './term-index/indri-path.mk'
 proj_dep_mk = 'proj-dep.mk'
 proj_dep_py = 'proj-dep.py'
 targets_mk = 'targets.mk'
+srclist_txt = 'srclist.txt'
 py = 'python3'
 
 def help(arg0):
@@ -40,6 +41,7 @@ def main():
 			os.system('rm -f ' + targets_mk)
 			os.system('rm -f ' + proj_dep_mk)
 			os.system('rm -f ' + indri_path_mk)
+			os.system('rm -f ' + srclist_txt)
 			print('done clean.')
 			sys.exit(0)
 
