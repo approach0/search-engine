@@ -17,17 +17,17 @@ CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
-CC := gcc -std=c99 -c
+CC := gcc -std=c99
 CC_DEP := @ gcc -MM -MT
 COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
        tput sgr0
-COMPILE_CC = $(CC) $(CFLAGS) $(filter-out %.h, $^)  -o $@
+COMPILE_CC = $(CC) -c $(CFLAGS) $(filter-out %.h, $^)  -o $@
 
-CXX := g++ -c
+CXX := g++
 CXX_DEP = @ g++ -MM -MT
 COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
        tput sgr0
-COMPILE_CXX = $(CXX) $(CFLAGS) $(filter-out %.h, $^) -o $@
+COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter-out %.h, $^) -o $@
 
 CCDH = gcc -dH
 
@@ -100,8 +100,14 @@ $(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
 	$(COLOR_LINK)
 	$(strip $(LINK))
 
-test-%.h: %.h
+# header validity
+check-%.h: %.h
 	$(CCDH) $(CFLAGS) $*.h
+
+# library check
+check-lib%:
+	@ $(CXX) $(LDFLAGS) -w -Xlinker \
+	--unresolved-symbols=ignore-all -l$*
 
 FIND := @ find . -type d \( -path './.git' \) -prune -o
 
