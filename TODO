@@ -1,6 +1,7 @@
 * malloc hook
 * faster Chinese tokenizer
 * blob-index (consider file size limit)
-* pfor-delta module
+* delta compression
 * oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
+* breadth-first dir-merge
