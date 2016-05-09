@@ -54,6 +54,8 @@ extern void handle_math(struct lex_slice *slice)
 	parse_ret = tex_parse(slice->mb_str, 0, false);
 
 	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+		printf("indexing math `%s' (docID=%u, expID=%u)\n", slice->mb_str,
+		       new_docID, new_expID);
 		math_index_add_tex(math_index, new_docID, new_expID,
 		                   parse_ret.subpaths);
 		subpaths_release(&parse_ret.subpaths);

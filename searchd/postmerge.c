@@ -4,16 +4,17 @@
 
 #include "postmerge.h"
 
-void postmerge_arg_init(struct postmerge_arg *arg)
+void postmerge_posts_clear(struct postmerge_arg *pm_arg)
 {
-	memset(arg, 0, sizeof(struct postmerge_arg));
+	pm_arg->n_postings = 0;
 }
 
-void postmerge_arg_add_post(struct postmerge_arg *pm_arg, void *post, void *arg)
+void postmerge_posts_add(struct postmerge_arg *pm_arg, void *post, void *arg)
 {
 	pm_arg->postings[pm_arg->n_postings] = post;
 	pm_arg->posting_args[pm_arg->n_postings] = arg;
-	pm_arg->curIDs[pm_arg->n_postings] = 0;
+	pm_arg->curIDs[pm_arg->n_postings] = MAX_POST_ITEM_ID;
+	pm_arg->cur_pos_item[pm_arg->n_postings] = NULL;
 	pm_arg->n_postings ++;
 }
 

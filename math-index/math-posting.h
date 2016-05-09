@@ -5,8 +5,13 @@ typedef void* math_posting_t;
 
 #pragma pack(push, 1)
 struct math_posting_item {
+	/*
+	 * two IDs starting from offset zero is good for
+	 * later transforming them to uint64_t.
+	 */
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
+
 	uint64_t  pathinfo_pos;
 };
 

@@ -81,13 +81,14 @@ struct postmerge_arg {
 	post_merge_callbk   post_on_merge;
 };
 
-void postmerge_arg_init(struct postmerge_arg*);
+
+void postmerge_posts_clear(struct postmerge_arg*);
 
 /*
- * Even if a posting list is empty, you need to call postmerge_arg_add_post()
+ * Even if a posting list is empty, you need to call postmerge_posts_add()
  * to add it for merge process, because AND merge may need NULL pointer to
  * indicate posting list is empty such that no results is going to be returned. */
-void postmerge_arg_add_post(struct postmerge_arg*, void*, void*);
+void postmerge_posts_add(struct postmerge_arg*, void*, void*);
 
 /* posting list IDs must be incremental and *unique* for each item */
 bool posting_merge(struct postmerge_arg*, void*);
