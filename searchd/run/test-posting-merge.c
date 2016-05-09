@@ -7,6 +7,7 @@
 #include "list/list.h"
 #include "term-index/term-index.h"
 #include "math-index/math-index.h"
+#include "math-index/subpath-set.h"
 #include "keyval-db/keyval-db.h"
 #include "postmerge.h"
 #include "bm25-score.h"
@@ -29,12 +30,23 @@ void *term_posting_current_wrap(void *posting)
 	return (void*)term_posting_current(posting);
 }
 
+void* math_posting_current_wrap(math_posting_t po_)
+{
+	return (void*)math_posting_current(po_);
+}
+
 uint64_t term_posting_current_id_wrap(void *item)
 {
 	doc_id_t doc_id;
 	doc_id = ((struct term_posting_item*)item)->doc_id;
 	return (uint64_t)doc_id;
 }
+
+uint64_t math_posting_current_id_wrap(void *po_item_)
+{
+	uint64_t *id64 = (uint64_t *)po_item_;
+	return *id64;
+};
 
 bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 {
@@ -52,8 +64,8 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 }
 
 void
-posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
-                 void* extra_args)
+term_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
+                      void* extra_args)
 {
 	uint32_t i, hit_terms = 0;
 	float score = 0.f;
@@ -162,29 +174,213 @@ uint32_t print_all_rank_res(struct rank_set *rs, keyval_db_t keyval_db)
 	return total_pages;
 }
 
-int main(int argc, char *argv[])
+static void
+do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
+               char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
 {
-	int                     i, opt;
+	int                     i;
 	void                   *posting;
-	void                   *ti = NULL;
-	math_index_t            mi = NULL;
 	term_id_t               term_id;
-	struct postmerge_arg    pm_arg;
 	struct merge_extra_arg  me_arg;
-	keyval_db_t             keyval_db;
 	struct rank_set         rk_set;
 	uint32_t                res_pages;
-
-	char    *index_path = NULL;
-	const char kv_db_fname[] = "kvdb-offset.bin";
-	char     term_index_path[MAX_DIR_PATH_NAME_LEN];
-
-	char     terms[MAX_MERGE_POSTINGS][MAX_TERM_BYTES];
-	uint32_t docN, df, n_terms = 0;
+	uint32_t                docN, df;
 	struct BM25_term_i_args bm25args;
+	struct postmerge_arg    pm_arg;
 
-	/* initially, set pm_arg.op to undefined */
-	postmerge_arg_init(&pm_arg);
+	postmerge_posts_clear(&pm_arg);
+	pm_arg.op = op;
+
+	/*
+	 * for each term posting list, pre-calculate some scoring
+	 * parameters and find associated posting list.
+	 */
+	docN = term_index_get_docN(ti);
+
+	for (i = 0; i < n_terms; i++) {
+		term_id = term_lookup(ti, terms[i]);
+		if (term_id != 0) {
+			posting = term_index_get_posting(ti, term_id);
+
+			df = term_index_get_df(ti, term_id);
+			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
+
+			printf("term `%s' ID = %u, df[%d] = %u.\n",
+			       terms[i], term_id, i, df);
+		} else {
+			posting = NULL;
+
+			df = 0;
+			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
+
+			printf("term `%s' not found, df[%d] = %u.\n",
+			       terms[i], i, df);
+		}
+
+		postmerge_posts_add(&pm_arg, posting, terms[i]);
+	}
+
+	/*
+	 * prepare some scoring parameters.
+	 */
+	bm25args.n_postings = i;
+	bm25args.avgDocLen = (float)term_index_get_avgDocLen(ti);
+	bm25args.b  = BM25_DEFAULT_B;
+	bm25args.k1 = BM25_DEFAULT_K1;
+	bm25args.frac_b_avgDocLen = BM25_DEFAULT_K1 / bm25args.avgDocLen;
+
+	printf("BM25 arguments:\n");
+	BM25_term_i_args_print(&bm25args);
+
+	/*
+	 * prepare term posting list merge callbacks.
+	 */
+	pm_arg.post_start_fun = &term_posting_start;
+	pm_arg.post_finish_fun = &term_posting_finish;
+	pm_arg.post_jump_fun = &term_posting_jump_wrap;
+	pm_arg.post_next_fun = &term_posting_next;
+	pm_arg.post_now_fun = &term_posting_current_wrap;
+	pm_arg.post_now_id_fun = &term_posting_current_id_wrap;
+	pm_arg.post_on_merge = &term_posting_on_merge;
+
+	/*
+	 * initialize ranking set given number of terms.
+	 */
+	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, n_terms, 0);
+
+	/*
+	 * merge extra arguments.
+	 */
+	me_arg.term_index = ti;
+	me_arg.bm25args = &bm25args;
+	me_arg.keyval_db = keyval_db;
+	me_arg.rk_set = &rk_set;
+
+	/*
+	 * merge and score.
+	 */
+	printf("start merging...\n");
+	if (!posting_merge(&pm_arg, &me_arg))
+		fprintf(stderr, "posting merge operation undefined.\n");
+
+	/*
+	 * rank top K hits.
+	 */
+	rank_sort(&rk_set);
+
+	/*
+	 * print ranked search results by page number.
+	 */
+	res_pages = print_all_rank_res(&rk_set, keyval_db);
+	printf("result(s): %u pages.\n", res_pages);
+
+	rank_uninit(&rk_set);
+}
+
+void
+math_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
+                      void* extra_args)
+{
+	uint32_t i;
+	struct math_posting_item* po_item;
+
+	for (i = 0; i < pm_arg->n_postings; i++) {
+		po_item = pm_arg->cur_pos_item[i];
+		printf("merge docID#%u expID#%u from posting[%u]\n",
+		       po_item->doc_id, po_item->exp_id, i);
+	}
+}
+
+enum dir_merge_ret
+on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
+             uint32_t level, void *args)
+{
+	P_CAST(pm_arg, struct postmerge_arg, args);
+
+	uint32_t i;
+	math_posting_t po;
+	struct subpath_ele *ele;
+//	uint32_t j;
+//	struct subpath *sp;
+//	const char *fullpath;
+
+	postmerge_posts_clear(pm_arg);
+//	printf("====\n");
+	for (i = 0; i < n_postings; i++) {
+		po = postings[i];
+
+		ele = math_posting_get_ele(po);
+		postmerge_posts_add(pm_arg, po, ele);
+
+//		fullpath = math_posting_get_pathstr(po);
+//
+//		printf("posting[%u]: %s ", i, fullpath);
+//
+//		printf("(duplicates: ");
+//		for (j = 0; j <= ele->dup_cnt; j++) {
+//			sp = ele->dup[j];
+//			printf("path#%u ", sp->path_id);
+//		}
+//		printf(")\n");
+	}
+//	printf("~~~~\n");
+
+	if (!posting_merge(pm_arg, NULL))
+		fprintf(stderr, "math posting merge failed.");
+
+	return DIR_MERGE_RET_CONTINUE;
+}
+
+static void
+do_math_search(math_index_t mi, char *tex)
+{
+	struct tex_parse_ret parse_ret;
+	struct postmerge_arg pm_arg;
+
+	/*
+	 * prepare term posting list merge callbacks.
+	 */
+	pm_arg.post_start_fun = &math_posting_start;
+	pm_arg.post_finish_fun = &math_posting_finish;
+	pm_arg.post_jump_fun = &math_posting_jump;
+	pm_arg.post_next_fun = &math_posting_next;
+	pm_arg.post_now_fun = &math_posting_current_wrap;
+	pm_arg.post_now_id_fun = &math_posting_current_id_wrap;
+	pm_arg.post_on_merge = &math_posting_on_merge;
+
+	/* overwrites to AND merge */
+	pm_arg.op = POSTMERGE_OP_AND;
+
+	/* parse TeX */
+	parse_ret = tex_parse(tex, 0, false);
+
+	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+		subpaths_print(&parse_ret.subpaths, stdout);
+
+		printf("calling math_index_dir_merge()...\n");
+		math_index_dir_merge(mi, DIR_MERGE_DEPTH_FIRST,
+		                     &parse_ret.subpaths, &on_dir_merge, &pm_arg);
+
+		subpaths_release(&parse_ret.subpaths);
+	} else {
+		printf("parser error: %s\n", parse_ret.msg);
+	}
+}
+
+int main(int argc, char *argv[])
+{
+	int                     opt, i;
+	void                   *ti = NULL;
+	math_index_t            mi = NULL;
+	keyval_db_t             keyval_db = NULL;
+	enum postmerge_op       op;
+
+	char       query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
+	uint32_t   n_queries = 0;
+
+	char      *index_path = NULL;
+	const char kv_db_fname[] = "kvdb-offset.bin";
+	char       term_index_path[MAX_DIR_PATH_NAME_LEN];
 
 	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
 		switch (opt) {
@@ -205,17 +401,17 @@ int main(int argc, char *argv[])
 			break;
 
 		case 't':
-			strcpy(terms[n_terms ++], optarg);
+			strcpy(query[n_queries ++], optarg);
 			break;
 
 		case 'o':
 		{
 			if (strcmp(optarg, "AND") == 0)
-				pm_arg.op = POSTMERGE_OP_AND;
+				op = POSTMERGE_OP_AND;
 			else if (strcmp(optarg, "OR") == 0)
-				pm_arg.op = POSTMERGE_OP_OR;
+				op = POSTMERGE_OP_OR;
 			else
-				pm_arg.op = POSTMERGE_OP_UNDEF;
+				op = POSTMERGE_OP_UNDEF;
 
 			break;
 		}
@@ -229,7 +425,7 @@ int main(int argc, char *argv[])
 	/*
 	 * check program arguments.
 	 */
-	if (index_path == NULL || n_terms == 0) {
+	if (index_path == NULL || n_queries == 0) {
 		printf("not enough arguments.\n");
 		goto exit;
 	}
@@ -238,10 +434,10 @@ int main(int argc, char *argv[])
 	 * print program arguments.
 	 */
 	printf("index path: %s\n", index_path);
-	printf("terms: ");
-	for (i = 0; i < n_terms; i++) {
-		printf("`%s'", terms[i]);
-		if (i + 1 != n_terms)
+	printf("query: ");
+	for (i = 0; i < n_queries; i++) {
+		printf("`%s'", query[i]);
+		if (i + 1 != n_queries)
 			printf(", ");
 		else
 			printf(".");
@@ -284,90 +480,11 @@ int main(int argc, char *argv[])
 		       keyval_db_records(keyval_db));
 	}
 
-	/*
-	 * for each term posting list, pre-calculate some scoring
-	 * parameters and find associated posting list.
-	 */
-	docN = term_index_get_docN(ti);
-
-	for (i = 0; i < n_terms; i++) {
-		term_id = term_lookup(ti, terms[i]);
-		if (term_id != 0) {
-			posting = term_index_get_posting(ti, term_id);
-
-			df = term_index_get_df(ti, term_id);
-			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
-
-			printf("term `%s' ID = %u, df[%d] = %u.\n",
-			       terms[i], term_id, i, df);
-		} else {
-			posting = NULL;
-
-			df = 0;
-			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
-
-			printf("term `%s' not found, df[%d] = %u.\n",
-			       terms[i], i, df);
-		}
-
-		postmerge_arg_add_post(&pm_arg, posting, terms[i]);
+	if (n_queries == 1) {
+		do_math_search(mi, query[0]);
+	} else {
+		do_term_search(ti, keyval_db, op, query, n_queries);
 	}
-
-	/*
-	 * prepare some scoring parameters.
-	 */
-	bm25args.n_postings = i;
-	bm25args.avgDocLen = (float)term_index_get_avgDocLen(ti);
-	bm25args.b  = BM25_DEFAULT_B;
-	bm25args.k1 = BM25_DEFAULT_K1;
-	bm25args.frac_b_avgDocLen = BM25_DEFAULT_K1 / bm25args.avgDocLen;
-
-	printf("BM25 arguments:\n");
-	BM25_term_i_args_print(&bm25args);
-
-	/*
-	 * prepare term posting list merge callbacks.
-	 */
-	pm_arg.post_start_fun = &term_posting_start;
-	pm_arg.post_finish_fun = &term_posting_finish;
-	pm_arg.post_jump_fun = &term_posting_jump_wrap;
-	pm_arg.post_next_fun = &term_posting_next;
-	pm_arg.post_now_fun = &term_posting_current_wrap;
-	pm_arg.post_now_id_fun = &term_posting_current_id_wrap;
-	pm_arg.post_on_merge = &posting_on_merge;
-
-	/*
-	 * initialize ranking set given number of terms.
-	 */
-	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, n_terms, 0);
-
-	/*
-	 * merge extra arguments.
-	 */
-	me_arg.term_index = ti;
-	me_arg.bm25args = &bm25args;
-	me_arg.keyval_db = keyval_db;
-	me_arg.rk_set = &rk_set;
-
-	/*
-	 * merge and score.
-	 */
-	printf("start merging...\n");
-	if (!posting_merge(&pm_arg, &me_arg))
-		fprintf(stderr, "posting merge operation undefined.\n");
-
-	/*
-	 * rank top K hits.
-	 */
-	rank_sort(&rk_set);
-
-	/*
-	 * print ranked search results by page number.
-	 */
-	res_pages = print_all_rank_res(&rk_set, keyval_db);
-	printf("result(s): %u pages.\n", res_pages);
-
-	rank_uninit(&rk_set);
 
 exit:
 	if (index_path)
