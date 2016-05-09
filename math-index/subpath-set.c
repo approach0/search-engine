@@ -179,7 +179,8 @@ static LIST_IT_CALLBK(set_add)
 			                        pa_now, pa_fwd);
 
 			/* indicate we inserted one into set */
-			*pa_now = *pa_head;
+			pa_now->now = NULL;
+
 			return LIST_RET_BREAK;
 		} else {
 			/* not the last element */
@@ -200,9 +201,10 @@ bool subpath_set_add(list *set, struct subpath *sp)
 	} else {
 		br = list_foreach(set, &set_add, sp);
 
-		if (br.now == set->now)
+		if (br.now == NULL) {
 			/* we just inserted an unique element */
 			return 0;
+		}
 	}
 
 	return 1;

@@ -235,7 +235,7 @@ void optr_assign_values(struct optr_node *optr)
 {
 	uint32_t leaf_cnt = 0;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
-	             1 /* excluding root */, &leaf_cnt);
+	             0 /* excluding root */, &leaf_cnt);
 }
 
 struct subpath *create_subpath(struct optr_node *p, bool leaf)
@@ -351,7 +351,7 @@ struct subpaths optr_subpaths(struct optr_node* optr)
 	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
 
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
-	             1 /* excluding root */, &subpaths);
+	             0 /* excluding root */, &subpaths);
 	return subpaths;
 }
 
