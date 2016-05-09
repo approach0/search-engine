@@ -1,8 +1,8 @@
 struct subpaths;
 
 enum dir_merge_ret {
-	DIR_MERGE_CONTINUE,
-	DIR_MERGE_STOP
+	DIR_MERGE_RET_CONTINUE,
+	DIR_MERGE_RET_STOP
 };
 
 enum dir_merge_type {

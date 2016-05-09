@@ -92,7 +92,9 @@ dir_search_callbk(const char* path, const char *srchpath,
 		}
 	}
 
-	dm_args->fun(postings, dm_args->set_sz, level, dm_args->args);
+	if (DIR_MERGE_RET_STOP == dm_args->fun(postings, dm_args->set_sz,
+	                                       level, dm_args->args))
+		ret = DS_RET_STOP_ALLDIR;
 
 free_postings:
 	for (j = 0; j < i; j++)

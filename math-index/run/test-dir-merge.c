@@ -31,7 +31,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	}
 	printf("======\n");
 
-	return DIR_MERGE_CONTINUE;
+	return DIR_MERGE_RET_CONTINUE;
 }
 
 int main(int argc, char *argv[])
