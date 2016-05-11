@@ -5,3 +5,4 @@
 * oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
 * breadth-first dir-merge
+* mnc_score compare father-to-root hash
