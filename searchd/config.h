@@ -6,5 +6,7 @@
 /* max mark score, type of mnc_score_t */
 #define MNC_MARK_SCORE 99
 
-//#define MNC_DEBUG
-//#define MNC_SMALL_BITMAP
+/*
+#define MNC_DEBUG
+#define MNC_SMALL_BITMAP
+*/

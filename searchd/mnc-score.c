@@ -178,23 +178,29 @@ print_bitmap:
 /*
  * cleaning functions.
  */
+
+/* reset dimension */
 void mnc_reset_dimension()
 {
-	/* reset dimension */
 	n_qry_syms = 0;
 	n_doc_uniq_syms = 0;
 }
 
+/* clean bitmaps to the n_qry_syms, n_doc_uniq_syms dimension */
 static void clean_bitmaps()
 {
-	/* clean bitmaps to the n_qry_syms, n_doc_uniq_syms dimension */
 	int i;
-	memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
+
+	/* No need to clean 'mark bitmap' because cross() function
+	 * already ensures a clean 'mark bitmap' after main function. */
+	// memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
+
 	memset(doc_cross_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
 
-	for (i = 0; i < n_qry_syms; i++)
+	for (i = 0; i < n_qry_syms; i++) {
 		memset(relevance_bitmap[i], 0,
 		       sizeof(mnc_slot_t) * n_doc_uniq_syms);
+	}
 }
 
 /* return the index of least significant bit position */
@@ -234,14 +240,13 @@ static __inline mnc_score_t mark(int i, int j)
 		return MNC_MARK_SCORE; /* normal match */
 }
 
-static __inline void cross(int j, int max_subscore_idx)
+static __inline void cross(int max_slot)
 {
-	if (j == max_subscore_idx)
-		/* cross the document paths in the "max" slot */
-		doc_cross_bitmap[j] |= doc_mark_bitmap[j];
+	/* rule out the document path in the "max" slot */
+	doc_cross_bitmap[max_slot] |= doc_mark_bitmap[max_slot];
 
-	/* reset mark bitmap */
-	doc_mark_bitmap[j] = 0;
+	/* clear 'mark' bitmap */
+	memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
 }
 
 mnc_score_t mnc_score()
@@ -281,11 +286,13 @@ mnc_score_t mnc_score()
 			mnc_print(i, max_subscore_idx);
 #endif
 
-			for (j = 0; j < n_doc_uniq_syms; j++)
-				cross(j, max_subscore_idx);
+			cross(max_subscore_idx);
 
 			/* accumulate into total score */
-			total_score += max_subscore;
+			if (early_termination)
+				total_score = 0;
+			else
+				total_score += max_subscore;
 
 #ifdef MNC_DEBUG
 			/* print after cross */
