@@ -81,19 +81,19 @@ new: clean all
 $(BUILD_DIR)/%.o: %.c
 	$(COLOR_CC)
 	$(CREAT_BUILD_DIR)
-	$(CC_DEP) $@ $(CFLAGS) $^ -o $(BUILD_DIR)/$*.d
+	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
 
 $(BUILD_DIR)/%.main.o: $(RUN_DIR)/%.c
 	$(COLOR_CC)
 	$(CREAT_BUILD_DIR)
-	$(CC_DEP) $@ $(CFLAGS) $^ -o $(BUILD_DIR)/$*.d
+	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
 
 $(BUILD_DIR)/%.o: %.cpp
 	$(COLOR_CXX)
 	$(CREAT_BUILD_DIR)
-	$(CXX_DEP) $@ $(CFLAGS) $^ -o $(BUILD_DIR)/$*.d
+	$(CXX_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CXX))
 
 $(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
