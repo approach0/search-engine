@@ -109,20 +109,6 @@ free_postings:
 /*
  * dir-merge initialization related functions.
  */
-static LIST_IT_CALLBK(dele_if_gener)
-{
-	bool res;
-	LIST_OBJ(struct subpath, sp, ln);
-
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-		free(sp);
-		return res;
-	}
-
-	LIST_GO_OVER;
-}
-
 struct assoc_ele_and_pathstr_args {
 	uint32_t             i;
 	math_index_t         index;
@@ -182,10 +168,6 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	                                 0 /* longpath index */,
 	                                 NULL /* base paths */,
 	                                 NULL /* full paths */};
-
-	/* strip gener paths because they are not used for searching */
-	list_foreach(&subpaths->li, &dele_if_gener, NULL);
-
 	/* generate subpath set */
 	n_uniq_paths = subpath_set_from_subpaths(subpaths, &subpath_set);
 
