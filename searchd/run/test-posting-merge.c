@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
@@ -13,6 +14,8 @@
 #include "bm25-score.h"
 #include "rank.h"
 #include "snippet.h"
+#include "math-search.h"
+#include "mnc-score.h"
 
 #include "txt-seg/txt-seg.h"
 #include "txt-seg/config.h"
@@ -281,14 +284,49 @@ void
 math_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
                       void* extra_args)
 {
-	uint32_t i;
-	struct math_posting_item* po_item;
+	uint32_t                    i, j, k;
+	uint32_t                    pathinfo_pos;
+	math_posting_t              posting;
+	struct math_posting_item   *po_item;
+	struct math_pathinfo_pack  *pathinfo_pack;
+	struct math_pathinfo       *pathinfo;
+	struct subpath_ele         *subpath_ele;
+	//uint32_t                    n_lr_paths;
+
+	uint32_t slot;
+	struct mnc_ref mnc_ref;
+	mnc_reset_docs();
 
 	for (i = 0; i < pm_arg->n_postings; i++) {
 		po_item = pm_arg->cur_pos_item[i];
-		printf("merge docID#%u expID#%u from posting[%u]\n",
-		       po_item->doc_id, po_item->exp_id, i);
+		pathinfo_pos = po_item->pathinfo_pos;
+		posting = pm_arg->postings[i];
+
+		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
+		assert(NULL != pathinfo_pack);
+
+		subpath_ele = math_posting_get_ele(posting);
+		assert(NULL != subpath_ele);
+
+		// n_lr_paths = pathinfo_pack->n_lr_paths;
+		for (j = 0; j < pathinfo_pack->n_paths; j++) {
+			pathinfo = pathinfo_pack->pathinfo + j;
+
+			mnc_ref.sym = pathinfo->lf_symb;
+			slot = mnc_map_slot(mnc_ref);
+//			printf("cnt=%u\n", subpath_ele->dup_cnt);
+
+			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
+//				printf("add_rele(%u,%u,%u)\n", slot, pathinfo->path_id,
+//				                       subpath_ele->dup[k]->path_id);
+				mnc_doc_add_rele(slot, pathinfo->path_id,
+				                 subpath_ele->dup[k]->path_id);
+			}
+		}
 	}
+
+	printf("docID#%u expID#%u score: %u\n",
+			po_item->doc_id, po_item->exp_id, mnc_score());
 }
 
 enum dir_merge_ret
@@ -300,28 +338,27 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	uint32_t i;
 	math_posting_t po;
 	struct subpath_ele *ele;
-//	uint32_t j;
-//	struct subpath *sp;
-//	const char *fullpath;
+	uint32_t j;
+	struct subpath *sp;
+	const char *fullpath;
 
 	postmerge_posts_clear(pm_arg);
-//	printf("====\n");
+	printf("====\n");
 	for (i = 0; i < n_postings; i++) {
 		po = postings[i];
 
 		ele = math_posting_get_ele(po);
 		postmerge_posts_add(pm_arg, po, ele);
 
-//		fullpath = math_posting_get_pathstr(po);
-//
-//		printf("posting[%u]: %s ", i, fullpath);
-//
-//		printf("(duplicates: ");
-//		for (j = 0; j <= ele->dup_cnt; j++) {
-//			sp = ele->dup[j];
-//			printf("path#%u ", sp->path_id);
-//		}
-//		printf(")\n");
+		fullpath = math_posting_get_pathstr(po);
+		printf("posting[%u]: %s ", i, fullpath);
+
+		printf("(duplicates: ");
+		for (j = 0; j <= ele->dup_cnt; j++) {
+			sp = ele->dup[j];
+			printf("path#%u ", sp->path_id);
+		}
+		printf(")\n");
 	}
 //	printf("~~~~\n");
 
@@ -355,6 +392,10 @@ do_math_search(math_index_t mi, char *tex)
 	parse_ret = tex_parse(tex, 0, false);
 
 	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+		math_search_prepare_qry(&parse_ret.subpaths);
+		prepare_score_struct(&parse_ret.subpaths);
+
+		printf("math query in order:\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
 
 		printf("calling math_index_dir_merge()...\n");
