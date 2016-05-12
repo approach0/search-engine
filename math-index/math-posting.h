@@ -24,7 +24,7 @@ struct math_pathinfo {
 struct math_pathinfo_pack {
 	pathinfo_num_t        n_paths;
 	uint32_t              n_lr_paths;
-	struct math_pathinfo  pathinfo[0];
+	struct math_pathinfo  pathinfo[];
 };
 #pragma pack(pop)
 
