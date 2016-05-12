@@ -186,7 +186,7 @@ void mnc_reset_qry()
 }
 
 /* reset document */
-void mnc_reset_doc()
+void mnc_reset_docs()
 {
 	n_doc_uniq_syms = 0;
 }

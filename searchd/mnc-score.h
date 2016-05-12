@@ -7,7 +7,7 @@ struct mnc_ref {
 typedef uint32_t mnc_score_t;
 
 void        mnc_reset_qry(void);
-void        mnc_reset_doc(void);
+void        mnc_reset_docs(void);
 void        mnc_push_qry(struct mnc_ref);
 uint32_t    mnc_map_slot(struct mnc_ref);
 void        mnc_doc_add_rele(uint32_t, uint32_t, uint32_t);

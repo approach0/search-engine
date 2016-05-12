@@ -30,7 +30,7 @@ int main()
 	/* run twice to test init/uninit */
 	for (i = 0; i < 2; i++) {
 		printf("======test %d=======\n", i);
-		mnc_reset_doc();
+		mnc_reset_docs();
 
 		/*
 		 * document: y + y + x = 1/x + x<--(use macro below to remove this x)
