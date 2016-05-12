@@ -179,10 +179,15 @@ print_bitmap:
  * cleaning functions.
  */
 
-/* reset dimension */
-void mnc_reset_dimension()
+/* reset query */
+void mnc_reset_qry()
 {
 	n_qry_syms = 0;
+}
+
+/* reset document */
+void mnc_reset_doc()
+{
 	n_doc_uniq_syms = 0;
 }
 

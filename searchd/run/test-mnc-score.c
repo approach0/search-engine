@@ -8,28 +8,29 @@ int main()
 	mnc_score_t score;
 	uint32_t slot;
 
+	mnc_reset_qry();
+
+	/*
+	 * query: b + b + 1/b = a + a
+	 *        1   0   5 2   4   3
+	 */
+	ref.sym = 'b'; /* 0 */
+	mnc_push_qry(ref);
+	ref.sym = 'b'; /* 1 */
+	mnc_push_qry(ref);
+	ref.sym = 'b'; /* 2 */
+	mnc_push_qry(ref);
+	ref.sym = 'a'; /* 3 */
+	mnc_push_qry(ref);
+	ref.sym = 'a'; /* 4 */
+	mnc_push_qry(ref);
+	ref.sym = '1'; /* 5 */
+	mnc_push_qry(ref);
+
 	/* run twice to test init/uninit */
 	for (i = 0; i < 2; i++) {
 		printf("======test %d=======\n", i);
-		/* reset */
-		mnc_reset_dimension();
-
-		/*
-		 * query: b + b + 1/b = a + a
-		 *        1   0   5 2   4   3
-		 */
-		ref.sym = 'b'; /* 0 */
-		mnc_push_qry(ref);
-		ref.sym = 'b'; /* 1 */
-		mnc_push_qry(ref);
-		ref.sym = 'b'; /* 2 */
-		mnc_push_qry(ref);
-		ref.sym = 'a'; /* 3 */
-		mnc_push_qry(ref);
-		ref.sym = 'a'; /* 4 */
-		mnc_push_qry(ref);
-		ref.sym = '1'; /* 5 */
-		mnc_push_qry(ref);
+		mnc_reset_doc();
 
 		/*
 		 * document: y + y + x = 1/x + x<--(use macro below to remove this x)
