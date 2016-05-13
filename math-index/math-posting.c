@@ -199,3 +199,22 @@ math_posting_pathinfo(math_posting_t po_, uint64_t position)
 
 	return (struct math_pathinfo_pack*)&ret;
 }
+
+void math_posting_print_info(math_posting_t po_)
+{
+	uint32_t i;
+	struct subpath *sp;
+	const char *fullpath;
+	struct subpath_ele *ele;
+
+	fullpath = math_posting_get_pathstr(po_);
+	ele = math_posting_get_ele(po_);
+
+	printf("@%s ", fullpath);
+	printf("(duplicates: ");
+	for (i = 0; i <= ele->dup_cnt; i++) {
+		sp = ele->dup[i];
+		printf("path#%u ", sp->path_id);
+	}
+	printf(")");
+}

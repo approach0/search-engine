@@ -1,5 +1,10 @@
-/* essential step before a math query can be searched */
-int math_search_prepare_qry(struct subpaths*);
+#include "math-index/math-index.h"
+#include "math-index/subpath-set.h"
 
-/* to score math query, pass a prepared query subpaths to function below */
-void prepare_score_struct(struct subpaths*);
+#include "postmerge.h"
+#include "mnc-score.h"
+
+/* perform math expression search and upon math posting list merge,
+ * call the callback function specified in the argument. */
+int math_search_posting_merge(math_index_t, char*, enum dir_merge_type,
+                              post_merge_callbk, void*);
