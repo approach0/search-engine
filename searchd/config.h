@@ -11,4 +11,4 @@
 #define MNC_SMALL_BITMAP
 */
 
-#define DEBUG_MATH_SEARCH
+//#define DEBUG_MATH_SEARCH

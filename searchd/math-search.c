@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -147,6 +148,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 {
 	P_CAST(on_dm_args, struct on_dir_merge_args, args);
 	struct postmerge_arg *pm_arg = on_dm_args->pm_arg;
+	struct math_extra_score_arg mes_arg;
 
 	uint32_t i;
 	math_posting_t po;
@@ -170,7 +172,9 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	printf("start merging math posting lists...\n");
 #endif
 
-	if (!posting_merge(pm_arg, &on_dm_args->n_qry_lr_paths)) {
+	mes_arg.n_qry_lr_paths = on_dm_args->n_qry_lr_paths;
+	mes_arg.dir_merge_level = level;
+	if (!posting_merge(pm_arg, &mes_arg)) {
 #ifdef DEBUG_MATH_SEARCH
 		fprintf(stderr, "math posting merge failed.");
 #endif
@@ -240,4 +244,96 @@ int math_search_posting_merge(math_index_t mi, char *tex,
 	}
 
 	return 0;
+}
+
+static __inline uint32_t
+math_sim(mnc_score_t mnc_score, uint32_t depth_delta, uint32_t breath_delta)
+{
+	uint32_t mult = (depth_delta + 1) * (breath_delta + 1);
+	uint32_t score = (mult * mnc_score + 1) / mult;
+
+#ifdef DEBUG_MATH_SEARCH
+	printf("mnc score = %u, depth delta = %u, breath delta = %u\n",
+	       mnc_score, depth_delta, breath_delta);
+#endif
+	return score;
+}
+
+struct math_score_res
+math_score_on_merge(struct postmerge_arg* pm_arg,
+                    uint32_t level, uint32_t n_qry_lr_paths)
+{
+	uint32_t                    i, j, k;
+	math_posting_t              posting;
+	uint32_t                    pathinfo_pos;
+	struct math_posting_item   *po_item;
+	struct math_pathinfo_pack  *pathinfo_pack;
+	struct math_pathinfo       *pathinfo;
+	struct subpath_ele         *subpath_ele;
+	bool                        skipped = 0;
+	struct math_score_res       ret;
+
+	/* reset mnc for scoring new document */
+	uint32_t slot;
+	struct mnc_ref mnc_ref;
+	mnc_reset_docs();
+
+	for (i = 0; i < pm_arg->n_postings; i++) {
+		/* for each merged posting item from posting lists */
+		posting = pm_arg->postings[i];
+		po_item = pm_arg->cur_pos_item[i];
+		subpath_ele = math_posting_get_ele(posting);
+		assert(NULL != subpath_ele);
+
+		/* get pathinfo position of corresponding merged item */
+		pathinfo_pos = po_item->pathinfo_pos;
+
+		/* use pathinfo position to get pathinfo packet */
+		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
+		assert(NULL != pathinfo_pack);
+
+		if (n_qry_lr_paths > pathinfo_pack->n_lr_paths) {
+			/* impossible to match, skip this math expression */
+#ifdef DEBUG_MATH_SEARCH
+			printf("query leaf-root paths (%u) is greater than "
+			       "document leaf-root paths (%u), skip this expression."
+			       "\n", n_qry_lr_paths, pathinfo_pack->n_lr_paths);
+#endif
+			skipped = 1;
+			break;
+		}
+
+		for (j = 0; j < pathinfo_pack->n_paths; j++) {
+			/* for each pathinfo from this pathinfo packet */
+			pathinfo = pathinfo_pack->pathinfo + j;
+
+			/* preparing to score corresponding document subpaths */
+			mnc_ref.sym = pathinfo->lf_symb;
+			slot = mnc_map_slot(mnc_ref);
+
+			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
+				/* add this document subpath for scoring */
+				mnc_doc_add_rele(slot, pathinfo->path_id,
+				                 subpath_ele->dup[k]->path_id);
+			}
+		}
+	}
+
+#ifdef DEBUG_MATH_SEARCH
+	printf("query leaf-root paths: %u\n", n_qry_lr_paths);
+	printf("document leaf-root paths: %u\n", pathinfo_pack->n_lr_paths);
+	printf("posting merge level: %u\n", level);
+#endif
+
+	/* finally calculate expression similarity score */
+	if (!skipped)
+		ret.score = math_sim(mnc_score(), level,
+		                     pathinfo_pack->n_lr_paths - n_qry_lr_paths);
+	else
+		ret.score = 0;
+
+	/* return result */
+	ret.doc_id = po_item->doc_id;
+	ret.exp_id = po_item->exp_id;
+	return ret;
 }

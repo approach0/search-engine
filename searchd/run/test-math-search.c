@@ -1,15 +1,11 @@
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
-#include <limits.h>
-#include <stdbool.h>
 
 #include "list/list.h"
 #include "keyval-db/keyval-db.h"
 #include "postmerge.h"
-
 #include "math-search.h"
 
 /* for MAX_QUERY_BYTES */
@@ -20,73 +16,19 @@ static void
 math_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
                       void* extra_args)
 {
-	uint32_t                    i, j, k;
-	math_posting_t              posting;
-	uint32_t                    pathinfo_pos;
-	struct math_posting_item   *po_item;
-	struct math_pathinfo_pack  *pathinfo_pack;
-	struct math_pathinfo       *pathinfo;
-	struct subpath_ele         *subpath_ele;
-	mnc_score_t                 score;
-	bool                        skipped = 0;
+	struct math_score_res res;
 
-	/* get number of query leaf-root paths' pointer */
-	P_CAST(qry_n_lr_paths, uint32_t, extra_args);
-//	printf("query leaf-root paths: %u\n", *qry_n_lr_paths);
+	/* get additional math score arguments */
+	P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
 
-	/* reset mnc for scoring new document */
-	uint32_t slot;
-	struct mnc_ref mnc_ref;
-	mnc_reset_docs();
+	/* calculate math similarity on merge */
+	res = math_score_on_merge(pm_arg, mes_arg->dir_merge_level,
+	                          mes_arg->n_qry_lr_paths);
 
-	for (i = 0; i < pm_arg->n_postings; i++) {
-		/* for each merged posting item from posting lists */
-		posting = pm_arg->postings[i];
-		po_item = pm_arg->cur_pos_item[i];
-		subpath_ele = math_posting_get_ele(posting);
-		assert(NULL != subpath_ele);
-
-		/* get pathinfo position of corresponding merged item */
-		pathinfo_pos = po_item->pathinfo_pos;
-
-		/* use pathinfo position to get pathinfo packet */
-		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
-		assert(NULL != pathinfo_pack);
-
-		if (*qry_n_lr_paths > pathinfo_pack->n_lr_paths) {
-			/* impossible to match, skip this math expression */
-
-			printf("query leaf-root paths (%u) is greater than "
-			       "document leaf-root paths (%u), skip this expression."
-			       "\n", *qry_n_lr_paths, pathinfo_pack->n_lr_paths);
-			skipped = 1;
-			break;
-		}
-
-		for (j = 0; j < pathinfo_pack->n_paths; j++) {
-			/* for each pathinfo from this pathinfo packet */
-			pathinfo = pathinfo_pack->pathinfo + j;
-
-			/* preparing to score corresponding document subpaths */
-			mnc_ref.sym = pathinfo->lf_symb;
-			slot = mnc_map_slot(mnc_ref);
-
-			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
-				/* add this document subpath for scoring */
-				mnc_doc_add_rele(slot, pathinfo->path_id,
-				                 subpath_ele->dup[k]->path_id);
-			}
-		}
+	if (res.score > 0.f) {
+		printf("docID#%u expID#%u score: %u\n",
+		       res.doc_id, res.exp_id, res.score);
 	}
-
-	/* finally calculate expression similarity score */
-	if (!skipped)
-		score = mnc_score();
-	else
-		score = 0;
-
-	printf("docID#%u expID#%u score: %u\n",
-			po_item->doc_id, po_item->exp_id, score);
 }
 
 int main(int argc, char *argv[])
