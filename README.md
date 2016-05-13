@@ -1,5 +1,4 @@
 ![](https://travis-ci.org/t-k-/the-day-after-tomorrow.svg)
-[![HitCount](https://hitt.herokuapp.com/t-k-/the-day-after-tomorrow.svg)](https://hitt.herokuapp.com/t-k-/the-day-after-tomorrow)
 [![GitHub release](https://img.shields.io/github/release/t-k-/the-day-after-tomorrow.svg?maxAge=2592000)]()
 
 ## About
@@ -107,21 +106,21 @@ This project is still in its early stage, nothing really to show you now. Howeve
 	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p ./test-doc` to index corpus files recursively from our mini test corpus directory. 
 	3. run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to take a peek at the index (termN, docN, avgDocLen etc.) you just build. (Pass `-h` argument to see more options for `test-read.out` program)
 
-* Test merge and score of posting list
+* Test searching
 
-	Posting list merge is a key component in searching index. Run the following test command to experiment some keywords and see the merged docIDs (and their Okapi BM25 scores as well as highlighted context) for the keywords you input.
+	By far, there are two search program you can play with: One is term search (or fulltext search) which uses Okapi BM25 scoring method and highlight the keywords in result directly in terminal. To perform fulltext search, pass `-p` option to speficy the index path you want to search on, e.g. for AND merge:
 	```
-	$ cd $PROJECT/indexer
+	$ $PROJECT/searchd/run/test-term-search.out -p ./tmp -t 'hacker' -t 'news' -o AND
 	```
-	For AND merge:
+	for OR merge:
 	```
-	$ ../searchd/run/test-posting-merge.out -p ./tmp -t 'hacker' -t 'news' -o AND
+	$ $PROJECT/searchd/run/test-term-search.out -p ./tmp -t 'hello' -t 'nick' -t 'wilde' -o OR
 	```
-	Alternatively, merge term posting lists using OR operation:
+	Alternatively, you can have an experience of math search by running:
 	```
-	$ ../searchd/run/test-posting-merge.out -p ./tmp -t 'hello' -t 'nick' -t 'wilde' -o OR
+	$ $PROJECT/searchd/run/test-math-search.out -p ./tmp -t 'a+b'
 	```
-Where `-p` option passes the index path you want to perform search on. Refer to the previous point for how to generate an index.
+	For single TeX query, math search will always perform AND merge.
 
 ## Module dependencies
 ![module dependency](https://raw.githubusercontent.com/t-k-/cowpie-lab/master/dep.png)
