@@ -19,9 +19,6 @@ struct dir_merge_args {
 	char           (*full_paths)[MAX_DIR_PATH_NAME_LEN];
 };
 
-	uint32_t         dup_cnt;
-	struct subpath  *dup[MAX_MATH_PATHS];
-	char           (*full_paths)[MAX_DIR_PATH_NAME_LEN];
 /*
  * functions below are for debug purpose.
  */
