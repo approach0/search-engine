@@ -6,3 +6,4 @@
 * faster math-index/subpath-set
 * breadth-first dir-merge
 * mnc_score compare father-to-root hash
+* search: concept search (horse == Pony) and offset-distance (hello-world)
