@@ -18,6 +18,8 @@ static void print_help(char *argv[])
 	       " -d (all document) |"
 	       " -a (dump all) |"
 	       " -p (index path) |"
+	       " -g <df> "
+	       "(list terms whose df is greater than <df>) |"
 	       "\n", argv[0]);
 }
 
@@ -30,11 +32,12 @@ int main(int argc, char* argv[])
 	doc_id_t j;
 	char *term;
 	char *index_path = NULL;
+	uint32_t df, df_valve = 0;
 
 	int opt, opt_any = 0;
 	bool opt_summary = 0, opt_terms = 0, opt_postings = 0,
 	     opt_document = 0, opt_all = 0;
-	while ((opt = getopt(argc, argv, "hstldap:")) != -1) {
+	while ((opt = getopt(argc, argv, "hstldap:g:")) != -1) {
 		opt_any = 1;
 		switch (opt) {
 		case 'h':
@@ -65,6 +68,10 @@ int main(int argc, char* argv[])
 			index_path = strdup(optarg);
 			break;
 
+		case 'g':
+			sscanf(optarg, "%d", &df_valve);
+			break;
+
 		default:
 			printf("bad argument(s). \n");
 			goto exit;
@@ -75,6 +82,8 @@ int main(int argc, char* argv[])
 		print_help(argv);
 		goto exit;
 	}
+
+	printf("df valve: %u\n", df_valve);
 
 	if (index_path == NULL) {
 		printf("no index path specified.\n");
@@ -102,11 +111,14 @@ int main(int argc, char* argv[])
 
 	for (i = 1; i <= termN; i++) {
 		if (opt_all || opt_terms) {
-			term = term_lookup_r(ti, i);
-			printf("term#%u=", term_lookup(ti, term));
-			printf("`%s' ", term);
-			printf("(df=%u): ", term_index_get_df(ti, i));
-			free(term);
+			df = term_index_get_df(ti, i);
+			if (df > df_valve) {
+				term = term_lookup_r(ti, i);
+				printf("term#%u=", term_lookup(ti, term));
+				printf("`%s' ", term);
+				printf("(df=%u): ", term_index_get_df(ti, i));
+				free(term);
+			}
 		}
 		
 		if (opt_all || opt_postings) {
