@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,6 +9,8 @@ extern "C" {
 
 typedef uint32_t term_id_t;
 typedef uint32_t doc_id_t;
+
+#define MAX_DOC_ID UINT_MAX
 
 enum term_index_open_flag {
 	TERM_INDEX_OPEN_CREATE,
@@ -40,9 +43,9 @@ struct term_posting_item {
 	uint32_t tf;
 };
 
-void term_posting_start(void *);
+bool term_posting_start(void *);
 bool term_posting_jump(void *, uint64_t);
-void term_posting_next(void *);
+bool term_posting_next(void *);
 struct term_posting_item
 *term_posting_current(void *);
 void term_posting_finish(void *);

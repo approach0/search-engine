@@ -65,8 +65,6 @@ list_get_it(struct list_node *in_node)
  *
  * After this operation, list node i->now will still point to
  * what it used to point.
- *
- * refer to doc/pics/list_tk.png
  */
 static __inline void
 list_tk(struct list_it *i0, struct list_it *i1)
@@ -102,14 +100,14 @@ typedef bool list_it_fun(struct list_it*,
 #define LIST_RET_BREAK    1
 #define LIST_RET_CONTINUE 0
 
-static __inline void
+static __inline struct list_it
 list_foreach(struct list_it *head, list_it_fun *each_do, 
 		void *extra) 
 {
 	struct list_it fwd, now = *head;
 
 	if (head->now == NULL)
-		return;
+		return now;
 
 	for(;;) {
 		fwd = list_get_it(now.now->next);
@@ -119,6 +117,8 @@ list_foreach(struct list_it *head, list_it_fun *each_do,
 
 		now = fwd;
 	}
+
+	return now;
 }
 
 /*

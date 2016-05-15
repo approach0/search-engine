@@ -1,62 +1,113 @@
 .PHONY: all clean regular-clean new
 
+# .SECONDARY with no prerequisite prevents intermediate
+# objects (here *.main.o) from being deleted by GNU-make.
+.SECONDARY:
+
+# build files (e.g. .o/.d) directory
+BUILD_DIR := .build
+
+# executables (e.g. .out) directory
+RUN_DIR := run
+
+# create build directory
+CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
+
 # compiler
-CFLAGS = -Wall -Wno-unused-function
-CC =  @ tput setaf 5 && echo -n "[compile C $(strip $(CFLAGS))] " && \
-       tput sgr0 && echo $< && gcc
-CXX = @ tput setaf 5 && echo -n '[compile C++ $(strip $(CFLAGS))] ' && \
-       tput sgr0 && echo $< && g++
-CCDH =  @ tput setaf 5 && echo -n '[test C header] ' && \
-       tput sgr0 && echo $< && gcc
-CC_DEP = @ gcc
-CXX_DEP = @ g++
+CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE
+# (_DEFAULT_SOURCE enables strdup function and DT_* macro)
+
+CC := gcc -std=c99
+CC_DEP := @ gcc -MM -MT
+COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
+       tput sgr0
+COMPILE_CC = $(CC) -c $(CFLAGS) $(filter-out %.h, $^)  -o $@
+
+CXX := g++
+CXX_DEP = @ g++ -MM -MT
+COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
+       tput sgr0
+COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter-out %.h, $^) -o $@
+
+CCDH = gcc -dH
 
 # linker
-LD = @ tput setaf 5 && echo -n '[link $(strip $*.o $(LDOBJS) $(LDLIBS))] ' \
-     && tput sgr0 && echo $@ && gcc
+LD := gcc
+COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
-LINK = $(LD) $(LDFLAGS) $*.o $(LDOBJS) \
-	-Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
+# cycling libraries even if we use "-( .. -)", this is necessary
+# to fix Ubuntu gcc linking problem.
+LINK = $(LD) $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" \
+	$(LDFLAGS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" -o $@
 
 # archive
-AR = @ tput setaf 5 && echo -n '[archive $(strip $(AROBJS) $(ARLIBS))] ' \
-     && tput sgr0 && echo $@ && \
-	 rm -f $@ && \
-	 ar -rcT $@ $(AROBJS) $(ARLIBS) && ar -t $@ | tr '\n' ' ' && echo ''
+AR := ar
+COLOR_AR = @ tput setaf 5 && echo '[archive] $@' && tput sgr0
+
+GEN_LIB = rm -f $@ && $(AR) -rcT $@ $(AROBJS) $(ARLIBS)
+COLOR_SHOW_LIB := @ tput setaf 5 && \
+	echo 'objects in this archive:' && tput sgr0
+SHOW_LIB = @ $(AR) -t $@ | tr '\n' ' ' && echo ''
+
+# make
+MAKE := make --no-print-directory
 
 # Bison/Flex
-LEX = @ tput setaf 5 && echo -n '[lex] ' \
-        && tput sgr0 && echo $< && flex $<
+LEX := flex
+COLOR_LEX = @ tput setaf 5 && echo '[lex] $<' && tput sgr0
+DO_LEX = flex $<
 
-YACC = @ tput setaf 5 && echo -n '[yacc] ' \
-         && tput sgr0 && echo $< \
-		 && tput setaf 3 \
-         && bison -v -d --report=itemset $< -o y.tab.c \
-		 && tput sgr0;
+YACC := bison
+COLOR_YACC = @ tput setaf 5 && echo '[yacc] $<' && tput sgr0
+DO_YACC = $(YACC) -v -d --report=itemset $< -o y.tab.c
+
+# high light shorhand
+HIGHLIGHT_BEGIN := @ tput setaf
+HIGHLIGHT_END := @ tput sgr0
 
 # regular rules
-all: 
-	@echo "[done $(CURDIR)]"
+all:
+	$(HIGHLIGHT_BEGIN) 5
+	@echo "[done] $(CURDIR)"
+	$(HIGHLIGHT_END)
 
 new: clean all
-	@echo "[re-make $(CURDIR)]"
+	$(HIGHLIGHT_BEGIN) 5
+	@echo "[re-make done] $(CURDIR)"
+	$(HIGHLIGHT_END)
 
--include $(wildcard *.d)
--include $(wildcard run/*.d)
+-include $(wildcard $(BUILD_DIR)/*.d)
 
-%.o: %.c
-	$(CC) $(CFLAGS) $*.c -c -o $@
-	$(CC_DEP) -MM -MT $@ $(CFLAGS) $*.c -o $*.d
+$(BUILD_DIR)/%.o: %.c
+	$(COLOR_CC)
+	$(CREAT_BUILD_DIR)
+	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(strip $(COMPILE_CC))
 
-%.o: %.cpp
-	$(CXX) $(CFLAGS) $*.cpp -c -o $@
-	$(CXX_DEP) -MM -MT $@ $(CFLAGS) $*.cpp -o $*.d
+$(BUILD_DIR)/%.main.o: $(RUN_DIR)/%.c
+	$(COLOR_CC)
+	$(CREAT_BUILD_DIR)
+	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(strip $(COMPILE_CC))
 
-%.out: %.o
-	$(LINK)
+$(BUILD_DIR)/%.o: %.cpp
+	$(COLOR_CXX)
+	$(CREAT_BUILD_DIR)
+	$(CXX_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(strip $(COMPILE_CXX))
 
-test-%.h: %.h
-	$(CCDH) $(CFLAGS) -dH $*.h
+$(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
+	$(COLOR_LINK)
+	$(strip $(LINK))
+
+# header validity
+validate-%.h: %.h
+	$(CCDH) $(CFLAGS) $*.h
+
+# library check
+check-lib%:
+	@ $(CXX) $(LDFLAGS) -w -Xlinker \
+	--unresolved-symbols=ignore-all -l$*
 
 FIND := @ find . -type d \( -path './.git' \) -prune -o
 
@@ -75,6 +126,7 @@ regular-clean:
 	$(FIND) -type l \( -name '*.py' \) -print | xargs rm -f
 	$(FIND) -type d \( -name 'tmp' \) -print | xargs rm -rf
 	$(FIND) -type d \( -name '__pycache__' \) -print | xargs rm -rf
+	$(FIND) -type d \( -name '$(BUILD_DIR)' \) -print | xargs rm -rf
 
 grep-%:
 	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep --color -nH $* {} \;
@@ -82,5 +134,8 @@ grep-%:
 	$(FIND) -type f \( -name '*.[ly]' \)   -exec grep --color -nH $* {} \;
 	$(FIND) -type f \( -name 'Makefile' \) -exec grep --color -nH $* {} \;
 	$(FIND) -type f \( -name '*.mk' \)     -exec grep --color -nH $* {} \;
+
+show-swp:
+	$(FIND) -type f \( -name '*.swp' \) -print
 
 clean: regular-clean

@@ -4,10 +4,32 @@
 #include "tex-parser/gen-token.h"  /* for token_id */
 #include "tex-parser/gen-symbol.h" /* for symbol_id */
 #include "tex-parser/trans.h"      /* for trans_token() */
+#include "head.h"
 
-#include "math-index.h"
-#include "subpath-set.h"
-#include "config.h"
+struct add_subpaths_args {
+	uint32_t            n_uniq;
+	list               *set;
+};
+
+static LIST_IT_CALLBK(add_subpaths)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(args, struct add_subpaths_args, pa_extra);
+
+	if (0 == subpath_set_add(args->set, sp))
+		args->n_uniq ++;
+
+	LIST_GO_OVER;
+}
+
+uint32_t
+subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
+{
+	struct add_subpaths_args args = {0, set};
+	list_foreach(&subpaths->li, &add_subpaths, &args);
+
+	return args.n_uniq;
+}
 
 static LIST_IT_CALLBK(print_subpath_nodes)
 {
@@ -22,9 +44,17 @@ static LIST_IT_CALLBK(print_subpath)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(fh, FILE, pa_extra);
+	uint32_t i;
 
-	list_foreach(&ele->path_nodes, &print_subpath_nodes, fh);
-	fprintf(fh, " (dup_cnt: %u)\n", ele->dup_cnt);
+	list_foreach(&ele->dup[0]->path_nodes,
+	             &print_subpath_nodes, fh);
+	printf(" ");
+
+	printf("(duplicates: ");
+	for (i = 0; i <= ele->dup_cnt; i++)
+		fprintf(fh, "path#%u ", ele->dup[i]->path_id);
+	printf(")\n");
+
 	LIST_GO_OVER;
 }
 
@@ -74,74 +104,110 @@ static LIST_IT_CALLBK(cmp_subpath_nodes)
 	}
 }
 
-static int compare(struct subpath_ele *ele1, struct subpath_ele *ele2)
+static int compare(struct subpath *sp1, struct subpath *sp2)
 {
 	struct _cmp_subpath_nodes_arg arg;
-	arg.path_node2 = ele2->path_nodes;
-	arg.path_node2_end = ele2->path_nodes.last;
+	arg.path_node2 = sp2->path_nodes;
+	arg.path_node2_end = sp2->path_nodes.last;
 	arg.res = 0;
 
-	if (ele1->subpath_type != ele2->subpath_type)
+	if (sp1->type != sp2->type)
 		arg.res = 5;
 	else
-		list_foreach(&ele1->path_nodes, &cmp_subpath_nodes, &arg);
+		list_foreach(&sp1->path_nodes, &cmp_subpath_nodes, &arg);
 
+//#define DEBUG_SUBPATH_SET
 #ifdef DEBUG_SUBPATH_SET
-	list_foreach(&ele1->path_nodes, &print_subpath_nodes, stdout);
+	list_foreach(&sp1->path_nodes, &print_subpath_nodes, stdout);
 	printf(" and ");
-	list_foreach(&ele2->path_nodes, &print_subpath_nodes, stdout);
+	list_foreach(&sp2->path_nodes, &print_subpath_nodes, stdout);
 	printf(" ");
-	if (arg.res == 0)
+
+	switch (arg.res) {
+	case 0:
 		printf("are the same.");
-	else if (arg.res == 1)
+		break;
+	case 1:
 		printf("are different. (the other is empty)");
-	else if (arg.res == 2)
-		printf("are different. (the other is short)");
-	else if (arg.res == 3)
-		printf("are different. (the other is long)");
-	else if (arg.res == 4)
+		break;
+	case 2:
+		printf("are different. (the other is shorter)");
+		break;
+	case 3:
+		printf("are different. (the other is longer)");
+		break;
+	case 4:
 		printf("are different.");
-	else if (arg.res == 5)
+		break;
+	case 5:
 		printf("are different. (the other is not the same type)");
+		break;
+	default:
+		printf("unexpected res number.\n");
+	}
 	printf("\n");
 #endif
 
 	return arg.res;
 }
 
+static struct subpath_ele *new_ele(struct subpath *sp)
+{
+	struct subpath_ele *newele;
+	newele = malloc(sizeof(struct subpath_ele));
+	LIST_NODE_CONS(newele->ln);
+	newele->dup_cnt = 0;
+	newele->dup[0] = sp;
+
+	return newele;
+}
+
 static LIST_IT_CALLBK(set_add)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
-	P_CAST(newele, struct subpath_ele, pa_extra);
+	P_CAST(sp, struct subpath, pa_extra);
+	struct subpath_ele *newele;
 
-	if (0 == compare(newele, ele)) {
+	if (0 == compare(sp, ele->dup[0])) {
 		ele->dup_cnt ++;
-		free(newele);
+		ele->dup[ele->dup_cnt] = sp;
 		return LIST_RET_BREAK;
 	} else {
 		if (pa_now->now == pa_head->last) {
-			list_insert_one_at_tail(&newele->ln, pa_head, pa_now, pa_fwd);
+			newele = new_ele(sp);
+			list_insert_one_at_tail(&newele->ln, pa_head,
+			                        pa_now, pa_fwd);
+
+			/* indicate we inserted one into set */
+			pa_now->now = NULL;
+
 			return LIST_RET_BREAK;
 		} else {
+			/* not the last element */
 			return LIST_RET_CONTINUE;
 		}
 	}
 }
 
-void subpath_set_add(list *set, struct subpath *sp,
-                     struct math_posting_item *to_write)
+bool subpath_set_add(list *set, struct subpath *sp)
 {
-	struct subpath_ele *newele = malloc(sizeof(struct subpath_ele));
-	LIST_NODE_CONS(newele->ln);
-	newele->path_nodes = sp->path_nodes;
-	newele->to_write = *to_write;
-	newele->subpath_type = sp->type;
-	newele->dup_cnt = 0;
+	struct subpath_ele *newele;
+	struct list_it br;
 
-	if (set->now == NULL)
+	if (set->now == NULL) {
+		newele = new_ele(sp);
 		list_insert_one_at_tail(&newele->ln, set, NULL, NULL);
-	else
-		list_foreach(set, &set_add, newele);
+		return 0;
+	} else {
+		br = list_foreach(set, &set_add, sp);
+
+		if (br.now == NULL) {
+			/* we just inserted an unique element */
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 LIST_DEF_FREE_FUN(subpath_set_free, struct subpath_ele, ln, free(p));

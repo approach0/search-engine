@@ -1,7 +1,8 @@
 #include <tcutil.h>
 #include <tcbdb.h>
+
+#include "dir-util/dir-util.h"
 #include "keyval-db.h"
-#include "config.h"
 
 keyval_db_t keyval_db_open(const char *path, int mode)
 {

@@ -10,19 +10,33 @@ include ../module.mk
 gen-symbol.h: gen-lexer.l
 gen-token.h: gen-lexer.l
 gen-lexer.l: lexer.template.l symbol.template.h token.template.h
+	$(HIGHLIGHT_BEGIN) 5
+	@ echo "generating $@"
+	$(HIGHLIGHT_END)
 	./auto-gen.sh $^
 
 gen-trans.c: gen-symbol.h gen-token.h trans.template.c
+	$(HIGHLIGHT_BEGIN) 5
+	@ echo "generating $@"
+	$(HIGHLIGHT_END)
 	./trans-gen.sh $^ $@
 
 gen-completion.c: lexer.template.l completion.template.c
+	$(HIGHLIGHT_BEGIN) 5
+	@ echo "generating $@"
+	$(HIGHLIGHT_END)
 	./completion-gen.sh $^ $@
 
 lex.yy.c: gen-lexer.l y.tab.h
-	$(LEX)
+	$(COLOR_LEX)
+	$(strip $(DO_LEX))
 
 y.tab.h y.tab.c: grammar.y
-	$(YACC)
+	$(COLOR_YACC)
+	@ echo '$(strip $(DO_YACC))'
+	$(HIGHLIGHT_BEGIN) 3 # highlight conflicts
+	@ $(DO_YACC)
+	$(HIGHLIGHT_END)
 
 clean:
 	rm -f *.tab.[ch]

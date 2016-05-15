@@ -5,8 +5,11 @@
 #include "indexer.h"
 
 static void *term_index = NULL;
+static math_index_t math_index = NULL;
 static keyval_db_t keyval_db = NULL;
+
 static doc_id_t new_docID = 0;
+static doc_id_t new_expID = 0;
 static list splited_terms = LIST_NULL;
 
 static LIST_IT_CALLBK(index_term)
@@ -47,6 +50,19 @@ static LIST_IT_CALLBK(index_term_pos)
 extern void handle_math(struct lex_slice *slice)
 {
 //	printf("math: %s (len=%u)\n", slice->mb_str, slice->offset);
+	struct tex_parse_ret parse_ret;
+	parse_ret = tex_parse(slice->mb_str, 0, false);
+
+	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+		printf("indexing math `%s' (docID=%u, expID=%u)\n", slice->mb_str,
+		       new_docID, new_expID);
+		math_index_add_tex(math_index, new_docID, new_expID,
+		                   parse_ret.subpaths);
+		subpaths_release(&parse_ret.subpaths);
+		new_expID ++;
+	} else {
+		printf("math parser error: %s\n", parse_ret.msg);
+	}
 }
 
 extern void handle_text(struct lex_slice *slice)
@@ -71,6 +87,8 @@ static void index_txt_document(const char *fullpath)
 	lex_txt_file(fullpath);
 	list_foreach(&splited_terms, &index_term, NULL);
 	new_docID = term_index_doc_end(term_index);
+
+	new_expID = 0; /* clear expression ID */
 
 	list_foreach(&splited_terms, &index_term_pos, &nterms);
 	//printf("{%lu}", nterms);
@@ -118,6 +136,8 @@ int main(int argc, char* argv[])
 	int opt;
 	char *path = NULL /* corpus path */;
 	const char index_path[] = "./tmp";
+	const char kv_db_fname[] = "kvdb-offset.bin";
+	char term_index_path[MAX_FILE_NAME_LEN];
 
 	while ((opt = getopt(argc, argv, "hp:")) != -1) {
 		switch (opt) {
@@ -150,25 +170,41 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 
+	/* open text segmentation dictionary */
 	printf("opening dict...\n");
 	text_segment_init("../jieba/fork/dict");
 	text_segment_insert_usrterm("当且仅当");
 	printf("dict opened.\n");
 
+	/* open term index */
 	printf("opening term index...\n");
-	term_index = term_index_open(index_path, TERM_INDEX_OPEN_CREATE);
+	sprintf(term_index_path, "%s/term", index_path);
+
+	mkdir_p(term_index_path);
+
+	/* open term index */
+	term_index = term_index_open(term_index_path, TERM_INDEX_OPEN_CREATE);
 	if (NULL == term_index) {
 		printf("cannot create/open term index.\n");
-		return 1;
+		goto exit;
 	}
 
-	keyval_db = keyval_db_open_under("kv-termpos.bin", index_path,
+	/* open math index */
+	math_index = math_index_open(index_path, MATH_INDEX_WRITE);
+	if (NULL == math_index) {
+		printf("cannot create/open math index.\n");
+		goto exit;
+	}
+
+	/* open document offset key-value database */
+	keyval_db = keyval_db_open_under(kv_db_fname, index_path,
 	                                 KEYVAL_DB_OPEN_WR);
 	if (keyval_db == NULL) {
 		printf("cannot create/open key-value DB.\n");
-		goto keyval_db_fails;
+		goto exit;
 	}
 
+	/* start indexing */
 	if (file_exists(path)) {
 		printf("[single file] %s\n", path);
 		index_txt_document(path);
@@ -178,17 +214,28 @@ int main(int argc, char* argv[])
 		printf("not file/directory.\n");
 	}
 
-	printf("closing key-value DB...\n");
-	keyval_db_close(keyval_db);
+	printf("done indexing!\n");
 
-keyval_db_fails:
-	printf("closing term index...\n");
-	term_index_close(term_index);
+exit:
+	if (keyval_db) {
+		printf("closing key-value DB...\n");
+		keyval_db_close(keyval_db);
+	}
 
-	printf("closing dict...\n");
+	if (math_index) {
+		printf("closing math index...\n");
+		math_index_close(math_index);
+	}
+
+	if (term_index) {
+		printf("closing term index...\n");
+		term_index_close(term_index);
+	}
+
 	text_segment_free();
 
-	free(path);
-exit:
+	if (path)
+		free(path);
+
 	return 0;
 }

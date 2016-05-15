@@ -1,21 +1,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "jieba-wrap.h"
 #include "wstring/wstring.h"
 #include "txt-seg.h"
 
+static bool _init_flag = 0;
+
 int text_segment_init(const char *dict_path)
 {
 	dict_path = NULL; /* not supported yet */
 	jieba_init();
+	_init_flag = 1;
 	return 0;
 }
 
 void text_segment_free()
 {
-	jieba_release();
+	if (_init_flag)
+		jieba_release();
 }
 
 bool text_segment_insert_usrterm(const char *term)

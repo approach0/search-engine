@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #include "math-index.h"
-#include "config.h"
+#include "config.h" /* for TOKEN_PATH_NAME */
 
 int main(int argc, char *argv[])
 {
@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
 			       " -t", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
-			printf("%s -p ./tmp/%s/TIMES/ADD\n", argv[0], TOKEN_PATH_NAME);
+			printf("%s -p ./tmp/%s/VAR/TIMES/ADD\n",
+			       argv[0], TOKEN_PATH_NAME);
 			goto exit;
 
 		case 'p':

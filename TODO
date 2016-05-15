@@ -1,6 +1,16 @@
+Top priority:
+* delta compression & posting file compression
+* blob-index (libz compress)
+
+Want to implement:
+* search: concept search (horse == Pony) and phrase&proximity search
+* spell checking & 3-gram input suggestion
+* query correction ("do you mean XXX")
+
+Do it when time is allowed:
 * malloc hook
 * faster Chinese tokenizer
-* blob-index (consider file size limit)
-* pfor-delta module
 * oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
+* breadth-first dir-merge
+* in mnc_score, compare father-to-root hash

@@ -83,7 +83,8 @@ void split_into_terms(struct lex_slice *slice, list *ret)
 
 void eng_to_lower_case(struct lex_slice *slice)
 {
-	for(size_t i = 0; i < slice->offset; i++)
+	size_t i;
+	for(i = 0; i < slice->offset; i++)
 		slice->mb_str[i] = tolower(slice->mb_str[i]);
 }
 
