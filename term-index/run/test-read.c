@@ -20,6 +20,8 @@ static void print_help(char *argv[])
 	       " -p (index path) |"
 	       " -g <df> "
 	       "(list terms whose df is greater than <df>) |"
+	       " -i <term_id> "
+	       "(list only posting list of <term_id>)"
 	       "\n", argv[0]);
 }
 
@@ -33,17 +35,18 @@ int main(int argc, char* argv[])
 	char *term;
 	char *index_path = NULL;
 	uint32_t df, df_valve = 0;
+	uint32_t term_id = 0;
 
 	int opt, opt_any = 0;
 	bool opt_summary = 0, opt_terms = 0, opt_postings = 0,
 	     opt_document = 0, opt_all = 0;
-	while ((opt = getopt(argc, argv, "hstldap:g:")) != -1) {
+	while ((opt = getopt(argc, argv, "hstldap:g:i:")) != -1) {
 		opt_any = 1;
 		switch (opt) {
 		case 'h':
 			print_help(argv);
 			goto exit;
-		
+
 		case 's':
 			opt_summary = 1;
 			break;
@@ -63,13 +66,17 @@ int main(int argc, char* argv[])
 		case 'a':
 			opt_all = 1;
 			break;
-		
+
 		case 'p':
 			index_path = strdup(optarg);
 			break;
 
 		case 'g':
 			sscanf(optarg, "%d", &df_valve);
+			break;
+
+		case 'i':
+			sscanf(optarg, "%d", &term_id);
 			break;
 
 		default:
@@ -82,8 +89,6 @@ int main(int argc, char* argv[])
 		print_help(argv);
 		goto exit;
 	}
-
-	printf("df valve: %u\n", df_valve);
 
 	if (index_path == NULL) {
 		printf("no index path specified.\n");
@@ -98,6 +103,11 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 
+	printf("df valve: %u\n", df_valve);
+
+	if (term_id != 0)
+		printf("only list term ID: %u\n", term_id);
+
 	termN = term_index_get_termN(ti);
 	docN = term_index_get_docN(ti);
 	avgDocLen = term_index_get_avgDocLen(ti);
@@ -110,6 +120,9 @@ int main(int argc, char* argv[])
 	}
 
 	for (i = 1; i <= termN; i++) {
+		if (term_id != 0 && i != term_id)
+			continue; /* skip this term */
+
 		if (opt_all || opt_terms) {
 			df = term_index_get_df(ti, i);
 			if (df > df_valve) {
@@ -120,7 +133,7 @@ int main(int argc, char* argv[])
 				free(term);
 			}
 		}
-		
+
 		if (opt_all || opt_postings) {
 			posting = term_index_get_posting(ti, i);
 			if (posting) {
