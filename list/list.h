@@ -65,8 +65,6 @@ list_get_it(struct list_node *in_node)
  *
  * After this operation, list node i->now will still point to
  * what it used to point.
- *
- * refer to doc/pics/list_tk.png
  */
 static __inline void
 list_tk(struct list_it *i0, struct list_it *i1)
