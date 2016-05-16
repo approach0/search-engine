@@ -12,7 +12,7 @@ struct math_posting_item {
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
 
-	uint64_t  pathinfo_pos;
+	uint32_t  pathinfo_pos;
 };
 
 struct math_pathinfo {
@@ -45,7 +45,7 @@ struct math_posting_item*
 math_posting_current(math_posting_t);
 
 struct math_pathinfo_pack*
-math_posting_pathinfo(math_posting_t, uint64_t);
+math_posting_pathinfo(math_posting_t, uint32_t);
 
 /* print math posting path and its subpath set duplicate elements */
 void math_posting_print_info(math_posting_t);
