@@ -184,7 +184,7 @@ static LIST_IT_CALLBK(path_index_step1)
 	LIST_GO_OVER;
 }
 
-static uint64_t pathinfo_len(const char *path)
+static uint32_t pathinfo_len(const char *path)
 {
 	FILE *fh;
 	uint64_t ret;
@@ -199,7 +199,7 @@ static uint64_t pathinfo_len(const char *path)
 	ret = ftell(fh);
 	fclose(fh);
 
-	return ret;
+	return (uint32_t)ret;
 }
 
 static LIST_IT_CALLBK(path_index_step2)
@@ -276,7 +276,7 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 {
 	int ret = 0;
 	uint32_t i;
-	uint64_t pos;
+	uint32_t pos;
 	math_posting_t *po;
 
 	struct math_posting_item *po_item;
@@ -298,7 +298,7 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 		/* read posting list item */
 		po_item = math_posting_current(po);
 		pos = po_item->pathinfo_pos;
-		fprintf(fh, "doc#%u, exp#%u pathinfo@%lu;",
+		fprintf(fh, "doc#%u, exp#%u pathinfo@%u;",
 		        po_item->doc_id, po_item->exp_id, pos);
 
 		/* then read path info items */

@@ -170,7 +170,7 @@ struct math_posting_item* math_posting_current(math_posting_t po_)
 }
 
 struct math_pathinfo_pack*
-math_posting_pathinfo(math_posting_t po_, uint64_t position)
+math_posting_pathinfo(math_posting_t po_, uint32_t position)
 {
 	pathinfo_num_t i;
 	struct _math_posting *po = (struct _math_posting*)po_;
