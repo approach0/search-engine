@@ -8,7 +8,7 @@ enum codec_method {
 struct for_delta_args {
 	int pack_size;
 	/* ...... */
-	/* whatever needs for FOR-delta compression */
+	/* whatever needed for FOR-delta compression */
 };
 
 struct codec {
