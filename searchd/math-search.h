@@ -15,12 +15,12 @@ struct math_score_res {
 	uint32_t  score;
 };
 
-/* perform math expression search and upon math posting list merge,
+/* perform math expression search. Upon math posting list merge,
  * call the callback function specified in the argument. */
 int math_search_posting_merge(math_index_t, char*, enum dir_merge_type,
                               post_merge_callbk, void*);
 
 /* call this function in posting merge callback to score merged item
- * similarity with math query. */
+ * similarity compared with math query. */
 struct math_score_res
 math_score_on_merge(struct postmerge_arg*, uint32_t, uint32_t);

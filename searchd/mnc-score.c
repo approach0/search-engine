@@ -1,4 +1,4 @@
-/* This is the bitmap-way implementation of mnc score (or "mark
+/* This is the bitmap-style implementation of mnc score (or "mark
  * and cross" score) algorithm. This algorithm evaluates two math
  * expressions' similarity based on their subpaths, and also taking
  * symbolic alpha-equivalence into consideration.
