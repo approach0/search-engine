@@ -16,7 +16,7 @@ int main()
 	for (i = 0; i < len; i++)
 		input_arr[i] = i;
 
-	res = codec_compress(&codec, input_arr, buf, len);
+	res = codec_compress(&codec, input_arr, len, buf);
 
 	printf("compressing %u integers into %u bytes...\n",
 	       len, res);
