@@ -9,11 +9,13 @@ struct math_extra_score_arg {
 	uint32_t dir_merge_level;
 };
 
+#pragma pack(push, 1)
 struct math_score_res {
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
 	uint32_t  score;
 };
+#pragma pack(pop)
 
 /* perform math expression search. Upon math posting list merge,
  * call the callback function specified in the argument. */
