@@ -19,6 +19,7 @@ struct mem_posting_blk {
 	struct skippy_node       sn;
 	uint32_t                 end;
 	char                     buff[MEM_POSTING_BLOCK_SZ];
+	uint32_t                 n_writes;
 	struct mem_posting_blk  *next;
 };
 

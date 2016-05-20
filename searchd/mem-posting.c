@@ -63,6 +63,7 @@ static struct mem_posting_blk *create_blk(uint32_t key)
 	skippy_node_init(&ret->sn, key);
 
 	ret->end = 0;
+	ret->n_writes = 0;
 	ret->next = NULL;
 
 	return ret;
@@ -101,28 +102,30 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src,
 	const uint32_t n_encode = MAX(1, MEM_POSTING_N_ENCODE);
 	const uint32_t n_encode_bytes = n_encode * struct_sz;
 
-	uint32_t blk_now, first_key, res_bytes, remain_bytes, n_enc_remain;
+	uint32_t byte_now, first_key, res_bytes, remain_bytes, n_enc_remain;
 	char     tmp_buf[MEM_POSTING_BLOCK_SZ];
 
 	while (srcblk) {
-		blk_now = 0;
 		/* for each of source block in order */
-		while (blk_now < srcblk->end) {
+		byte_now = 0;
+		n_enc_remain = srcblk->n_writes;
+
+		while (byte_now < srcblk->end) {
 			/* for each N structures in this source block */
-			first_key = *(uint32_t*)(srcblk->buff + blk_now);
-			remain_bytes = srcblk->end - blk_now;
+			first_key = *(uint32_t*)(srcblk->buff + byte_now);
+			remain_bytes = srcblk->end - byte_now;
 
 			if (remain_bytes >= n_encode_bytes) {
 				/* encode n_encode structures */
-				res_bytes = encode_struct_arr(tmp_buf, srcblk->buff + blk_now,
+				res_bytes = encode_struct_arr(tmp_buf, srcblk->buff + byte_now,
 				                              codecs, n_encode, struct_sz);
-				blk_now += n_encode_bytes;
+				byte_now += n_encode_bytes;
+				n_enc_remain -= n_encode;
 			} else {
 				/* encode n_enc_remain structures */
-				n_enc_remain = remain_bytes / struct_sz;
-				res_bytes = encode_struct_arr(tmp_buf, srcblk->buff + blk_now,
+				res_bytes = encode_struct_arr(tmp_buf, srcblk->buff + byte_now,
 				                              codecs, n_enc_remain, struct_sz);
-				blk_now += remain_bytes;
+				byte_now += remain_bytes;
 			}
 
 			/* write encoded bytes to destination memory posting */
@@ -154,6 +157,7 @@ mem_posting_write(struct mem_posting *po, uint32_t first_key,
 
 	memcpy(po->tail->buff + po->tail->end, in, bytes);
 	po->tail->end += bytes;
+	po->tail->n_writes ++;
 	po->n_used_bytes += bytes;
 
 	return 0;
