@@ -6,6 +6,8 @@
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
+typedef void (*blk_print_callbk)(struct mem_posting_blk*, size_t);
+
 static void po_init(struct mem_posting *po, uint32_t skippy_spans)
 {
 	po->n_used_bytes = 0;
@@ -102,8 +104,10 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src,
 	const uint32_t n_encode = MAX(1, MEM_POSTING_N_ENCODE);
 	const uint32_t n_encode_bytes = n_encode * struct_sz;
 
-	uint32_t byte_now, first_key, res_bytes, remain_bytes, n_enc_remain;
-	char     tmp_buf[MEM_POSTING_BLOCK_SZ];
+	uint32_t  byte_now, first_key, res_bytes, remain_bytes, n_enc_remain;
+	char      buf[MEM_POSTING_BLOCK_SZ];
+	enc_hd_t *buf_head = (enc_hd_t*)buf;
+	enc_hd_t *buf_load = buf_head + 1;
 
 	while (srcblk) {
 		/* for each of source block in order */
@@ -117,19 +121,28 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src,
 
 			if (remain_bytes >= n_encode_bytes) {
 				/* encode n_encode structures */
-				res_bytes = encode_struct_arr(tmp_buf, srcblk->buff + byte_now,
+				res_bytes = encode_struct_arr(buf_load,
+				                              srcblk->buff + byte_now,
 				                              codecs, n_encode, struct_sz);
 				byte_now += n_encode_bytes;
 				n_enc_remain -= n_encode;
+
+				/* write encode header */
+				*buf_head = n_encode;
 			} else {
 				/* encode n_enc_remain structures */
-				res_bytes = encode_struct_arr(tmp_buf, srcblk->buff + byte_now,
+				res_bytes = encode_struct_arr(buf_load,
+				                              srcblk->buff + byte_now,
 				                              codecs, n_enc_remain, struct_sz);
 				byte_now += remain_bytes;
+
+				/* write encode header */
+				*buf_head = n_enc_remain;
 			}
 
 			/* write encoded bytes to destination memory posting */
-			mem_posting_write(dest, first_key, tmp_buf, res_bytes);
+			mem_posting_write(dest, first_key, buf,
+			                  sizeof(enc_hd_t) + res_bytes);
 		}
 
 		srcblk = srcblk->next;
@@ -171,8 +184,8 @@ static void print_int32_buff(uint32_t *integer, size_t n)
 	printf("\n");
 }
 
-void
-mem_posting_print(struct mem_posting *po)
+static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun,
+                     size_t struct_sz)
 {
 	struct mem_posting_blk *blk = po->head;
 	int i = 0;
@@ -192,9 +205,69 @@ mem_posting_print(struct mem_posting *po)
 		printf("[%u/%d used]:\n", blk->end, MEM_POSTING_BLOCK_SZ);
 
 		skippy_node_print(&blk->sn);
-		print_int32_buff((uint32_t*)blk->buff, blk->end / 4);
+		blk_print_fun(blk, struct_sz);
 
 		blk = blk->next;
 		i ++;
 	}
+}
+
+static void po_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
+{
+	print_int32_buff((uint32_t*)blk->buff, blk->end / sizeof(uint32_t));
+}
+
+void mem_posting_print(struct mem_posting *po)
+{
+	po_print(po, &po_print_callbk, 0);
+}
+
+static void po_enc_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
+{
+	int j = 0;
+	enc_hd_t *enc_head;
+	uint32_t n_members = struct_sz / sizeof(uint32_t);
+
+	while (j < blk->end) {
+		enc_head = (enc_hd_t*)(blk->buff + j);
+		printf("[ %u ]:", *enc_head);
+		j += sizeof(enc_hd_t);
+		print_int32_buff((uint32_t*)(blk->buff + j),
+				(*enc_head) * n_members);
+		j += (*enc_head) * n_members * sizeof(uint32_t);
+	}
+}
+
+void mem_posting_enc_print(struct mem_posting *po, size_t struct_sz)
+{
+	po_print(po, &po_enc_print_callbk, struct_sz);
+}
+
+bool mem_posting_start(void *po_)
+{
+	struct mem_posting *po = (struct mem_posting*)po_;
+	return 0;
+}
+
+bool mem_posting_jump(void *po_, uint64_t target)
+{
+	struct mem_posting *po = (struct mem_posting*)po_;
+	return 0;
+}
+
+bool mem_posting_next(void *po_)
+{
+	struct mem_posting *po = (struct mem_posting*)po_;
+	return 0;
+}
+
+void mem_posting_finish(void *po_)
+{
+	struct mem_posting *po = (struct mem_posting*)po_;
+}
+
+void* mem_posting_current(void *po_)
+{
+	struct mem_posting *po = (struct mem_posting*)po_;
+	return NULL;
 }

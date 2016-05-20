@@ -43,14 +43,14 @@ int main()
 
 #ifdef DEBUG_MEM_POSTING
 			printf("encoded posting list:\n");
-			mem_posting_print(po);
+			mem_posting_enc_print(po, sizeof(struct math_posting_item));
 #endif
 		}
 	}
 
 #ifndef DEBUG_MEM_POSTING
 	printf("encoded posting list:\n");
-	mem_posting_print(po);
+	mem_posting_enc_print(po, sizeof(struct math_posting_item));
 #endif
 
 	mem_posting_release(po);

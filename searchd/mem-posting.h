@@ -15,6 +15,8 @@
 
 #define MEM_POSTING_N_ENCODE ((MEM_POSTING_BLOCK_SZ / struct_sz) >> 2)
 
+typedef uint16_t enc_hd_t; /* encode header */
+
 struct mem_posting_blk {
 	struct skippy_node       sn;
 	uint32_t                 end;
@@ -44,3 +46,12 @@ mem_posting_encode(struct mem_posting*, struct mem_posting*,
                    size_t, struct codec*);
 
 void mem_posting_print(struct mem_posting*);
+
+void mem_posting_enc_print(struct mem_posting*, size_t);
+
+/* merge-related functions */
+bool  mem_posting_start(void*);
+bool  mem_posting_jump(void*, uint64_t);
+bool  mem_posting_next(void*);
+void  mem_posting_finish(void*);
+void* mem_posting_current(void*);

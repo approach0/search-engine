@@ -29,7 +29,9 @@ struct math_pathinfo_pack {
 #pragma pack(pop)
 
 struct subpath_ele;
-math_posting_t math_posting_new_reader(struct subpath_ele*, const char*);
+
+math_posting_t
+math_posting_new_reader(struct subpath_ele*, const char*);
 
 void math_posting_free_reader(math_posting_t);
 
