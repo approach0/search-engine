@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -15,6 +16,12 @@ static void po_init(struct mem_posting *po, uint32_t skippy_spans)
 	po->head = NULL; /* lazy, create on write */
 	po->tail = NULL;
 	skippy_init(&po->skippy, skippy_spans);
+
+	/* encoder */
+	po->struct_sz = 0;
+	po->codecs = NULL;
+
+	/* leave merge-related initializations to mem_posting_start() */
 }
 
 struct mem_posting *mem_posting_create(uint32_t skippy_spans)
@@ -96,11 +103,19 @@ static __inline bool is_paging(struct mem_posting *po, size_t next_bytes)
 	        /* not enough space */);
 }
 
+void
+mem_posting_set_enc(struct mem_posting *po,
+                    uint32_t struct_sz, struct codec *codecs)
+{
+	po->struct_sz = struct_sz;
+	po->codecs = codecs;
+}
+
 uint32_t
-mem_posting_encode(struct mem_posting *dest, struct mem_posting *src,
-                   size_t struct_sz, struct codec *codecs)
+mem_posting_encode(struct mem_posting *dest, struct mem_posting *src)
 {
 	struct mem_posting_blk *srcblk = src->head;
+	uint32_t struct_sz = dest->struct_sz;
 	const uint32_t n_encode = MAX(1, MEM_POSTING_N_ENCODE);
 	const uint32_t n_encode_bytes = n_encode * struct_sz;
 
@@ -123,7 +138,8 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src,
 				/* encode n_encode structures */
 				res_bytes = encode_struct_arr(buf_load,
 				                              srcblk->buff + byte_now,
-				                              codecs, n_encode, struct_sz);
+				                              dest->codecs, n_encode,
+				                              struct_sz);
 				byte_now += n_encode_bytes;
 				n_enc_remain -= n_encode;
 
@@ -133,7 +149,8 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src,
 				/* encode n_enc_remain structures */
 				res_bytes = encode_struct_arr(buf_load,
 				                              srcblk->buff + byte_now,
-				                              codecs, n_enc_remain, struct_sz);
+				                              dest->codecs, n_enc_remain,
+				                              struct_sz);
 				byte_now += remain_bytes;
 
 				/* write encode header */
@@ -184,8 +201,7 @@ static void print_int32_buff(uint32_t *integer, size_t n)
 	printf("\n");
 }
 
-static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun,
-                     size_t struct_sz)
+static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun)
 {
 	struct mem_posting_blk *blk = po->head;
 	int i = 0;
@@ -205,7 +221,7 @@ static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun,
 		printf("[%u/%d used]:\n", blk->end, MEM_POSTING_BLOCK_SZ);
 
 		skippy_node_print(&blk->sn);
-		blk_print_fun(blk, struct_sz);
+		blk_print_fun(blk, po->struct_sz);
 
 		blk = blk->next;
 		i ++;
@@ -219,7 +235,7 @@ static void po_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
 
 void mem_posting_print(struct mem_posting *po)
 {
-	po_print(po, &po_print_callbk, 0);
+	po_print(po, &po_print_callbk);
 }
 
 static void po_enc_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
@@ -234,40 +250,117 @@ static void po_enc_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
 		j += sizeof(enc_hd_t);
 		print_int32_buff((uint32_t*)(blk->buff + j),
 				(*enc_head) * n_members);
-		j += (*enc_head) * n_members * sizeof(uint32_t);
+		j += (*enc_head) * struct_sz;
 	}
 }
 
-void mem_posting_enc_print(struct mem_posting *po, size_t struct_sz)
+void mem_posting_enc_print(struct mem_posting *po)
 {
-	po_print(po, &po_enc_print_callbk, struct_sz);
+	po_print(po, &po_enc_print_callbk);
+}
+
+/*
+ * posting merge related functions.
+ */
+static bool merge_next_blk(struct mem_posting *po)
+{
+	po->blk_now = po->blk_now->next;
+	po->blk_idx = 0;
+#ifdef DEBUG_MEM_POSTING
+	printf("merge next block.\n");
+#endif
+
+	return (po->blk_now != NULL);
+}
+
+static void merge_rebuf(struct mem_posting *po)
+{
+	size_t res_bytes;
+#ifdef DEBUG_MEM_POSTING
+	printf("merge rebuf.\n");
+#endif
+
+	if (po->blk_idx >= po->blk_now->end) {
+		if (!merge_next_blk(po)) {
+			res_bytes = 0;
+			goto reset_buf_ptr;
+		}
+	}
+
+	/* read encode header */
+	enc_hd_t *enc_head = (enc_hd_t*)(po->blk_now->buff + po->blk_idx);
+	po->blk_idx += sizeof(enc_hd_t);
+
+	/* decode into merge buffer */
+	res_bytes = decode_struct_arr(po->buff, po->blk_now->buff + po->blk_idx,
+	                              po->codecs, *enc_head, po->struct_sz);
+	po->blk_idx += (*enc_head) * po->struct_sz;
+
+reset_buf_ptr:
+	po->buf_idx = 0;
+	po->buf_end = res_bytes;
 }
 
 bool mem_posting_start(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
-	return 0;
-}
+	po->buff = NULL;
 
-bool mem_posting_jump(void *po_, uint64_t target)
-{
-	struct mem_posting *po = (struct mem_posting*)po_;
-	return 0;
+	if (po->head == NULL)
+		return 0;
+
+#ifdef DEBUG_MEM_POSTING
+	printf("allocating posting merge buffer.\n");
+#endif
+	po->buff = malloc(MEM_POSTING_BLOCK_SZ);
+
+	if (po->buff == NULL)
+		return 0;
+
+	po->blk_now = po->head;
+	po->blk_idx = 0;
+
+	/* read the very first decoded bytes into merge buffer */
+	merge_rebuf(po);
+	return (po->buf_end != 0);
 }
 
 bool mem_posting_next(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
+	po->buf_idx += po->struct_sz;
+
+	do {
+		if (po->buf_idx < po->buf_end)
+			return 1;
+		else
+			merge_rebuf(po);
+
+	} while (po->buf_end != 0);
+
+	return 0;
+}
+
+bool mem_posting_jump(void *po_, uint64_t target)
+{
 	return 0;
 }
 
 void mem_posting_finish(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
+
+	if (po->buff) {
+#ifdef DEBUG_MEM_POSTING
+		printf("free posting merge buffer.\n");
+#endif
+		free(po->buff);
+		po->buff = NULL;
+	}
 }
 
 void* mem_posting_current(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
-	return NULL;
+	return po->buff + po->buf_idx;
 }

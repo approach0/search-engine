@@ -30,6 +30,17 @@ struct mem_posting {
 	uint32_t                   n_tot_blocks;
 	struct mem_posting_blk    *head, *tail;
 	struct skippy              skippy;
+
+	/* encoder info */
+	uint32_t                   struct_sz;
+	struct codec              *codecs;
+
+	/* merge-related */
+	char                      *buff; /* merge buffer */
+	struct mem_posting_blk    *blk_now;
+	uint32_t                   blk_idx;
+	uint32_t                   buf_idx;
+	uint32_t                   buf_end;
 };
 
 struct mem_posting *mem_posting_create(uint32_t);
@@ -41,13 +52,14 @@ void mem_posting_clear(struct mem_posting*);
 size_t
 mem_posting_write(struct mem_posting*, uint32_t, const void*, size_t);
 
+void mem_posting_set_enc(struct mem_posting*, uint32_t, struct codec*);
+
 uint32_t
-mem_posting_encode(struct mem_posting*, struct mem_posting*,
-                   size_t, struct codec*);
+mem_posting_encode(struct mem_posting*, struct mem_posting*);
 
 void mem_posting_print(struct mem_posting*);
 
-void mem_posting_enc_print(struct mem_posting*, size_t);
+void mem_posting_enc_print(struct mem_posting*);
 
 /* merge-related functions */
 bool  mem_posting_start(void*);
