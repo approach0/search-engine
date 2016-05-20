@@ -1,16 +1,23 @@
 #pragma once
 #include "codec/codec.h"
 #include "skippy.h"
+#include "config.h"
 
-#define MEM_POSTING_PAGE_SZ          4096
+#ifdef DEBUG_MEM_POSTING
+#define SYS_MEM_PAGE_SZ 64
+#else
+#define SYS_MEM_PAGE_SZ 4096
+#endif
+
 #define MEM_POSTING_PAGES_PER_BLOCK  2
 
-#define MEM_POSTING_BLOCK_SZ (MEM_POSTING_PAGE_SZ * MEM_POSTING_PAGES_PER_BLOCK)
+#define MEM_POSTING_BLOCK_SZ (SYS_MEM_PAGE_SZ * MEM_POSTING_PAGES_PER_BLOCK)
+
+#define MEM_POSTING_N_ENCODE ((MEM_POSTING_BLOCK_SZ / struct_sz) >> 2)
 
 struct mem_posting_blk {
 	struct skippy_node       sn;
 	uint32_t                 end;
-	uint32_t                 n_encode;
 	char                     buff[MEM_POSTING_BLOCK_SZ];
 	struct mem_posting_blk  *next;
 };
@@ -26,18 +33,13 @@ struct mem_posting *mem_posting_create(uint32_t);
 
 void mem_posting_release(struct mem_posting*);
 
-bool mem_posting_paging(struct mem_posting*, size_t);
+void mem_posting_clear(struct mem_posting*);
 
 size_t
 mem_posting_write(struct mem_posting*, uint32_t, const void*, size_t);
 
-size_t
-mem_posting_encode_tail(struct mem_posting*, struct codec*, size_t);
-
-#define mem_posting_encode_flush mem_posting_encode_tail
+uint32_t
+mem_posting_encode(struct mem_posting*, struct mem_posting*,
+                   size_t, struct codec*);
 
 void mem_posting_print(struct mem_posting*);
-
-void
-mem_posting_encode_struct(struct mem_posting*, uint32_t,
-                          const void*, size_t, struct codec*);

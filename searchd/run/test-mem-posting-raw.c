@@ -5,7 +5,7 @@
 int main()
 {
 	int i, j, n;
-	size_t sz, total_sz = 0;
+	size_t len;
 	struct mem_posting *po = NULL;
 	uint32_t test_data[MEM_POSTING_BLOCK_SZ];
 	uint32_t docID = 0;
@@ -17,20 +17,17 @@ int main()
 	for (i = 1; i < 10; i++) {
 		/* write a simulated buffer `test_data' of size `sz' */
 		docID = docID + i;
-		sz = 5 + i * 10;
-		for (j = 0; j < sz; j++) {
-			if (j + 1 == sz)
+		len = 5 + i * 10;
+		for (j = 0; j < len; j++) {
+			if (j + 1 == len)
 				test_data[j] = 0;
 			else
 				test_data[j] = i;
 		}
 
-		printf("writing docID#%u\n", docID);
-		mem_posting_write(po, docID, test_data, sz * sizeof(uint32_t));
-		total_sz += sz;
+		printf("writing docID#%u (length %lu)\n", docID, len);
+		mem_posting_write(po, docID, test_data, len * sizeof(uint32_t));
 	}
-
-	printf("total %lu bytes...\n", total_sz);
 
 	mem_posting_print(po);
 	mem_posting_release(po);
