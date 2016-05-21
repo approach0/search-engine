@@ -59,15 +59,16 @@ skippy_init(struct skippy *sk, uint32_t n_spans)
 	memset(sk->tail, 0, sizeof(void*) * SKIPPY_TOTAL_LEVELS);
 }
 
-/* a lot branches, not good for instruction-level parallelism */
+/* skippy_node_jump() function jumps to the furthest possible node
+ * that has a key less or equal to `target'. Return the same `sn'
+ * if nowhere can go. */
 static __inline struct skippy_node*
 skippy_node_jump(struct skippy_node *sn, uint32_t target)
 {
 	int level = SKIPPY_TOTAL_LEVELS - 1;
 	struct skippy_node *forward, *upward;
-	while (sn->key < target) {
+	while (1) {
 
-		/* go `forward' until we are almost at the target */
 		forward = sn->next[level];
 		upward = sn->next[level + 1];
 
@@ -77,20 +78,15 @@ skippy_node_jump(struct skippy_node *sn, uint32_t target)
 			sn = upward;
 			level ++;
 		} else if (forward && forward->key <= target) {
-			/* then safely step ahead? */
+			/* or can we safely step forward? */
 			sn = forward;
 		} else {
-			/* check what level we are now */
-			if (level)
+			/* check if we are at the bottom level */
+			if (level > 0)
 				/* go downward */
 				level --;
 			else
-				if (forward)
-					/* force forward at ground level */
-					sn = forward;
-				else
-					/* nowhere we can go */
-					return NULL;
+				break;
 		}
 
 #ifdef DEBUG_SKIPPY
