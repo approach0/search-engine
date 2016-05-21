@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,6 +21,11 @@ int main()
 		{CODEC_PLAIN, NULL}
 	};
 
+	/* variables for testing jump */
+	uint32_t fromID;
+	uint64_t jumpID;
+	bool     jumped = 0;
+
 	/* create posting lists */
 	po = mem_posting_create(2);
 	buf_po = mem_posting_create(MAX_SKIPPY_SPANS);
@@ -28,7 +34,7 @@ int main()
 	mem_posting_set_enc(po, sizeof(struct math_posting_item), codecs);
 
 	for (docID = 1; docID < N; docID++) {
-		item.doc_id = docID;
+		item.doc_id = docID * 2;
 		item.exp_id = docID % 5;
 		item.pathinfo_pos = docID * 100;
 
@@ -48,11 +54,23 @@ int main()
 		goto finish;
 	}
 
+	printf("Please input (from, jump_to) IDs:\n");
+	scanf("%u, %lu", &fromID, &jumpID);
+
 	do {
+print_current:
 		cur_item = (struct math_posting_item*)mem_posting_current(po);
 		printf("current item [%u, %u, %u]\n", cur_item->doc_id,
 		       cur_item->exp_id, cur_item->pathinfo_pos);
-	} while (mem_posting_next(po));
+
+		if (!jumped && cur_item->doc_id == fromID) {
+			printf("trying to jump to %lu...\n", jumpID);
+			jumped = mem_posting_jump(po, jumpID);
+			printf("jump: %s.\n", jumped ? "successful" : "failed");
+			goto print_current;
+		}
+
+	} while (!jumped && mem_posting_next(po));
 
 finish:
 	mem_posting_finish(po);

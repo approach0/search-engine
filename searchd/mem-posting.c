@@ -276,11 +276,13 @@ static bool merge_next_blk(struct mem_posting *po)
 static void merge_rebuf(struct mem_posting *po)
 {
 	size_t res_bytes;
+
 #ifdef DEBUG_MEM_POSTING
 	printf("merge rebuf.\n");
 #endif
 
 	if (po->blk_idx >= po->blk_now->end) {
+		/* go to a new block */
 		if (!merge_next_blk(po)) {
 			res_bytes = 0;
 			goto reset_buf_ptr;
@@ -341,9 +343,55 @@ bool mem_posting_next(void *po_)
 	return 0;
 }
 
-bool mem_posting_jump(void *po_, uint64_t target)
+bool mem_posting_jump(void *po_, uint64_t target_)
 {
-	return 0;
+	uint32_t  target = (uint32_t)target_;
+	uint32_t *curID;
+	struct mem_posting *po = (struct mem_posting*)po_;
+	struct skippy_node *jump_to;
+	bool ret = 0;
+
+	/* try to use skip-list first */
+	jump_to = skippy_node_jump(&po->blk_now->sn, target);
+#ifdef DEBUG_MEM_POSTING
+	printf("skippy jumps to node %u.\n", jump_to->key);
+#endif
+
+	if (jump_to != &po->blk_now->sn) {
+		/* if we can jump some blocks */
+#ifdef DEBUG_MEM_POSTING
+		printf("jump to a different node.\n");
+#endif
+		po->blk_now = MEMBER_2_STRUCT(jump_to, struct mem_posting_blk, sn);
+		po->blk_idx = 0;
+		merge_rebuf(po);
+	}
+#ifdef DEBUG_MEM_POSTING
+	else
+		printf("stay in the same node.\n");
+#endif
+
+	/* at this point, there shouldn't be any problem to access
+	 * current posting item:
+	 * case 1: if we check out to a new block, the merge buff
+	 * must be non-empty.
+	 * case 2: if we stay in the old block, it is guaranteed
+	 * that current posting item is within legal scope. */
+
+	/* seek in the current block until we get to an ID greater or
+	 * equal to target ID. */
+	do {
+		/* docID must be the first member of structure */
+		curID = (uint32_t*)mem_posting_current(po);
+
+		if (*curID >= target) {
+			ret = 1;
+			break;
+		}
+
+	} while (mem_posting_next(po));
+
+	return ret;
 }
 
 void mem_posting_finish(void *po_)
