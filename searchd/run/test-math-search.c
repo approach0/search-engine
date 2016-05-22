@@ -13,7 +13,7 @@
 #include "txt-seg/config.h"
 
 static void
-math_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
+math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
 	struct math_score_res res;
@@ -22,7 +22,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
 	P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
 
 	/* calculate math similarity on merge */
-	res = math_score_on_merge(pm_arg, mes_arg->dir_merge_level,
+	res = math_score_on_merge(pm, mes_arg->dir_merge_level,
 	                          mes_arg->n_qry_lr_paths);
 
 	if (res.score > 0.f) {

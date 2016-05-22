@@ -26,4 +26,4 @@ int math_search_posting_merge(math_index_t, char*, enum dir_merge_type,
 /* call this function in posting merge callback to score merged item
  * similarity compared with math query. */
 struct math_score_res
-math_score_on_merge(struct postmerge_arg*, uint32_t, uint32_t);
+math_score_on_merge(struct postmerge*, uint32_t, uint32_t);

@@ -54,7 +54,7 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 }
 
 void
-term_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
+term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
 	uint32_t i, hit_terms = 0;
@@ -65,16 +65,16 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
 	float doclen = (float)term_index_get_docLen(tes_arg->term_index, docID);
 	struct term_posting_item *tpi;
 
-	for (i = 0; i < pm_arg->n_postings; i++)
-		if (pm_arg->curIDs[i] == cur_min) {
+	for (i = 0; i < pm->n_postings; i++)
+		if (pm->curIDs[i] == cur_min) {
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
-			tpi = pm_arg->cur_pos_item[i];
+			tpi = pm->cur_pos_item[i];
 			score += BM25_term_i_score(tes_arg->bm25args, i, tpi->tf, doclen);
 			hit_terms ++;
 		}
 
 	rank_cram(tes_arg->rk_set, docID, score, hit_terms,
-	          (char**)pm_arg->posting_args, NULL);
+	          (char**)pm->posting_args, NULL);
 	//printf("(BM25 score = %f)\n", score);
 }
 
@@ -176,10 +176,20 @@ do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	uint32_t                     res_pages;
 	uint32_t                     docN, df;
 	struct BM25_term_i_args      bm25args;
-	struct postmerge_arg         pm_arg;
+	struct postmerge             pm;
+	struct postmerge_callbks     calls;
 
-	postmerge_posts_clear(&pm_arg);
-	pm_arg.op = op;
+	postmerge_posts_clear(&pm);
+
+	/*
+	 * prepare term posting list merge callbacks.
+	 */
+	calls.start  = &term_posting_start;
+	calls.finish = &term_posting_finish;
+	calls.jump   = &term_posting_jump_wrap;
+	calls.next   = &term_posting_next;
+	calls.now    = &term_posting_current_wrap;
+	calls.now_id = &term_posting_current_id_wrap;
 
 	/*
 	 * for each term posting list, pre-calculate some scoring
@@ -207,7 +217,7 @@ do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 			       terms[i], i, df);
 		}
 
-		postmerge_posts_add(&pm_arg, posting, terms[i]);
+		postmerge_posts_add(&pm, posting, &calls, terms[i]);
 	}
 
 	/*
@@ -221,17 +231,6 @@ do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 
 	printf("BM25 arguments:\n");
 	BM25_term_i_args_print(&bm25args);
-
-	/*
-	 * prepare term posting list merge callbacks.
-	 */
-	pm_arg.post_start_fun = &term_posting_start;
-	pm_arg.post_finish_fun = &term_posting_finish;
-	pm_arg.post_jump_fun = &term_posting_jump_wrap;
-	pm_arg.post_next_fun = &term_posting_next;
-	pm_arg.post_now_fun = &term_posting_current_wrap;
-	pm_arg.post_now_id_fun = &term_posting_current_id_wrap;
-	pm_arg.post_on_merge = &term_posting_on_merge;
 
 	/*
 	 * initialize ranking set given number of terms.
@@ -250,7 +249,11 @@ do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	 * merge and score.
 	 */
 	printf("start merging...\n");
-	if (!posting_merge(&pm_arg, &tes_arg))
+
+	printf("Press Enter to Continue");
+	while( getchar() != '\n' );
+
+	if (!posting_merge(&pm, op, &term_posting_on_merge, &tes_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
 	/*

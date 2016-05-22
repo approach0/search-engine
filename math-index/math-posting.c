@@ -38,6 +38,9 @@ math_posting_new_reader(struct subpath_ele *ele, const char *fullpath)
 #ifdef DEBUG_MATH_POSTING
 	printf("posting item size: %lu bytes.\n",
 	       sizeof(struct math_posting_item));
+	printf("DISK_RD_BUF_BYTES: %u\n", DISK_RD_BUF_BYTES);
+	printf("sizeof(math posting item): %lu\n",
+	       sizeof(struct math_posting_item));
 #endif
 
 	/* before compression is implemented, our posting item

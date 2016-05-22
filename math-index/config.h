@@ -5,7 +5,11 @@
 #define PATH_INFO_FNAME    "pathinfo.bin"
 
 #define DISK_BLCK_SIZE 4096
-#define DISK_RD_BLOCKS 1
+
+/* DISK_RD_BLOCKS is 3 here because math_posting_item structure
+ * has 3 members, this makes fread() reads integral blocks.
+ * (before compression on disk is implemented) */
+#define DISK_RD_BLOCKS 3
 
 //#define DEBUG_SUBPATH_SET
 
