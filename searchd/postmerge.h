@@ -36,6 +36,8 @@ struct postmerge {
 	post_now_callbk     now[MAX_MERGE_POSTINGS];
 	post_now_id_callbk  now_id[MAX_MERGE_POSTINGS];
 	post_finish_callbk  finish[MAX_MERGE_POSTINGS];
+
+	post_merge_callbk   post_on_merge;
 };
 
 struct postmerge_callbks {

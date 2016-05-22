@@ -133,8 +133,7 @@ next_id_AND(struct postmerge *pm,
 }
 
 static void
-posting_merge_OR(struct postmerge *pm,
-                  post_merge_callbk post_on_merge, void *extra_args)
+posting_merge_OR(struct postmerge *pm, void *extra_args)
 {
 	uint32_t cur_min_idx = 0;
 	uint64_t cur_min;
@@ -153,7 +152,7 @@ posting_merge_OR(struct postmerge *pm,
 #ifdef DEBUG_POST_MERGE
 		printf("calling post_on_merge(cur_min=%lu)\n", cur_min);
 #endif
-		post_on_merge(cur_min, pm, extra_args);
+		pm->post_on_merge(cur_min, pm, extra_args);
 
 #ifdef DEBUG_POST_MERGE
 		printf("calling next_id_OR()\n");
@@ -162,8 +161,7 @@ posting_merge_OR(struct postmerge *pm,
 }
 
 static void
-posting_merge_AND(struct postmerge *pm,
-                  post_merge_callbk post_on_merge, void *extra_args)
+posting_merge_AND(struct postmerge *pm, void *extra_args)
 {
 	uint32_t i, cur_min_idx = 0, cur_max_idx = 0;
 	uint64_t cur_min;
@@ -187,7 +185,7 @@ posting_merge_AND(struct postmerge *pm,
 		printf("calling post_on_merge(cur_min=%lu)\n", cur_min);
 #endif
 		if (i == pm->n_postings)
-			post_on_merge(cur_min, pm, extra_args);
+			pm->post_on_merge(cur_min, pm, extra_args);
 
 #ifdef DEBUG_POST_MERGE
 		printf("calling next_id_AND()\n");
@@ -225,10 +223,13 @@ posting_merge(struct postmerge *pm, enum postmerge_op op,
 		}
 	}
 
+	/* setup posting list on-merge callback */
+	pm->post_on_merge = post_on_merge;
+
 	if (op == POSTMERGE_OP_AND)
-		posting_merge_AND(pm, post_on_merge, extra_args);
+		posting_merge_AND(pm, extra_args);
 	else if (op == POSTMERGE_OP_OR)
-		posting_merge_OR(pm, post_on_merge, extra_args);
+		posting_merge_OR(pm, extra_args);
 	else
 		return 0;
 
