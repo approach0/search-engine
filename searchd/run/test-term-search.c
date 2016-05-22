@@ -19,7 +19,7 @@
 #include "txt-seg/config.h"
 #include "indexer/doc-term-pos.h"
 
-struct merge_extra_arg {
+struct term_extra_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
 	keyval_db_t              keyval_db;
@@ -61,19 +61,19 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge_arg* pm_arg,
 	float score = 0.f;
 	doc_id_t docID = cur_min;
 
-	P_CAST(me_arg, struct merge_extra_arg, extra_args);
-	float doclen = (float)term_index_get_docLen(me_arg->term_index, docID);
+	P_CAST(tes_arg, struct term_extra_score_arg, extra_args);
+	float doclen = (float)term_index_get_docLen(tes_arg->term_index, docID);
 	struct term_posting_item *tpi;
 
 	for (i = 0; i < pm_arg->n_postings; i++)
 		if (pm_arg->curIDs[i] == cur_min) {
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			tpi = pm_arg->cur_pos_item[i];
-			score += BM25_term_i_score(me_arg->bm25args, i, tpi->tf, doclen);
+			score += BM25_term_i_score(tes_arg->bm25args, i, tpi->tf, doclen);
 			hit_terms ++;
 		}
 
-	rank_cram(me_arg->rk_set, docID, score, hit_terms,
+	rank_cram(tes_arg->rk_set, docID, score, hit_terms,
 	          (char**)pm_arg->posting_args, NULL);
 	//printf("(BM25 score = %f)\n", score);
 }
@@ -168,15 +168,15 @@ static void
 do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
                char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
 {
-	int                     i;
-	void                   *posting;
-	term_id_t               term_id;
-	struct merge_extra_arg  me_arg;
-	struct rank_set         rk_set;
-	uint32_t                res_pages;
-	uint32_t                docN, df;
-	struct BM25_term_i_args bm25args;
-	struct postmerge_arg    pm_arg;
+	int                          i;
+	void                        *posting;
+	term_id_t                    term_id;
+	struct term_extra_score_arg  tes_arg;
+	struct rank_set              rk_set;
+	uint32_t                     res_pages;
+	uint32_t                     docN, df;
+	struct BM25_term_i_args      bm25args;
+	struct postmerge_arg         pm_arg;
 
 	postmerge_posts_clear(&pm_arg);
 	pm_arg.op = op;
@@ -241,16 +241,16 @@ do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	/*
 	 * merge extra arguments.
 	 */
-	me_arg.term_index = ti;
-	me_arg.bm25args = &bm25args;
-	me_arg.keyval_db = keyval_db;
-	me_arg.rk_set = &rk_set;
+	tes_arg.term_index = ti;
+	tes_arg.bm25args = &bm25args;
+	tes_arg.keyval_db = keyval_db;
+	tes_arg.rk_set = &rk_set;
 
 	/*
 	 * merge and score.
 	 */
 	printf("start merging...\n");
-	if (!posting_merge(&pm_arg, &me_arg))
+	if (!posting_merge(&pm_arg, &tes_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
 	/*
