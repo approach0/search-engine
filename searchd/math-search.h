@@ -7,6 +7,7 @@
 struct math_extra_score_arg {
 	uint32_t n_qry_lr_paths;
 	uint32_t dir_merge_level;
+	void    *extra_search_args;
 };
 
 #pragma pack(push, 1)

@@ -140,6 +140,7 @@ static uint64_t math_posting_current_id_wrap(void *po_item_)
 struct on_dir_merge_args {
 	uint32_t              n_qry_lr_paths;
 	struct postmerge_arg *pm_arg;
+	void                 *extra_search_args;
 };
 
 static enum dir_merge_ret
@@ -174,6 +175,8 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 
 	mes_arg.n_qry_lr_paths = on_dm_args->n_qry_lr_paths;
 	mes_arg.dir_merge_level = level;
+	mes_arg.extra_search_args = on_dm_args->extra_search_args;
+
 	if (!posting_merge(pm_arg, &mes_arg)) {
 #ifdef DEBUG_MATH_SEARCH
 		fprintf(stderr, "math posting merge failed.");
@@ -231,6 +234,7 @@ int math_search_posting_merge(math_index_t mi, char *tex,
 		/* prepare directory merge extra arguments */
 		on_dm_args.pm_arg = &pm_arg;
 		on_dm_args.n_qry_lr_paths = parse_ret.subpaths.n_lr_paths;
+		on_dm_args.extra_search_args = args;
 
 		math_index_dir_merge(mi, dir_merge_type, &parse_ret.subpaths,
 		                     &on_dir_merge, &on_dm_args);
