@@ -56,6 +56,9 @@ void mem_posting_clear(struct mem_posting *po)
 
 void mem_posting_release(struct mem_posting *po)
 {
+	if (po->codecs)
+		free(po->codecs);
+
 	mem_posting_clear(po);
 
 #ifdef DEBUG_MEM_POSTING
@@ -104,11 +107,14 @@ static __inline bool is_paging(struct mem_posting *po, size_t next_bytes)
 }
 
 void
-mem_posting_set_enc(struct mem_posting *po,
-                    uint32_t struct_sz, struct codec *codecs)
+mem_posting_set_enc(struct mem_posting *po, uint32_t struct_sz,
+                    const struct codec *codecs, size_t codecs_sz)
 {
 	po->struct_sz = struct_sz;
-	po->codecs = codecs;
+
+	/* copy codecs */
+	po->codecs = malloc(codecs_sz);
+	memcpy(po->codecs, codecs, codecs_sz);
 }
 
 uint32_t
@@ -201,13 +207,32 @@ static void print_int32_buff(uint32_t *integer, size_t n)
 	printf("\n");
 }
 
+void mem_posting_print_meminfo(struct mem_posting *po)
+{
+	uint32_t i, n_encode, n_members, struct_sz = po->struct_sz;
+	uint32_t mem_usage = po->n_tot_blocks * MEM_POSTING_BLOCK_SZ;
+
+	printf("%u blocks (%.2f KB), %.2f%% used.", po->n_tot_blocks,
+	       (float)mem_usage / 1024.f,
+	       ((float)po->n_used_bytes / (float)mem_usage) * 100.f);
+
+	if (struct_sz != 0) {
+		n_encode = MAX(1, MEM_POSTING_N_ENCODE);
+		printf(" (encoded, n_encode=%u)", n_encode);
+	}
+	printf("\n");
+
+	n_members = struct_sz / sizeof(uint32_t);
+	for (i = 0; i < n_members; i++)
+		printf("member %u: %s\n", i, codec_method_str(po->codecs[i].method));
+}
+
 static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun)
 {
 	struct mem_posting_blk *blk = po->head;
 	int i = 0;
-	printf("==== memory posting list (%u blocks, %u/%u used) ====\n",
-	       po->n_tot_blocks, po->n_used_bytes,
-	       po->n_tot_blocks * MEM_POSTING_BLOCK_SZ);
+	printf("==== memory posting list ====\n");
+	mem_posting_print_meminfo(po);
 
 	skippy_print(&po->skippy);
 
@@ -411,4 +436,10 @@ void* mem_posting_current(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
 	return po->buff + po->buf_idx;
+}
+
+uint64_t mem_posting_current_id(void *item)
+{
+	uint32_t *curID = (uint32_t*)item;
+	return (uint64_t)(*curID);
 }

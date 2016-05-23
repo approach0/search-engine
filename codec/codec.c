@@ -1,7 +1,26 @@
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "codec.h"
+
+char *codec_method_str(enum codec_method method)
+{
+	static char ret[4096];
+	switch (method) {
+	case CODEC_FOR_DELTA:
+		strcpy(ret, "Frame of Reference delta encoding");
+		break;
+	case CODEC_PLAIN:
+		strcpy(ret, "No encoding (plain)");
+		break;
+	default:
+		strcpy(ret, "Unknown encoding");
+		break;
+	}
+
+	return ret;
+}
 
 static size_t
 for_delta_compress(const uint32_t *in, size_t len, void *out,
@@ -31,10 +50,13 @@ codec_compress(struct codec *codec,
                void *out)
 {
 	if (codec->method == CODEC_FOR_DELTA) {
+		assert(0);
 		return for_delta_compress(in, len, out,
 		                          (struct for_delta_args*)codec->args);
 	} else if (codec->method == CODEC_PLAIN) {
 		return dummpy_copy(in, len, out);
+	} else {
+		assert(0);
 	}
 
 	return 0;
@@ -52,9 +74,11 @@ codec_decompress(struct codec *codec, const void *in,
                  uint32_t *out, size_t len)
 {
 	if (codec->method == CODEC_FOR_DELTA) {
-		//...
+		assert(0);
 	} else if (codec->method == CODEC_PLAIN) {
 		return dummpy_copy(in, len, out);
+	} else {
+		assert(0);
 	}
 
 	return 0;

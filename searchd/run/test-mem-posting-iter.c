@@ -31,7 +31,8 @@ int main()
 	buf_po = mem_posting_create(MAX_SKIPPY_SPANS);
 
 	/* write some dummy values */
-	mem_posting_set_enc(po, sizeof(struct math_posting_item), codecs);
+	mem_posting_set_enc(po, sizeof(struct math_posting_item),
+	                    codecs, sizeof(codecs));
 
 	for (docID = 1; docID < N; docID++) {
 		item.doc_id = docID * 2;

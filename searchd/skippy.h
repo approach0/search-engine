@@ -20,7 +20,8 @@
 #define SKIPPY_SKIP_LEVELS 2
 #define SKIPPY_TOTAL_LEVELS (SKIPPY_SKIP_LEVELS + 1)
 
-#define MAX_SKIPPY_SPANS UINT_MAX
+#define DEFAULT_SKIPPY_SPANS 3
+#define MAX_SKIPPY_SPANS     UINT_MAX
 
 #define skippy_foreach(_cur, _save, _sk, _level) \
 	_cur = (_sk)->head[_level]; \

@@ -9,7 +9,7 @@
 #define SYS_MEM_PAGE_SZ 4096
 #endif
 
-#define MEM_POSTING_PAGES_PER_BLOCK  2
+#define MEM_POSTING_PAGES_PER_BLOCK 2
 
 #define MEM_POSTING_BLOCK_SZ (SYS_MEM_PAGE_SZ * MEM_POSTING_PAGES_PER_BLOCK)
 
@@ -52,7 +52,9 @@ void mem_posting_clear(struct mem_posting*);
 size_t
 mem_posting_write(struct mem_posting*, uint32_t, const void*, size_t);
 
-void mem_posting_set_enc(struct mem_posting*, uint32_t, struct codec*);
+void
+mem_posting_set_enc(struct mem_posting*, uint32_t,
+                    const struct codec*, size_t);
 
 uint32_t
 mem_posting_encode(struct mem_posting*, struct mem_posting*);
@@ -61,9 +63,12 @@ void mem_posting_print(struct mem_posting*);
 
 void mem_posting_enc_print(struct mem_posting*);
 
+void mem_posting_print_meminfo(struct mem_posting*);
+
 /* merge-related functions */
-bool  mem_posting_start(void*);
-bool  mem_posting_jump(void*, uint64_t);
-bool  mem_posting_next(void*);
-void  mem_posting_finish(void*);
-void* mem_posting_current(void*);
+bool     mem_posting_start(void*);
+bool     mem_posting_jump(void*, uint64_t);
+bool     mem_posting_next(void*);
+void     mem_posting_finish(void*);
+void*    mem_posting_current(void*);
+uint64_t mem_posting_current_id(void*);

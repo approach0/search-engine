@@ -24,3 +24,5 @@ size_t codec_decompress(struct codec*, const void*, uint32_t*, size_t);
 size_t encode_struct_arr(void*, const void*, struct codec*, size_t, size_t);
 
 size_t decode_struct_arr(void*, const void*, struct codec*, size_t, size_t);
+
+char *codec_method_str(enum codec_method);
