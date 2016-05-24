@@ -36,7 +36,7 @@ free_T(struct bintr_ref *ref, uint32_t level, void *arg)
 {
 	struct T *t = MEMBER_2_STRUCT(ref->this_, struct T, trp_nd.bintr_nd);
 
-	printf("free structure...\n");
+	printf("free node...\n");
 	bintr_detach(ref->this_, ref->ptr_to_this);
 	free(t);
 
@@ -63,7 +63,7 @@ int main()
 		if (inserted == NULL)
 			free(new);
 		else
-			printf("inserted structure.\n");
+			printf("inserted.\n");
 	}
 
 	do {

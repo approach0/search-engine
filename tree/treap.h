@@ -8,7 +8,9 @@ struct treap_node {
 	int               priority;
 };
 
-/* for random seed */
+/* for random seed. Treap is a randomized data
+ * structure, rand_timeseed() provide a seed
+ * function to randomized treap priority value. */
 #include <unistd.h>
 #include <sys/time.h>
 #include <stdlib.h>
@@ -90,7 +92,7 @@ treap_rotate_up(struct bintr_node *me, struct bintr_node *father,
 		bintr_attach(me, grandpa->son + pos, grandpa);
 	}
 
-	/* which of my son should drop to old father? */
+	/* which of my son should be passed to old father? */
 	my_abandon_son = me->son[my_abandon_pos];
 
 	if (my_abandon_son != NULL) {
@@ -144,6 +146,7 @@ treap_rotate_down(struct bintr_node **root, struct bintr_node *this_)
 {
 	struct bintr_node *son;
 
+	/* rotate one of the children up, so `this_' will go down one level */
 	son = this_->son[BINTR_LEFT];
 	if (son) {
 		treap_rotate_up(son, this_, this_->father, root);

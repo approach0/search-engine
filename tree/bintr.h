@@ -21,6 +21,7 @@ struct bintr_node {
 #define BINTR_NODE_CONS(_tn, _key) \
 		(_tn).son[0] = NULL; \
 		(_tn).son[1] = NULL; \
+		(_tn).father = NULL; \
 		(_tn).key = _key
 
 enum bintr_it_ret {
@@ -65,6 +66,8 @@ bintr_find(struct bintr_node **root, bintr_key_t key)
 
 	while (ref.this_ && (diff = bintr_cmpkey(ref.this_->key, key))) {
 		enum bintr_son_pos pos = (diff > 0) ? BINTR_LEFT : BINTR_RIGHT;
+
+		/* iterate to the choosen son, update `ref' */
 		ref.father = ref.this_;
 		ref.ptr_to_this = ref.this_->son + pos;
 		ref.this_ = ref.this_->son[pos]; /* can be NULL */
@@ -95,10 +98,12 @@ bintr_insert(struct bintr_node **root, struct bintr_node *new_)
 	ref = bintr_find(root, new_->key);
 
 	if (ref.this_ == NULL) {
+		/* insert at the suggested position */
 		bintr_attach(new_, ref.ptr_to_this, ref.father);
 		return new_;
 	}
 
+	/* same key found, do not insert */
 	return NULL;
 }
 
