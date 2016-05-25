@@ -337,7 +337,7 @@ mem_posting_release(fork_posting);
 
 int main(int argc, char *argv[])
 {
-	struct searcher         se;
+	struct indices          indices;
 	int                     opt, i;
 	enum postmerge_op       op;
 
@@ -409,12 +409,12 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	printf("opening index...\n");
-	se = search_open(index_path);
+	indices = indices_open(index_path);
 
-	test_term_search(se.ti, se.keyval_db, op, query, n_queries);
+	test_term_search(indices.ti, indices.keyval_db, op, query, n_queries);
 
 	printf("closing index...\n");
-	search_close(se);
+	indices_close(&indices);
 
 exit:
 	if (index_path)

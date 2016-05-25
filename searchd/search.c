@@ -84,15 +84,15 @@ void query_digest_utf8txt(struct query *qry, const char* txt)
 }
 
 /*
- * searcher related functions.
+ * indices related functions.
  */
 
-struct searcher search_open(const char *index_path)
+struct indices indices_open(const char*index_path)
 {
-	struct searcher se;
-	bool            open_err = 0;
-	const char      kv_db_fname[] = "kvdb-offset.bin";
-	char            term_index_path[MAX_DIR_PATH_NAME_LEN];
+	struct indices indices;
+	bool           open_err = 0;
+	const char     kv_db_fname[] = "kvdb-offset.bin";
+	char           term_index_path[MAX_DIR_PATH_NAME_LEN];
 
 	void         *ti = NULL;
 	math_index_t  mi = NULL;
@@ -138,26 +138,32 @@ struct searcher search_open(const char *index_path)
 	}
 
 skip:
-	se.ti = ti;
-	se.mi = mi;
-	se.keyval_db = keyval_db;
-	se.open_err = open_err;
-	return se;
+	indices.ti = ti;
+	indices.mi = mi;
+	indices.keyval_db = keyval_db;
+	indices.open_err = open_err;
+	return indices;
 }
 
-void search_close(struct searcher se)
+void indices_close(struct indices* indices)
 {
-	if (se.ti)
-		term_index_close(se.ti);
+	if (indices->ti) {
+		term_index_close(indices->ti);
+		indices->ti = NULL;
+	}
 
-	if (se.mi)
-		math_index_close(se.mi);
+	if (indices->mi) {
+		math_index_close(indices->mi);
+		indices->mi = NULL;
+	}
 
-	if (se.keyval_db)
-		keyval_db_close(se.keyval_db);
+	if (indices->keyval_db) {
+		keyval_db_close(indices->keyval_db);
+		indices->keyval_db = NULL;
+	}
 }
 
-void search_run(struct searcher se, struct query qry)
+void indices_run_query(struct indices indices, const struct query qry)
 {
 	return;
 }

@@ -33,22 +33,22 @@ void         query_print_to(struct query, FILE*);
 void         query_delete(struct query);
 
 /*
- * searcher structures
+ * indices structures
  */
 #include "list/list.h"
 #include "term-index/term-index.h"
 #include "keyval-db/keyval-db.h"
 #include "math-index/math-index.h"
 
-struct searcher {
+struct indices {
 	void         *ti;
 	math_index_t  mi;
 	keyval_db_t   keyval_db;
 	bool          open_err;
 };
 
-struct searcher search_open(const char*);
-void            search_close(struct searcher);
+struct indices indices_open(const char*);
+void           indices_close(struct indices*);
 
 /* search method */
-void search_run(struct searcher, struct query);
+void indices_run_query(struct indices, const struct query);

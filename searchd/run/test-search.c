@@ -9,10 +9,10 @@
 int main(int argc, char *argv[])
 {
 	struct query_keyword keyword;
-	struct query    qry;
-	struct searcher se;
-	int             opt;
-	char           *index_path = NULL;
+	struct query         qry;
+	struct indices       indices;
+	int                  opt;
+	char                *index_path = NULL;
 
 	/* initialize text segmentation module */
 	text_segment_init("../jieba/fork/dict");
@@ -78,21 +78,21 @@ int main(int argc, char *argv[])
 	query_print_to(qry, stdout);
 
 	/*
-	 * open searcher
+	 * open indices
 	 */
 	printf("opening index...\n");
-	se = search_open(index_path);
-	if (se.open_err) {
+	indices = indices_open(index_path);
+	if (indices.open_err) {
 		printf("index open failed.\n");
 		goto close;
 	}
 
 close:
 	/*
-	 * close searcher
+	 * close indices
 	 */
 	printf("closing index...\n");
-	search_close(se);
+	indices_close(&indices);
 
 	/*
 	 * free program arguments
