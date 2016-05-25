@@ -51,4 +51,4 @@ struct indices indices_open(const char*);
 void           indices_close(struct indices*);
 
 /* search method */
-void indices_run_query(struct indices, const struct query);
+void indices_run_query(struct indices*, const struct query);

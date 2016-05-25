@@ -87,6 +87,9 @@ int main(int argc, char *argv[])
 		goto close;
 	}
 
+	/* search query */
+	indices_run_query(&indices, qry);
+
 close:
 	/*
 	 * close indices
@@ -94,10 +97,10 @@ close:
 	printf("closing index...\n");
 	indices_close(&indices);
 
+exit:
 	/*
 	 * free program arguments
 	 */
-exit:
 	if (index_path)
 		free(index_path);
 

@@ -163,7 +163,7 @@ void indices_close(struct indices* indices)
 	}
 }
 
-void indices_run_query(struct indices indices, const struct query qry)
+void indices_run_query(struct indices *indices, const struct query qry)
 {
 	return;
 }
