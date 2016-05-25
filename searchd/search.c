@@ -89,10 +89,11 @@ void query_digest_utf8txt(struct query *qry, const char* txt)
 
 struct indices indices_open(const char*index_path)
 {
-	struct indices indices;
-	bool           open_err = 0;
-	const char     kv_db_fname[] = "kvdb-offset.bin";
-	char           term_index_path[MAX_DIR_PATH_NAME_LEN];
+	struct indices        indices;
+	bool                  open_err = 0;
+	const char            kv_db_fname[] = "kvdb-offset.bin";
+	char                  term_index_path[MAX_DIR_PATH_NAME_LEN];
+	struct postcache_pool postcache;
 
 	void         *ti = NULL;
 	math_index_t  mi = NULL;
@@ -105,7 +106,7 @@ struct indices indices_open(const char*index_path)
 	mkdir_p(term_index_path);
 	ti = term_index_open(term_index_path, TERM_INDEX_OPEN_EXISTS);
 	if (ti == NULL) {
-//		printf("cannot create/open term index.\n");
+		printf("cannot create/open term index.\n");
 
 		open_err = 1;
 		goto skip;
@@ -116,7 +117,7 @@ struct indices indices_open(const char*index_path)
 	 */
 	mi = math_index_open(index_path, MATH_INDEX_READ_ONLY);
 	if (mi == NULL) {
-//		printf("cannot create/open math index.\n");
+		printf("cannot create/open math index.\n");
 
 		open_err = 1;
 		goto skip;
@@ -128,7 +129,7 @@ struct indices indices_open(const char*index_path)
 	keyval_db = keyval_db_open_under(kv_db_fname, index_path,
 	                                 KEYVAL_DB_OPEN_RD);
 	if (keyval_db == NULL) {
-//		printf("key-value DB open error.\n");
+		printf("key-value DB open error.\n");
 
 		open_err = 1;
 		goto skip;
@@ -137,11 +138,16 @@ struct indices indices_open(const char*index_path)
 		       keyval_db_records(keyval_db));
 	}
 
+	/* initialize posting cache pool */
+	postcache_init(&postcache, POSTCACHE_POOL_LIMIT_1MB);
+
 skip:
 	indices.ti = ti;
 	indices.mi = mi;
 	indices.keyval_db = keyval_db;
+	indices.postcache = postcache;
 	indices.open_err = open_err;
+
 	return indices;
 }
 
@@ -160,6 +166,10 @@ void indices_close(struct indices* indices)
 	if (indices->keyval_db) {
 		keyval_db_close(indices->keyval_db);
 		indices->keyval_db = NULL;
+	}
+
+	if (indices->postcache.trp_root) {
+		postcache_free(&indices->postcache);
 	}
 }
 

@@ -338,11 +338,11 @@ mem_posting_release(fork_posting);
 int main(int argc, char *argv[])
 {
 	struct indices          indices;
-	int                     opt, i;
-	enum postmerge_op       op;
+	int                     opt;
+	enum postmerge_op       op = POSTMERGE_OP_AND;
 
 	char       query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
-	uint32_t   n_queries = 0;
+	uint32_t   i, n_queries = 0;
 
 	char      *index_path = NULL;
 

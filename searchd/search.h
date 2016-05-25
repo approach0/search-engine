@@ -39,12 +39,14 @@ void         query_delete(struct query);
 #include "term-index/term-index.h"
 #include "keyval-db/keyval-db.h"
 #include "math-index/math-index.h"
+#include "postcache.h"
 
 struct indices {
-	void         *ti;
-	math_index_t  mi;
-	keyval_db_t   keyval_db;
-	bool          open_err;
+	void                 *ti;
+	math_index_t          mi;
+	keyval_db_t           keyval_db;
+	bool                  open_err;
+	struct postcache_pool postcache;
 };
 
 struct indices indices_open(const char*);
