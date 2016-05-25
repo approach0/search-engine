@@ -8,7 +8,7 @@ struct T {
 	struct skippy_node sn;
 };
 
-int main()
+int main(void)
 {
 	int i;
 	struct T *t;

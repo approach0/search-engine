@@ -5,10 +5,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "list/list.h"
-#include "term-index/term-index.h"
-#include "keyval-db/keyval-db.h"
-#include "dir-util/dir-util.h"
+#include "search.h"
 
 #include "postmerge.h"
 #include "bm25-score.h"
@@ -202,10 +199,10 @@ struct mem_posting *term_posting_fork(void *term_posting)
 }
 
 static void
-do_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
+test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
                char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
 {
-	int                          i;
+	uint32_t                     i;
 	void                        *posting;
 	term_id_t                    term_id;
 	struct term_extra_score_arg  tes_arg;
@@ -340,17 +337,14 @@ mem_posting_release(fork_posting);
 
 int main(int argc, char *argv[])
 {
+	struct searcher         se;
 	int                     opt, i;
-	void                   *ti = NULL;
-	keyval_db_t             keyval_db = NULL;
 	enum postmerge_op       op;
 
 	char       query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
 	uint32_t   n_queries = 0;
 
 	char      *index_path = NULL;
-	const char kv_db_fname[] = "kvdb-offset.bin";
-	char       term_index_path[MAX_DIR_PATH_NAME_LEN];
 
 	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
 		switch (opt) {
@@ -414,47 +408,17 @@ int main(int argc, char *argv[])
 	}
 	printf("\n");
 
-	/*
-	 * open term index.
-	 */
-	printf("opening term index ...\n");
-	sprintf(term_index_path, "%s/term", index_path);
-	mkdir_p(term_index_path);
-	ti = term_index_open(term_index_path, TERM_INDEX_OPEN_EXISTS);
-	if (ti == NULL) {
-		printf("cannot create/open term index.\n");
-		goto exit;
-	}
+	printf("opening index...\n");
+	se = search_open(index_path);
 
-	/*
-	 * open document offset key-value database.
-	 */
-	printf("opening document offset key-value DB...\n");
-	keyval_db = keyval_db_open_under(kv_db_fname, index_path,
-	                                 KEYVAL_DB_OPEN_RD);
-	if (keyval_db == NULL) {
-		printf("key-value DB open error.\n");
-		goto exit;
-	} else {
-		printf("%lu records in key-value DB.\n",
-		       keyval_db_records(keyval_db));
-	}
+	test_term_search(se.ti, se.keyval_db, op, query, n_queries);
 
-	do_term_search(ti, keyval_db, op, query, n_queries);
+	printf("closing index...\n");
+	search_close(se);
 
 exit:
 	if (index_path)
 		free(index_path);
-
-	if (ti) {
-		printf("closing term index...\n");
-		term_index_close(ti);
-	}
-
-	if (keyval_db) {
-		printf("closing key-value DB...\n");
-		keyval_db_close(keyval_db);
-	}
 
 	return 0;
 }

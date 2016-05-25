@@ -201,7 +201,7 @@ mem_posting_write(struct mem_posting *po, uint32_t first_key,
 
 static void print_int32_buff(uint32_t *integer, size_t n)
 {
-	int i;
+	size_t i;
 	for (i = 0; i < n; i++)
 		printf("%u,", integer[i]);
 	printf("\n");
@@ -265,7 +265,7 @@ void mem_posting_print(struct mem_posting *po)
 
 static void po_enc_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
 {
-	int j = 0;
+	uint32_t j = 0;
 	enc_hd_t *enc_head;
 	uint32_t n_members = struct_sz / sizeof(uint32_t);
 

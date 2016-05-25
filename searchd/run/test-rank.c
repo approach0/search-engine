@@ -14,7 +14,7 @@ void test_print_res(struct rank_set *rs, struct rank_item* ri,
 	rank_cram(&rk_set, _docID, _score, 0, NULL, NULL); \
 	rank_print(&rk_set);
 
-int main()
+int main(void)
 {
 	struct rank_set  rk_set;
 	struct rank_wind win;

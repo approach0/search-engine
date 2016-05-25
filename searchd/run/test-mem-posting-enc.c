@@ -4,12 +4,12 @@
 #include "math-index/math-index.h"
 #include "mem-posting.h"
 
-int main()
+int main(void)
 {
 #ifdef DEBUG_MEM_POSTING
-	const int N = 60;
+	const uint32_t N = 60;
 #else
-	const int N = 2500;
+	const uint32_t N = 2500;
 #endif
 	uint32_t docID, n_encode;
 	struct math_posting_item item;

@@ -112,6 +112,7 @@ static int prepare_math_qry(struct subpaths *subpaths)
 
 	/* sort subpaths by <bound variable size, symbol> tuple */
 	sort_arg.cmp = &compare_qry_path;
+	sort_arg.extra = NULL;
 	list_sort(&subpaths->li, &sort_arg);
 
 	/* assign new path_id for each subpaths, in its list node order. */
@@ -329,14 +330,14 @@ math_score_on_merge(struct postmerge* pm,
 #endif
 
 	/* finally calculate expression similarity score */
-	if (!skipped)
+	if (!skipped && pm->n_postings != 0) {
 		ret.score = math_sim(mnc_score(), level,
 		                     pathinfo_pack->n_lr_paths - n_qry_lr_paths);
-	else
+		ret.doc_id = po_item->doc_id;
+		ret.exp_id = po_item->exp_id;
+		return ret;
+	} else {
 		ret.score = 0;
-
-	/* return result */
-	ret.doc_id = po_item->doc_id;
-	ret.exp_id = po_item->exp_id;
-	return ret;
+		return ret;
+	}
 }

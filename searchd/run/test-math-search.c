@@ -33,7 +33,8 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 int main(int argc, char *argv[])
 {
-	int                     i, opt;
+	uint32_t                i;
+	int                     opt;
 	math_index_t            mi = NULL;
 	keyval_db_t             keyval_db = NULL;
 

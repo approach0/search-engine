@@ -10,7 +10,7 @@
 #define ADD( _pos, _term) \
 	snippet_add_pos(&div_list, _term, _pos, strlen(_term));
 
-int main()
+int main(void)
 {
 	list div_list = LIST_NULL;
 	FILE *fh = fopen("text.tmp", "r");

@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "mem-posting.h"
 
-int main()
+int main(void)
 {
-	int i, j, n;
+	size_t i, j, n;
 	size_t len;
 	struct mem_posting *po = NULL;
 	uint32_t test_data[MEM_POSTING_BLOCK_SZ];

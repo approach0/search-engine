@@ -1,7 +1,7 @@
 #include "tex-parser/tex-parser.h" /* for symbol_id_t */
 #include "mnc-score.h"
 
-int main()
+int main(void)
 {
 	int i;
 	struct mnc_ref ref = {'_', '@'};
