@@ -15,7 +15,7 @@ struct treap_node {
 #include <sys/time.h>
 #include <stdlib.h>
 
-static __inline void rand_timeseed()
+static __inline void rand_timeseed(void)
 {
 	unsigned int ticks;
 	struct timeval tv;
