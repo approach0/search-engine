@@ -151,6 +151,40 @@ skip:
 	return indices;
 }
 
+void indices_cache(struct indices* indices, uint64_t mem_limit)
+{
+	enum postcache_err res;
+	uint32_t  termN, df;
+	char     *term;
+	void     *posting;
+	term_id_t term_id;
+
+	postcache_set_mem_limit(&indices->postcache, mem_limit);
+
+	termN = term_index_get_termN(indices->ti);
+
+	printf("caching terms:\n");
+	for (term_id = 1; term_id <= termN; term_id++) {
+		df = term_index_get_df(indices->ti, term_id);
+		term = term_lookup_r(indices->ti, term_id);
+		posting = term_index_get_posting(indices->ti, term_id);
+
+		if (posting) {
+			printf("`%s'(df=%u) ", term, df);
+			res = postcache_add_term_posting(&indices->postcache,
+			                                 term_id, posting);
+			if (res == POSTCACHE_EXCEED_MEM_LIMIT)
+				break;
+		}
+
+		free(term);
+	}
+	printf("\n");
+
+	printf("caching complete:\n");
+	postcache_print_mem_usage(&indices->postcache);
+}
+
 void indices_close(struct indices* indices)
 {
 	if (indices->ti) {

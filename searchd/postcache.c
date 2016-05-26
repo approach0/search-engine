@@ -39,7 +39,7 @@ free_postcache_item(struct bintr_ref *ref, uint32_t level, void *arg)
 	P_CAST(mem_po, struct mem_posting, item->posting);
 
 
-	printf("free posting cache item and memory posting list...\n");
+	//printf("free posting cache item and memory posting list...\n");
 
 	mem_usage_cntdown(pool, mem_po);
 

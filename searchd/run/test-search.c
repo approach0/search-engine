@@ -87,6 +87,9 @@ int main(int argc, char *argv[])
 		goto close;
 	}
 
+	/* setup cache */
+	indices_cache(&indices, 32 MB);
+
 	/* search query */
 	indices_run_query(&indices, qry);
 

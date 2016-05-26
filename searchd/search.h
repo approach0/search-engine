@@ -52,5 +52,9 @@ struct indices {
 struct indices indices_open(const char*);
 void           indices_close(struct indices*);
 
+#define MB * POSTCACHE_POOL_LIMIT_1MB
+
+void indices_cache(struct indices*, uint64_t);
+
 /* search method */
 void indices_run_query(struct indices*, const struct query);
