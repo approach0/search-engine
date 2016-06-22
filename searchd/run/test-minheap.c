@@ -23,7 +23,7 @@ void test_print(void* ele, uint32_t i, uint32_t depth)
 	printf("[%d]:%-3d ", i, *(uint32_t *)ele);
 }
 
-int main()
+int main(void)
 {
 	uint32_t cnt, i, data[] =
 	                    {14, 2, 22, 13, 23, 10, 90, 36, 108, 12,

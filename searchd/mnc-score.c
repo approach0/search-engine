@@ -122,7 +122,7 @@ static void print_slot(char *byte)
 static void
 mnc_print(int highlight_qry_path, int max_subscore_idx)
 {
-	int i, j;
+	uint32_t i, j;
 	if (n_doc_uniq_syms == 0)
 		goto print_bitmap;
 
@@ -161,7 +161,7 @@ print_bitmap:
 
 	/* print main bitmaps */
 	for (i = 0; i < n_qry_syms; i++) {
-		if (highlight_qry_path == i)
+		if ((uint32_t)highlight_qry_path == i)
 			printf("-> %-*c", _MAX_SYMBOL_STR_LEN - 3,
 			       qry_sym[i]);
 		else
@@ -192,9 +192,9 @@ void mnc_reset_docs()
 }
 
 /* clean bitmaps to the n_qry_syms, n_doc_uniq_syms dimension */
-static void clean_bitmaps()
+static void clean_bitmaps(void)
 {
-	int i;
+	uint32_t i;
 
 	/* No need to clean 'mark bitmap' because cross() function
 	 * already ensures a clean 'mark bitmap' after main function. */
@@ -256,7 +256,7 @@ static __inline void cross(int max_slot)
 
 mnc_score_t mnc_score()
 {
-	int i, j, max_subscore_idx = 0;
+	uint32_t i, j, max_subscore_idx = 0;
 	bool early_termination = false;
 
 	mnc_score_t mark_score, total_score = 0;

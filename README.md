@@ -26,7 +26,7 @@ The meaning behind "the day after tomorrow"? Because reinventing a search engine
 ```
 $ git clone --depth=1 https://github.com/t-k-/the-day-after-tomorrow.git
 ```
-The following instructions assume you the have cloned this project in to directory `$PROJECT`.
+The following instructions assume you have cloned this project in to directory `$PROJECT`.
 
 ### 1. Install dependencies
 Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), ther are some external dependencies you may need to download and install to your system environment:

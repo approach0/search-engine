@@ -112,6 +112,7 @@ static int prepare_math_qry(struct subpaths *subpaths)
 
 	/* sort subpaths by <bound variable size, symbol> tuple */
 	sort_arg.cmp = &compare_qry_path;
+	sort_arg.extra = NULL;
 	list_sort(&subpaths->li, &sort_arg);
 
 	/* assign new path_id for each subpaths, in its list node order. */
@@ -138,8 +139,11 @@ static uint64_t math_posting_current_id_wrap(void *po_item_)
 };
 
 struct on_dir_merge_args {
-	uint32_t              n_qry_lr_paths;
-	struct postmerge_arg *pm_arg;
+	uint32_t                  n_qry_lr_paths;
+	struct postmerge         *pm;
+	void                     *extra_search_args;
+	post_merge_callbk         post_on_merge;
+	struct postmerge_callbks *calls;
 };
 
 static enum dir_merge_ret
@@ -147,14 +151,14 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
              uint32_t level, void *args)
 {
 	P_CAST(on_dm_args, struct on_dir_merge_args, args);
-	struct postmerge_arg *pm_arg = on_dm_args->pm_arg;
+	struct postmerge *pm = on_dm_args->pm;
 	struct math_extra_score_arg mes_arg;
 
 	uint32_t i;
 	math_posting_t po;
 	struct subpath_ele *ele;
 
-	postmerge_posts_clear(pm_arg);
+	postmerge_posts_clear(pm);
 
 	for (i = 0; i < n_postings; i++) {
 		po = postings[i];
@@ -165,7 +169,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 		math_posting_print_info(po);
 		printf("\n");
 #endif
-		postmerge_posts_add(pm_arg, po, ele);
+		postmerge_posts_add(pm, po, on_dm_args->calls, ele);
 	}
 
 #ifdef DEBUG_MATH_SEARCH
@@ -174,7 +178,10 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 
 	mes_arg.n_qry_lr_paths = on_dm_args->n_qry_lr_paths;
 	mes_arg.dir_merge_level = level;
-	if (!posting_merge(pm_arg, &mes_arg)) {
+	mes_arg.extra_search_args = on_dm_args->extra_search_args;
+
+	if (!posting_merge(pm, POSTMERGE_OP_AND,
+	                   on_dm_args->post_on_merge, &mes_arg)) {
 #ifdef DEBUG_MATH_SEARCH
 		fprintf(stderr, "math posting merge failed.");
 #endif
@@ -188,23 +195,17 @@ int math_search_posting_merge(math_index_t mi, char *tex,
                               enum dir_merge_type dir_merge_type,
                               post_merge_callbk fun, void *args)
 {
-	struct tex_parse_ret parse_ret;
-	struct postmerge_arg pm_arg;
+	struct tex_parse_ret     parse_ret;
+	struct postmerge         pm;
 	struct on_dir_merge_args on_dm_args;
+	struct postmerge_callbks calls;
 
-	/*
-	 * prepare term posting list merge callbacks.
-	 */
-	pm_arg.post_start_fun = &math_posting_start;
-	pm_arg.post_finish_fun = &math_posting_finish;
-	pm_arg.post_jump_fun = &math_posting_jump;
-	pm_arg.post_next_fun = &math_posting_next;
-	pm_arg.post_now_fun = &math_posting_current_wrap;
-	pm_arg.post_now_id_fun = &math_posting_current_id_wrap;
-	pm_arg.post_on_merge = fun;
-
-	/* subpaths are always using AND merge */
-	pm_arg.op = POSTMERGE_OP_AND;
+	calls.start = &math_posting_start;
+	calls.finish = &math_posting_finish;
+	calls.jump = &math_posting_jump;
+	calls.next = &math_posting_next;
+	calls.now = &math_posting_current_wrap;
+	calls.now_id = &math_posting_current_id_wrap;
 
 	/* parse TeX */
 	parse_ret = tex_parse(tex, 0, false);
@@ -229,8 +230,11 @@ int math_search_posting_merge(math_index_t mi, char *tex,
 #endif
 
 		/* prepare directory merge extra arguments */
-		on_dm_args.pm_arg = &pm_arg;
+		on_dm_args.pm = &pm;
 		on_dm_args.n_qry_lr_paths = parse_ret.subpaths.n_lr_paths;
+		on_dm_args.extra_search_args = args;
+		on_dm_args.post_on_merge = fun;
+		on_dm_args.calls = &calls;
 
 		math_index_dir_merge(mi, dir_merge_type, &parse_ret.subpaths,
 		                     &on_dir_merge, &on_dm_args);
@@ -260,7 +264,7 @@ math_sim(mnc_score_t mnc_score, uint32_t depth_delta, uint32_t breath_delta)
 }
 
 struct math_score_res
-math_score_on_merge(struct postmerge_arg* pm_arg,
+math_score_on_merge(struct postmerge* pm,
                     uint32_t level, uint32_t n_qry_lr_paths)
 {
 	uint32_t                    i, j, k;
@@ -278,10 +282,10 @@ math_score_on_merge(struct postmerge_arg* pm_arg,
 	struct mnc_ref mnc_ref;
 	mnc_reset_docs();
 
-	for (i = 0; i < pm_arg->n_postings; i++) {
+	for (i = 0; i < pm->n_postings; i++) {
 		/* for each merged posting item from posting lists */
-		posting = pm_arg->postings[i];
-		po_item = pm_arg->cur_pos_item[i];
+		posting = pm->postings[i];
+		po_item = pm->cur_pos_item[i];
 		subpath_ele = math_posting_get_ele(posting);
 		assert(NULL != subpath_ele);
 
@@ -326,14 +330,14 @@ math_score_on_merge(struct postmerge_arg* pm_arg,
 #endif
 
 	/* finally calculate expression similarity score */
-	if (!skipped)
+	if (!skipped && pm->n_postings != 0) {
 		ret.score = math_sim(mnc_score(), level,
 		                     pathinfo_pack->n_lr_paths - n_qry_lr_paths);
-	else
+		ret.doc_id = po_item->doc_id;
+		ret.exp_id = po_item->exp_id;
+		return ret;
+	} else {
 		ret.score = 0;
-
-	/* return result */
-	ret.doc_id = po_item->doc_id;
-	ret.exp_id = po_item->exp_id;
-	return ret;
+		return ret;
+	}
 }

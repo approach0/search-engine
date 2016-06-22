@@ -12,3 +12,5 @@
 */
 
 //#define DEBUG_MATH_SEARCH
+
+//#define DEBUG_MEM_POSTING

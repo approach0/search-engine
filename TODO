@@ -1,6 +1,7 @@
 Top priority:
 * delta compression & posting file compression
 * blob-index (libz compress)
+* force query lower case to avoid Indri crash.
 
 Want to implement:
 * search: concept search (horse == Pony) and phrase&proximity search
