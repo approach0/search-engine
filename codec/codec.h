@@ -10,6 +10,7 @@ struct for_delta_args {
 	int pack_size;
 	/* ...... */
 	/* whatever needed for FOR-delta compression */
+    unsigned b;
 };
 
 struct codec {
