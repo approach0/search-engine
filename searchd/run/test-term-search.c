@@ -213,18 +213,17 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	struct postmerge             pm;
 	struct postmerge_callbks     mem_calls, disk_calls, *calls = NULL;
 
-////////////
-struct mem_posting *fork_posting;
-void *term_posting;
+#if 1 /* testing in-memory posting */
+	struct mem_posting *fork_posting;
+	void *term_posting;
 
-#define WORD "posting"
-
-term_id = term_lookup(ti, WORD);
-term_posting = term_index_get_posting(ti, term_id);
-fork_posting = term_posting_fork(term_posting);
-printf("forked posting list: ");
-mem_posting_print_meminfo(fork_posting);
-/////////////
+#define WORD "bird"
+	term_id = term_lookup(ti, WORD);
+	term_posting = term_index_get_posting(ti, term_id);
+	fork_posting = term_posting_fork(term_posting);
+	printf("forked posting list: ");
+	mem_posting_print_meminfo(fork_posting);
+#endif
 
 	postmerge_posts_clear(&pm);
 
@@ -311,9 +310,14 @@ mem_posting_print_meminfo(fork_posting);
 	 */
 	printf("start merging...\n");
 
+	/*
+	 * pause and continue on key press to have an idea
+	 * of how long the actual search process takes.
+	 */
 	printf("Press Enter to Continue");
-	while( getchar() != '\n' );
+	while(getchar() != '\n');
 
+	/* posting merge */
 	if (!posting_merge(&pm, op, &term_posting_on_merge, &tes_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
@@ -330,9 +334,9 @@ mem_posting_print_meminfo(fork_posting);
 
 	rank_uninit(&rk_set);
 
-////////////
-mem_posting_release(fork_posting);
-/////////////
+#if 1 /* testing in-memory posting */
+	mem_posting_release(fork_posting);
+#endif
 }
 
 int main(int argc, char *argv[])
