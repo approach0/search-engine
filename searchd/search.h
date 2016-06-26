@@ -57,4 +57,10 @@ void           indices_close(struct indices*);
 void indices_cache(struct indices*, uint64_t);
 
 /* search method */
-void indices_run_query(struct indices*, const struct query);
+#include "mem-posting.h"
+#include "postmerge.h"
+#include "bm25-score.h"
+#include "rank.h"
+
+struct rank_set
+indices_run_query(struct indices*, const struct query);

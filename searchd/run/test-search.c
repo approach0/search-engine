@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
 	struct indices       indices;
 	int                  opt;
 	char                *index_path = NULL;
+	struct rank_set      rk_set;
 
 	/* initialize text segmentation module */
 	text_segment_init("../jieba/fork/dict");
@@ -91,7 +92,8 @@ int main(int argc, char *argv[])
 	indices_cache(&indices, 32 MB);
 
 	/* search query */
-	indices_run_query(&indices, qry);
+	rk_set = indices_run_query(&indices, qry);
+	rank_uninit(&rk_set);
 
 close:
 	/*

@@ -6,12 +6,7 @@
 #include <limits.h>
 
 #include "search.h"
-
-#include "postmerge.h"
-#include "bm25-score.h"
-#include "rank.h"
 #include "snippet.h"
-#include "mem-posting.h"
 
 #include "txt-seg/txt-seg.h"
 #include "txt-seg/config.h"
@@ -75,7 +70,7 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	//printf("(BM25 score = %f)\n", score);
 }
 
-char *get_doc_path(keyval_db_t kv_db, doc_id_t docID)
+static char *get_doc_path(keyval_db_t kv_db, doc_id_t docID)
 {
 	char *doc_path;
 	size_t val_sz;
@@ -230,19 +225,19 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	/*
 	 * prepare term posting list merge callbacks.
 	 */
-	mem_calls.start  = &term_posting_start;
-	mem_calls.finish = &term_posting_finish;
-	mem_calls.jump   = &term_posting_jump_wrap;
-	mem_calls.next   = &term_posting_next;
-	mem_calls.now    = &term_posting_current_wrap;
-	mem_calls.now_id = &term_posting_current_id_wrap;
+	disk_calls.start  = &term_posting_start;
+	disk_calls.finish = &term_posting_finish;
+	disk_calls.jump   = &term_posting_jump_wrap;
+	disk_calls.next   = &term_posting_next;
+	disk_calls.now    = &term_posting_current_wrap;
+	disk_calls.now_id = &term_posting_current_id_wrap;
 
-	disk_calls.start  = &mem_posting_start;
-	disk_calls.finish = &mem_posting_finish;
-	disk_calls.jump   = &mem_posting_jump;
-	disk_calls.next   = &mem_posting_next;
-	disk_calls.now    = &mem_posting_current;
-	disk_calls.now_id = &mem_posting_current_id;
+	mem_calls.start  = &mem_posting_start;
+	mem_calls.finish = &mem_posting_finish;
+	mem_calls.jump   = &mem_posting_jump;
+	mem_calls.next   = &mem_posting_next;
+	mem_calls.now    = &mem_posting_current;
+	mem_calls.now_id = &mem_posting_current_id;
 
 	/*
 	 * for each term posting list, pre-calculate some scoring
@@ -256,10 +251,10 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 
 			if (0 == strcmp(WORD, terms[i])) {
 				posting = fork_posting;
-				calls = &disk_calls;
+				calls = &mem_calls;
 			} else {
 				posting = term_index_get_posting(ti, term_id);
-				calls = &mem_calls;
+				calls = &disk_calls;
 			}
 
 			df = term_index_get_df(ti, term_id);

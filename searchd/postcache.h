@@ -8,7 +8,7 @@
 #define POSTCACHE_POOL_LIMIT_1MB (1024 << 10)
 
 enum postcache_item_type {
-	POSTCACHE_TERM_POSTING /* currently only has one type */
+	POSTCACHE_TERM_POSTING /* currently only one type */
 };
 
 enum postcache_err {

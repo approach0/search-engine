@@ -98,7 +98,7 @@ struct indices indices_open(const char*index_path)
 	void         *ti = NULL;
 	math_index_t  mi = NULL;
 	keyval_db_t   keyval_db = NULL;
-	
+
 	/*
 	 * open term index.
 	 */
@@ -207,7 +207,212 @@ void indices_close(struct indices* indices)
 	}
 }
 
-void indices_run_query(struct indices *indices, const struct query qry)
+/*
+ * search related functions.
+ */
+
+static bool term_posting_jump_wrap(void *posting, uint64_t to_id)
+{
+	bool succ;
+
+	/* because uint64_t value can be greater than doc_id_t,
+	 * we need a wrapper function to safe-guard from
+	 * calling term_posting_jump with illegal argument. */
+	if (to_id >= UINT_MAX)
+		succ = 0;
+	else
+		succ = term_posting_jump(posting, (doc_id_t)to_id);
+
+	return succ;
+}
+
+static void *term_posting_current_wrap(void *posting)
+{
+	return (void*)term_posting_current(posting);
+}
+
+static uint64_t term_posting_current_id_wrap(void *item)
+{
+	doc_id_t doc_id;
+	doc_id = ((struct term_posting_item*)item)->doc_id;
+	return (uint64_t)doc_id;
+}
+
+static struct postmerge_callbks *get_memory_postmerge_callbks(void)
+{
+	static struct postmerge_callbks ret;
+	ret.start  = &mem_posting_start;
+	ret.finish = &mem_posting_finish;
+	ret.jump   = &mem_posting_jump;
+	ret.next   = &mem_posting_next;
+	ret.now    = &mem_posting_current;
+	ret.now_id = &mem_posting_current_id;
+
+	return &ret;
+}
+
+static struct postmerge_callbks *get_disk_postmerge_callbks(void)
+{
+	static struct postmerge_callbks ret;
+	ret.start  = &term_posting_start;
+	ret.finish = &term_posting_finish;
+	ret.jump   = &term_posting_jump_wrap;
+	ret.next   = &term_posting_next;
+	ret.now    = &term_posting_current_wrap;
+	ret.now_id = &term_posting_current_id_wrap;
+
+	return &ret;
+}
+
+struct add_postinglist_for_merge_args {
+	struct indices          *indices;
+	struct postmerge        *pm;
+	uint32_t                 docN;
+	uint32_t                 posting_idx;
+	struct BM25_term_i_args *bm25args;
+};
+
+static LIST_IT_CALLBK(add_postinglist_for_merge)
+{
+	void                     *posting = NULL;
+	struct postmerge_callbks *postmerge_callbks = NULL;
+	void                     *ti;
+	term_id_t                 term_id;
+	uint32_t                  df;
+	float                    *idf;
+	float                     docN;
+
+	LIST_OBJ(struct query_keyword, kw, ln);
+	P_CAST(apfm_args, struct add_postinglist_for_merge_args, pa_extra);
+
+	/* get term index for short-hand */
+	ti = apfm_args->indices->ti;
+
+	/* get utf-8 keyword string and termID */
+	char *kw_utf8 = wstr2mbstr(kw->wstr);
+	term_id = term_lookup(ti, kw_utf8);
+
+	/* get docN in float format */
+	docN = (float)apfm_args->docN;
+
+	/* set IDF pointer */
+	idf = apfm_args->bm25args->idf;
+
+	printf("adding posting list of keyword `%s'(termID: %u)...\n",
+	       kw_utf8, term_id);
+
+	if (term_id == 0) {
+		/* if term is not found in our dictionary */
+		posting = NULL;
+		postmerge_callbks = NULL;
+
+		/* get IDF number */
+		df = 0;
+		idf[apfm_args->posting_idx] = BM25_idf((float)df, docN);
+
+		printf("keyword not found.\n");
+	} else {
+		/* otherwise, get on-disk or cached posting list */
+		struct postcache_item *cache_item =
+			postcache_find(&apfm_args->indices->postcache, term_id);
+
+		if (NULL != cache_item) {
+			/* if this term is already cached */
+			posting = cache_item->posting;
+			postmerge_callbks = get_memory_postmerge_callbks();
+
+			printf("using cached posting list.\n");
+		} else {
+			/* otherwise read posting from disk */
+			posting = term_index_get_posting(ti, term_id);
+			postmerge_callbks = get_disk_postmerge_callbks();
+			printf("using on-disk posting list.\n");
+		}
+
+		/* get IDF number */
+		df = term_index_get_df(ti, term_id);
+		idf[apfm_args->posting_idx] = BM25_idf((float)df, docN);
+	}
+
+	postmerge_posts_add(apfm_args->pm, posting, postmerge_callbks, NULL);
+//	kw->type: QUERY_KEYWORD_TEX, QUERY_KEYWORD_TERM.
+
+	/* increment current adding posting list index */
+	apfm_args->posting_idx ++;
+
+	LIST_GO_OVER;
+}
+
+static void
+add_postinglists_for_merge(struct indices *indices, const struct query *qry,
+                           struct postmerge *pm,
+                           struct BM25_term_i_args *bm25args)
+{
+
+	/* setup argument variable `apfm_args' (in & out) */
+	struct add_postinglist_for_merge_args apfm_args;
+	apfm_args.indices = indices;
+	apfm_args.pm = pm;
+	apfm_args.docN = term_index_get_docN(indices->ti);
+	apfm_args.posting_idx = 0;
+	apfm_args.bm25args = bm25args;
+
+	/* add posting list of every keyword for merge */
+	list_foreach((list*)&qry->keywords, &add_postinglist_for_merge,
+	             &apfm_args);
+
+	/* prepare some score parameters */
+	bm25args->n_postings = apfm_args.posting_idx;
+	bm25args->avgDocLen = (float)term_index_get_avgDocLen(indices->ti);
+	bm25args->b  = BM25_DEFAULT_B;
+	bm25args->k1 = BM25_DEFAULT_K1;
+	bm25args->frac_b_avgDocLen = BM25_DEFAULT_K1 / bm25args->avgDocLen;
+
+	printf("BM25 arguments:\n");
+	BM25_term_i_args_print(bm25args);
+}
+
+struct posting_merge_extra_args {
+	struct indices          *indices;
+	struct BM25_term_i_args *bm25args;
+	struct rank_set         *rk_set;
+};
+
+void
+posting_on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
 {
 	return;
+}
+
+struct rank_set
+indices_run_query(struct indices *indices, const struct query qry)
+{
+	struct postmerge                postmerge;
+	struct BM25_term_i_args         bm25args;
+	struct rank_set                 rk_set;
+	struct posting_merge_extra_args pm_args;
+
+	/* initialize postmerge */
+	postmerge_posts_clear(&postmerge);
+	add_postinglists_for_merge(indices, &qry, &postmerge, &bm25args);
+
+	/* initialize ranking set */
+	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, 0, 0);
+
+	/* setup merge extra arguments */
+	pm_args.indices  = indices;
+	pm_args.bm25args = &bm25args;
+	pm_args.rk_set   = &rk_set;
+
+	/* posting list merge */
+	printf("start merging...\n");
+	if (!posting_merge(&postmerge, POSTMERGE_OP_AND,
+	                   &posting_on_merge, &pm_args))
+		fprintf(stderr, "posting list merge failed.\n");
+
+	/* rank top K hits */
+	rank_sort(&rk_set);
+
+	/* return ranking set */
+	return rk_set;
 }
