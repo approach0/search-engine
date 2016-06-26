@@ -39,9 +39,14 @@ void rank_cram(struct rank_set *rs, doc_id_t docID, float score,
 		rs->n_items ++;
 	} else {
 		top = heap_top(&rs->heap);
+
 		if (ri_less_than(top, ri)) {
+			free(top);
 			minheap_delete(&rs->heap, 0);
+
 			minheap_insert(&rs->heap, ri);
+		} else {
+			free(ri);
 		}
 	}
 }
@@ -53,6 +58,10 @@ void rank_sort(struct rank_set *rs)
 
 void rank_uninit(struct rank_set *rs)
 {
+	uint32_t i;
+	for (i = 0; i < rs->n_items; i++)
+		free(rs->heap.array[i]);
+
 	heap_destory(&rs->heap);
 }
 
