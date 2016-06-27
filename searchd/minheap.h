@@ -6,7 +6,7 @@ typedef void (*heap_pr_fun)(void*, uint32_t, uint32_t);
 
 struct heap {
 	void       **array;
-	uint32_t     size;
+	uint32_t     volume;
 	uint32_t     end;
 	heap_lt_fun  ltf;
 };

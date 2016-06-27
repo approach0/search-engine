@@ -381,6 +381,9 @@ struct posting_merge_extra_args {
 void
 posting_on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
 {
+//	float score = 0.f;
+//	doc_id_t docID = cur_min;
+
 	return;
 }
 
@@ -397,7 +400,7 @@ indices_run_query(struct indices *indices, const struct query qry)
 	add_postinglists_for_merge(indices, &qry, &postmerge, &bm25args);
 
 	/* initialize ranking set */
-	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, 0, 0);
+	rank_set_init(&rk_set, RANK_SET_DEFAULT_VOL);
 
 	/* setup merge extra arguments */
 	pm_args.indices  = indices;

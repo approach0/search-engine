@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
 	/* search query */
 	rk_set = indices_run_query(&indices, qry);
-	rank_uninit(&rk_set);
+	rank_set_free(&rk_set);
 
 close:
 	/*

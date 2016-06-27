@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include "minheap.h"
 
-struct heap heap_create(uint32_t sz)
+struct heap heap_create(uint32_t vol)
 {
 	struct heap h;
-	h.array = calloc(sz, sizeof(void*));
-	h.size = sz;
+	h.array = calloc(vol, sizeof(void*));
+	h.volume = vol;
 	h.end = 0;
 	h.ltf = NULL;
 
@@ -25,7 +25,7 @@ void heap_destory(struct heap *h)
 
 bool heap_full(struct heap *h)
 {
-	return (h->end == h->size);
+	return (h->end == h->volume);
 }
 
 uint32_t heap_size(struct heap *h)
@@ -74,7 +74,7 @@ void heap_print_tr(struct heap *h, heap_pr_fun fun)
 void heap_print_arr(struct heap *h, heap_pr_fun fun)
 {
 	uint32_t i;
-	for (i = 0; i < h->size; i++) {
+	for (i = 0; i < h->volume; i++) {
 		if (i == h->end)
 			printf("|       ");
 

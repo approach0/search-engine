@@ -18,6 +18,12 @@ struct term_extra_score_arg {
 	struct rank_set         *rk_set;
 };
 
+struct snippet_arg {
+	keyval_db_t kv_db;
+	char (*terms)[MAX_TERM_BYTES];
+	uint32_t n_terms;
+};
+
 void *term_posting_current_wrap(void *posting)
 {
 	return (void*)term_posting_current(posting);
@@ -49,7 +55,7 @@ void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	uint32_t i, hit_terms = 0;
+	uint32_t i;
 	float score = 0.f;
 	doc_id_t docID = cur_min;
 
@@ -62,11 +68,9 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			tpi = pm->cur_pos_item[i];
 			score += BM25_term_i_score(tes_arg->bm25args, i, tpi->tf, doclen);
-			hit_terms ++;
 		}
 
-	rank_cram(tes_arg->rk_set, docID, score, hit_terms,
-	          (char**)pm->posting_args, NULL);
+	rank_set_hit(tes_arg->rk_set, docID, score);
 	//printf("(BM25 score = %f)\n", score);
 }
 
@@ -84,8 +88,7 @@ static char *get_doc_path(keyval_db_t kv_db, doc_id_t docID)
 	return doc_path;
 }
 
-void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
-                       keyval_db_t kv_db)
+void print_res_snippet(doc_id_t docID, struct snippet_arg *snp_arg)
 {
 	uint32_t i;
 	size_t val_sz;
@@ -96,13 +99,13 @@ void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
 	FILE *doc_fh;
 	list  snippet_div_list = LIST_NULL;
 
-	doc_path = get_doc_path(kv_db, docID);
+	doc_path = get_doc_path(snp_arg->kv_db, docID);
 	printf("@ %s\n", doc_path);
 
-	for (i = 0; i < n_terms; i++) {
-		strcpy(docterm.term, terms[i]);
+	for (i = 0; i < snp_arg->n_terms; i++) {
+		strcpy(docterm.term, snp_arg->terms[i]);
 
-		termpos = keyval_db_get(kv_db, &docterm,
+		termpos = keyval_db_get(snp_arg->kv_db, &docterm,
 								sizeof(doc_id_t) + strlen(docterm.term),
 								&val_sz);
 		if(NULL != termpos) {
@@ -128,16 +131,17 @@ void print_res_snippet(doc_id_t docID, char **terms, uint32_t n_terms,
 	free(doc_path);
 }
 
-void print_res_item(struct rank_set *rs, struct rank_item* ri,
-                    uint32_t cnt, void*arg)
+void print_res_item(struct rank_set *rs, struct rank_hit* hit,
+                    uint32_t cnt, void* arg)
 {
-	P_CAST(kv_db, keyval_db_t, arg);
+	P_CAST(snp_arg, struct snippet_arg, arg);
 
-	printf("result#%u: doc#%u score=%.3f\n", cnt, ri->docID, ri->score);
-	print_res_snippet(ri->docID, ri->terms, rs->n_terms, kv_db);
+	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
+	print_res_snippet(hit->docID, snp_arg);
 }
 
-uint32_t print_all_rank_res(struct rank_set *rs, keyval_db_t keyval_db)
+uint32_t
+print_all_rank_res(struct rank_set *rs, struct snippet_arg *snp_arg)
 {
 	struct rank_wind win;
 	uint32_t         total_pages, page = 0;
@@ -148,7 +152,7 @@ uint32_t print_all_rank_res(struct rank_set *rs, keyval_db_t keyval_db)
 		if (win.to > 0) {
 			printf("page#%u (from %u to %u):\n",
 			       page + 1, win.from, win.to);
-			rank_window_foreach(&win, &print_res_item, keyval_db);
+			rank_window_foreach(&win, &print_res_item, snp_arg);
 			page ++;
 		}
 	} while (page < total_pages);
@@ -207,6 +211,8 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	struct BM25_term_i_args      bm25args;
 	struct postmerge             pm;
 	struct postmerge_callbks     mem_calls, disk_calls, *calls = NULL;
+
+	struct snippet_arg           snp_arg = {keyval_db, terms, n_terms};
 
 #if 1 /* testing in-memory posting */
 	struct mem_posting *fork_posting;
@@ -273,7 +279,7 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 			       terms[i], i, df);
 		}
 
-		postmerge_posts_add(&pm, posting, calls, terms[i]);
+		postmerge_posts_add(&pm, posting, calls, NULL);
 	}
 
 	/*
@@ -289,9 +295,9 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	BM25_term_i_args_print(&bm25args);
 
 	/*
-	 * initialize ranking set given number of terms.
+	 * initialize ranking set.
 	 */
-	rank_init(&rk_set, RANK_SET_DEFAULT_SZ, n_terms, 0);
+	rank_set_init(&rk_set, RANK_SET_DEFAULT_VOL);
 
 	/*
 	 * merge extra arguments.
@@ -324,10 +330,10 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	/*
 	 * print ranked search results by page number.
 	 */
-	res_pages = print_all_rank_res(&rk_set, keyval_db);
+	res_pages = print_all_rank_res(&rk_set, &snp_arg);
 	printf("result(s): %u pages.\n", res_pages);
 
-	rank_uninit(&rk_set);
+	rank_set_free(&rk_set);
 
 #if 1 /* testing in-memory posting */
 	mem_posting_release(fork_posting);
