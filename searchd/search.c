@@ -381,8 +381,23 @@ struct posting_merge_extra_args {
 void
 posting_on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
 {
-//	float score = 0.f;
-//	doc_id_t docID = cur_min;
+	uint32_t i;
+	float score = 0.f;
+	doc_id_t docID = cur_min;
+
+	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
+	float doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
+	struct term_posting_item *tpi;
+
+	for (i = 0; i < pm->n_postings; i++)
+		if (pm->curIDs[i] == cur_min) {
+			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
+			tpi = pm->cur_pos_item[i];
+			score += BM25_term_i_score(pm_args->bm25args, i, tpi->tf, doclen);
+		}
+
+	rank_set_hit(pm_args->rk_set, docID, score);
+	//printf("(BM25 score = %f)\n", score);
 
 	return;
 }
