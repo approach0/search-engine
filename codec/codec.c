@@ -10,13 +10,13 @@ char *codec_method_str(enum codec_method method)
 	static char ret[4096];
 	switch (method) {
 	case CODEC_FOR_DELTA:
-		strcpy(ret, "Frame of Reference delta encoding");
+		strcpy(ret, "Frame of Reference delta codec");
 		break;
 	case CODEC_PLAIN:
-		strcpy(ret, "No encoding (plain)");
+		strcpy(ret, "No codec (plain)");
 		break;
 	default:
-		strcpy(ret, "Unknown encoding");
+		strcpy(ret, "Unknown codec");
 		break;
 	}
 
@@ -32,26 +32,37 @@ for_delta_compress(const uint32_t *in, size_t len, int *out,
     // must declare MAX as long integer because it would
     // cause bit shift operation (MAX>>bsets[bn]) overflow when b is 32
     long int MAX = in[0];
-    for(int i = 1; i < len; ++i)
-        if(in[i] > MAX)
-            MAX = in[i];
+
+	/* assume input buffer is ordered (either descending or ascending) */
+	if (in[0] > in[len - 1])
+		MAX = in[0];
+	else
+		MAX = in[len - 1];
+
+	//printf("max=%ld, len=%lu\n", MAX, len);
     // find the b value for FOR_DELTA algorithm
     unsigned bn = 0;
     unsigned b;
     while((MAX>>bsets[bn])>0) bn++;
     b = bsets[bn];
-    printf("b is %u \n", b);
     args->b = b;
+	//printf("use b=%u\n", b);
     // compress each element of input array using b bits
     unsigned out_size=(len+32/b-1)/(32/b);
     unsigned total_bytes = out_size*4;
-    args->pack_size = total_bytes;
     unsigned threshold;
     // the maximum width of shift operation is 31
     if(b == 32)
         threshold = 1<<31;
     else
         threshold = 1<<b;
+
+    // must initialize buf array to all zeros, since
+    // element in buf logical OR with input data
+    memset(out, 0, total_bytes);
+
+    args->save_sz = total_bytes; /* save for decompress */
+
     for(int i = 0; i < len; ++i){
         unsigned low = in[i] & (threshold-1);
         out[i/(32/b)] |= low << i%(32/b)*b;
@@ -229,6 +240,7 @@ codec_decompress(struct codec *codec, const void *in,
                  uint32_t *out, size_t len)
 {
 	if (codec->method == CODEC_FOR_DELTA) {
+		struct for_delta_args* args = (struct for_delta_args*)(codec->args);
         // the name of a function and a pointer to
         // the same function are interchangeable
         steps[2] = step2b;
@@ -240,8 +252,10 @@ codec_decompress(struct codec *codec, const void *in,
         steps[16] = step16b;
         steps[32] = step32b;
 
-        unsigned b = ((struct for_delta_args*)(codec->args))->b;
+        unsigned b = args->b;
         (*steps[b])(len, (int*)in, (int*)out);
+
+		return args->save_sz;
 	} else if (codec->method == CODEC_PLAIN) {
 		return dummpy_copy(in, len, out);
 	} else {

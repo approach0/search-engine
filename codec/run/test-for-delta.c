@@ -14,10 +14,8 @@ int main()
     input_arr  = (uint32_t*)malloc(sizeof(uint32_t)*len);
     uint32_t* check_arr;
     check_arr  = (uint32_t*)malloc(sizeof(uint32_t)*len);
-    // must initialize buf array to all zeros, since
-    // element in buf logical OR with input data
     int* buf = (int*)malloc(sizeof(int)*1024);
-    memset(buf, 0, sizeof(int)*1024);
+
     // define a array to test each case for different b
     int N_Max[8] = {3, 15, 31, 63, 255, 1023, 65535, 655355};
     //int N_Max[1] = {15};
@@ -26,15 +24,25 @@ int main()
     // generate random numbers to test codec
         srand(time(NULL));
     for(int j=0; j<8; ++j){
-        int M = 2; // minimum number
+        int M = N_Max[0] - 1; // minimum number
         int N = N_Max[j]; // maximum number
         for (i = 0; i < len; i++){
-            input_arr[i] = M + rand() / (RAND_MAX / (N - M + 1) + 1);;
+			int last;
+			if (i == 0)
+				last = M;
+			else
+				last = input_arr[i - 1];
+
+            input_arr[i] = last + rand() / (RAND_MAX / (N - last + 1) + 1);
+			//printf("%u ", input_arr[i]);
         }
+		//printf("\n");
         res = codec_compress(&codec, input_arr, len, buf);
+		printf("b is %u \n", args.b);
         printf("compressing %u integers into %u bytes...\n",
                len, res);
-        codec_decompress(&codec, buf, check_arr, len);
+        res = codec_decompress(&codec, buf, check_arr, len);
+		printf("%u bytes decompressed.\n", res);
         // check check_arr, see if it's same as input_arr.
         for (i = 0; i < len; i++)
             if(input_arr[i] != check_arr[i]){
