@@ -122,6 +122,14 @@ This project is still in its early stage, nothing really to show you now. Howeve
 	```
 	For single TeX query, math search will always perform AND merge.
 
+* Test cached index
+
+	`Searchd` can cache a portion of term index posting lists into memory, the number of posting lists cached is depend on the in-memory cache limit specified (currently just 2MB). To test search results from mixed term index (on-disk and in-memory), run:
+	```
+	$ cd $PROJECT/searchd
+	$ ./run/test-search.out -p ./tmp -t 'window' -t 'period' -t 'old' -t 'coat'
+	```
+
 ## Module dependencies
 ![module dependency](https://raw.githubusercontent.com/t-k-/cowpie-lab/master/dep.png)
 (boxes are external dependencies, circles are internal modules)
