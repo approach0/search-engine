@@ -3,6 +3,7 @@
 
 enum codec_method {
 	CODEC_FOR_DELTA,
+	CODEC_FOR_DELTA_ASC, /* input data is in ascending order */
 	CODEC_PLAIN /* do nothing */
 };
 

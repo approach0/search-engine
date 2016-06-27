@@ -14,7 +14,7 @@ int main()
 	struct math_score_res test[TEST_NUM];
 	uint32_t linear[LINEAR_ARRAY_LEN];
 	struct for_delta_args for_args[2];
-	struct codec codecs[] = {{CODEC_FOR_DELTA, for_args + 0},
+	struct codec codecs[] = {{CODEC_FOR_DELTA_ASC, for_args + 0},
 	                         {CODEC_FOR_DELTA, for_args + 1},
 	                         {CODEC_PLAIN, NULL}};
 

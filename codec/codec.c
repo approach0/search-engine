@@ -12,6 +12,9 @@ char *codec_method_str(enum codec_method method)
 	case CODEC_FOR_DELTA:
 		strcpy(ret, "Frame of Reference delta codec");
 		break;
+	case CODEC_FOR_DELTA_ASC:
+		strcpy(ret, "Frame of Reference delta codec (ascending data)");
+		break;
 	case CODEC_PLAIN:
 		strcpy(ret, "No codec (plain)");
 		break;
@@ -23,21 +26,32 @@ char *codec_method_str(enum codec_method method)
 	return ret;
 }
 
+typedef long int (*get_max_callbk)(const uint32_t *, size_t);
+
+static long int get_max_general(const uint32_t *in, size_t len)
+{
+	long int max = in[0], i;
+	for(i = 1; i < len; ++i)
+		if(in[i] > max)
+			max = in[i];
+
+	return max;
+}
+
+static long int get_max_asc(const uint32_t *in, size_t len)
+{
+	return in[len - 1];
+}
+
 static size_t
 for_delta_compress(const uint32_t *in, size_t len, int *out,
-                   struct for_delta_args *args)
+                   struct for_delta_args *args, get_max_callbk max_fun)
 {
     unsigned bsets[8] ={2, 4, 5, 6, 8, 10, 16, 32};
 	// find the maximum element in the input array
     // must declare MAX as long integer because it would
     // cause bit shift operation (MAX>>bsets[bn]) overflow when b is 32
-    long int MAX = in[0];
-
-	/* assume input buffer is ordered (either descending or ascending) */
-	if (in[0] > in[len - 1])
-		MAX = in[0];
-	else
-		MAX = in[len - 1];
+    long int MAX = max_fun(in, len);
 
 	//printf("max=%ld, len=%lu\n", MAX, len);
     // find the b value for FOR_DELTA algorithm
@@ -92,7 +106,14 @@ codec_compress(struct codec *codec,
 {
 	if (codec->method == CODEC_FOR_DELTA) {
 		return for_delta_compress(in, len, (int*)out,
-		                          (struct for_delta_args*)codec->args);
+		                          (struct for_delta_args*)codec->args,
+		                          &get_max_general);
+
+	} else if (codec->method == CODEC_FOR_DELTA_ASC) {
+		return for_delta_compress(in, len, (int*)out,
+		                          (struct for_delta_args*)codec->args,
+		                          &get_max_asc);
+
 	} else if (codec->method == CODEC_PLAIN) {
 		return dummpy_copy(in, len, out);
 	} else {
@@ -239,7 +260,8 @@ size_t
 codec_decompress(struct codec *codec, const void *in,
                  uint32_t *out, size_t len)
 {
-	if (codec->method == CODEC_FOR_DELTA) {
+	if (codec->method == CODEC_FOR_DELTA ||
+	    codec->method == CODEC_FOR_DELTA_ASC) {
 		struct for_delta_args* args = (struct for_delta_args*)(codec->args);
         // the name of a function and a pointer to
         // the same function are interchangeable
