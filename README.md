@@ -124,7 +124,7 @@ This project is still in its early stage, nothing really to show you now. Howeve
 
 * Test cached index
 
-	`Searchd` can cache a portion of term index posting lists into memory, the number of posting lists cached is depend on the in-memory cache limit specified (currently just 2MB). To test search results from mixed term index (on-disk and in-memory), run:
+	`Searchd` can cache a portion of term index posting lists into memory, the number of posting lists cached is depend on the in-memory cache limit specified (currently just 32MB). To test search results from mixed term index (on-disk and in-memory), run:
 	```
 	$ cd $PROJECT/searchd
 	$ ./run/test-search.out -p ./tmp -t 'window' -t 'period' -t 'old' -t 'coat'
