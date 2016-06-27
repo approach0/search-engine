@@ -93,11 +93,13 @@ struct indices indices_open(const char*index_path)
 	bool                  open_err = 0;
 	const char            kv_db_fname[] = "kvdb-offset.bin";
 	char                  term_index_path[MAX_DIR_PATH_NAME_LEN];
-	struct postcache_pool postcache;
 
-	void         *ti = NULL;
-	math_index_t  mi = NULL;
-	keyval_db_t   keyval_db = NULL;
+	void                 *ti = NULL;
+	math_index_t          mi = NULL;
+	keyval_db_t           keyval_db = NULL;
+
+	struct postcache_pool postcache;
+	postcache.trp_root = NULL;
 
 	/*
 	 * open term index.
