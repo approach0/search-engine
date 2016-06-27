@@ -25,6 +25,7 @@ void rank_set_hit(struct rank_set *rs, doc_id_t docID, float score)
 
 	hit = malloc(sizeof(struct rank_hit));
 	hit->docID = docID;
+	hit->score = score;
 
 	if (!heap_full(&rs->heap)) {
 		minheap_insert(&rs->heap, hit);
