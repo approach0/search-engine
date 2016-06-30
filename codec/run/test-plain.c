@@ -5,13 +5,9 @@ int main()
 {
 	const int len = 10;
 	int i;
-	struct codec codec;
-	struct for_delta_args args;
+	struct codec codec = {CODEC_PLAIN, NULL};
 	uint32_t res, input_arr[len], check_arr[len];
 	char buf[1024];
-
-	codec.method = CODEC_PLAIN;
-	codec.args = &args;
 
 	for (i = 0; i < len; i++)
 		input_arr[i] = i;

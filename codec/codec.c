@@ -3,17 +3,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "codec.h"
-#include <stdio.h>
+
+struct codec *codec_new(enum codec_method method, void* args)
+{
+	size_t args_sz;
+	struct codec *ret = malloc(sizeof(struct codec));
+
+	switch (method) {
+	case CODEC_FOR:
+	case CODEC_FOR_DELTA:
+		args_sz = sizeof(struct for_delta_args);
+		break;
+	case CODEC_PLAIN:
+		args_sz = 0;
+		break;
+	default:
+		assert(0);
+	}
+
+	ret->method = method;
+	ret->args = malloc(args_sz);
+
+	if(args)
+		memcpy(ret->args, args, args_sz);
+	else
+		memset(ret->args, 0, args_sz);
+
+	return ret;
+}
+
+void codec_free(struct codec* codec)
+{
+	free(codec->args);
+	free(codec);
+}
 
 char *codec_method_str(enum codec_method method)
 {
 	static char ret[4096];
 	switch (method) {
+	case CODEC_FOR:
+		strcpy(ret, "Frame of Reference codec");
+		break;
 	case CODEC_FOR_DELTA:
 		strcpy(ret, "Frame of Reference delta codec");
-		break;
-	case CODEC_FOR_DELTA_ASC:
-		strcpy(ret, "Frame of Reference delta codec (ascending data)");
 		break;
 	case CODEC_PLAIN:
 		strcpy(ret, "No codec (plain)");
@@ -24,64 +57,6 @@ char *codec_method_str(enum codec_method method)
 	}
 
 	return ret;
-}
-
-typedef long int (*get_max_callbk)(const uint32_t *, size_t);
-
-static long int get_max_general(const uint32_t *in, size_t len)
-{
-	long int max = in[0], i;
-	for(i = 1; i < len; ++i)
-		if(in[i] > max)
-			max = in[i];
-
-	return max;
-}
-
-static long int get_max_asc(const uint32_t *in, size_t len)
-{
-	return in[len - 1];
-}
-
-static size_t
-for_delta_compress(const uint32_t *in, size_t len, int *out,
-                   struct for_delta_args *args, get_max_callbk max_fun)
-{
-    unsigned bsets[8] ={2, 4, 5, 6, 8, 10, 16, 32};
-	// find the maximum element in the input array
-    // must declare MAX as long integer because it would
-    // cause bit shift operation (MAX>>bsets[bn]) overflow when b is 32
-    long int MAX = max_fun(in, len);
-
-	//printf("max=%ld, len=%lu\n", MAX, len);
-    // find the b value for FOR_DELTA algorithm
-    unsigned bn = 0;
-    unsigned b;
-    while((MAX>>bsets[bn])>0) bn++;
-    b = bsets[bn];
-    args->b = b;
-	//printf("use b=%u\n", b);
-    // compress each element of input array using b bits
-    unsigned out_size=(len+32/b-1)/(32/b);
-    unsigned total_bytes = out_size*4;
-    unsigned threshold;
-    // the maximum width of shift operation is 31
-    if(b == 32)
-        threshold = 1<<31;
-    else
-        threshold = 1<<b;
-
-    // must initialize buf array to all zeros, since
-    // element in buf logical OR with input data
-    memset(out, 0, total_bytes);
-
-    args->save_sz = total_bytes; /* save for decompress */
-
-    for(int i = 0; i < len; ++i){
-        unsigned low = in[i] & (threshold-1);
-        out[i/(32/b)] |= low << i%(32/b)*b;
-    }
-    return total_bytes;
 }
 
 static size_t
@@ -104,18 +79,17 @@ codec_compress(struct codec *codec,
                const uint32_t *in, size_t len,
                void *out)
 {
-	if (codec->method == CODEC_FOR_DELTA) {
-		return for_delta_compress(in, len, (int*)out,
-		                          (struct for_delta_args*)codec->args,
-		                          &get_max_general);
+	if (codec->method == CODEC_FOR) {
+		struct for_delta_args *args = (struct for_delta_args*)codec->args;
+		return for_compress((uint32_t*)in, len, out, &args->b);
 
-	} else if (codec->method == CODEC_FOR_DELTA_ASC) {
-		return for_delta_compress(in, len, (int*)out,
-		                          (struct for_delta_args*)codec->args,
-		                          &get_max_asc);
+	} else if (codec->method == CODEC_FOR_DELTA) {
+		struct for_delta_args *args = (struct for_delta_args*)codec->args;
+		return for_delta_compress(in, len, (uint32_t*)out, &args->b);
 
 	} else if (codec->method == CODEC_PLAIN) {
 		return dummpy_copy(in, len, out);
+
 	} else {
 		assert(0);
 	}
@@ -123,132 +97,6 @@ codec_compress(struct codec *codec,
 	return 0;
 }
 
-void step2b(int num, int* in, int* out){
-    unsigned l=(num+15)/16;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 3;
-       out[1] = (block>>2) & 3;
-       out[2] = (block>>4) & 3;
-       out[3] = (block>>6) & 3;
-       out[4] = (block>>8) & 3;
-       out[5] = (block>>10) & 3;
-       out[6] = (block>>12) & 3;
-       out[7] = (block>>14) & 3;
-       out[8] = (block>>16) & 3;
-       out[9] = (block>>18) & 3;
-       out[10] = (block>>20) & 3;
-       out[11] = (block>>22) & 3;
-       out[12] = (block>>24) & 3;
-       out[13] = (block>>26) & 3;
-       out[14] = (block>>28) & 3;
-       out[15] = (block>>30) & 3;
-       out+=16;
-    }
-}
-
-void step4b(int num, int* in, int* out){
-    unsigned l=(num+7)/8;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 15;
-       out[1] = (block>>4) & 15;
-       out[2] = (block>>8) & 15;
-       out[3] = (block>>12) & 15;
-       out[4] = (block>>16) & 15;
-       out[5] = (block>>20) & 15;
-       out[6] = (block>>24) & 15;
-       out[7] = (block>>28) & 15;
-       out+=8;
-    }
-}
-
-void step5b(int num, int* in, int* out){
-    unsigned l=(num+5)/6;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 31;
-       out[1] = (block>>5) & 31;
-       out[2] = (block>>10) & 31;
-       out[3] = (block>>15) & 31;
-       out[4] = (block>>20) & 31;
-       out[5] = (block>>25) & 31;
-       out+=6;
-    }
-}
-
-void step6b(int num, int* in, int* out){
-    unsigned l=(num+4)/5;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 63;
-       out[1] = (block>>6) & 63;
-       out[2] = (block>>12) & 63;
-       out[3] = (block>>18) & 63;
-       out[4] = (block>>24) & 63;
-       out+=5;
-    }
-}
-
-void step8b(int num, int* in, int* out){
-    unsigned l=(num+3)/4;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 255;
-       out[1] = (block>>8) & 255;
-       out[2] = (block>>16) & 255;
-       out[3] = (block>>24) & 255;
-       out+=4;
-    }
-}
-
-void step10b(int num, int* in, int* out){
-    unsigned l=(num+2)/3;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 1023;
-       out[1] = (block>>10) & 1023;
-       out[2] = (block>>20) & 1023;
-       out+=3;
-    }
-}
-
-void step16b(int num, int* in, int* out){
-    unsigned l=(num+1)/2;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & ((1<<16)-1);
-       out[1] = block>>16;
-       out+=2;
-    }
-}
-
-void step32b(int num, int* in, int* out){
-    unsigned l=num;
-    unsigned i,block;
-    for(i=0;i<l;i++)
-    {
-       block=in[i];
-       out[0] = block & 0xFFFFFFFF;
-       out+=1;
-    }
-}
-
-void (*steps[33])(int num, int* in, int* out);
 /*
  * Decompress the compressed uint32_t integer array `in' whose original
  * length is `len', using the algorithm and its parameters specified from
@@ -260,26 +108,17 @@ size_t
 codec_decompress(struct codec *codec, const void *in,
                  uint32_t *out, size_t len)
 {
-	if (codec->method == CODEC_FOR_DELTA ||
-	    codec->method == CODEC_FOR_DELTA_ASC) {
-		struct for_delta_args* args = (struct for_delta_args*)(codec->args);
-        // the name of a function and a pointer to
-        // the same function are interchangeable
-        steps[2] = step2b;
-        steps[4] = step4b;
-        steps[5] = step5b;
-        steps[6] = step6b;
-        steps[8] = step8b;
-        steps[10] = step10b;
-        steps[16] = step16b;
-        steps[32] = step32b;
+	if (codec->method == CODEC_FOR) {
+		struct for_delta_args *args = (struct for_delta_args*)codec->args;
+		return for_decompress((uint32_t*)in, out, len, &args->b);
 
-        unsigned b = args->b;
-        (*steps[b])(len, (int*)in, (int*)out);
+	} else if (codec->method == CODEC_FOR_DELTA) {
+		struct for_delta_args *args = (struct for_delta_args*)codec->args;
+		return for_delta_decompress(in, out, len, &args->b);
 
-		return args->save_sz;
 	} else if (codec->method == CODEC_PLAIN) {
 		return dummpy_copy(in, len, out);
+
 	} else {
 		assert(0);
 	}
@@ -296,7 +135,7 @@ codec_decompress(struct codec *codec, const void *in,
  * Return the number of bytes of linear encoding.
  */
 size_t
-encode_struct_arr(void *dest_, const void *src, struct codec *codecs,
+encode_struct_arr(void *dest_, const void *src, struct codec **codecs,
                   size_t n, size_t struct_sz)
 {
 	int i, j;
@@ -318,7 +157,7 @@ encode_struct_arr(void *dest_, const void *src, struct codec *codecs,
 			p32buf ++;
 		}
 
-		res = codec_compress(&codecs[i], intbuf, n, dest);
+		res = codec_compress(codecs[i], intbuf, n, dest);
 		dest += res;
 	}
 
@@ -333,7 +172,7 @@ encode_struct_arr(void *dest_, const void *src, struct codec *codecs,
  * Return the number of encoded bytes processed.
  */
 size_t
-decode_struct_arr(void *dest_, const void *src_, struct codec *codecs,
+decode_struct_arr(void *dest_, const void *src_, struct codec **codecs,
                   size_t n, size_t struct_sz)
 {
 	int i, j;
@@ -345,7 +184,7 @@ decode_struct_arr(void *dest_, const void *src_, struct codec *codecs,
 	intbuf = malloc(struct_sz * n);
 
 	for (i = 0; i < members; i++) {
-		res = codec_decompress(&codecs[i], src, intbuf, n);
+		res = codec_decompress(codecs[i], src, intbuf, n);
 		src += res;
 
 		p32buf = intbuf;
