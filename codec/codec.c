@@ -142,7 +142,7 @@ encode_struct_arr(void *dest_, const void *src, struct codec **codecs,
 	uint32_t *p32src, *p32buf;
 	uint32_t *intbuf;
 	char     *dest = (char *)dest_;
-	size_t   res, members = struct_sz >> 2 /* four bytes per interget */;
+	size_t   res, members = struct_sz >> 2 /* four bytes per integer */;
 
 	intbuf = malloc(struct_sz * n);
 
@@ -179,9 +179,9 @@ decode_struct_arr(void *dest_, const void *src_, struct codec **codecs,
 	uint32_t   *p32dest, *p32buf;
 	uint32_t   *intbuf;
 	const char *src = (const char *)src_;
-	size_t      res, members = struct_sz >> 2 /* four bytes per interget */;
+	size_t      res, members = struct_sz >> 2 /* four bytes per integer */;
 
-	intbuf = malloc(struct_sz * n);
+	intbuf = malloc(struct_sz * n + (15 << 2)); /* safety extra space needed */
 
 	for (i = 0; i < members; i++) {
 		res = codec_decompress(codecs[i], src, intbuf, n);

@@ -284,14 +284,15 @@ for_delta_decompress(const uint32_t *in, uint32_t *out, size_t len, size_t *b_)
 	if (len == 0)
 		return 0;
 	else
-		delta_buf = malloc((len - 1 + 16) * sizeof(uint32_t));
+		delta_buf = malloc((len - 1 + 15) * sizeof(uint32_t));
 		/* for_decompress() function in some cases, may output
 		 * more than `len' 32bits integers. In worst case, where
 		 * only one 32bits integer is encoded (len=1) with b=2,
 		 * according to for_decompress_b2() function, in this case,
 		 * decoding will write output buffer to the furthest at
-		 * `out[15]'. So sufficient extra space (16 in worst case)
-		 * is necessary.
+		 * `out[15]'. Therefore sufficient extra space is necessary.
+		 * (single 32bits can generate 16 out[], thus we need
+		 * 16 - 1 = 15 extra 32bits space in worst case)
 		 */
 
 	/* len is greater than zero, get and write initial value to output */
