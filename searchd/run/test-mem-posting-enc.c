@@ -7,52 +7,52 @@
 int main(void)
 {
 #ifdef DEBUG_MEM_POSTING
-	const uint32_t N = 60;
+	const uint32_t N = 10;
 #else
 	const uint32_t N = 2500;
 #endif
-	uint32_t docID, n_encode;
+	uint32_t i, docID;
 	struct math_posting_item item;
 	struct mem_posting *po, *buf_po;
-	struct codec codecs[] = {
-		{CODEC_PLAIN, NULL},
-		{CODEC_PLAIN, NULL},
-		{CODEC_PLAIN, NULL}
+
+	struct codec *codecs[] = {
+		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	};
 
 	printf("%u bytes/block.\n", MEM_POSTING_BLOCK_SZ);
 
 	po = mem_posting_create(2);
 	buf_po = mem_posting_create(MAX_SKIPPY_SPANS);
-	mem_posting_set_enc(po, sizeof(struct math_posting_item),
-	                    codecs, sizeof(codecs));
+	mem_posting_set_codecs(po, sizeof(struct math_posting_item), codecs);
 
 	for (docID = 1; docID < N; docID++) {
 		item.doc_id = docID;
 		item.exp_id = docID % 5;
 		item.pathinfo_pos = docID * 100;
 
+		printf("writting (%u, %u, %u)...\n",
+		       item.doc_id, item.exp_id, item.pathinfo_pos);
 		mem_posting_write(buf_po, 0, &item, sizeof(struct math_posting_item));
-		if (docID == N / 2 || docID + 1 == N) {
-#ifdef DEBUG_MEM_POSTING
-			printf("buffer posting list before clear:\n");
-			mem_posting_print(buf_po);
-#endif
-			n_encode = mem_posting_encode(po, buf_po);
-			mem_posting_clear(buf_po);
-			printf("use n_encode = %u\n", n_encode);
 
-#ifdef DEBUG_MEM_POSTING
-			printf("encoded posting list:\n");
-			mem_posting_enc_print(po);
-#endif
+		if (docID == N / 2 || docID + 1 == N) {
+			printf("\nencoding...\n");
+			mem_posting_encode(po, buf_po);
+			printf("\n");
+
+			mem_posting_clear(buf_po);
 		}
 	}
 
-#ifndef DEBUG_MEM_POSTING
-	printf("encoded posting list:\n");
-	mem_posting_enc_print(po);
-#endif
+	printf("raw posting list:\n");
+	mem_posting_print_raw(po);
+
+	printf("decoded posting list:\n");
+	mem_posting_print_dec(po);
+
+	for (i = 0; i < sizeof(codecs) / sizeof(struct codec*); i++)
+		codec_free((void*)codecs[i]);
 
 	mem_posting_release(po);
 	mem_posting_release(buf_po);

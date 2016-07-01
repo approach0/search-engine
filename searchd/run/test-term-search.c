@@ -165,15 +165,15 @@ struct mem_posting *term_posting_fork(void *term_posting)
 	struct term_posting_item *pi;
 	struct mem_posting *ret_mempost, *buf_mempost;
 
-	const struct codec codecs[] = {
-		{CODEC_PLAIN, NULL},
-		{CODEC_PLAIN, NULL}
+	struct codec *codecs[] = {
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 	};
 
 	/* create memory posting to be encoded */
 	ret_mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS);
-	mem_posting_set_enc(ret_mempost, sizeof(struct term_posting_item),
-	                    codecs, sizeof(codecs));
+	mem_posting_set_codecs(ret_mempost,
+	                       sizeof(struct term_posting_item), codecs);
 
 	/* create a temporary memory posting */
 	buf_mempost = mem_posting_create(MAX_SKIPPY_SPANS);
@@ -194,6 +194,9 @@ struct mem_posting *term_posting_fork(void *term_posting)
 	/* encode */
 	mem_posting_encode(ret_mempost, buf_mempost);
 	mem_posting_release(buf_mempost);
+
+	free(codecs[0]);
+	free(codecs[1]);
 	return ret_mempost;
 }
 

@@ -4,7 +4,7 @@
 #include "config.h"
 
 #ifdef DEBUG_MEM_POSTING
-#define SYS_MEM_PAGE_SZ 64
+#define SYS_MEM_PAGE_SZ 512
 #else
 #define SYS_MEM_PAGE_SZ 4096
 #endif
@@ -33,7 +33,7 @@ struct mem_posting {
 
 	/* encoder info */
 	uint32_t                   struct_sz;
-	struct codec              *codecs;
+	struct codec             **codecs;
 
 	/* merge-related */
 	char                      *buff; /* merge buffer */
@@ -53,15 +53,14 @@ size_t
 mem_posting_write(struct mem_posting*, uint32_t, const void*, size_t);
 
 void
-mem_posting_set_enc(struct mem_posting*, uint32_t,
-                    const struct codec*, size_t);
+mem_posting_set_codecs(struct mem_posting*, uint32_t, struct codec**);
 
 uint32_t
 mem_posting_encode(struct mem_posting*, struct mem_posting*);
 
-void mem_posting_print(struct mem_posting*);
+void mem_posting_print_raw(struct mem_posting*);
 
-void mem_posting_enc_print(struct mem_posting*);
+void mem_posting_print_dec(struct mem_posting*);
 
 void mem_posting_print_meminfo(struct mem_posting*);
 

@@ -5,9 +5,28 @@
 #include "mem-posting.h"
 #include "config.h"
 
+#undef NDEBUG
+#include <assert.h>
+
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-typedef void (*blk_print_callbk)(struct mem_posting_blk*, size_t);
+typedef void (*blk_print_callbk)(struct mem_posting*, struct mem_posting_blk*);
+
+static void print_int32_buff(uint32_t *integer, size_t n)
+{
+	size_t i;
+	for (i = 0; i < n; i++)
+		printf("%u,", integer[i]);
+	printf("\n");
+}
+
+static void print_int8_buff(uint8_t *str, size_t n)
+{
+	size_t i;
+	for (i = 0; i < n; i++)
+		printf("%x,", str[i]);
+	printf("\n");
+}
 
 static void po_init(struct mem_posting *po, uint32_t skippy_spans)
 {
@@ -56,11 +75,17 @@ void mem_posting_clear(struct mem_posting *po)
 
 void mem_posting_release(struct mem_posting *po)
 {
-	if (po->codecs)
-		free(po->codecs);
+	uint32_t i, n_members = po->struct_sz / sizeof(uint32_t);
 
+	/* free codecs */
+	for (i = 0; i < n_members; i++)
+		codec_free(po->codecs[i]);
+	free(po->codecs);
+
+	/* free posting list blocks */
 	mem_posting_clear(po);
 
+	/* free posting list header */
 #ifdef DEBUG_MEM_POSTING
 	printf("free memory posting list.\n");
 #endif
@@ -106,15 +131,16 @@ static __inline bool is_paging(struct mem_posting *po, size_t next_bytes)
 	        /* not enough space */);
 }
 
-void
-mem_posting_set_enc(struct mem_posting *po, uint32_t struct_sz,
-                    const struct codec *codecs, size_t codecs_sz)
+void mem_posting_set_codecs(struct mem_posting *po, uint32_t struct_sz,
+                            struct codec **codecs)
 {
+	uint32_t i, n_members = struct_sz / sizeof(uint32_t);
 	po->struct_sz = struct_sz;
 
 	/* copy codecs */
-	po->codecs = malloc(codecs_sz);
-	memcpy(po->codecs, codecs, codecs_sz);
+	po->codecs = calloc(n_members, sizeof(struct codec*));
+	for (i = 0; i < n_members; i++)
+		po->codecs[i] = codec_new(codecs[i]->method, codecs[i]->args);
 }
 
 uint32_t
@@ -122,6 +148,7 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src)
 {
 	struct mem_posting_blk *srcblk = src->head;
 	uint32_t struct_sz = dest->struct_sz;
+	/* n_encode is the number of structure to be encoded at a time */
 	const uint32_t n_encode = MAX(1, MEM_POSTING_N_ENCODE);
 	const uint32_t n_encode_bytes = n_encode * struct_sz;
 
@@ -140,7 +167,20 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src)
 			first_key = *(uint32_t*)(srcblk->buff + byte_now);
 			remain_bytes = srcblk->end - byte_now;
 
+#ifdef DEBUG_MEM_POSTING_ENC
+			printf("DEBUG\n");
+			printf("n_encode = %u\n", n_encode);
+			printf("remain_bytes = %u\n", remain_bytes);
+#endif
+
 			if (remain_bytes >= n_encode_bytes) {
+#ifdef DEBUG_MEM_POSTING_ENC
+				printf("case A\n");
+				printf("[before encode %u * %u]\n", struct_sz, n_encode);
+				print_int8_buff((uint8_t*)srcblk->buff + byte_now,
+				                struct_sz * n_encode);
+#endif
+
 				/* encode n_encode structures */
 				res_bytes = encode_struct_arr(buf_load,
 				                              srcblk->buff + byte_now,
@@ -152,6 +192,13 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src)
 				/* write encode header */
 				*buf_head = n_encode;
 			} else {
+#ifdef DEBUG_MEM_POSTING_ENC
+				printf("case B\n");
+				printf("[before encode %u * %u]\n", struct_sz, n_enc_remain);
+				print_int8_buff((uint8_t*)srcblk->buff + byte_now,
+				                struct_sz * n_enc_remain);
+#endif
+
 				/* encode n_enc_remain structures */
 				res_bytes = encode_struct_arr(buf_load,
 				                              srcblk->buff + byte_now,
@@ -162,6 +209,11 @@ mem_posting_encode(struct mem_posting *dest, struct mem_posting *src)
 				/* write encode header */
 				*buf_head = n_enc_remain;
 			}
+
+#ifdef DEBUG_MEM_POSTING_ENC
+			printf("[after encode]\n");
+			print_int8_buff((uint8_t*)buf_load, res_bytes);
+#endif
 
 			/* write encoded bytes to destination memory posting */
 			mem_posting_write(dest, first_key, buf,
@@ -179,6 +231,7 @@ mem_posting_write(struct mem_posting *po, uint32_t first_key,
                   const void *in, size_t bytes)
 {
 	struct mem_posting_blk *blk;
+	assert(bytes <= MEM_POSTING_BLOCK_SZ);
 
 	if (is_paging(po, bytes)) {
 
@@ -199,21 +252,13 @@ mem_posting_write(struct mem_posting *po, uint32_t first_key,
 	return 0;
 }
 
-static void print_int32_buff(uint32_t *integer, size_t n)
-{
-	size_t i;
-	for (i = 0; i < n; i++)
-		printf("%u,", integer[i]);
-	printf("\n");
-}
-
 void mem_posting_print_meminfo(struct mem_posting *po)
 {
 	uint32_t i, n_encode, n_members, struct_sz = po->struct_sz;
 	uint32_t mem_usage = po->n_tot_blocks * MEM_POSTING_BLOCK_SZ;
 
 	printf("%u blocks (%.2f KB), %.2f%% used.", po->n_tot_blocks,
-	       (float)mem_usage / 1024.f,
+	       (float)mem_usage / 1024.f, (mem_usage == 0) ? 0.f :
 	       ((float)po->n_used_bytes / (float)mem_usage) * 100.f);
 
 	if (struct_sz != 0) {
@@ -222,9 +267,14 @@ void mem_posting_print_meminfo(struct mem_posting *po)
 	}
 	printf("\n");
 
+	if (po->codecs == NULL) {
+		printf("no codec(s) specified.\n");
+		return;
+	}
+
 	n_members = struct_sz / sizeof(uint32_t);
 	for (i = 0; i < n_members; i++)
-		printf("member %u: %s\n", i, codec_method_str(po->codecs[i].method));
+		printf("member %u: %s\n", i, codec_method_str(po->codecs[i]->method));
 }
 
 static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun)
@@ -246,42 +296,60 @@ static void po_print(struct mem_posting *po, blk_print_callbk blk_print_fun)
 		printf("[%u/%d used]:\n", blk->end, MEM_POSTING_BLOCK_SZ);
 
 		skippy_node_print(&blk->sn);
-		blk_print_fun(blk, po->struct_sz);
+		blk_print_fun(po, blk);
 
 		blk = blk->next;
 		i ++;
 	}
 }
 
-static void po_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
+static void
+po_print_raw_callbk(struct mem_posting *po, struct mem_posting_blk* blk)
 {
-	print_int32_buff((uint32_t*)blk->buff, blk->end / sizeof(uint32_t));
+#ifdef DEBUG_MEM_POSTING_ENC
+	print_int8_buff((uint8_t*)blk->buff, blk->end);
+#else
+	print_int32_buff((uint32_t*)blk->buff,
+	                 (blk->end + sizeof(uint32_t) - 1) / sizeof(uint32_t));
+#endif
 }
 
-void mem_posting_print(struct mem_posting *po)
+void mem_posting_print_raw(struct mem_posting *po)
 {
-	po_print(po, &po_print_callbk);
+	po_print(po, &po_print_raw_callbk);
 }
 
-static void po_enc_print_callbk(struct mem_posting_blk* blk, size_t struct_sz)
+static void
+po_print_dec_callbk(struct mem_posting *po, struct mem_posting_blk* blk)
 {
 	uint32_t j = 0;
 	enc_hd_t *enc_head;
-	uint32_t n_members = struct_sz / sizeof(uint32_t);
+	uint32_t n_members = po->struct_sz / sizeof(uint32_t);
+
+	size_t   res_bytes;
+	char     tmpbuf[MEM_POSTING_BLOCK_SZ];
 
 	while (j < blk->end) {
 		enc_head = (enc_hd_t*)(blk->buff + j);
-		printf("[ %u ]:", *enc_head);
 		j += sizeof(enc_hd_t);
-		print_int32_buff((uint32_t*)(blk->buff + j),
-				(*enc_head) * n_members);
-		j += (*enc_head) * struct_sz;
+
+#ifdef DEBUG_MEM_POSTING_ENC
+		printf("[before decode %u * %u]\n", po->struct_sz, (*enc_head));
+		print_int8_buff((uint8_t*)blk->buff + j, po->struct_sz * (*enc_head));
+#endif
+		res_bytes = decode_struct_arr(tmpbuf, blk->buff + j, po->codecs,
+		                              *enc_head, po->struct_sz);
+
+		printf("[dec %lu bytes]: ", res_bytes);
+		print_int32_buff((uint32_t*)(tmpbuf), (*enc_head) * n_members);
+
+		j += res_bytes;
 	}
 }
 
-void mem_posting_enc_print(struct mem_posting *po)
+void mem_posting_print_dec(struct mem_posting *po)
 {
-	po_print(po, &po_enc_print_callbk);
+	po_print(po, &po_print_dec_callbk);
 }
 
 /*

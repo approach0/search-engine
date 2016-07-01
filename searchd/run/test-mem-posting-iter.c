@@ -15,10 +15,10 @@ int main(void)
 	uint32_t docID;
 	struct math_posting_item item, *cur_item;
 	struct mem_posting *po, *buf_po;
-	struct codec codecs[] = {
-		{CODEC_PLAIN, NULL},
-		{CODEC_PLAIN, NULL},
-		{CODEC_PLAIN, NULL}
+	struct codec *codecs[] = {
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	};
 
 	/* variables for testing jump */
@@ -30,10 +30,13 @@ int main(void)
 	po = mem_posting_create(2);
 	buf_po = mem_posting_create(MAX_SKIPPY_SPANS);
 
-	/* write some dummy values */
-	mem_posting_set_enc(po, sizeof(struct math_posting_item),
-	                    codecs, sizeof(codecs));
+	/* set codecs */
+	mem_posting_set_codecs(po, sizeof(struct math_posting_item), codecs);
+	free(codecs[0]);
+	free(codecs[1]);
+	free(codecs[2]);
 
+	/* write some dummy values */
 	for (docID = 1; docID < N; docID++) {
 		item.doc_id = docID * 2;
 		item.exp_id = docID % 5;
@@ -48,7 +51,7 @@ int main(void)
 
 	/* now we get the encoded posting list */
 	printf("encoded posting list:\n");
-	mem_posting_enc_print(po);
+	mem_posting_print_dec(po);
 
 	if (!mem_posting_start(po)) {
 		printf("error in starting posting merge.\n");

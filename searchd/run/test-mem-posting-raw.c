@@ -29,7 +29,7 @@ int main(void)
 		mem_posting_write(po, docID, test_data, len * sizeof(uint32_t));
 	}
 
-	mem_posting_print(po);
+	mem_posting_print_raw(po);
 	mem_posting_release(po);
 	return 0;
 }
