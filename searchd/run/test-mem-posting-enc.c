@@ -15,11 +15,19 @@ int main(void)
 	struct math_posting_item item;
 	struct mem_posting *po, *buf_po;
 
+#if 0
+	struct codec *codecs[] = {
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+	};
+#else
 	struct codec *codecs[] = {
 		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	};
+#endif
 
 	printf("%u bytes/block.\n", MEM_POSTING_BLOCK_SZ);
 
