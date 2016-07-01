@@ -39,7 +39,7 @@ void         query_delete(struct query);
 #include "term-index/term-index.h"
 #include "keyval-db/keyval-db.h"
 #include "math-index/math-index.h"
-#include "postcache.h"
+#include "mem-index/postcache.h"
 
 struct indices {
 	void                 *ti;

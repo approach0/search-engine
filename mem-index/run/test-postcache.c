@@ -1,36 +1,37 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "mem-index/mem-posting.h"
+#include "mem-posting.h"
 #include "postcache.h"
-#include "search.h"
+#include "term-index/term-index.h"
 
 #define TEST_TERM "significant"
 
 int main(void)
 {
 	struct postcache_pool  cache_pool;
-	struct indices         indices;
-	struct postcache_item* cache_item;
+	void                  *ti;
+	struct postcache_item *cache_item;
 
 	term_id_t    term_id;
 	void        *term_posting = NULL;
 
 	printf("opening index...\n");
-	indices = indices_open("/home/tk/large-index");
-	if (indices.ti == NULL) {
+	ti = term_index_open("/home/tk/large-index/term",
+	                             TERM_INDEX_OPEN_EXISTS);
+	if (ti == NULL) {
 		printf("term index open failed.\n");
 		goto exit;
 	}
 
-	term_id = term_lookup(indices.ti, TEST_TERM);
+	term_id = term_lookup(ti, TEST_TERM);
 	if (term_id == 0) {
 		printf("term id is zero.\n");
 		goto exit;
 	}
 
 	printf("cache term `%s'\n", TEST_TERM);
-	term_posting = term_index_get_posting(indices.ti, term_id);
+	term_posting = term_index_get_posting(ti, term_id);
 
 	if (term_posting == NULL) {
 		printf("term posting is NULL.\n");
@@ -56,6 +57,8 @@ int main(void)
 
 exit:
 	printf("closing index...\n");
-	indices_close(&indices);
+	if (ti)
+		term_index_close(ti);
+
 	return 0;
 }
