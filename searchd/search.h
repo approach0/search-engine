@@ -57,7 +57,7 @@ void           indices_close(struct indices*);
 void indices_cache(struct indices*, uint64_t);
 
 /* search method */
-#include "mem-posting.h"
+#include "mem-index/mem-posting.h"
 #include "postmerge.h"
 #include "bm25-score.h"
 #include "rank.h"

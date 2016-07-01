@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <assert.h>
+
+#include "mem-index/mem-posting.h"
 #include "postcache.h"
-#include "mem-posting.h"
 #include "search.h"
 
 #define TEST_TERM "significant"

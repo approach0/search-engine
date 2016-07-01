@@ -1,0 +1,4 @@
+/*
+#define DEBUG_MEM_POSTING
+#define DEBUG_MEM_POSTING_ENC
+*/
