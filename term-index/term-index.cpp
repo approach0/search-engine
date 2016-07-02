@@ -204,17 +204,29 @@ bool term_posting_jump(void *posting, uint64_t doc_id)
 	return po->nextEntry(doc_id);
 }
 
+#include "searchd/config.h" /* for MAX_MERGE_POSTINGS */
+
 struct term_posting_item *term_posting_current(void *posting)
 {
-	static struct term_posting_item ret;
+	static struct term_posting_item *ret, q[MAX_MERGE_POSTINGS];
+	static int i = 0;
+
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
 	indri::index::DocListIterator::DocumentData *doc;
 	doc = po->currentEntry();
 
 	if (doc) {
-		ret.doc_id = doc->document;
-		ret.tf = doc->positions.size();
-		return &ret;
+		/* a hacky way to return term_posting_item pointers. This array is
+		 * made of MAX_MERGE_POSTINGS objects to avoid different posting
+		 * lists referring to the same object at merge time, which leads to
+		 * all query terms sharing an identical term-frequency, and a wrong
+		 * score as a result. */
+		ret = &q[i];
+		i = (i + 1) % MAX_MERGE_POSTINGS;
+		ret->doc_id = doc->document;
+		ret->tf = doc->positions.size();
+
+		return ret;
 	} else {
 		return NULL;
 	}
