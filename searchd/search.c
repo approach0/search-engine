@@ -300,8 +300,8 @@ static LIST_IT_CALLBK(add_postinglist_for_merge)
 	/* set IDF pointer */
 	idf = apfm_args->bm25args->idf;
 
-	printf("adding posting list of keyword `%s'(termID: %u)...\n",
-	       kw_utf8, term_id);
+	printf("adding posting list[%u] of keyword `%s'(termID: %u)...\n",
+	       apfm_args->posting_idx, kw_utf8, term_id);
 
 	if (term_id == 0) {
 		/* if term is not found in our dictionary */
@@ -396,6 +396,7 @@ posting_on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			tpi = pm->cur_pos_item[i];
 			score += BM25_term_i_score(pm_args->bm25args, i, tpi->tf, doclen);
+			//printf("score += term[%u]_score(%u, %f)\n", i, tpi->tf, doclen);
 		}
 
 	rank_set_hit(pm_args->rk_set, docID, score);
