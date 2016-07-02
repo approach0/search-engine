@@ -160,6 +160,7 @@ void indices_cache(struct indices* indices, uint64_t mem_limit)
 	char     *term;
 	void     *posting;
 	term_id_t term_id;
+	bool      ellp_lock = 0;
 
 	postcache_set_mem_limit(&indices->postcache, mem_limit);
 
@@ -172,7 +173,14 @@ void indices_cache(struct indices* indices, uint64_t mem_limit)
 		posting = term_index_get_posting(indices->ti, term_id);
 
 		if (posting) {
-			printf("`%s'(df=%u) ", term, df);
+			if (term_id < MAX_PRINT_CACHE_TERMS) {
+				printf("`%s'(df=%u) ", term, df);
+
+			} else if (!ellp_lock) {
+				printf(" ...... ");
+				ellp_lock = 1;
+			}
+
 			res = postcache_add_term_posting(&indices->postcache,
 			                                 term_id, posting);
 			if (res == POSTCACHE_EXCEED_MEM_LIMIT)
@@ -183,7 +191,7 @@ void indices_cache(struct indices* indices, uint64_t mem_limit)
 	}
 	printf("\n");
 
-	printf("caching complete:\n");
+	printf("caching complete (%u posting lists cached):\n", term_id);
 	postcache_print_mem_usage(&indices->postcache);
 }
 
