@@ -368,16 +368,19 @@ static bool merge_next_blk(struct mem_posting *po)
 
 static void merge_rebuf(struct mem_posting *po)
 {
-	size_t res_bytes;
+	size_t enc_bytes /* number of encoded bytes (smaller number) */;
+	size_t dec_bytes /* number of decoded bytes (larger number) */;
 
 #ifdef DEBUG_MEM_POSTING
 	printf("merge rebuf.\n");
 #endif
 
-	if (po->blk_idx >= po->blk_now->end) {
+	assert(po->blk_idx <= po->blk_now->end);
+
+	if (po->blk_idx == po->blk_now->end) {
 		/* go to a new block */
 		if (!merge_next_blk(po)) {
-			res_bytes = 0;
+			dec_bytes = 0;
 			goto reset_buf_ptr;
 		}
 	}
@@ -386,14 +389,19 @@ static void merge_rebuf(struct mem_posting *po)
 	enc_hd_t *enc_head = (enc_hd_t*)(po->blk_now->buff + po->blk_idx);
 	po->blk_idx += sizeof(enc_hd_t);
 
+#ifdef DEBUG_MEM_POSTING
+	//printf("enc_head = %u, blk_idx = %u\n", *enc_head, po->blk_idx);
+#endif
+
 	/* decode into merge buffer */
-	res_bytes = decode_struct_arr(po->buff, po->blk_now->buff + po->blk_idx,
+	enc_bytes = decode_struct_arr(po->buff, po->blk_now->buff + po->blk_idx,
 	                              po->codecs, *enc_head, po->struct_sz);
-	po->blk_idx += (*enc_head) * po->struct_sz;
+	dec_bytes = (*enc_head) * po->struct_sz;
+	po->blk_idx += enc_bytes;
 
 reset_buf_ptr:
 	po->buf_idx = 0;
-	po->buf_end = res_bytes;
+	po->buf_end = dec_bytes;
 }
 
 bool mem_posting_start(void *po_)
