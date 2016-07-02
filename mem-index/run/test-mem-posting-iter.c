@@ -15,11 +15,20 @@ int main(void)
 	uint32_t docID;
 	struct math_posting_item item, *cur_item;
 	struct mem_posting *po, *buf_po;
+
+#if 0
 	struct codec *codecs[] = {
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	};
+#else
+	struct codec *codecs[] = {
+		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+	};
+#endif
 
 	/* variables for testing jump */
 	uint32_t fromID;
@@ -49,7 +58,7 @@ int main(void)
 	mem_posting_encode(po, buf_po);
 	mem_posting_release(buf_po);
 
-	/* now we get the encoded posting list */
+	/* print current posting list (decoded) */
 	printf("encoded posting list:\n");
 	mem_posting_print_dec(po);
 

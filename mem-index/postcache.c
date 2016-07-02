@@ -77,10 +77,17 @@ static struct mem_posting *term_posting_fork(void *term_posting)
 	struct term_posting_item *pi;
 	struct mem_posting *ret_mempost, *buf_mempost;
 
+#if 0
 	struct codec *codecs[] = {
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	};
+#else
+	struct codec *codecs[] = {
+		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
+	};
+#endif
 
 	/* create memory posting to be encoded */
 	ret_mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS);
