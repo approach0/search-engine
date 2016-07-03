@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 /*
  * query structures
  */
@@ -9,9 +11,16 @@ enum query_kw_type {
 /* for wide string converting */
 #include "wstring/wstring.h"
 
-/* for MAX_QUERY_BYTES */
+/* for MAX_TEX_BYTES & MAX_TEX_WSTR_LEN */
+#include "indexer/config.h"
+
+/* for MAX_TERM_BYTES & MAX_TERM_WSTR_LEN */
 #include "txt-seg/txt-seg.h"
 #include "txt-seg/config.h"
+
+/* consider both math & term */
+#define MAX_QUERY_BYTES     MAX_TERM_BYTES + MAX_TEX_BYTES
+#define MAX_QUERY_WSTR_LEN  MAX_TERM_WSTR_LEN + MAX_TEX_WSTR_LEN
 
 struct query_keyword {
 	enum query_kw_type type;
@@ -61,6 +70,7 @@ void indices_cache(struct indices*, uint64_t);
 #include "postmerge.h"
 #include "bm25-score.h"
 #include "rank.h"
+#include "math-search.h"
 
 struct rank_set
 indices_run_query(struct indices*, const struct query);

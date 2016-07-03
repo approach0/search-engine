@@ -6,7 +6,7 @@
 
 #include "search.h"
 #include "snippet.h"
-#include "indexer/doc-term-pos.h"
+#include "indexer/doc-tok-pos.h"
 
 struct snippet_arg {
 	keyval_db_t   kv_db;
@@ -41,7 +41,7 @@ static LIST_IT_CALLBK(calc_hl_position)
 	char          *kw_utf8 = wstr2mbstr(kw->wstr);
 	docterm_t      docterm = {chp_arg->docID, ""};
 	size_t         val_sz;
-	docterm_pos_t *termpos;
+	doctok_pos_t  *termpos;
 
 	/* get keyword position in document */
 	strcpy(docterm.term, kw_utf8);

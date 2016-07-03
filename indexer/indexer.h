@@ -9,4 +9,4 @@
 
 #include "lex-slice.h"
 #include "index-util.h"
-#include "doc-term-pos.h"
+#include "doc-tok-pos.h"

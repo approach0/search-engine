@@ -10,7 +10,11 @@
 #define MAX_MATH_PATHS MAX_SUBPATH_ID
 
 typedef uint8_t  pathinfo_num_t;
-typedef uint32_t exp_id_t;
+
+/* for exp_id_t */
+#include "txt-seg/txt-seg.h"
+#include "txt-seg/config.h"
+#include "indexer/doc-tok-pos.h"
 
 #define MAX_EXP_ID UINT_MAX
 

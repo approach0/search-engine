@@ -90,20 +90,21 @@ static struct mem_posting *term_posting_fork(void *term_posting)
 #endif
 
 	/* create memory posting to be encoded */
-	ret_mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS);
-	mem_posting_set_codecs(ret_mempost,
-	                       sizeof(struct term_posting_item), codecs);
+	ret_mempost = mem_posting_create(sizeof(struct term_posting_item),
+	                                 DEFAULT_SKIPPY_SPANS);
+	mem_posting_set_codecs(ret_mempost, codecs);
 
 	/* create a temporary memory posting */
-	buf_mempost = mem_posting_create(MAX_SKIPPY_SPANS);
+	buf_mempost = mem_posting_create(sizeof(struct term_posting_item),
+	                                 MAX_SKIPPY_SPANS);
 
 	/* start iterating term posting list */
 	term_posting_start(term_posting);
 
 	do {
 		pi = term_posting_current(term_posting);
-		mem_posting_write(buf_mempost, 0, pi,
-		                  sizeof(struct term_posting_item));
+		mem_posting_write(buf_mempost, 0 /* does not matter for this buffer */,
+		                  pi, sizeof(struct term_posting_item));
 
 	} while (term_posting_next(term_posting));
 

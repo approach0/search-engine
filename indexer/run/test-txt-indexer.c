@@ -2,7 +2,11 @@
 #include <string.h>
 #include <getopt.h>
 
+#undef NDEBUG
+#include <assert.h>
+
 #include "indexer.h"
+#include "config.h"
 
 static void *term_index = NULL;
 static math_index_t math_index = NULL;
@@ -12,11 +16,21 @@ static doc_id_t new_docID = 0;
 static doc_id_t new_expID = 0;
 static list splited_terms = LIST_NULL;
 
+struct saved_tex {
+	char             str[MAX_TEX_BYTES];
+	uint32_t         pos, sz;
+	struct list_node ln;
+};
+
+static list saved_tex_li = LIST_NULL;
+
+LIST_DEF_FREE_FUN(saved_tex_li_release, struct saved_tex, ln, free(p));
+
 static LIST_IT_CALLBK(index_term)
 {
 	LIST_OBJ(struct splited_term, st, ln);
 
-//	printf("term `%s': ", st->term);
+//	printf("indexing term `%s': ", st->term);
 //	printf("%u[%u]\n", st->doc_pos, st->n_bytes);
 
 	/* add term for inverted-index */
@@ -27,11 +41,8 @@ static LIST_IT_CALLBK(index_term)
 static LIST_IT_CALLBK(index_term_pos)
 {
 	LIST_OBJ(struct splited_term, st, ln);
-	P_CAST(nterms, size_t, pa_extra);
-	docterm_pos_t termpos = {st->doc_pos, st->n_bytes};
+	doctok_pos_t termpos = {st->doc_pos, st->n_bytes};
 	docterm_t docterm;
-
-	(*nterms) ++;
 
 	/* save term position */
 	docterm.docID = new_docID;
@@ -39,7 +50,7 @@ static LIST_IT_CALLBK(index_term_pos)
 
 	if(keyval_db_put(keyval_db,
 	                 &docterm,sizeof(doc_id_t) + st->n_bytes,
-	                 &termpos, sizeof(docterm_pos_t))) {
+	                 &termpos, sizeof(doctok_pos_t))) {
 		printf("put error: %s\n", keyval_db_last_err(keyval_db));
 		return LIST_RET_BREAK;
 	}
@@ -47,22 +58,59 @@ static LIST_IT_CALLBK(index_term_pos)
 	LIST_GO_OVER;
 }
 
-extern void handle_math(struct lex_slice *slice)
+static LIST_IT_CALLBK(index_tex_and_pos)
 {
-//	printf("math: %s (len=%u)\n", slice->mb_str, slice->offset);
+	LIST_OBJ(struct saved_tex, st, ln);
+
+	doctok_pos_t texpos = {st->pos, st->sz};
+	doctex_t doctex;
+
 	struct tex_parse_ret parse_ret;
-	parse_ret = tex_parse(slice->mb_str, 0, false);
+	parse_ret = tex_parse(st->str, 0, false);
 
 	if (parse_ret.code == PARSER_RETCODE_SUCC) {
-		printf("indexing math `%s' (docID=%u, expID=%u)\n", slice->mb_str,
-		       new_docID, new_expID);
-		math_index_add_tex(math_index, new_docID, new_expID,
-		                   parse_ret.subpaths);
-		subpaths_release(&parse_ret.subpaths);
+		{ /* index */
+			printf("indexing math `%s' (docID=%u, expID=%u)\n",
+			       st->str, new_docID, new_expID);
+			math_index_add_tex(math_index, new_docID, new_expID,
+			                   parse_ret.subpaths);
+			subpaths_release(&parse_ret.subpaths);
+		}
+
+		{ /* index position */
+			doctex.docID = new_docID;
+			doctex.expID = new_expID;
+
+			printf("indexing math position (docID=%u,expID=%u) -> [%u,%u]\n",
+			       doctex.docID, doctex.expID, texpos.doc_pos, texpos.n_bytes);
+			if(keyval_db_put(keyval_db,
+			                 &doctex, sizeof(doctex_t),
+			                 &texpos, sizeof(doctok_pos_t))) {
+				printf("put error: %s\n", keyval_db_last_err(keyval_db));
+				return LIST_RET_BREAK;
+			}
+		}
+
 		new_expID ++;
 	} else {
 		printf("math parser error: %s\n", parse_ret.msg);
 	}
+
+	LIST_GO_OVER;
+}
+
+extern void handle_math(struct lex_slice *slice)
+{
+	struct saved_tex *st = malloc(sizeof(struct saved_tex));
+	assert(st != NULL);
+
+	strcpy(st->str, slice->mb_str);
+	st->pos = slice->begin;
+	st->sz = slice->offset;
+	LIST_NODE_CONS(st->ln);
+
+	list_insert_one_at_tail(&st->ln, &saved_tex_li, NULL, NULL);
+	printf("save math: %s [%u,%u]\n", st->str, st->pos, st->sz);
 }
 
 extern void handle_text(struct lex_slice *slice)
@@ -80,19 +128,21 @@ extern void handle_text(struct lex_slice *slice)
 static void index_txt_document(const char *fullpath)
 {
 	size_t val_sz = strlen(fullpath) + 1;
+
 	LIST_CONS(splited_terms);
-	size_t nterms = 0;
+	LIST_CONS(saved_tex_li);
 
 	term_index_doc_begin(term_index);
 	lex_txt_file(fullpath);
 	list_foreach(&splited_terms, &index_term, NULL);
-	new_docID = term_index_doc_end(term_index);
+	new_docID /* docID just indexed */ = term_index_doc_end(term_index);
+	//printf("new_docID = %u\n", new_docID);
 
-	new_expID = 0; /* clear expression ID */
+	/* index math from saved tex list */
+	list_foreach(&saved_tex_li, &index_tex_and_pos, NULL);
 
-	list_foreach(&splited_terms, &index_term_pos, &nterms);
-	//printf("{%lu}", nterms);
-	release_splited_terms(&splited_terms);
+	/* save term positions */
+	list_foreach(&splited_terms, &index_term_pos, NULL);
 
 	/* save document path */
 	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
@@ -100,6 +150,10 @@ static void index_txt_document(const char *fullpath)
 		printf("put error: %s\n", keyval_db_last_err(keyval_db));
 		return;
 	}
+
+	new_expID = 0; /* clear expression ID */
+	release_splited_terms(&splited_terms);
+	saved_tex_li_release(&saved_tex_li);
 }
 
 static int foreach_file_callbk(const char *filename, void *arg)

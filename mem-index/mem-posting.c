@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "mem-posting.h"
 #include "config.h"
@@ -43,11 +44,14 @@ static void po_init(struct mem_posting *po, uint32_t skippy_spans)
 	/* leave merge-related initializations to mem_posting_start() */
 }
 
-struct mem_posting *mem_posting_create(uint32_t skippy_spans)
+struct mem_posting
+*mem_posting_create(uint32_t struct_sz, uint32_t skippy_spans)
 {
 	struct mem_posting *ret;
 	ret = malloc(sizeof(struct mem_posting));
+
 	po_init(ret, skippy_spans);
+	ret->struct_sz = struct_sz;
 
 #ifdef DEBUG_MEM_POSTING
 	printf("new memory posting list created.\n");
@@ -78,9 +82,12 @@ void mem_posting_release(struct mem_posting *po)
 	uint32_t i, n_members = po->struct_sz / sizeof(uint32_t);
 
 	/* free codecs */
-	for (i = 0; i < n_members; i++)
-		codec_free(po->codecs[i]);
-	free(po->codecs);
+	if (po->codecs) {
+		for (i = 0; i < n_members; i++)
+			codec_free(po->codecs[i]);
+
+		free(po->codecs);
+	}
 
 	/* free posting list blocks */
 	mem_posting_clear(po);
@@ -131,11 +138,9 @@ static __inline bool is_paging(struct mem_posting *po, size_t next_bytes)
 	        /* not enough space */);
 }
 
-void mem_posting_set_codecs(struct mem_posting *po, uint32_t struct_sz,
-                            struct codec **codecs)
+void mem_posting_set_codecs(struct mem_posting *po, struct codec **codecs)
 {
-	uint32_t i, n_members = struct_sz / sizeof(uint32_t);
-	po->struct_sz = struct_sz;
+	uint32_t i, n_members = po->struct_sz / sizeof(uint32_t);
 
 	/* copy codecs */
 	po->codecs = calloc(n_members, sizeof(struct codec*));
@@ -366,13 +371,37 @@ static bool merge_next_blk(struct mem_posting *po)
 	return (po->blk_now != NULL);
 }
 
-static void merge_rebuf(struct mem_posting *po)
+static size_t raw_rebuf(struct mem_posting *po)
 {
-	size_t enc_bytes /* number of encoded bytes (smaller number) */;
-	size_t dec_bytes /* number of decoded bytes (larger number) */;
+	memcpy(po->buff, po->blk_now->buff + po->blk_idx, po->struct_sz);
+	po->blk_idx += po->struct_sz;
+
+	return po->struct_sz;
+}
+
+static size_t decode_rebuf(struct mem_posting *po)
+{
+	/* read encode header */
+	enc_hd_t *enc_head = (enc_hd_t*)(po->blk_now->buff + po->blk_idx);
+	po->blk_idx += sizeof(enc_hd_t);
 
 #ifdef DEBUG_MEM_POSTING
-	printf("merge rebuf.\n");
+	//printf("enc_head = %u, blk_idx = %u\n", *enc_head, po->blk_idx);
+#endif
+
+	/* decode into merge buffer */
+	po->blk_idx += decode_struct_arr(po->buff, po->blk_now->buff + po->blk_idx,
+	                                 po->codecs, *enc_head, po->struct_sz);
+
+	return (*enc_head) * po->struct_sz;
+}
+
+static void rebuf(struct mem_posting *po)
+{
+	size_t dec_bytes /* number of decoded bytes */;
+
+#ifdef DEBUG_MEM_POSTING
+	printf("rebuf.\n");
 #endif
 
 	assert(po->blk_idx <= po->blk_now->end);
@@ -385,19 +414,10 @@ static void merge_rebuf(struct mem_posting *po)
 		}
 	}
 
-	/* read encode header */
-	enc_hd_t *enc_head = (enc_hd_t*)(po->blk_now->buff + po->blk_idx);
-	po->blk_idx += sizeof(enc_hd_t);
-
-#ifdef DEBUG_MEM_POSTING
-	//printf("enc_head = %u, blk_idx = %u\n", *enc_head, po->blk_idx);
-#endif
-
-	/* decode into merge buffer */
-	enc_bytes = decode_struct_arr(po->buff, po->blk_now->buff + po->blk_idx,
-	                              po->codecs, *enc_head, po->struct_sz);
-	dec_bytes = (*enc_head) * po->struct_sz;
-	po->blk_idx += enc_bytes;
+	if (po->codecs != NULL)
+		dec_bytes = decode_rebuf(po);
+	else
+		dec_bytes = raw_rebuf(po);
 
 reset_buf_ptr:
 	po->buf_idx = 0;
@@ -424,7 +444,7 @@ bool mem_posting_start(void *po_)
 	po->blk_idx = 0;
 
 	/* read the very first decoded bytes into merge buffer */
-	merge_rebuf(po);
+	rebuf(po);
 	return (po->buf_end != 0);
 }
 
@@ -437,7 +457,7 @@ bool mem_posting_next(void *po_)
 		if (po->buf_idx < po->buf_end)
 			return 1;
 		else
-			merge_rebuf(po);
+			rebuf(po);
 
 	} while (po->buf_end != 0);
 
@@ -465,7 +485,7 @@ bool mem_posting_jump(void *po_, uint64_t target_)
 #endif
 		po->blk_now = MEMBER_2_STRUCT(jump_to, struct mem_posting_blk, sn);
 		po->blk_idx = 0;
-		merge_rebuf(po);
+		rebuf(po);
 	}
 #ifdef DEBUG_MEM_POSTING
 	else

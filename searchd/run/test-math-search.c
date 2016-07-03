@@ -3,14 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 
-#include "list/list.h"
-#include "keyval-db/keyval-db.h"
-#include "postmerge.h"
-#include "math-search.h"
-
-/* for MAX_QUERY_BYTES */
-#include "txt-seg/txt-seg.h"
-#include "txt-seg/config.h"
+#include "search.h"
 
 static void
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,

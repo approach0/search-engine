@@ -31,9 +31,10 @@ int main(void)
 
 	printf("%u bytes/block.\n", MEM_POSTING_BLOCK_SZ);
 
-	po = mem_posting_create(2);
-	buf_po = mem_posting_create(MAX_SKIPPY_SPANS);
-	mem_posting_set_codecs(po, sizeof(struct math_posting_item), codecs);
+	po = mem_posting_create(sizeof(struct math_posting_item), 2);
+	buf_po = mem_posting_create(sizeof(struct math_posting_item),
+	                            MAX_SKIPPY_SPANS);
+	mem_posting_set_codecs(po, codecs);
 
 	for (docID = 1; docID < N; docID++) {
 		item.doc_id = docID;

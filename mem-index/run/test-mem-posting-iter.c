@@ -36,11 +36,12 @@ int main(void)
 	bool     jumped = 0;
 
 	/* create posting lists */
-	po = mem_posting_create(2);
-	buf_po = mem_posting_create(MAX_SKIPPY_SPANS);
+	po = mem_posting_create(sizeof(struct math_posting_item), 2);
+	buf_po = mem_posting_create(sizeof(struct math_posting_item),
+	                            MAX_SKIPPY_SPANS);
 
 	/* set codecs */
-	mem_posting_set_codecs(po, sizeof(struct math_posting_item), codecs);
+	mem_posting_set_codecs(po, codecs);
 	free(codecs[0]);
 	free(codecs[1]);
 	free(codecs[2]);

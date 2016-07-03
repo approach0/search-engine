@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#undef NDEBUG
+#include <assert.h>
+
 #include "search.h"
 
 /*
@@ -274,7 +277,7 @@ static struct postmerge_callbks *get_disk_postmerge_callbks(void)
 	return &ret;
 }
 
-struct add_postinglist_for_merge_args {
+struct add_postinglist_arg {
 	struct indices          *indices;
 	struct postmerge        *pm;
 	uint32_t                 docN;
@@ -282,39 +285,34 @@ struct add_postinglist_for_merge_args {
 	struct BM25_term_i_args *bm25args;
 };
 
-static LIST_IT_CALLBK(add_postinglist_for_merge)
+struct add_postinglist {
+	void *posting;
+	struct postmerge_callbks *postmerge_callbks;
+};
+
+static struct add_postinglist
+term_postinglist(char *kw_utf8, struct add_postinglist_arg *apfm_args)
 {
-	void                     *posting = NULL;
-	struct postmerge_callbks *postmerge_callbks = NULL;
-	void                     *ti;
-	term_id_t                 term_id;
-	uint32_t                  df;
-	float                    *idf;
-	float                     docN;
+	struct add_postinglist ret;
+	void                  *ti;
+	term_id_t              term_id;
+	uint32_t               df;
+	float                 *idf;
+	float                  docN;
 
-	LIST_OBJ(struct query_keyword, kw, ln);
-	P_CAST(apfm_args, struct add_postinglist_for_merge_args, pa_extra);
-
-	/* get term index for short-hand */
+	/* get variables for short-hand */
 	ti = apfm_args->indices->ti;
-
-	/* get utf-8 keyword string and termID */
-	char *kw_utf8 = wstr2mbstr(kw->wstr);
 	term_id = term_lookup(ti, kw_utf8);
-
-	/* get docN in float format */
 	docN = (float)apfm_args->docN;
-
-	/* set IDF pointer */
 	idf = apfm_args->bm25args->idf;
 
-	printf("adding posting list[%u] of keyword `%s'(termID: %u)...\n",
+	printf("posting list[%u] of keyword `%s'(termID: %u)...\n",
 	       apfm_args->posting_idx, kw_utf8, term_id);
 
 	if (term_id == 0) {
 		/* if term is not found in our dictionary */
-		posting = NULL;
-		postmerge_callbks = NULL;
+		ret.posting = NULL;
+		ret.postmerge_callbks = NULL;
 
 		/* get IDF number */
 		df = 0;
@@ -328,14 +326,14 @@ static LIST_IT_CALLBK(add_postinglist_for_merge)
 
 		if (NULL != cache_item) {
 			/* if this term is already cached */
-			posting = cache_item->posting;
-			postmerge_callbks = get_memory_postmerge_callbks();
+			ret.posting = cache_item->posting;
+			ret.postmerge_callbks = get_memory_postmerge_callbks();
 
 			printf("using cached posting list.\n");
 		} else {
 			/* otherwise read posting from disk */
-			posting = term_index_get_posting(ti, term_id);
-			postmerge_callbks = get_disk_postmerge_callbks();
+			ret.posting = term_index_get_posting(ti, term_id);
+			ret.postmerge_callbks = get_disk_postmerge_callbks();
 			printf("using on-disk posting list.\n");
 		}
 
@@ -344,8 +342,117 @@ static LIST_IT_CALLBK(add_postinglist_for_merge)
 		idf[apfm_args->posting_idx] = BM25_idf((float)df, docN);
 	}
 
-	postmerge_posts_add(apfm_args->pm, posting, postmerge_callbks, NULL);
-//	kw->type: QUERY_KEYWORD_TEX, QUERY_KEYWORD_TERM.
+	return ret;
+}
+
+struct math_score_merge_arg {
+	struct mem_posting *mem_po;      /* output */
+	uint32_t            doc_score;   /* sum of expression scores */
+	doc_id_t            last_doc_id; /* document that is summing score */
+};
+
+struct math_doc_score {
+	doc_id_t doc_id;
+	uint32_t score;
+};
+
+static void write_math_doc_sum_score(struct math_score_merge_arg *msm_arg)
+{
+	struct math_doc_score mds;
+	mds.doc_id = msm_arg->last_doc_id;
+	mds.score = msm_arg->doc_score;
+	mem_posting_write(msm_arg->mem_po, mds.doc_id,
+	                  &mds, sizeof(struct math_doc_score));
+
+#ifdef DEBUG_MIX_SCORING
+	printf("math-search docID#%u sum-score: %u\n", mds.doc_id, mds.score);
+#endif
+}
+
+static void
+math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
+                      void* extra_args)
+{
+	struct math_score_res res;
+
+	/* get additional math score arguments */
+	P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
+	P_CAST(msm_arg, struct math_score_merge_arg, mes_arg->extra_search_args);
+
+	/* calculate math similarity on merge */
+	res = math_score_on_merge(pm, mes_arg->dir_merge_level,
+	                          mes_arg->n_qry_lr_paths);
+
+	if (res.doc_id != msm_arg->last_doc_id) {
+		/* write old document final score to in-memory posting list */
+		if (msm_arg->doc_score > 0)
+		write_math_doc_sum_score(msm_arg);
+
+		/* clear old document score */
+		msm_arg->last_doc_id = res.doc_id;
+		msm_arg->doc_score = 0;
+	}
+
+	/* sum expression scores */
+	msm_arg->doc_score += res.score;
+
+#ifdef DEBUG_PRINT_MATH_HITS
+	printf("math-search hit: docID#%u expID#%u score: %u\n",
+		   res.doc_id, res.exp_id, res.score);
+#endif
+}
+
+static struct add_postinglist
+math_postinglist(char *kw_utf8, struct add_postinglist_arg *apfm_args)
+{
+	struct add_postinglist      ret;
+	struct math_score_merge_arg msm_arg;
+
+	math_index_t mi = apfm_args->indices->mi;
+
+	printf("posting list[%u] of tex `%s'...\n",
+	       apfm_args->posting_idx, kw_utf8);
+
+	/* a temporary memory posting to store intermediate math-search results */
+	msm_arg.mem_po = mem_posting_create(sizeof(struct math_doc_score),
+	                                    MAX_SKIPPY_SPANS);
+	msm_arg.doc_score = 0;
+	msm_arg.last_doc_id = 0;
+
+	math_search_posting_merge(mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,
+	                          &math_posting_on_merge, &msm_arg);
+
+	/* write the final math-document sum-score */
+	if (msm_arg.doc_score > 0)
+		write_math_doc_sum_score(&msm_arg);
+
+	ret.posting = msm_arg.mem_po;
+	ret.postmerge_callbks = get_memory_postmerge_callbks();
+	return ret;
+}
+
+static LIST_IT_CALLBK(add_postinglist_for_merge)
+{
+	struct add_postinglist res;
+	LIST_OBJ(struct query_keyword, kw, ln);
+	P_CAST(apfm_args, struct add_postinglist_arg, pa_extra);
+
+	switch (kw->type) {
+	case QUERY_KEYWORD_TERM:
+		res = term_postinglist(wstr2mbstr(kw->wstr), apfm_args);
+		break;
+
+	case QUERY_KEYWORD_TEX:
+		res = math_postinglist(wstr2mbstr(kw->wstr), apfm_args);
+		break;
+
+	default:
+		assert(0);
+	}
+
+	/* add posting list for merge */
+	postmerge_posts_add(apfm_args->pm, res.posting, res.postmerge_callbks,
+	                    &kw->type);
 
 	/* increment current adding posting list index */
 	apfm_args->posting_idx ++;
@@ -360,7 +467,7 @@ add_postinglists_for_merge(struct indices *indices, const struct query *qry,
 {
 
 	/* setup argument variable `apfm_args' (in & out) */
-	struct add_postinglist_for_merge_args apfm_args;
+	struct add_postinglist_arg apfm_args;
 	apfm_args.indices = indices;
 	apfm_args.pm = pm;
 	apfm_args.docN = term_index_get_docN(indices->ti);
@@ -371,7 +478,7 @@ add_postinglists_for_merge(struct indices *indices, const struct query *qry,
 	list_foreach((list*)&qry->keywords, &add_postinglist_for_merge,
 	             &apfm_args);
 
-	/* prepare some score parameters */
+	/* prepare some term-posting list score parameters */
 	bm25args->n_postings = apfm_args.posting_idx;
 	bm25args->avgDocLen = (float)term_index_get_avgDocLen(indices->ti);
 	bm25args->b  = BM25_DEFAULT_B;
@@ -388,29 +495,78 @@ struct posting_merge_extra_args {
 	struct rank_set         *rk_set;
 };
 
-void
-posting_on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
+static void
+mixed_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
+                       void* extra_args)
 {
 	uint32_t i;
-	float score = 0.f;
+	float term_score, score = 0.f;
+	enum query_kw_type *type;
 	doc_id_t docID = cur_min;
 
 	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
 	float doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
 	struct term_posting_item *tpi;
+	struct math_doc_score    *mds;
 
 	for (i = 0; i < pm->n_postings; i++)
 		if (pm->curIDs[i] == cur_min) {
-			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
-			tpi = pm->cur_pos_item[i];
-			score += BM25_term_i_score(pm_args->bm25args, i, tpi->tf, doclen);
-			//printf("score += term[%u]_score(%u, %f)\n", i, tpi->tf, doclen);
+			type = (enum query_kw_type *)pm->posting_args[i];
+
+			switch (*type) {
+			case QUERY_KEYWORD_TERM:
+				tpi = (struct term_posting_item *)pm->cur_pos_item[i];
+				term_score = BM25_term_i_score(pm_args->bm25args,
+				                               i, tpi->tf, doclen);
+				score += term_score;
+
+#ifdef DEBUG_MIX_SCORING
+				printf("score += posting[%u].BM25_score(tf=%u, docLen=%f) "
+				       "= %f\n", i, tpi->tf, doclen, term_score);
+#endif
+				break;
+
+			case QUERY_KEYWORD_TEX:
+				mds = (struct math_doc_score *)pm->cur_pos_item[i];
+				score += (float)mds->score;
+
+#ifdef DEBUG_MIX_SCORING
+				printf("score += posting[%u].math_doc_sum_score = %u\n",
+				       i, mds->score);
+#endif
+				break;
+
+			default:
+				assert(0);
+			}
 		}
 
 	rank_set_hit(pm_args->rk_set, docID, score);
-	//printf("(BM25 score = %f)\n", score);
+
+#ifdef DEBUG_MIX_SCORING
+	printf("total score of doc#%u = %f\n", docID, score);
+#endif
 
 	return;
+}
+
+void free_mixed_postinglists(struct postmerge *pm)
+{
+	uint32_t i;
+	enum query_kw_type *type;
+	struct mem_posting *mem_po;
+
+	for (i = 0; i < pm->n_postings; i++) {
+		mem_po = (struct mem_posting*)pm->postings[i];
+		type = (enum query_kw_type *)pm->posting_args[i];
+
+		if (*type == QUERY_KEYWORD_TEX) {
+			printf("releasing math in-memory posting[%u] (%u blocks)...\n",
+			       i, mem_po->n_tot_blocks);
+
+			mem_posting_release(mem_po);
+		}
+	}
 }
 
 struct rank_set
@@ -435,9 +591,12 @@ indices_run_query(struct indices *indices, const struct query qry)
 
 	/* posting list merge */
 	printf("start merging...\n");
-	if (!posting_merge(&postmerge, POSTMERGE_OP_AND,
-	                   &posting_on_merge, &pm_args))
+	if (!posting_merge(&postmerge, POSTMERGE_OP_OR,
+	                   &mixed_posting_on_merge, &pm_args))
 		fprintf(stderr, "posting list merge failed.\n");
+
+	/* free posting lists */
+	free_mixed_postinglists(&postmerge);
 
 	/* rank top K hits */
 	rank_sort(&rk_set);

@@ -12,3 +12,6 @@
 */
 
 //#define DEBUG_MATH_SEARCH
+
+//#define DEBUG_MIX_SCORING
+//#define DEBUG_PRINT_MATH_HITS

@@ -43,7 +43,7 @@ struct mem_posting {
 	uint32_t                   buf_end;
 };
 
-struct mem_posting *mem_posting_create(uint32_t);
+struct mem_posting *mem_posting_create(uint32_t, uint32_t);
 
 void mem_posting_release(struct mem_posting*);
 
@@ -53,7 +53,7 @@ size_t
 mem_posting_write(struct mem_posting*, uint32_t, const void*, size_t);
 
 void
-mem_posting_set_codecs(struct mem_posting*, uint32_t, struct codec**);
+mem_posting_set_codecs(struct mem_posting*, struct codec**);
 
 uint32_t
 mem_posting_encode(struct mem_posting*, struct mem_posting*);

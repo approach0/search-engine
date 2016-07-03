@@ -7,10 +7,7 @@
 
 #include "search.h"
 #include "snippet.h"
-
-#include "txt-seg/txt-seg.h"
-#include "txt-seg/config.h"
-#include "indexer/doc-term-pos.h"
+#include "indexer/doc-tok-pos.h"
 
 struct term_extra_score_arg {
 	void                    *term_index;
@@ -93,7 +90,7 @@ void print_res_snippet(doc_id_t docID, struct snippet_arg *snp_arg)
 	uint32_t i;
 	size_t val_sz;
 	docterm_t docterm = {docID, ""};
-	docterm_pos_t *termpos;
+	doctok_pos_t *termpos;
 	char *doc_path;
 
 	FILE *doc_fh;
@@ -171,12 +168,13 @@ struct mem_posting *term_posting_fork(void *term_posting)
 	};
 
 	/* create memory posting to be encoded */
-	ret_mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS);
-	mem_posting_set_codecs(ret_mempost,
-	                       sizeof(struct term_posting_item), codecs);
+	ret_mempost = mem_posting_create(sizeof(struct term_posting_item),
+	                                 DEFAULT_SKIPPY_SPANS);
+	mem_posting_set_codecs(ret_mempost, codecs);
 
 	/* create a temporary memory posting */
-	buf_mempost = mem_posting_create(MAX_SKIPPY_SPANS);
+	buf_mempost = mem_posting_create(sizeof(struct term_posting_item),
+	                                 MAX_SKIPPY_SPANS);
 
 	/* start iterating term posting list */
 	term_posting_start(term_posting);
@@ -349,7 +347,7 @@ int main(int argc, char *argv[])
 	int                     opt;
 	enum postmerge_op       op = POSTMERGE_OP_AND;
 
-	char       query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
+	char       query[MAX_MERGE_POSTINGS][MAX_TERM_BYTES];
 	uint32_t   i, n_queries = 0;
 
 	char      *index_path = NULL;

@@ -1,0 +1,2 @@
+#define MAX_TEX_WSTR_LEN 4096
+#define MAX_TEX_BYTES    MAX_TEX_WSTR_LEN
