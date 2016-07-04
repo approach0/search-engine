@@ -1,6 +1,11 @@
 Top priority:
-* delta compression & posting file compression
+* docID, termID used to get highlight position.
+* faster Chinese tokenizer
+* crawler
 * blob-index (libz compress)
+* search daemon
+
+* math posting file compression
 * force query lower case to avoid Indri crash.
 
 Want to implement:
@@ -10,7 +15,6 @@ Want to implement:
 
 Do it when time is allowed:
 * malloc hook
-* faster Chinese tokenizer
 * oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
 * breadth-first dir-merge
