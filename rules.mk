@@ -13,21 +13,22 @@ RUN_DIR := run
 # create build directory
 CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 
-# compiler
+# reset CFLAGS
 CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
+# compiler
 CC := gcc -std=c99
 CC_DEP := @ gcc -MM -MT
 COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
        tput sgr0
-COMPILE_CC = $(CC) -c $(CFLAGS) $(filter-out %.h, $^)  -o $@
+COMPILE_CC = $(CC) -c $(CFLAGS) $(filter %.c, $^)  -o $@
 
 CXX := g++
 CXX_DEP = @ g++ -MM -MT
 COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
        tput sgr0
-COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter-out %.h, $^) -o $@
+COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter %.cpp, $^) -o $@
 
 CCDH = gcc -dH
 
