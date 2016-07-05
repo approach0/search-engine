@@ -22,8 +22,8 @@ struct math_pathinfo {
 };
 
 struct math_pathinfo_pack {
-	pathinfo_num_t        n_paths;
-	uint32_t              n_lr_paths;
+	pathinfo_num_t        n_paths; /* number of different paths followed */
+	uint32_t              n_lr_paths; /* number of paths in original tree */
 	struct math_pathinfo  pathinfo[];
 };
 #pragma pack(pop)
