@@ -1,21 +1,21 @@
 #include <stddef.h>
-#include "lex-slice.h"
+#include "indexer.h"
 
-extern size_t lex_seek_pos;
+extern size_t lex_bytes_now;
 
-void _handle_slice(char*, size_t, enum lex_slice_type);
+void lex_handle_math(char*, size_t);
+void lex_handle_text(char*, size_t);
 
-void handle_text(struct lex_slice *);
-void handle_math(struct lex_slice *);
+extern void indexer_handle_slice(struct lex_slice *);
 
 #define LEX_SLICE_MORE \
 	yymore(); \
-	lex_seek_pos -= yyleng;
+	lex_bytes_now -= yyleng;
 /* append to yytext. */
 
-#define YY_USER_ACTION { lex_seek_pos += yyleng; }
+#define YY_USER_ACTION { lex_bytes_now += yyleng; }
 
-#define YY_USER_INIT { lex_seek_pos = 0; }
+#define YY_USER_INIT { lex_bytes_now = 0; }
 
 #define MORE LEX_SLICE_MORE /* for shorthand */
 

@@ -2,34 +2,41 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "lex-slice.h"
+size_t lex_bytes_now = 0;
+
+/* choose lexer */
+#define  LEX_PREFIX(_name) mix ## _name
 #include "lex.h"
 
-size_t lex_seek_pos = 0;
-
-static void _strip_math(char *text, size_t bytes)
+void lex_file(const char* path)
 {
-	size_t pad = strlen("[imath]");
-	uint32_t i;
-	for (i = 0; pad + i + 1 < bytes - pad; i++) {
-		text[i] = text[pad + i];
+	FILE *fh = fopen(path, "r");
+	if (fh) {
+		LEX_PREFIX(in) = fh;
+		DO_LEX;
+		fclose(fh);
+	} else {
+		fprintf(stderr, "cannot open `%s'.\n", path);
 	}
-
-	text[i] = '\0';
 }
 
-void _handle_slice(char *text, size_t bytes, enum lex_slice_type type)
+void lex_handle_text(char *text, size_t n_bytes)
 {
 	struct lex_slice lex_slice;
 	lex_slice.mb_str = text;
-	lex_slice.begin = lex_seek_pos - bytes;
-	lex_slice.offset = bytes;
-	lex_slice.type = type;
+	lex_slice.offset = lex_bytes_now - n_bytes;
+	lex_slice.type = LEX_SLICE_TYPE_TEXT;
 
-	if (type == LEX_SLICE_MATH) {
-		_strip_math(text, bytes);
-		handle_math(&lex_slice);
-	} else if (type == LEX_SLICE_TEXT) {
-		handle_text(&lex_slice);
-	}
+	indexer_handle_slice(&lex_slice);
+}
+
+void lex_handle_math(char *text, size_t n_bytes)
+{
+	struct lex_slice lex_slice;
+	lex_slice.mb_str = text;
+	lex_slice.offset = lex_bytes_now - n_bytes;
+	lex_slice.type = LEX_SLICE_TYPE_MATH;
+
+	//_strip_math(text, n_bytes);
+	indexer_handle_slice(&lex_slice);
 }
