@@ -1,8 +1,7 @@
 include ../rules.mk
 include ../module.mk
 
-CFLAGS += $(shell python3-config --cflags)
-LDFLAGS += $(shell python3-config --ldflags)
+CFLAGS += -I ../cppjieba/fork/include/ -I ../cppjieba/fork/deps/
 
 clean:
 	@ echo 'clean'

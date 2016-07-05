@@ -4,10 +4,10 @@
 
 static LIST_IT_CALLBK(print)
 {
-	LIST_OBJ(struct term_list_node, p, ln);
+	LIST_OBJ(struct text_seg, seg, ln);
 
-	printf("%S<%u,%u>'%c'", p->term, p->begin_pos, p->end_pos,
-	                        (p->type == TERM_T_ENGLISH) ? 'e' : 'c');
+	printf("%s<%u,%u>", seg->str, seg->offset, seg->n_bytes);
+
 	if (pa_now->now == pa_head->last)
 		printf(".");
 	else
@@ -16,7 +16,7 @@ static LIST_IT_CALLBK(print)
 	LIST_GO_OVER;
 }
 
-LIST_DEF_FREE_FUN(list_release, struct term_list_node,
+LIST_DEF_FREE_FUN(list_release, struct text_seg,
                   ln, free(p));
 
 const char * txt[] = {
@@ -37,11 +37,12 @@ const char * txt[] = {
 
 int main(void)
 {
-	list li = LIST_NULL;
-	text_segment_init("../jieba/fork/dict");
 	unsigned int i;
-
-	text_segment_insert_usrterm("人艰不拆");
+	list li = LIST_NULL;
+	if (text_segment_init("")) {
+		printf("open dict failed.\n");
+		return 1;
+	}
 
 	for (i = 0; i < n_txt; i++) {
 		li = text_segment(txt[i]);

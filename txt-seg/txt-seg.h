@@ -1,30 +1,24 @@
 #pragma once
-#include <wchar.h>
-#include <stdbool.h>
-#include "config.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "list/list.h"
 
-#define MAX_TERM_WSTR_LEN 32
+#define MAX_TERM_LEN       32 /* in number of characters */
+#define MAX_TXT_SEG_BYTES  (MAX_TERM_LEN * 3)
 
-enum term_type {
-	TERM_T_ENGLISH,
-	TERM_T_CHINESE,
-};
-
-struct term_list_node {
-	wchar_t          term[MAX_TERM_WSTR_LEN];
-	uint32_t         begin_pos, end_pos; /* in characters */
-	/* notice term[end_pos - 1] is actually the last character
-	 * of this term. */
-	enum term_type   type;
+struct text_seg {
+	char             str[MAX_TXT_SEG_BYTES];
+	uint32_t         offset, n_bytes; /* in bytes */
 	struct list_node ln;
 };
 
 int   text_segment_init(const char *dict_path);
 list  text_segment(const char *text);
-bool  text_segment_insert_usrterm(const char *term);
 void  text_segment_free(void);
 
-/* helper function to convert term positions in characters
- * to term positions in bytes. */
-#include "term-offset-conv.h"
+#ifdef __cplusplus
+}
+#endif

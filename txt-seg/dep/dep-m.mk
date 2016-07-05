@@ -1,2 +1,2 @@
-CFLAGS += 
-LDFLAGS += 
+CFLAGS +=
+LDFLAGS +=

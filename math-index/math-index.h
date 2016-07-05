@@ -5,17 +5,14 @@
 
 #include "dir-util/dir-util.h" /* for MAX_DIR_PATH_NAME_LEN */
 #include "tex-parser/tex-parser.h" /* for subpaths */
-#include "term-index/term-index.h" /* for doc_id_t */
+#include "term-index/term-index.h" /* for doc_id_t and position_t */
 
 #define MAX_MATH_PATHS MAX_SUBPATH_ID
 
 typedef uint8_t  pathinfo_num_t;
 
-/* for exp_id_t */
-#include "txt-seg/txt-seg.h"
-#include "txt-seg/config.h"
-#include "indexer/doc-tok-pos.h"
-
+/* define math expression ID type */
+typedef position_t exp_id_t;
 #define MAX_EXP_ID UINT_MAX
 
 /* ===================
