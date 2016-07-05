@@ -16,6 +16,7 @@ static void print_help(char *argv[])
 	       " -t (unique terms) |"
 	       " -l (posting lists) |"
 	       " -d (all document) |"
+	       " -o (term positions) |"
 	       " -a (dump all) |"
 	       " -p (index path) |"
 	       " -g <df> "
@@ -29,7 +30,8 @@ int main(int argc, char* argv[])
 {
 	void *posting, *ti;
 	struct term_posting_item *pi;
-	uint32_t termN, docN, avgDocLen;
+	uint32_t k, tf, termN, docN, avgDocLen;
+	position_t *pos_arr;
 	term_id_t i;
 	doc_id_t j;
 	char *term;
@@ -39,8 +41,8 @@ int main(int argc, char* argv[])
 
 	int opt, opt_any = 0;
 	bool opt_summary = 0, opt_terms = 0, opt_postings = 0,
-	     opt_document = 0, opt_all = 0;
-	while ((opt = getopt(argc, argv, "hstldap:g:i:")) != -1) {
+	     opt_document = 0, opt_posting_termpos = 0, opt_all = 0;
+	while ((opt = getopt(argc, argv, "hstldoap:g:i:")) != -1) {
 		opt_any = 1;
 		switch (opt) {
 		case 'h':
@@ -61,6 +63,10 @@ int main(int argc, char* argv[])
 
 		case 'd':
 			opt_document = 1;
+			break;
+
+		case 'o':
+			opt_posting_termpos = 1;
 			break;
 
 		case 'a':
@@ -140,7 +146,21 @@ int main(int argc, char* argv[])
 				term_posting_start(posting);
 				do {
 					pi = term_posting_current(posting);
-					printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
+					printf("[docID=%u, tf=%u", pi->doc_id, pi->tf);
+
+					if (opt_all || opt_posting_termpos) {
+						/* read term positions in this document */
+						printf(", pos=");
+						pos_arr = term_posting_current_termpos(posting, &tf);
+						for (k = 0; k < tf; k++)
+							printf("%d%c", pos_arr[k],
+							       (k == tf - 1) ? '.' : ',');
+						printf("]");
+						free(pos_arr);
+					} else {
+						printf("]");
+					}
+
 				} while (term_posting_next(posting));
 				term_posting_finish(posting);
 				printf("\n");

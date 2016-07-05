@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <string.h>
 #include <vector>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -112,6 +113,7 @@ void term_index_doc_add(void *handle, char *term)
 {
 	struct term_index *ti = (struct term_index*)handle;
 	char *p = strdup(term);
+
 	ti->document.terms.push_back(p);
 
 	//printf("%s address: %p\n", p, p);
@@ -236,4 +238,28 @@ void term_posting_finish(void *posting)
 {
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
 	delete po;
+}
+
+position_t *term_posting_current_termpos(void *posting, uint32_t *tf_)
+{
+	uint32_t tf, i;
+	position_t *pos_arr;
+	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
+	indri::index::DocListIterator::DocumentData *doc;
+	indri::utility::greedy_vector<int>::iterator it;
+
+	po = (indri::index::DocListIterator*)posting;
+	doc = po->currentEntry();
+	tf = doc->positions.size();
+
+	pos_arr = (position_t*)malloc(sizeof(position_t) * tf);
+
+	for (i = 0, it = doc->positions.begin();
+	     it != doc->positions.end();
+	     i++, it++) {
+		pos_arr[i] = *it;
+	}
+
+	*tf_ = tf;
+	return pos_arr;
 }
