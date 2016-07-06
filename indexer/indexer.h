@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
 
 /* dependency modules */
 #include "list/list.h"
@@ -9,8 +11,12 @@
 #include "txt-seg/txt-seg.h"
 #include "dir-util/dir-util.h"
 
-/* invoke lexer to parse a file */
-void lex_file(const char*);
+/* lexer function type */
+typedef void (*file_lexer)(const char*);
+
+/* different lexer functions */
+void lex_file_mix(const char*);
+void lex_file_eng(const char*);
 
 /* segment position to offset map */
 #pragma pack(push, 1)
@@ -29,6 +35,7 @@ typedef struct {
 /* lex slice structure */
 enum lex_slice_type {
 	LEX_SLICE_TYPE_MATH,
+	LEX_SLICE_TYPE_ENG_TEXT,
 	LEX_SLICE_TYPE_TEXT
 };
 
@@ -38,25 +45,30 @@ struct lex_slice {
 	enum lex_slice_type type;
 };
 
+/* main indexing functions */
+void index_set(void *, math_index_t, keyval_db_t);
+void index_file(const char*, file_lexer);
+void indexer_handle_slice(struct lex_slice*);
+
 /* offset checking test utilities */
 #include "offset-check.h"
 
 /* other utilities */
 #include <ctype.h> /* for tolower() */
-static __inline void eng_to_lower_case(struct lex_slice *slice)
+static __inline void eng_to_lower_case(char *str, size_t n_bytes)
 {
 	size_t i;
-	for(i = 0; i < slice->offset; i++)
-		slice->mb_str[i] = tolower(slice->mb_str[i]);
+	for(i = 0; i < n_bytes; i++)
+		str[i] = tolower(str[i]);
 }
 
-static __inline void strip_math_tag(char *text, size_t bytes)
+static __inline void strip_math_tag(char *str, size_t n_bytes)
 {
-	size_t pad = strlen("[imath]");
+	size_t tag_sz = strlen("[imath]");
 	uint32_t i;
-	for (i = 0; pad + i + 1 < bytes - pad; i++) {
-		text[i] = text[pad + i];
+	for (i = 0; tag_sz + i + 1 < n_bytes - tag_sz; i++) {
+		str[i] = str[tag_sz + i];
 	}
 
-	text[i] = '\0';
+	str[i] = '\0';
 }

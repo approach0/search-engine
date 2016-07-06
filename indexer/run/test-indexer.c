@@ -1,176 +1,42 @@
-#include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
-
-#undef NDEBUG
-#include <assert.h>
-
+#include <stdlib.h>
 #include "indexer.h"
-#include "config.h"
 
-static void *term_index = NULL;
-static math_index_t math_index = NULL;
-static keyval_db_t keyval_db = NULL;
+void lex_slice_handler(struct lex_slice *slice)
+{
+	indexer_handle_slice(slice);
+}
 
-static doc_id_t new_docID = 0;
-static doc_id_t new_expID = 0;
-static list splited_terms = LIST_NULL;
+static bool filename_filter(const char *filename)
+{
+	char *ext = filename_ext(filename);
+	return (ext && strcmp(ext, ".txt") == 0);
+}
 
-struct saved_tex {
-	char             str[MAX_TEX_BYTES];
-	uint32_t         pos, sz;
-	struct list_node ln;
+struct foreach_file_args {
+	uint32_t    n_files_indexed;
+	const char *path;
+	file_lexer  lex;
 };
-
-static list saved_tex_li = LIST_NULL;
-
-LIST_DEF_FREE_FUN(saved_tex_li_release, struct saved_tex, ln, free(p));
-
-static LIST_IT_CALLBK(index_term)
-{
-	LIST_OBJ(struct splited_term, st, ln);
-
-//	printf("indexing term `%s': ", st->term);
-//	printf("%u[%u]\n", st->doc_pos, st->n_bytes);
-
-	/* add term for inverted-index */
-	term_index_doc_add(term_index, st->term);
-	LIST_GO_OVER;
-}
-
-static LIST_IT_CALLBK(index_term_pos)
-{
-	LIST_OBJ(struct splited_term, st, ln);
-	doctok_pos_t termpos = {st->doc_pos, st->n_bytes};
-	docterm_t docterm;
-
-	/* save term position */
-	docterm.docID = new_docID;
-	strcpy(docterm.term, st->term);
-
-	if(keyval_db_put(keyval_db,
-	                 &docterm,sizeof(doc_id_t) + st->n_bytes,
-	                 &termpos, sizeof(doctok_pos_t))) {
-		printf("put error: %s\n", keyval_db_last_err(keyval_db));
-		return LIST_RET_BREAK;
-	}
-
-	LIST_GO_OVER;
-}
-
-static LIST_IT_CALLBK(index_tex_and_pos)
-{
-	LIST_OBJ(struct saved_tex, st, ln);
-
-	doctok_pos_t texpos = {st->pos, st->sz};
-	doctex_t doctex;
-
-	struct tex_parse_ret parse_ret;
-	parse_ret = tex_parse(st->str, 0, false);
-
-	if (parse_ret.code == PARSER_RETCODE_SUCC) {
-		{ /* index */
-			printf("indexing math `%s' (docID=%u, expID=%u)\n",
-			       st->str, new_docID, new_expID);
-			math_index_add_tex(math_index, new_docID, new_expID,
-			                   parse_ret.subpaths);
-			subpaths_release(&parse_ret.subpaths);
-		}
-
-		{ /* index position */
-			doctex.docID = new_docID;
-			doctex.expID = new_expID;
-
-			printf("indexing math position (docID=%u,expID=%u) -> [%u,%u]\n",
-			       doctex.docID, doctex.expID, texpos.doc_pos, texpos.n_bytes);
-			if(keyval_db_put(keyval_db,
-			                 &doctex, sizeof(doctex_t),
-			                 &texpos, sizeof(doctok_pos_t))) {
-				printf("put error: %s\n", keyval_db_last_err(keyval_db));
-				return LIST_RET_BREAK;
-			}
-		}
-
-		new_expID ++;
-	} else {
-		printf("math parser error: %s\n", parse_ret.msg);
-	}
-
-	LIST_GO_OVER;
-}
-
-extern void handle_math(struct lex_slice *slice)
-{
-	struct saved_tex *st = malloc(sizeof(struct saved_tex));
-	assert(st != NULL);
-
-	strcpy(st->str, slice->mb_str);
-	st->pos = slice->begin;
-	st->sz = slice->offset;
-	LIST_NODE_CONS(st->ln);
-
-	list_insert_one_at_tail(&st->ln, &saved_tex_li, NULL, NULL);
-	printf("save math: %s [%u,%u]\n", st->str, st->pos, st->sz);
-}
-
-extern void handle_text(struct lex_slice *slice)
-{
-//	printf("slice<%u,%u>: %s\n",
-//	       slice->begin, slice->offset, slice->mb_str);
-
-	/* convert english words to lower case */
-	eng_to_lower_case(slice);
-
-	/* split slice into terms */
-	split_into_terms(slice, &splited_terms);
-}
-
-static void index_txt_document(const char *fullpath)
-{
-	size_t val_sz = strlen(fullpath) + 1;
-
-	LIST_CONS(splited_terms);
-	LIST_CONS(saved_tex_li);
-
-	term_index_doc_begin(term_index);
-	lex_txt_file(fullpath);
-	list_foreach(&splited_terms, &index_term, NULL);
-	new_docID /* docID just indexed */ = term_index_doc_end(term_index);
-	//printf("new_docID = %u\n", new_docID);
-
-	/* index math from saved tex list */
-	list_foreach(&saved_tex_li, &index_tex_and_pos, NULL);
-
-	/* save term positions */
-	list_foreach(&splited_terms, &index_term_pos, NULL);
-
-	/* save document path */
-	if(keyval_db_put(keyval_db, &new_docID, sizeof(doc_id_t),
-	                 (void *)fullpath, val_sz)) {
-		printf("put error: %s\n", keyval_db_last_err(keyval_db));
-		return;
-	}
-
-	new_expID = 0; /* clear expression ID */
-	release_splited_terms(&splited_terms);
-	saved_tex_li_release(&saved_tex_li);
-}
 
 static int foreach_file_callbk(const char *filename, void *arg)
 {
-	char *path = (char*) arg;
-	//char *ext = filename_ext(filename);
+	P_CAST(fef_args, struct foreach_file_args, arg);
 	char fullpath[MAX_FILE_NAME_LEN];
+	uint32_t n = fef_args->n_files_indexed;
 
-	if (1 /*ext && strcmp(ext, ".txt") == 0 */) {
-		sprintf(fullpath, "%s/%s", path, filename);
+	if (1 /* filename_filter(filename) */) {
+		sprintf(fullpath, "%s/%s", fef_args->path, filename);
 
-		//printf("[file] %s\n", fullpath);
-		index_txt_document(fullpath);
-		if (term_index_maintain(term_index)) {
-			printf("\r[term index merging...]");
-			keyval_db_flush(keyval_db);
+		{ /* print process */
+			printf("\33[2K\r"); /* clear last line and reset cursor */
+			printf("[files processed] %u", n);
+			fflush(stdout);
 		}
+
+		index_file(fullpath, fef_args->lex);
+		fef_args->n_files_indexed ++;
 	}
 
 	return 0;
@@ -180,27 +46,37 @@ static enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
 {
+	struct foreach_file_args fef_args = {0, path, (file_lexer)arg};
 	printf("[directory] %s\n", path);
-	foreach_files_in(path, &foreach_file_callbk, (void*)path);
+	foreach_files_in(path, &foreach_file_callbk, &fef_args);
+
+	if (fef_args.n_files_indexed != 0)
+		printf("\n");
+
 	return DS_RET_CONTINUE;
 }
 
 int main(int argc, char* argv[])
 {
 	int opt;
-	char *path = NULL /* corpus path */;
+	file_lexer lex = lex_file_mix;
+	char *corpus_path = NULL;
 	const char index_path[] = "./tmp";
-	const char kv_db_fname[] = "kvdb-offset.bin";
+	const char offset_db_name[] = "offset.kvdb";
 	char term_index_path[MAX_FILE_NAME_LEN];
 
-	while ((opt = getopt(argc, argv, "hp:")) != -1) {
+	void        *term_index = NULL;
+	math_index_t math_index = NULL;
+	keyval_db_t  offset_db  = NULL;
+
+	while ((opt = getopt(argc, argv, "hep:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
-			printf("index txt document from a specified path. \n");
+			printf("index file(s) from a specified path. \n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -p <corpus path>\n", argv[0]);
+			printf("%s -h | -e (english only) | -p <corpus path>\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -p ./some/where/file.txt\n", argv[0]);
@@ -208,7 +84,11 @@ int main(int argc, char* argv[])
 			goto exit;
 
 		case 'p':
-			path = strdup(optarg);
+			corpus_path = strdup(optarg);
+			break;
+
+		case 'e':
+			lex = lex_file_eng;
 			break;
 
 		default:
@@ -217,18 +97,16 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (path) {
-		printf("corpus path %s\n", path);
+	if (corpus_path) {
+		printf("corpus path: %s\n", corpus_path);
 	} else {
 		printf("no corpus path specified.\n");
 		goto exit;
 	}
 
 	/* open text segmentation dictionary */
-	printf("opening dict...\n");
-	text_segment_init("../jieba/fork/dict");
-	text_segment_insert_usrterm("当且仅当");
-	printf("dict opened.\n");
+	printf("opening dictionary...\n");
+	text_segment_init("");
 
 	/* open term index */
 	printf("opening term index...\n");
@@ -236,7 +114,6 @@ int main(int argc, char* argv[])
 
 	mkdir_p(term_index_path);
 
-	/* open term index */
 	term_index = term_index_open(term_index_path, TERM_INDEX_OPEN_CREATE);
 	if (NULL == term_index) {
 		printf("cannot create/open term index.\n");
@@ -251,19 +128,24 @@ int main(int argc, char* argv[])
 	}
 
 	/* open document offset key-value database */
-	keyval_db = keyval_db_open_under(kv_db_fname, index_path,
+	offset_db = keyval_db_open_under(offset_db_name, index_path,
 	                                 KEYVAL_DB_OPEN_WR);
-	if (keyval_db == NULL) {
+	if (offset_db == NULL) {
 		printf("cannot create/open key-value DB.\n");
 		goto exit;
 	}
 
+	/* set index pointers */
+	index_set(term_index, math_index, offset_db);
+
 	/* start indexing */
-	if (file_exists(path)) {
-		printf("[single file] %s\n", path);
-		index_txt_document(path);
-	} else if (dir_exists(path)) {
-		dir_search_podfs(path, &dir_search_callbk, NULL);
+	if (file_exists(corpus_path)) {
+		printf("[single file] %s\n", corpus_path);
+		index_file(corpus_path, lex);
+
+	} else if (dir_exists(corpus_path)) {
+		dir_search_podfs(corpus_path, &dir_search_callbk, lex);
+
 	} else {
 		printf("not file/directory.\n");
 	}
@@ -271,9 +153,9 @@ int main(int argc, char* argv[])
 	printf("done indexing!\n");
 
 exit:
-	if (keyval_db) {
+	if (offset_db) {
 		printf("closing key-value DB...\n");
-		keyval_db_close(keyval_db);
+		keyval_db_close(offset_db);
 	}
 
 	if (math_index) {
@@ -288,8 +170,8 @@ exit:
 
 	text_segment_free();
 
-	if (path)
-		free(path);
+	if (corpus_path)
+		free(corpus_path);
 
 	return 0;
 }

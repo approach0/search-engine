@@ -26,7 +26,7 @@ static LIST_IT_CALLBK(add_check_node)
 	LIST_GO_OVER;
 }
 
-void indexer_handle_slice(struct lex_slice *slice)
+void lex_slice_handler(struct lex_slice *slice)
 {
 	list li = LIST_NULL;
 	printf("input slice: [%s]\n", slice->mb_str);
@@ -63,7 +63,7 @@ int main(void)
 	if (0 != file_offset_check_init(test_file_name))
 		goto free;
 
-	lex_file(test_file_name);
+	lex_file_mix(test_file_name);
 	file_offset_check_print();
 
 free:

@@ -5,8 +5,13 @@ extern size_t lex_bytes_now;
 
 void lex_handle_math(char*, size_t);
 void lex_handle_text(char*, size_t);
+void lex_handle_eng_text(char*, size_t);
 
-extern void indexer_handle_slice(struct lex_slice *);
+extern void lex_slice_handler(struct lex_slice *);
+
+#ifndef LEX_MACRO
+#define LEX_MACRO
+/* begin LEX_MACRO */
 
 #define LEX_SLICE_MORE \
 	yymore(); \
@@ -18,6 +23,8 @@ extern void indexer_handle_slice(struct lex_slice *);
 #define YY_USER_INIT { lex_bytes_now = 0; }
 
 #define MORE LEX_SLICE_MORE /* for shorthand */
+
+#endif /* end LEX_MACRO */
 
 /* prefix-dependent declarations */
 #ifndef LEX_PREFIX

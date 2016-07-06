@@ -6,7 +6,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-void indexer_handle_slice(struct lex_slice *slice)
+void lex_slice_handler(struct lex_slice *slice)
 {
 	uint32_t n_bytes = strlen(slice->mb_str);
 
@@ -19,6 +19,12 @@ void indexer_handle_slice(struct lex_slice *slice)
 
 	case LEX_SLICE_TYPE_TEXT:
 		printf("#%u text: %s <%u, %u>\n",
+		       file_offset_check_cnt, slice->mb_str,
+		       slice->offset, n_bytes);
+		break;
+
+	case LEX_SLICE_TYPE_ENG_TEXT:
+		printf("#%u english: %s <%u, %u>\n",
 		       file_offset_check_cnt, slice->mb_str,
 		       slice->offset, n_bytes);
 		break;
@@ -39,7 +45,12 @@ int main(void)
 	if (0 != file_offset_check_init(test_file_name))
 		goto free;
 
-	lex_file(test_file_name);
+	printf("testing English lexer...\n");
+	lex_file_eng(test_file_name);
+	file_offset_check_print();
+
+	printf("testing mix lexer...\n");
+	lex_file_mix(test_file_name);
 	file_offset_check_print();
 
 free:
