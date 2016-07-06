@@ -79,6 +79,7 @@ int main(int argc, char* argv[])
 
 		case 'g':
 			sscanf(optarg, "%d", &df_valve);
+			printf("df valve: %u\n", df_valve);
 			break;
 
 		case 'i':
@@ -108,8 +109,6 @@ int main(int argc, char* argv[])
 		printf("index does not exists.\n");
 		goto exit;
 	}
-
-	printf("df valve: %u\n", df_valve);
 
 	if (term_id != 0)
 		printf("only list term ID: %u\n", term_id);
