@@ -7,7 +7,6 @@
 
 #include "search.h"
 #include "snippet.h"
-#include "indexer/doc-tok-pos.h"
 
 struct term_extra_score_arg {
 	void                    *term_index;
@@ -87,45 +86,45 @@ static char *get_doc_path(keyval_db_t kv_db, doc_id_t docID)
 
 void print_res_snippet(doc_id_t docID, struct snippet_arg *snp_arg)
 {
-	uint32_t i;
-	size_t val_sz;
-	docterm_t docterm = {docID, ""};
-	doctok_pos_t *termpos;
-	char *doc_path;
-
-	FILE *doc_fh;
-	list  snippet_div_list = LIST_NULL;
-
-	doc_path = get_doc_path(snp_arg->kv_db, docID);
-	printf("@ %s\n", doc_path);
-
-	for (i = 0; i < snp_arg->n_terms; i++) {
-		strcpy(docterm.term, snp_arg->terms[i]);
-
-		termpos = keyval_db_get(snp_arg->kv_db, &docterm,
-								sizeof(doc_id_t) + strlen(docterm.term),
-								&val_sz);
-		if(NULL != termpos) {
-			//printf("`%s' ", docterm.term);
-			//printf("pos = %u[%u] ", termpos->doc_pos, termpos->n_bytes);
-			snippet_add_pos(&snippet_div_list, docterm.term,
-			                termpos->doc_pos, termpos->n_bytes);
-			free(termpos);
-		}
-	}
-	//printf("\n");
-
-	doc_fh = fopen(doc_path, "r");
-	if (doc_fh) {
-		snippet_read_file(doc_fh, &snippet_div_list);
-		fclose(doc_fh);
-
-		snippet_hi_print(&snippet_div_list);
-	}
-
-	snippet_free_div_list(&snippet_div_list);
-
-	free(doc_path);
+//	uint32_t i;
+//	size_t val_sz;
+//	docterm_t docterm = {docID, ""};
+//	doctok_pos_t *termpos;
+//	char *doc_path;
+//
+//	FILE *doc_fh;
+//	list  snippet_div_list = LIST_NULL;
+//
+//	doc_path = get_doc_path(snp_arg->kv_db, docID);
+//	printf("@ %s\n", doc_path);
+//
+//	for (i = 0; i < snp_arg->n_terms; i++) {
+//		strcpy(docterm.term, snp_arg->terms[i]);
+//
+//		termpos = keyval_db_get(snp_arg->kv_db, &docterm,
+//								sizeof(doc_id_t) + strlen(docterm.term),
+//								&val_sz);
+//		if(NULL != termpos) {
+//			//printf("`%s' ", docterm.term);
+//			//printf("pos = %u[%u] ", termpos->doc_pos, termpos->n_bytes);
+//			snippet_add_pos(&snippet_div_list, docterm.term,
+//			                termpos->doc_pos, termpos->n_bytes);
+//			free(termpos);
+//		}
+//	}
+//	//printf("\n");
+//
+//	doc_fh = fopen(doc_path, "r");
+//	if (doc_fh) {
+//		snippet_read_file(doc_fh, &snippet_div_list);
+//		fclose(doc_fh);
+//
+//		snippet_hi_print(&snippet_div_list);
+//	}
+//
+//	snippet_free_div_list(&snippet_div_list);
+//
+//	free(doc_path);
 }
 
 void print_res_item(struct rank_set *rs, struct rank_hit* hit,

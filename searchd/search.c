@@ -65,18 +65,18 @@ void query_push_keyword(struct query *qry, const struct query_keyword* kw)
 
 static LIST_IT_CALLBK(add_into_qry)
 {
-	LIST_OBJ(struct term_list_node, nd, ln);
+	LIST_OBJ(struct text_seg, seg, ln);
 	P_CAST(qry, struct query, pa_extra);
 	struct query_keyword kw;
 
 	kw.type = QUERY_KEYWORD_TERM;
-	wstr_copy(kw.wstr, nd->term);
+	wstr_copy(kw.wstr, mbstr2wstr(seg->str));
 
 	query_push_keyword(qry, &kw);
 	LIST_GO_OVER;
 }
 
-LIST_DEF_FREE_FUN(txt_seg_list_free, struct term_list_node,
+LIST_DEF_FREE_FUN(txt_seg_list_free, struct text_seg,
                   ln, free(p));
 
 void query_digest_utf8txt(struct query *qry, const char* txt)

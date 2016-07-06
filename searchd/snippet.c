@@ -6,9 +6,8 @@
 #include "list/list.h"
 #include "snippet.h"
 
-/* for MAX_TERM_BYTES */
+/* for MAX_TXT_SEG_BYTES */
 #include "txt-seg/txt-seg.h"
-#include "txt-seg/config.h"
 
 /* for terminal colors */
 #include "tex-parser/vt100-color.h"
@@ -29,7 +28,7 @@ struct snippet_div {
 	/* string buffers */
 	char     left_str[SNIPPET_PADDING + 1];
 	char     right_str[SNIPPET_PADDING + 1];
-	char     kw_str[MAX_TERM_BYTES];
+	char     kw_str[MAX_TXT_SEG_BYTES];
 
 	struct list_node ln;
 };

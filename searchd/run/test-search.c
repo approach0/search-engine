@@ -6,7 +6,7 @@
 
 #include "search.h"
 #include "snippet.h"
-#include "indexer/doc-tok-pos.h"
+//#include "indexer/doc-tok-pos.h"
 
 struct snippet_arg {
 	keyval_db_t   kv_db;
@@ -38,22 +38,22 @@ static LIST_IT_CALLBK(calc_hl_position)
 	LIST_OBJ(struct query_keyword, kw, ln);
 	P_CAST(chp_arg, struct calc_hl_position_arg, pa_extra);
 
-	char          *kw_utf8 = wstr2mbstr(kw->wstr);
-	docterm_t      docterm = {chp_arg->docID, ""};
-	size_t         val_sz;
-	doctok_pos_t  *termpos;
-
-	/* get keyword position in document */
-	strcpy(docterm.term, kw_utf8);
-	termpos = keyval_db_get(chp_arg->kv_db, &docterm,
-	                        sizeof(doc_id_t) + strlen(docterm.term), &val_sz);
-
-	/* add this keyword to snippet */
-	if(NULL != termpos) {
-		snippet_add_pos(chp_arg->snippet_div_list, docterm.term,
-				termpos->doc_pos, termpos->n_bytes);
-		free(termpos);
-	}
+//	char          *kw_utf8 = wstr2mbstr(kw->wstr);
+//	docterm_t      docterm = {chp_arg->docID, ""};
+//	size_t         val_sz;
+//	doctok_pos_t  *termpos;
+//
+//	/* get keyword position in document */
+//	strcpy(docterm.term, kw_utf8);
+//	termpos = keyval_db_get(chp_arg->kv_db, &docterm,
+//	                        sizeof(doc_id_t) + strlen(docterm.term), &val_sz);
+//
+//	/* add this keyword to snippet */
+//	if(NULL != termpos) {
+//		snippet_add_pos(chp_arg->snippet_div_list, docterm.term,
+//				termpos->doc_pos, termpos->n_bytes);
+//		free(termpos);
+//	}
 
 	LIST_GO_OVER;
 }

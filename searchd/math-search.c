@@ -330,13 +330,14 @@ math_score_on_merge(struct postmerge* pm,
 #endif
 
 	/* finally calculate expression similarity score */
-	if (!skipped && pm->n_postings != 0)
+	if (!skipped && pm->n_postings != 0) {
 		ret.score = math_sim(mnc_score(), level,
 		                     pathinfo_pack->n_lr_paths - n_qry_lr_paths);
-	else
+		ret.doc_id = po_item->doc_id;
+		ret.exp_id = po_item->exp_id;
+	} else {
 		ret.score = 0;
+	}
 
-	ret.doc_id = po_item->doc_id;
-	ret.exp_id = po_item->exp_id;
 	return ret;
 }

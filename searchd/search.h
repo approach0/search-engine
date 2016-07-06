@@ -11,16 +11,13 @@ enum query_kw_type {
 /* for wide string converting */
 #include "wstring/wstring.h"
 
-/* for MAX_TEX_BYTES & MAX_TEX_WSTR_LEN */
-#include "indexer/config.h"
-
-/* for MAX_TERM_BYTES & MAX_TERM_WSTR_LEN */
+/* for MAX_TXT_SEG_BYTES & MAX_TXT_SEG_LEN */
 #include "txt-seg/txt-seg.h"
-#include "txt-seg/config.h"
+#define MAX_TERM_BYTES MAX_TXT_SEG_BYTES
 
 /* consider both math & term */
-#define MAX_QUERY_BYTES     MAX_TERM_BYTES + MAX_TEX_BYTES
-#define MAX_QUERY_WSTR_LEN  MAX_TERM_WSTR_LEN + MAX_TEX_WSTR_LEN
+#define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
+#define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
 
 struct query_keyword {
 	enum query_kw_type type;
