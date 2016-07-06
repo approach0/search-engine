@@ -37,15 +37,12 @@ Other than commonly system build-in libraries (pthread, libz, libm, libstdc++), 
 * [libz](http://zlib.net/zlib-1.2.8.tar.gz)
 * [libbz](http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz)
 * [Lemur/Indri](https://sourceforge.net/projects/lemur/files/lemur/indri-5.9/indri-5.9.tar.gz/download)
-* [libpython3](https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tar.xz)
-* [jieba](https://github.com/fxsjy/jieba/archive/v0.36.tar.gz)
 
 For Debian/Ubuntu users, you can instead type the following commands to automatically install above dependencies:
 ```
 $ sudo apt-get update
-$ sudo apt-get install bison flex python3-pip python3-dev \
-$                      libtokyocabinet-dev libbz2-dev libz-dev
-$ sudo pip3 install jieba
+$ sudo apt-get install bison flex libbz2-dev libz-dev \
+$                      libtokyocabinet-dev
 ```
 Lemur/Indri is not likely to be in your distribution's official software repository, so you may need to build and manually specify its library path (see the next step).
 
@@ -103,7 +100,7 @@ This project is still in its early stage, nothing really to show you now. Howeve
 * Index a corpus/collection and see its index statistics
 
 	1. `$PROJECT/indexer/test-doc` includes a mini test corpus. Optionally, you are suggested to download a slightly larger plain text corpus (e.g. *Reuters-21578* and *Ohsumed* from [University of Trento CATEGORIZATION CORPORA](http://disi.unitn.it/moschitti/corpora.htm)) for performance evaluation. For non-trivial (reasonable large) corpus, you will have the chance to observe the index merging precess under default generated index directory (`$PROJECT/indexer/tmp`).
-	2. `cd $PROJECT/indexer` and run `run/test-txt-indexer.out -p ./test-doc` to index corpus files recursively from our mini test corpus directory. 
+	2. `cd $PROJECT/indexer` and run `run/test-indexer.out -p ./test-doc` to index corpus files recursively from our mini test corpus directory. 
 	3. run `../term-index/run/test-read.out -s -p $PROJECT/indexer/tmp` to take a peek at the index (termN, docN, avgDocLen etc.) you just build. (Pass `-h` argument to see more options for `test-read.out` program)
 
 * Test searching
