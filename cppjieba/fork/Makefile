@@ -1,6 +1,6 @@
-BUILD_DIR := fork/build
+BUILD_DIR := ./build
 
-all: build_dir
+all lib: build_dir
 	(cd $(BUILD_DIR) && cmake ..)
 	(cd $(BUILD_DIR) && make)
 
