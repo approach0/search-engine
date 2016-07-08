@@ -50,12 +50,12 @@ int main()
 		printf("\n\n");
 
 		/* acutal compress and decompress... */
-		res = codec_compress(codec, input_arr, len, enc_arr);
+		res = codec_compress_ints(codec, input_arr, len, enc_arr);
 		printf("compressing %u integers (%lu bytes) into %lu bytes "
 		       "(b=%lu)...\n", len, len * sizeof(uint32_t), res,
 		       ((struct for_delta_args*)(codec->args))->b);
 
-		res = codec_decompress(codec, enc_arr, check_arr, len);
+		res = codec_decompress_ints(codec, enc_arr, check_arr, len);
 		printf("%lu bytes decompressed (b=%lu).\n",
 		       res, ((struct for_delta_args*)(codec->args))->b);
 

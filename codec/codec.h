@@ -12,6 +12,7 @@ struct for_delta_args {
 enum codec_method {
 	CODEC_FOR,
 	CODEC_FOR_DELTA,
+	CODEC_GZ,
 	CODEC_PLAIN /* do nothing */
 };
 
@@ -25,9 +26,13 @@ struct codec {
 struct codec *codec_new(enum codec_method, void*);
 void          codec_free(struct codec*);
 
-size_t codec_compress(struct codec*, const uint32_t*, size_t, void*);
+size_t codec_compress_ints(struct codec*, const uint32_t*, size_t, void*);
 
-size_t codec_decompress(struct codec*, const void*, uint32_t*, size_t);
+size_t codec_decompress_ints(struct codec*, const void*, uint32_t*, size_t);
+
+size_t codec_compress(struct codec*, const void*, size_t, void**);
+
+size_t codec_decompress(struct codec*, const void*, size_t, void*, size_t);
 
 size_t encode_struct_arr(void*, const void*, struct codec**, size_t, size_t);
 

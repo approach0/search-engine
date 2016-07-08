@@ -12,12 +12,12 @@ int main()
 	for (i = 0; i < len; i++)
 		input_arr[i] = i;
 
-	res = codec_compress(&codec, input_arr, len, buf);
+	res = codec_compress_ints(&codec, input_arr, len, buf);
 
 	printf("compressing %u integers into %u bytes...\n",
 	       len, res);
 
-	codec_decompress(&codec, buf, check_arr, len);
+	codec_decompress_ints(&codec, buf, check_arr, len);
 
 	// check check_arr, see if it's same as input_arr.
 	for (i = 0; i < len; i++)

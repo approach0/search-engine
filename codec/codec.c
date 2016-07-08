@@ -75,9 +75,9 @@ dummpy_copy(const uint32_t *in, size_t len, void *out)
  * Return the number of bytes of compressed buffer (return 0 on error).
  */
 size_t
-codec_compress(struct codec *codec,
-               const uint32_t *in, size_t len,
-               void *out)
+codec_compress_ints(struct codec *codec,
+                   const uint32_t *in, size_t len,
+                   void *out)
 {
 	if (codec->method == CODEC_FOR) {
 		struct for_delta_args *args = (struct for_delta_args*)codec->args;
@@ -105,8 +105,8 @@ codec_compress(struct codec *codec,
  * Return the number of compressed bytes processed (return 0 on error).
  */
 size_t
-codec_decompress(struct codec *codec, const void *in,
-                 uint32_t *out, size_t len)
+codec_decompress_ints(struct codec *codec, const void *in,
+                      uint32_t *out, size_t len)
 {
 	if (codec->method == CODEC_FOR) {
 		struct for_delta_args *args = (struct for_delta_args*)codec->args;
@@ -157,7 +157,7 @@ encode_struct_arr(void *dest_, const void *src, struct codec **codecs,
 			p32buf ++;
 		}
 
-		res = codec_compress(codecs[i], intbuf, n, dest);
+		res = codec_compress_ints(codecs[i], intbuf, n, dest);
 		dest += res;
 	}
 
@@ -184,7 +184,7 @@ decode_struct_arr(void *dest_, const void *src_, struct codec **codecs,
 	intbuf = malloc(struct_sz * n + (15 << 2)); /* safety extra space needed */
 
 	for (i = 0; i < members; i++) {
-		res = codec_decompress(codecs[i], src, intbuf, n);
+		res = codec_decompress_ints(codecs[i], src, intbuf, n);
 		src += res;
 
 		p32buf = intbuf;
@@ -200,4 +200,60 @@ decode_struct_arr(void *dest_, const void *src_, struct codec **codecs,
 
 	free(intbuf);
 	return (uintptr_t)src - (uintptr_t)src_;
+}
+
+#include <zlib.h>
+
+size_t
+codec_compress(struct codec* codec, const void* src, size_t src_sz,
+               void** dest)
+{
+	long unsigned int dest_sz;
+	int res;
+
+	switch (codec->method) {
+	case CODEC_GZ:
+		dest_sz = compressBound(src_sz);
+		*dest = malloc(dest_sz);
+
+		res = compress(*dest, &dest_sz /* second parameter is both an
+		                                  input and an output */,
+		               src, src_sz);
+
+		if (res != Z_OK) {
+			dest_sz = 0;
+			free(*dest);
+			*dest = NULL;
+		}
+
+		break;
+
+	default:
+		assert(0);
+	}
+
+	return dest_sz;
+}
+
+size_t
+codec_decompress(struct codec* codec, const void* src, size_t src_sz,
+                 void* dest, size_t dest_sz /* max destination buffer size */)
+{
+	int res;
+	switch (codec->method) {
+	case CODEC_GZ:
+		res = uncompress(dest, &dest_sz /* second parameter is both an
+	                                       input and an output */,
+	                     src, src_sz);
+
+		if (res != Z_OK)
+			dest_sz = 0;
+
+		break;
+
+	default:
+		assert(0);
+	}
+
+	return dest_sz;
 }
