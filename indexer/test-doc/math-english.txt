@@ -1,7 +1,0 @@
-hello hello
-[imath]a+b/2[/imath]
-function
-[imath]f(x) = a + x/2[/imath]
-function again
-[imath]g(x) = x/2[/imath]
-just say "hello world" and exit with zero.
