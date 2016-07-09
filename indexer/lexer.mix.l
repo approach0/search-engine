@@ -20,7 +20,7 @@ mathsym [\x20-\x7e]
 
 %%
  /* text */
-({engword}|{chinese}|[\ ])+                { lex_handle_text(yytext, yyleng); }
+({engword}|{chinese}|[\ ])+            { lex_handle_mix_text(yytext, yyleng); }
 
  /* inline math */
 "[imath]"            { BEGIN(imath); MORE; /* Append next tokens to yytext */ }

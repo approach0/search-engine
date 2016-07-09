@@ -1,6 +1,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <stdlib.h>
+
 #include "indexer.h"
 
 void lex_slice_handler(struct lex_slice *slice)
@@ -8,16 +9,16 @@ void lex_slice_handler(struct lex_slice *slice)
 	indexer_handle_slice(slice);
 }
 
-static bool filename_filter(const char *filename)
+static bool json_ext(const char *filename)
 {
 	char *ext = filename_ext(filename);
-	return (ext && strcmp(ext, ".txt") == 0);
+	return (ext && strcmp(ext, ".json") == 0);
 }
 
 struct foreach_file_args {
 	uint32_t    n_files_indexed;
 	const char *path;
-	file_lexer  lex;
+	text_lexer  lex;
 };
 
 static int foreach_file_callbk(const char *filename, void *arg)
@@ -25,10 +26,18 @@ static int foreach_file_callbk(const char *filename, void *arg)
 	P_CAST(fef_args, struct foreach_file_args, arg);
 	char fullpath[MAX_FILE_NAME_LEN];
 	uint32_t n = fef_args->n_files_indexed;
+	FILE *fh;
 
-	if (1 /* filename_filter(filename) */) {
+	if (json_ext(filename)) {
 		sprintf(fullpath, "%s/%s", fef_args->path, filename);
-		//printf("fullpath: %s\n", fullpath);
+		fh = fopen(fullpath, "r");
+
+		//printf("opening: %s\n", fullpath);
+		if (fh == NULL) {
+			fprintf(stderr, "cannot open `%s', indexing aborted.\n",
+			        fullpath);
+			return 1;
+		}
 
 		{ /* print process */
 			printf("\33[2K\r"); /* clear last line and reset cursor */
@@ -36,8 +45,9 @@ static int foreach_file_callbk(const char *filename, void *arg)
 			fflush(stdout);
 		}
 
-		index_file(fullpath, fef_args->lex);
+		index_json_file(fh, fef_args->lex);
 		fef_args->n_files_indexed ++;
+		fclose(fh);
 	}
 
 	return 0;
@@ -47,7 +57,7 @@ static enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
 {
-	struct foreach_file_args fef_args = {0, path, (file_lexer)arg};
+	struct foreach_file_args fef_args = {0, path, (text_lexer)arg};
 	printf("[directory] %s\n", path);
 	foreach_files_in(path, &foreach_file_callbk, &fef_args);
 
@@ -60,15 +70,19 @@ dir_search_callbk(const char* path, const char *srchpath,
 int main(int argc, char* argv[])
 {
 	int opt;
-	file_lexer lex = lex_file_mix;
+	text_lexer lex = lex_mix_file;
 	char *corpus_path = NULL;
 	const char index_path[] = "./tmp";
 	const char offset_db_name[] = "offset.kvdb";
-	char term_index_path[MAX_FILE_NAME_LEN];
+	const char blob_index_url_name[] = "url";
+	const char blob_index_txt_name[] = "doc";
+	char       path[MAX_FILE_NAME_LEN];
 
 	void        *term_index = NULL;
 	math_index_t math_index = NULL;
 	keyval_db_t  offset_db  = NULL;
+	blob_index_t blob_index_url = NULL;
+	blob_index_t blob_index_txt = NULL;
 
 	while ((opt = getopt(argc, argv, "hep:")) != -1) {
 		switch (opt) {
@@ -89,7 +103,7 @@ int main(int argc, char* argv[])
 			break;
 
 		case 'e':
-			lex = lex_file_eng;
+			lex = lex_eng_file;
 			break;
 
 		default:
@@ -111,11 +125,11 @@ int main(int argc, char* argv[])
 
 	/* open term index */
 	printf("opening term index...\n");
-	sprintf(term_index_path, "%s/term", index_path);
+	sprintf(path, "%s/term", index_path);
 
-	mkdir_p(term_index_path);
+	mkdir_p(path);
 
-	term_index = term_index_open(term_index_path, TERM_INDEX_OPEN_CREATE);
+	term_index = term_index_open(path, TERM_INDEX_OPEN_CREATE);
 	if (NULL == term_index) {
 		printf("cannot create/open term index.\n");
 		goto exit;
@@ -136,13 +150,38 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 
+	/* open blob index */
+	sprintf(path, "%s/%s", index_path, blob_index_url_name);
+	blob_index_url = blob_index_open(path, "w+");
+	if (NULL == blob_index_url) {
+		printf("cannot create/open URL blob index.\n");
+		goto exit;
+	}
+
+	sprintf(path, "%s/%s", index_path, blob_index_txt_name);
+	blob_index_txt = blob_index_open(path, "w+");
+	if (NULL == blob_index_txt) {
+		printf("cannot create/open text blob index.\n");
+		goto exit;
+	}
+
 	/* set index pointers */
-	index_set(term_index, math_index, offset_db);
+	index_set(term_index, math_index, offset_db,
+	          blob_index_url, blob_index_txt);
 
 	/* start indexing */
 	if (file_exists(corpus_path)) {
+		FILE *fh = fopen(corpus_path, "r");
 		printf("[single file] %s\n", corpus_path);
-		index_file(corpus_path, lex);
+
+		if (fh == NULL) {
+			fprintf(stderr, "cannot open `%s', indexing aborted.\n",
+			        corpus_path);
+			goto exit;
+		}
+
+		index_json_file(fh, lex);
+		fclose(fh);
 
 	} else if (dir_exists(corpus_path)) {
 		dir_search_podfs(corpus_path, &dir_search_callbk, lex);
@@ -167,6 +206,16 @@ exit:
 	if (term_index) {
 		printf("closing term index...\n");
 		term_index_close(term_index);
+	}
+
+	if (blob_index_url) {
+		printf("closing URL blob index...\n");
+		blob_index_close(blob_index_url);
+	}
+
+	if (blob_index_txt) {
+		printf("closing text blob index...\n");
+		blob_index_close(blob_index_txt);
 	}
 
 	text_segment_free();

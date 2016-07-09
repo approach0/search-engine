@@ -39,21 +39,32 @@ void lex_slice_handler(struct lex_slice *slice)
 int main(void)
 {
 	const char test_file_name[] = "test-doc/1.txt";
+	FILE *fh = fopen(test_file_name, "r");
 
-	printf("open document `%s'...\n", test_file_name);
+	if (fh == NULL) {
+		printf("cannot open document `%s'...\n", test_file_name);
+		return 1;
+	}
 
 	if (0 != file_offset_check_init(test_file_name))
-		goto free;
+		goto close;
 
 	printf("testing English lexer...\n");
-	lex_file_eng(test_file_name);
+	lex_eng_file(fh);
+
 	file_offset_check_print();
+	file_offset_check_free();
+
+	if (0 != file_offset_check_init(test_file_name))
+		goto close;
 
 	printf("testing mix lexer...\n");
-	lex_file_mix(test_file_name);
-	file_offset_check_print();
+	lex_mix_file(fh);
 
-free:
+	file_offset_check_print();
 	file_offset_check_free();
+
+close:
+	fclose(fh);
 	return 0;
 }

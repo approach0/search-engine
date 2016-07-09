@@ -1,24 +1,17 @@
 #include <string.h>
-#include <stddef.h>
-#include <stdio.h>
 
 size_t lex_bytes_now = 0;
 
-/* mix (Chinese and English) lexer */
+/* mixed text (Chinese and English) lexer */
 #undef   LEX_PREFIX
 #define  LEX_PREFIX(_name) mix ## _name
 #include "lex.h"
 
-void lex_file_mix(const char* path)
+void lex_mix_file(FILE *fh)
 {
-	FILE *fh = fopen(path, "r");
-	if (fh) {
-		LEX_PREFIX(in) = fh;
-		DO_LEX;
-		fclose(fh);
-	} else {
-		fprintf(stderr, "cannot open `%s'.\n", path);
-	}
+	fseek(fh, 0, SEEK_SET);
+	LEX_PREFIX(in) = fh;
+	DO_LEX;
 }
 
 /* English-only lexer (faster) */
@@ -26,19 +19,14 @@ void lex_file_mix(const char* path)
 #define  LEX_PREFIX(_name) eng ## _name
 #include "lex.h"
 
-void lex_file_eng(const char* path)
+void lex_eng_file(FILE *fh)
 {
-	FILE *fh = fopen(path, "r");
-	if (fh) {
-		LEX_PREFIX(in) = fh;
-		DO_LEX;
-		fclose(fh);
-	} else {
-		fprintf(stderr, "cannot open `%s'.\n", path);
-	}
+	fseek(fh, 0, SEEK_SET);
+	LEX_PREFIX(in) = fh;
+	DO_LEX;
 }
 
-void lex_handle_text(char *text, size_t n_bytes)
+void lex_handle_mix_text(char *text, size_t n_bytes)
 {
 	struct lex_slice lex_slice;
 	lex_slice.mb_str = text;

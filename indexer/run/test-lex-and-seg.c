@@ -55,15 +55,20 @@ void lex_slice_handler(struct lex_slice *slice)
 int main(void)
 {
 	const char test_file_name[] = "test-doc/1.txt";
+	FILE *fh = fopen(test_file_name, "r");
+
+	if (fh == NULL) {
+		printf("cannot open document `%s'...\n", test_file_name);
+		return 1;
+	}
 
 	printf("open dictionary ...\n");
 	text_segment_init("");
 
-	printf("open document `%s'...\n", test_file_name);
 	if (0 != file_offset_check_init(test_file_name))
 		goto free;
 
-	lex_file_mix(test_file_name);
+	lex_mix_file(fh);
 	file_offset_check_print();
 
 free:
@@ -71,5 +76,8 @@ free:
 
 	printf("closing dict...\n");
 	text_segment_free();
+
+	printf("closing file...\n");
+	fclose(fh);
 	return 0;
 }

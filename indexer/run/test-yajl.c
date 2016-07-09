@@ -4,15 +4,17 @@
 
 void lex_slice_handler(struct lex_slice *slice)
 {
+	return;
 }
 
 int main()
 {
-	const char json[] = "{\"drink\" : {\"name\" : \"Coke\"}}";
+	const char json[] = "{\"drink\" : {\"name\" : \"可口可乐 \\\"Diet\\\"\"}}";
 	const char *path[] = {"drink", "name", NULL};
 	char errstr[1024] = {0};
 	yajl_val tr, node;
 
+	printf("JSON string: %s\n", json);
 	tr = yajl_tree_parse(json, errstr, sizeof(errstr));
 
 	if (tr == NULL) {

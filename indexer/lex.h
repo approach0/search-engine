@@ -1,17 +1,22 @@
 #include <stddef.h>
-#include "indexer.h"
+#include <stdint.h>
+#include <stdio.h>
 
-extern size_t lex_bytes_now;
+#ifndef LEX_DEF_HEAD
+#define LEX_DEF_HEAD /* begin LEX_DEF_HEAD */
 
-void lex_handle_math(char*, size_t);
-void lex_handle_text(char*, size_t);
-void lex_handle_eng_text(char*, size_t);
+/* lex slice structure */
+enum lex_slice_type {
+	LEX_SLICE_TYPE_MATH,
+	LEX_SLICE_TYPE_ENG_TEXT,
+	LEX_SLICE_TYPE_TEXT
+};
 
-extern void lex_slice_handler(struct lex_slice *);
-
-#ifndef LEX_MACRO
-#define LEX_MACRO
-/* begin LEX_MACRO */
+struct lex_slice {
+	char  *mb_str;    /* in multi-bytes */
+	uint32_t offset;   /* in bytes */
+	enum lex_slice_type type;
+};
 
 #define LEX_SLICE_MORE \
 	yymore(); \
@@ -24,7 +29,18 @@ extern void lex_slice_handler(struct lex_slice *);
 
 #define MORE LEX_SLICE_MORE /* for shorthand */
 
-#endif /* end LEX_MACRO */
+extern size_t lex_bytes_now;
+
+void lex_handle_math(char*, size_t);
+void lex_handle_mix_text(char*, size_t);
+void lex_handle_eng_text(char*, size_t);
+
+extern void lex_slice_handler(struct lex_slice *);
+
+void lex_eng_file(FILE*);
+void lex_mix_file(FILE*);
+
+#endif /* end LEX_DEF_HEAD */
 
 /* prefix-dependent declarations */
 #ifndef LEX_PREFIX
