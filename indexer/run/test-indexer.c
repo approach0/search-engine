@@ -25,7 +25,6 @@ static int foreach_file_callbk(const char *filename, void *arg)
 {
 	P_CAST(fef_args, struct foreach_file_args, arg);
 	char fullpath[MAX_FILE_NAME_LEN];
-	uint32_t n = fef_args->n_files_indexed;
 	FILE *fh;
 
 	if (json_ext(filename)) {
@@ -39,15 +38,15 @@ static int foreach_file_callbk(const char *filename, void *arg)
 			return 1;
 		}
 
-		{ /* print process */
-			printf("\33[2K\r"); /* clear last line and reset cursor */
-			printf("[files processed] %u", n);
-			fflush(stdout);
-		}
-
 		index_json_file(fh, fef_args->lex);
 		fef_args->n_files_indexed ++;
 		fclose(fh);
+
+		{ /* print process */
+			printf("\33[2K\r"); /* clear last line and reset cursor */
+			printf("[files processed] %u", fef_args->n_files_indexed);
+			fflush(stdout);
+		}
 	}
 
 	return 0;
