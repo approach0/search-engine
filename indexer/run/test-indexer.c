@@ -28,6 +28,7 @@ static int foreach_file_callbk(const char *filename, void *arg)
 
 	if (1 /* filename_filter(filename) */) {
 		sprintf(fullpath, "%s/%s", fef_args->path, filename);
+		//printf("fullpath: %s\n", fullpath);
 
 		{ /* print process */
 			printf("\33[2K\r"); /* clear last line and reset cursor */
