@@ -39,7 +39,7 @@ char *term_lookup_r(void *, term_id_t);
 
 void *term_index_get_posting(void *, term_id_t);
 
-position_t *term_posting_current_termpos(void *, uint32_t*);
+position_t *term_posting_current_termpos(void *);
 
 struct term_posting_item {
 	doc_id_t doc_id;

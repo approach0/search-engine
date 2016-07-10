@@ -240,7 +240,7 @@ void term_posting_finish(void *posting)
 	delete po;
 }
 
-position_t *term_posting_current_termpos(void *posting, uint32_t *tf_)
+position_t *term_posting_current_termpos(void *posting)
 {
 	uint32_t tf, i;
 	position_t *pos_arr;
@@ -260,6 +260,5 @@ position_t *term_posting_current_termpos(void *posting, uint32_t *tf_)
 		pos_arr[i] = *it;
 	}
 
-	*tf_ = tf;
 	return pos_arr;
 }

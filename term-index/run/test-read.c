@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
 	void *posting, *ti;
 	struct term_posting_item *pi;
-	uint32_t k, tf, termN, docN, avgDocLen;
+	uint32_t k, termN, docN, avgDocLen;
 	position_t *pos_arr;
 	term_id_t i;
 	doc_id_t j;
@@ -150,10 +150,10 @@ int main(int argc, char* argv[])
 					if (opt_all || opt_posting_termpos) {
 						/* read term positions in this document */
 						printf(", pos=");
-						pos_arr = term_posting_current_termpos(posting, &tf);
-						for (k = 0; k < tf; k++)
+						pos_arr = term_posting_current_termpos(posting);
+						for (k = 0; k < pi->tf; k++)
 							printf("%d%c", pos_arr[k],
-							       (k == tf - 1) ? '.' : ',');
+							       (k == pi->tf - 1) ? '.' : ',');
 						printf("]");
 						free(pos_arr);
 					} else {

@@ -74,13 +74,16 @@ int main(int argc, char* argv[])
 	const char index_path[] = "./tmp";
 	struct indices indices;
 
-	/* open indices for writing */
-	printf("opening indices...\n");
-	indices_open(&indices, index_path, INDICES_OPEN_RW);
-
 	/* open text segmentation dictionary */
 	printf("opening dictionary...\n");
 	text_segment_init("");
+
+	/* open indices for writing */
+	printf("opening indices...\n");
+	if(indices_open(&indices, index_path, INDICES_OPEN_RW)) {
+		fprintf(stderr, "indices open failed.\n");
+		goto exit;
+	}
 
 	while ((opt = getopt(argc, argv, "hep:")) != -1) {
 		switch (opt) {
