@@ -38,7 +38,7 @@ static int foreach_file_callbk(const char *filename, void *arg)
 			return 1;
 		}
 
-		index_json_file(fh, fef_args->lex);
+		indexer_index_json(fh, fef_args->lex);
 		fef_args->n_files_indexed ++;
 		fclose(fh);
 
@@ -72,16 +72,15 @@ int main(int argc, char* argv[])
 	text_lexer lex = lex_mix_file;
 	char *corpus_path = NULL;
 	const char index_path[] = "./tmp";
-	const char offset_db_name[] = "offset.kvdb";
-	const char blob_index_url_name[] = "url";
-	const char blob_index_txt_name[] = "doc";
-	char       path[MAX_FILE_NAME_LEN];
+	struct indices indices;
 
-	void        *term_index = NULL;
-	math_index_t math_index = NULL;
-	keyval_db_t  offset_db  = NULL;
-	blob_index_t blob_index_url = NULL;
-	blob_index_t blob_index_txt = NULL;
+	/* open indices for writing */
+	printf("opening indices...\n");
+	indices_open(&indices, index_path, INDICES_OPEN_RW);
+
+	/* open text segmentation dictionary */
+	printf("opening dictionary...\n");
+	text_segment_init("");
 
 	while ((opt = getopt(argc, argv, "hep:")) != -1) {
 		switch (opt) {
@@ -118,55 +117,7 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 
-	/* open text segmentation dictionary */
-	printf("opening dictionary...\n");
-	text_segment_init("");
-
-	/* open term index */
-	printf("opening term index...\n");
-	sprintf(path, "%s/term", index_path);
-
-	mkdir_p(path);
-
-	term_index = term_index_open(path, TERM_INDEX_OPEN_CREATE);
-	if (NULL == term_index) {
-		printf("cannot create/open term index.\n");
-		goto exit;
-	}
-
-	/* open math index */
-	math_index = math_index_open(index_path, MATH_INDEX_WRITE);
-	if (NULL == math_index) {
-		printf("cannot create/open math index.\n");
-		goto exit;
-	}
-
-	/* open document offset key-value database */
-	offset_db = keyval_db_open_under(offset_db_name, index_path,
-	                                 KEYVAL_DB_OPEN_WR);
-	if (offset_db == NULL) {
-		printf("cannot create/open key-value DB.\n");
-		goto exit;
-	}
-
-	/* open blob index */
-	sprintf(path, "%s/%s", index_path, blob_index_url_name);
-	blob_index_url = blob_index_open(path, "w+");
-	if (NULL == blob_index_url) {
-		printf("cannot create/open URL blob index.\n");
-		goto exit;
-	}
-
-	sprintf(path, "%s/%s", index_path, blob_index_txt_name);
-	blob_index_txt = blob_index_open(path, "w+");
-	if (NULL == blob_index_txt) {
-		printf("cannot create/open text blob index.\n");
-		goto exit;
-	}
-
-	/* set index pointers */
-	index_set(term_index, math_index, offset_db,
-	          blob_index_url, blob_index_txt);
+	indexer_assign(&indices);
 
 	/* start indexing */
 	if (file_exists(corpus_path)) {
@@ -179,7 +130,7 @@ int main(int argc, char* argv[])
 			goto exit;
 		}
 
-		index_json_file(fh, lex);
+		indexer_index_json(fh, lex);
 		fclose(fh);
 
 	} else if (dir_exists(corpus_path)) {
@@ -192,30 +143,7 @@ int main(int argc, char* argv[])
 	printf("done indexing!\n");
 
 exit:
-	if (offset_db) {
-		printf("closing key-value DB...\n");
-		keyval_db_close(offset_db);
-	}
-
-	if (math_index) {
-		printf("closing math index...\n");
-		math_index_close(math_index);
-	}
-
-	if (term_index) {
-		printf("closing term index...\n");
-		term_index_close(term_index);
-	}
-
-	if (blob_index_url) {
-		printf("closing URL blob index...\n");
-		blob_index_close(blob_index_url);
-	}
-
-	if (blob_index_txt) {
-		printf("closing text blob index...\n");
-		blob_index_close(blob_index_txt);
-	}
+	indices_close(&indices);
 
 	text_segment_free();
 

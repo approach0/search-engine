@@ -5,21 +5,17 @@
 #include <stdio.h>
 
 /* dependency modules */
-#include "list/list.h"
-#include "term-index/term-index.h"
-#include "math-index/math-index.h"
-#include "blob-index/blob-index.h"
-#include "keyval-db/keyval-db.h"
 #include "txt-seg/txt-seg.h"
 #include "dir-util/dir-util.h"
 #include "codec/codec.h"
+#include "indices.h"
 #include "lex.h"
 
 /* main indexing functions */
-void index_set(void *, math_index_t, keyval_db_t, blob_index_t, blob_index_t);
+void indexer_assign(struct indices*);
 
 typedef void (*text_lexer)(FILE*);
-void index_json_file(FILE*, text_lexer);
+void indexer_index_json(FILE*, text_lexer);
 
 void indexer_handle_slice(struct lex_slice*);
 

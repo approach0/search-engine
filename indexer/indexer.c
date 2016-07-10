@@ -18,17 +18,16 @@ static blob_index_t blob_index_txt = NULL;
 static doc_id_t   prev_docID /* docID just indexed */ = 0;
 static position_t cur_position = 0;
 
-void index_set(void * ti, math_index_t mi, keyval_db_t od,
-               blob_index_t url_bi, blob_index_t txt_bi)
+void indexer_assign(struct indices *indices)
 {
-	term_index = ti;
-	math_index = mi;
-	offset_db  = od;
-	blob_index_url = url_bi;
-	blob_index_txt = txt_bi;
+	term_index = indices->ti;
+	math_index = indices->mi;
+	offset_db  = indices->ofs_db;
+	blob_index_url = indices->url_bi;
+	blob_index_txt = indices->txt_bi;
 }
 
-void
+static void
 index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 {
 	struct codec codec = {CODEC_GZ, NULL};
@@ -193,7 +192,7 @@ static void index_maintain()
 	}
 }
 
-bool get_json_val(const char *json, const char **path, char *val)
+static bool get_json_val(const char *json, const char **path, char *val)
 {
 	yajl_val tr, node;
 	char err_str[1024] = {0};
@@ -220,7 +219,7 @@ bool get_json_val(const char *json, const char **path, char *val)
 	return 1;
 }
 
-void index_text_field(const char *txt, text_lexer lex)
+static void index_text_field(const char *txt, text_lexer lex)
 {
 	doc_id_t docID;
 	size_t txt_sz = strlen(txt);
@@ -253,7 +252,7 @@ void index_text_field(const char *txt, text_lexer lex)
 	cur_position = 0;
 }
 
-void index_json_file(FILE *fh, text_lexer lex)
+void indexer_index_json(FILE *fh, text_lexer lex)
 {
 	const char *url_path[] = {"url", NULL};
 	const char *txt_path[] = {"text", NULL};
