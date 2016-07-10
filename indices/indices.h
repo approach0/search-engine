@@ -6,7 +6,21 @@
 #include "math-index/math-index.h"
 #include "keyval-db/keyval-db.h"
 #include "blob-index/blob-index.h"
-#include "mem-index/postcache.h"
+#include "postcache.h"
+
+/* segment position to offset map */
+#pragma pack(push, 1)
+
+typedef struct {
+	doc_id_t docID;
+	position_t pos;
+} offsetmap_from_t;
+
+typedef struct {
+	uint32_t offset, n_bytes;
+} offsetmap_to_t;
+
+#pragma pack(pop)
 
 enum indices_open_mode {
 	INDICES_OPEN_RD,

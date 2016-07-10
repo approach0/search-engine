@@ -3,8 +3,7 @@
 #include <stdlib.h>
 
 #include "list/list.h"
-
-#include "mem-posting.h"
+#include "mem-index/mem-posting.h"
 #include "postcache.h"
 
 int postcache_init(struct postcache_pool *pool, uint64_t mem_limit)

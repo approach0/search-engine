@@ -9,7 +9,7 @@
 #include "txt-seg/txt-seg.h"
 #include "dir-util/dir-util.h"
 #include "codec/codec.h"
-#include "indices.h"
+#include "indices/indices.h"
 #include "lex.h"
 
 /* main indexing functions */
@@ -42,17 +42,3 @@ static __inline void strip_math_tag(char *str, size_t n_bytes)
 
 	str[i] = '\0';
 }
-
-/* segment position to offset map */
-#pragma pack(push, 1)
-
-typedef struct {
-	doc_id_t docID;
-	position_t pos;
-} offsetmap_from_t;
-
-typedef struct {
-	uint32_t offset, n_bytes;
-} offsetmap_to_t;
-
-#pragma pack(pop)

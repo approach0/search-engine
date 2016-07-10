@@ -1,16 +1,13 @@
 #include "tex-parser/vt100-color.h"
-#include "indexer.h"
+#include "indexer/config.h" // for MAX_CORPUS_FILE_SZ
+#include "codec/codec.h"
+#include "indices.h"
 #include "config.h"
 
 #undef N_DEBUG
 #include <assert.h>
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
-
-void lex_slice_handler(struct lex_slice *slice)
-{
-	return;
-}
 
 struct check_pos {
 	doc_id_t docID;
