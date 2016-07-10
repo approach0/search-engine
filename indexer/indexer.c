@@ -79,7 +79,7 @@ static bool save_offset(uint32_t offset, uint32_t n_bytes)
 	return 0;
 }
 
-static void index_tex(char *tex)
+static void index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
 	struct tex_parse_ret parse_ret;
 	parse_ret = tex_parse(tex, 0, false);
@@ -98,6 +98,9 @@ static void index_tex(char *tex)
 		printf("parsing TeX (`%s') error: %s\n", tex, parse_ret.msg);
 	}
 
+	/* save offset before cur_position increases */
+	save_offset(offset, n_bytes);
+
 	/* increment position */
 	cur_position ++;
 }
@@ -112,6 +115,8 @@ static void index_term(char *term, uint32_t offset, size_t n_bytes)
 
 	/* add term into inverted-index */
 	term_index_doc_add(term_index, term);
+
+	/* save offset before cur_position increases */
 	save_offset(offset, n_bytes);
 
 	/* increment position */
@@ -149,15 +154,13 @@ void indexer_handle_slice(struct lex_slice *slice)
 		printf("[index math tag] %s <%u, %lu>\n", slice->mb_str,
 		       slice->offset, str_sz);
 #endif
+		/* term_index_doc_add() is invoked here to make position numbers
+		 * synchronous in both math-index and Indri. */
+		term_index_doc_add(term_index, "math_exp");
 
 		/* extract tex from math tag and add it into math-index */
 		strip_math_tag(slice->mb_str, str_sz);
-		index_tex(slice->mb_str);
-
-		save_offset(slice->offset, str_sz);
-
-		/* make position numbers synchronous in both math-index and Indri */
-		term_index_doc_add(term_index, "math_exp");
+		index_tex(slice->mb_str, slice->offset, str_sz);
 
 		break;
 
