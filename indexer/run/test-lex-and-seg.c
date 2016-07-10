@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "txt-seg/config.h"
 #include "txt-seg/txt-seg.h"
 #include "indexer.h"
 

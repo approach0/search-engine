@@ -1,4 +1,6 @@
 #include "cppjieba/Jieba.hpp"
+
+#include "config.h"
 #include "txt-seg.h"
 
 using namespace std;

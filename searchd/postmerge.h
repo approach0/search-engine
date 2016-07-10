@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <limits.h>
+#include <stdbool.h>
 #include "config.h"
 
 #define MAX_POST_ITEM_ID   ULLONG_MAX

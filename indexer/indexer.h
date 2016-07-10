@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 /* dependency modules */
+#include "txt-seg/config.h"
 #include "txt-seg/txt-seg.h"
 #include "dir-util/dir-util.h"
 #include "codec/codec.h"

@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "config.h"
 #include "txt-seg.h"
 
 static LIST_IT_CALLBK(print)

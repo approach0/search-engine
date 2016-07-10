@@ -7,7 +7,7 @@
 #include "snippet.h"
 
 /* for MAX_TXT_SEG_BYTES */
-#include "txt-seg/txt-seg.h"
+#include "txt-seg/config.h"
 
 /* for terminal colors */
 #include "tex-parser/vt100-color.h"

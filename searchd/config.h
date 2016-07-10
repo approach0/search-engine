@@ -1,3 +1,11 @@
+/* for MAX_TXT_SEG_BYTES & MAX_TXT_SEG_LEN */
+#include "txt-seg/config.h"
+#define MAX_TERM_BYTES MAX_TXT_SEG_BYTES
+
+/* consider both math & term */
+#define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
+#define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
+
 #define MAX_MERGE_POSTINGS 4096
 #define SNIPPET_PADDING 40
 

@@ -5,19 +5,17 @@
 #include <string.h>
 #include <limits.h>
 
-#include "search.h"
-#include "snippet.h"
+#include "indexer/indexer.h"
+#include "mem-index/mem-posting.h"
+#include "postmerge.h"
+#include "bm25-score.h"
+#include "rank.h"
+#include "config.h"
 
 struct term_extra_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
 	struct rank_set         *rk_set;
-};
-
-struct snippet_arg {
-	keyval_db_t kv_db;
-	char (*terms)[MAX_TERM_BYTES];
-	uint32_t n_terms;
 };
 
 void *term_posting_current_wrap(void *posting)
@@ -70,74 +68,14 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	//printf("(BM25 score = %f)\n", score);
 }
 
-static char *get_doc_path(keyval_db_t kv_db, doc_id_t docID)
-{
-	char *doc_path;
-	size_t val_sz;
-
-	if(NULL == (doc_path = keyval_db_get(kv_db, &docID, sizeof(doc_id_t),
-	                                     &val_sz))) {
-		printf("get error: %s\n", keyval_db_last_err(kv_db));
-		return NULL;
-	}
-
-	return doc_path;
-}
-
-void print_res_snippet(doc_id_t docID, struct snippet_arg *snp_arg)
-{
-//	uint32_t i;
-//	size_t val_sz;
-//	docterm_t docterm = {docID, ""};
-//	doctok_pos_t *termpos;
-//	char *doc_path;
-//
-//	FILE *doc_fh;
-//	list  snippet_div_list = LIST_NULL;
-//
-//	doc_path = get_doc_path(snp_arg->kv_db, docID);
-//	printf("@ %s\n", doc_path);
-//
-//	for (i = 0; i < snp_arg->n_terms; i++) {
-//		strcpy(docterm.term, snp_arg->terms[i]);
-//
-//		termpos = keyval_db_get(snp_arg->kv_db, &docterm,
-//								sizeof(doc_id_t) + strlen(docterm.term),
-//								&val_sz);
-//		if(NULL != termpos) {
-//			//printf("`%s' ", docterm.term);
-//			//printf("pos = %u[%u] ", termpos->doc_pos, termpos->n_bytes);
-//			snippet_add_pos(&snippet_div_list, docterm.term,
-//			                termpos->doc_pos, termpos->n_bytes);
-//			free(termpos);
-//		}
-//	}
-//	//printf("\n");
-//
-//	doc_fh = fopen(doc_path, "r");
-//	if (doc_fh) {
-//		snippet_read_file(doc_fh, &snippet_div_list);
-//		fclose(doc_fh);
-//
-//		snippet_hi_print(&snippet_div_list);
-//	}
-//
-//	snippet_free_div_list(&snippet_div_list);
-//
-//	free(doc_path);
-}
-
 void print_res_item(struct rank_set *rs, struct rank_hit* hit,
                     uint32_t cnt, void* arg)
 {
-	P_CAST(snp_arg, struct snippet_arg, arg);
-
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
-	print_res_snippet(hit->docID, snp_arg);
 }
 
 uint32_t
-print_all_rank_res(struct rank_set *rs, struct snippet_arg *snp_arg)
+print_all_rank_res(struct rank_set *rs)
 {
 	struct rank_wind win;
 	uint32_t         total_pages, page = 0;
@@ -148,7 +86,7 @@ print_all_rank_res(struct rank_set *rs, struct snippet_arg *snp_arg)
 		if (win.to > 0) {
 			printf("page#%u (from %u to %u):\n",
 			       page + 1, win.from, win.to);
-			rank_window_foreach(&win, &print_res_item, snp_arg);
+			rank_window_foreach(&win, &print_res_item, NULL);
 			page ++;
 		}
 	} while (page < total_pages);
@@ -156,7 +94,7 @@ print_all_rank_res(struct rank_set *rs, struct snippet_arg *snp_arg)
 	return total_pages;
 }
 
-struct mem_posting *term_posting_fork(void *term_posting)
+static struct mem_posting *term_posting_fork(void *term_posting)
 {
 	struct term_posting_item *pi;
 	struct mem_posting *ret_mempost, *buf_mempost;
@@ -198,8 +136,8 @@ struct mem_posting *term_posting_fork(void *term_posting)
 }
 
 static void
-test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
-               char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
+test_term_search(void *ti, enum postmerge_op op,
+                 char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
 {
 	uint32_t                     i;
 	void                        *posting;
@@ -212,20 +150,21 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	struct postmerge             pm;
 	struct postmerge_callbks     mem_calls, disk_calls, *calls = NULL;
 
-	struct snippet_arg           snp_arg = {keyval_db, terms, n_terms};
-
-#if 1 /* testing in-memory posting */
+	/* testing in-memory posting */
 	struct mem_posting *fork_posting;
 	void *term_posting;
 
-#define WORD "bird"
-	term_id = term_lookup(ti, WORD);
-	term_posting = term_index_get_posting(ti, term_id);
+	const term_id_t forked_term_id = 1;
+	printf("caching posting list[%u] of term `%s'...\n", forked_term_id,
+	       term_lookup_r(ti, forked_term_id));
+
+	term_posting = term_index_get_posting(ti, forked_term_id);
 	fork_posting = term_posting_fork(term_posting);
+
 	printf("forked posting list: ");
 	mem_posting_print_meminfo(fork_posting);
-#endif
 
+	/* clear post merge structure */
 	postmerge_posts_clear(&pm);
 
 	/*
@@ -255,19 +194,21 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 		term_id = term_lookup(ti, terms[i]);
 		if (term_id != 0) {
 
-			if (0 == strcmp(WORD, terms[i])) {
-				posting = fork_posting;
-				calls = &mem_calls;
-			} else {
-				posting = term_index_get_posting(ti, term_id);
-				calls = &disk_calls;
-			}
-
 			df = term_index_get_df(ti, term_id);
 			bm25args.idf[i] = BM25_idf((float)df, (float)docN);
 
 			printf("term `%s' ID = %u, df[%d] = %u.\n",
 			       terms[i], term_id, i, df);
+
+			if (forked_term_id == term_id) {
+				posting = fork_posting;
+				calls = &mem_calls;
+				printf("using cached posting list.\n");
+			} else {
+				posting = term_index_get_posting(ti, term_id);
+				calls = &disk_calls;
+				printf("using on-disk posting list.\n");
+			}
 		} else {
 			posting = NULL;
 			calls = NULL;
@@ -330,14 +271,13 @@ test_term_search(void *ti, keyval_db_t keyval_db, enum postmerge_op op,
 	/*
 	 * print ranked search results by page number.
 	 */
-	res_pages = print_all_rank_res(&rk_set, &snp_arg);
+	res_pages = print_all_rank_res(&rk_set);
 	printf("result(s): %u pages.\n", res_pages);
 
 	rank_set_free(&rk_set);
 
-#if 1 /* testing in-memory posting */
+	/* testing in-memory posting */
 	mem_posting_release(fork_posting);
-#endif
 }
 
 int main(int argc, char *argv[])
@@ -414,9 +354,13 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	printf("opening index...\n");
-	indices = indices_open(index_path);
+	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
+		printf("indices open failed.\n");
+		goto exit;
+	}
 
-	test_term_search(indices.ti, indices.keyval_db, op, query, n_queries);
+	printf("searching terms...\n");
+	test_term_search(indices.ti, op, query, n_queries);
 
 	printf("closing index...\n");
 	indices_close(&indices);

@@ -3,7 +3,8 @@
 #include <getopt.h>
 #include <string.h>
 
-#include "search.h"
+#include "postmerge.h"
+#include "math-search.h"
 
 static void
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
@@ -29,13 +30,11 @@ int main(int argc, char *argv[])
 	uint32_t                i;
 	int                     opt;
 	math_index_t            mi = NULL;
-	keyval_db_t             keyval_db = NULL;
 
 	char       query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
 	uint32_t   n_queries = 0;
 
 	char      *index_path = NULL;
-	const char kv_db_fname[] = "kvdb-offset.bin";
 
 	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
 		switch (opt) {
@@ -96,20 +95,6 @@ int main(int argc, char *argv[])
 		goto exit;
 	}
 
-	/*
-	 * open document offset key-value database.
-	 */
-	printf("opening document offset key-value DB...\n");
-	keyval_db = keyval_db_open_under(kv_db_fname, index_path,
-	                                 KEYVAL_DB_OPEN_RD);
-	if (keyval_db == NULL) {
-		printf("key-value DB open error.\n");
-		goto exit;
-	} else {
-		printf("%lu records in key-value DB.\n",
-		       keyval_db_records(keyval_db));
-	}
-
 	/* for now only single (query[0]) is searched */
 	math_search_posting_merge(mi, query[0], DIR_MERGE_DEPTH_FIRST,
 	                          &math_posting_on_merge, NULL);
@@ -121,11 +106,6 @@ exit:
 	if (mi) {
 		printf("closing math index...\n");
 		math_index_close(mi);
-	}
-
-	if (keyval_db) {
-		printf("closing key-value DB...\n");
-		keyval_db_close(keyval_db);
 	}
 
 	return 0;

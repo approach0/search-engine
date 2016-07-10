@@ -6,9 +6,6 @@ extern "C" {
 
 #include "list/list.h"
 
-#define MAX_TXT_SEG_LEN    32 /* in number of characters */
-#define MAX_TXT_SEG_BYTES  (MAX_TXT_SEG_LEN * 3)
-
 struct text_seg {
 	char             str[MAX_TXT_SEG_BYTES];
 	uint32_t         offset, n_bytes; /* in bytes */
