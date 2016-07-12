@@ -4,6 +4,13 @@
 #undef N_DEBUG
 #include <assert.h>
 
+static char *mem_posting_get_pos_arr(char *buf, size_t *size)
+{
+	uint32_t *tf = (uint32_t *)buf + 1;
+	*size = 0;
+	return (char *)(tf + 1);
+}
+
 int main()
 {
 	uint32_t i;
@@ -19,7 +26,7 @@ int main()
 	struct mem_posting_callbks calls = {
 		mem_posting_default_on_flush,
 		mem_posting_default_on_rebuf,
-		mem_posting_default_get_pos_arr
+		mem_posting_get_pos_arr
 	};
 
 	po = mem_posting_create(2, calls);

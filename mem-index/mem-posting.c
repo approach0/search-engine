@@ -12,13 +12,9 @@
 #endif
 #include <assert.h>
 
-/* define size of buffer to be allocated */
-#define SYS_MEM_PAGE_SZ 4096
-
-#ifdef DEBUG_MEM_POSTING
-#define MEM_POSTING_BUF_SZ 25
-#else
-#define MEM_POSTING_BUF_SZ (SYS_MEM_PAGE_SZ * 1)
+#ifdef  DEBUG_MEM_POSTING_SMALL_BUF_SZ
+#undef  MEM_POSTING_BUF_SZ
+#define MEM_POSTING_BUF_SZ DEBUG_MEM_POSTING_SMALL_BUF_SZ
 #endif
 
 /* buffer setup/free macro */
@@ -91,7 +87,9 @@ append_node(struct mem_posting *po, struct mem_posting_node *node)
 	po->tot_sz += node->blk_sz;
 	po->n_blk ++;
 
-	printf("appending...\n");
+#ifdef DEBUG_MEM_POSTING
+	printf("appending skippy node...\n");
+#endif
 	skippy_append(&po->skippy, &node->sn);
 }
 
@@ -204,10 +202,10 @@ bool mem_posting_start(void *po_)
 bool mem_posting_next(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
-	uint32_t tf;
-	char    *pos_arr;
-	pos_arr = po->get_pos_arr(po->buf + po->buf_idx, &tf);
-	po->buf_idx = (uint32_t)(pos_arr - po->buf);
+	size_t  pos_arr_sz;
+	char   *pos_arr;
+	pos_arr = po->get_pos_arr(po->buf + po->buf_idx, &pos_arr_sz);
+	po->buf_idx = (uint32_t)(pos_arr - po->buf) + pos_arr_sz;
 
 	do {
 		if (po->buf_idx < po->buf_end) {
@@ -289,16 +287,14 @@ position_t *mem_posting_cur_pos_arr(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
 
-	uint32_t    tf;
-	size_t      arr_sz;
+	size_t      pos_arr_sz;
 	char       *pos_arr;
 	position_t *copy;
 
-	pos_arr = po->get_pos_arr(po->buf + po->buf_idx, &tf);
+	pos_arr = po->get_pos_arr(po->buf + po->buf_idx, &pos_arr_sz);
 
-	arr_sz = tf * sizeof(position_t);
-	copy = malloc(arr_sz);
-	memcpy(copy, pos_arr, arr_sz);
+	copy = malloc(pos_arr_sz);
+	memcpy(copy, pos_arr, pos_arr_sz);
 
 	return copy;
 }
@@ -317,11 +313,4 @@ mem_posting_default_on_flush(char *buf, uint32_t *buf_sz)
 void mem_posting_default_on_rebuf(char *buf, uint32_t *buf_sz)
 {
 	return;
-}
-
-char *mem_posting_default_get_pos_arr(char *buf, uint32_t *tf_)
-{
-	uint32_t *tf = (uint32_t *)buf + 1;
-	*tf_ = *tf;
-	return (char *)(tf + 1);
 }

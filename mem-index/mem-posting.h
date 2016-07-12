@@ -5,7 +5,7 @@
 
 typedef uint32_t (*mem_posting_flush_callbk)(char*, uint32_t*);
 typedef void     (*mem_posting_rebuf_callbk)(char*, uint32_t*);
-typedef char    *(*mem_posting_pos_arr_callbk)(char*, uint32_t*);
+typedef char    *(*mem_posting_pos_arr_callbk)(char*, size_t*);
 
 struct mem_posting_callbks {
 	mem_posting_flush_callbk   on_flush;
@@ -16,7 +16,6 @@ struct mem_posting_callbks {
 /* default callback functions */
 uint32_t mem_posting_default_on_flush(char*, uint32_t*);
 void     mem_posting_default_on_rebuf(char*, uint32_t*);
-char    *mem_posting_default_get_pos_arr(char*, uint32_t*);
 
 struct mem_posting_node {
 	struct skippy_node  sn;
