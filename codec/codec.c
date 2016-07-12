@@ -181,7 +181,7 @@ decode_struct_arr(void *dest_, const void *src_, struct codec **codecs,
 	const char *src = (const char *)src_;
 	size_t      res, members = struct_sz >> 2 /* four bytes per integer */;
 
-	intbuf = malloc(struct_sz * n + (15 << 2)); /* safety extra space needed */
+	intbuf = malloc(struct_sz * n);
 
 	for (i = 0; i < members; i++) {
 		res = codec_decompress_ints(codecs[i], src, intbuf, n);
