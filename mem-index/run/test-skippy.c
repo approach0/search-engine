@@ -23,6 +23,7 @@ int main(void)
 
 	for (i = 0; i < 30; i++) {
 		t = malloc(sizeof(struct T));
+		printf("[alloc]\n");
 		t->data = i * i;
 		skippy_node_init(&t->sn, i * 2);
 		skippy_append(&skippy, &t->sn);
@@ -50,6 +51,6 @@ int main(void)
 		printf("cannot find node key %u\n", cur_num);
 	}
 
-	skippy_free(&skippy, struct T, sn);
+	skippy_free(&skippy, struct T, sn, free(p); printf("[free]\n"));
 	return 0;
 }

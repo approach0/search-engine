@@ -1,73 +1,63 @@
 #pragma once
-#include "codec/codec.h"
+#include <stdint.h>
+#include "term-index/term-index.h" /* for position_t */
 #include "skippy.h"
-#include "config.h"
 
-#ifdef DEBUG_MEM_POSTING
-#define SYS_MEM_PAGE_SZ 512
-#else
-#define SYS_MEM_PAGE_SZ 4096
-#endif
+typedef uint32_t (*mem_posting_flush_callbk)(char*, uint32_t*);
+typedef void     (*mem_posting_rebuf_callbk)(char*, uint32_t*);
+typedef char    *(*mem_posting_pos_arr_callbk)(char*, uint32_t*);
 
-#define MEM_POSTING_PAGES_PER_BLOCK 2
+struct mem_posting_callbks {
+	mem_posting_flush_callbk   on_flush;
+	mem_posting_rebuf_callbk   on_rebuf;
+	mem_posting_pos_arr_callbk get_pos_arr;
+};
 
-#define MEM_POSTING_BLOCK_SZ (SYS_MEM_PAGE_SZ * MEM_POSTING_PAGES_PER_BLOCK)
+/* default callback functions */
+uint32_t mem_posting_default_on_flush(char*, uint32_t*);
+void     mem_posting_default_on_rebuf(char*, uint32_t*);
+char    *mem_posting_default_get_pos_arr(char*, uint32_t*);
 
-#define MEM_POSTING_N_ENCODE ((MEM_POSTING_BLOCK_SZ / struct_sz) >> 2)
-
-typedef uint16_t enc_hd_t; /* encode header */
-
-struct mem_posting_blk {
-	struct skippy_node       sn;
-	uint32_t                 end;
-	char                     buff[MEM_POSTING_BLOCK_SZ];
-	uint32_t                 n_writes;
-	struct mem_posting_blk  *next;
+struct mem_posting_node {
+	struct skippy_node  sn;
+	char               *blk;
+	size_t              blk_sz;
 };
 
 struct mem_posting {
-	uint32_t                   n_used_bytes;
-	uint32_t                   n_tot_blocks;
-	struct mem_posting_blk    *head, *tail;
-	struct skippy              skippy;
+	struct mem_posting_node *head, *tail;
+	size_t                   tot_sz;
+	uint32_t                 n_blk;
+	struct skippy            skippy;
 
-	/* encoder info */
-	uint32_t                   struct_sz;
-	struct codec             **codecs;
+	/* writer/iterator buffer */
+	char                    *buf;
+	uint32_t                 buf_end;
 
-	/* merge-related */
-	char                      *buff; /* merge buffer */
-	struct mem_posting_blk    *blk_now;
-	uint32_t                   blk_idx;
-	uint32_t                   buf_idx;
-	uint32_t                   buf_end;
+	/* callback functions */
+	mem_posting_flush_callbk   on_flush;
+	mem_posting_rebuf_callbk   on_rebuf;
+	mem_posting_pos_arr_callbk get_pos_arr;
+
+	/* iterator-related */
+	struct mem_posting_node *cur;
+	uint32_t                 buf_idx;
 };
 
-struct mem_posting *mem_posting_create(uint32_t, uint32_t);
+struct mem_posting *mem_posting_create(uint32_t, struct mem_posting_callbks);
+void mem_posting_free(struct mem_posting*);
 
-void mem_posting_release(struct mem_posting*);
+void mem_posting_print_info(struct mem_posting*);
 
-void mem_posting_clear(struct mem_posting*);
+size_t mem_posting_write(struct mem_posting*, const void*, size_t);
+size_t mem_posting_write_complete(struct mem_posting*);
 
-size_t
-mem_posting_write(struct mem_posting*, uint32_t, const void*, size_t);
-
-void
-mem_posting_set_codecs(struct mem_posting*, struct codec**);
-
-uint32_t
-mem_posting_encode(struct mem_posting*, struct mem_posting*);
-
-void mem_posting_print_raw(struct mem_posting*);
-
-void mem_posting_print_dec(struct mem_posting*);
-
-void mem_posting_print_meminfo(struct mem_posting*);
-
-/* merge-related functions */
-bool     mem_posting_start(void*);
-bool     mem_posting_jump(void*, uint64_t);
-bool     mem_posting_next(void*);
-void     mem_posting_finish(void*);
-void*    mem_posting_current(void*);
+/* iterator functions */
+bool  mem_posting_start(void*);
+bool  mem_posting_next(void*);
+void* mem_posting_current(void*);
 uint64_t mem_posting_current_id(void*);
+bool  mem_posting_jump(void*, uint64_t);
+void  mem_posting_finish(void*);
+
+position_t *mem_posting_cur_pos_arr(void*);

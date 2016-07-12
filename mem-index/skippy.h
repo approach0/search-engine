@@ -10,7 +10,6 @@
  * Wei Zhong
  */
 
-#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -30,12 +29,12 @@
 	     _cur != NULL; \
 	     _cur = _save, _save = (_cur) ? _cur->next[_level] : NULL)
 
-#define skippy_free(_sk, _type, _member) { \
+#define skippy_free(_sk, _type, _member, _stmt) { \
 		struct skippy_node *cur, *save; \
 		_type* p; \
 		skippy_foreach(cur, save, _sk, 0) { \
 			p = MEMBER_2_STRUCT(cur, _type, _member); \
-			free(p); \
+			_stmt; \
 		} \
 	} do {} while(0)
 
