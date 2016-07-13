@@ -9,7 +9,7 @@ extern "C" {
 
 typedef uint32_t term_id_t;
 typedef uint32_t doc_id_t;
-typedef int32_t  position_t;
+typedef uint32_t position_t;
 
 #define MAX_DOC_ID UINT_MAX
 

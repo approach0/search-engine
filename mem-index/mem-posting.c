@@ -31,6 +31,39 @@
 		_po->tot_sz -= MEM_POSTING_BUF_SZ; \
 	} do {} while (0)
 
+struct mem_posting_callbks mem_term_posting_plain_calls()
+{
+	struct mem_posting_callbks ret = {
+		onflush_for_plainpost,
+		onrebuf_for_plainpost,
+		getposarr_for_termpost
+	};
+
+	return ret;
+}
+
+struct mem_posting_callbks mem_term_posting_codec_calls()
+{
+	struct mem_posting_callbks ret = {
+		onflush_for_termpost,
+		onrebuf_for_termpost,
+		getposarr_for_termpost,
+	};
+
+	return ret;
+};
+
+struct mem_posting_callbks mem_term_posting_with_pos_codec_calls()
+{
+	struct mem_posting_callbks ret = {
+		onflush_for_termpost_with_pos,
+		onrebuf_for_termpost_with_pos,
+		getposarr_for_termpost_with_pos
+	};
+
+	return ret;
+};
+
 void mem_posting_print_info(struct mem_posting *po)
 {
 	printf("==== memory posting list info ====\n");
@@ -297,20 +330,4 @@ position_t *mem_posting_cur_pos_arr(void *po_)
 	memcpy(copy, pos_arr, pos_arr_sz);
 
 	return copy;
-}
-
-uint32_t
-mem_posting_default_on_flush(char *buf, uint32_t *buf_sz)
-{
-	doc_id_t *docID = (doc_id_t *)buf;
-
-#ifdef DEBUG_MEM_POSTING
-	printf("flushing docID #%u...\n", *docID);
-#endif
-	return *docID;
-}
-
-void mem_posting_default_on_rebuf(char *buf, uint32_t *buf_sz)
-{
-	return;
 }

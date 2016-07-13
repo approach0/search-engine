@@ -1,8 +1,10 @@
 #pragma once
 #include <stdint.h>
 #include "term-index/term-index.h" /* for position_t */
+#include "mem-posting-calls.h"
 #include "skippy.h"
 
+/* callback types */
 typedef uint32_t (*mem_posting_flush_callbk)(char*, uint32_t*);
 typedef void     (*mem_posting_rebuf_callbk)(char*, uint32_t*);
 typedef char    *(*mem_posting_pos_arr_callbk)(char*, size_t*);
@@ -13,10 +15,12 @@ struct mem_posting_callbks {
 	mem_posting_pos_arr_callbk get_pos_arr;
 };
 
-/* default callback functions */
-uint32_t mem_posting_default_on_flush(char*, uint32_t*);
-void     mem_posting_default_on_rebuf(char*, uint32_t*);
+/* some mem_posting_callbks setup utility functions */
+struct mem_posting_callbks mem_term_posting_plain_calls();
+struct mem_posting_callbks mem_term_posting_codec_calls();
+struct mem_posting_callbks mem_term_posting_with_pos_codec_calls();
 
+/* structures */
 struct mem_posting_node {
 	struct skippy_node  sn;
 	char               *blk;
@@ -43,6 +47,7 @@ struct mem_posting {
 	uint32_t                 buf_idx;
 };
 
+/* main functions */
 struct mem_posting *mem_posting_create(uint32_t, struct mem_posting_callbks);
 void mem_posting_free(struct mem_posting*);
 
