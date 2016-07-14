@@ -55,27 +55,23 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 	P_CAST(tes_arg, struct term_extra_score_arg, extra_args);
 	float doclen = (float)term_index_get_docLen(tes_arg->term_index, docID);
-	struct term_posting_item *tpi;
+	struct term_posting_item *pip /* posting item with positions */;
 
 	for (i = 0; i < pm->n_postings; i++)
 		if (pm->curIDs[i] == cur_min) {
-			printf("merge docID#%lu from posting[%d]\n", cur_min, i);
-			tpi = pm->cur_pos_item[i];
+			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 
-//			printf("tf=%u\n", tpi->tf);
-//			printf("curID=%lu\n", pm->curIDs[i]);
-//			printf("po=%p\n", pm->postings[i]);
-//			uint32_t j;
-//			position_t *p;
-			printf("tf=%u, ", tpi->tf);
-			tpi = term_posting_cur_item(pm->postings[i]);
-			printf("tf=%u\n", tpi->tf);
-//			for (j = 0; j < tpi->tf; j++) {
-//				printf("%u-", p[j]);
+			pip = pm->cur_pos_item[i];
+
+//			{ /* print position array */
+//				int j;
+//				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
+//				for (j = 0; j < pip->tf; j++) {
+//					printf("%u-", pos_arr[j]);
+//				}
+//				printf("\n");
 //			}
-//			printf("\n");
-//			free(p);
-			score += BM25_term_i_score(tes_arg->bm25args, i, tpi->tf, doclen);
+			score += BM25_term_i_score(tes_arg->bm25args, i, pip->tf, doclen);
 		}
 
 	rank_set_hit(tes_arg->rk_set, docID, score);
@@ -134,8 +130,9 @@ test_term_search(void *ti, enum postmerge_op op,
 	term_posting = term_index_get_posting(ti, forked_term_id);
 	fork_posting = postcache_fork_term_posting(term_posting);
 
-	printf("forked posting list: ");
+	printf("forked posting list: \n");
 	mem_posting_print_info(fork_posting);
+	printf("\n");
 
 	/* clear post merge structure */
 	postmerge_posts_clear(&pm);
