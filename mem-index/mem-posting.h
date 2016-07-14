@@ -59,8 +59,8 @@ size_t mem_posting_write_complete(struct mem_posting*);
 /* iterator functions */
 bool  mem_posting_start(void*);
 bool  mem_posting_next(void*);
-void* mem_posting_current(void*);
-uint64_t mem_posting_current_id(void*);
+void* mem_posting_cur_item(void*);
+uint64_t mem_posting_cur_item_id(void*);
 bool  mem_posting_jump(void*, uint64_t);
 void  mem_posting_finish(void*);
 

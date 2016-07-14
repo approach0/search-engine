@@ -18,12 +18,12 @@ struct term_extra_score_arg {
 	struct rank_set         *rk_set;
 };
 
-void *term_posting_current_wrap(void *posting)
+void *term_posting_cur_item_wrap(void *posting)
 {
 	return (void*)term_posting_cur_item_with_pos(posting);
 }
 
-uint64_t term_posting_current_id_wrap(void *item)
+uint64_t term_posting_cur_item_id_wrap(void *item)
 {
 	doc_id_t doc_id;
 	doc_id = ((struct term_posting_item*)item)->doc_id;
@@ -147,15 +147,15 @@ test_term_search(void *ti, enum postmerge_op op,
 	disk_calls.finish = &term_posting_finish;
 	disk_calls.jump   = &term_posting_jump_wrap;
 	disk_calls.next   = &term_posting_next;
-	disk_calls.now    = &term_posting_current_wrap;
-	disk_calls.now_id = &term_posting_current_id_wrap;
+	disk_calls.now    = &term_posting_cur_item_wrap;
+	disk_calls.now_id = &term_posting_cur_item_id_wrap;
 
 	mem_calls.start  = &mem_posting_start;
 	mem_calls.finish = &mem_posting_finish;
 	mem_calls.jump   = &mem_posting_jump;
 	mem_calls.next   = &mem_posting_next;
-	mem_calls.now    = &mem_posting_current;
-	mem_calls.now_id = &mem_posting_current_id;
+	mem_calls.now    = &mem_posting_cur_item;
+	mem_calls.now_id = &mem_posting_cur_item_id;
 
 	/*
 	 * for each term posting list, pre-calculate some scoring

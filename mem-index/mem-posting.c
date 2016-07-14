@@ -256,13 +256,13 @@ bool mem_posting_next(void *po_)
 	return 0;
 }
 
-void* mem_posting_current(void *po_)
+void* mem_posting_cur_item(void *po_)
 {
 	struct mem_posting *po = (struct mem_posting*)po_;
 	return po->buf + po->buf_idx;
 }
 
-uint64_t mem_posting_current_id(void *item)
+uint64_t mem_posting_cur_item_id(void *item)
 {
 	uint32_t *curID = (uint32_t*)item;
 	return (uint64_t)(*curID);
@@ -302,7 +302,7 @@ bool mem_posting_jump(void *po_, uint64_t target_)
 	 * equal to target ID. */
 	do {
 		/* docID must be the first member of structure */
-		curID = (uint32_t*)mem_posting_current(po);
+		curID = (uint32_t*)mem_posting_cur_item(po);
 
 		if (*curID >= target) {
 			return 1;

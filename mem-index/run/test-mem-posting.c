@@ -92,8 +92,8 @@ static void test_iterator(struct mem_posting *po, enum test_option opt)
 
 	do {
 print_current:
-		pi = mem_posting_current(po);
-		id = mem_posting_current_id(pi);
+		pi = mem_posting_cur_item(po);
+		id = mem_posting_cur_item_id(pi);
 		assert(id == pi->doc_id);
 
 		printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
