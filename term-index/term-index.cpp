@@ -3,6 +3,7 @@
 #include "indri/ParsedDocument.hpp"
 #include "indri/CompressedCollection.hpp"
 #include "term-index.h"
+#include "config.h"
 #include <iostream>
 #include <stdio.h>
 #include <limits.h>
@@ -206,9 +207,15 @@ bool term_posting_jump(void *posting, uint64_t doc_id)
 	return po->nextEntry(doc_id);
 }
 
+void term_posting_finish(void *posting)
+{
+	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
+	delete po;
+}
+
 #include "searchd/config.h" /* for MAX_MERGE_POSTINGS */
 
-struct term_posting_item *term_posting_current(void *posting)
+struct term_posting_item *term_posting_cur_item(void *posting)
 {
 	static struct term_posting_item *ret, q[MAX_MERGE_POSTINGS];
 	static int i = 0;
@@ -234,31 +241,36 @@ struct term_posting_item *term_posting_current(void *posting)
 	}
 }
 
-void term_posting_finish(void *posting)
+struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 {
-	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
-	delete po;
-}
+	static int i = 0;
+	static struct _item_with_pos {
+		doc_id_t   doc_id;
+		uint32_t   tf;
+		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
+	} q[MAX_MERGE_POSTINGS];
 
-position_t *term_posting_current_termpos(void *posting)
-{
-	uint32_t tf, i;
-	position_t *pos_arr;
+	int k;
+	static struct _item_with_pos *ret;
+
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
 	indri::index::DocListIterator::DocumentData *doc;
-	indri::utility::greedy_vector<int>::iterator it;
 
-	po = (indri::index::DocListIterator*)posting;
 	doc = po->currentEntry();
-	tf = doc->positions.size();
 
-	pos_arr = (position_t*)malloc(sizeof(position_t) * tf);
+	if (doc) {
+		ret = &q[i];
+		i = (i + 1) % MAX_MERGE_POSTINGS;
 
-	for (i = 0, it = doc->positions.begin();
-	     it != doc->positions.end();
-	     i++, it++) {
-		pos_arr[i] = *it;
+		ret->doc_id = doc->document;
+		ret->tf = doc->positions.size();
+
+		for (k = 0; k < ret->tf; k++) {
+			ret->pos_arr[k] = doc->positions[k];
+		}
+
+		return (struct term_posting_item *)ret;
+	} else {
+		return NULL;
 	}
-
-	return pos_arr;
 }

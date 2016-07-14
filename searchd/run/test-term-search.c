@@ -20,7 +20,7 @@ struct term_extra_score_arg {
 
 void *term_posting_current_wrap(void *posting)
 {
-	return (void*)term_posting_current(posting);
+	return (void*)term_posting_cur_item_with_pos(posting);
 }
 
 uint64_t term_posting_current_id_wrap(void *item)
@@ -59,8 +59,22 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 	for (i = 0; i < pm->n_postings; i++)
 		if (pm->curIDs[i] == cur_min) {
-			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
+			printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			tpi = pm->cur_pos_item[i];
+
+//			printf("tf=%u\n", tpi->tf);
+//			printf("curID=%lu\n", pm->curIDs[i]);
+//			printf("po=%p\n", pm->postings[i]);
+//			uint32_t j;
+//			position_t *p;
+			printf("tf=%u, ", tpi->tf);
+			tpi = term_posting_cur_item(pm->postings[i]);
+			printf("tf=%u\n", tpi->tf);
+//			for (j = 0; j < tpi->tf; j++) {
+//				printf("%u-", p[j]);
+//			}
+//			printf("\n");
+//			free(p);
 			score += BM25_term_i_score(tes_arg->bm25args, i, tpi->tf, doclen);
 		}
 
@@ -94,47 +108,6 @@ print_all_rank_res(struct rank_set *rs)
 	return total_pages;
 }
 
-static struct mem_posting *term_posting_fork(void *term_posting)
-{
-	struct term_posting_item *pi;
-	struct mem_posting *ret_mempost, *buf_mempost;
-
-	struct codec *codecs[] = {
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-	};
-
-	/* create memory posting to be encoded */
-	ret_mempost = mem_posting_create(sizeof(struct term_posting_item),
-	                                 DEFAULT_SKIPPY_SPANS);
-	mem_posting_set_codecs(ret_mempost, codecs);
-
-	/* create a temporary memory posting */
-	buf_mempost = mem_posting_create(sizeof(struct term_posting_item),
-	                                 MAX_SKIPPY_SPANS);
-
-	/* start iterating term posting list */
-	term_posting_start(term_posting);
-
-	do {
-		pi = term_posting_current(term_posting);
-		mem_posting_write(buf_mempost, 0, pi,
-		                  sizeof(struct term_posting_item));
-
-	} while (term_posting_next(term_posting));
-
-	/* finish iterating term posting list */
-	term_posting_finish(term_posting);
-
-	/* encode */
-	mem_posting_encode(ret_mempost, buf_mempost);
-	mem_posting_release(buf_mempost);
-
-	free(codecs[0]);
-	free(codecs[1]);
-	return ret_mempost;
-}
-
 static void
 test_term_search(void *ti, enum postmerge_op op,
                  char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
@@ -159,10 +132,10 @@ test_term_search(void *ti, enum postmerge_op op,
 	       term_lookup_r(ti, forked_term_id));
 
 	term_posting = term_index_get_posting(ti, forked_term_id);
-	fork_posting = term_posting_fork(term_posting);
+	fork_posting = postcache_fork_term_posting(term_posting);
 
 	printf("forked posting list: ");
-	mem_posting_print_meminfo(fork_posting);
+	mem_posting_print_info(fork_posting);
 
 	/* clear post merge structure */
 	postmerge_posts_clear(&pm);
@@ -277,7 +250,7 @@ test_term_search(void *ti, enum postmerge_op op,
 	rank_set_free(&rk_set);
 
 	/* testing in-memory posting */
-	mem_posting_release(fork_posting);
+	mem_posting_free(fork_posting);
 }
 
 int main(int argc, char *argv[])

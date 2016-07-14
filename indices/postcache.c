@@ -58,11 +58,10 @@ void postcache_print_mem_usage(struct postcache_pool *pool)
 	printf("\n");
 }
 
-static struct mem_posting *term_posting_fork(void *term_posting)
+struct mem_posting *postcache_fork_term_posting(void *term_posting)
 {
 	struct mem_posting *ret_mempost;
-	struct term_posting_item *pi, *pip;
-	position_t *pos_arr;
+	struct term_posting_item *pip;
 
 	/* create memory posting list */
 	ret_mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS,
@@ -71,28 +70,17 @@ static struct mem_posting *term_posting_fork(void *term_posting)
 	term_posting_start(term_posting);
 
 	do {
-		size_t id_tf_sz;
-		size_t pos_arr_sz;
+		size_t wr_sz = 0;
 
 		/* get docID, TF and position array */
-		pi = term_posting_current(term_posting);
-		pos_arr = term_posting_current_termpos(term_posting);
+		pip = term_posting_cur_item_with_pos(term_posting);
 
-		/* calculate size of two sections */
-		id_tf_sz = sizeof(doc_id_t) + sizeof(uint32_t);
-		pos_arr_sz = pi->tf * sizeof(position_t);
-
-		/* combine two sections into consecutive memory */
-		pip = malloc(id_tf_sz + pos_arr_sz);
-		pip->doc_id = pi->doc_id;
-		pip->tf = pi->tf;
-		memcpy((char *)pip + id_tf_sz, pos_arr, pos_arr_sz);
+		/* calculate size of term posting item with positions */
+		wr_sz = sizeof(doc_id_t) + sizeof(uint32_t);
+		wr_sz += pip->tf * sizeof(position_t);
 
 		/* pass combined posting item to a single write() */
-		mem_posting_write(ret_mempost, pip, id_tf_sz + pos_arr_sz);
-
-		free(pos_arr);
-		free(pip);
+		mem_posting_write(ret_mempost, pip, wr_sz);
 
 	} while (term_posting_next(term_posting));
 
@@ -109,7 +97,7 @@ enum postcache_err
 postcache_add_term_posting(struct postcache_pool *pool,
                            term_id_t term_id, void *term_posting)
 {
-	struct mem_posting *mem_po = term_posting_fork(term_posting);
+	struct mem_posting *mem_po = postcache_fork_term_posting(term_posting);
 	struct postcache_item *new = malloc(sizeof(struct postcache_item));
 	struct treap_node *inserted;
 

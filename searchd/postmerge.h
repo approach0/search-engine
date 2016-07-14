@@ -9,6 +9,7 @@
 struct postmerge;
 
 typedef void*          post_item_t;
+typedef uint32_t*      post_pos_t;
 
 typedef void           (*post_finish_callbk)(void *);
 typedef bool           (*post_start_callbk)(void *);

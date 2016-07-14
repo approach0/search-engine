@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+#undef N_DEBUG
+#include <assert.h>
+
 static void print_help(char *argv[])
 {
 	printf("DESCRIPTION:\n");
@@ -29,7 +32,7 @@ static void print_help(char *argv[])
 int main(int argc, char* argv[])
 {
 	void *posting, *ti;
-	struct term_posting_item *pi;
+	struct term_posting_item *pi, *pip;
 	uint32_t k, termN, docN, avgDocLen;
 	position_t *pos_arr;
 	term_id_t i;
@@ -144,18 +147,23 @@ int main(int argc, char* argv[])
 			if (posting) {
 				term_posting_start(posting);
 				do {
-					pi = term_posting_current(posting);
+					/* test both "get_cur_item" functions */
+					pi = term_posting_cur_item(posting);
+					pip = term_posting_cur_item_with_pos(posting);
+
+					assert(pi->doc_id == pip->doc_id);
+					assert(pi->tf == pip->tf);
+
 					printf("[docID=%u, tf=%u", pi->doc_id, pi->tf);
 
 					if (opt_all || opt_posting_termpos) {
 						/* read term positions in this document */
 						printf(", pos=");
-						pos_arr = term_posting_current_termpos(posting);
+						pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
 						for (k = 0; k < pi->tf; k++)
 							printf("%d%c", pos_arr[k],
 							       (k == pi->tf - 1) ? '.' : ',');
 						printf("]");
-						free(pos_arr);
 					} else {
 						printf("]");
 					}

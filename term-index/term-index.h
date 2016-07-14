@@ -39,8 +39,6 @@ char *term_lookup_r(void *, term_id_t);
 
 void *term_index_get_posting(void *, term_id_t);
 
-position_t *term_posting_current_termpos(void *);
-
 struct term_posting_item {
 	doc_id_t doc_id;
 	uint32_t tf;
@@ -49,9 +47,14 @@ struct term_posting_item {
 bool term_posting_start(void *);
 bool term_posting_jump(void *, uint64_t);
 bool term_posting_next(void *);
-struct term_posting_item
-*term_posting_current(void *);
+struct term_posting_item *term_posting_cur_item(void *);
+struct term_posting_item *term_posting_cur_item_with_pos(void *);
 void term_posting_finish(void *);
+
+position_t *term_posting_get_item_pos(struct term_posting_item*);
+
+#define TERM_POSTING_ITEM_POSITIONS(_item) \
+	((position_t*)((char*)_item + sizeof(struct term_posting_item)));
 
 #ifdef __cplusplus
 }

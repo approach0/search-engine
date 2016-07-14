@@ -44,3 +44,5 @@ postcache_add_term_posting(struct postcache_pool*, term_id_t, void*);
 struct postcache_item* postcache_find(struct postcache_pool*, bintr_key_t);
 
 int postcache_set_mem_limit(struct postcache_pool*, uint64_t);
+
+struct mem_posting *postcache_fork_term_posting(void*);

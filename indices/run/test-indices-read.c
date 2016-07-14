@@ -94,7 +94,7 @@ int main()
 	char *term;
 	const uint32_t max_terms_listed = 100;
 	void *posting;
-	struct term_posting_item *pi;
+	struct term_posting_item *pip;
 	position_t *pos_arr;
 
 	if(indices_open(&indices, index_path, INDICES_OPEN_RD)) {
@@ -120,19 +120,18 @@ int main()
 		term_posting_start(posting);
 
 		do {
-			pi = term_posting_current(posting);
-			printf("[docID=%u, tf=%u", pi->doc_id, pi->tf);
+			pip = term_posting_cur_item_with_pos(posting);
+			pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
 
-			pos_arr = term_posting_current_termpos(posting);
+			printf("[docID=%u, tf=%u", pip->doc_id, pip->tf);
 
 			printf(", pos=");
-			for (i = 0; i < pi->tf; i++) {
-				printf("%d%c", pos_arr[i], (i == pi->tf - 1) ? '.' : ',');
-				add_check_pos(&check_pos_li, pi->doc_id, pos_arr[i]);
+			for (i = 0; i < pip->tf; i++) {
+				printf("%d%c", pos_arr[i], (i == pip->tf - 1) ? '.' : ',');
+				add_check_pos(&check_pos_li, pip->doc_id, pos_arr[i]);
 			}
 
 			printf("]");
-			free(pos_arr);
 
 		} while (term_posting_next(posting));
 
