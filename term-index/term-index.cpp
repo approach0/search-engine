@@ -244,11 +244,14 @@ struct term_posting_item *term_posting_cur_item(void *posting)
 struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 {
 	static int i = 0;
+
+#pragma pack(push, 1)
 	static struct _item_with_pos {
 		doc_id_t   doc_id;
 		uint32_t   tf;
 		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
 	} q[MAX_MERGE_POSTINGS];
+#pragma pack(pop)
 
 	int k;
 	static struct _item_with_pos *ret;
@@ -264,6 +267,10 @@ struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 
 		ret->doc_id = doc->document;
 		ret->tf = doc->positions.size();
+
+		/* reduce tf if it exceed limit of the positions we can return. */
+		if (ret->tf > MAX_TERM_INDEX_ITEM_POSITIONS)
+			ret->tf = MAX_TERM_INDEX_ITEM_POSITIONS;
 
 		for (k = 0; k < ret->tf; k++) {
 			ret->pos_arr[k] = doc->positions[k];
