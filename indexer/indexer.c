@@ -259,7 +259,7 @@ void indexer_index_json(FILE *fh, text_lexer lex)
 {
 	const char *url_path[] = {"url", NULL};
 	const char *txt_path[] = {"text", NULL};
-	static char doc_json[MAX_CORPUS_FILE_SZ];
+	static char doc_json[MAX_CORPUS_FILE_SZ + 1];
 	static char url_field[MAX_CORPUS_FILE_SZ];
 	static char txt_field[MAX_CORPUS_FILE_SZ];
 	size_t      rd_sz;
