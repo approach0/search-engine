@@ -5,7 +5,7 @@
 #include "term-index/term-index.h"
 #include "postcache.h"
 
-#define TEST_TERM "significant"
+#define TEST_TERM "news"
 
 int main(void)
 {
@@ -17,8 +17,7 @@ int main(void)
 	void        *term_posting = NULL;
 
 	printf("opening index...\n");
-	ti = term_index_open("/home/tk/large-index/term",
-	                             TERM_INDEX_OPEN_EXISTS);
+	ti = term_index_open("../indexer/tmp/term", TERM_INDEX_OPEN_EXISTS);
 	if (ti == NULL) {
 		printf("term index open failed.\n");
 		goto exit;
@@ -38,21 +37,23 @@ int main(void)
 		goto exit;
 	}
 
+	printf("initialize posting cache...\n");
 	postcache_init(&cache_pool, POSTCACHE_POOL_LIMIT_1MB);
 
+	printf("add term posting list...\n");
 	postcache_add_term_posting(&cache_pool, term_id, term_posting);
 
 	postcache_print_mem_usage(&cache_pool);
 
+	printf("test finding posting list item in cache...\n");
 	cache_item = postcache_find(&cache_pool, term_id);
 	assert(cache_item != NULL);
 
 	printf("found memory posting list:\n");
-	mem_posting_print_meminfo(cache_item->posting);
+	mem_posting_print_info(cache_item->posting);
 
 	printf("free posting cache...\n");
 	postcache_free(&cache_pool);
-
 	postcache_print_mem_usage(&cache_pool);
 
 exit:

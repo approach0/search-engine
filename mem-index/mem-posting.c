@@ -175,7 +175,10 @@ mem_posting_write(struct mem_posting *po, const void *in, size_t size)
 
 size_t mem_posting_write_complete(struct mem_posting *po)
 {
-	size_t flush_sz = mem_posting_flush(po);
+	size_t flush_sz;
+
+	if (po->buf)
+		flush_sz = mem_posting_flush(po);
 
 	FREE_BUFFER(po);
 	return flush_sz;

@@ -17,18 +17,6 @@ int postcache_init(struct postcache_pool *pool, uint64_t mem_limit)
 	return 0;
 }
 
-static void
-mem_usage_cntdown(struct postcache_pool *pool, struct mem_posting *mem_po)
-{
-	uint64_t trp_mem_usage, pos_mem_usage;
-
-	trp_mem_usage = sizeof(struct postcache_item);
-	pos_mem_usage = mem_po->n_tot_blocks * MEM_POSTING_BLOCK_SZ;
-
-	pool->trp_mem_usage -= trp_mem_usage;
-	pool->pos_mem_usage -= pos_mem_usage;
-}
-
 static enum bintr_it_ret
 free_postcache_item(struct bintr_ref *ref, uint32_t level, void *arg)
 {
@@ -37,13 +25,12 @@ free_postcache_item(struct bintr_ref *ref, uint32_t level, void *arg)
 	P_CAST(pool, struct postcache_pool, arg);
 	P_CAST(mem_po, struct mem_posting, item->posting);
 
-
 	//printf("free posting cache item and memory posting list...\n");
-
-	mem_usage_cntdown(pool, mem_po);
+	pool->trp_mem_usage -= sizeof(struct postcache_item);
+	pool->pos_mem_usage -= mem_po->tot_sz;;
 
 	bintr_detach(ref->this_, ref->ptr_to_this);
-	mem_posting_release(item->posting);
+	mem_posting_free(mem_po);
 	free(item);
 
 	return BINTR_IT_CONTINUE;
@@ -73,49 +60,48 @@ void postcache_print_mem_usage(struct postcache_pool *pool)
 
 static struct mem_posting *term_posting_fork(void *term_posting)
 {
-	struct term_posting_item *pi;
-	struct mem_posting *ret_mempost, *buf_mempost;
+	struct mem_posting *ret_mempost;
+	struct term_posting_item *pi, *pip;
+	position_t *pos_arr;
 
-#if 0
-	struct codec *codecs[] = {
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
-	};
-#else
-	struct codec *codecs[] = {
-		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
-	};
-#endif
-
-	/* create memory posting to be encoded */
-	ret_mempost = mem_posting_create(sizeof(struct term_posting_item),
-	                                 DEFAULT_SKIPPY_SPANS);
-	mem_posting_set_codecs(ret_mempost, codecs);
-
-	/* create a temporary memory posting */
-	buf_mempost = mem_posting_create(sizeof(struct term_posting_item),
-	                                 MAX_SKIPPY_SPANS);
-
+	/* create memory posting list */
+	ret_mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS,
+	                                 mem_term_posting_with_pos_codec_calls());
 	/* start iterating term posting list */
 	term_posting_start(term_posting);
 
 	do {
+		size_t id_tf_sz;
+		size_t pos_arr_sz;
+
+		/* get docID, TF and position array */
 		pi = term_posting_current(term_posting);
-		mem_posting_write(buf_mempost, 0 /* does not matter for this buffer */,
-		                  pi, sizeof(struct term_posting_item));
+		pos_arr = term_posting_current_termpos(term_posting);
+
+		/* calculate size of two sections */
+		id_tf_sz = sizeof(doc_id_t) + sizeof(uint32_t);
+		pos_arr_sz = pi->tf * sizeof(position_t);
+
+		/* combine two sections into consecutive memory */
+		pip = malloc(id_tf_sz + pos_arr_sz);
+		pip->doc_id = pi->doc_id;
+		pip->tf = pi->tf;
+		memcpy((char *)pip + id_tf_sz, pos_arr, pos_arr_sz);
+
+		/* pass combined posting item to a single write() */
+		mem_posting_write(ret_mempost, pip, id_tf_sz + pos_arr_sz);
+
+		free(pos_arr);
+		free(pip);
 
 	} while (term_posting_next(term_posting));
+
+	/* flush write buffer of memory posting list */
+	mem_posting_write_complete(ret_mempost);
 
 	/* finish iterating term posting list */
 	term_posting_finish(term_posting);
 
-	/* encode */
-	mem_posting_encode(ret_mempost, buf_mempost);
-	mem_posting_release(buf_mempost);
-
-	free(codecs[0]);
-	free(codecs[1]);
 	return ret_mempost;
 }
 
@@ -130,7 +116,7 @@ postcache_add_term_posting(struct postcache_pool *pool,
 	uint64_t trp_mem_usage, pos_mem_usage;
 
 	trp_mem_usage = sizeof(struct postcache_item);
-	pos_mem_usage = mem_po->n_tot_blocks * MEM_POSTING_BLOCK_SZ;
+	pos_mem_usage = mem_po->tot_sz;
 
 	if (pool->trp_mem_usage + trp_mem_usage +
 	    pool->pos_mem_usage + pos_mem_usage > pool->tot_mem_limit)
@@ -143,7 +129,8 @@ postcache_add_term_posting(struct postcache_pool *pool,
 	inserted = treap_insert(&pool->trp_root, &new->trp_nd);
 
 	if (inserted == NULL) {
-		mem_posting_release(mem_po);
+		fprintf(stderr, "treap node with same term ID exists.\n");
+		mem_posting_free(mem_po);
 		free(new);
 		return POSTCACHE_SAME_KEY_EXISTS;
 	}

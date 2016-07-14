@@ -87,7 +87,7 @@ static void add_check_pos(list *li, doc_id_t docID, position_t pos)
 int main()
 {
 	struct indices indices;
-	const char index_path[] = "./tmp";
+	const char index_path[] = "../indexer/tmp";
 	list check_pos_li = LIST_NULL;
 
 	uint32_t i, termN, termID;
