@@ -265,6 +265,7 @@ void indexer_index_json(FILE *fh, text_lexer lex)
 	size_t      rd_sz;
 
 	rd_sz = fread(doc_json, 1, MAX_CORPUS_FILE_SZ, fh);
+	doc_json[rd_sz] = '\0';
 
 	if (rd_sz == MAX_CORPUS_FILE_SZ) {
 		fprintf(stderr, "corpus file too large!\n");
