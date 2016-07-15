@@ -15,7 +15,7 @@
 struct term_extra_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
-	struct rank_set         *rk_set;
+	ranked_results_t        *rk_res;
 };
 
 void *term_posting_cur_item_wrap(void *posting)
@@ -45,6 +45,33 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 	return succ;
 }
 
+struct rank_hit *new_hit(struct postmerge *pm, doc_id_t docID,
+                         float score, uint32_t n_occurs)
+{
+	uint32_t i;
+	struct term_posting_item *pip /* posting item with positions */;
+	struct rank_hit *hit;
+	position_t *pos_arr;
+	position_t *occurs;
+
+	hit = malloc(sizeof(struct rank_hit));
+	hit->docID = docID;
+	hit->score = score;
+	hit->n_occurs = n_occurs;
+	hit->occurs = occurs = malloc(sizeof(position_t) * n_occurs);
+
+	for (i = 0; i < pm->n_postings; i++)
+		if (pm->curIDs[i] == docID) {
+			pip = pm->cur_pos_item[i];
+			pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
+
+			memcpy(occurs, pos_arr, pip->tf * sizeof(position_t));
+			occurs += pip->tf;
+		}
+
+	return hit;
+}
+
 void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
@@ -52,6 +79,7 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	uint32_t i;
 	float score = 0.f;
 	doc_id_t docID = cur_min;
+	uint32_t n_occurs = 0;
 
 	P_CAST(tes_arg, struct term_extra_score_arg, extra_args);
 	float doclen = (float)term_index_get_docLen(tes_arg->term_index, docID);
@@ -60,8 +88,8 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	for (i = 0; i < pm->n_postings; i++)
 		if (pm->curIDs[i] == cur_min) {
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
-
 			pip = pm->cur_pos_item[i];
+			n_occurs += pip->tf;
 
 //			{ /* print position array */
 //				int j;
@@ -74,34 +102,43 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 			score += BM25_term_i_score(tes_arg->bm25args, i, pip->tf, doclen);
 		}
 
-	rank_set_hit(tes_arg->rk_set, docID, score);
 	//printf("(BM25 score = %f)\n", score);
+
+	if (!priority_Q_full(tes_arg->rk_res) ||
+	    score > priority_Q_min_score(tes_arg->rk_res)) {
+
+		struct rank_hit *hit = new_hit(pm, docID, score, n_occurs);
+		priority_Q_add_or_replace(tes_arg->rk_res, hit);
+	}
 }
 
-void print_res_item(struct rank_set *rs, struct rank_hit* hit,
-                    uint32_t cnt, void* arg)
+void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 {
+	uint32_t i;
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
+	printf("occurs: ");
+	for (i = 0; i < hit->n_occurs; i++)
+		printf("%u ", hit->occurs[i]);
+	printf("\n");
 }
 
 uint32_t
-print_all_rank_res(struct rank_set *rs)
+print_all_rank_res(ranked_results_t *rk_res)
 {
-	struct rank_wind win;
-	uint32_t         total_pages, page = 0;
-	const uint32_t   res_per_page = DEFAULT_RES_PER_PAGE;
+	struct rank_window win;
+	uint32_t tot_pages, page = 0;
 
 	do {
-		win = rank_window_calc(rs, page, res_per_page, &total_pages);
+		win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
 		if (win.to > 0) {
 			printf("page#%u (from %u to %u):\n",
 			       page + 1, win.from, win.to);
 			rank_window_foreach(&win, &print_res_item, NULL);
 			page ++;
 		}
-	} while (page < total_pages);
+	} while (page < tot_pages);
 
-	return total_pages;
+	return tot_pages;
 }
 
 static void
@@ -112,7 +149,7 @@ test_term_search(void *ti, enum postmerge_op op,
 	void                        *posting;
 	term_id_t                    term_id;
 	struct term_extra_score_arg  tes_arg;
-	struct rank_set              rk_set;
+	ranked_results_t             rk_res;
 	uint32_t                     res_pages;
 	uint32_t                     docN, df;
 	struct BM25_term_i_args      bm25args;
@@ -208,14 +245,14 @@ test_term_search(void *ti, enum postmerge_op op,
 	/*
 	 * initialize ranking set.
 	 */
-	rank_set_init(&rk_set, RANK_SET_DEFAULT_VOL);
+	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
 
 	/*
 	 * merge extra arguments.
 	 */
 	tes_arg.term_index = ti;
 	tes_arg.bm25args = &bm25args;
-	tes_arg.rk_set = &rk_set;
+	tes_arg.rk_res = &rk_res;
 
 	/*
 	 * merge and score.
@@ -236,15 +273,15 @@ test_term_search(void *ti, enum postmerge_op op,
 	/*
 	 * rank top K hits.
 	 */
-	rank_sort(&rk_set);
+	priority_Q_sort(&rk_res);
 
 	/*
 	 * print ranked search results by page number.
 	 */
-	res_pages = print_all_rank_res(&rk_set);
+	res_pages = print_all_rank_res(&rk_res);
 	printf("result(s): %u pages.\n", res_pages);
 
-	rank_set_free(&rk_set);
+	free_ranked_results(&rk_res);
 
 	/* testing in-memory posting */
 	mem_posting_free(fork_posting);

@@ -4,45 +4,67 @@
 #include "term-index/term-index.h" /* for doc_id_t */
 #include "rank.h"
 
-void test_print_res(struct rank_set *rs, struct rank_hit* hit,
-                    uint32_t cnt, void*arg)
+void test_print_res(struct rank_hit* hit, uint32_t cnt, void*arg)
 {
 	printf("#%u: doc#%u (score=%f)\n", cnt, hit->docID, hit->score);
 }
 
-#define ADD_HIT(_docID, _score) \
-	rank_set_hit(&rk_set, _docID, _score); \
-	rank_print(&rk_set);
+void test_add(struct priority_Q *Q, doc_id_t id, float score)
+{
+	struct rank_hit *hit;
+
+	printf("inserting score=%.3f...\n", score);
+
+	if (!priority_Q_full(Q) ||
+	    score > priority_Q_min_score(Q)) {
+
+		hit = malloc(sizeof(struct rank_hit));
+		hit->docID = id;
+		hit->score = score;
+		hit->n_occurs = 0;
+		hit->occurs = NULL;
+
+		if (priority_Q_add_or_replace(Q, hit))
+			printf("inserted.\n");
+		else
+			printf("replaced.\n");
+	} else {
+		printf("skipped.\n");
+	}
+
+	priority_Q_print(Q);
+}
 
 int main(void)
 {
-	struct rank_set  rk_set;
-	struct rank_wind win;
-	uint32_t         page, total_pages;
-	const uint32_t   res_per_page = 3;
-	const uint32_t   max_num_res = 5;
+	struct priority_Q  queue;
+	struct rank_window window;
+	uint32_t           page, tot_pages;
+	const uint32_t     res_per_page = 3;
+	const uint32_t     max_num_res = 5;
 
-	rank_set_init(&rk_set, max_num_res);
+	priority_Q_init(&queue, max_num_res);
 
-	ADD_HIT(1, 2.3f);
-	ADD_HIT(2, 14.1f);
-	ADD_HIT(3, -3.8f);
-	ADD_HIT(4, 21.f);
-	ADD_HIT(5, 10.3f);
-	ADD_HIT(6, 1.1f);
+	test_add(&queue, 1, 2.3f);
+	test_add(&queue, 2, 14.1f);
+	test_add(&queue, 3, -3.8f);
+	test_add(&queue, 4, 21.f);
+	test_add(&queue, 5, 10.3f);
+	test_add(&queue, 6, 1.1f);
+	test_add(&queue, 7, -9.9f);
 
 	printf("sorting...\n");
-	rank_sort(&rk_set);
-	// rank_print(&rk_set);
+	priority_Q_sort(&queue);
+	priority_Q_print(&queue);
 
 	page = 0;
 	do {
 		printf("page#%u:\n", page + 1);
-		win = rank_window_calc(&rk_set, page, res_per_page, &total_pages);
-		rank_window_foreach(&win, &test_print_res, NULL);
+		window = rank_window_calc(&queue, page, res_per_page, &tot_pages);
+		rank_window_foreach(&window, &test_print_res, NULL);
 		page ++;
-	} while (page < total_pages);
+	} while (page < tot_pages);
 
-	rank_set_free(&rk_set);
+	priority_Q_free(&queue);
 	return 0;
 }

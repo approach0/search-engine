@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include "term-index/term-index.h" /* for doc_id_t */
 #include "rank.h"
+#include "config.h"
 
-static bool hit_score_less_than(void* ele0, void* ele1)
+static bool score_less_than(void* ele0, void* ele1)
 {
 	struct rank_hit *hit0 = (struct rank_hit *)ele0;
 	struct rank_hit *hit1 = (struct rank_hit *)ele1;
@@ -11,51 +12,59 @@ static bool hit_score_less_than(void* ele0, void* ele1)
 	return hit0->score < hit1->score;
 }
 
-void rank_set_init(struct rank_set *rs, uint32_t volume)
+void priority_Q_init(struct priority_Q *Q, uint32_t volume)
 {
-	rs->heap = heap_create(volume);
-	rs->n_hits = 0;
-	heap_set_callbk(&rs->heap, &hit_score_less_than);
+	Q->heap = heap_create(volume);
+	Q->n_elements = 0;
+	heap_set_callbk(&Q->heap, &score_less_than);
 }
 
-void rank_set_hit(struct rank_set *rs, doc_id_t docID, float score)
+bool priority_Q_full(struct priority_Q* Q)
 {
-	struct rank_hit *hit;
-	void *top;
+	return heap_full(&Q->heap);
+}
 
-	hit = malloc(sizeof(struct rank_hit));
-	hit->docID = docID;
-	hit->score = score;
+float priority_Q_min_score(struct priority_Q *Q)
+{
+	void *top = heap_top(&Q->heap);
+	return ((struct rank_hit *)top)->score;
+}
 
-	if (!heap_full(&rs->heap)) {
-		minheap_insert(&rs->heap, hit);
-		rs->n_hits ++;
+bool priority_Q_add_or_replace(struct priority_Q *Q, struct rank_hit *hit)
+{
+	/* insert this element or replace the top one in Q */
+	if (!heap_full(&Q->heap)) {
+		minheap_insert(&Q->heap, hit);
+		Q->n_elements ++;
+		return 1;
+
 	} else {
-		top = heap_top(&rs->heap);
+		void *top = heap_top(&Q->heap);
+		minheap_delete(&Q->heap, 0);
+		minheap_insert(&Q->heap, hit);
 
-		if (hit_score_less_than(top, hit)) {
-			free(top);
-			minheap_delete(&rs->heap, 0);
-
-			minheap_insert(&rs->heap, hit);
-		} else {
-			free(hit);
-		}
+		free(top);
+		return 0;
 	}
 }
 
-void rank_sort(struct rank_set *rs)
+void priority_Q_sort(struct priority_Q *Q)
 {
-	minheap_sort(&rs->heap);
+	minheap_sort(&Q->heap);
 }
 
-void rank_set_free(struct rank_set *rs)
+void priority_Q_free(struct priority_Q *Q)
 {
 	uint32_t i;
-	for (i = 0; i < rs->n_hits; i++)
-		free(rs->heap.array[i]);
+	struct rank_hit *hit;
 
-	heap_destory(&rs->heap);
+	for (i = 0; i < Q->n_elements; i++) {
+		hit = (struct rank_hit *)Q->heap.array[i];
+		free(hit->occurs);
+		free(hit);
+	}
+
+	heap_destory(&Q->heap);
 }
 
 static void print(void* ele, uint32_t i, uint32_t depth)
@@ -68,13 +77,13 @@ static void print(void* ele, uint32_t i, uint32_t depth)
 	printf("[%d]:doc#%u(%.2f) ", i, hit->docID, hit->score);
 }
 
-void rank_print(struct rank_set *rs)
+void priority_Q_print(struct priority_Q *Q)
 {
-	printf("heap n_hits = %u\n", rs->n_hits);
+	printf("priority Q elements: %u\n", Q->n_elements);
 	printf("rank heap:\n");
-	heap_print_tr(&rs->heap, &print);
+	heap_print_tr(&Q->heap, &print);
 	printf("rank array:\n");
-	heap_print_arr(&rs->heap, &print);
+	heap_print_arr(&Q->heap, &print);
 	printf("\n");
 }
 
@@ -88,39 +97,40 @@ uint32_t div_ceil(uint32_t a, uint32_t b)
 		return ret;
 }
 
-struct rank_wind rank_window_calc(struct rank_set *rs,
-                                  uint32_t page_start,
-                                  uint32_t res_per_page,
-                                  uint32_t *total_page)
+struct rank_window rank_window_calc(ranked_results_t *r,
+                                    uint32_t wind_start,
+                                    uint32_t res_per_wind,
+                                    uint32_t *n_wind)
 {
-	struct rank_wind win = {rs, 0, 0};
-	*total_page = 0;
+	struct rank_window wind = {r, 0, 0};
+	*n_wind = 0;
 
-	if (res_per_page == 0)
-		return win;
+	if (res_per_wind == 0)
+		return wind;
 
-	*total_page = div_ceil(rs->n_hits, res_per_page);
+	*n_wind = div_ceil(r->n_elements, res_per_wind);
 
-	if (page_start >= *total_page)
-		return win;
+	if (wind_start >= *n_wind)
+		return wind;
 
-	win.from = page_start * res_per_page;
-	win.to   = (page_start + 1) * res_per_page;
+	wind.from = wind_start * res_per_wind;
+	wind.to   = (wind_start + 1) * res_per_wind;
 
-	if (win.to > rs->n_hits)
-		win.to = rs->n_hits;
+	if (wind.to > r->n_elements)
+		wind.to = r->n_elements;
 
-	return win;
+	return wind;
 }
 
-uint32_t rank_window_foreach(struct rank_wind *win,
-                             rank_wind_callbk fun, void *arg)
+uint32_t
+rank_window_foreach(struct rank_window *wind,
+                    rank_window_it_callbk fun, void *arg)
 {
 	uint32_t i, cnt = 0;
-	struct heap *h = &win->rs->heap;
+	struct heap *h = &wind->results->heap;
 
-	for (i = win->from; i < win->to; i++) {
-		(*fun)(win->rs, (struct rank_hit*)h->array[i], cnt, arg);
+	for (i = wind->from; i < wind->to; i++) {
+		(*fun)((struct rank_hit*)h->array[i], cnt, arg);
 		cnt ++;
 	}
 

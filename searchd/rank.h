@@ -1,41 +1,40 @@
 #include <stdint.h>
 #include "minheap.h"
 
-typedef uint32_t frml_id_t;
-
 struct rank_hit {
 	doc_id_t    docID;
 	float       score;
+	uint32_t    n_occurs;
+	position_t *occurs; /* occur positions */
 };
 
-struct rank_set {
+typedef struct priority_Q {
 	struct heap heap;
-	uint32_t    n_hits;
-};
+	uint32_t    n_elements;
+} ranked_results_t /* a conceptually more descriptive name */;
 
-#define RANK_SET_DEFAULT_VOL 45
-#define DEFAULT_RES_PER_PAGE 10
+void  priority_Q_init(struct priority_Q*, uint32_t);
+bool  priority_Q_full(struct priority_Q*);
+float priority_Q_min_score(struct priority_Q*);
+bool  priority_Q_add_or_replace(struct priority_Q*, struct rank_hit*);
+void  priority_Q_sort(struct priority_Q*);
+void  priority_Q_print(struct priority_Q*);
+void  priority_Q_free(struct priority_Q*);
 
-void rank_set_init(struct rank_set*, uint32_t);
-void rank_set_free(struct rank_set*);
-
-void
-rank_set_hit(struct rank_set*, doc_id_t, float);
-
-void rank_sort(struct rank_set*);
-void rank_print(struct rank_set*);
+/* a conceptually more descriptive name */
+#define free_ranked_results(_Q) \
+	priority_Q_free(_Q)
 
 /* ranking window */
-struct rank_wind {
-	struct rank_set *rs;
-	uint32_t   from, to;
+struct rank_window {
+	ranked_results_t *results;
+	uint32_t          from, to;
 };
 
-struct rank_wind
-rank_window_calc(struct rank_set*, uint32_t, uint32_t, uint32_t*);
+struct rank_window
+rank_window_calc(ranked_results_t*, uint32_t, uint32_t, uint32_t*);
 
-typedef void (*rank_wind_callbk)(struct rank_set *, struct rank_hit*,
-                                 uint32_t, void*);
+typedef void (*rank_window_it_callbk)(struct rank_hit*, uint32_t, void*);
 
 uint32_t
-rank_window_foreach(struct rank_wind*, rank_wind_callbk, void*);
+rank_window_foreach(struct rank_window*, rank_window_it_callbk, void*);
