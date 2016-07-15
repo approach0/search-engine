@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <zlib.h>
 #include "codec.h"
 
 struct codec *codec_new(enum codec_method method, void* args)
@@ -15,6 +16,9 @@ struct codec *codec_new(enum codec_method method, void* args)
 		args_sz = sizeof(struct for_delta_args);
 		break;
 	case CODEC_PLAIN:
+		args_sz = 0;
+		break;
+	case CODEC_GZ:
 		args_sz = 0;
 		break;
 	default:
@@ -47,6 +51,9 @@ char *codec_method_str(enum codec_method method)
 		break;
 	case CODEC_FOR_DELTA:
 		strcpy(ret, "Frame of Reference delta codec");
+		break;
+	case CODEC_GZ:
+		strcpy(ret, "GNU zip codec");
 		break;
 	case CODEC_PLAIN:
 		strcpy(ret, "No codec (plain)");
@@ -125,84 +132,6 @@ codec_decompress_ints(struct codec *codec, const void *in,
 
 	return 0;
 }
-
-/*
- * Encode a structure (size `struct_sz') array `src' of length `n' into
- * a linear bytes stored by `dest_'. This function requires all structure
- * members be uint32_t integers. Each member of this structure is compressed
- * by corresponding codec specified in `codecs' array.
- *
- * Return the number of bytes of linear encoding.
- */
-size_t
-encode_struct_arr(void *dest_, const void *src, struct codec **codecs,
-                  size_t n, size_t struct_sz)
-{
-	int i, j;
-	uint32_t *p32src, *p32buf;
-	uint32_t *intbuf;
-	char     *dest = (char *)dest_;
-	size_t   res, members = struct_sz >> 2 /* four bytes per integer */;
-
-	intbuf = malloc(struct_sz * n);
-
-	for (i = 0; i < members; i++) {
-		p32buf = intbuf;
-		p32src = (uint32_t*)src + i; /* adjust member offset */
-
-		for (j = 0; j < n; j++) {
-			*p32buf = *p32src;
-
-			p32src += members;
-			p32buf ++;
-		}
-
-		res = codec_compress_ints(codecs[i], intbuf, n, dest);
-		dest += res;
-	}
-
-	free(intbuf);
-	return (uintptr_t)dest - (uintptr_t)dest_;
-}
-
-/*
- * Reverse process of encode_struct_arr() function, parameters are
- * similar.
- *
- * Return the number of encoded bytes processed.
- */
-size_t
-decode_struct_arr(void *dest_, const void *src_, struct codec **codecs,
-                  size_t n, size_t struct_sz)
-{
-	int i, j;
-	uint32_t   *p32dest, *p32buf;
-	uint32_t   *intbuf;
-	const char *src = (const char *)src_;
-	size_t      res, members = struct_sz >> 2 /* four bytes per integer */;
-
-	intbuf = malloc(struct_sz * n);
-
-	for (i = 0; i < members; i++) {
-		res = codec_decompress_ints(codecs[i], src, intbuf, n);
-		src += res;
-
-		p32buf = intbuf;
-		p32dest = (uint32_t*)dest_ + i; /* adjust member offset */
-
-		for (j = 0; j < n; j++) {
-			*p32dest = *p32buf;
-
-			p32dest += members;
-			p32buf ++;
-		}
-	}
-
-	free(intbuf);
-	return (uintptr_t)src - (uintptr_t)src_;
-}
-
-#include <zlib.h>
 
 size_t
 codec_compress(struct codec* codec, const void* src, size_t src_sz,
