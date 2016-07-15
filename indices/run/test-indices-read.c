@@ -30,7 +30,7 @@ static LIST_IT_CALLBK(check)
 
 	char  *url_blob;
 	char  *txt_blob;
-	char  text[MAX_CORPUS_FILE_SZ + 1];
+	static char  text[MAX_CORPUS_FILE_SZ + 1]; /* too large to be in stack */
 	struct codec codec = {CODEC_GZ, NULL};
 
 	printf("Checking doc#%u, pos@%u...\n", cp->docID, cp->pos);
