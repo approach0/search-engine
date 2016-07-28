@@ -9,6 +9,7 @@
 #include "mem-index/mem-posting.h"
 #include "postmerge.h"
 #include "bm25-score.h"
+#include "proximity.h"
 #include "rank.h"
 #include "config.h"
 
@@ -16,6 +17,7 @@ struct term_extra_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
 	ranked_results_t        *rk_res;
+	prox_input_t            *prox_in;
 };
 
 void *term_posting_cur_item_wrap(void *posting)
@@ -76,7 +78,7 @@ void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	uint32_t i;
+	uint32_t i, j = 0;
 	float score = 0.f;
 	doc_id_t docID = cur_min;
 	uint32_t n_occurs = 0;
@@ -99,10 +101,19 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //				}
 //				printf("\n");
 //			}
+
+			{
+				/* set proximity input */
+				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
+				prox_set_input(tes_arg->prox_in + j, pos_arr, pip->tf);
+				j++;
+			}
+
 			score += BM25_term_i_score(tes_arg->bm25args, i, pip->tf, doclen);
 		}
 
-	//printf("(BM25 score = %f)\n", score);
+	printf("BM25 score = %f.\n", score);
+	printf("proximity minDist = %u.\n", prox_min_dist(tes_arg->prox_in, j));
 
 	if (!priority_Q_full(tes_arg->rk_res) ||
 	    score > priority_Q_min_score(tes_arg->rk_res)) {
@@ -253,6 +264,7 @@ test_term_search(void *ti, enum postmerge_op op,
 	tes_arg.term_index = ti;
 	tes_arg.bm25args = &bm25args;
 	tes_arg.rk_res = &rk_res;
+	tes_arg.prox_in = malloc(sizeof(prox_input_t) * pm.n_postings);
 
 	/*
 	 * merge and score.
@@ -282,6 +294,7 @@ test_term_search(void *ti, enum postmerge_op op,
 	printf("result(s): %u pages.\n", res_pages);
 
 	free_ranked_results(&rk_res);
+	free(tes_arg.prox_in);
 
 	/* testing in-memory posting */
 	mem_posting_free(fork_posting);
