@@ -1,11 +1,13 @@
+#define _BSD_SOURCE /* for DT_REG, DT_DIR... */
+
 #include <assert.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <dirent.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "dir-util.h"
 
