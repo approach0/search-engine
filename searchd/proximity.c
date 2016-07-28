@@ -63,3 +63,12 @@ position_t prox_min_dist(prox_input_t* in, uint32_t n)
 
 	return min_dist;
 }
+
+#include <math.h>
+
+float prox_calc_score(position_t min_dist)
+{
+	float dis = (float)min_dist;
+
+	return logf(0.3f + expf(-dis));
+}

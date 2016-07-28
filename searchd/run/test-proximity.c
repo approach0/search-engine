@@ -47,6 +47,10 @@ position_t test3()
 
 int main()
 {
+	printf("score(minDist=%u) = %f.\n", 1,   prox_calc_score(1));
+	printf("score(minDist=%u) = %f.\n", 10,  prox_calc_score(10));
+	printf("score(minDist=%u) = %f.\n", 100, prox_calc_score(100));
+
 	printf("=== test1 ===\n");
 	printf("res = %u.\n\n", test1());
 

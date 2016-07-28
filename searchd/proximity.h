@@ -11,6 +11,8 @@ typedef struct {
 
 position_t prox_min_dist(prox_input_t*, uint32_t);
 
+float prox_calc_score(position_t);
+
 static __inline void
 prox_set_input(prox_input_t *in, position_t* arr, uint32_t n)
 {

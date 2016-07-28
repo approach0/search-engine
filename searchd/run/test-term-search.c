@@ -13,6 +13,8 @@
 #include "rank.h"
 #include "config.h"
 
+#define ENABLE_PROXIMITY_SEARCH /* comment to disable proximity search */
+
 struct term_extra_score_arg {
 	void                    *term_index;
 	struct BM25_term_i_args *bm25args;
@@ -78,8 +80,14 @@ void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	uint32_t i, j = 0;
-	float score = 0.f;
+	uint32_t i;
+	float tot_score, bm25_score = 0.f;
+
+#ifdef ENABLE_PROXIMITY_SEARCH
+	uint32_t j = 0;
+	float prox_score;
+#endif
+
 	doc_id_t docID = cur_min;
 	uint32_t n_occurs = 0;
 
@@ -102,23 +110,35 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //				printf("\n");
 //			}
 
+#ifdef ENABLE_PROXIMITY_SEARCH
 			{
 				/* set proximity input */
 				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
 				prox_set_input(tes_arg->prox_in + j, pos_arr, pip->tf);
 				j++;
 			}
+#endif
 
-			score += BM25_term_i_score(tes_arg->bm25args, i, pip->tf, doclen);
+			bm25_score += BM25_term_i_score(tes_arg->bm25args, i,
+			                                pip->tf, doclen);
 		}
 
-	printf("BM25 score = %f.\n", score);
-	printf("proximity minDist = %u.\n", prox_min_dist(tes_arg->prox_in, j));
+#ifdef ENABLE_PROXIMITY_SEARCH
+	/* calculate overall score considering proximity. */
+	prox_score = prox_calc_score(prox_min_dist(tes_arg->prox_in, j));
+	tot_score = bm25_score + prox_score;
+#else
+	tot_score = bm25_score;
+#endif
+
+//	printf("BM25 score = %f.\n", bm25_score);
+//	printf("proximity score = %f.\n", prox_score);
+//	printf("(total score: %f)\n", tot_score);
 
 	if (!priority_Q_full(tes_arg->rk_res) ||
-	    score > priority_Q_min_score(tes_arg->rk_res)) {
+	    tot_score > priority_Q_min_score(tes_arg->rk_res)) {
 
-		struct rank_hit *hit = new_hit(pm, docID, score, n_occurs);
+		struct rank_hit *hit = new_hit(pm, docID, tot_score, n_occurs);
 		priority_Q_add_or_replace(tes_arg->rk_res, hit);
 	}
 }
