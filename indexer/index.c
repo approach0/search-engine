@@ -11,7 +11,6 @@
 
 static void        *term_index = NULL;
 static math_index_t math_index = NULL;
-static keyval_db_t  offset_db  = NULL;
 static blob_index_t blob_index_url = NULL;
 static blob_index_t blob_index_txt = NULL;
 
@@ -22,7 +21,6 @@ void indexer_assign(struct indices *indices)
 {
 	term_index = indices->ti;
 	math_index = indices->mi;
-	offset_db  = indices->ofs_db;
 	blob_index_url = indices->url_bi;
 	blob_index_txt = indices->txt_bi;
 }
@@ -55,30 +53,6 @@ index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 	}
 }
 
-static bool save_offset(uint32_t offset, uint32_t n_bytes)
-{
-//	offsetmap_from_t from;
-//	offsetmap_to_t   to;
-//
-//	from.docID = prev_docID + 1;
-//	from.pos   = cur_position;
-//	to.offset  = offset;
-//	to.n_bytes = n_bytes;
-//
-//#ifdef DEBUG_INDEXER
-//	printf("saving offset map: docID=%u, pos=%u => offset=%u, sz=%u ...\n",
-//	       prev_docID + 1, cur_position, offset, n_bytes);
-//#endif
-//
-//	if(keyval_db_put(offset_db, &from, sizeof(offsetmap_from_t),
-//	                 &to, sizeof(offsetmap_to_t))) {
-//		printf("put error: %s\n", keyval_db_last_err(offset_db));
-//		return 1;
-//	}
-
-	return 0;
-}
-
 static void index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
 	struct tex_parse_ret parse_ret;
@@ -98,9 +72,6 @@ static void index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		printf("parsing TeX (`%s') error: %s\n", tex, parse_ret.msg);
 	}
 
-	/* save offset before cur_position increases */
-	save_offset(offset, n_bytes);
-
 	/* increment position */
 	cur_position ++;
 }
@@ -115,9 +86,6 @@ static void index_term(char *term, uint32_t offset, size_t n_bytes)
 
 	/* add term into inverted-index */
 	term_index_doc_add(term_index, term);
-
-	/* save offset before cur_position increases */
-	save_offset(offset, n_bytes);
 
 	/* increment position */
 	cur_position ++;
@@ -190,8 +158,6 @@ static void index_maintain()
 		printf("\r[index maintaining...]");
 		fflush(stdout);
 		sleep(2);
-
-		keyval_db_flush(offset_db);
 	}
 }
 

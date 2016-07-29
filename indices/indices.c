@@ -5,7 +5,6 @@ void indices_init(struct indices* indices)
 {
 	indices->ti = NULL;
 	indices->mi = NULL;
-	indices->ofs_db = NULL;
 	indices->url_bi = NULL;
 	indices->txt_bi = NULL;
 	indices->postcache.trp_root = NULL;
@@ -26,7 +25,6 @@ bool indices_open(struct indices* indices, const char* index_path,
 	/* indices variables */
 	void                 *term_index = NULL;
 	math_index_t          math_index = NULL;
-	keyval_db_t           offset_db  = NULL;
 	blob_index_t          blob_index_url = NULL;
 	blob_index_t          blob_index_txt = NULL;
 
@@ -62,25 +60,6 @@ bool indices_open(struct indices* indices, const char* index_path,
 	}
 
 	/*
-	 * open document offset key-value database.
-	 */
-	offset_db = keyval_db_open_under(offset_db_name, index_path,
-	                                 (mode == INDICES_OPEN_RD) ?
-	                                 KEYVAL_DB_OPEN_RD : KEYVAL_DB_OPEN_WR);
-	if (offset_db == NULL) {
-		fprintf(stderr, "cannot create/open offset DB.\n");
-
-		open_err = 1;
-		goto skip;
-	}
-#ifdef DEBUG_INDICES
-	else {
-		printf("%lu records in offset DB.\n",
-		       keyval_db_records(offset_db));
-	}
-#endif
-
-	/*
 	 * open blob index
 	 */
 	sprintf(path, "%s/%s", index_path, blob_index_url_name);
@@ -109,7 +88,6 @@ bool indices_open(struct indices* indices, const char* index_path,
 skip:
 	indices->ti = term_index;
 	indices->mi = math_index;
-	indices->ofs_db = offset_db;
 	indices->url_bi = blob_index_url;
 	indices->txt_bi = blob_index_txt;
 	indices->postcache = postcache;
@@ -127,11 +105,6 @@ void indices_close(struct indices* indices)
 	if (indices->mi) {
 		math_index_close(indices->mi);
 		indices->mi = NULL;
-	}
-
-	if (indices->ofs_db) {
-		keyval_db_close(indices->ofs_db);
-		indices->ofs_db = NULL;
 	}
 
 	if (indices->url_bi) {

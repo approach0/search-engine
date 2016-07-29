@@ -4,23 +4,8 @@
 #include "list/list.h"
 #include "term-index/term-index.h"
 #include "math-index/math-index.h"
-#include "keyval-db/keyval-db.h"
 #include "blob-index/blob-index.h"
 #include "postcache.h"
-
-/* segment position to offset map */
-#pragma pack(push, 1)
-
-typedef struct {
-	doc_id_t docID;
-	position_t pos;
-} offsetmap_from_t;
-
-typedef struct {
-	uint32_t offset, n_bytes;
-} offsetmap_to_t;
-
-#pragma pack(pop)
 
 enum indices_open_mode {
 	INDICES_OPEN_RD,
@@ -30,7 +15,6 @@ enum indices_open_mode {
 struct indices {
 	void                 *ti;
 	math_index_t          mi;
-	keyval_db_t           ofs_db;
 	blob_index_t          url_bi;
 	blob_index_t          txt_bi;
 	struct postcache_pool postcache;
