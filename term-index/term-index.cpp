@@ -257,7 +257,7 @@ struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 	} q[MAX_MERGE_POSTINGS];
 #pragma pack(pop)
 
-	int k;
+	unsigned int k;
 	static struct _item_with_pos *ret;
 
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;

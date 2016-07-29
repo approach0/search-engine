@@ -17,7 +17,6 @@ bool indices_open(struct indices* indices, const char* index_path,
 	bool                  open_err = 0;
 
 	/* temporary variables */
-	const char            offset_db_name[] = "offset.kvdb";
 	const char            blob_index_url_name[] = "url";
 	const char            blob_index_txt_name[] = "doc";
 	char                  path[MAX_FILE_NAME_LEN];
