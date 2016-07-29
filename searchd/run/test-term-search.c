@@ -10,6 +10,9 @@
 #include "indices/indices.h"
 #include "codec/codec.h"
 #include "mem-index/mem-posting.h"
+#include "txt-seg/config.h"
+#include "txt-seg/txt-seg.h"
+#include "txt-seg/lex.h"
 #include "postmerge.h"
 #include "bm25-score.h"
 #include "proximity.h"
@@ -155,7 +158,8 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	}
 }
 
-static char *get_blob_string(blob_index_t bi, doc_id_t docID, bool gz)
+static char
+*get_blob_string(blob_index_t bi, doc_id_t docID, bool gz, size_t *sz)
 {
 	struct codec   codec = {CODEC_GZ, NULL};
 	static char    text[MAX_CORPUS_FILE_SZ + 1];
@@ -169,9 +173,11 @@ static char *get_blob_string(blob_index_t bi, doc_id_t docID, bool gz)
 			text_sz = codec_decompress(&codec, blob_out, blob_sz,
 					text, MAX_CORPUS_FILE_SZ);
 			text[text_sz] = '\0';
+			*sz = text_sz;
 		} else {
 			memcpy(text, blob_out, blob_sz);
 			text[blob_sz] = '\0';
+			*sz = blob_sz;
 		}
 
 		blob_free(blob_out);
@@ -179,28 +185,149 @@ static char *get_blob_string(blob_index_t bi, doc_id_t docID, bool gz)
 	}
 
 	fprintf(stderr, "error: get_blob_string().\n");
+	*sz = 0;
 	return NULL;
+}
+
+static void bubble_sort(position_t *arr, uint32_t n)
+{
+	uint32_t i, j;
+	position_t tmp;
+
+	for (i = 0; i < n; i++)
+		for (j = i; j < n; j++)
+			if (arr[i] > arr[j]) {
+				tmp = arr[i];
+				arr[i] = arr[j];
+				arr[j] = tmp;
+			}
+}
+
+typedef void (*seg_it_callbk)(char*, uint32_t, size_t, void*);
+
+struct highlighter_arg {
+	position_t *pos_arr;
+	uint32_t    pos_arr_now, pos_arr_sz;
+	uint32_t    cur_lex_pos;
+};
+
+struct seg_it_args {
+	uint32_t      slice_offset;
+	seg_it_callbk fun;
+	void         *arg;
+};
+
+LIST_DEF_FREE_FUN(txt_seg_li_release, struct text_seg,
+                  ln, free(p));
+
+static void
+print_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
+{
+	printf("`%s' [%u, %lu]\n", mb_str, offset, sz);
+}
+
+static void
+add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
+{
+	P_CAST(ha, struct highlighter_arg, arg);
+
+	if (ha->pos_arr_now == ha->pos_arr_sz) {
+		return;
+	} else if (ha->cur_lex_pos == ha->pos_arr[ha->pos_arr_now]) {
+		print_seg(mb_str, offset, sz, NULL);
+		ha->pos_arr_now ++;
+	}
+
+	ha->cur_lex_pos ++;
+}
+
+static LIST_IT_CALLBK(seg_iteration)
+{
+	LIST_OBJ(struct text_seg, seg, ln);
+	P_CAST(sia, struct seg_it_args, pa_extra);
+
+	/* adjust offset relatively to file */
+	seg->offset += sia->slice_offset;
+
+	/* call the callback function */
+	sia->fun(seg->str, seg->offset, seg->n_bytes, sia->arg);
+
+	LIST_GO_OVER;
+}
+
+static void
+foreach_seg(struct lex_slice *slice, seg_it_callbk fun, void *arg)
+{
+	size_t str_sz = strlen(slice->mb_str);
+	list   li     = LIST_NULL;
+	struct seg_it_args sia = {slice->offset, fun, arg};
+
+	switch (slice->type) {
+	case LEX_SLICE_TYPE_MATH_SEG:
+		fun(slice->mb_str, slice->offset, str_sz, arg);
+		break;
+
+	case LEX_SLICE_TYPE_MIX_SEG:
+		li = text_segment(slice->mb_str);
+		list_foreach(&li, &seg_iteration, &sia);
+		txt_seg_li_release(&li);
+
+		break;
+
+	case LEX_SLICE_TYPE_ENG_SEG:
+		fun(slice->mb_str, slice->offset, str_sz, arg);
+		break;
+
+	default:
+		assert(0);
+	}
+}
+
+static struct highlighter_arg hi_arg;
+
+void token_offset_lex_handler(struct lex_slice *slice)
+{
+	//foreach_seg(slice, &print_seg, NULL);
+	foreach_seg(slice, &add_highlight_seg, &hi_arg);
 }
 
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 {
 	P_CAST(indices, struct indices, arg);
 	uint32_t i;
-	char *str;
+	char    *str;
+	size_t   str_sz;
+	FILE    *str_fh;
 
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
+
+	bubble_sort(hit->occurs, hit->n_occurs);
+
 	printf("occurs: ");
 	for (i = 0; i < hit->n_occurs; i++)
 		printf("%u ", hit->occurs[i]);
 	printf("\n");
 
 	/* print URL */
-	str = get_blob_string(indices->url_bi, hit->docID, 0);
+	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n\n", str);
 
 	/* print document text */
-	str = get_blob_string(indices->txt_bi, hit->docID, 1);
-	printf("%s" "\n--------\n\n", str);
+	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
+	//printf("%s" "\n--------\n\n", str);
+
+	/* prepare highlighter arguments */
+	hi_arg.pos_arr = hit->occurs;
+	hi_arg.pos_arr_now = 0;
+	hi_arg.pos_arr_sz = hit->n_occurs;
+	hi_arg.cur_lex_pos = 0;
+
+	/* invoke lexer */
+	str_fh = fmemopen((void *)str, str_sz, "r");
+	lex_eng_file(str_fh);
+	fclose(str_fh);
+
+	printf("\n");
 }
 
 uint32_t
@@ -379,6 +506,10 @@ int main(int argc, char *argv[])
 	uint32_t           res_pages;
 	ranked_results_t   results;
 
+	/* open text segmentation dictionary */
+	printf("opening dictionary...\n");
+	text_segment_init("");
+
 	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
 		switch (opt) {
 		case 'h':
@@ -457,6 +588,11 @@ int main(int argc, char *argv[])
 	results = test_term_search(indices.ti, op, query, n_queries);
 
 	/*
+	 * register lex handler.
+	 */
+	g_lex_handler = token_offset_lex_handler;
+
+	/*
 	 * print ranked search results by page number.
 	 */
 	res_pages = print_all_rank_res(&results, &indices);
@@ -471,6 +607,8 @@ int main(int argc, char *argv[])
 	indices_close(&indices);
 
 exit:
+	text_segment_free();
+
 	if (index_path)
 		free(index_path);
 
