@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "yajl/yajl_tree.h"
-#include "indexer.h"
+#include "index.h"
 #include "config.h"
 
 #undef NDEBUG
@@ -57,24 +57,24 @@ index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 
 static bool save_offset(uint32_t offset, uint32_t n_bytes)
 {
-	offsetmap_from_t from;
-	offsetmap_to_t   to;
-
-	from.docID = prev_docID + 1;
-	from.pos   = cur_position;
-	to.offset  = offset;
-	to.n_bytes = n_bytes;
-
-#ifdef DEBUG_INDEXER
-	printf("saving offset map: docID=%u, pos=%u => offset=%u, sz=%u ...\n",
-	       prev_docID + 1, cur_position, offset, n_bytes);
-#endif
-
-	if(keyval_db_put(offset_db, &from, sizeof(offsetmap_from_t),
-	                 &to, sizeof(offsetmap_to_t))) {
-		printf("put error: %s\n", keyval_db_last_err(offset_db));
-		return 1;
-	}
+//	offsetmap_from_t from;
+//	offsetmap_to_t   to;
+//
+//	from.docID = prev_docID + 1;
+//	from.pos   = cur_position;
+//	to.offset  = offset;
+//	to.n_bytes = n_bytes;
+//
+//#ifdef DEBUG_INDEXER
+//	printf("saving offset map: docID=%u, pos=%u => offset=%u, sz=%u ...\n",
+//	       prev_docID + 1, cur_position, offset, n_bytes);
+//#endif
+//
+//	if(keyval_db_put(offset_db, &from, sizeof(offsetmap_from_t),
+//	                 &to, sizeof(offsetmap_to_t))) {
+//		printf("put error: %s\n", keyval_db_last_err(offset_db));
+//		return 1;
+//	}
 
 	return 0;
 }
@@ -149,7 +149,7 @@ void indexer_handle_slice(struct lex_slice *slice)
 #endif
 
 	switch (slice->type) {
-	case LEX_SLICE_TYPE_MATH:
+	case LEX_SLICE_TYPE_MATH_SEG:
 #ifdef DEBUG_INDEXER
 		printf("[index math tag] %s <%u, %lu>\n", slice->mb_str,
 		       slice->offset, str_sz);
@@ -164,7 +164,7 @@ void indexer_handle_slice(struct lex_slice *slice)
 
 		break;
 
-	case LEX_SLICE_TYPE_TEXT:
+	case LEX_SLICE_TYPE_MIX_SEG:
 		eng_to_lower_case(slice->mb_str, str_sz);
 
 		li = text_segment(slice->mb_str);
@@ -173,7 +173,7 @@ void indexer_handle_slice(struct lex_slice *slice)
 
 		break;
 
-	case LEX_SLICE_TYPE_ENG_TEXT:
+	case LEX_SLICE_TYPE_ENG_SEG:
 		eng_to_lower_case(slice->mb_str, str_sz);
 
 		index_term(slice->mb_str, slice->offset, str_sz);

@@ -1,0 +1,2 @@
+The Intel Pentium 4 was the first modern desktop processor to implement simultaneous multithreading, starting from the [imath]3.06[/imath] GHz model released in 2002, and since introduced into a number of their processors. Intel calls the functionality Hyper‑threading.
+Test math [imath]f(x) = a + b[/imath]

@@ -7,10 +7,10 @@
 /* dependency modules */
 #include "txt-seg/config.h"
 #include "txt-seg/txt-seg.h"
+#include "txt-seg/lex.h"
 #include "dir-util/dir-util.h"
 #include "codec/codec.h"
 #include "indices/indices.h"
-#include "lex.h"
 
 /* main indexing functions */
 void indexer_assign(struct indices*);
@@ -19,9 +19,6 @@ typedef void (*text_lexer)(FILE*);
 void indexer_index_json(FILE*, text_lexer);
 
 void indexer_handle_slice(struct lex_slice*);
-
-/* offset checking test utilities */
-#include "offset-check.h"
 
 /* other utilities */
 #include <ctype.h> /* for tolower() */

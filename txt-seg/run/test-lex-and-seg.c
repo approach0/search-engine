@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "txt-seg/config.h"
-#include "txt-seg/txt-seg.h"
-#include "indexer.h"
+#include "lex.h"
+#include "config.h"
+#include "txt-seg.h"
+
+#include "offset-check.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -19,7 +21,7 @@ static LIST_IT_CALLBK(add_check_node)
 
 	seg->offset += *slice_offset;
 
-	printf("#%u text: %s <%u, %u>\n", file_offset_check_cnt,
+	printf("#%u seg: %s <%u, %u>\n", file_offset_check_cnt,
 	       seg->str, seg->offset, seg->n_bytes);
 
 	file_offset_check_add(seg->offset, seg->n_bytes);
@@ -27,13 +29,13 @@ static LIST_IT_CALLBK(add_check_node)
 	LIST_GO_OVER;
 }
 
-void lex_slice_handler(struct lex_slice *slice)
+static void my_lex_handler(struct lex_slice *slice)
 {
 	list li = LIST_NULL;
 	printf("input slice: [%s]\n", slice->mb_str);
 
 	switch (slice->type) {
-	case LEX_SLICE_TYPE_MATH:
+	case LEX_SLICE_TYPE_MATH_SEG:
 		printf("#%u math: %s <%u, %lu>\n",
 		       file_offset_check_cnt, slice->mb_str,
 		       slice->offset, strlen(slice->mb_str));
@@ -41,7 +43,7 @@ void lex_slice_handler(struct lex_slice *slice)
 		file_offset_check_add(slice->offset, strlen(slice->mb_str));
 		break;
 
-	case LEX_SLICE_TYPE_TEXT:
+	case LEX_SLICE_TYPE_MIX_SEG:
 		li = text_segment(slice->mb_str);
 		list_foreach(&li, &add_check_node, &slice->offset);
 		break;
@@ -55,7 +57,7 @@ void lex_slice_handler(struct lex_slice *slice)
 
 int main(void)
 {
-	const char test_file_name[] = "test-doc/1.txt";
+	const char test_file_name[] = "test-txt/mix.txt";
 	FILE *fh = fopen(test_file_name, "r");
 
 	if (fh == NULL) {
@@ -68,6 +70,8 @@ int main(void)
 
 	if (0 != file_offset_check_init(test_file_name))
 		goto free;
+
+	g_lex_handler = my_lex_handler;
 
 	lex_mix_file(fh);
 	file_offset_check_print();

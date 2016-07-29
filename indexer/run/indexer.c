@@ -2,12 +2,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 
-#include "indexer.h"
-
-void lex_slice_handler(struct lex_slice *slice)
-{
-	indexer_handle_slice(slice);
-}
+#include "index.h"
 
 static bool json_ext(const char *filename)
 {
@@ -121,6 +116,7 @@ int main(int argc, char* argv[])
 	}
 
 	indexer_assign(&indices);
+	g_lex_handler = &indexer_handle_slice;
 
 	/* start indexing */
 	if (file_exists(corpus_path)) {

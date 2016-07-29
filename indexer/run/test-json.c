@@ -1,11 +1,5 @@
 #include <stdio.h>
-#include "indexer.h"
 #include "yajl/yajl_tree.h"
-
-void lex_slice_handler(struct lex_slice *slice)
-{
-	return;
-}
 
 int main()
 {

@@ -7,9 +7,9 @@
 
 /* lex slice structure */
 enum lex_slice_type {
-	LEX_SLICE_TYPE_MATH,
-	LEX_SLICE_TYPE_ENG_TEXT,
-	LEX_SLICE_TYPE_TEXT
+	LEX_SLICE_TYPE_MATH_SEG,
+	LEX_SLICE_TYPE_ENG_SEG,
+	LEX_SLICE_TYPE_MIX_SEG
 };
 
 struct lex_slice {
@@ -35,8 +35,12 @@ void lex_handle_math(char*, size_t);
 void lex_handle_mix_text(char*, size_t);
 void lex_handle_eng_text(char*, size_t);
 
-extern void lex_slice_handler(struct lex_slice *);
+/* lexer general handler */
+typedef void (*lex_handle_callbk)(struct lex_slice *);
 
+extern lex_handle_callbk g_lex_handler;
+
+/* lexer invoke functions */
 void lex_eng_file(FILE*);
 void lex_mix_file(FILE*);
 

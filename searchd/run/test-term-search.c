@@ -5,7 +5,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "indexer/indexer.h"
+#include "indices/indices.h"
 #include "mem-index/mem-posting.h"
 #include "postmerge.h"
 #include "bm25-score.h"

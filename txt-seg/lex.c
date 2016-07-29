@@ -1,4 +1,7 @@
 #include <string.h>
+#include "lex.h"
+
+lex_handle_callbk g_lex_handler = NULL;
 
 size_t lex_bytes_now = 0;
 
@@ -31,9 +34,10 @@ void lex_handle_mix_text(char *text, size_t n_bytes)
 	struct lex_slice lex_slice;
 	lex_slice.mb_str = text;
 	lex_slice.offset = lex_bytes_now - n_bytes;
-	lex_slice.type = LEX_SLICE_TYPE_TEXT;
+	lex_slice.type = LEX_SLICE_TYPE_MIX_SEG;
 
-	lex_slice_handler(&lex_slice);
+	if (g_lex_handler)
+		g_lex_handler(&lex_slice);
 }
 
 void lex_handle_eng_text(char *text, size_t n_bytes)
@@ -41,9 +45,10 @@ void lex_handle_eng_text(char *text, size_t n_bytes)
 	struct lex_slice lex_slice;
 	lex_slice.mb_str = text;
 	lex_slice.offset = lex_bytes_now - n_bytes;
-	lex_slice.type = LEX_SLICE_TYPE_ENG_TEXT;
+	lex_slice.type = LEX_SLICE_TYPE_ENG_SEG;
 
-	lex_slice_handler(&lex_slice);
+	if (g_lex_handler)
+		g_lex_handler(&lex_slice);
 }
 
 void lex_handle_math(char *text, size_t n_bytes)
@@ -51,7 +56,8 @@ void lex_handle_math(char *text, size_t n_bytes)
 	struct lex_slice lex_slice;
 	lex_slice.mb_str = text;
 	lex_slice.offset = lex_bytes_now - n_bytes;
-	lex_slice.type = LEX_SLICE_TYPE_MATH;
+	lex_slice.type = LEX_SLICE_TYPE_MATH_SEG;
 
-	lex_slice_handler(&lex_slice);
+	if (g_lex_handler)
+		g_lex_handler(&lex_slice);
 }
