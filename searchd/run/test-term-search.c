@@ -17,6 +17,7 @@
 #include "bm25-score.h"
 #include "proximity.h"
 #include "rank.h"
+#include "snippet.h"
 #include "config.h"
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
@@ -209,6 +210,7 @@ struct highlighter_arg {
 	position_t *pos_arr;
 	uint32_t    pos_arr_now, pos_arr_sz;
 	uint32_t    cur_lex_pos;
+	list        hi_list; /* highlight list */
 };
 
 struct seg_it_args {
@@ -234,7 +236,9 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 	if (ha->pos_arr_now == ha->pos_arr_sz) {
 		return;
 	} else if (ha->cur_lex_pos == ha->pos_arr[ha->pos_arr_now]) {
-		print_seg(mb_str, offset, sz, NULL);
+		//print_seg(mb_str, offset, sz, NULL);
+
+		snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
 		ha->pos_arr_now ++;
 	}
 
@@ -294,7 +298,7 @@ void token_offset_lex_handler(struct lex_slice *slice)
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 {
 	P_CAST(indices, struct indices, arg);
-	uint32_t i;
+//	uint32_t i;
 	char    *str;
 	size_t   str_sz;
 	FILE    *str_fh;
@@ -303,31 +307,39 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 
 	bubble_sort(hit->occurs, hit->n_occurs);
 
-	printf("occurs: ");
-	for (i = 0; i < hit->n_occurs; i++)
-		printf("%u ", hit->occurs[i]);
-	printf("\n");
+//	printf("occurs: ");
+//	for (i = 0; i < hit->n_occurs; i++)
+//		printf("%u ", hit->occurs[i]);
+//	printf("\n");
 
-	/* print URL */
+	/* get URL */
 	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n\n", str);
 
-	/* print document text */
+	/* get document text */
 	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
-	//printf("%s" "\n--------\n\n", str);
 
 	/* prepare highlighter arguments */
 	hi_arg.pos_arr = hit->occurs;
 	hi_arg.pos_arr_now = 0;
 	hi_arg.pos_arr_sz = hit->n_occurs;
 	hi_arg.cur_lex_pos = 0;
+	LIST_CONS(hi_arg.hi_list);
 
 	/* invoke lexer */
 	str_fh = fmemopen((void *)str, str_sz, "r");
 	lex_eng_file(str_fh);
-	fclose(str_fh);
 
-	printf("\n");
+	/* print snippet */
+	snippet_read_file(str_fh, &hi_arg.hi_list);
+	snippet_hi_print(&hi_arg.hi_list);
+	printf("--------\n\n");
+
+	/* reset highlighter */
+	snippet_free_highlight_list(&hi_arg.hi_list);
+
+	/* close file handler */
+	fclose(str_fh);
 }
 
 uint32_t

@@ -1,5 +1,5 @@
-void snippet_free_div_list(list*);
-void snippet_add_pos(list*, char*, uint32_t, uint32_t);
+void snippet_push_highlight(list*, char*, uint32_t, uint32_t);
+void snippet_free_highlight_list(list*);
 
 void snippet_read_file(FILE*, list*);
 void snippet_read_blob(void*, size_t, list*);
