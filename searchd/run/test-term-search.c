@@ -4,8 +4,11 @@
 #include <getopt.h>
 #include <string.h>
 #include <limits.h>
+#include <stdbool.h>
 
+#include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indices/indices.h"
+#include "codec/codec.h"
 #include "mem-index/mem-posting.h"
 #include "postmerge.h"
 #include "bm25-score.h"
@@ -152,18 +155,56 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	}
 }
 
+static char *get_blob_string(blob_index_t bi, doc_id_t docID, bool gz)
+{
+	struct codec   codec = {CODEC_GZ, NULL};
+	static char    text[MAX_CORPUS_FILE_SZ + 1];
+	size_t         blob_sz, text_sz;
+	char          *blob_out = NULL;
+
+	blob_sz = blob_index_read(bi, docID, (void **)&blob_out);
+
+	if (blob_out) {
+		if (gz) {
+			text_sz = codec_decompress(&codec, blob_out, blob_sz,
+					text, MAX_CORPUS_FILE_SZ);
+			text[text_sz] = '\0';
+		} else {
+			memcpy(text, blob_out, blob_sz);
+			text[blob_sz] = '\0';
+		}
+
+		blob_free(blob_out);
+		return text;
+	}
+
+	fprintf(stderr, "error: get_blob_string().\n");
+	return NULL;
+}
+
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 {
+	P_CAST(indices, struct indices, arg);
 	uint32_t i;
+	char *str;
+
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
 	printf("occurs: ");
 	for (i = 0; i < hit->n_occurs; i++)
 		printf("%u ", hit->occurs[i]);
 	printf("\n");
+
+	/* print URL */
+	str = get_blob_string(indices->url_bi, hit->docID, 0);
+	printf("URL: %s" "\n\n", str);
+
+	/* print document text */
+	str = get_blob_string(indices->txt_bi, hit->docID, 1);
+	printf("%s" "\n--------\n\n", str);
 }
 
 uint32_t
-print_all_rank_res(ranked_results_t *rk_res)
+print_all_rank_res(ranked_results_t *rk_res, struct indices *indices)
 {
 	struct rank_window win;
 	uint32_t tot_pages, page = 0;
@@ -173,7 +214,7 @@ print_all_rank_res(ranked_results_t *rk_res)
 		if (win.to > 0) {
 			printf("page#%u (from %u to %u):\n",
 			       page + 1, win.from, win.to);
-			rank_window_foreach(&win, &print_res_item, NULL);
+			rank_window_foreach(&win, &print_res_item, indices);
 			page ++;
 		}
 	} while (page < tot_pages);
@@ -181,7 +222,7 @@ print_all_rank_res(ranked_results_t *rk_res)
 	return tot_pages;
 }
 
-static void
+static ranked_results_t
 test_term_search(void *ti, enum postmerge_op op,
                  char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
 {
@@ -190,7 +231,6 @@ test_term_search(void *ti, enum postmerge_op op,
 	term_id_t                    term_id;
 	struct term_extra_score_arg  tes_arg;
 	ranked_results_t             rk_res;
-	uint32_t                     res_pages;
 	uint32_t                     docN, df;
 	struct BM25_term_i_args      bm25args;
 	struct postmerge             pm;
@@ -311,22 +351,18 @@ test_term_search(void *ti, enum postmerge_op op,
 	if (!posting_merge(&pm, op, &term_posting_on_merge, &tes_arg))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
+	/* free proximity pointer array */
+	free(tes_arg.prox_in);
+
+	/* free test in-memory posting */
+	mem_posting_free(fork_posting);
+
 	/*
 	 * rank top K hits.
 	 */
 	priority_Q_sort(&rk_res);
 
-	/*
-	 * print ranked search results by page number.
-	 */
-	res_pages = print_all_rank_res(&rk_res);
-	printf("result(s): %u pages.\n", res_pages);
-
-	free_ranked_results(&rk_res);
-	free(tes_arg.prox_in);
-
-	/* testing in-memory posting */
-	mem_posting_free(fork_posting);
+	return rk_res;
 }
 
 int main(int argc, char *argv[])
@@ -339,6 +375,9 @@ int main(int argc, char *argv[])
 	uint32_t   i, n_queries = 0;
 
 	char      *index_path = NULL;
+
+	uint32_t           res_pages;
+	ranked_results_t   results;
 
 	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
 		switch (opt) {
@@ -402,15 +441,32 @@ int main(int argc, char *argv[])
 	}
 	printf("\n");
 
+	/*
+	 * open indices.
+	 */
 	printf("opening index...\n");
 	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
 		printf("indices open failed.\n");
 		goto exit;
 	}
 
+	/*
+	 * perform search.
+	 */
 	printf("searching terms...\n");
-	test_term_search(indices.ti, op, query, n_queries);
+	results = test_term_search(indices.ti, op, query, n_queries);
 
+	/*
+	 * print ranked search results by page number.
+	 */
+	res_pages = print_all_rank_res(&results, &indices);
+	printf("result(s): %u pages.\n", res_pages);
+
+	free_ranked_results(&results);
+
+	/*
+	 * close indices.
+	 */
 	printf("closing index...\n");
 	indices_close(&indices);
 

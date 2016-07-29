@@ -25,12 +25,17 @@ int main()
 	blob_sz = blob_index_read(indices.txt_bi, docID, (void **)&blob_out);
 	printf("read blob of doc#%u: size = %lu ... \n", docID, blob_sz);
 
-	text_sz = codec_decompress(&codec, blob_out, blob_sz,
-	                           text, MAX_CORPUS_FILE_SZ);
-	text[text_sz] = '\0';
+	if (blob_out) {
+		text_sz = codec_decompress(&codec, blob_out, blob_sz,
+		                           text, MAX_CORPUS_FILE_SZ);
+		text[text_sz] = '\0';
+		blob_free(blob_out);
 
-	printf("TEXT:\n");
-	printf("%s", text);
+		printf("TEXT:\n");
+		printf("%s", text);
+	} else {
+		fprintf(stderr, "blob read failed.\n");
+	}
 
 close:
 
