@@ -13,7 +13,7 @@
 #include "rank.h"
 #include "config.h"
 
-#define ENABLE_PROXIMITY_SEARCH /* comment to disable proximity search */
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 struct term_extra_score_arg {
 	void                    *term_index;
@@ -50,7 +50,7 @@ bool term_posting_jump_wrap(void *posting, uint64_t to_id)
 }
 
 struct rank_hit *new_hit(struct postmerge *pm, doc_id_t docID,
-                         float score, uint32_t n_occurs)
+                         float score, uint32_t n_save_occurs)
 {
 	uint32_t i;
 	struct term_posting_item *pip /* posting item with positions */;
@@ -61,16 +61,22 @@ struct rank_hit *new_hit(struct postmerge *pm, doc_id_t docID,
 	hit = malloc(sizeof(struct rank_hit));
 	hit->docID = docID;
 	hit->score = score;
-	hit->n_occurs = n_occurs;
-	hit->occurs = occurs = malloc(sizeof(position_t) * n_occurs);
+	hit->n_occurs = n_save_occurs;
+	hit->occurs = occurs = malloc(sizeof(position_t) * n_save_occurs);
 
 	for (i = 0; i < pm->n_postings; i++)
 		if (pm->curIDs[i] == docID) {
 			pip = pm->cur_pos_item[i];
 			pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
 
-			memcpy(occurs, pos_arr, pip->tf * sizeof(position_t));
-			occurs += pip->tf;
+			if (n_save_occurs >= pip->tf) {
+				memcpy(occurs, pos_arr, pip->tf * sizeof(position_t));
+				occurs += pip->tf;
+				n_save_occurs -= pip->tf;
+			} else {
+				memcpy(occurs, pos_arr, n_save_occurs * sizeof(position_t));
+				break;
+			}
 		}
 
 	return hit;
@@ -89,7 +95,7 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 #endif
 
 	doc_id_t docID = cur_min;
-	uint32_t n_occurs = 0;
+	uint32_t n_tot_occurs = 0;
 
 	P_CAST(tes_arg, struct term_extra_score_arg, extra_args);
 	float doclen = (float)term_index_get_docLen(tes_arg->term_index, docID);
@@ -99,7 +105,7 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 		if (pm->curIDs[i] == cur_min) {
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			pip = pm->cur_pos_item[i];
-			n_occurs += pip->tf;
+			n_tot_occurs += pip->tf;
 
 //			{ /* print position array */
 //				int j;
@@ -138,7 +144,10 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	if (!priority_Q_full(tes_arg->rk_res) ||
 	    tot_score > priority_Q_min_score(tes_arg->rk_res)) {
 
-		struct rank_hit *hit = new_hit(pm, docID, tot_score, n_occurs);
+		struct rank_hit *hit = new_hit(
+			pm, docID, tot_score,
+			MIN(MAX_HIGHLIGHT_OCCURS, n_tot_occurs)
+		);
 		priority_Q_add_or_replace(tes_arg->rk_res, hit);
 	}
 }

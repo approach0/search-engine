@@ -28,3 +28,6 @@
 #define DEFAULT_RES_PER_PAGE 10
 
 //#define DEBUG_PROXIMITY
+#define ENABLE_PROXIMITY_SEARCH /* comment to disable proximity search */
+
+#define MAX_HIGHLIGHT_OCCURS 8
