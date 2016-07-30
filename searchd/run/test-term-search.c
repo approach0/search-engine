@@ -1,10 +1,18 @@
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
 
+#include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
+#include "indexer/index.h" /* for text_lexer and indices */
+#include "mem-index/mem-posting.h"
+
 #include "config.h"
-#include "search.h"
+#include "postmerge.h"
+#include "bm25-score.h"
+#include "proximity.h"
+#include "rank.h"
+#include "snippet.h"
+#include "search-utils.h"
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
