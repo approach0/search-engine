@@ -2,92 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
-#include <string.h>
-#include <limits.h>
-#include <stdbool.h>
 
-#include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
-#include "indices/indices.h"
-#include "codec/codec.h"
-#include "mem-index/mem-posting.h"
-#include "txt-seg/config.h"
-#include "txt-seg/txt-seg.h"
-#include "txt-seg/lex.h"
-#include "postmerge.h"
-#include "bm25-score.h"
-#include "proximity.h"
-#include "rank.h"
-#include "snippet.h"
 #include "config.h"
+#include "search.h"
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
-
-struct term_extra_score_arg {
-	void                    *term_index;
-	struct BM25_term_i_args *bm25args;
-	ranked_results_t        *rk_res;
-	prox_input_t            *prox_in;
-};
-
-void *term_posting_cur_item_wrap(void *posting)
-{
-	return (void*)term_posting_cur_item_with_pos(posting);
-}
-
-uint64_t term_posting_cur_item_id_wrap(void *item)
-{
-	doc_id_t doc_id;
-	doc_id = ((struct term_posting_item*)item)->doc_id;
-	return (uint64_t)doc_id;
-}
-
-bool term_posting_jump_wrap(void *posting, uint64_t to_id)
-{
-	bool succ;
-
-	/* because uint64_t value can be greater than doc_id_t,
-	 * we need a wrapper function to safe-guard from
-	 * calling term_posting_jump with illegal argument. */
-	if (to_id >= UINT_MAX)
-		succ = 0;
-	else
-		succ = term_posting_jump(posting, (doc_id_t)to_id);
-
-	return succ;
-}
-
-struct rank_hit *new_hit(struct postmerge *pm, doc_id_t docID,
-                         float score, uint32_t n_save_occurs)
-{
-	uint32_t i;
-	struct term_posting_item *pip /* posting item with positions */;
-	struct rank_hit *hit;
-	position_t *pos_arr;
-	position_t *occurs;
-
-	hit = malloc(sizeof(struct rank_hit));
-	hit->docID = docID;
-	hit->score = score;
-	hit->n_occurs = n_save_occurs;
-	hit->occurs = occurs = malloc(sizeof(position_t) * n_save_occurs);
-
-	for (i = 0; i < pm->n_postings; i++)
-		if (pm->curIDs[i] == docID) {
-			pip = pm->cur_pos_item[i];
-			pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
-
-			if (n_save_occurs >= pip->tf) {
-				memcpy(occurs, pos_arr, pip->tf * sizeof(position_t));
-				occurs += pip->tf;
-				n_save_occurs -= pip->tf;
-			} else {
-				memcpy(occurs, pos_arr, n_save_occurs * sizeof(position_t));
-				break;
-			}
-		}
-
-	return hit;
-}
 
 void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
@@ -104,8 +23,8 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	doc_id_t docID = cur_min;
 	uint32_t n_tot_occurs = 0;
 
-	P_CAST(tes_arg, struct term_extra_score_arg, extra_args);
-	float doclen = (float)term_index_get_docLen(tes_arg->term_index, docID);
+	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
+	float doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
 	struct term_posting_item *pip /* posting item with positions */;
 
 	for (i = 0; i < pm->n_postings; i++)
@@ -127,18 +46,18 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 			{
 				/* set proximity input */
 				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
-				prox_set_input(tes_arg->prox_in + j, pos_arr, pip->tf);
+				prox_set_input(pm_args->prox_in + j, pos_arr, pip->tf);
 				j++;
 			}
 #endif
 
-			bm25_score += BM25_term_i_score(tes_arg->bm25args, i,
+			bm25_score += BM25_term_i_score(pm_args->bm25args, i,
 			                                pip->tf, doclen);
 		}
 
 #ifdef ENABLE_PROXIMITY_SEARCH
 	/* calculate overall score considering proximity. */
-	prox_score = prox_calc_score(prox_min_dist(tes_arg->prox_in, j));
+	prox_score = prox_calc_score(prox_min_dist(pm_args->prox_in, j));
 	tot_score = bm25_score + prox_score;
 #else
 	tot_score = bm25_score;
@@ -148,164 +67,26 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //	printf("proximity score = %f.\n", prox_score);
 //	printf("(total score: %f)\n", tot_score);
 
-	if (!priority_Q_full(tes_arg->rk_res) ||
-	    tot_score > priority_Q_min_score(tes_arg->rk_res)) {
+	if (!priority_Q_full(pm_args->rk_res) ||
+	    tot_score > priority_Q_min_score(pm_args->rk_res)) {
 
 		struct rank_hit *hit = new_hit(
 			pm, docID, tot_score,
 			MIN(MAX_HIGHLIGHT_OCCURS, n_tot_occurs)
 		);
-		priority_Q_add_or_replace(tes_arg->rk_res, hit);
+
+		priority_Q_add_or_replace(pm_args->rk_res, hit);
 	}
-}
-
-static char
-*get_blob_string(blob_index_t bi, doc_id_t docID, bool gz, size_t *sz)
-{
-	struct codec   codec = {CODEC_GZ, NULL};
-	static char    text[MAX_CORPUS_FILE_SZ + 1];
-	size_t         blob_sz, text_sz;
-	char          *blob_out = NULL;
-
-	blob_sz = blob_index_read(bi, docID, (void **)&blob_out);
-
-	if (blob_out) {
-		if (gz) {
-			text_sz = codec_decompress(&codec, blob_out, blob_sz,
-					text, MAX_CORPUS_FILE_SZ);
-			text[text_sz] = '\0';
-			*sz = text_sz;
-		} else {
-			memcpy(text, blob_out, blob_sz);
-			text[blob_sz] = '\0';
-			*sz = blob_sz;
-		}
-
-		blob_free(blob_out);
-		return text;
-	}
-
-	fprintf(stderr, "error: get_blob_string().\n");
-	*sz = 0;
-	return NULL;
-}
-
-static void bubble_sort(position_t *arr, uint32_t n)
-{
-	uint32_t i, j;
-	position_t tmp;
-
-	for (i = 0; i < n; i++)
-		for (j = i; j < n; j++)
-			if (arr[i] > arr[j]) {
-				tmp = arr[i];
-				arr[i] = arr[j];
-				arr[j] = tmp;
-			}
-}
-
-typedef void (*seg_it_callbk)(char*, uint32_t, size_t, void*);
-
-struct highlighter_arg {
-	position_t *pos_arr;
-	uint32_t    pos_arr_now, pos_arr_sz;
-	uint32_t    cur_lex_pos;
-	list        hi_list; /* highlight list */
-};
-
-struct seg_it_args {
-	uint32_t      slice_offset;
-	seg_it_callbk fun;
-	void         *arg;
-};
-
-LIST_DEF_FREE_FUN(txt_seg_li_release, struct text_seg,
-                  ln, free(p));
-
-static void
-print_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
-{
-	printf("`%s' [%u, %lu]\n", mb_str, offset, sz);
-}
-
-static void
-add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
-{
-	P_CAST(ha, struct highlighter_arg, arg);
-
-	if (ha->pos_arr_now == ha->pos_arr_sz) {
-		return;
-	} else if (ha->cur_lex_pos == ha->pos_arr[ha->pos_arr_now]) {
-		//print_seg(mb_str, offset, sz, NULL);
-
-		snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
-		ha->pos_arr_now ++;
-	}
-
-	ha->cur_lex_pos ++;
-}
-
-static LIST_IT_CALLBK(seg_iteration)
-{
-	LIST_OBJ(struct text_seg, seg, ln);
-	P_CAST(sia, struct seg_it_args, pa_extra);
-
-	/* adjust offset relatively to file */
-	seg->offset += sia->slice_offset;
-
-	/* call the callback function */
-	sia->fun(seg->str, seg->offset, seg->n_bytes, sia->arg);
-
-	LIST_GO_OVER;
-}
-
-static void
-foreach_seg(struct lex_slice *slice, seg_it_callbk fun, void *arg)
-{
-	size_t str_sz = strlen(slice->mb_str);
-	list   li     = LIST_NULL;
-	struct seg_it_args sia = {slice->offset, fun, arg};
-
-	switch (slice->type) {
-	case LEX_SLICE_TYPE_MATH_SEG:
-		fun(slice->mb_str, slice->offset, str_sz, arg);
-		break;
-
-	case LEX_SLICE_TYPE_MIX_SEG:
-		li = text_segment(slice->mb_str);
-		list_foreach(&li, &seg_iteration, &sia);
-		txt_seg_li_release(&li);
-
-		break;
-
-	case LEX_SLICE_TYPE_ENG_SEG:
-		fun(slice->mb_str, slice->offset, str_sz, arg);
-		break;
-
-	default:
-		assert(0);
-	}
-}
-
-static struct highlighter_arg hi_arg;
-
-void token_offset_lex_handler(struct lex_slice *slice)
-{
-	//foreach_seg(slice, &print_seg, NULL);
-	foreach_seg(slice, &add_highlight_seg, &hi_arg);
 }
 
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 {
+	char  *str;
+	size_t str_sz;
+	list   highlight_list;
 	P_CAST(indices, struct indices, arg);
-//	uint32_t i;
-	char    *str;
-	size_t   str_sz;
-	FILE    *str_fh;
 
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
-
-	bubble_sort(hit->occurs, hit->n_occurs);
 
 //	printf("occurs: ");
 //	for (i = 0; i < hit->n_occurs; i++)
@@ -320,26 +101,14 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
 
 	/* prepare highlighter arguments */
-	hi_arg.pos_arr = hit->occurs;
-	hi_arg.pos_arr_now = 0;
-	hi_arg.pos_arr_sz = hit->n_occurs;
-	hi_arg.cur_lex_pos = 0;
-	LIST_CONS(hi_arg.hi_list);
-
-	/* invoke lexer */
-	str_fh = fmemopen((void *)str, str_sz, "r");
-	lex_eng_file(str_fh);
+	highlight_list = prepare_snippet(hit, str, str_sz, lex_eng_file);
 
 	/* print snippet */
-	snippet_read_file(str_fh, &hi_arg.hi_list);
-	snippet_hi_print(&hi_arg.hi_list);
+	snippet_hi_print(&highlight_list);
 	printf("--------\n\n");
 
-	/* reset highlighter */
-	snippet_free_highlight_list(&hi_arg.hi_list);
-
-	/* close file handler */
-	fclose(str_fh);
+	/* free highlight list */
+	snippet_free_highlight_list(&highlight_list);
 }
 
 uint32_t
@@ -362,18 +131,19 @@ print_all_rank_res(ranked_results_t *rk_res, struct indices *indices)
 }
 
 static ranked_results_t
-test_term_search(void *ti, enum postmerge_op op,
+test_term_search(struct indices *indices, enum postmerge_op op,
                  char (*terms)[MAX_TERM_BYTES], uint32_t n_terms)
 {
-	uint32_t                     i;
-	void                        *posting;
-	term_id_t                    term_id;
-	struct term_extra_score_arg  tes_arg;
-	ranked_results_t             rk_res;
-	uint32_t                     docN, df;
-	struct BM25_term_i_args      bm25args;
-	struct postmerge             pm;
-	struct postmerge_callbks     mem_calls, disk_calls, *calls = NULL;
+	uint32_t                        i;
+	void                           *posting;
+	term_id_t                       term_id;
+	struct posting_merge_extra_args pm_args;
+	ranked_results_t                rk_res;
+	uint32_t                        docN, df;
+	struct BM25_term_i_args         bm25args;
+	struct postmerge                pm;
+	struct postmerge_callbks       *calls = NULL;
+	void                           *ti = indices->ti;
 
 	/* testing in-memory posting */
 	struct mem_posting *fork_posting;
@@ -394,23 +164,6 @@ test_term_search(void *ti, enum postmerge_op op,
 	postmerge_posts_clear(&pm);
 
 	/*
-	 * prepare term posting list merge callbacks.
-	 */
-	disk_calls.start  = &term_posting_start;
-	disk_calls.finish = &term_posting_finish;
-	disk_calls.jump   = &term_posting_jump_wrap;
-	disk_calls.next   = &term_posting_next;
-	disk_calls.now    = &term_posting_cur_item_wrap;
-	disk_calls.now_id = &term_posting_cur_item_id_wrap;
-
-	mem_calls.start  = &mem_posting_start;
-	mem_calls.finish = &mem_posting_finish;
-	mem_calls.jump   = &mem_posting_jump;
-	mem_calls.next   = &mem_posting_next;
-	mem_calls.now    = &mem_posting_cur_item;
-	mem_calls.now_id = &mem_posting_cur_item_id;
-
-	/*
 	 * for each term posting list, pre-calculate some scoring
 	 * parameters and find associated posting list.
 	 */
@@ -428,11 +181,11 @@ test_term_search(void *ti, enum postmerge_op op,
 
 			if (forked_term_id == term_id) {
 				posting = fork_posting;
-				calls = &mem_calls;
+				calls = get_memory_postmerge_callbks();
 				printf("using cached posting list.\n");
 			} else {
 				posting = term_index_get_posting(ti, term_id);
-				calls = &disk_calls;
+				calls = get_disk_postmerge_callbks();
 				printf("using on-disk posting list.\n");
 			}
 		} else {
@@ -469,10 +222,10 @@ test_term_search(void *ti, enum postmerge_op op,
 	/*
 	 * merge extra arguments.
 	 */
-	tes_arg.term_index = ti;
-	tes_arg.bm25args = &bm25args;
-	tes_arg.rk_res = &rk_res;
-	tes_arg.prox_in = malloc(sizeof(prox_input_t) * pm.n_postings);
+	pm_args.indices = indices;
+	pm_args.bm25args = &bm25args;
+	pm_args.rk_res = &rk_res;
+	pm_args.prox_in = malloc(sizeof(prox_input_t) * pm.n_postings);
 
 	/*
 	 * merge and score.
@@ -487,11 +240,11 @@ test_term_search(void *ti, enum postmerge_op op,
 	while(getchar() != '\n');
 
 	/* posting merge */
-	if (!posting_merge(&pm, op, &term_posting_on_merge, &tes_arg))
+	if (!posting_merge(&pm, op, &term_posting_on_merge, &pm_args))
 		fprintf(stderr, "posting merge operation undefined.\n");
 
 	/* free proximity pointer array */
-	free(tes_arg.prox_in);
+	free(pm_args.prox_in);
 
 	/* free test in-memory posting */
 	mem_posting_free(fork_posting);
@@ -597,12 +350,7 @@ int main(int argc, char *argv[])
 	 * perform search.
 	 */
 	printf("searching terms...\n");
-	results = test_term_search(indices.ti, op, query, n_queries);
-
-	/*
-	 * register lex handler.
-	 */
-	g_lex_handler = token_offset_lex_handler;
+	results = test_term_search(&indices, op, query, n_queries);
 
 	/*
 	 * print ranked search results by page number.
