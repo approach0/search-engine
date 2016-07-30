@@ -287,3 +287,24 @@ list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexe
 
 	return hi_arg.hi_list;
 }
+
+/*
+ * consider_top_K() function
+ */
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+
+void
+consider_top_K(ranked_results_t *rk_res,
+               doc_id_t docID, float score,
+               struct postmerge *pm, uint32_t n_tot_occurs)
+{
+	struct rank_hit *hit;
+	uint32_t n_save_occurs = MIN(MAX_HIGHLIGHT_OCCURS, n_tot_occurs);
+
+	if (!priority_Q_full(rk_res) ||
+	    score > priority_Q_min_score(rk_res)) {
+
+		hit = new_hit(pm, docID, score, n_save_occurs);
+		priority_Q_add_or_replace(rk_res, hit);
+	}
+}

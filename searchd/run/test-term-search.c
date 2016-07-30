@@ -7,14 +7,9 @@
 #include "mem-index/mem-posting.h"
 
 #include "config.h"
-#include "postmerge.h"
 #include "bm25-score.h"
-#include "proximity.h"
-#include "rank.h"
 #include "snippet.h"
 #include "search-utils.h"
-
-#define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
@@ -75,16 +70,8 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //	printf("proximity score = %f.\n", prox_score);
 //	printf("(total score: %f)\n", tot_score);
 
-	if (!priority_Q_full(pm_args->rk_res) ||
-	    tot_score > priority_Q_min_score(pm_args->rk_res)) {
-
-		struct rank_hit *hit = new_hit(
-			pm, docID, tot_score,
-			MIN(MAX_HIGHLIGHT_OCCURS, n_tot_occurs)
-		);
-
-		priority_Q_add_or_replace(pm_args->rk_res, hit);
-	}
+	consider_top_K(pm_args->rk_res, docID, tot_score, pm, n_tot_occurs);
+	return;
 }
 
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
@@ -95,11 +82,6 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	P_CAST(indices, struct indices, arg);
 
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
-
-//	printf("occurs: ");
-//	for (i = 0; i < hit->n_occurs; i++)
-//		printf("%u ", hit->occurs[i]);
-//	printf("\n");
 
 	/* get URL */
 	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
@@ -223,7 +205,7 @@ test_term_search(struct indices *indices, enum postmerge_op op,
 	BM25_term_i_args_print(&bm25args);
 
 	/*
-	 * initialize ranking set.
+	 * initialize ranking queue
 	 */
 	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
 
@@ -366,6 +348,9 @@ int main(int argc, char *argv[])
 	res_pages = print_all_rank_res(&results, &indices);
 	printf("result(s): %u pages.\n", res_pages);
 
+	/*
+	 * free ranked results
+	 */
 	free_ranked_results(&results);
 
 	/*

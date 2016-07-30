@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <assert.h>
+
 #include "list.h"
 
 struct T
@@ -23,7 +26,7 @@ LIST_CMP_CALLBK(compare)
 	struct T *p1 = MEMBER_2_STRUCT(pa_node1, struct T, ln);
 	P_CAST(extra, int, pa_extra);
 
-	printf("%d \n", *extra);
+	assert(*extra == 123);
 	return p0->i > p1->i;
 }
 
@@ -44,10 +47,12 @@ main()
 	int i;
 	int extra = 123;
 
+	srand(time(NULL));
+
 	/* insert into list some entries orderly */
-	for (i=0; i<9; i++) {
+	for (i=0; i<100; i++) {
 		p = malloc(sizeof(struct T));
-		p->i = i % 3 + 2;
+		p->i = rand() % 100;
 		LIST_NODE_CONS(p->ln);
 		list_insert_one_at_tail(&p->ln, &list, NULL, NULL);
 	}
