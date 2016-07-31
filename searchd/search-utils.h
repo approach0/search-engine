@@ -25,3 +25,17 @@ list prepare_snippet(struct rank_hit*, char*, size_t, text_lexer);
 /* consider_top_K() */
 void consider_top_K(ranked_results_t*, doc_id_t, float,
                     struct postmerge*, uint32_t);
+
+/* math related */
+#include "mnc-score.h"
+
+#pragma pack(push, 1)
+typedef struct {
+	doc_id_t    docID;
+	mnc_score_t score;
+	uint32_t    n_match;
+	position_t  pos_arr[];
+} math_score_posting_item_t;
+#pragma pack(pop)
+
+struct mem_posting_callbks math_score_posting_plain_calls();

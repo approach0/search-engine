@@ -1,3 +1,5 @@
+#pragma once
+
 /* factors in subpath that contribute to math score */
 struct mnc_ref {
 	symbol_id_t sym, fr;

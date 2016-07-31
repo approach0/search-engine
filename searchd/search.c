@@ -32,6 +32,9 @@ struct add_postinglist {
 };
 
 static struct add_postinglist
+math_postinglist(char*, struct add_postinglist_arg*);
+
+static struct add_postinglist
 term_postinglist(char *kw_utf8, float df, struct add_postinglist_arg *ap_args)
 {
 	struct add_postinglist ret;
@@ -94,7 +97,7 @@ static LIST_IT_CALLBK(add_postinglist)
 		break;
 
 	case QUERY_KEYWORD_TEX:
-		//res = math_postinglist(kw_utf8, ap_args);
+		res = math_postinglist(kw_utf8, ap_args);
 		break;
 
 	default:
@@ -136,7 +139,7 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 {
 	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
 	uint32_t    i;
-	float       mnc_score, bm25_score, tot_score = 0.f;
+	float       math_score, bm25_score, tot_score = 0.f;
 #ifdef ENABLE_PROXIMITY_SEARCH
 	uint32_t    j = 0;
 	float       prox_score;
@@ -145,11 +148,13 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 #endif
 	doc_id_t    docID = cur_min;
 	uint32_t    n_tot_occurs = 0;
-	float       doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
+	float       doclen;
 
-	enum query_kw_type       *type;
-	struct term_posting_item *pip;
-	//struct math_doc_score  *mds;
+	doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
+
+	enum query_kw_type        *type;
+	struct term_posting_item  *pip;
+	math_score_posting_item_t *mip;
 
 	for (i = 0; i < pm->n_postings; i++)
 		if (pm->curIDs[i] == cur_min) {
@@ -176,9 +181,18 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 				break;
 
 			case QUERY_KEYWORD_TEX:
-				n_tot_occurs += 0;
-				mnc_score = 0;
-				tot_score += mnc_score;
+				mip = pm->cur_pos_item[i];
+				n_tot_occurs += mip->n_match;
+				math_score = mip->score;
+				tot_score += math_score;
+
+#ifdef ENABLE_PROXIMITY_SEARCH
+				/* set proximity input */
+				pos_arr = mip->pos_arr;
+				prox_set_input(pm_args->prox_in + j, pos_arr, mip->n_match);
+				j++;
+#endif
+
 
 				break;
 
@@ -292,4 +306,107 @@ indices_run_query(struct indices *indices, const struct query qry)
 
 	/* return top K hits */
 	return rk_res;
+}
+
+/*
+ * math related functions
+ */
+#pragma pack(push, 1)
+typedef struct {
+	/* output memory posting list */
+	struct mem_posting       *mem_po;
+
+	/* document math score item buffer */
+	math_score_posting_item_t last;
+	position_t reserve[MAX_HIGHLIGHT_OCCURS];
+
+} math_score_combine_args_t;
+#pragma pack(pop)
+
+static void
+msca_push_pos(math_score_combine_args_t *msca, position_t pos)
+{
+	uint32_t *i = &msca->last.n_match;
+	if (*i < MAX_HIGHLIGHT_OCCURS) {
+		msca->last.pos_arr[*i] = pos;
+		(*i) ++;
+	}
+}
+
+static void
+msca_rst(math_score_combine_args_t *msca, doc_id_t docID)
+{
+	msca->last.docID   = docID;
+	msca->last.score   = 0;
+	msca->last.n_match = 0;
+}
+
+static void
+write_math_score_posting(math_score_combine_args_t *msca)
+{
+	size_t wr_sz = sizeof(math_score_posting_item_t);
+	math_score_posting_item_t *mip = &msca->last;
+
+	if (msca->last.docID > 0) {
+		wr_sz += mip->n_match * sizeof(position_t);
+		mem_posting_write(msca->mem_po, mip, wr_sz);
+	}
+}
+
+static void
+math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
+                      void* extra_args)
+{
+	struct math_score_res res;
+	P_CAST(mesa, struct math_extra_score_arg, extra_args);
+	P_CAST(msca, math_score_combine_args_t, mesa->extra_search_args);
+
+	/* calculate expression similarity on merge */
+	res = math_score_on_merge(pm, mesa->dir_merge_level,
+	                          mesa->n_qry_lr_paths);
+
+	if (res.doc_id != msca->last.docID) {
+		/* this expression is in a new document */
+
+		write_math_score_posting(msca);
+
+		/* clear msca */
+		msca_rst(msca, res.doc_id);
+	}
+
+	/* accumulate score and positions of current document */
+	msca->last.score += res.score;
+	msca_push_pos(msca, res.exp_id);
+}
+
+static struct add_postinglist
+math_postinglist(char *kw_utf8, struct add_postinglist_arg *ap_args)
+{
+	struct add_postinglist    ret;
+	math_score_combine_args_t msca;
+	struct mem_posting       *mempost;
+
+	printf("posting list[%u] of tex `%s'...\n",
+	       ap_args->posting_idx, kw_utf8);
+
+	/* create memory posting list for math intermediate results */
+	mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS,
+	                             math_score_posting_plain_calls());
+
+	/* initialize score combine arguments */
+	msca.mem_po = mempost;
+	msca_rst(&msca, 0);
+
+	/* merge and combine math scores */
+	math_search_posting_merge(ap_args->indices->mi, kw_utf8,
+	                          DIR_MERGE_DEPTH_FIRST,
+	                          &math_posting_on_merge, &msca);
+	/* flush write */
+	write_math_score_posting(&msca);
+	mem_posting_write_complete(mempost);
+
+	/* return math score (in-memory) posting list */
+	ret.posting = mempost;
+	ret.postmerge_callbks = get_memory_postmerge_callbks();
+	return ret;
 }

@@ -308,3 +308,24 @@ consider_top_K(ranked_results_t *rk_res,
 		priority_Q_add_or_replace(rk_res, hit);
 	}
 }
+
+/*
+ * math related functions
+ */
+static char *getposarr_for_mathpost(char *buf, size_t *size)
+{
+	P_CAST(mip, math_score_posting_item_t, buf);
+	*size = sizeof(position_t) * mip->n_match;
+	return (char *)(mip->pos_arr);
+}
+
+struct mem_posting_callbks math_score_posting_plain_calls()
+{
+	struct mem_posting_callbks ret = {
+		onflush_for_plainpost,
+		onrebuf_for_plainpost,
+		getposarr_for_mathpost
+	};
+
+	return ret;
+}
