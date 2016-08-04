@@ -217,7 +217,7 @@ void term_posting_finish(void *posting)
 	delete po;
 }
 
-#include "searchd/config.h" /* for MAX_MERGE_POSTINGS */
+#include "search/config.h" /* for MAX_MERGE_POSTINGS */
 
 struct term_posting_item *term_posting_cur_item(void *posting)
 {
