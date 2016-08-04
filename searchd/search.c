@@ -9,6 +9,7 @@
 
 #include "wstring/wstring.h"
 #include "mem-index/mem-posting.h"
+#include "indexer/index.h" /* for eng_to_lower_case() */
 
 #include "config.h"
 #include "postmerge.h"
@@ -101,6 +102,7 @@ static LIST_IT_CALLBK(add_postinglist)
 
 	switch (kw->type) {
 	case QUERY_KEYWORD_TERM:
+		eng_to_lower_case(kw_utf8, strlen(kw_utf8));
 		res = term_postinglist(kw_utf8, kw->df, ap_args);
 		break;
 

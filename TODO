@@ -2,7 +2,6 @@ Top priority:
 * math score anchor posting
 * crawler
 * math posting file compression
-* uppercase highlight miss.
 * math query "aa" crash
 * breadth-first dir-merge
 
