@@ -15,11 +15,10 @@ void
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	uint32_t i;
+	uint32_t i, j = 0;
 	float tot_score, bm25_score = 0.f;
 
-#ifdef ENABLE_PROXIMITY_SEARCH
-	uint32_t j = 0;
+#ifdef ENABLE_PROXIMITY_SCORE
 	float prox_score;
 #endif
 
@@ -45,20 +44,18 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //				printf("\n");
 //			}
 
-#ifdef ENABLE_PROXIMITY_SEARCH
 			{
 				/* set proximity input */
 				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
 				prox_set_input(pm_args->prox_in + j, pos_arr, pip->tf);
 				j++;
 			}
-#endif
 
 			bm25_score += BM25_term_i_score(pm_args->bm25args, i,
 			                                pip->tf, doclen);
 		}
 
-#ifdef ENABLE_PROXIMITY_SEARCH
+#ifdef ENABLE_PROXIMITY_SCORE
 	/* calculate overall score considering proximity. */
 	prox_score = prox_calc_score(prox_min_dist(pm_args->prox_in, j));
 	tot_score = bm25_score + prox_score;
@@ -70,7 +67,8 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //	printf("proximity score = %f.\n", prox_score);
 //	printf("(total score: %f)\n", tot_score);
 
-	consider_top_K(pm_args->rk_res, docID, tot_score, pm, n_tot_occurs);
+	consider_top_K(pm_args->rk_res, docID, tot_score,
+	               pm_args->prox_in, j, n_tot_occurs);
 	return;
 }
 

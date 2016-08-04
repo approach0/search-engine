@@ -18,7 +18,7 @@
 #include "search.h"
 #include "search-utils.h"
 
-struct add_postinglist_arg {
+struct adding_post_arg {
 	struct indices          *indices;
 	struct postmerge        *pm;
 	uint32_t                 docN;
@@ -26,29 +26,26 @@ struct add_postinglist_arg {
 	float                   *idf;
 };
 
-struct add_postinglist {
+struct adding_post {
 	void *posting;
 	struct postmerge_callbks *postmerge_callbks;
 };
 
-static struct add_postinglist
-math_postinglist(char*, struct add_postinglist_arg*);
+static struct adding_post
+math_postinglist(char*, struct adding_post_arg*);
 
-static struct add_postinglist
-term_postinglist(char *kw_utf8, float df, struct add_postinglist_arg *ap_args)
+static struct adding_post
+term_postinglist(char *kw_utf8, float df, struct adding_post_arg *ap_args)
 {
-	struct add_postinglist ret;
-	void                  *ti;
-	term_id_t              term_id;
-	float                  docN;
+	struct adding_post ret;
+	void              *ti;
+	term_id_t          term_id;
+	float              docN;
 
 	/* get variables for short-hand */
 	ti = ap_args->indices->ti;
 	term_id = term_lookup(ti, kw_utf8);
 	docN = (float)ap_args->docN;
-
-	printf("posting list[%u] of keyword `%s'(termID: %u)...\n",
-	       ap_args->posting_idx, kw_utf8, term_id);
 
 	if (term_id == 0) {
 		/* if term is not found in our dictionary */
@@ -58,7 +55,9 @@ term_postinglist(char *kw_utf8, float df, struct add_postinglist_arg *ap_args)
 		/* set BM25 idf argument */
 		ap_args->idf[ap_args->posting_idx] = BM25_idf(0.f, docN);
 
-		printf("keyword not found.\n");
+#ifdef VERBOSE_SEARCH
+		printf("(empty posting)");
+#endif
 	} else {
 		/* otherwise, get on-disk or cached posting list */
 		struct postcache_item *cache_item =
@@ -69,12 +68,16 @@ term_postinglist(char *kw_utf8, float df, struct add_postinglist_arg *ap_args)
 			ret.posting = cache_item->posting;
 			ret.postmerge_callbks = get_memory_postmerge_callbks();
 
-			printf("using cached posting list.\n");
+#ifdef VERBOSE_SEARCH
+			printf("(cached in memory)");
+#endif
 		} else {
 			/* otherwise read posting from disk */
 			ret.posting = term_index_get_posting(ti, term_id);
 			ret.postmerge_callbks = get_disk_postmerge_callbks();
-			printf("using on-disk posting list.\n");
+#ifdef VERBOSE_SEARCH
+			printf("(on disk)");
+#endif
 		}
 
 		/* set BM25 idf argument */
@@ -86,10 +89,15 @@ term_postinglist(char *kw_utf8, float df, struct add_postinglist_arg *ap_args)
 
 static LIST_IT_CALLBK(add_postinglist)
 {
-	struct add_postinglist res;
+	struct adding_post res;
 	LIST_OBJ(struct query_keyword, kw, ln);
-	P_CAST(ap_args, struct add_postinglist_arg, pa_extra);
+	P_CAST(ap_args, struct adding_post_arg, pa_extra);
 	char *kw_utf8 = wstr2mbstr(kw->wstr);
+
+#ifdef VERBOSE_SEARCH
+	printf("posting list[%u]: `%s' ",
+	       ap_args->posting_idx, kw_utf8);
+#endif
 
 	switch (kw->type) {
 	case QUERY_KEYWORD_TERM:
@@ -103,6 +111,10 @@ static LIST_IT_CALLBK(add_postinglist)
 	default:
 		assert(0);
 	}
+
+#ifdef VERBOSE_SEARCH
+	printf("\n");
+#endif
 
 	/* add posting list for merge */
 	postmerge_posts_add(ap_args->pm, res.posting,
@@ -120,7 +132,7 @@ add_postinglists(struct indices *indices, const struct query *qry,
 {
 
 	/* setup argument variable `ap_args' (in & out) */
-	struct add_postinglist_arg ap_args;
+	struct adding_post_arg ap_args;
 	ap_args.indices = indices;
 	ap_args.pm = pm;
 	ap_args.docN = term_index_get_docN(indices->ti);
@@ -138,14 +150,15 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
                        void *extra_args)
 {
 	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
-	uint32_t    i;
+	uint32_t    i, j = 0;
 	float       math_score, bm25_score, tot_score = 0.f;
-#ifdef ENABLE_PROXIMITY_SEARCH
-	uint32_t    j = 0;
-	float       prox_score;
 	position_t *pos_arr;
+
+#ifdef ENABLE_PROXIMITY_SCORE
+	float       prox_score;
 	position_t  minDist;
 #endif
+
 	doc_id_t    docID = cur_min;
 	uint32_t    n_tot_occurs = 0;
 	float       doclen;
@@ -171,28 +184,23 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 
 				tot_score += bm25_score;
 
-#ifdef ENABLE_PROXIMITY_SEARCH
 				/* set proximity input */
 				pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
 				prox_set_input(pm_args->prox_in + j, pos_arr, pip->tf);
 				j++;
-#endif
 
 				break;
 
 			case QUERY_KEYWORD_TEX:
 				mip = pm->cur_pos_item[i];
 				n_tot_occurs += mip->n_match;
-				math_score = mip->score;
+				math_score = (float)mip->score;
 				tot_score += math_score;
 
-#ifdef ENABLE_PROXIMITY_SEARCH
 				/* set proximity input */
 				pos_arr = mip->pos_arr;
 				prox_set_input(pm_args->prox_in + j, pos_arr, mip->n_match);
 				j++;
-#endif
-
 
 				break;
 
@@ -201,14 +209,15 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 			}
 		}
 
-#ifdef ENABLE_PROXIMITY_SEARCH
+#ifdef ENABLE_PROXIMITY_SCORE
 	/* calculate overall score considering proximity. */
 	minDist = prox_min_dist(pm_args->prox_in, j);
 	prox_score = prox_calc_score(minDist);
 	tot_score += prox_score;
 #endif
 
-	consider_top_K(pm_args->rk_res, docID, tot_score, pm, n_tot_occurs);
+	consider_top_K(pm_args->rk_res, docID, tot_score,
+	               pm_args->prox_in, j, n_tot_occurs);
 	return;
 }
 
@@ -223,8 +232,7 @@ static void free_math_postinglists(struct postmerge *pm)
 		type = (enum query_kw_type *)pm->posting_args[i];
 
 		if (*type == QUERY_KEYWORD_TEX) {
-			printf("releasing math in-memory posting[%u]...\n",
-			       i);
+			//printf("releasing math in-memory posting[%u]...\n", i);
 
 			mem_posting_free(mem_po);
 		}
@@ -254,31 +262,37 @@ indices_run_query(struct indices *indices, const struct query qry)
 	struct BM25_term_i_args         bm25args;
 	ranked_results_t                rk_res;
 	struct posting_merge_extra_args pm_args;
-	uint32_t                        n_added;
+	uint32_t                        n_postings;
 
 	/* sort query, to prioritize keywords in highlight stage */
-	printf("query before sorting:\n");
-	query_print_to(qry, stdout);
-
 	list_foreach((list*)&qry.keywords, &set_df_value, indices);
 	query_sort(&qry);
 
-	printf("query after sorting:\n");
+#ifdef VERBOSE_SEARCH
+	printf("sorted query:\n");
 	query_print_to(qry, stdout);
+	printf("\n");
+#endif
 
 	/* initialize postmerge */
 	postmerge_posts_clear(&pm);
-	n_added = add_postinglists(indices, &qry, &pm, (float*)&bm25args.idf);
+	n_postings = add_postinglists(indices, &qry, &pm, (float*)&bm25args.idf);
+#ifdef VERBOSE_SEARCH
+	printf("\n");
+#endif
 
 	/* prepare BM25 parameters */
-	bm25args.n_postings = n_added;
+	bm25args.n_postings = n_postings;
 	bm25args.avgDocLen = (float)term_index_get_avgDocLen(indices->ti);
 	bm25args.b  = BM25_DEFAULT_B;
 	bm25args.k1 = BM25_DEFAULT_K1;
 	bm25args.frac_b_avgDocLen = BM25_DEFAULT_K1 / bm25args.avgDocLen;
 
+#ifdef VERBOSE_SEARCH
 	printf("BM25 arguments:\n");
 	BM25_term_i_args_print(&bm25args);
+	printf("\n");
+#endif
 
 	/* initialize ranking queue */
 	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
@@ -290,11 +304,16 @@ indices_run_query(struct indices *indices, const struct query qry)
 	pm_args.prox_in  = malloc(sizeof(prox_input_t) * pm.n_postings);
 
 	/* posting list merge */
+#ifdef VERBOSE_SEARCH
 	printf("start merging...\n");
+#endif
 	if (!posting_merge(&pm, POSTMERGE_OP_OR,
 	                   &mixed_posting_on_merge, &pm_args))
 		fprintf(stderr, "posting list merge failed.\n");
 
+#ifdef VERBOSE_SEARCH
+	printf("start ranking...\n");
+#endif
 	/* free proximity pointer array */
 	free(pm_args.prox_in);
 
@@ -347,7 +366,7 @@ write_math_score_posting(math_score_combine_args_t *msca)
 	size_t wr_sz = sizeof(math_score_posting_item_t);
 	math_score_posting_item_t *mip = &msca->last;
 
-	if (msca->last.docID > 0) {
+	if (mip->score > 0) {
 		wr_sz += mip->n_match * sizeof(position_t);
 		mem_posting_write(msca->mem_po, mip, wr_sz);
 	}
@@ -379,15 +398,15 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	msca_push_pos(msca, res.exp_id);
 }
 
-static struct add_postinglist
-math_postinglist(char *kw_utf8, struct add_postinglist_arg *ap_args)
+/* debug print function */
+static void print_math_score_posting(struct mem_posting*);
+
+static struct adding_post
+math_postinglist(char *kw_utf8, struct adding_post_arg *ap_args)
 {
-	struct add_postinglist    ret;
+	struct adding_post        ret;
 	math_score_combine_args_t msca;
 	struct mem_posting       *mempost;
-
-	printf("posting list[%u] of tex `%s'...\n",
-	       ap_args->posting_idx, kw_utf8);
 
 	/* create memory posting list for math intermediate results */
 	mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS,
@@ -405,8 +424,37 @@ math_postinglist(char *kw_utf8, struct add_postinglist_arg *ap_args)
 	write_math_score_posting(&msca);
 	mem_posting_write_complete(mempost);
 
+#ifdef VERBOSE_SEARCH
+	printf("(math score posting, %f KB)",
+	       (float)mempost->tot_sz / 1024.f);
+#endif
+
+#ifdef DEBUG_MATH_SCORE_POSTING
+	print_math_score_posting(mempost);
+#endif
+
 	/* return math score (in-memory) posting list */
 	ret.posting = mempost;
 	ret.postmerge_callbks = get_memory_postmerge_callbks();
 	return ret;
+}
+
+static void print_math_score_posting(struct mem_posting *po)
+{
+	math_score_posting_item_t *mip;
+	mem_posting_start(po);
+
+	do {
+		mip = mem_posting_cur_item(po);
+		printf("==> math score item: ");
+		printf("docID=%u, score=%u, n_match=%u: ", mip->docID,
+			   mip->score, mip->n_match);
+		{ uint32_t i;
+		for (i = 0; i < mip->n_match; i++) {
+			printf("%u ", mip->pos_arr[i]);
+		}}
+		printf("\n");
+	} while (mem_posting_next(po));
+
+	mem_posting_finish(po);
 }

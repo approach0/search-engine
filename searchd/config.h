@@ -21,13 +21,13 @@
 
 //#define DEBUG_MATH_SEARCH
 
-//#define DEBUG_MIX_SCORING
-//#define DEBUG_PRINT_MATH_HITS
-
 #define RANK_SET_DEFAULT_VOL 45
 #define DEFAULT_RES_PER_PAGE 10
 
 //#define DEBUG_PROXIMITY
-#define ENABLE_PROXIMITY_SEARCH /* comment to disable proximity search */
+#define ENABLE_PROXIMITY_SCORE
 
 #define MAX_HIGHLIGHT_OCCURS 8
+
+#define DEBUG_MATH_SCORE_POSTING
+//#define VERBOSE_SEARCH

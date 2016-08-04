@@ -125,23 +125,29 @@ void indices_close(struct indices* indices)
 void indices_cache(struct indices* indices, uint64_t mem_limit)
 {
 	enum postcache_err res;
-	uint32_t  termN, df;
-	char     *term;
+	uint32_t  termN;
 	void     *posting;
 	term_id_t term_id;
+
+#ifdef ENABLE_PRINT_CACHE_TERMS
+	uint32_t  df;
+	char     *term;
 	bool      ellp_lock = 0;
+#endif
 
 	postcache_set_mem_limit(&indices->postcache, mem_limit);
 
 	termN = term_index_get_termN(indices->ti);
 
-	printf("caching terms:\n");
+	printf("caching term postings...\n");
 	for (term_id = 1; term_id <= termN; term_id++) {
-		df = term_index_get_df(indices->ti, term_id);
-		term = term_lookup_r(indices->ti, term_id);
 		posting = term_index_get_posting(indices->ti, term_id);
 
 		if (posting) {
+#ifdef ENABLE_PRINT_CACHE_TERMS
+			df = term_index_get_df(indices->ti, term_id);
+			term = term_lookup_r(indices->ti, term_id);
+
 			if (term_id < MAX_PRINT_CACHE_TERMS) {
 				printf("`%s'(df=%u) ", term, df);
 
@@ -150,16 +156,20 @@ void indices_cache(struct indices* indices, uint64_t mem_limit)
 				ellp_lock = 1;
 			}
 
+			free(term);
+#endif
+
 			res = postcache_add_term_posting(&indices->postcache,
 			                                 term_id, posting);
 			if (res == POSTCACHE_EXCEED_MEM_LIMIT)
 				break;
 		}
-
-		free(term);
 	}
+#ifdef ENABLE_PRINT_CACHE_TERMS
 	printf("\n");
+#endif
 
-	printf("caching complete (%u posting lists cached):\n", term_id);
+	printf("caching completed (%u posting lists cached):\n", term_id);
 	postcache_print_mem_usage(&indices->postcache);
+	printf("\n");
 }

@@ -72,11 +72,11 @@ struct postmerge_callbks *get_disk_postmerge_callbks(void)
 /*
  * new rank hit
  */
-struct rank_hit *new_hit(struct postmerge *pm, doc_id_t hitID,
-                         float score, uint32_t n_save_occurs)
+struct rank_hit *new_hit(doc_id_t hitID, float score,
+                         prox_input_t *prox_in, uint32_t n,
+                         uint32_t n_save_occurs)
 {
-	uint32_t i;
-	struct term_posting_item *pip /* posting item with positions */;
+	uint32_t i, n_pos;
 	struct rank_hit *hit;
 	position_t *pos_arr;
 	position_t *occurs;
@@ -87,20 +87,19 @@ struct rank_hit *new_hit(struct postmerge *pm, doc_id_t hitID,
 	hit->n_occurs = n_save_occurs;
 	hit->occurs = occurs = malloc(sizeof(position_t) * n_save_occurs);
 
-	for (i = 0; i < pm->n_postings; i++)
-		if (pm->curIDs[i] == hitID) {
-			pip = pm->cur_pos_item[i];
-			pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
+	for (i = 0; i < n; i++) {
+		pos_arr = prox_in[i].pos_arr;
+		n_pos = prox_in[i].n_pos;
 
-			if (n_save_occurs >= pip->tf) {
-				memcpy(occurs, pos_arr, pip->tf * sizeof(position_t));
-				occurs += pip->tf;
-				n_save_occurs -= pip->tf;
-			} else {
-				memcpy(occurs, pos_arr, n_save_occurs * sizeof(position_t));
-				break;
-			}
+		if (n_save_occurs >= n_pos) {
+			memcpy(occurs, pos_arr, n_pos * sizeof(position_t));
+			occurs += n_pos;
+			n_save_occurs -= n_pos;
+		} else {
+			memcpy(occurs, pos_arr, n_save_occurs * sizeof(position_t));
+			break;
 		}
+	}
 
 	return hit;
 }
@@ -294,9 +293,8 @@ list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexe
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 void
-consider_top_K(ranked_results_t *rk_res,
-               doc_id_t docID, float score,
-               struct postmerge *pm, uint32_t n_tot_occurs)
+consider_top_K(ranked_results_t *rk_res, doc_id_t docID, float score,
+               prox_input_t *prox_in, uint32_t n, uint32_t n_tot_occurs)
 {
 	struct rank_hit *hit;
 	uint32_t n_save_occurs = MIN(MAX_HIGHLIGHT_OCCURS, n_tot_occurs);
@@ -304,7 +302,7 @@ consider_top_K(ranked_results_t *rk_res,
 	if (!priority_Q_full(rk_res) ||
 	    score > priority_Q_min_score(rk_res)) {
 
-		hit = new_hit(pm, docID, score, n_save_occurs);
+		hit = new_hit(docID, score, prox_in, n, n_save_occurs);
 		priority_Q_add_or_replace(rk_res, hit);
 	}
 }

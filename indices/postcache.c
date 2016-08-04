@@ -52,7 +52,8 @@ void postcache_print_mem_usage(struct postcache_pool *pool)
 	uint64_t total = pool->trp_mem_usage + pool->pos_mem_usage;
 
 	printf("%.2f KB look-up structure and "
-	       "%.2f KB memory posting list (total %.2f KB, %.2f%% used)",
+	       "%.2f KB memory posting list "
+	       "(total %.2f KB, %.2f%% of specified memory limit)",
 	       trp_mem_usage_KB, pos_mem_usage_KB, (float)total / 1024.f,
 	       ((float)total / (float)pool->tot_mem_limit) * 100.f);
 	printf("\n");

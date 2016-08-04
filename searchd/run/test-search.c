@@ -35,7 +35,8 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
 
 	/* prepare highlighter arguments */
-	highlight_list = prepare_snippet(hit, str, str_sz, lex_eng_file);
+	highlight_list = prepare_snippet(hit, str, str_sz,
+	                                 lex_mix_file);//lex_eng_file);
 
 	/* print snippet */
 	snippet_hi_print(&highlight_list);
@@ -75,6 +76,7 @@ int main(int argc, char *argv[])
 	uint32_t             res_pages;
 
 	/* initialize text segmentation module */
+	printf("opening dictionary...\n");
 	text_segment_init("../jieba/fork/dict");
 
 	/* a single new query */
@@ -132,15 +134,9 @@ int main(int argc, char *argv[])
 	}
 
 	/*
-	 * print program arguments.
-	 */
-	printf("index path: %s\n", index_path);
-	query_print_to(qry, stdout);
-
-	/*
 	 * open indices
 	 */
-	printf("opening index...\n");
+	printf("opening index at path: `%s' ...\n", index_path);
 	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
 		printf("index open failed.\n");
 		goto close;
@@ -167,6 +163,8 @@ close:
 	indices_close(&indices);
 
 exit:
+	printf("existing...\n");
+
 	/*
 	 * free program arguments
 	 */

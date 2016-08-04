@@ -25,7 +25,8 @@ static LIST_IT_CALLBK(qry_keyword_print)
 	LIST_OBJ(struct query_keyword, kw, ln);
 	P_CAST(fh, FILE, pa_extra);
 
-	fprintf(fh, "[%u]: `%S'", kw->pos, kw->wstr);
+	//fprintf(fh, "[%u]: `%S'", kw->pos, kw->wstr);
+	fprintf(fh, "`%S'", kw->wstr);
 
 	if (kw->type == QUERY_KEYWORD_TEX)
 		fprintf(fh, " (tex)");

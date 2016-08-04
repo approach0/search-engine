@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	int                     opt;
 	math_index_t            mi = NULL;
 
-	char       query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
+	static char query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
 	uint32_t   n_queries = 0;
 
 	char      *index_path = NULL;
