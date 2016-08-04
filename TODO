@@ -3,6 +3,7 @@ Top priority:
 * crawler
 * math posting file compression
 * breadth-first dir-merge
+* searchd
 
 Want to implement:
 * search: concept search (horse == Pony)
