@@ -194,8 +194,10 @@ void mem_posting_free(struct mem_posting *po)
 
 static void forward_cur(struct mem_posting_node **cur)
 {
-	/* update `cur' variables */
-	*cur = MEMBER_2_STRUCT((*cur)->sn.next[0], struct mem_posting_node, sn);
+	struct skippy_node *next = (*cur)->sn.next[0];
+
+	/* forward one step */
+	*cur = MEMBER_2_STRUCT(next, struct mem_posting_node, sn);
 }
 
 static void rebuf_cur(struct mem_posting *po)

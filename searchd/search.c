@@ -444,18 +444,24 @@ math_postinglist(char *kw_utf8, struct adding_post_arg *ap_args)
 static void print_math_score_posting(struct mem_posting *po)
 {
 	math_score_posting_item_t *mip;
-	mem_posting_start(po);
+	if (!mem_posting_start(po)) {
+		printf("(empty)");
+		return;
+	}
 
 	do {
 		mip = mem_posting_cur_item(po);
-		printf("==> math score item: ");
-		printf("docID=%u, score=%u, n_match=%u: ", mip->docID,
+		printf("[docID=%u, score=%u, n_match=%u", mip->docID,
 			   mip->score, mip->n_match);
-		{ uint32_t i;
-		for (i = 0; i < mip->n_match; i++) {
-			printf("%u ", mip->pos_arr[i]);
-		}}
-		printf("\n");
+
+		if (mip->n_match != 0) {
+			uint32_t i;
+			printf(": ");
+			for (i = 0; i < mip->n_match; i++)
+				printf("%u ", mip->pos_arr[i]);
+		}
+
+		printf("]");
 	} while (mem_posting_next(po));
 
 	mem_posting_finish(po);
