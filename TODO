@@ -1,14 +1,10 @@
 Top priority:
-
-* proximity and highlight:
-	limit max highlighted terms for one document, order posting by importance, and no need to mix-sort term positions from different query keywords, but to extract&save term positions by their posting order.
-	In this way, because we do not need to mix-sort on the fly (but sort at snippet stage, i.e. after top-K are retrieved), no heap allocation is needed, good for efficiency.
-	In this way, at postmerge stage, we can calculate proximity score using mindist measurement by mergesort positions from different query keywords, while do not need to store (malloc) the mergesort results (we only want to get mindist value).
-	In this way, we guarantee important query terms are highlighted. (instead of highlighting unimportant terms, for example, a query "the economist" may get only "the" highlighted where a document has "economist" in the end of document)
-
+* math score anchor posting
 * crawler
 * math posting file compression
-* force query lower case to avoid Indri crash.
+* uppercase highlight miss.
+* math query "aa" crash
+* breadth-first dir-merge
 
 Want to implement:
 * search: concept search (horse == Pony)
@@ -20,5 +16,4 @@ Do it when time is allowed:
 * malloc hook
 * oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
-* breadth-first dir-merge
 * in mnc_score, compare father-to-root hash
