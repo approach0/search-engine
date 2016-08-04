@@ -15,7 +15,7 @@
 #include "postmerge.h"
 #include "bm25-score.h"
 #include "proximity.h"
-#include "math-search.h"
+#include "math-expr-search.h"
 #include "search.h"
 #include "search-utils.h"
 
@@ -378,13 +378,13 @@ static void
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	struct math_score_res res;
+	struct math_expr_score_res res;
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(msca, math_score_combine_args_t, mesa->extra_search_args);
 
 	/* calculate expression similarity on merge */
-	res = math_score_on_merge(pm, mesa->dir_merge_level,
-	                          mesa->n_qry_lr_paths);
+	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
+	                               mesa->n_qry_lr_paths);
 
 	if (res.doc_id != msca->last.docID) {
 		/* this expression is in a new document */

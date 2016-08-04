@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "math-search.h"
+#include "math-expr-search.h"
 
 static LIST_CMP_CALLBK(compare_qry_path)
 {
@@ -263,9 +263,9 @@ math_sim(mnc_score_t mnc_score, uint32_t depth_delta, uint32_t breath_delta)
 	return score;
 }
 
-struct math_score_res
-math_score_on_merge(struct postmerge* pm,
-                    uint32_t level, uint32_t n_qry_lr_paths)
+struct math_expr_score_res
+math_expr_score_on_merge(struct postmerge* pm,
+                         uint32_t level, uint32_t n_qry_lr_paths)
 {
 	uint32_t                    i, j, k;
 	math_posting_t              posting;
@@ -275,7 +275,7 @@ math_score_on_merge(struct postmerge* pm,
 	struct math_pathinfo       *pathinfo;
 	struct subpath_ele         *subpath_ele;
 	bool                        skipped = 0;
-	struct math_score_res       ret;
+	struct math_expr_score_res  ret;
 
 	/* reset mnc for scoring new document */
 	uint32_t slot;

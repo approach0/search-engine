@@ -11,7 +11,7 @@ struct math_extra_score_arg {
 };
 
 #pragma pack(push, 1)
-struct math_score_res {
+struct math_expr_score_res {
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
 	uint32_t  score;
@@ -25,5 +25,5 @@ int math_search_posting_merge(math_index_t, char*, enum dir_merge_type,
 
 /* call this function in posting merge callback to score merged item
  * similarity compared with math query. */
-struct math_score_res
-math_score_on_merge(struct postmerge*, uint32_t, uint32_t);
+struct math_expr_score_res
+math_expr_score_on_merge(struct postmerge*, uint32_t, uint32_t);

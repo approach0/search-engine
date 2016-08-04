@@ -4,20 +4,20 @@
 #include <string.h>
 
 #include "postmerge.h"
-#include "math-search.h"
+#include "math-expr-search.h"
 
 static void
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	struct math_score_res res;
+	struct math_expr_score_res res;
 
 	/* get additional math score arguments */
 	P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
 
 	/* calculate math similarity on merge */
-	res = math_score_on_merge(pm, mes_arg->dir_merge_level,
-	                          mes_arg->n_qry_lr_paths);
+	res = math_expr_score_on_merge(pm, mes_arg->dir_merge_level,
+	                               mes_arg->n_qry_lr_paths);
 
 	if (res.score > 0.f) {
 		printf("docID#%u expID#%u score: %u\n",
