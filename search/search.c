@@ -228,7 +228,7 @@ static void free_math_postinglists(struct postmerge *pm)
 		mem_po = (struct mem_posting*)pm->postings[i];
 		type = (enum query_kw_type *)pm->posting_args[i];
 
-		if (*type == QUERY_KEYWORD_TEX) {
+		if (*type == QUERY_KEYWORD_TEX && mem_po != NULL) {
 			//printf("releasing math in-memory posting[%u]...\n", i);
 
 			mem_posting_free(mem_po);
