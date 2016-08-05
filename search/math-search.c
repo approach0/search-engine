@@ -82,9 +82,10 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 static void print_math_score_posting(struct mem_posting*);
 
 void
-*math_postinglist(struct indices *indices, char *kw_utf8,
-                  struct postmerge_callbks **pm_calls)
+add_math_postinglist(struct postmerge *pm, struct indices *indices,
+                     char *kw_utf8, enum query_kw_type *kw_type)
 {
+	struct postmerge_callbks *pm_calls;
 	math_score_combine_args_t msca;
 	struct mem_posting       *mempost;
 
@@ -113,9 +114,9 @@ void
 	print_math_score_posting(mempost);
 #endif
 
-	/* return math score (in-memory) posting list */
-	*pm_calls = get_memory_postmerge_callbks();
-	return mempost;
+	/* add math score (in-memory) posting list for merge */
+	pm_calls = get_memory_postmerge_callbks();
+	postmerge_posts_add(pm, mempost, pm_calls, kw_type);
 }
 
 static void print_math_score_posting(struct mem_posting *po)
