@@ -13,7 +13,7 @@
 #pragma pack(push, 1)
 typedef struct {
 	/* output memory posting list */
-	struct mem_posting       *mem_po;
+	struct mem_posting *mem_po;
 
 	/* document math score item buffer */
 	math_score_posting_item_t last;
@@ -58,11 +58,16 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 {
 	struct math_expr_score_res res;
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
-	P_CAST(msca, math_score_combine_args_t, mesa->extra_search_args);
+	P_CAST(msca, math_score_combine_args_t, mesa->expr_srch_arg);
 
 	/* calculate expression similarity on merge */
 	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
 	                               mesa->n_qry_lr_paths);
+
+#ifdef DEBUG_MATH_SEARCH
+	printf("directory visited: %u\n", mesa->n_dir_visits);
+	printf("visting depth: %u\n", mesa->dir_merge_level);
+#endif
 
 	if (res.doc_id != msca->last.docID) {
 		/* this expression is in a new document */

@@ -139,11 +139,12 @@ static uint64_t math_posting_current_id_wrap(void *po_item_)
 };
 
 struct on_dir_merge_args {
-	uint32_t                  n_qry_lr_paths;
-	struct postmerge         *pm;
-	void                     *extra_search_args;
-	post_merge_callbk         post_on_merge;
-	struct postmerge_callbks *calls;
+	uint32_t                    n_qry_lr_paths;
+	struct postmerge           *pm;
+	post_merge_callbk           post_on_merge;
+	struct postmerge_callbks   *calls;
+	uint32_t                    n_dir_visits;
+	void                       *expr_srch_arg;
 };
 
 static enum dir_merge_ret
@@ -153,7 +154,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	P_CAST(on_dm_args, struct on_dir_merge_args, args);
 	struct postmerge *pm = on_dm_args->pm;
 	struct math_extra_score_arg mes_arg;
-
+	bool res;
 	uint32_t i;
 	math_posting_t po;
 	struct subpath_ele *ele;
@@ -164,7 +165,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 		po = postings[i];
 		ele = math_posting_get_ele(po);
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("adding posting[%d]", i);
 		math_posting_print_info(po);
 		printf("\n");
@@ -172,17 +173,23 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 		postmerge_posts_add(pm, po, on_dm_args->calls, ele);
 	}
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("start merging math posting lists...\n");
 #endif
 
-	mes_arg.n_qry_lr_paths = on_dm_args->n_qry_lr_paths;
+	mes_arg.n_qry_lr_paths  = on_dm_args->n_qry_lr_paths;
 	mes_arg.dir_merge_level = level;
-	mes_arg.extra_search_args = on_dm_args->extra_search_args;
+	mes_arg.n_dir_visits    = on_dm_args->n_dir_visits;
+	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
 
-	if (!posting_merge(pm, POSTMERGE_OP_AND,
-	                   on_dm_args->post_on_merge, &mes_arg)) {
-#ifdef DEBUG_MATH_SEARCH
+	res = posting_merge(pm, POSTMERGE_OP_AND,
+	                    on_dm_args->post_on_merge, &mes_arg);
+
+	/* increment directory visit counter */
+	on_dm_args->n_dir_visits ++;
+
+	if (!res) {
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		fprintf(stderr, "math posting merge failed.");
 #endif
 		return DIR_MERGE_RET_STOP;
@@ -211,19 +218,19 @@ int math_expr_search(math_index_t mi, char *tex,
 	parse_ret = tex_parse(tex, 0, false);
 
 	if (parse_ret.code == PARSER_RETCODE_SUCC) {
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("before prepare_math_qry():\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
 #endif
 		/* prepare math query */
 		prepare_math_qry(&parse_ret.subpaths);
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("after prepare_math_qry():\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
 #endif
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("math query in order:\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
 		printf("calling math_index_dir_merge()...\n");
@@ -232,16 +239,17 @@ int math_expr_search(math_index_t mi, char *tex,
 		/* prepare directory merge extra arguments */
 		on_dm_args.pm = &pm;
 		on_dm_args.n_qry_lr_paths = parse_ret.subpaths.n_lr_paths;
-		on_dm_args.extra_search_args = args;
 		on_dm_args.post_on_merge = fun;
 		on_dm_args.calls = &calls;
+		on_dm_args.n_dir_visits = 0;
+		on_dm_args.expr_srch_arg = args;
 
 		math_index_dir_merge(mi, dir_merge_type, &parse_ret.subpaths,
 		                     &on_dir_merge, &on_dm_args);
 
 		subpaths_release(&parse_ret.subpaths);
 	} else {
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("parser error: %s\n", parse_ret.msg);
 #endif
 		return 1;
@@ -257,7 +265,7 @@ math_expr_sim(mnc_score_t mnc_score,
 	uint32_t mult = (depth_delta + 1) * (breath_delta + 1);
 	uint32_t score = (mult * mnc_score + 1) / mult;
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("mnc score = %u, depth delta = %u, breath delta = %u\n",
 	       mnc_score, depth_delta, breath_delta);
 #endif
@@ -299,7 +307,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 
 		if (n_qry_lr_paths > pathinfo_pack->n_lr_paths) {
 			/* impossible to match, skip this math expression */
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 			printf("query leaf-root paths (%u) is greater than "
 			       "document leaf-root paths (%u), skip this expression."
 			       "\n", n_qry_lr_paths, pathinfo_pack->n_lr_paths);
@@ -324,7 +332,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 		}
 	}
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("query leaf-root paths: %u\n", n_qry_lr_paths);
 	printf("document leaf-root paths: %u\n", pathinfo_pack->n_lr_paths);
 	printf("posting merge level: %u\n", level);

@@ -145,6 +145,13 @@ int main(int argc, char *argv[])
 	/* setup cache */
 	indices_cache(&indices, 32 MB);
 
+	/*
+	 * pause and continue on key press to have an idea
+	 * of how long the actual search process takes.
+	 */
+	printf("Press Enter to Continue");
+	while(getchar() != '\n');
+
 	/* search query */
 	results = indices_run_query(&indices, qry);
 
