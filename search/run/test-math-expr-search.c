@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* for now only single (query[0]) is searched */
-	math_search_posting_merge(mi, query[0], DIR_MERGE_DEPTH_FIRST,
-	                          &math_posting_on_merge, NULL);
+	math_expr_search(mi, query[0], DIR_MERGE_DEPTH_FIRST,
+	                 &math_posting_on_merge, NULL);
 
 exit:
 	if (index_path)

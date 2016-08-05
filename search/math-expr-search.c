@@ -191,9 +191,9 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	return DIR_MERGE_RET_CONTINUE;
 }
 
-int math_search_posting_merge(math_index_t mi, char *tex,
-                              enum dir_merge_type dir_merge_type,
-                              post_merge_callbk fun, void *args)
+int math_expr_search(math_index_t mi, char *tex,
+                     enum dir_merge_type dir_merge_type,
+                     post_merge_callbk fun, void *args)
 {
 	struct tex_parse_ret     parse_ret;
 	struct postmerge         pm;
@@ -251,7 +251,8 @@ int math_search_posting_merge(math_index_t mi, char *tex,
 }
 
 static __inline uint32_t
-math_sim(mnc_score_t mnc_score, uint32_t depth_delta, uint32_t breath_delta)
+math_expr_sim(mnc_score_t mnc_score,
+              uint32_t depth_delta, uint32_t breath_delta)
 {
 	uint32_t mult = (depth_delta + 1) * (breath_delta + 1);
 	uint32_t score = (mult * mnc_score + 1) / mult;
@@ -331,8 +332,8 @@ math_expr_score_on_merge(struct postmerge* pm,
 
 	/* finally calculate expression similarity score */
 	if (!skipped && pm->n_postings != 0) {
-		ret.score = math_sim(mnc_score(), level,
-		                     pathinfo_pack->n_lr_paths - n_qry_lr_paths);
+		ret.score = math_expr_sim(mnc_score(), level,
+		                          pathinfo_pack->n_lr_paths - n_qry_lr_paths);
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
 	} else {
