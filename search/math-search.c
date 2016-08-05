@@ -12,8 +12,17 @@
 
 #pragma pack(push, 1)
 typedef struct {
-	/* output memory posting list */
-	struct mem_posting *mem_po;
+	/* consistent variables */
+	struct postmerge   *top_pm;
+	enum query_kw_type *kw_type;
+
+	/* writing posting list */
+	struct mem_posting *wr_mem_po;
+	uint32_t            last_visits;
+
+	/* statical variables */
+	uint32_t            n_mem_po;
+	float               mem_cost;
 
 	/* document math score item buffer */
 	math_score_posting_item_t last;
@@ -40,6 +49,9 @@ msca_rst(math_score_combine_args_t *msca, doc_id_t docID)
 	msca->last.n_match = 0;
 }
 
+/* debug print function */
+static void print_math_score_posting(struct mem_posting*);
+
 static void
 write_math_score_posting(math_score_combine_args_t *msca)
 {
@@ -48,8 +60,32 @@ write_math_score_posting(math_score_combine_args_t *msca)
 
 	if (mip->score > 0) {
 		wr_sz += mip->n_match * sizeof(position_t);
-		mem_posting_write(msca->mem_po, mip, wr_sz);
+		mem_posting_write(msca->wr_mem_po, mip, wr_sz);
 	}
+}
+
+static void
+add_math_score_posting(math_score_combine_args_t *msca)
+{
+	struct postmerge_callbks *pm_calls;
+
+	/* flush write */
+	write_math_score_posting(msca);
+	mem_posting_write_complete(msca->wr_mem_po);
+
+#ifdef DEBUG_MATH_SCORE_POSTING
+	printf("\n");
+	printf("adding math-score posting list:\n");
+	print_math_score_posting(msca->wr_mem_po);
+#endif
+
+	/* record memory cost increase */
+	msca->mem_cost += (float)msca->wr_mem_po->tot_sz;
+
+	/* add this posting list to top level postmerge */
+	pm_calls = get_memory_postmerge_callbks();
+	postmerge_posts_add(msca->top_pm, msca->wr_mem_po,
+	                    pm_calls, msca->kw_type);
 }
 
 static void
@@ -65,63 +101,80 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	                               mesa->n_qry_lr_paths);
 
 #ifdef DEBUG_MATH_SEARCH
+	printf("\n");
 	printf("directory visited: %u\n", mesa->n_dir_visits);
 	printf("visting depth: %u\n", mesa->dir_merge_level);
 #endif
 
+	/*
+	 * first, checkout to a new posting list when a new
+	 * directory is visited.
+	 */
+	if (msca->wr_mem_po == NULL ||
+	    mesa->n_dir_visits != msca->last_visits) {
+
+		/* if posting list is not NULL, add it */
+		if (msca->wr_mem_po)
+			add_math_score_posting(msca);
+
+		/* reset and create new posting list */
+		msca_rst(msca, 0);
+		msca->wr_mem_po = mem_posting_create(
+			DEFAULT_SKIPPY_SPANS,
+			math_score_posting_plain_calls()
+		);
+		msca->n_mem_po ++;
+
+		/* update last_visits */
+		msca->last_visits = mesa->n_dir_visits;
+	}
+
+	/*
+	 * second, write last posting list item when this
+	 * expression is a new document ID.
+	 */
 	if (res.doc_id != msca->last.docID) {
-		/* this expression is in a new document */
 
 		write_math_score_posting(msca);
-
-		/* clear msca */
 		msca_rst(msca, res.doc_id);
 	}
 
-	/* accumulate score and positions of current document */
+	/* finally, accumulate score and positions of current
+	 * document */
 	msca->last.score += res.score;
 	msca_push_pos(msca, res.exp_id);
 }
-
-/* debug print function */
-static void print_math_score_posting(struct mem_posting*);
 
 void
 add_math_postinglist(struct postmerge *pm, struct indices *indices,
                      char *kw_utf8, enum query_kw_type *kw_type)
 {
-	struct postmerge_callbks *pm_calls;
 	math_score_combine_args_t msca;
-	struct mem_posting       *mempost;
-
-	/* create memory posting list for math intermediate results */
-	mempost = mem_posting_create(DEFAULT_SKIPPY_SPANS,
-	                             math_score_posting_plain_calls());
 
 	/* initialize score combine arguments */
-	msca.mem_po = mempost;
+	msca.top_pm      = pm;
+	msca.kw_type     = kw_type;
+	msca.wr_mem_po   = NULL;
+	msca.last_visits = 0;
+	msca.n_mem_po    = 0;
+	msca.mem_cost    = 0.f;
 	msca_rst(&msca, 0);
 
 	/* merge and combine math scores */
 	math_expr_search(indices->mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,
 	                 &math_posting_on_merge, &msca);
 
-	/* flush write */
-	write_math_score_posting(&msca);
-	mem_posting_write_complete(mempost);
+	if (msca.wr_mem_po)
+		/* flush and final adding */
+		add_math_score_posting(&msca);
+	else
+		/* add a NULL posting to indicate empty result */
+		postmerge_posts_add(msca.top_pm, NULL, NULL, kw_type);
 
 #ifdef VERBOSE_SEARCH
-	printf("(math score posting, %f KB)",
-	       (float)mempost->tot_sz / 1024.f);
+	printf("(%u math score posting(s), %f KB)", msca.n_mem_po,
+	       msca.mem_cost / 1024.f);
 #endif
-
-#ifdef DEBUG_MATH_SCORE_POSTING
-	print_math_score_posting(mempost);
-#endif
-
-	/* add math score (in-memory) posting list for merge */
-	pm_calls = get_memory_postmerge_callbks();
-	postmerge_posts_add(pm, mempost, pm_calls, kw_type);
 }
 
 static void print_math_score_posting(struct mem_posting *po)

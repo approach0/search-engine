@@ -4,6 +4,7 @@ Top priority:
 * math posting file compression
 * breadth-first dir-merge
 * searchd
+* duplicate occurs highlight miss
 
 Want to implement:
 * search: concept search (horse == Pony)
@@ -16,3 +17,4 @@ Do it when time is allowed:
 * oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
 * in mnc_score, compare father-to-root hash
+* efficient postmerge

@@ -19,6 +19,17 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
 
+	/* get URL */
+	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
+	printf("URL: %s" "\n", str);
+
+	/* get document text */
+	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
+
+	/* prepare highlighter arguments */
+	highlight_list = prepare_snippet(hit, str, str_sz,
+	                                 lex_mix_file);//lex_eng_file);
+
 	{
 		int i;
 		printf("occurs: ");
@@ -27,16 +38,7 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 		printf("\n");
 	}
 
-	/* get URL */
-	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
-	printf("URL: %s" "\n\n", str);
-
-	/* get document text */
-	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
-
-	/* prepare highlighter arguments */
-	highlight_list = prepare_snippet(hit, str, str_sz,
-	                                 lex_mix_file);//lex_eng_file);
+	printf("\n");
 
 	/* print snippet */
 	snippet_hi_print(&highlight_list);
