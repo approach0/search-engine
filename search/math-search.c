@@ -1,23 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <stdbool.h>
 
-#undef NDEBUG
-#include <assert.h>
-
-#include "wstring/wstring.h"
 #include "mem-index/mem-posting.h"
-#include "indexer/index.h" /* for eng_to_lower_case() */
 
 #include "config.h"
 #include "postmerge.h"
-#include "bm25-score.h"
-#include "proximity.h"
 #include "search.h"
 #include "search-utils.h"
-
 #include "math-expr-search.h"
 #include "math-search.h"
 
