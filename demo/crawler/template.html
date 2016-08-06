@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="{URL}">{URL}</a></h2>
+{PREVIEW}
+</body>
+</html>
