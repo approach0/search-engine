@@ -23,38 +23,34 @@ struct adding_post_arg {
 	struct indices          *indices;
 	struct postmerge        *pm;
 	uint32_t                 docN;
-	uint32_t                 posting_idx;
+	uint32_t                 idx;
 	float                   *idf;
 };
 
-static void
+static bool
 add_term_postinglist(struct postmerge *pm, struct indices *indices,
-                     char *kw_utf8, enum query_kw_type *kw_type,
-                     uint32_t docN_, float df, float *idf, uint32_t i)
+                     char *kw_utf8, enum query_kw_type *kw_type)
 {
-	void                     *post;
+	void *post;
 	struct postmerge_callbks *pm_calls;
 
-	void      *ti;
-	term_id_t  term_id;
-	float      docN;
+	bool ret;
+	void *ti;
+	term_id_t term_id;
 
 	/* some short-hand variables */
 	ti = indices->ti;
 	term_id = term_lookup(ti, kw_utf8);
-	docN = (float)docN_;
 
 	if (term_id == 0) {
 		/* if term is not found in our dictionary */
 		post = NULL;
 		pm_calls = NULL;
 
-		/* set BM25 idf argument */
-		idf[i] = BM25_idf(0.f, docN);
-
 #ifdef VERBOSE_SEARCH
-		printf("(empty posting)");
+		printf("`%s' has empty posting list.\n", kw_utf8);
 #endif
+		ret = 0;
 	} else {
 		/* otherwise, get on-disk or cached posting list */
 		struct postcache_item *cache_item =
@@ -66,65 +62,65 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
 			pm_calls = get_memory_postmerge_callbks();
 
 #ifdef VERBOSE_SEARCH
-			printf("(cached in memory)");
+		printf("`%s' uses cached posting list.\n", kw_utf8);
 #endif
 		} else {
 			/* otherwise read posting from disk */
 			post = term_index_get_posting(ti, term_id);
 			pm_calls = get_disk_postmerge_callbks();
 #ifdef VERBOSE_SEARCH
-			printf("(on disk)");
+		printf("`%s' uses on-disk posting list.\n", kw_utf8);
 #endif
 		}
 
-		/* set BM25 idf argument */
-		idf[i] = BM25_idf(df, docN);
+		ret = 1;
 	}
 
 	/* add posting list for merge */
 	postmerge_posts_add(pm, post, pm_calls, kw_type);
+
+	return ret;
 }
 
 static LIST_IT_CALLBK(add_postinglist)
 {
-	/* posting list and merge callbacks to be added */
-
 	/* castings */
 	LIST_OBJ(struct query_keyword, kw, ln);
 	P_CAST(aa, struct adding_post_arg, pa_extra);
 	char *kw_utf8 = wstr2mbstr(kw->wstr);
 	enum query_kw_type *kw_type = &kw->type;
-
-#ifdef VERBOSE_SEARCH
-	printf("posting list[%u]: `%s' ", aa->posting_idx, kw_utf8);
-#endif
+	float docN;
 
 	switch (kw->type) {
 	case QUERY_KEYWORD_TERM:
+		docN = (float)aa->docN;
 		eng_to_lower_case(kw_utf8, strlen(kw_utf8));
-		add_term_postinglist(aa->pm, aa->indices, kw_utf8, kw_type,
-		                     aa->docN, kw->df, aa->idf, aa->posting_idx);
+
+		if (add_term_postinglist(aa->pm, aa->indices, kw_utf8, kw_type))
+			aa->idf[aa->idx] = BM25_idf(kw->df, docN);
+		else
+			aa->idf[aa->idx] = BM25_idf(0, docN);
+
+		aa->idx ++;
 		break;
 
 	case QUERY_KEYWORD_TEX:
-		add_math_postinglist(aa->pm, aa->indices, kw_utf8, kw_type);
+		aa->idx += add_math_postinglist(aa->pm, aa->indices,
+		                                kw_utf8, kw_type);
 		break;
 
 	default:
 		assert(0);
 	}
 
-#ifdef VERBOSE_SEARCH
-	printf("\n");
-#endif
-
-	/* increment current adding posting list index */
-	aa->posting_idx ++;
-
-	LIST_GO_OVER;
+	if (aa->idx < MAX_MERGE_POSTINGS) {
+		LIST_GO_OVER;
+	} else {
+		return LIST_RET_BREAK;
+	}
 }
 
-static uint32_t
+static void
 add_postinglists(struct indices *indices, const struct query *qry,
                  struct postmerge *pm, float *idf_arr)
 {
@@ -133,13 +129,11 @@ add_postinglists(struct indices *indices, const struct query *qry,
 	ap_args.indices = indices;
 	ap_args.pm = pm;
 	ap_args.docN = term_index_get_docN(indices->ti);
-	ap_args.posting_idx = 0;
+	ap_args.idx = 0;
 	ap_args.idf = idf_arr;
 
 	/* add posting list of every keyword for merge */
 	list_foreach((list*)&qry->keywords, &add_postinglist, &ap_args);
-
-	return ap_args.posting_idx;
 }
 
 static void
@@ -259,7 +253,6 @@ indices_run_query(struct indices *indices, const struct query qry)
 	struct BM25_term_i_args         bm25args;
 	ranked_results_t                rk_res;
 	struct posting_merge_extra_args pm_args;
-	uint32_t                        n_postings;
 
 	/* sort query, to prioritize keywords in highlight stage */
 	list_foreach((list*)&qry.keywords, &set_df_value, indices);
@@ -273,13 +266,13 @@ indices_run_query(struct indices *indices, const struct query qry)
 
 	/* initialize postmerge */
 	postmerge_posts_clear(&pm);
-	n_postings = add_postinglists(indices, &qry, &pm, (float*)&bm25args.idf);
+	add_postinglists(indices, &qry, &pm, (float*)&bm25args.idf);
 #ifdef VERBOSE_SEARCH
 	printf("\n");
 #endif
 
 	/* prepare BM25 parameters */
-	bm25args.n_postings = n_postings;
+	bm25args.n_postings = pm.n_postings;
 	bm25args.avgDocLen = (float)term_index_get_avgDocLen(indices->ti);
 	bm25args.b  = BM25_DEFAULT_B;
 	bm25args.k1 = BM25_DEFAULT_K1;

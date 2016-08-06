@@ -5,7 +5,7 @@
 #define BM25_DEFAULT_K1 1.5
 
 struct BM25_term_i_args {
-	uint32_t n_postings;
+	uint32_t n_postings; /* only for printing */
 	float idf[MAX_MERGE_POSTINGS];
 
 	/* frac_b_avgDocLen is used for actual scoring for efficiency reason,

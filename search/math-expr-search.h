@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "math-index/math-index.h"
 #include "math-index/subpath-set.h"
 
@@ -8,6 +9,7 @@ struct math_extra_score_arg {
 	uint32_t n_qry_lr_paths;
 	uint32_t dir_merge_level;
 	uint32_t n_dir_visits;
+	bool     stop_dir_search;
 	void    *expr_srch_arg;
 };
 

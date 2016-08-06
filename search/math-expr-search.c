@@ -180,6 +180,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	mes_arg.n_qry_lr_paths  = on_dm_args->n_qry_lr_paths;
 	mes_arg.dir_merge_level = level;
 	mes_arg.n_dir_visits    = on_dm_args->n_dir_visits;
+	mes_arg.stop_dir_search = 0;
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
 
 	res = posting_merge(pm, POSTMERGE_OP_AND,
@@ -188,9 +189,9 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	/* increment directory visit counter */
 	on_dm_args->n_dir_visits ++;
 
-	if (!res) {
+	if (!res || mes_arg.stop_dir_search) {
 #ifdef DEBUG_MATH_EXPR_SEARCH
-		fprintf(stderr, "math posting merge failed.");
+		printf("math posting merge force-stopped.");
 #endif
 		return DIR_MERGE_RET_STOP;
 	}

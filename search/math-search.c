@@ -108,6 +108,23 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 #endif
 
 	/*
+	 * check whether we are reaching the limit of total number
+	 * of merging posting lists. If yes, force stop traverse
+	 * the next directory after this posting merge is done.
+	 */
+	if (msca->top_pm->n_postings + 1 >= MAX_MERGE_POSTINGS) {
+		/* remember to stop traversing the next directory */
+		mesa->stop_dir_search = 1;
+
+		/*
+		 * prevent creating a new posting list during this
+		 * posting merge.
+		 */
+		if (msca->wr_mem_po == NULL)
+			return;
+	}
+
+	/*
 	 * first, checkout to a new posting list when a new
 	 * directory is visited.
 	 */
@@ -146,7 +163,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	msca_push_pos(msca, res.exp_id);
 }
 
-void
+uint32_t
 add_math_postinglist(struct postmerge *pm, struct indices *indices,
                      char *kw_utf8, enum query_kw_type *kw_type)
 {
@@ -173,9 +190,11 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 		postmerge_posts_add(msca.top_pm, NULL, NULL, kw_type);
 
 #ifdef VERBOSE_SEARCH
-	printf("(%u math score posting(s), %f KB)", msca.n_mem_po,
-	       msca.mem_cost / 1024.f);
+	printf("`%s' has %u math score posting(s) (%f KB).\n",
+	       kw_utf8, msca.n_mem_po, msca.mem_cost / 1024.f);
 #endif
+
+	return msca.n_mem_po;
 }
 
 static void print_math_score_posting(struct mem_posting *po)
