@@ -9,6 +9,8 @@
 #define MAX_MERGE_POSTINGS 4096
 #define SNIPPET_PADDING 40
 
+//#define DEBUG_SNIPPET
+
 //#define DEBUG_POST_MERGE
 
 /* max mark score, type of mnc_score_t */
@@ -28,8 +30,10 @@
 #define ENABLE_PROXIMITY_SCORE
 
 #define MAX_HIGHLIGHT_OCCURS 8
+//#define DEBUG_HILIGHT_SEG_OFFSET
+//#define DEBUG_HILIGHT_SEG
 
-#define DEBUG_MATH_SCORE_POSTING
+//#define DEBUG_MATH_SCORE_POSTING
 #define VERBOSE_SEARCH
 
 //#define DEBUG_MATH_SEARCH

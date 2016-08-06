@@ -1,10 +1,8 @@
 Top priority:
-* math score anchor posting
 * crawler
 * math posting file compression
 * breadth-first dir-merge
 * searchd
-* duplicate occurs highlight miss
 
 Want to implement:
 * search: concept search (horse == Pony)

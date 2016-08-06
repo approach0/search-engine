@@ -157,7 +157,6 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 #endif
 
 	doc_id_t    docID = cur_min;
-	uint32_t    n_tot_occurs = 0;
 	float       doclen;
 
 	doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
@@ -173,7 +172,6 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 			switch (*type) {
 			case QUERY_KEYWORD_TERM:
 				pip = pm->cur_pos_item[i];
-				n_tot_occurs += pip->tf;
 				bm25_score = BM25_term_i_score(
 					pm_args->bm25args,
 					i, pip->tf, doclen
@@ -190,7 +188,6 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 
 			case QUERY_KEYWORD_TEX:
 				mip = pm->cur_pos_item[i];
-				n_tot_occurs += mip->n_match;
 				math_score = (float)mip->score;
 				tot_score += math_score;
 
@@ -211,10 +208,13 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	minDist = prox_min_dist(pm_args->prox_in, j);
 	prox_score = prox_calc_score(minDist);
 	tot_score += prox_score;
+
+	/* reset prox_in for consider_top_K() function */
+	prox_reset_inputs(pm_args->prox_in, j);
 #endif
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
-	               pm_args->prox_in, j, n_tot_occurs);
+	               pm_args->prox_in, j);
 	return;
 }
 

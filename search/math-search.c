@@ -77,6 +77,7 @@ add_math_score_posting(math_score_combine_args_t *msca)
 	printf("\n");
 	printf("adding math-score posting list:\n");
 	print_math_score_posting(msca->wr_mem_po);
+	printf("\n");
 #endif
 
 	/* record memory cost increase */

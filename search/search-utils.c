@@ -72,34 +72,47 @@ struct postmerge_callbks *get_disk_postmerge_callbks(void)
 /*
  * new rank hit
  */
-struct rank_hit *new_hit(doc_id_t hitID, float score,
-                         prox_input_t *prox_in, uint32_t n,
-                         uint32_t n_save_occurs)
+#define CUR_POS(_in, _i) \
+	_in[_i].pos_arr[_in[_i].cur]
+
+static uint32_t
+mergesort(position_t *dest, prox_input_t* in, uint32_t n)
 {
-	uint32_t i, n_pos;
+	uint32_t dest_end = 0;
+
+	while (1) {
+		uint32_t i, min_idx, min = MAX_N_POSITIONS;
+
+		for (i = 0; i < n; i++)
+			if (in[i].cur < in[i].n_pos)
+				if (CUR_POS(in, i) < min) {
+					min = CUR_POS(in, i);
+					min_idx = i;
+				}
+
+		if (min == MAX_N_POSITIONS)
+			/* exhausted */
+			break;
+		else if (dest_end == 0 || /* first put */
+		         dest[dest_end - 1] != min /* unique */)
+			dest[dest_end++] = min;
+
+		in[min_idx].cur ++;
+	}
+
+	return dest_end;
+}
+struct rank_hit *new_hit(doc_id_t hitID, float score,
+                         prox_input_t *prox_in, uint32_t n)
+{
 	struct rank_hit *hit;
-	position_t *pos_arr;
-	position_t *occurs;
 
 	hit = malloc(sizeof(struct rank_hit));
 	hit->docID = hitID;
 	hit->score = score;
-	hit->n_occurs = n_save_occurs;
-	hit->occurs = occurs = malloc(sizeof(position_t) * n_save_occurs);
 
-	for (i = 0; i < n; i++) {
-		pos_arr = prox_in[i].pos_arr;
-		n_pos = prox_in[i].n_pos;
-
-		if (n_save_occurs >= n_pos) {
-			memcpy(occurs, pos_arr, n_pos * sizeof(position_t));
-			occurs += n_pos;
-			n_save_occurs -= n_pos;
-		} else {
-			memcpy(occurs, pos_arr, n_save_occurs * sizeof(position_t));
-			break;
-		}
-	}
+	hit->occurs = malloc(sizeof(position_t) * MAX_HIGHLIGHT_OCCURS);
+	hit->n_occurs = mergesort(hit->occurs, prox_in, n);
 
 	return hit;
 }
@@ -156,9 +169,25 @@ struct highlighter_arg {
 };
 
 static void
-debug_print_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
+debug_print_seg_offset(char *mb_str, uint32_t offset, size_t sz, void *arg)
 {
 	printf("`%s' [%u, %lu]\n", mb_str, offset, sz);
+}
+
+static void
+debug_print_highlight_seg(char *mb_str, uint32_t offset,
+                          size_t sz, void *arg)
+{
+	P_CAST(ha, struct highlighter_arg, arg);
+	uint32_t i, n = ha->pos_arr_sz;
+
+	printf("%u: `%s' ", ha->cur_lex_pos, mb_str);
+	for (i = 0; i < n; i++) {
+		printf("%u-", ha->pos_arr[i]);
+	}
+
+	printf("\n");
+	ha->cur_lex_pos ++;
 }
 
 static void
@@ -239,22 +268,15 @@ static struct highlighter_arg hi_arg;
 
 static void highlighter_arg_lex_setter(struct lex_slice *slice)
 {
-	//foreach_seg(slice, &debug_print_seg, NULL);
+#ifdef DEBUG_HILIGHT_SEG_OFFSET
+	foreach_seg(slice, &debug_print_seg_offset, NULL);
+#endif
+
+#ifdef DEBUG_HILIGHT_SEG
+	foreach_seg(slice, &debug_print_highlight_seg, &hi_arg);
+#else
 	foreach_seg(slice, &add_highlight_seg, &hi_arg);
-}
-
-static void bubble_sort(position_t *arr, uint32_t n)
-{
-	uint32_t i, j;
-	position_t tmp;
-
-	for (i = 0; i < n; i++)
-		for (j = i; j < n; j++)
-			if (arr[i] > arr[j]) {
-				tmp = arr[i];
-				arr[i] = arr[j];
-				arr[j] = tmp;
-			}
+#endif
 }
 
 list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexer lex)
@@ -267,9 +289,6 @@ list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexe
 	hi_arg.pos_arr_sz = hit->n_occurs;
 	hi_arg.cur_lex_pos = 0;
 	LIST_CONS(hi_arg.hi_list);
-
-	/* sort highlighting positions */
-	bubble_sort(hit->occurs, hit->n_occurs);
 
 	/* register lex handler  */
 	g_lex_handler = highlighter_arg_lex_setter;
@@ -293,16 +312,16 @@ list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexe
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 void
-consider_top_K(ranked_results_t *rk_res, doc_id_t docID, float score,
-               prox_input_t *prox_in, uint32_t n, uint32_t n_tot_occurs)
+consider_top_K(ranked_results_t *rk_res,
+               doc_id_t docID, float score,
+               prox_input_t *prox_in, uint32_t n)
 {
 	struct rank_hit *hit;
-	uint32_t n_save_occurs = MIN(MAX_HIGHLIGHT_OCCURS, n_tot_occurs);
 
 	if (!priority_Q_full(rk_res) ||
 	    score > priority_Q_min_score(rk_res)) {
 
-		hit = new_hit(docID, score, prox_in, n, n_save_occurs);
+		hit = new_hit(docID, score, prox_in, n);
 		priority_Q_add_or_replace(rk_res, hit);
 	}
 }

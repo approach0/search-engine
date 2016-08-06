@@ -91,15 +91,15 @@ static LIST_IT_CALLBK(print)
 
 void snippet_pos_print(list* hi_li)
 {
-	bool pos = 1;
-	list_foreach(hi_li, &print, &pos);
+	bool if_print_pos = 1;
+	list_foreach(hi_li, &print, &if_print_pos);
 	printf("\n");
 }
 
 void snippet_hi_print(list* hi_li)
 {
-	bool pos = 0;
-	list_foreach(hi_li, &print, &pos);
+	bool if_print_pos = 0;
+	list_foreach(hi_li, &print, &if_print_pos);
 	printf("\n");
 }
 
@@ -247,14 +247,14 @@ static LIST_IT_CALLBK(rm_linefeed)
 
 void snippet_read_file(FILE* fh, list* hi_li)
 {
+#ifdef DEBUG_SNIPPET
+	printf("snippet right before reading file:\n");
+	snippet_pos_print(hi_li);
+#endif
+
 	list_foreach(hi_li, &align, NULL);
 	list_foreach(hi_li, &read_file, fh);
 	list_foreach(hi_li, &rm_linefeed, NULL);
-}
-
-void snippet_read_blob(void* blob, size_t blob_sz, list* hi_li)
-{
-	/* still nothing */
 }
 
 char *snippet_highlight(list* hi_li, char *open, char *close)

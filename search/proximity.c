@@ -45,7 +45,10 @@ position_t prox_min_dist(prox_input_t* in, uint32_t n)
 			break;
 		else if (last != MAX_N_POSITIONS)
 			/* after the first position is iterated */
-			if (min_idx != last_idx && min - last < min_dist) {
+			if (min != last && /* min_dist != 0 */
+			    min_idx != last_idx &&
+			    min - last < min_dist) {
+
 				min_dist = min - last;
 #ifdef DEBUG_PROXIMITY
 				printf("minDist updated: %u.\n", min_dist);
@@ -61,6 +64,9 @@ position_t prox_min_dist(prox_input_t* in, uint32_t n)
 #endif
 	}
 
+#ifdef DEBUG_PROXIMITY
+	printf("final min_dist = %u\n", min_dist);
+#endif
 	return min_dist;
 }
 

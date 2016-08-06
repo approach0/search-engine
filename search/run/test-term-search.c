@@ -23,7 +23,6 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 #endif
 
 	doc_id_t docID = cur_min;
-	uint32_t n_tot_occurs = 0;
 
 	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
 	float doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
@@ -33,7 +32,6 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 		if (pm->curIDs[i] == cur_min) {
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			pip = pm->cur_pos_item[i];
-			n_tot_occurs += pip->tf;
 
 //			{ /* print position array */
 //				int j;
@@ -68,7 +66,7 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 //	printf("(total score: %f)\n", tot_score);
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
-	               pm_args->prox_in, j, n_tot_occurs);
+	               pm_args->prox_in, j);
 	return;
 }
 
