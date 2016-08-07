@@ -80,7 +80,7 @@ mergesort(position_t *dest, prox_input_t* in, uint32_t n)
 {
 	uint32_t dest_end = 0;
 
-	while (1) {
+	while (dest_end < MAX_HIGHLIGHT_OCCURS) {
 		uint32_t i, min_idx, min = MAX_N_POSITIONS;
 
 		for (i = 0; i < n; i++)
@@ -91,13 +91,15 @@ mergesort(position_t *dest, prox_input_t* in, uint32_t n)
 				}
 
 		if (min == MAX_N_POSITIONS)
-			/* exhausted */
+			/* input exhausted */
 			break;
-		else if (dest_end == 0 || /* first put */
-		         dest[dest_end - 1] != min /* unique */)
-			dest[dest_end++] = min;
+		else
+			/* consume input */
+			in[min_idx].cur ++;
 
-		in[min_idx].cur ++;
+		if (dest_end == 0 || /* first put */
+		    dest[dest_end - 1] != min /* unique */)
+			dest[dest_end++] = min;
 	}
 
 	return dest_end;
