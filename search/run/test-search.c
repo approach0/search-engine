@@ -17,7 +17,7 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	list   highlight_list;
 	P_CAST(indices, struct indices, arg);
 
-	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
+	printf("page result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
 
 	/* get URL */
 	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
@@ -48,7 +48,7 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	snippet_free_highlight_list(&highlight_list);
 }
 
-uint32_t
+void
 print_all_rank_res(ranked_results_t *rk_res, struct indices *indices)
 {
 	struct rank_window win;
@@ -57,14 +57,12 @@ print_all_rank_res(ranked_results_t *rk_res, struct indices *indices)
 	do {
 		win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
 		if (win.to > 0) {
-			printf("page#%u (from %u to %u):\n",
-			       page + 1, win.from, win.to);
+			printf("page %u/%u, top result(s) from %u to %u:\n",
+			       page + 1, tot_pages, win.from + 1, win.to);
 			rank_window_foreach(&win, &print_res_item, indices);
 			page ++;
 		}
 	} while (page < tot_pages);
-
-	return tot_pages;
 }
 
 int main(int argc, char *argv[])
@@ -75,7 +73,6 @@ int main(int argc, char *argv[])
 	int                  opt;
 	char                *index_path = NULL;
 	ranked_results_t     results;
-	uint32_t             res_pages;
 
 	/* initialize text segmentation module */
 	printf("opening dictionary...\n");
@@ -158,8 +155,7 @@ int main(int argc, char *argv[])
 	results = indices_run_query(&indices, qry);
 
 	/* print ranked search results in pages */
-	res_pages = print_all_rank_res(&results, &indices);
-	printf("result(s): %u pages.\n", res_pages);
+	print_all_rank_res(&results, &indices);
 
 	/* free ranked results */
 	free_ranked_results(&results);

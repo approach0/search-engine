@@ -90,6 +90,7 @@ static LIST_IT_CALLBK(add_postinglist)
 	char *kw_utf8 = wstr2mbstr(kw->wstr);
 	enum query_kw_type *kw_type = &kw->type;
 	float docN;
+	uint32_t n;
 
 	switch (kw->type) {
 	case QUERY_KEYWORD_TERM:
@@ -101,12 +102,28 @@ static LIST_IT_CALLBK(add_postinglist)
 		else
 			aa->idf[aa->idx] = BM25_idf(0, docN);
 
+#ifdef VERBOSE_SEARCH
+		printf("posting[%u].\n", aa->idx);
+#endif
 		aa->idx ++;
 		break;
 
 	case QUERY_KEYWORD_TEX:
-		aa->idx += add_math_postinglist(aa->pm, aa->indices,
-		                                kw_utf8, kw_type);
+		n = add_math_postinglist(aa->pm, aa->indices, kw_utf8, kw_type);
+#ifdef VERBOSE_SEARCH
+		{
+			int i;
+			for (i = aa->idx; i < n; i++) {
+				printf("posting[%u]", i);
+				if (i + 1 == n)
+					printf(".");
+				else
+					printf(", ");
+			}
+			printf("\n");
+		}
+#endif
+		aa->idx += n;
 		break;
 
 	default:
@@ -259,7 +276,7 @@ indices_run_query(struct indices *indices, const struct query qry)
 	query_sort(&qry);
 
 #ifdef VERBOSE_SEARCH
-	printf("sorted query:\n");
+	printf("sorted query: ");
 	query_print_to(qry, stdout);
 	printf("\n");
 #endif

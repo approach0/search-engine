@@ -37,13 +37,15 @@ int main()
 
 	query_digest_utf8txt(&qry, "hello world");
 
-	printf("before sorting:\n");
+	printf("before sorting: ");
 	query_print_to(qry, stdout);
+	printf("\n");
 
 	query_sort(&qry);
 
-	printf("after sorting:\n");
+	printf("after sorting: ");
 	query_print_to(qry, stdout);
+	printf("\n");
 
 	query_delete(qry);
 	text_segment_free();
