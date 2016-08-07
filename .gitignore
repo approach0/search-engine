@@ -5,6 +5,7 @@
 *.a
 *.d
 *.out
+*.log
 gen-*
 y.output
 y.*.h
@@ -18,3 +19,4 @@ build/
 .build/
 proj-dep.mk
 targets.mk
+__pycache__
