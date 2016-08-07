@@ -6,6 +6,7 @@ import errno
 import code
 import re
 import json
+import sys
 from dollar import replace_dollar_tex
 from io import BytesIO
 from bs4 import BeautifulSoup
@@ -35,6 +36,9 @@ def curl(sub_url, c):
 	while True:
 		try:
 			c.perform()
+		except (KeyboardInterrupt,  SystemExit):
+			print('user aborting...')
+			sys.exit(0)
 		except:
 			errs = errs + 1
 			if errs > 3:
@@ -168,4 +172,4 @@ def crawl_pages(start, end):
 				continue
 			time.sleep(0.6)
 
-crawl_pages(1, 1000)
+crawl_pages(1, 500)
