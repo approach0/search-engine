@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	printf("search: `%s'\n", tex);
 	parse_ret = tex_parse(tex, 0, false);
 
-	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		subpaths_print(&parse_ret.subpaths, stdout);
 
 		printf("calling math_index_dir_merge()...\n");

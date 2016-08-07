@@ -7,7 +7,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-static void my_lex_handler(struct lex_slice *slice)
+static int my_lex_handler(struct lex_slice *slice)
 {
 	uint32_t n_bytes = strlen(slice->mb_str);
 
@@ -35,6 +35,7 @@ static void my_lex_handler(struct lex_slice *slice)
 	}
 
 	file_offset_check_add(slice->offset, n_bytes);
+	return 0;
 }
 
 int main(void)

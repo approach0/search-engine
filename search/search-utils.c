@@ -266,7 +266,7 @@ foreach_seg(struct lex_slice *slice, seg_it_callbk fun, void *arg)
 /* highlighter arguments */
 static struct highlighter_arg hi_arg;
 
-static void highlighter_arg_lex_setter(struct lex_slice *slice)
+static int highlighter_arg_lex_setter(struct lex_slice *slice)
 {
 #ifdef DEBUG_HILIGHT_SEG_OFFSET
 	foreach_seg(slice, &debug_print_seg_offset, NULL);
@@ -277,6 +277,8 @@ static void highlighter_arg_lex_setter(struct lex_slice *slice)
 #else
 	foreach_seg(slice, &add_highlight_seg, &hi_arg);
 #endif
+
+	return 0;
 }
 
 list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexer lex)

@@ -36,13 +36,13 @@ void lex_handle_mix_text(char*, size_t);
 void lex_handle_eng_text(char*, size_t);
 
 /* lexer general handler */
-typedef void (*lex_handle_callbk)(struct lex_slice *);
+typedef int (*lex_handle_callbk)(struct lex_slice *);
 
 extern lex_handle_callbk g_lex_handler;
 
 /* lexer invoke functions */
-void lex_eng_file(FILE*);
-void lex_mix_file(FILE*);
+int lex_eng_file(FILE*);
+int lex_mix_file(FILE*);
 
 #endif /* end LEX_DEF_HEAD */
 

@@ -19,6 +19,7 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
 extern unsigned int ign_stack;
 extern unsigned int mat_stack;
+extern int lexer_warning_flag;
 %}
  /* ==================
   *  start conditions
@@ -879,11 +880,12 @@ extern unsigned int mat_stack;
 "\\;"                                       { /* omit short space, before semicolon */ }
 "\\,"                                           { /* omit short space, before comma */ }
 [\t ]                                                               { /* omit space */ }
-.                                    { fprintf(stderr, "parser: `%s' esc.\n", yytext); }
+.            { lexer_warning_flag = 1; fprintf(stderr, "parser: `%s' esc.\n", yytext); }
 %%
 /* self-defined stack values */
 unsigned int ign_stack = 0;
 unsigned int mat_stack = 0;
+int lexer_warning_flag = 0;
 
 /* =======================================================
  * Symbol ID Space:

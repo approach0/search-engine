@@ -9,6 +9,10 @@
 /* for MAX_TXT_SEG_BYTES */
 #include "txt-seg/config.h"
 
+/* even a short query can get a long hilighted string, e.g.
+ * in the case of math search */
+#define MAX_HIGHLIGHTED_BYTES (MAX_TXT_SEG_BYTES * 1024)
+
 /* for terminal colors */
 #include "tex-parser/vt100-color.h"
 #define SNIPPET_HL_COLOR C_RED
@@ -28,7 +32,7 @@ struct snippet_hi {
 	/* string buffers */
 	char     left_str[SNIPPET_PADDING + 1];
 	char     right_str[SNIPPET_PADDING + 1];
-	char     kw_str[MAX_TXT_SEG_BYTES];
+	char     kw_str[MAX_HIGHLIGHTED_BYTES];
 
 	struct list_node ln;
 };

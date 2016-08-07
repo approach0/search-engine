@@ -15,10 +15,10 @@
 /* main indexing functions */
 void indexer_assign(struct indices*);
 
-typedef void (*text_lexer)(FILE*);
-void indexer_index_json(FILE*, text_lexer);
+typedef int (*text_lexer)(FILE*);
+int indexer_index_json(FILE*, text_lexer);
 
-void indexer_handle_slice(struct lex_slice*);
+int indexer_handle_slice(struct lex_slice*);
 
 /* other utilities */
 #include <ctype.h> /* for tolower() */

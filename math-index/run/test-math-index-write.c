@@ -26,7 +26,7 @@ int main()
 		printf("add: `%s' as experssion#%u\n", test[i], expID);
 		parse_ret = tex_parse(test[i], 0, false);
 
-		if (parse_ret.code == PARSER_RETCODE_SUCC) {
+		if (parse_ret.code != PARSER_RETCODE_ERR) {
 			subpaths_print(&parse_ret.subpaths, stdout);
 			math_index_add_tex(index, docID, expID, parse_ret.subpaths);
 			subpaths_release(&parse_ret.subpaths);

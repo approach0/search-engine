@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "yajl/yajl_tree.h"
+#include "tex-parser/vt100-color.h"
 #include "index.h"
 #include "config.h"
 
@@ -53,12 +55,14 @@ index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 	}
 }
 
-static void index_tex(char *tex, uint32_t offset, size_t n_bytes)
+static int
+index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
+	int ret;
 	struct tex_parse_ret parse_ret;
 	parse_ret = tex_parse(tex, 0, false);
 
-	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+	if (parse_ret.code != PARSER_RETCODE_ERR) {
 #ifdef DEBUG_INDEXER
 		printf("[index tex] `%s'\n", tex);
 #endif
@@ -68,12 +72,24 @@ static void index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		                   parse_ret.subpaths);
 		subpaths_release(&parse_ret.subpaths);
 
+		if (parse_ret.code == PARSER_RETCODE_SUCC) {
+			ret = 0; /* successful */
+		} else {
+			fprintf(stderr, C_MAGENTA "`%s': %s\n" C_RST,
+			        tex, parse_ret.msg);
+			ret = 1; /* warning */
+		}
 	} else {
-		printf("parsing TeX (`%s') error: %s\n", tex, parse_ret.msg);
+		fprintf(stderr, C_RED "`%s': %s\n" C_RST,
+		        tex, parse_ret.msg);
+
+		ret = 2; /* failed */
 	}
 
 	/* increment position */
 	cur_position ++;
+
+	return ret;
 }
 
 static void index_term(char *term, uint32_t offset, size_t n_bytes)
@@ -107,7 +123,7 @@ static LIST_IT_CALLBK(_index_term)
 LIST_DEF_FREE_FUN(txt_seg_li_release, struct text_seg,
                   ln, free(p));
 
-void indexer_handle_slice(struct lex_slice *slice)
+int indexer_handle_slice(struct lex_slice *slice)
 {
 	size_t str_sz = strlen(slice->mb_str);
 	list   li     = LIST_NULL;
@@ -128,7 +144,9 @@ void indexer_handle_slice(struct lex_slice *slice)
 
 		/* extract tex from math tag and add it into math-index */
 		strip_math_tag(slice->mb_str, str_sz);
-		index_tex(slice->mb_str, slice->offset, str_sz);
+
+		if (index_tex(slice->mb_str, slice->offset, str_sz))
+			return 1;
 
 		break;
 
@@ -150,6 +168,8 @@ void indexer_handle_slice(struct lex_slice *slice)
 	default:
 		assert(0);
 	}
+
+	return 0;
 }
 
 static void index_maintain()
@@ -170,7 +190,7 @@ static bool get_json_val(const char *json, const char **path, char *val)
 	tr = yajl_tree_parse(json, err_str, sizeof(err_str));
 
 	if (tr == NULL) {
-		fprintf(stderr, "parser error: %s\n", err_str);
+		fprintf(stderr, "JSON parser error: %s\n", err_str);
 		return 0;
 	}
 
@@ -188,11 +208,12 @@ static bool get_json_val(const char *json, const char **path, char *val)
 	return 1;
 }
 
-static void index_text_field(const char *txt, text_lexer lex)
+static int index_text_field(const char *txt, text_lexer lex)
 {
 	doc_id_t docID;
 	size_t txt_sz = strlen(txt);
 	FILE *fh_txt = fmemopen((void *)txt, txt_sz, "r");
+	int ret;
 
 	/* safe check */
 	if (fh_txt == NULL) {
@@ -204,7 +225,7 @@ static void index_text_field(const char *txt, text_lexer lex)
 	term_index_doc_begin(term_index);
 
 	/* invoke lexer */
-	(*lex)(fh_txt);
+	ret = (*lex)(fh_txt);
 
 	/* index text blob */
 	index_blob(blob_index_txt, txt, txt_sz, 1);
@@ -219,9 +240,11 @@ static void index_text_field(const char *txt, text_lexer lex)
 	/* update document indexing variables */
 	prev_docID = docID;
 	cur_position = 0;
+
+	return ret;
 }
 
-void indexer_index_json(FILE *fh, text_lexer lex)
+int indexer_index_json(FILE *fh, text_lexer lex)
 {
 	const char *url_path[] = {"url", NULL};
 	const char *txt_path[] = {"text", NULL};
@@ -229,28 +252,35 @@ void indexer_index_json(FILE *fh, text_lexer lex)
 	static char url_field[MAX_CORPUS_FILE_SZ];
 	static char txt_field[MAX_CORPUS_FILE_SZ];
 	size_t      rd_sz;
+	int         ret;
 
 	rd_sz = fread(doc_json, 1, MAX_CORPUS_FILE_SZ, fh);
 	doc_json[rd_sz] = '\0';
 
 	if (rd_sz == MAX_CORPUS_FILE_SZ) {
 		fprintf(stderr, "corpus file too large!\n");
-		return;
+		return 1;
 	}
 
-	if (!get_json_val(doc_json, url_path, url_field))
-		return;
+	if (!get_json_val(doc_json, url_path, url_field)) {
+		fprintf(stderr, "JSON: get URL field failed.\n");
+		return 1;
+	}
 
-	if (!get_json_val(doc_json, txt_path, txt_field))
-		return;
+	if (!get_json_val(doc_json, txt_path, txt_field)) {
+		fprintf(stderr, "JSON: get URL field failed.\n");
+		return 1;
+	}
 
 	/* URL blob indexing, it is done prior than text indexing
 	 * because prev_docID is not updated at this point. */
 	index_blob(blob_index_url, url_field, strlen(url_field), 0);
 
 	/* text indexing */
-	index_text_field(txt_field, lex);
+	ret = index_text_field(txt_field, lex);
 
 	/* maintain index (e.g. optimize, merge...) */
 	index_maintain();
+
+	return ret;
 }

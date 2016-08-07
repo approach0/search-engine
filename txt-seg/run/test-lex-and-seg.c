@@ -29,7 +29,7 @@ static LIST_IT_CALLBK(add_check_node)
 	LIST_GO_OVER;
 }
 
-static void my_lex_handler(struct lex_slice *slice)
+static int my_lex_handler(struct lex_slice *slice)
 {
 	list li = LIST_NULL;
 	printf("input slice: [%s]\n", slice->mb_str);
@@ -53,6 +53,7 @@ static void my_lex_handler(struct lex_slice *slice)
 	}
 
 	list_release(&li);
+	return 0;
 }
 
 int main(void)

@@ -28,9 +28,9 @@ int main()
 
 		ret = tex_parse(line, 0, true);
 
-		printf("return code:%s\n", (ret.code == PARSER_RETCODE_SUCC) ? "SUCC" : "ERR");
+		printf("return code:%d\n", ret.code);
 
-		if (ret.code == PARSER_RETCODE_SUCC) {
+		if (ret.code != PARSER_RETCODE_ERR) {
 			printf("Operator tree:\n");
 			if (ret.operator_tree) {
 				optr_print((struct optr_node*)ret.operator_tree, stdout);

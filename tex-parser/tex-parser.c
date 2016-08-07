@@ -3,6 +3,7 @@
 extern struct optr_node *grammar_optr_root;
 extern bool grammar_err_flag;
 extern char grammar_last_err_str[];
+extern int  lexer_warning_flag;
 
 static char *mk_scan_buf(const char *str, size_t *out_sz)
 {
@@ -26,7 +27,10 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 	scan_buf = mk_scan_buf(tex_str, &scan_buf_sz);
 	state_buf = yy_scan_buffer(scan_buf, scan_buf_sz);
 
-	grammar_err_flag = 0; /* clear flag */
+	/* clear flags */
+	grammar_err_flag = 0;
+	lexer_warning_flag = 0;
+
 	yyparse();
 
 	yy_delete_buffer(state_buf);
@@ -46,8 +50,13 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 				ret.operator_tree = NULL;
 			}
 
-			ret.code = PARSER_RETCODE_SUCC;
-			strcpy(ret.msg, "no error.");
+			if (lexer_warning_flag) {
+				ret.code = PARSER_RETCODE_WARN;
+				strcpy(ret.msg, "character(s) escaped.");
+			} else {
+				ret.code = PARSER_RETCODE_SUCC;
+				strcpy(ret.msg, "no error.");
+			}
 		} else {
 			ret.code = PARSER_RETCODE_ERR;
 			strcpy(ret.msg, "operator tree not generated.");

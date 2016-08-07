@@ -33,7 +33,9 @@ static int foreach_file_callbk(const char *filename, void *arg)
 			return 1;
 		}
 
-		indexer_index_json(fh, fef_args->lex);
+		if (indexer_index_json(fh, fef_args->lex))
+			fprintf(stderr, "@ %s\n", fullpath);
+
 		fef_args->n_files_indexed ++;
 		fclose(fh);
 
@@ -129,7 +131,9 @@ int main(int argc, char* argv[])
 			goto exit;
 		}
 
-		indexer_index_json(fh, lex);
+		if (indexer_index_json(fh, lex))
+			fprintf(stderr, "@ %s\n", corpus_path);
+
 		fclose(fh);
 
 	} else if (dir_exists(corpus_path)) {

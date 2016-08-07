@@ -218,7 +218,7 @@ int math_expr_search(math_index_t mi, char *tex,
 	/* parse TeX */
 	parse_ret = tex_parse(tex, 0, false);
 
-	if (parse_ret.code == PARSER_RETCODE_SUCC) {
+	if (parse_ret.code != PARSER_RETCODE_ERR) {
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("before prepare_math_qry():\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
