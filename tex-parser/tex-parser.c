@@ -41,8 +41,21 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 		strcpy(ret.msg, grammar_last_err_str);
 	} else {
 		if (grammar_optr_root) {
-			optr_assign_values(grammar_optr_root);
-			ret.subpaths = optr_subpaths(grammar_optr_root);
+			int max = optr_assign_values(grammar_optr_root);
+
+			/*
+			 * Inside optr_subpaths(), it uses a bitmap data
+			 * structure, we need to make sure path_id is in
+			 * a legal range.
+			 */
+			if (max <= MAX_SUBPATH_ID) {
+				ret.subpaths = optr_subpaths(grammar_optr_root);
+			} else {
+				LIST_CONS(ret.subpaths.li);
+				ret.subpaths.n_lr_paths = 0;
+				ret.subpaths.n_subpaths = 0;
+			}
+
 			if (keep_optr) {
 				ret.operator_tree = grammar_optr_root;
 			} else {

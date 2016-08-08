@@ -27,6 +27,6 @@ void optr_release(struct optr_node*);
 
 char *optr_hash_str(symbol_id_t);
 
-void optr_assign_values(struct optr_node*);
+uint32_t optr_assign_values(struct optr_node*);
 
 struct subpaths optr_subpaths(struct optr_node*);

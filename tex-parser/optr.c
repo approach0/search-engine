@@ -1,5 +1,17 @@
 #include "head.h"
 
+#undef N_DEBUG
+#include <assert.h>
+
+enum {
+	depth_end,
+	depth_begin,
+	depth_going_end
+};
+
+static int depth_flag[MAX_OPTR_PRINT_DEPTH];
+static bool gen_subpaths_bitmap[MAX_SUBPATH_ID * 2];
+
 struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 {
 	struct optr_node *n = malloc(sizeof(struct optr_node));
@@ -29,8 +41,8 @@ static LIST_IT_CALLBK(pass_children_to_father)
 	TREE_OBJ(struct optr_node, child, tnd);
 	bool res;
 
-	P_CAST(gf/* grandfather */, 
-	       struct optr_node, pa_extra); 
+	P_CAST(gf/* grandfather */,
+	       struct optr_node, pa_extra);
 
 	if (gf == NULL)
 		return LIST_RET_BREAK; /* no children to pass */
@@ -43,32 +55,24 @@ static LIST_IT_CALLBK(pass_children_to_father)
 	return res;
 }
 
-struct optr_node* optr_attach(struct optr_node *c /* child */, 
+struct optr_node* optr_attach(struct optr_node *c /* child */,
                               struct optr_node *f /* father */)
 {
 	if (c == NULL || f == NULL)
 		return NULL;
-	
+
 	if (f->commutative && c->token_id == f->token_id) {
 		/* apply commutative rule */
 		list_foreach(&c->tnd.sons, &pass_children_to_father, f);
 		free(c);
 		return f;
-	} 
+	}
 
 	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
 	update(c, f);
 
 	return f;
 }
-
-static int depth_flag[MAX_OPTR_DEPTH];
-
-enum {
-	depth_end,
-	depth_begin,
-	depth_going_end
-};
 
 char *optr_hash_str(symbol_id_t hash)
 {
@@ -77,7 +81,7 @@ char *optr_hash_str(symbol_id_t hash)
 	static char str[LEN * 2 + 1];
 	uint8_t *c = (uint8_t*)&hash;
 	str[LEN * 2] = '\0';
-	
+
 	for (i = 0; i < LEN; i++, c++) {
 		sprintf(str + (i << 1), "%02x", *c);
 	}
@@ -88,7 +92,8 @@ char *optr_hash_str(symbol_id_t hash)
 static __inline__ void
 print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 {
-	struct optr_node *f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+	struct optr_node *f =
+		MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 
 	fprintf(fh, "──");
 
@@ -128,8 +133,8 @@ static TREE_IT_CALLBK(print)
 	depth_flag[pa_depth] = depth_going_end;
 	else if (pa_now->now == pa_head->now)
 		depth_flag[pa_depth] = depth_begin;
-	
-	for (i = 0; i < pa_depth; i++) { 
+
+	for (i = 0; i < pa_depth; i++) {
 		switch (depth_flag[i + 1]) {
 		case depth_end:
 			fprintf(fh, "      ");
@@ -144,12 +149,12 @@ static TREE_IT_CALLBK(print)
 			break;
 		}
 	}
-	
+
 	if (p->tnd.sons.now == NULL /* is leaf */)
 		is_leaf = 1;
 	else
 		is_leaf = 0;
-	
+
 	print_node(fh, p, is_leaf);
 
 	if (depth_flag[pa_depth] == depth_going_end)
@@ -231,11 +236,14 @@ static TREE_IT_CALLBK(assign_value)
 	LIST_GO_OVER;
 }
 
-void optr_assign_values(struct optr_node *optr)
+uint32_t optr_assign_values(struct optr_node *optr)
 {
 	uint32_t leaf_cnt = 0;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
 	             0 /* excluding root */, &leaf_cnt);
+
+	/* return the maximum path_id assigned */
+	return leaf_cnt;
 }
 
 struct subpath *create_subpath(struct optr_node *p, bool leaf)
@@ -285,15 +293,15 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
 
 		/* create and insert rank node if necessary */
 		if (f && !f->commutative) {
-			nd = create_subpath_node(T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank), 1);
-			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
+			nd = create_subpath_node(
+				T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank), 1);
+			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,
+			                        NULL, NULL);
 		}
 
 		p = f;
 	} while(p);
 }
-
-static bool gen_subpaths_bitmap[MAX_SUBPATH_ID * 2];
 
 static TREE_IT_CALLBK(gen_subpaths)
 {
@@ -321,22 +329,28 @@ static TREE_IT_CALLBK(gen_subpaths)
 				else
 					bitmap_idx = p->path_id + MAX_SUBPATH_ID;
 
-				/* insert only when not inserted before (by looking at bitmap)  */
+				assert(bitmap_idx > 0);
+				bitmap_idx --; /* map to [0, 63] */
+
+				/* insert only when not inserted before */
 				if (!gen_subpaths_bitmap[bitmap_idx]) {
-					ret->n_subpaths ++; /* count total subpaths generated. */
 					subpath = create_subpath(p, is_leaf);
 					insert_subpath_nodes(subpath, p);
-					list_insert_one_at_tail(&subpath->ln, &ret->li, NULL, NULL);
+					list_insert_one_at_tail(&subpath->ln, &ret->li,
+					                        NULL, NULL);
 					gen_subpaths_bitmap[bitmap_idx] = 1;
+
+					/* count total subpaths generated. */
+					ret->n_subpaths ++;
 				}
 			}
 
 			is_leaf = false;
 			p = f;
 		} while(p);
-	
+
 	}
-	
+
 	LIST_GO_OVER;
 }
 
@@ -381,9 +395,10 @@ static __inline__ char *subpath_type_str(enum subpath_type t)
 static LIST_IT_CALLBK(print_subpath_path_node)
 {
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
-	P_CAST(fh, FILE, pa_extra); 
+	P_CAST(fh, FILE, pa_extra);
 
-	fprintf(fh, C_BROWN "%s" C_RST "(%u)/", trans_token(sp_nd->token_id), sp_nd->sons);
+	fprintf(fh, C_BROWN "%s" C_RST "(%u)/",
+	        trans_token(sp_nd->token_id), sp_nd->sons);
 
 	LIST_GO_OVER;
 }
@@ -391,23 +406,24 @@ static LIST_IT_CALLBK(print_subpath_path_node)
 static LIST_IT_CALLBK(print_subpath_list_item)
 {
 	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(fh, FILE, pa_extra); 
+	P_CAST(fh, FILE, pa_extra);
 
 	fprintf(fh, "* ");
 	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
 
 	fprintf(fh, "[");
-	fprintf(fh, "path_id=%u: type=%s, ", sp->path_id, subpath_type_str(sp->type));
+	fprintf(fh, "path_id=%u: type=%s, ",
+	        sp->path_id, subpath_type_str(sp->type));
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE)
-		fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ", 
+		fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ",
 		        optr_hash_str(sp->ge_hash));
 	else
-		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST ", ", 
+		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST ", ",
 		        trans_symbol(sp->lf_symbol_id));
 
 	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST, optr_hash_str(sp->fr_hash));
-	
+
 	fprintf(fh, "]\n");
 
 	LIST_GO_OVER;

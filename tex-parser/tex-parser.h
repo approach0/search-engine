@@ -9,6 +9,8 @@ typedef uint16_t symbol_id_t;
 #define PARSER_RETCODE_ERR  1
 #define PARSER_RETCODE_SUCC 0
 #define MAX_PARSER_ERR_STR  1024
+
+/* assigned pathID is in [1, 64] */
 #define MAX_SUBPATH_ID      64
 
 enum subpath_type {
