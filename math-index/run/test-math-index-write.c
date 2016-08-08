@@ -2,12 +2,20 @@
 
 int main()
 {
+	/* normal test */
+//	const char *test[] = {
+//		"ab",             // expID = 0
+//		"a+k(b+c)",       // expID = 1
+//		"a+bc+xy",        // expID = 2
+//		"a(b+cd)",        // expID = 3
+//		"\\sqrt{pq + m}"  // expID = 4
+//	};
+
+	/* extreme-condition test */
 	const char *test[] = {
-		"ab",             // expID = 0
-		"a+k(b+c)",       // expID = 1
-		"a+bc+xy",        // expID = 2
-		"a(b+cd)",        // expID = 3
-		"\\sqrt{pq + m}"  // expID = 4
+		"abcdefghijklmnopqrstuvwxyz" /* 26 */
+		"abcdefghijklmnopqrstuvwxyz" /* 52 */
+		"abcdefghijkl" /* 64 */
 	};
 
 	doc_id_t docID = 1;

@@ -16,3 +16,5 @@
 //#define DEBUG_DIR_MERGE
 
 //#define DEBUG_MATH_POSTING
+
+//#define DEBUG_MATH_INDEX

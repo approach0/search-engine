@@ -26,6 +26,11 @@ uint32_t
 subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 {
 	struct add_subpaths_args args = {0, set};
+
+	if (NULL == subpaths ||
+	    subpaths->n_lr_paths > MAX_MATH_PATHS)
+		return 0;
+
 	list_foreach(&subpaths->li, &add_subpaths, &args);
 
 	return args.n_uniq;

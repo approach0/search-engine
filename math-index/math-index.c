@@ -179,6 +179,7 @@ static LIST_IT_CALLBK(path_index_step1)
 	}
 
 	mkdir_p(path);
+
 	subpath_set_add(&arg->subpath_set, sp);
 
 	LIST_GO_OVER;
@@ -261,10 +262,39 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 	arg.n_lr_paths = subpaths.n_lr_paths;
 	LIST_CONS(arg.subpath_set);
 
+#ifdef DEBUG_MATH_INDEX
+	printf("[math index adding %u subpaths]\n", subpaths.n_lr_paths);
+#endif
+
+	if (subpaths.n_lr_paths > MAX_MATH_PATHS) {
+#ifdef DEBUG_MATH_INDEX
+		printf("too many subpaths, abort.\n");
+#endif
+		return 1;
+	}
+
+#ifdef DEBUG_MATH_INDEX
+	printf("path index step 1 (adding into subpath set):\n");
+#endif
+
 	list_foreach(&subpaths.li, &path_index_step1, &arg);
+
+#ifdef DEBUG_MATH_INDEX
+	printf("subpath set:\n");
+	subpath_set_print(&arg.subpath_set, stdout);
+
+	printf("path index step 2 (write post item and pathinfo head)...\n");
+#endif
 	list_foreach(&arg.subpath_set, &path_index_step2, &arg);
+
+#ifdef DEBUG_MATH_INDEX
+	printf("path index step 2 (write pathinfo payload)...\n");
+#endif
 	list_foreach(&subpaths.li, &path_index_step3, &arg);
 
+#ifdef DEBUG_MATH_INDEX
+	printf("done.\n");
+#endif
 	return 0;
 }
 
