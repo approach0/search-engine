@@ -56,7 +56,7 @@ extern int lexer_warning_flag;
 
 <ign>\{                         { ign_stack ++; }
 <ign>\}     { ign_stack --; if (!ign_stack) BEGIN(INITIAL); }
-<ign>.                                                     {}
+<ign>.|\n                                                  {}
 
  /* =============
   *  add/minus
@@ -137,7 +137,7 @@ extern int lexer_warning_flag;
 <dim>mm\}?                                                           { BEGIN(INITIAL); }
 <dim>in\}?                                                           { BEGIN(INITIAL); }
 <dim>px\}?                                                           { BEGIN(INITIAL); }
-<dim>.                                                                                {}
+<dim>.|\n                                                                             {}
 
  /* ===============
   *  table/matrix
@@ -880,7 +880,7 @@ extern int lexer_warning_flag;
 "\\;"                                       { /* omit short space, before semicolon */ }
 "\\,"                                           { /* omit short space, before comma */ }
 [\t ]                                                               { /* omit space */ }
-.            { lexer_warning_flag = 1; fprintf(stderr, "parser: `%s' esc.\n", yytext); }
+.      { /* lexer_warning_flag = 1; fprintf(stderr, "parser: `%s' esc.\n", yytext); */ }
 %%
 /* self-defined stack values */
 unsigned int ign_stack = 0;
