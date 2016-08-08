@@ -58,7 +58,7 @@ index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 static int
 index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
-	int ret;
+	int ret, res;
 	struct tex_parse_ret parse_ret;
 	parse_ret = tex_parse(tex, 0, false);
 
@@ -68,9 +68,17 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 #endif
 
 		/* actual tex indexing */
-		math_index_add_tex(math_index, prev_docID + 1, cur_position,
-		                   parse_ret.subpaths);
+		res = math_index_add_tex(math_index, prev_docID + 1,
+		                         cur_position, parse_ret.subpaths);
 		subpaths_release(&parse_ret.subpaths);
+
+		if (res > 0) {
+			fprintf(stderr, C_MAGENTA "`%s': "
+			        "too many subpaths.\n" C_RST,
+			        tex, parse_ret.msg);
+			ret = 1; /* warning */
+			goto return_;
+		}
 
 		if (parse_ret.code == PARSER_RETCODE_SUCC) {
 			ret = 0; /* successful */
@@ -89,6 +97,7 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 	/* increment position */
 	cur_position ++;
 
+return_:
 	return ret;
 }
 
