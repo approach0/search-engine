@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
 
 	/* open indices for writing */
 	printf("opening indices...\n");
+	system("rm -rf ./tmp");
 	if(indices_open(&indices, index_path, INDICES_OPEN_RW)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto exit;

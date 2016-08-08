@@ -60,6 +60,9 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
 	int ret, res;
 	struct tex_parse_ret parse_ret;
+#ifdef DEBUG_INDEXER
+	printf("[parse tex] `%s'\n", tex);
+#endif
 	parse_ret = tex_parse(tex, 0, false);
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
@@ -75,7 +78,7 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		if (res > 0) {
 			fprintf(stderr, C_MAGENTA "`%s': "
 			        "too many subpaths.\n" C_RST,
-			        tex, parse_ret.msg);
+			        tex);
 			ret = 1; /* warning */
 			goto return_;
 		}
