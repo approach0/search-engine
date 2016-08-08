@@ -4,26 +4,32 @@
 
 #include "index.h"
 
-static bool json_ext(const char *filename)
-{
-	char *ext = filename_ext(filename);
-	return (ext && strcmp(ext, ".json") == 0);
-}
-
-struct foreach_file_args {
-	uint32_t    n_files_indexed;
-	const char *path;
+struct indexer_args {
+	uint64_t    indexed_files, tot_files;
+	char       *path;
 	text_lexer  lex;
 };
 
+void print_process(uint64_t indexed_files, uint64_t tot_files)
+{
+	uint64_t n_tex_correct = n_parse_tex - n_parse_err;
+
+	printf("[process %3.0f%%] %lu/%lu file(s) indexed, "
+	       "TeX parsing success rate: %.2f%%",
+		   100.f * (float)indexed_files / (float)tot_files,
+	       indexed_files, tot_files,
+		   100.f * (float)n_tex_correct / (float)n_parse_tex);
+	fflush(stdout);
+}
+
 static int foreach_file_callbk(const char *filename, void *arg)
 {
-	P_CAST(fef_args, struct foreach_file_args, arg);
+	P_CAST(i_args, struct indexer_args, arg);
 	char fullpath[MAX_FILE_NAME_LEN];
 	FILE *fh;
 
 	if (json_ext(filename)) {
-		sprintf(fullpath, "%s/%s", fef_args->path, filename);
+		sprintf(fullpath, "%s/%s", i_args->path, filename);
 		fh = fopen(fullpath, "r");
 
 		//printf("opening: %s\n", fullpath);
@@ -33,17 +39,14 @@ static int foreach_file_callbk(const char *filename, void *arg)
 			return 1;
 		}
 
-		if (indexer_index_json(fh, fef_args->lex))
+		if (indexer_index_json(fh, i_args->lex))
 			fprintf(stderr, "@ %s\n", fullpath);
 
-		fef_args->n_files_indexed ++;
+		i_args->indexed_files ++;
 		fclose(fh);
 
-		{ /* print process */
-			printf("\33[2K\r"); /* clear last line and reset cursor */
-			printf("[files processed] %u", fef_args->n_files_indexed);
-			fflush(stdout);
-		}
+		printf("\33[2K\r"); /* clear last line & reset cursor */
+		print_process(i_args->indexed_files, i_args->tot_files);
 	}
 
 	return 0;
@@ -53,11 +56,15 @@ static enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
 {
-	struct foreach_file_args fef_args = {0, path, (text_lexer)arg};
-	printf("[directory] %s\n", path);
-	foreach_files_in(path, &foreach_file_callbk, &fef_args);
+	P_CAST(i_args, struct indexer_args, arg);
+	uint64_t last = i_args->indexed_files;
 
-	if (fef_args.n_files_indexed != 0)
+	i_args->path = (char *)path;
+	printf("[directory] %s\n", path);
+
+	foreach_files_in(path, &foreach_file_callbk, i_args);
+
+	if (i_args->indexed_files != last)
 		printf("\n");
 
 	return DS_RET_CONTINUE;
@@ -135,16 +142,20 @@ int main(int argc, char* argv[])
 		if (indexer_index_json(fh, lex))
 			fprintf(stderr, "@ %s\n", corpus_path);
 
+		print_process(1, 1);
 		fclose(fh);
 
 	} else if (dir_exists(corpus_path)) {
-		dir_search_podfs(corpus_path, &dir_search_callbk, lex);
+		struct indexer_args arg = {0, 0, NULL, lex};
+
+		arg.tot_files = total_json_files(corpus_path);
+		dir_search_podfs(corpus_path, &dir_search_callbk, &arg);
 
 	} else {
 		printf("not file/directory.\n");
 	}
 
-	printf("done indexing!\n");
+	printf("\ndone indexing!\n");
 
 exit:
 	indices_close(&indices);

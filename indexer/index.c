@@ -19,6 +19,9 @@ static blob_index_t blob_index_txt = NULL;
 static doc_id_t   prev_docID /* docID just indexed */ = 0;
 static position_t cur_position = 0;
 
+uint64_t n_parse_err = 0;
+uint64_t n_parse_tex = 0;
+
 void indexer_assign(struct indices *indices)
 {
 	term_index = indices->ti;
@@ -58,7 +61,7 @@ index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 static int
 index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
-	int ret, res;
+	int ret;
 	struct tex_parse_ret parse_ret;
 #ifdef DEBUG_INDEXER
 	printf("[parse tex] `%s'\n", tex);
@@ -66,41 +69,27 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 	parse_ret = tex_parse(tex, 0, false);
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
+		/* warning or completely successful */
 #ifdef DEBUG_INDEXER
 		printf("[index tex] `%s'\n", tex);
 #endif
-
 		/* actual tex indexing */
-		res = math_index_add_tex(math_index, prev_docID + 1,
-		                         cur_position, parse_ret.subpaths);
+		math_index_add_tex(math_index, prev_docID + 1,
+		                   cur_position, parse_ret.subpaths);
 		subpaths_release(&parse_ret.subpaths);
 
-		if (res > 0) {
-			fprintf(stderr, C_MAGENTA "`%s': "
-			        "too many subpaths.\n" C_RST,
-			        tex);
-			ret = 1; /* warning */
-			goto return_;
-		}
-
-		if (parse_ret.code == PARSER_RETCODE_SUCC) {
-			ret = 0; /* successful */
-		} else {
-			fprintf(stderr, C_MAGENTA "`%s': %s\n" C_RST,
-			        tex, parse_ret.msg);
-			ret = 1; /* warning */
-		}
+		ret = 0; /* successful */
 	} else {
+		/* grammar error or too many subpaths */
 		fprintf(stderr, C_RED "`%s': %s\n" C_RST,
 		        tex, parse_ret.msg);
 
-		ret = 2; /* failed */
+		ret = 1;
 	}
 
 	/* increment position */
 	cur_position ++;
 
-return_:
 	return ret;
 }
 
@@ -157,8 +146,13 @@ int indexer_handle_slice(struct lex_slice *slice)
 		/* extract tex from math tag and add it into math-index */
 		strip_math_tag(slice->mb_str, str_sz);
 
-		if (index_tex(slice->mb_str, slice->offset, str_sz))
+		/* count how many TeX parsed */
+		n_parse_tex ++;
+
+		if (index_tex(slice->mb_str, slice->offset, str_sz)) {
+			n_parse_err++;
 			return 1;
+		}
 
 		break;
 
@@ -295,4 +289,34 @@ int indexer_index_json(FILE *fh, text_lexer lex)
 	index_maintain();
 
 	return ret;
+}
+
+static int foreach_file_callbk(const char *filename, void *arg)
+{
+	P_CAST(cnt, uint64_t, arg);
+
+	if (json_ext(filename)) {
+		(*cnt) ++;
+	}
+
+	return 0;
+}
+
+static enum ds_ret
+dir_search_callbk(const char* path, const char *srchpath,
+                  uint32_t level, void *arg)
+{
+	P_CAST(cnt, uint64_t, arg);
+	foreach_files_in(path, &foreach_file_callbk, cnt);
+
+	return DS_RET_CONTINUE;
+}
+
+uint64_t total_json_files(const char *dir)
+{
+	uint64_t cnt = 0;
+	if (dir_exists(dir))
+		dir_search_podfs(dir, &dir_search_callbk, &cnt);
+
+	return cnt;
 }

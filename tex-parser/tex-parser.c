@@ -24,6 +24,7 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 	char *scan_buf;
 	size_t scan_buf_sz;
 
+	/* create parser buffer */
 	scan_buf = mk_scan_buf(tex_str, &scan_buf_sz);
 	state_buf = yy_scan_buffer(scan_buf, scan_buf_sz);
 
@@ -31,16 +32,27 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 	grammar_err_flag = 0;
 	lexer_warning_flag = 0;
 
+	/* do parse */
 	yyparse();
 
+	/* free parser buffer */
 	yy_delete_buffer(state_buf);
 	free(scan_buf);
 
+	/* return operator tree or not, depends on `keep_optr' */
+	if (keep_optr)
+		ret.operator_tree = grammar_optr_root;
+	else
+		ret.operator_tree = NULL;
+
+	/* is there any grammar error? */
 	if (grammar_err_flag) {
+		/* grammar error */
 		ret.code = PARSER_RETCODE_ERR;
 		strcpy(ret.msg, grammar_last_err_str);
 	} else {
 		if (grammar_optr_root) {
+			/* assign subpath IDs */
 			int max = optr_assign_values(grammar_optr_root);
 
 			/*
@@ -50,26 +62,25 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			 */
 			if (max <= MAX_SUBPATH_ID) {
 				ret.subpaths = optr_subpaths(grammar_optr_root);
+
+				if (lexer_warning_flag) {
+					ret.code = PARSER_RETCODE_WARN;
+					strcpy(ret.msg, "character(s) escaped.");
+				} else {
+					ret.code = PARSER_RETCODE_SUCC;
+					strcpy(ret.msg, "no error.");
+				}
+
 			} else {
 				LIST_CONS(ret.subpaths.li);
 				ret.subpaths.n_lr_paths = 0;
 				ret.subpaths.n_subpaths = 0;
+
+				ret.code = PARSER_RETCODE_ERR;
+				strcpy(ret.msg, "too many subpaths.");
 			}
 
-			if (keep_optr) {
-				ret.operator_tree = grammar_optr_root;
-			} else {
-				optr_release(grammar_optr_root);
-				ret.operator_tree = NULL;
-			}
-
-			if (lexer_warning_flag) {
-				ret.code = PARSER_RETCODE_WARN;
-				strcpy(ret.msg, "character(s) escaped.");
-			} else {
-				ret.code = PARSER_RETCODE_SUCC;
-				strcpy(ret.msg, "no error.");
-			}
+			optr_release(grammar_optr_root);
 		} else {
 			ret.code = PARSER_RETCODE_ERR;
 			strcpy(ret.msg, "operator tree not generated.");

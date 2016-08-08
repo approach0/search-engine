@@ -12,6 +12,10 @@
 #include "codec/codec.h"
 #include "indices/indices.h"
 
+/* tex-parse counters */
+extern uint64_t n_parse_err;
+extern uint64_t n_parse_tex;
+
 /* main indexing functions */
 void indexer_assign(struct indices*);
 
@@ -39,3 +43,11 @@ static __inline void strip_math_tag(char *str, size_t n_bytes)
 
 	str[i] = '\0';
 }
+
+static __inline bool json_ext(const char *filename)
+{
+	char *ext = filename_ext(filename);
+	return (ext && strcmp(ext, ".json") == 0);
+}
+
+uint64_t total_json_files(const char *dir);
