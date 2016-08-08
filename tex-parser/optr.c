@@ -30,7 +30,6 @@ struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 
 static __inline__ void update(struct optr_node *c, struct optr_node *f)
 {
-	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
 	f->sons++;
 	c->rank = f->sons;
 	c->fr_hash = f->fr_hash + c->symbol_id;
