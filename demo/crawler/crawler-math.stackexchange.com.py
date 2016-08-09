@@ -8,7 +8,9 @@ import re
 import json
 import sys
 import getopt
-from dollar import replace_dollar_tex
+from replace_post_tex import replace_dollar_tex
+from replace_post_tex import replace_display_tex
+from replace_post_tex import replace_inline_tex
 from io import BytesIO
 from bs4 import BeautifulSoup
 
@@ -150,6 +152,8 @@ def process_post(post_id, post_txt, url):
 	except:
 		raise
 	# process TeX mode pieces
+	post_txt = replace_display_tex(post_txt)
+	post_txt = replace_inline_tex(post_txt)
 	post_txt = replace_dollar_tex(post_txt)
 	# save files
 	save_json(file_path + '.json',
@@ -210,9 +214,9 @@ def main(arg):
 			continue
 		if opt in ("-p", "--post"):
 			sub_url = "/questions/" + arg
+			full_url = root_url + sub_url
 			post_txt = crawl_post_page(sub_url, get_curl())
-			print(post_txt)
-			process_post(int(arg), post_txt, root_url + sub_url)
+			process_post(int(arg), post_txt, full_url)
 			return
 
 	if (end_page >= begin_page):

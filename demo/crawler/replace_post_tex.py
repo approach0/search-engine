@@ -1,13 +1,18 @@
+import re
+
 def replace_dollar_tex(s):
 	l = len(s)
 	i, j, stack = 0, 0, 0
 	new_txt = ''
 	while i < l:
 		if s[i] == "\\" and (i + 1) < l:
-			# skip if it is escaped dollar
 			if s[i + 1] == '$':
+				# skip if it is escaped dollar
+				new_txt += '$'
 				i += 1
-				new_txt += '\\$'
+			elif stack == 0:
+				# otherwise just copy it
+				new_txt += s[i]
 		elif s[i] == '$':
 			if stack == 0: # first open dollar
 				stack = 1
@@ -37,4 +42,15 @@ def replace_dollar_tex(s):
 		i += 1
 	return new_txt
 
-# print(replace_dollar_tex('given $Y=f(x)$ and $$f \in P$$'))
+def replace_display_tex(s):
+	# replace '\[ * \]'
+	regex = re.compile('\\\\\[(.+?)\\\\\]')
+	return re.sub(regex, r"[imath]\1[/imath]", s)
+
+def replace_inline_tex(s):
+	# replace '\\( * \\)'
+	regex = re.compile('\\\\\\\\\((.+)\\\\\\\\\)')
+	return re.sub(regex, r"[imath]\1[/imath]", s)
+
+# curl http://math.stackexchange.com/questions/1886701/justify-a-function-series-is-approximating-another-function
+# to test everything.
