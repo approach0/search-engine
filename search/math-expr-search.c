@@ -91,7 +91,7 @@ static LIST_IT_CALLBK(push_query_path)
 
 static void prepare_score_struct(struct subpaths *subpaths)
 {
-	/* initialize 'mark and score' query dimension */
+	/* initialize 'mark and cross' query dimension */
 	mnc_reset_qry();
 
 	/* push queries to MNC stack for future scoring */
@@ -232,8 +232,6 @@ int math_expr_search(math_index_t mi, char *tex,
 #endif
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
-		printf("math query in order:\n");
-		subpaths_print(&parse_ret.subpaths, stdout);
 		printf("calling math_index_dir_merge()...\n");
 #endif
 
@@ -326,9 +324,12 @@ math_expr_score_on_merge(struct postmerge* pm,
 			slot = mnc_map_slot(mnc_ref);
 
 			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
-				/* add this document subpath for scoring */
-				mnc_doc_add_rele(slot, pathinfo->path_id,
-				                 subpath_ele->dup[k]->path_id);
+				/*
+				 * add this document subpath for scoring.
+				 * (path_id [1, 64] is mapped to [0, 63])
+				 */
+				mnc_doc_add_rele(slot, pathinfo->path_id - 1,
+				                 subpath_ele->dup[k]->path_id - 1);
 			}
 		}
 	}
