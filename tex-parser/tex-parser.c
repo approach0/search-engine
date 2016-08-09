@@ -80,7 +80,8 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 				strcpy(ret.msg, "too many subpaths.");
 			}
 
-			optr_release(grammar_optr_root);
+			if (!keep_optr)
+				optr_release(grammar_optr_root);
 		} else {
 			ret.code = PARSER_RETCODE_ERR;
 			strcpy(ret.msg, "operator tree not generated.");
