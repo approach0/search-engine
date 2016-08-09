@@ -7,6 +7,7 @@ import code
 import re
 import json
 import sys
+import getopt
 from dollar import replace_dollar_tex
 from io import BytesIO
 from bs4 import BeautifulSoup
@@ -14,7 +15,7 @@ from bs4 import BeautifulSoup
 root_url = "http://math.stackexchange.com"
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
-DIVISIONS = 5
+DIVISIONS = 500
 
 def print_err(err_str):
 	f = open("error.log", "a")
@@ -74,19 +75,19 @@ def crawl_post_page(sub_url, c):
 	if question_header is None:
 		raise
 	header = str(question_header.h1.string)
-	page_txt = header + '\n\n'
+	post_txt = header + '\n\n'
 	# get question
 	try:
-		page_txt += extract_p_tag_text(s, "question")
+		post_txt += extract_p_tag_text(s, "question")
 	except:
 		raise
-	page_txt += '\n'
+	post_txt += '\n'
 	# get answers
 	try:
-		page_txt += extract_p_tag_text(s, "answers")
+		post_txt += extract_p_tag_text(s, "answers")
 	except:
 		raise
-	return page_txt
+	return post_txt
 
 def mkdir_p(path):
 	try:
@@ -97,23 +98,24 @@ def mkdir_p(path):
 		else:
 			raise Exception("mkdir needs permission")
 
-def save_preview(path, page_txt, url):
+def save_preview(path, post_txt, url):
 	# put preview into HTML template
 	f = open("template.html", "r")
 	fmt_str = f.read()
 	f.close()
-	preview = fmt_str.replace("{PREVIEW}", page_txt);
+	post_txt = post_txt.replace("\n", "</br>");
+	preview = fmt_str.replace("{PREVIEW}", post_txt);
 	preview = preview.replace("{URL}", url);
 	# save preview
 	f = open(path, "w")
 	f.write(preview)
 	f.close()
 
-def save_json(path, page_txt, url):
+def save_json(path, post_txt, url):
 	f = open(path, "w")
 	f.write(json.dumps({
 		"url": url,
-		"text": page_txt
+		"text": post_txt
 	}))
 	f.close()
 
@@ -139,6 +141,22 @@ def list_post_links(page, c):
 		a_tag = div.find('a', {"class": "question-hyperlink"})
 		yield (div['id'], a_tag['href'], None)
 
+def process_post(post_id, post_txt, url):
+	# decide sub-directory
+	directory = './tmp/' + str(post_id % DIVISIONS)
+	file_path = directory + '/' + str(post_id)
+	try:
+		mkdir_p(directory)
+	except:
+		raise
+	# process TeX mode pieces
+	post_txt = replace_dollar_tex(post_txt)
+	# save files
+	save_json(file_path + '.json',
+				 post_txt, url)
+	save_preview(file_path + '.html',
+				 post_txt, url)
+
 def crawl_pages(start, end):
 	c = get_curl()
 	for page in range(start, end + 1):
@@ -152,24 +170,55 @@ def crawl_pages(start, end):
 			if not res:
 				print_err("div ID %s" % div_id)
 				continue
-			# decide sub-directory
-			ID = int(res.group(1))
-			directory = './tmp/' + str(ID % DIVISIONS)
-			file_path = directory + '/' + str(ID)
 			try:
-				mkdir_p(directory)
-			except:
-				raise
-			try:
-				page_txt = crawl_post_page(sub_url, get_curl())
-				page_txt = replace_dollar_tex(page_txt)
-				save_json(file_path + '.json',
-				             page_txt, url)
-				save_preview(file_path + '.html',
-				             page_txt, url)
+				post_txt = crawl_post_page(sub_url, get_curl())
+				ID = int(res.group(1))
+				process_post(ID, post_txt, url)
 			except:
 				print_err("post %s" % url)
 				continue
 			time.sleep(0.6)
 
-crawl_pages(1, 500)
+def help(arg0):
+	print('DESCRIPTION: crawler script for math.stackexchange.com.' \
+	      '\n\n' \
+	      'SYNOPSIS:\n' \
+	      '%s [-b | --begin-page <page>] ' \
+	      '[-e | --end-page <page>] ' \
+	      '[-p | --post <post id>] ' \
+	      '\n' % (arg0))
+	sys.exit(1)
+
+def main(arg):
+	argv = arg[1:]
+	try:
+		opts, args = getopt.getopt(
+			argv, "b:e:p:",
+			['begin-page=', 'end-page=', 'post=']
+		)
+	except:
+		help(arg[0])
+
+	begin_page = 1;
+	end_page = -1;
+	for opt, arg in opts:
+		if opt in ("-b", "--begin-page"):
+			begin_page = int(arg);
+			continue
+		if opt in ("-e", "--end-page"):
+			end_page = int(arg);
+			continue
+		if opt in ("-p", "--post"):
+			sub_url = "/questions/" + arg
+			post_txt = crawl_post_page(sub_url, get_curl())
+			print(post_txt)
+			process_post(int(arg), post_txt, root_url + sub_url)
+			return
+
+	if (end_page >= begin_page):
+		crawl_pages(begin_page, end_page)
+	else:
+		help(arg[0])
+
+if __name__ == "__main__":
+	main(sys.argv)
