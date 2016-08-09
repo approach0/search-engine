@@ -15,10 +15,10 @@ void print_process(uint64_t indexed_files, uint64_t tot_files)
 	uint64_t n_tex_correct = n_parse_tex - n_parse_err;
 
 	printf("[process %3.0f%%] %lu/%lu file(s) indexed, "
-	       "TeX parsing success rate: %.2f%%",
-		   100.f * (float)indexed_files / (float)tot_files,
-	       indexed_files, tot_files,
-		   100.f * (float)n_tex_correct / (float)n_parse_tex);
+	       "TeX parsing success rate: %lu/%lu",
+	       100.f * (float)indexed_files / (float)tot_files,
+	       indexed_files, tot_files, n_tex_correct,
+	       n_parse_tex);
 	fflush(stdout);
 }
 
@@ -66,6 +66,8 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 	if (i_args->indexed_files != last)
 		printf("\n");
+	else
+		printf("no file in this directory.\n");
 
 	return DS_RET_CONTINUE;
 }

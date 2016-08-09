@@ -72,8 +72,8 @@ static LIST_IT_CALLBK(assign_path_id_in_order)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(new_path_id, uint32_t, pa_extra);
 
-	/* assign path_id in order */
-	sp->path_id = (*new_path_id) ++;
+	/* assign path_id in order, from 1 to maximum 64. */
+	sp->path_id = ++(*new_path_id);
 
 	LIST_GO_OVER;
 }
