@@ -43,12 +43,11 @@ del_subpath_of_path_id(struct subpaths *subpaths, uint32_t path_id)
 }
 
 static void
-print_all_dir_strings(struct dir_merge_args *dm_args, const char *srchpath)
+print_all_dir_strings(struct dir_merge_args *dm_args)
 {
 	uint32_t i, j;
 	struct subpath_ele *ele;
 
-	printf("======\n");
 	for (i = 0; i < dm_args->set_sz; i++) {
 		ele = dm_args->eles[i];
 		printf("[%u] %s ", i, dm_args->full_paths[i]);
@@ -89,6 +88,11 @@ dir_search_callbk(const char* path, const char *srchpath,
 		}
 	}
 
+#ifdef DEBUG_DIR_MERGE
+	printf("post merging at directories:\n");
+	print_all_dir_strings(dm_args);
+	printf("\n");
+#endif
 	if (DIR_MERGE_RET_STOP == dm_args->fun(postings, dm_args->set_sz,
 	                                       level, dm_args->args))
 		ret = DS_RET_STOP_ALLDIR;
@@ -96,10 +100,6 @@ dir_search_callbk(const char* path, const char *srchpath,
 free_postings:
 	for (j = 0; j < i; j++)
 		math_posting_free_reader(postings[j]);
-
-#ifdef DEBUG_DIR_MERGE
-	print_all_dir_strings(dm_args, srchpath);
-#endif
 	return ret;
 }
 
