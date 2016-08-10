@@ -113,7 +113,7 @@ static LIST_IT_CALLBK(add_postinglist)
 #ifdef VERBOSE_SEARCH
 		{
 			int i;
-			for (i = aa->idx; i < n; i++) {
+			for (i = aa->idx; i < aa->idx + n; i++) {
 				printf("posting[%u]", i);
 				if (i + 1 == n)
 					printf(".");
@@ -278,7 +278,7 @@ indices_run_query(struct indices *indices, const struct query qry)
 #ifdef VERBOSE_SEARCH
 	printf("sorted query: ");
 	query_print_to(qry, stdout);
-	printf("\n");
+	printf("\n\n");
 #endif
 
 	/* initialize postmerge */
