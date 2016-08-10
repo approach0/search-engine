@@ -1,8 +1,7 @@
 Top priority:
-* crawler
+* searchd
 * math posting file compression
 * breadth-first dir-merge
-* searchd
 
 Want to implement:
 * search: concept search (horse == Pony)
@@ -16,3 +15,4 @@ Do it when time is allowed:
 * faster math-index/subpath-set
 * in mnc_score, compare father-to-root hash
 * efficient postmerge
+* top level AND merge does not work
