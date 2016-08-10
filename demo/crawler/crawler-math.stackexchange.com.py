@@ -39,9 +39,9 @@ def curl(sub_url, c):
 	while True:
 		try:
 			c.perform()
-		except (KeyboardInterrupt,  SystemExit):
+		except (KeyboardInterrupt, SystemExit):
 			print('user aborting...')
-			sys.exit(0)
+			raise
 		except:
 			errs = errs + 1
 			if errs > 3:
@@ -114,6 +114,8 @@ def save_preview(path, post_txt, url):
 	f.close()
 
 def save_json(path, post_txt, url):
+	if os.path.isfile(path):
+		print('[overwrite] ' + path)
 	f = open(path, "w")
 	f.write(json.dumps({
 		"url": url,
@@ -178,6 +180,9 @@ def crawl_pages(start, end):
 				post_txt = crawl_post_page(sub_url, get_curl())
 				ID = int(res.group(1))
 				process_post(ID, post_txt, url)
+			except (KeyboardInterrupt, SystemExit):
+				print('[abort]')
+				return
 			except:
 				print_err("post %s" % url)
 				continue
