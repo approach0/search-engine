@@ -168,7 +168,6 @@ def crawl_pages(start, end):
 	for page in range(start, end + 1):
 		print("[page] %d / %d" % (page, end))
 		for div_id, sub_url, e in list_post_links(page, c):
-			url = root_url + sub_url
 			if e is not None:
 				print_err("page %d" % page)
 				break
@@ -176,6 +175,7 @@ def crawl_pages(start, end):
 			if not res:
 				print_err("div ID %s" % div_id)
 				continue
+			url = root_url + sub_url
 			try:
 				post_txt = crawl_post_page(sub_url, get_curl())
 				ID = int(res.group(1))
