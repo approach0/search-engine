@@ -22,6 +22,22 @@ struct _math_posting {
 	struct math_posting_item buf[DISK_RD_BUF_ITEMS];
 };
 
+static void print_cur_post_buf(struct _math_posting *po)
+{
+	uint32_t i;
+	struct math_posting_item *item;
+	printf("buf (idx=%u, end=%u): ", po->buf_idx, po->buf_end);
+	for (i = 0; i < po->buf_end; i++) {
+		item = po->buf + po->buf_idx;
+		printf("[%u]", i);
+		if (i == po->buf_idx)
+			printf("{doc%u,exp%u} ", item->doc_id, item->exp_id);
+		else
+			printf("(doc%u,exp%u) ", item->doc_id, item->exp_id);
+	}
+	printf("\n");
+}
+
 math_posting_t
 math_posting_new_reader(struct subpath_ele *ele, const char *fullpath)
 {
@@ -169,7 +185,9 @@ bool math_posting_jump(math_posting_t po_, uint64_t target)
 struct math_posting_item* math_posting_current(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
-	return po->buf + po->buf_idx;
+	struct math_posting_item *item = po->buf + po->buf_idx;
+	// printf("math disk-item docID: %u\n", item->doc_id);
+	return item;
 }
 
 struct math_pathinfo_pack*
