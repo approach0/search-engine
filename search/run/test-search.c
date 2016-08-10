@@ -55,6 +55,9 @@ print_res(ranked_results_t *rk_res, uint32_t page, struct indices *indices)
 	uint32_t tot_pages;
 
 	win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
+	if (page >= tot_pages)
+		printf("No such page. (total page(s): %u)\n", tot_pages);
+
 	if (win.to > 0) {
 		printf("page %u/%u, top result(s) from %u to %u:\n",
 			   page + 1, tot_pages, win.from + 1, win.to);
@@ -68,7 +71,7 @@ int main(int argc, char *argv[])
 	struct query         qry;
 	struct indices       indices;
 	int                  opt;
-	uint32_t             page = 0;
+	uint32_t             page = 1;
 	char                *index_path = NULL;
 	ranked_results_t     results;
 
