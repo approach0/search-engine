@@ -49,20 +49,17 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 }
 
 void
-print_all_rank_res(ranked_results_t *rk_res, struct indices *indices)
+print_res(ranked_results_t *rk_res, uint32_t page, struct indices *indices)
 {
 	struct rank_window win;
-	uint32_t tot_pages, page = 0;
+	uint32_t tot_pages;
 
-	do {
-		win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
-		if (win.to > 0) {
-			printf("page %u/%u, top result(s) from %u to %u:\n",
-			       page + 1, tot_pages, win.from + 1, win.to);
-			rank_window_foreach(&win, &print_res_item, indices);
-			page ++;
-		}
-	} while (page < tot_pages);
+	win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
+	if (win.to > 0) {
+		printf("page %u/%u, top result(s) from %u to %u:\n",
+			   page + 1, tot_pages, win.from + 1, win.to);
+		rank_window_foreach(&win, &print_res_item, indices);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -71,6 +68,7 @@ int main(int argc, char *argv[])
 	struct query         qry;
 	struct indices       indices;
 	int                  opt;
+	uint32_t             page = 0;
 	char                *index_path = NULL;
 	ranked_results_t     results;
 
@@ -81,7 +79,7 @@ int main(int argc, char *argv[])
 	/* a single new query */
 	qry = query_new();
 
-	while ((opt = getopt(argc, argv, "hp:t:m:x:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:p:t:m:x:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -89,7 +87,8 @@ int main(int argc, char *argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h |"
-			       " -p <index path> |"
+			       " -i <index path> |"
+			       " -p <page> |"
 			       " -t <term> |"
 			       " -m <tex> |"
 			       " -x <text>"
@@ -97,8 +96,12 @@ int main(int argc, char *argv[])
 			printf("\n");
 			goto exit;
 
-		case 'p':
+		case 'i':
 			index_path = strdup(optarg);
+			break;
+
+		case 'p':
+			sscanf(optarg, "%u", &page);
 			break;
 
 		case 't':
@@ -155,7 +158,7 @@ int main(int argc, char *argv[])
 	results = indices_run_query(&indices, qry);
 
 	/* print ranked search results in pages */
-	print_all_rank_res(&results, &indices);
+	print_res(&results, page - 1, &indices);
 
 	/* free ranked results */
 	free_ranked_results(&results);
