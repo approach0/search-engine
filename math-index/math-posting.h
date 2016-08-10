@@ -3,14 +3,17 @@
 
 typedef void* math_posting_t;
 
+#if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
+#error "Not little-endian machine."
+#endif
+
 #pragma pack(push, 1)
 struct math_posting_item {
 	/*
-	 * two IDs starting from offset zero is good for
-	 * later transforming them to uint64_t.
+	 * two IDs will be casted to uint64_t
 	 */
-	doc_id_t  doc_id;
-	exp_id_t  exp_id;
+	exp_id_t  exp_id; /* lower address, less significant */
+	doc_id_t  doc_id; /* higher address, more significant */
 
 	uint32_t  pathinfo_pos;
 };
