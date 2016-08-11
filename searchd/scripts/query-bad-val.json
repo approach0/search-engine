@@ -1,0 +1,7 @@
+{	
+	"page": 123,
+	"kw": [
+		{"type": "tex", "str": "f(x) = 2x + b"},
+		{"type": "term", "str": 3421}
+	]
+}

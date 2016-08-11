@@ -6,7 +6,8 @@
  */
 enum query_kw_type {
 	QUERY_KEYWORD_TEX,
-	QUERY_KEYWORD_TERM
+	QUERY_KEYWORD_TERM,
+	QUERY_KEYWORD_INVALID
 };
 
 struct query_keyword {

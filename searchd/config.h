@@ -1,0 +1,5 @@
+#define SEARCHD_DEFAULT_PORT 8921
+#define SEARCHD_DEFAULT_URI  "/search"
+
+//#define DEBUG_PRINT_HTTP_HEAD
+#define DEBUG_SEARCHD

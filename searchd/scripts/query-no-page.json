@@ -1,0 +1,6 @@
+{	
+	"kw": [
+		{"type": "tex", "str": "f(x) = 2x + b"},
+		{"type": "term", "str": "function"}
+	]
+}
