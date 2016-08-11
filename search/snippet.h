@@ -3,7 +3,7 @@ void snippet_free_highlight_list(list*);
 
 void snippet_read_file(FILE*, list*);
 
-/* return an static string */
+/* return a static string */
 const char
 *snippet_highlighted(list*, const char*, const char*);
 
