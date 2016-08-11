@@ -122,7 +122,8 @@ struct rank_hit *new_hit(doc_id_t hitID, float score,
 /*
  * get blob string
  */
-char *get_blob_string(blob_index_t bi, doc_id_t docID, bool gz, size_t *sz)
+char
+*get_blob_string(blob_index_t bi, doc_id_t docID, bool gz, size_t *str_len)
 {
 	struct codec   codec = {CODEC_GZ, NULL};
 	static char    text[MAX_CORPUS_FILE_SZ + 1];
@@ -136,19 +137,19 @@ char *get_blob_string(blob_index_t bi, doc_id_t docID, bool gz, size_t *sz)
 			text_sz = codec_decompress(&codec, blob_out, blob_sz,
 					text, MAX_CORPUS_FILE_SZ);
 			text[text_sz] = '\0';
-			*sz = text_sz;
+			*str_len = text_sz;
 		} else {
 			memcpy(text, blob_out, blob_sz);
 			text[blob_sz] = '\0';
-			*sz = blob_sz;
+			*str_len = blob_sz;
 		}
 
 		blob_free(blob_out);
-		return text;
+		return strdup(text);
 	}
 
 	fprintf(stderr, "error: get_blob_string().\n");
-	*sz = 0;
+	*str_len = 0;
 	return NULL;
 }
 
@@ -283,7 +284,8 @@ static int highlighter_arg_lex_setter(struct lex_slice *slice)
 	return 0;
 }
 
-list prepare_snippet(struct rank_hit* hit, char *text, size_t text_sz, text_lexer lex)
+list prepare_snippet(struct rank_hit* hit, const char *text,
+                     size_t text_sz, text_lexer lex)
 {
 	FILE    *text_fh;
 

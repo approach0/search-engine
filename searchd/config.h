@@ -2,4 +2,9 @@
 #define SEARCHD_DEFAULT_URI  "/search"
 
 //#define DEBUG_PRINT_HTTP_HEAD
-#define DEBUG_SEARCHD
+//#define DEBUG_SEARCHD
+
+#define SEARCHD_HIGHLIGHT_OPEN  "<b>"
+#define SEARCHD_HIGHLIGHT_CLOSE "</b>"
+
+#define SEARCHD_DEFAULT_CACHE_MB 32 /* 32 MB */

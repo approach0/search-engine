@@ -18,7 +18,7 @@
 #define SNIPPET_HL_COLOR C_RED
 #define SNIPPET_HL_RST   C_RST
 
-/* for SNIPPET_PADDING */
+/* for SNIPPET_PADDING and MAX_SNIPPET_SZ */
 #include "config.h"
 
 #define _min(x, y) ((x) > (y) ? (y) : (x))
@@ -35,6 +35,11 @@ struct snippet_hi {
 	char     kw_str[MAX_HIGHLIGHTED_BYTES];
 
 	struct list_node ln;
+};
+
+struct write_snippet_arg {
+	char *snippet;
+	const char *open, *close;
 };
 
 LIST_DEF_FREE_FUN(free_hi_list, struct snippet_hi, ln, free(p));
@@ -261,7 +266,30 @@ void snippet_read_file(FILE* fh, list* hi_li)
 	list_foreach(hi_li, &rm_linefeed, NULL);
 }
 
-char *snippet_highlight(list* hi_li, char *open, char *close)
+static LIST_IT_CALLBK(write_snippet)
 {
-	return malloc(1);
+	LIST_OBJ(struct snippet_hi, h, ln);
+	P_CAST(arg, struct write_snippet_arg, pa_extra);
+	char *p = arg->snippet;
+
+	p += sprintf(p, "%s", h->left_str);
+	p += sprintf(p, "%s", arg->open);
+	p += sprintf(p, "%s", h->kw_str);
+	p += sprintf(p, "%s", arg->close);
+	p += sprintf(p, "%s", h->right_str);
+
+	if (!h->joint_right)
+		p += sprintf(p, " ... ");
+
+	LIST_GO_OVER;
+}
+
+const char
+*snippet_highlighted(list* hi_li, const char *open, const char *close)
+{
+	static char snippet[MAX_SNIPPET_SZ];
+	struct write_snippet_arg arg = {snippet, open, close};
+	list_foreach(hi_li, &write_snippet, &arg);
+
+	return snippet;
 }

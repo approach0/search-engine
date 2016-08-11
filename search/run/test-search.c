@@ -22,6 +22,7 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	/* get URL */
 	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n", str);
+	free(str);
 
 	{
 		int i;
@@ -39,6 +40,7 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	/* prepare highlighter arguments */
 	highlight_list = prepare_snippet(hit, str, str_sz,
 	                                 lex_mix_file);//lex_eng_file);
+	free(str);
 
 	/* print snippet */
 	snippet_hi_print(&highlight_list);

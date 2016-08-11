@@ -37,7 +37,7 @@ static void print_headers(struct evhttp_request *req)
 	}
 }
 
-static char *get_POST_str(struct evhttp_request *req)
+char *get_POST_str(struct evhttp_request *req)
 {
 	struct evbuffer *buf;
 	size_t len;
@@ -68,7 +68,8 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 {
 	struct http_cb_arg *arg = (struct http_cb_arg *)arg_;
 	struct evbuffer *buf;
-	char *request, *response;
+	char *request;
+	const char *response;
 
 #ifdef DEBUG_PRINT_HTTP_HEAD
 	printf("HTTP request header:\n");
@@ -95,10 +96,8 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 	                  "close");
 
 	/* set HTTP response content */
-	if (response) {
+	if (response)
 		evbuffer_add_printf(buf, "%s", response);
-		free(response);
-	}
 
 reply:
 	/* send response */

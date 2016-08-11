@@ -7,7 +7,9 @@
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
 
 #define MAX_MERGE_POSTINGS 4096
-#define SNIPPET_PADDING 40
+
+#define SNIPPET_PADDING    40
+#define MAX_SNIPPET_SZ     4096
 
 //#define DEBUG_SNIPPET
 
@@ -34,6 +36,6 @@
 //#define DEBUG_HILIGHT_SEG
 
 //#define DEBUG_MATH_SCORE_POSTING
-#define VERBOSE_SEARCH
+//#define VERBOSE_SEARCH
 
 //#define DEBUG_MATH_SEARCH
