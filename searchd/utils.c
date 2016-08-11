@@ -205,14 +205,17 @@ static const char
 	static char hit_str[MAX_SEARCHD_RESPONSE_JSON_SZ];
 	static char enc_snippet[MAX_SNIPPET_SZ];
 
-	/* encode into JSON string */
+	/*
+	 * encode into JSON string (encoded snippet is already
+	 * enclosed by double quotes)
+	 */
 	json_encode_str(enc_snippet, snippet);
 
 	sprintf(hit_str, "{"
 		"\"docid\": %u, "     /* hit docID */
 		"\"score\": %.3f, "   /* hit score */
 		"\"url\": \"%s\", "   /* hit document URL */
-		"\"snippet\": \"%s\"" /* hit document snippet */
+		"\"snippet\": %s" /* hit document snippet */
 		"}",
 		docID, score, url, enc_snippet
 	);
