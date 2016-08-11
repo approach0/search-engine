@@ -45,7 +45,7 @@ if(!isset($_GET['q'])) { /* q for query string */
 }
 
 if(isset($_GET['p'])) /* p for page */
-	$req_page = $_GET['p'];
+	$req_page = intval($_GET['p']);
 
 
 /*
