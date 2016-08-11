@@ -45,6 +45,12 @@ enum parse_json_kw_res {
 	PARSE_JSON_KW_SUCC
 };
 
+/* append_result() callback function arguments */
+struct append_result_args {
+	struct indices *indices;
+	uint32_t n_results;
+};
+
 /*
  * Query parsing related
  */
@@ -233,7 +239,8 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	doc_id_t    docID = hit->docID;
 	float       score = hit->score;
 
-	P_CAST(indices, struct indices, arg);
+	P_CAST(append_args, struct append_result_args, arg);
+	struct indices *indices = append_args->indices;
 
 	/* get URL */
 	url = get_blob_string(indices->url_bi, docID, 0, &url_sz);
@@ -255,6 +262,9 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	/* append search result */
 	hit_json = response_hit_str(docID, score, url, snippet);
 	strcat(response, hit_json);
+
+	if (cnt + 1 < append_args->n_results)
+		strcat(response, ", ");
 
 	/* free allocated strings */
 	free(url);
@@ -286,13 +296,15 @@ const char
 	/* check window calculation validity */
 	if (wind.to > 0) {
 		/* valid window, append search results in response */
+		uint32_t n_results = wind.to - wind.from;
+		struct append_result_args args = {indices, n_results};
 		sprintf(
 			response, "{%s, \"hits\": [", response_head_str(
 				SEARCHD_RET_SUCC, tot_pages
 			)
 		);
 
-		rank_window_foreach(&wind, &append_result, indices);
+		rank_window_foreach(&wind, &append_result, &args);
 		strcat(response, "]}\n");
 	} else {
 		/* not valid calculation, return error */
