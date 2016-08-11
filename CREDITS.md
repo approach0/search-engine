@@ -99,13 +99,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-## Tokyo Cabinet (publised under GNU Lesser General Public License: LGPL v2.1)
-Copyright (C) 2006-2011 FAL Labs
-
-Tokyo Cabinet was written and is maintained by FAL Labs. You can contact the author by e-mail to `info@fallabs.com'.
-
-Website: http://fallabs.com/tokyocabinet
-
 ## Linenoise
 Copyright (c) 2010-2014, Salvatore Sanfilippo <antirez at gmail dot com>
 Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
@@ -132,52 +125,6 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-## libz
-Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
-
-This software is provided 'as-is', without any express or implied
-warranty.  In no event will the authors be held liable for any damages
-arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
-
-1. The origin of this software must not be misrepresented; you must not
-claim that you wrote the original software. If you use this software
-in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not be
-misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
-
-Jean-loup Gailly        Mark Adler
-jloup@gzip.org          madler@alumni.caltech.edu
-
-## libbzip2
-This program, "bzip2", the associated library "libbzip2", and all
-documentation, are copyright (C) 1996-2010 Julian R Seward.  All
-rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. The origin of this software must not be misrepresented; you must 
-not claim that you wrote the original software.  If you use this 
-software in a product, an acknowledgment in the product 
-documentation would be appreciated but is not required.
-
-3. Altered source versions must be plainly marked as such, and must
-not be misrepresented as being the original software.
-
-4. The name of the author may not be used to endorse or promote 
-products derived from this software without specific prior written 
-permission.
 
 ## YAJL 2
 Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
