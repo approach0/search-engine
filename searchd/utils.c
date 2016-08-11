@@ -25,12 +25,14 @@ static char response[MAX_SEARCHD_RESPONSE_JSON_SZ];
  * Searchd response (JSON) code/string
  */
 enum searchd_ret_code {
+	SEARCHD_RET_NO_HIT_FOUND,
 	SEARCHD_RET_ILLEGAL_PAGENUM,
 	SEARCHD_RET_WIND_CALC_ERR,
 	SEARCHD_RET_SUCC
 };
 
 static const char searchd_ret_str_map[][128] = {
+	{"no hit found"},
 	{"illegal page number"},
 	{"rank window calculation error"},
 	{"successful"}
@@ -283,14 +285,23 @@ const char
 	                        &tot_pages);
 
 	/* check requested page number legality */
-	if (i >= tot_pages) {
+	if ((i | tot_pages) == 0) {
 		sprintf(
 			response, "{%s}\n", response_head_str(
-				SEARCHD_RET_ILLEGAL_PAGENUM, 0
+				SEARCHD_RET_NO_HIT_FOUND, 0
 			)
 		);
 
-		return strdup(response);
+		return response;
+
+	} else if (i >= tot_pages) {
+		sprintf(
+			response, "{%s}\n", response_head_str(
+				SEARCHD_RET_ILLEGAL_PAGENUM, tot_pages
+			)
+		);
+
+		return response;
 	}
 
 	/* check window calculation validity */
@@ -310,7 +321,7 @@ const char
 		/* not valid calculation, return error */
 		sprintf(
 			response, "{%s}\n", response_head_str(
-				SEARCHD_RET_WIND_CALC_ERR, 0
+				SEARCHD_RET_WIND_CALC_ERR, tot_pages
 			)
 		);
 	}
