@@ -4,7 +4,7 @@
 //#define DEBUG_PRINT_HTTP_HEAD
 //#define DEBUG_SEARCHD
 
-#define SEARCHD_HIGHLIGHT_OPEN  "<b>"
-#define SEARCHD_HIGHLIGHT_CLOSE "</b>"
+#define SEARCHD_HIGHLIGHT_OPEN  "<em class=\"hl\">"
+#define SEARCHD_HIGHLIGHT_CLOSE "</em>"
 
 #define SEARCHD_DEFAULT_CACHE_MB 32 /* 32 MB */
