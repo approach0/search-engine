@@ -1,3 +1,24 @@
+/*
+ * Searchd response (JSON) code/string
+ */
+enum searchd_ret_code {
+	SEARCHD_RET_SUCC,
+	SEARCHD_RET_UNRECOGNIZED_QRY,
+	SEARCHD_RET_BAD_QRY_JSON,
+	SEARCHD_RET_NO_HIT_FOUND,
+	SEARCHD_RET_ILLEGAL_PAGENUM,
+	SEARCHD_RET_WIND_CALC_ERR
+};
+
+static const char searchd_ret_str_map[][128] = {
+	{"successful"},
+	{"unrecognized query"},
+	{"invalid query JSON"},
+	{"no hit found"},
+	{"illegal page number"},
+	{"rank window calculation error"}
+};
+
 /* parse query JSON into our query structure */
 uint32_t parse_json_qry(const char*, struct query*);
 
@@ -5,4 +26,7 @@ uint32_t parse_json_qry(const char*, struct query*);
 void json_encode_str(char*, const char*);
 
 /* get response JSON with search results */
-const char *searchd_response(ranked_results_t*, uint32_t, struct indices*);
+const char
+*search_results_json(ranked_results_t*, uint32_t, struct indices*);
+
+const char *search_errcode_json(enum searchd_ret_code);

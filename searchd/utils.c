@@ -14,29 +14,13 @@
 #include "yajl/yajl_tree.h"
 
 #include "config.h"
+#include "utils.h"
 
 #define MAX_SEARCHD_RESPONSE_JSON_SZ \
 	(MAX_SNIPPET_SZ * DEFAULT_RES_PER_PAGE)
 
 /* response construction buffer */
 static char response[MAX_SEARCHD_RESPONSE_JSON_SZ];
-
-/*
- * Searchd response (JSON) code/string
- */
-enum searchd_ret_code {
-	SEARCHD_RET_NO_HIT_FOUND,
-	SEARCHD_RET_ILLEGAL_PAGENUM,
-	SEARCHD_RET_WIND_CALC_ERR,
-	SEARCHD_RET_SUCC
-};
-
-static const char searchd_ret_str_map[][128] = {
-	{"no hit found"},
-	{"illegal page number"},
-	{"rank window calculation error"},
-	{"successful"}
-};
 
 /* parse JSON keyword result */
 enum parse_json_kw_res {
@@ -183,6 +167,12 @@ static const char
 	return head_str;
 }
 
+const char *search_errcode_json(enum searchd_ret_code code)
+{
+	sprintf(response, "{%s}\n", response_head_str(code, 0));
+	return response;
+}
+
 void json_encode_str(char *dest, const char *src)
 {
 	size_t len = 0;
@@ -274,8 +264,8 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 }
 
 const char
-*searchd_response(ranked_results_t *rk_res, uint32_t i,
-                  struct indices *indices)
+*search_results_json(ranked_results_t *rk_res, uint32_t i,
+                      struct indices *indices)
 {
 	struct rank_window wind;
 	uint32_t tot_pages;
@@ -285,24 +275,10 @@ const char
 	                        &tot_pages);
 
 	/* check requested page number legality */
-	if ((i | tot_pages) == 0) {
-		sprintf(
-			response, "{%s}\n", response_head_str(
-				SEARCHD_RET_NO_HIT_FOUND, 0
-			)
-		);
-
-		return response;
-
-	} else if (i >= tot_pages) {
-		sprintf(
-			response, "{%s}\n", response_head_str(
-				SEARCHD_RET_ILLEGAL_PAGENUM, tot_pages
-			)
-		);
-
-		return response;
-	}
+	if ((i | tot_pages) == 0)
+		return search_errcode_json(SEARCHD_RET_NO_HIT_FOUND);
+	else if (i >= tot_pages)
+		return search_errcode_json(SEARCHD_RET_ILLEGAL_PAGENUM);
 
 	/* check window calculation validity */
 	if (wind.to > 0) {
@@ -319,11 +295,7 @@ const char
 		strcat(response, "]}\n");
 	} else {
 		/* not valid calculation, return error */
-		sprintf(
-			response, "{%s}\n", response_head_str(
-				SEARCHD_RET_WIND_CALC_ERR, tot_pages
-			)
-		);
+		return search_errcode_json(SEARCHD_RET_WIND_CALC_ERR);
 	}
 
 	return response;

@@ -28,6 +28,14 @@ const char *httpd_on_recv(const char* req, void* arg)
 
 	if (page == 0) {
 		fprintf(stderr, "requested JSON parse error.\n");
+
+		ret = search_errcode_json(SEARCHD_RET_BAD_QRY_JSON);
+		goto reply;
+
+	} else if (qry.len == 0) {
+		fprintf(stderr, "resulted qry of length zero.\n");
+
+		ret = search_errcode_json(SEARCHD_RET_UNRECOGNIZED_QRY);
 		goto reply;
 	}
 
@@ -40,15 +48,27 @@ const char *httpd_on_recv(const char* req, void* arg)
 #endif
 
 	/* search query */
+#ifdef DEBUG_SEARCHD
+	printf("run query...\n");
+#endif
 	srch_res = indices_run_query(indices, qry);
 
 	/* generate response JSON */
-	ret = searchd_response(&srch_res, page - 1, indices);
+#ifdef DEBUG_SEARCHD
+	printf("return results...\n");
+#endif
+	ret = search_results_json(&srch_res, page - 1, indices);
 
 	/* free ranked results */
+#ifdef DEBUG_SEARCHD
+	printf("free results...\n");
+#endif
 	free_ranked_results(&srch_res);
 
 reply:
+#ifdef DEBUG_SEARCHD
+	printf("delete query...\n");
+#endif
 	query_delete(qry);
 	return ret;
 }
