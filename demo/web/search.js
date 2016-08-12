@@ -8,13 +8,6 @@ var response = {
 	"hits": []
 };
 
-function render_math() {
-	console.log('rendering math...');
-	MathJax.Hub.Queue(
-		["Typeset", MathJax.Hub]
-	);
-}
-
 function str_fmt() {
 	var res_str = arguments[0];
 	for (var i = 1; i < arguments.length; i++) {
@@ -51,8 +44,8 @@ function handle_search_res(res, qry, page) {
 		response.next = '';
 
 	setTimeout(function(){
-		render_math();
-	}, 1000);
+		tex_render();
+	}, 500);
 }
 
 function srch_qry(qry, page) {

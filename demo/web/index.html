@@ -1,29 +1,15 @@
+<!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<title>Search Demo</title>
-	<link rel="stylesheet" href="style.css" type="text/css" media="all" />
-	<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
-	<script type="text/javascript" src="vendor/vue/vue.min.js"></script>
-	<script type="text/javascript" src="search.js"></script>
-	<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
-	<script type="text/x-mathjax-config">
-	MathJax.Hub.Config({
-		tex2jax: {
-			inlineMath: [['[imath]','[/imath]']],
-			displayMath: [['[dmath]','[/dmath]']]
-		},
-
-		showMathMenu: false, /* do not show menu */
-		menuSettings: {CHTMLpreview: false}
-	});
-
-	/* use SVG to avoid chrome trailing space vertical line bug */
-	MathJax.Hub.Register.StartupHook("End Jax",function () {
-		var jax = "SVG";
-		return MathJax.Hub.setRenderer(jax);
-	});
-	</script>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Search Demo</title>
+<link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
+<link rel="stylesheet" href="style.css" type="text/css"/>
+<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="vendor/vue/vue.min.js"></script>
+<script type="text/javascript" src="vendor/katex/katex.min.js"></script>
+<script type="text/javascript" src="tex-render.js"></script>
+<script type="text/javascript" src="search.js"></script>
 </head>
 <body>
 	<input type="text" placeholder=" search ..." id="search_input_box">
@@ -34,7 +20,7 @@
 	<ol>
 	<li v-for="hit in hits">
 		<a target="_blank" v-bind:href="hit.url">{{hit.url}}</a><br/>
-		{{{ hit.snippet }}}
+		<p class="snippet">{{{ hit.snippet }}}</p>
 	</li>
 	</ol>
 	<p>
@@ -43,6 +29,5 @@
 		<a v-bind:onclick="next" v-if="next != ''" href="javascript:;"> next</a>
 	</p>
 	</div>
-
 </body>
 </html>

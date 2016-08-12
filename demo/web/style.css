@@ -1,3 +1,8 @@
 em.hl {
 	background-color: #FF9;
 }
+
+span.imath-err {
+	color: #CC0000;
+	border: 1px solid #CC0000;
+}
