@@ -38,7 +38,7 @@ struct snippet_hi {
 };
 
 struct write_snippet_arg {
-	char *snippet;
+	char *wr_cur;
 	const char *open, *close;
 };
 
@@ -270,7 +270,7 @@ static LIST_IT_CALLBK(write_snippet)
 {
 	LIST_OBJ(struct snippet_hi, h, ln);
 	P_CAST(arg, struct write_snippet_arg, pa_extra);
-	char *p = arg->snippet;
+	char *p = arg->wr_cur;
 
 	p += sprintf(p, "%s", h->left_str);
 	p += sprintf(p, "%s", arg->open);
@@ -281,6 +281,9 @@ static LIST_IT_CALLBK(write_snippet)
 	if (!h->joint_right)
 		p += sprintf(p, " ... ");
 
+	/* update current writing position */
+	arg->wr_cur = p;
+
 	LIST_GO_OVER;
 }
 
@@ -289,6 +292,7 @@ const char
 {
 	static char snippet[MAX_SNIPPET_SZ];
 	struct write_snippet_arg arg = {snippet, open, close};
+
 	list_foreach(hi_li, &write_snippet, &arg);
 
 	return snippet;
