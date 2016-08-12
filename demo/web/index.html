@@ -24,9 +24,9 @@
 	</li>
 	</ol>
 	<p>
-		<a v-bind:onclick="prev" v-if="prev != ''" href="javascript:;">prev </a>
-		<span v-if="ret_code != -1">[{{cur_page}}/{{tot_pages}}]</span>
-		<a v-bind:onclick="next" v-if="next != ''" href="javascript:;"> next</a>
+		<a class="page-navi" v-bind:onclick="prev" v-if="prev != ''" href="#">prev </a>
+		<span v-if="ret_code != -1">[page {{cur_page}}/{{tot_pages}}]</span>
+		<a class="page-navi" v-bind:onclick="next" v-if="next != ''" href="#"> next</a>
 	</p>
 	</div>
 </body>

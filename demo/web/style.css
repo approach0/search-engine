@@ -6,3 +6,7 @@ span.imath-err {
 	color: #CC0000;
 	border: 1px solid #CC0000;
 }
+
+a.page-navi, a.page-navi:visited{
+     color: blue;
+}
