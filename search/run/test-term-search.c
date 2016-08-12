@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 	int                     opt;
 	enum postmerge_op       op = POSTMERGE_OP_AND;
 
-	char       query[MAX_MERGE_POSTINGS][MAX_TERM_BYTES];
+	static char query[MAX_MERGE_POSTINGS][MAX_TERM_BYTES];
 	uint32_t   i, n_queries = 0;
 
 	char      *index_path = NULL;
