@@ -75,13 +75,13 @@ $(document).ready(function() {
 
 	$('#search_button').on('click', function() {
 		qry = $("#search_input_box").val();
-		srch_qry(encodeURI(qry), 1);
+		srch_qry(encodeURIComponent(qry), 1);
 	});
 
 	$("#search_input_box").on("keyup", function(ev) {
 		if (ev.which == 13 /* enter */) {
 			qry = $(this).val();
-			srch_qry(encodeURI(qry), 1);
+			srch_qry(encodeURIComponent(qry), 1);
 		}
 	});
 });
