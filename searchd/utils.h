@@ -29,4 +29,5 @@ void json_encode_str(char*, const char*);
 const char
 *search_results_json(ranked_results_t*, uint32_t, struct indices*);
 
+/* get response JSON to indicate an error */
 const char *search_errcode_json(enum searchd_ret_code);
