@@ -84,6 +84,9 @@ $(document).ready(function(){
 					input_box.str = mq.latex();
 				},
 				enter: function() {
+					if (mq.latex() == '')
+						return;
+
 					fix_input("tex", mq.latex(), function() {
 						tex_render("div.qry-div-fix");
 						setTimeout(function () {
@@ -177,21 +180,26 @@ $(document).ready(function(){
 		arr = query.items;
 		input_box = arr[arr.length - 1];
 
-		if (input_box.type == 'tex-input') {
-			fix_input("tex", input_box.str, function() {
-				tex_render("div.qry-div-fix");
-				qry = $("#qry").val();
-				srch_qry(encodeURIComponent(qry), 1);
-			});
+		if (input_box.str != '') {
+			if (input_box.type == 'tex-input') {
+				fix_input("tex", input_box.str, function() {
+					tex_render("div.qry-div-fix");
+					qry = $("#qry").val();
 
-		} else if (input_box.type == 'term-input') {
-			fix_input("term", input_box.str, function() {
-				qry = $("#qry").val();
-				srch_qry(encodeURIComponent(qry), 1);
-			});
-		} else {
-			qry = $("#qry").val();
-			srch_qry(encodeURIComponent(qry), 1);
+					srch_qry(encodeURIComponent(qry), 1);
+				});
+				return;
+
+			} else if (input_box.type == 'term-input') {
+				fix_input("term", input_box.str, function() {
+					qry = $("#qry").val();
+					srch_qry(encodeURIComponent(qry), 1);
+				});
+				return;
+			}
 		}
+
+		qry = $("#qry").val();
+		srch_qry(encodeURIComponent(qry), 1);
 	});
 });

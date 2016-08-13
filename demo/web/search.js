@@ -47,6 +47,8 @@ function handle_search_res(res, qry, page) {
 }
 
 function srch_qry(qry, page) {
+	console.log('srch_qry: ' + qry + ' @page' + page);
+
 	$.ajax({
 		url: 'search-relay.php',
 		data: 'p=' + page + '&q=' + qry,
