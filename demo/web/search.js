@@ -18,8 +18,6 @@ function str_fmt() {
 }
 
 function handle_search_res(res, qry, page) {
-	console.log(res);
-
 	response.ret_code = res.ret_code;
 	response.ret_str = res.ret_str;
 	response.tot_pages = res.tot_pages;

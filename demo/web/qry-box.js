@@ -78,6 +78,11 @@ $(document).ready(function(){
 		var ele = document.getElementById("math-input");
 		var mq = MQ.MathField(ele, {
 			handlers: {
+				edit: function() {
+					arr = query.items;
+					input_box = arr[arr.length - 1];
+					input_box.str = mq.latex();
+				},
 				enter: function() {
 					fix_input("tex", mq.latex(), function() {
 						tex_render("div.qry-div-fix");
@@ -164,7 +169,24 @@ $(document).ready(function(){
 
 	/* search button */
 	$('#search_button').on('click', function() {
-		qry = $("#qry").val();
-		srch_qry(encodeURIComponent(qry), 1);
+		arr = query.items;
+		input_box = arr[arr.length - 1];
+
+		if (input_box.type == 'tex-input') {
+			fix_input("tex", input_box.str, function() {
+				tex_render("div.qry-div-fix");
+				qry = $("#qry").val();
+				srch_qry(encodeURIComponent(qry), 1);
+			});
+
+		} else if (input_box.type == 'term-input') {
+			fix_input("term", input_box.str, function() {
+				qry = $("#qry").val();
+				srch_qry(encodeURIComponent(qry), 1);
+			});
+		} else {
+			qry = $("#qry").val();
+			srch_qry(encodeURIComponent(qry), 1);
+		}
 	});
 });
