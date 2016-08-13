@@ -86,6 +86,9 @@ $(document).ready(function(){
 				enter: function() {
 					fix_input("tex", mq.latex(), function() {
 						tex_render("div.qry-div-fix");
+						setTimeout(function () {
+							$("#qry-input-box").focus();
+						}, 500);
 					});
 				}
 			}
@@ -100,7 +103,9 @@ $(document).ready(function(){
 		input_box = arr[arr.length - 1];
 
 		if (ev.which == 13 /* enter */) {
-			fix_input("term", input_box.str, function() {});
+			fix_input("term", input_box.str, function() {
+				$("#qry-input-box").focus();
+			});
 		} else if ( /* user input a $ as first char */
 			ev.which == 52 &&
 			input_box.str[0] == "$"
