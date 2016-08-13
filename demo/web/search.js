@@ -65,9 +65,4 @@ $(document).ready(function() {
 		el: '#search-vue-app',
 		data: response
 	});
-
-	$('#search_button').on('click', function() {
-		qry = $("#qry").val();
-		srch_qry(encodeURIComponent(qry), 1);
-	});
 });

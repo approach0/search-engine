@@ -8,6 +8,7 @@ $(document).ready(function(){
 		]
 	};
 
+	/* query variable <--> raw query string convert */
 	var raw_str_2_query = function() {
 		var q = query;
 		var raw_str_arr = q.raw_str.split(",");
@@ -41,6 +42,7 @@ $(document).ready(function(){
 		query.raw_str = raw_str_arr.slice(0, -1).join(", ");
 	};
 
+	/* keyword push/edit */
 	var fix_input = function (type, str, then) {
 		query.items.pop();
 		query.items.push({
@@ -106,6 +108,14 @@ $(document).ready(function(){
 	var qry_vm = new Vue({
 		el: "#qry-input-vue-app",
 		data: query,
+		computed: { /* computed property */
+			enc_uri: function () {
+				return encodeURIComponent(this.raw_str);
+			},
+			url_root: function () {
+				return location.origin + location.pathname;
+			}
+		},
 		methods: {
 			area_on_click: function (ev) {
 				$("#qry-input-box").focus();
@@ -150,5 +160,11 @@ $(document).ready(function(){
 				t = t.replace("-", "+");
 			head.text(t);
 		});
+	});
+
+	/* search button */
+	$('#search_button').on('click', function() {
+		qry = $("#qry").val();
+		srch_qry(encodeURIComponent(qry), 1);
 	});
 });

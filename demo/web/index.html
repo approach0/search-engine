@@ -6,22 +6,22 @@
 <meta charset="utf-8"/>
 <link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
 <link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
-<link rel="stylesheet" href="qry-box.css" type="text/css"/>
 <link rel="stylesheet" href="search.css" type="text/css"/>
+<link rel="stylesheet" href="qry-box.css" type="text/css"/>
 
 <script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
 <script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
 <script type="text/javascript" src="vendor/vue/vue.min.js"></script>
 <script type="text/javascript" src="vendor/katex/katex.min.js"></script>
 <script type="text/javascript" src="tex-render.js"></script>
-<script type="text/javascript" src="qry-box.js"></script>
 <script type="text/javascript" src="search.js"></script>
+<script type="text/javascript" src="qry-box.js"></script>
 </head>
 
-<body>
+<body style="margin: 0;">
 
 <!-- Query Box -->
-<div id="qry-input-vue-app">
+<div id="qry-input-vue-app" style="padding: 5px 5px 10px 5px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
 <div id="qry-input-area" v-on:click="area_on_click">
@@ -40,7 +40,7 @@
 			</div>
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box" class="pl_holder" placeholder="Enter keywords here, type $ for TeX input."/>
+			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box" class="pl_holder" placeholder="Enter here, type $ for TeX input."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
@@ -51,20 +51,29 @@
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="margin-top: 8px">
-	<button style="float:right" type="button" id="search_button">Search</button>
+<div style="margin-top: 8px;">
+	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
-	<span class="collapse">(+) No idea?</span>
+	<span class="collapse">(+) About</span>
 	<div>
-		<p>Example:</p>
+		<p>What is this?</p>
+		<p>Features:</p>
+		<p>Goal:</p>
+		<p>Examples:</p>
 	</div>
 
-	<span class="collapse">(+) Developer</span>
+	<span class="collapse">(+) Developers</span>
 	<div>
-		<input id="qry" style="margin: 10px 0 10px 0; width: 100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"/>
-		<p>Fork me on GitHub:</p>
-		<p>Curl API:</p>
+		<p>raw query edit:</p>
+		<input id="qry" style="width: 100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
+		<p>WEB API:</p>
+		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
+		curl -v {{url_root}}search-relay.php?q={{enc_uri}}
+		<p>
+		<p>Show me your interest on GitHub:</p>
+		<iframe src="https://ghbtns.com/github-btn.html?user=t-k-&repo=the-day-after-tomorrow&type=star&count=true" frameborder="0" scrolling="0" width="90px" height="20px"></iframe>
 	</div>
+
 </div>
 <!-- Search button and options END -->
 
