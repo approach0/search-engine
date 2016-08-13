@@ -106,9 +106,14 @@ $(document).ready(function(){
 		input_box = arr[arr.length - 1];
 
 		if (ev.which == 13 /* enter */) {
-			fix_input("term", input_box.str, function() {
-				$("#qry-input-box").focus();
-			});
+			if (input_box.str == '') {
+				/* think this as search signal */
+				do_search();
+			} else {
+				fix_input("term", input_box.str,function() {
+					$("#qry-input-box").focus();
+				});
+			}
 		} else if ( /* user input a $ as first char */
 			ev.which == 52 &&
 			input_box.str[0] == "$"
@@ -175,8 +180,8 @@ $(document).ready(function(){
 		});
 	});
 
-	/* search button */
-	$('#search_button').on('click', function() {
+	/* search related */
+	function do_search() {
 		arr = query.items;
 		input_box = arr[arr.length - 1];
 
@@ -201,5 +206,9 @@ $(document).ready(function(){
 
 		qry = $("#qry").val();
 		srch_qry(encodeURIComponent(qry), 1);
+	}
+
+	$('#search_button').on('click', function() {
+		do_search();
 	});
 });
