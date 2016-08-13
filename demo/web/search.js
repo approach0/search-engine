@@ -1,8 +1,8 @@
 var response = {
-	'ret_code': -1,
+	'ret_code': 0,
 	'ret_str': '',
-	'tot_pages': -1,
-	'cur_page': -1,
+	'tot_pages': 0,
+	'cur_page': 0,
 	'prev': '',
 	'next': '',
 	"hits": []
@@ -44,7 +44,7 @@ function handle_search_res(res, qry, page) {
 		response.next = '';
 
 	setTimeout(function(){
-		tex_render();
+		tex_render("p.snippet");
 	}, 500);
 }
 
@@ -67,14 +67,7 @@ $(document).ready(function() {
 	});
 
 	$('#search_button').on('click', function() {
-		qry = $("#search_input_box").val();
+		qry = $("#qry").val();
 		srch_qry(encodeURIComponent(qry), 1);
-	});
-
-	$("#search_input_box").on("keyup", function(ev) {
-		if (ev.which == 13 /* enter */) {
-			qry = $(this).val();
-			srch_qry(encodeURIComponent(qry), 1);
-		}
 	});
 });

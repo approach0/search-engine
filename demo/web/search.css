@@ -8,5 +8,7 @@ span.imath-err {
 }
 
 a.page-navi, a.page-navi:visited{
-     color: blue;
+	color: blue;
+	padding-left: 10px;
+	padding-right: 10px;
 }

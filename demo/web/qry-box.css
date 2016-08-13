@@ -1,0 +1,78 @@
+ul.qry-li-wrap {
+	overflow: hidden;
+	margin: 0;
+	padding-top: 6px;
+	padding-left: 10px;
+	padding-bottom: 6px;
+}
+
+li.qry-li {
+	float: left;
+	display: block;
+	padding-right: 4px;
+}
+
+div.qry-div-fix {
+	color: #4078c0;
+	background-color: #edf2f9;
+	padding-left: 8px;
+	padding-right: 8px;
+	padding-bottom: 4px;
+	padding-top: 4px;
+
+	box-shadow: 0 1px 2px black;
+	border-radius: 4px;
+}
+
+#qry-input-box {
+	margin-top: 2px;
+	float: left;
+	outline: none;
+	border: none;
+}
+
+#qry-input-area {
+	box-shadow: inset 0 1px 2px black;
+}
+
+span.qrytxt {
+	font-size: 18px;
+	color: black;
+}
+
+.pl_holder {
+	width: 300px;
+	font-size: 14px;
+	color: gray;
+	padding-left: 10px;
+}
+
+span.dele {
+	font-size: 14px;
+	color: gray;
+	padding-left: 12px;
+}
+
+span.dele:hover {
+	color: red;
+	cursor: pointer;
+}
+
+span.edit {
+	font-size: 14px;
+	color: gray;
+}
+
+span.edit:hover {
+	color: red;
+	cursor: pointer;
+}
+
+span.collapse {
+	margin-right: 10px;
+	color: blue;
+	font-size: 14px;
+}
+span.collapse:hover {
+	cursor: pointer;
+}

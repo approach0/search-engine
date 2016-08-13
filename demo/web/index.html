@@ -1,22 +1,79 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <title>Search Demo</title>
+<meta charset="utf-8"/>
 <link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="style.css" type="text/css"/>
+<link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
+<link rel="stylesheet" href="qry-box.css" type="text/css"/>
+<link rel="stylesheet" href="search.css" type="text/css"/>
+
 <script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
 <script type="text/javascript" src="vendor/vue/vue.min.js"></script>
 <script type="text/javascript" src="vendor/katex/katex.min.js"></script>
 <script type="text/javascript" src="tex-render.js"></script>
+<script type="text/javascript" src="qry-box.js"></script>
 <script type="text/javascript" src="search.js"></script>
 </head>
-<body>
-	<input type="text" placeholder=" search ..." id="search_input_box">
-	<button id="search_button" type="button">Run! Query, run!</button>
 
-	<div id="search-vue-app">
-	<p v-if="ret_code != -1">Return code: {{ret_code}}, message: {{ret_str}}.</p>
+<body>
+
+<!-- Query Box -->
+<div id="qry-input-vue-app">
+
+<!-- Query input area -->
+<div id="qry-input-area" v-on:click="area_on_click">
+<ul class="qry-li-wrap"><template v-for="i in items">
+		<li v-if="i.type == 'term'" class="qry-li">
+			<div class="qry-div-fix">
+				<span class="qrytxt">{{{i.str}}}</span>
+				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">×</span>
+			</div>
+		</li>
+		<li v-if="i.type == 'tex'" class="qry-li">
+			<div class="qry-div-fix">
+				<span class="qrytxt">[imath]{{i.str}}[/imath]</span>
+				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">×</span>
+				<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">✐</span>
+			</div>
+		</li>
+		<li v-if="i.type == 'term-input'" class="qry-li">
+			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box" class="pl_holder" placeholder="Enter keywords here, type $ for TeX input."/>
+		</li>
+		<li v-if="i.type == 'tex-input'" class="qry-li">
+			<span id="math-input"></span>
+			<span class="pl_holder">Press enter after TeX edit</span>
+		</li>
+</template></ul>
+</div>
+<!-- Query input area END -->
+
+<!-- Search button and options -->
+<div style="margin-top: 8px">
+	<button style="float:right" type="button" id="search_button">Search</button>
+
+	<span class="collapse">(+) No idea?</span>
+	<div>
+		<p>Example:</p>
+	</div>
+
+	<span class="collapse">(+) Developer</span>
+	<div>
+		<input id="qry" style="margin: 10px 0 10px 0; width: 100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"/>
+		<p>Fork me on GitHub:</p>
+		<p>Curl API:</p>
+	</div>
+</div>
+<!-- Search button and options END -->
+
+</div>
+<!-- Query Box END -->
+
+<!-- Search Results -->
+<div id="search-vue-app">
+	<p v-if="ret_code != 0">Return code: {{ret_code}}, message: {{ret_str}}.</p>
 	<ol>
 	<li v-for="hit in hits">
 		<a target="_blank" v-bind:href="hit.url">{{hit.url}}</a><br/>
@@ -24,10 +81,12 @@
 	</li>
 	</ol>
 	<p>
-		<a class="page-navi" v-bind:onclick="prev" v-if="prev != ''" href="#">prev </a>
-		<span v-if="ret_code != -1">[page {{cur_page}}/{{tot_pages}}]</span>
-		<a class="page-navi" v-bind:onclick="next" v-if="next != ''" href="#"> next</a>
+		<a class="page-navi" v-bind:onclick="prev" v-if="prev != ''" href="#">prev</a>
+		<span v-if="tot_pages != 0">[page {{cur_page}}/{{tot_pages}}]</span>
+		<a class="page-navi" v-bind:onclick="next" v-if="next != ''" href="#">next</a>
 	</p>
-	</div>
+</div>
+<!-- Search Results END -->
+
 </body>
 </html>

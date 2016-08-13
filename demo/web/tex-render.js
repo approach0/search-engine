@@ -1,10 +1,9 @@
-function tex_render() {
+function tex_render(scope_select) {
 	tex_tag_open  = '<span class="imath-to-render">';
 	tex_tag_close = '</span>';
 
 	replace_regex = /\[imath\]([\s\S]+?)\[\/imath\]/g;
 	render_select = "span.imath-to-render";
-	scope_select = "p.snippet";
 	remove_class = "imath-to-render";
 	replace_class = "imath-rendered";
 
