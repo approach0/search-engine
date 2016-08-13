@@ -35,7 +35,7 @@ const char *httpd_on_recv(const char* req, void* arg)
 	} else if (qry.len == 0) {
 		fprintf(stderr, "resulted qry of length zero.\n");
 
-		ret = search_errcode_json(SEARCHD_RET_UNRECOGNIZED_QRY);
+		ret = search_errcode_json(SEARCHD_RET_EMPTY_QRY);
 		goto reply;
 	}
 

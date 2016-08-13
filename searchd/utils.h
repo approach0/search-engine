@@ -3,7 +3,7 @@
  */
 enum searchd_ret_code {
 	SEARCHD_RET_SUCC,
-	SEARCHD_RET_UNRECOGNIZED_QRY,
+	SEARCHD_RET_EMPTY_QRY,
 	SEARCHD_RET_BAD_QRY_JSON,
 	SEARCHD_RET_NO_HIT_FOUND,
 	SEARCHD_RET_ILLEGAL_PAGENUM,
@@ -12,7 +12,7 @@ enum searchd_ret_code {
 
 static const char searchd_ret_str_map[][128] = {
 	{"successful"},
-	{"unrecognized query"},
+	{"empty or unrecognized query"},
 	{"invalid query JSON"},
 	{"no hit found"},
 	{"illegal page number"},
