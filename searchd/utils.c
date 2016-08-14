@@ -234,24 +234,54 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	P_CAST(append_args, struct append_result_args, arg);
 	struct indices *indices = append_args->indices;
 
+#ifdef DEBUG_APPEND_RESULTS
+	printf("appending hit (docID = %u) ...\n", docID);
+
+	printf("occurs: ");
+	{
+		uint32_t i;
+		for (i = 0; i < hit->n_occurs; i++)
+			printf("%u ", hit->occurs[i]);
+		printf("\n");
+	}
+#endif
+
 	/* get URL */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("getting URL...\n");
+#endif
 	url = get_blob_string(indices->url_bi, docID, 0, &url_sz);
 
 	/* get document text */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("getting doc text...\n");
+#endif
 	doc = get_blob_string(indices->txt_bi, docID, 1, &doc_sz);
 
 	/* prepare highlighter arguments */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("preparing highlight list...\n");
+#endif
 	hl_list = prepare_snippet(hit, doc, doc_sz, lex_mix_file);
 
 	/* get snippet */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("getting snippet...\n");
+#endif
 	snippet = snippet_highlighted(&hl_list,
                                   SEARCHD_HIGHLIGHT_OPEN,
 	                              SEARCHD_HIGHLIGHT_CLOSE);
 
 	/* free highlight list */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("free highlight list...\n");
+#endif
 	snippet_free_highlight_list(&hl_list);
 
 	/* append search result */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("append JSON result...\n");
+#endif
 	hit_json = response_hit_str(docID, score, url, snippet);
 	strcat(response, hit_json);
 
@@ -259,6 +289,9 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 		strcat(response, ", ");
 
 	/* free allocated strings */
+#ifdef DEBUG_APPEND_RESULTS
+	printf("free URL and doc text...\n");
+#endif
 	free(url);
 	free(doc);
 }

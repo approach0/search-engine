@@ -3,6 +3,7 @@
 
 //#define DEBUG_PRINT_HTTP_HEAD
 //#define DEBUG_SEARCHD
+//#define DEBUG_APPEND_RESULTS
 
 #define SEARCHD_HIGHLIGHT_OPEN  "<em class=\"hl\">"
 #define SEARCHD_HIGHLIGHT_CLOSE "</em>"

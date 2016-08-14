@@ -70,6 +70,10 @@ reply:
 	printf("delete query...\n");
 #endif
 	query_delete(qry);
+
+#ifdef DEBUG_SEARCHD
+	printf("query handled.\n");
+#endif
 	return ret;
 }
 

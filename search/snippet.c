@@ -170,8 +170,11 @@ strip_utf8conti_from_head(char *buf, size_t len)
 		if (!utf8_conti(buf[i]))
 			break;
 
-	if (i != len) {
-		/* move right utf8 string ahead and overwrite the head */
+	/*
+	 * if there are non-start byte(s) in the head, cut them,
+	 * move right utf8 string ahead and overwrite the head.
+	 */
+	if (i != 0) {
 		for (j = 0; i < len; i++, j++) {
 			buf[j] = buf[i];
 		}
@@ -180,22 +183,26 @@ strip_utf8conti_from_head(char *buf, size_t len)
 		return (uint32_t)j;
 	}
 
-	return 0;
+	/* no need to cut, keep the original length */
+	return len;
 }
 
 static uint32_t
 strip_utf8conti_from_tail(char *buf, size_t len)
 {
 	size_t i = len;
+
+	/* safe guard */
+	if (len == 0)
+		return 0;
+
 	/* go reversely from the tail, to the first byte that
 	 * is utf8 start byte */
-	do {
-		i --;
+	for (i = len - 1; i != 0; i--)
 		if (!utf8_conti(buf[i]))
 			break;
-	} while (i != 0);
 
-	/* cut it and what follows */
+	/* cut it and those follows */
 	buf[i] = '\0';
 	return (uint32_t)i;
 }
