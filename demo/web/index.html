@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="search.css" type="text/css"/>
 <link rel="stylesheet" href="qry-box.css" type="text/css"/>
+<link rel="stylesheet" href="font.css" type="text/css"/>
 
 <script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
 <script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
@@ -16,25 +17,41 @@
 <script type="text/javascript" src="tex-render.js"></script>
 <script type="text/javascript" src="search.js"></script>
 <script type="text/javascript" src="qry-box.js"></script>
+<style>
+img.social {
+	height: 16px;
+}
+/*
+	<span class="collapse">(+) Debug</span>
+	<div>
+		<ul>
+		<li v-for="i in items">
+			{{i.type}}: "{{i.str}}" <br/>
+		</li>
+		</ul>
+		<hr class="vsep"/>
+	</div>
+*/
+</style>
 </head>
 
 <body style="margin: 0;">
 
 <!-- Query Box -->
-<div id="qry-input-vue-app" style="padding: 5px 5px 10px 5px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+<div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
 <div id="qry-input-area" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
 			<div class="qry-div-fix">
-				<span class="qrytxt">{{{i.str}}}</span>
+				<span>{{{i.str}}}</span>
 				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">×</span>
 			</div>
 		</li>
 		<li v-if="i.type == 'tex'" class="qry-li">
 			<div class="qry-div-fix">
-				<span class="qrytxt">[imath]{{i.str}}[/imath]</span>
+				<span>[imath]{{i.str}}[/imath]</span>
 				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">×</span>
 				<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">✐</span>
 			</div>
@@ -54,33 +71,28 @@
 <div style="margin-top: 8px;">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
-	<span class="collapse">(+) About</span>
+	<span class="collapse" title="About">(+) ?</span>
 	<div>
-		<p>What is this?</p>
-		<p>Features:</p>
-		<p>Goal:</p>
-		<p>Examples:</p>
+		<h3>About</h3>
+		<p>This is a demo page for a math-aware search engine. <i>Math-aware</i> means
+		you can add math expression(s) as some of your keywords to have search engine
+		help you find similar expressions and return those documents that you may find
+		relevant to your input. In short, a typical search engine plus math search.</p>
+		<h3>Any thought?</h3>
+		<p>Send it to: zhongwei AT udel.edu</p>
+
+		<hr class="vsep"/>
 	</div>
 
-	<span class="collapse">(+) Developers</span>
+	<span class="collapse" title="Raw query and API">(+) Raw</span>
 	<div>
-		<p>raw query edit:</p>
+		<p>If you know TeX, it is faster to edit the equivalent raw query
+		(separate keywords by comma):</p>
 		<input id="qry" style="width: 100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
-		<p>WEB API:</p>
+		<p>Its corresponding WEB API:</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
 		curl -v {{url_root}}search-relay.php?q={{enc_uri}}
 		<p>
-		<p>Show me your interest on GitHub:</p>
-		<iframe src="https://ghbtns.com/github-btn.html?user=t-k-&repo=the-day-after-tomorrow&type=star&count=true" frameborder="0" scrolling="0" width="90px" height="20px"></iframe>
-	</div>
-
-	<span class="collapse">(+) Debug</span>
-	<div>
-		<ul>
-		<li v-for="i in items">
-			{{i.type}}: "{{i.str}}" <br/>
-		</li>
-		</ul>
 	</div>
 
 </div>
@@ -98,11 +110,37 @@
 		<p class="snippet">{{{ hit.snippet }}}</p>
 	</li>
 	</ol>
-	<p>
-		<a class="page-navi" v-bind:onclick="prev" v-if="prev != ''" href="#">prev</a>
-		<span v-if="tot_pages != 0">[page {{cur_page}}/{{tot_pages}}]</span>
-		<a class="page-navi" v-bind:onclick="next" v-if="next != ''" href="#">next</a>
-	</p>
+
+<!-- Footer -->
+<div v-show="tot_pages != 0" style="padding-top: 20px; height: 30px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+
+<!-- Left Footer -->
+	<div style="float: left; padding-left: 20px;">
+		<span v-if="prev != ''">
+			← <a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
+		</span>
+		<span>[page {{cur_page}}/{{tot_pages}}]</span>
+		<span v-if="next != ''">
+			<a class="page-navi" v-bind:onclick="next" href="#">next</a> →
+		</span>
+	</div>
+
+<!-- Right Footer -->
+	<div style="float: right;">
+		<a href="https://twitter.com/intent/tweet?text=" target="_blank" title="Tweet">
+		<img class="social" src="images/social/Twitter.svg"></a>
+		<a href="https://plus.google.com/share?url=" target="_blank" title="Share on Google+">
+		<img class="social" src="images/social/Google+.svg"></a>
+		<a href="http://www.reddit.com/submit?url=&title=" target="_blank" title="Submit to Reddit">
+		<img class="social" src="images/social/Reddit.svg"></a>
+		<script async defer src="https://buttons.github.io/buttons.js"></script>
+		<a class="github-button" href="https://github.com/t-k-/the-day-after-tomorrow" data-count-href="/ntkme/github-buttons/stargazers" data-count-api="/repos/ntkme/github-buttons#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star ntkme/github-buttons on GitHub">Star</a>
+		<!-- Place this tag in your head or just before your close body tag. -->
+	</div>
+
+</div>
+<!-- Footer END -->
+
 </div>
 <!-- Search Results END -->
 

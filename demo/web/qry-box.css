@@ -35,11 +35,6 @@ div.qry-div-fix {
 	box-shadow: inset 0 1px 2px black;
 }
 
-span.qrytxt {
-	font-size: 18px;
-	color: black;
-}
-
 .pl_holder {
 	width: 300px;
 	font-size: 14px;
@@ -75,4 +70,28 @@ span.collapse {
 }
 span.collapse:hover {
 	cursor: pointer;
+}
+
+hr.vsep {
+	display: block;
+	border-style: inset;
+	border-width: 1px;
+	width: 100%;
+	margin: 20px 0 20px 0;
+}
+
+#search_button {
+	color: #333;
+	border-color: #ccc;
+	background-color: #fff;
+	border: 1px solid #ccc;
+
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: 400;
+}
+
+#search_button:hover {
+	background-color: #e6e6e6;
+	border-color: #adadad;
 }
