@@ -77,5 +77,5 @@ It's coming, keep your eyes open!
 ## License
 MIT
 
-## Buy me a coffee
-Please send to zhongwei@udel.edu, no, seriously.
+## Contact
+zhongwei@udel.edu
