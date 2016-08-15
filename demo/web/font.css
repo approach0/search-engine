@@ -16,7 +16,7 @@ a {
 	font-size: 14px;
 }
 
-p, span, button, input, h3, li {
+p, button, input, h3, li, .mainfont {
 	font-family: 'Source Serif Pro', serif;
 	font-size: 14px;
 	color: #454545;
@@ -25,4 +25,9 @@ p, span, button, input, h3, li {
 h3 {
 	font-weight: 600;
 	color: #2c3e50;
+}
+
+.katex {
+	font-size: 1.2em !important;
+	color: #454545;
 }

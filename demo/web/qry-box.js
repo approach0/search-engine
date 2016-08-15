@@ -211,4 +211,13 @@ $(document).ready(function(){
 	$('#search_button').on('click', function() {
 		do_search();
 	});
+
+	window.type_and_search = function (raw_qry_str) {
+		query.raw_str = raw_qry_str;
+		raw_str_2_query();
+		Vue.nextTick(function () {
+			tex_render("div.qry-div-fix");
+			do_search();
+		});
+	};
 });

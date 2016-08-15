@@ -1,5 +1,5 @@
 var response = {
-	'ret_code': 0,
+	'ret_code': -1,
 	'ret_str': '',
 	'tot_pages': 0,
 	'cur_page': 0,

@@ -4,34 +4,38 @@
 <head>
 <title>Search Demo</title>
 <meta charset="utf-8"/>
-<link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
 <link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
+<link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
 <link rel="stylesheet" href="search.css" type="text/css"/>
 <link rel="stylesheet" href="qry-box.css" type="text/css"/>
 <link rel="stylesheet" href="font.css" type="text/css"/>
+<link rel="stylesheet" href="quiz.css" type="text/css"/>
 
 <script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
-<script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
 <script type="text/javascript" src="vendor/vue/vue.min.js"></script>
+<script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
 <script type="text/javascript" src="vendor/katex/katex.min.js"></script>
+<script type="text/javascript" src="vendor/typed/typed.js"></script>
 <script type="text/javascript" src="tex-render.js"></script>
 <script type="text/javascript" src="search.js"></script>
 <script type="text/javascript" src="qry-box.js"></script>
+<script type="text/javascript" src="quiz.js"></script>
 <style>
 img.social {
 	height: 16px;
 }
-/*
-	<span class="collapse">(+) Debug</span>
-	<div>
-		<ul>
-		<li v-for="i in items">
-			{{i.type}}: "{{i.str}}" <br/>
-		</li>
-		</ul>
-		<hr class="vsep"/>
-	</div>
-*/
+div.center-v-pad {
+	height: 200px
+}
+div.center-horiz {
+	margin: 0 auto;
+	text-align: center;
+}
+div.stick-bottom {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
 </style>
 </head>
 
@@ -71,20 +75,28 @@ img.social {
 <div style="margin-top: 8px;">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
-	<span class="collapse" title="About">(+) ?</span>
+	<span class="collapse" title="About">(+) about</span>
 	<div>
-		<h3>About</h3>
 		<p>This is a demo page for a math-aware search engine. <i>Math-aware</i> means
 		you can add math expression(s) as some of your keywords to have search engine
 		help you find similar expressions and return those documents that you may find
 		relevant to your input. In short, a typical search engine plus math search.</p>
+
+		<h3>Demo Indices</h3>
+		<p>
+			Currently all the data are crawled from
+			 <a target="_blank" href="http://math.stackexchange.com/">
+			<img style="vertical-align:middle"
+			src="images/math-stackexchange.png"/>Mathematics Stack Exchange</a>.
+		</p>
+
 		<h3>Any thought?</h3>
 		<p>Send it to: zhongwei AT udel.edu</p>
 
 		<hr class="vsep"/>
 	</div>
 
-	<span class="collapse" title="Raw query and API">(+) Raw</span>
+	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
 		<p>If you know TeX, it is faster to edit the equivalent raw query
 		(separate keywords by comma):</p>
@@ -101,15 +113,40 @@ img.social {
 </div>
 <!-- Query Box END -->
 
-<!-- Search Results -->
+<!-- Search App -->
 <div id="search-vue-app">
-	<p v-if="ret_code != 0">Return code: {{ret_code}}, message: {{ret_str}}.</p>
+
+<!-- Quiz -->
+<div id="quiz" v-show="ret_code < 0">
+	<div class="center-v-pad"></div>
+	<div class="center-horiz">
+		<p id="quiz-question">
+		<b>Question</b>: &nbsp; Find all solutions for [imath]1 = (1+x+\frac 1 2 x^2)e^{-x}[/imath].
+		</p>
+	</div>
+	<div class="center-horiz" style="padding-top:20px;">
+		<span id="quiz-hint" class="mainfont"></span>
+	</div>
+</div>
+<!-- Quiz END -->
+
+<!-- Error code -->
+<div v-if="ret_code > 0">
+<div class="center-v-pad"></div>
+<div class="center-horiz">
+	<p>Opps! {{ret_str}}. (return code #{{ret_code}}).</p>
+</div>
+</div>
+<!-- Error code END -->
+
+<!-- Search Results -->
 	<ol>
 	<li v-for="hit in hits">
 		<a target="_blank" v-bind:href="hit.url">{{hit.url}}</a><br/>
 		<p class="snippet">{{{ hit.snippet }}}</p>
 	</li>
 	</ol>
+<!-- Search Results END -->
 
 <!-- Footer -->
 <div v-show="tot_pages != 0" style="padding-top: 20px; height: 30px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
@@ -119,7 +156,7 @@ img.social {
 		<span v-if="prev != ''">
 			← <a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
 		</span>
-		<span>[page {{cur_page}}/{{tot_pages}}]</span>
+		<span class="mainfont">[page {{cur_page}}/{{tot_pages}}]</span>
 		<span v-if="next != ''">
 			<a class="page-navi" v-bind:onclick="next" href="#">next</a> →
 		</span>
@@ -142,7 +179,7 @@ img.social {
 <!-- Footer END -->
 
 </div>
-<!-- Search Results END -->
+<!-- Search App END -->
 
 </body>
 </html>
