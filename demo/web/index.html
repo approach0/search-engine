@@ -18,8 +18,9 @@
 <script type="text/javascript" src="vendor/typed/typed.js"></script>
 <script type="text/javascript" src="tex-render.js"></script>
 <script type="text/javascript" src="search.js"></script>
-<script type="text/javascript" src="qry-box.js"></script>
+<script type="text/javascript" src="quiz-list.js"></script>
 <script type="text/javascript" src="quiz.js"></script>
+<script type="text/javascript" src="qry-box.js"></script>
 <style>
 img.social {
 	height: 16px;
@@ -41,7 +42,7 @@ div.stick-bottom {
 
 <body style="margin: 0;">
 
-<!-- Query Box -->
+<!-- Query Box App -->
 <div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
@@ -111,24 +112,24 @@ div.stick-bottom {
 <!-- Search button and options END -->
 
 </div>
-<!-- Query Box END -->
+<!-- Query Box App END -->
 
-<!-- Search App -->
-<div id="search-vue-app">
-
-<!-- Quiz -->
-<div id="quiz" v-show="ret_code < 0">
+<!-- Quiz App -->
+<div id="quiz-vue-app" v-show="!hide">
 	<div class="center-v-pad"></div>
 	<div class="center-horiz">
 		<p id="quiz-question">
-		<b>Question</b>: &nbsp; Find all solutions for [imath]1 = (1+x+\frac 1 2 x^2)e^{-x}[/imath].
+		<b>Question</b>: &nbsp; {{Q}}
 		</p>
 	</div>
 	<div class="center-horiz" style="padding-top:20px;">
 		<span id="quiz-hint" class="mainfont"></span>
 	</div>
 </div>
-<!-- Quiz END -->
+<!-- Quiz App END -->
+
+<!-- Search App -->
+<div id="search-vue-app">
 
 <!-- Error code -->
 <div v-if="ret_code > 0">

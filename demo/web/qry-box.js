@@ -206,6 +206,8 @@ $(document).ready(function(){
 
 		qry = $("#qry").val();
 		srch_qry(encodeURIComponent(qry), 1);
+
+		quiz_hide();
 	}
 
 	$('#search_button').on('click', function() {
@@ -213,6 +215,7 @@ $(document).ready(function(){
 	});
 
 	window.type_and_search = function (raw_qry_str) {
+//		console.log('search: ' + raw_qry_str);
 		query.raw_str = raw_qry_str;
 		raw_str_2_query();
 		Vue.nextTick(function () {

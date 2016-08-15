@@ -53,10 +53,11 @@ function srch_qry(qry, page) {
 		url: 'search-relay.php',
 		data: 'p=' + page + '&q=' + qry,
 		dataType: 'json',
-	}).done(function(response) {
-		handle_search_res(response, qry, page);
-	}).fail(function(response) {
-		alert('Ajax fails, dude!');
+	}).done(function(res) {
+		handle_search_res(res, qry, page);
+	}).fail(function(res) {
+		response.ret_code = 101;
+		response.ret_str = "Ajax failed, server is down.";
 	});
 }
 

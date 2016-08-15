@@ -1,11 +1,26 @@
+var quiz = {
+	hide: false
+};
+
+(function () {
+/* choose a random item from quiz list */
+	var r = Math.random(); // in [0, 1]
+	var r_idx = parseInt(r * quiz_list.length)
+	if (r_idx == quiz_list.length) {
+		/* in case r equals 1 */
+		r_idx = 0;
+	}
+
+	//r_idx = 5; /* debug */
+
+	quiz.Q = quiz_list[r_idx].Q;
+	quiz.hints = quiz_list[r_idx].hints;
+	quiz.search = quiz_list[r_idx].search;
+})();
+
 $(function () {
 	$("#quiz-hint").typed({
-		strings: [
-			"Okay, find all solutions for ...",
-			"Wait, what is this? It looks terrible!",
-			"Honestly, I hate my math homework.",
-			"Hmmm... Can I <a href=\"#\">search it</a> on Internet?"
-		],
+		strings: quiz.hints,
 		contentType: 'html',
 		cursorChar: "|",
 		typeSpeed: 0,
@@ -13,13 +28,24 @@ $(function () {
 		backDelay: 1200,
 		callback: function() {
 			$("#quiz-hint").children("a").on("click", function () {
-				var raw_qry = "$(1+x+\\frac 1 2 x^2)e^{-x}$, solution";
-				type_and_search(raw_qry);
+				type_and_search(quiz.search);
 			});
 		}
 	});
 });
 
 $(document).ready(function () {
-	tex_render("#quiz-question");
+
+	quiz_vm = new Vue({
+		el: '#quiz-vue-app',
+		data: quiz
+	});
+
+	Vue.nextTick(function () {
+		tex_render("#quiz-question");
+	});
+
+	window.quiz_hide = function () {
+		quiz.hide = true;
+	};
 });
