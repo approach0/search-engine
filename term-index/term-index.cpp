@@ -31,7 +31,7 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 	struct term_index *ti = new struct term_index;
 	uint32_t docN, doci, doclen;
 
-	ti->parameters.set("memory", "1024K");
+	ti->parameters.set("memory", 1024 * 1024 * 512);
 	//ti->parameters.set("stemmer.name", "krovertz");
 	//cout<< "memory limit:" << ti->parameters.get("memory", "unset") <<endl;
 	
