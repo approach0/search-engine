@@ -1,6 +1,14 @@
 Top priority:
-* math posting file compression
+* Read the doc: en version
+* math on-disk posting file compression
+* math index on a filesystem that does not restrict number of inodes.
+* search earily termination (depends on how many items has been evaluated).
 * breadth-first dir-merge
+* score: frequency & [sub_expr depth > score (mnc_score / search_depth) > n_lr_paths]
+* top level AND merge does not work
+* oprtr decompose (when no search result is found)
+* malloc hook / valgrind check
+* Traffic stat / query log
 
 Want to implement:
 * search: concept search (horse == Pony)
@@ -9,9 +17,6 @@ Want to implement:
 
 Do it when time is allowed:
 * faster Chinese tokenizer
-* malloc hook
-* oprtr decompose (when no search result is found)
 * faster math-index/subpath-set
 * in mnc_score, compare father-to-root hash
 * efficient postmerge
-* top level AND merge does not work
