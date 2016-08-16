@@ -2,10 +2,10 @@
 
 all: lib
 
-lib: fork/build
+lib: fork/Makefile
 	make -C fork distro
 
-fork/build:
+fork/Makefile:
 	(cd fork && ./configure)
 
 clean:
