@@ -159,7 +159,9 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 {
 	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
 	uint32_t    i, j = 0;
-	float       math_score, bm25_score, tot_score = 0.f;
+
+	float       tot_score;
+	float       math_score = 1.f, bm25_score = 1.f;
 	position_t *pos_arr;
 
 #ifdef ENABLE_PROXIMITY_SCORE
@@ -183,12 +185,10 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 			switch (*type) {
 			case QUERY_KEYWORD_TERM:
 				pip = pm->cur_pos_item[i];
-				bm25_score = BM25_term_i_score(
+				bm25_score += BM25_term_i_score(
 					pm_args->bm25args,
 					i, pip->tf, doclen
 				);
-
-				tot_score += bm25_score;
 
 				/* set proximity input */
 				pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
@@ -199,8 +199,7 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 
 			case QUERY_KEYWORD_TEX:
 				mip = pm->cur_pos_item[i];
-				math_score = (float)mip->score;
-				tot_score += math_score;
+				math_score += (float)mip->score;
 
 				/* set proximity input */
 				pos_arr = mip->pos_arr;
@@ -218,11 +217,12 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	/* calculate overall score considering proximity. */
 	minDist = prox_min_dist(pm_args->prox_in, j);
 	prox_score = prox_calc_score(minDist);
-	tot_score += prox_score;
 
 	/* reset prox_in for consider_top_K() function */
 	prox_reset_inputs(pm_args->prox_in, j);
 #endif
+
+	tot_score = prox_score + math_score * bm25_score;
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
 	               pm_args->prox_in, j);

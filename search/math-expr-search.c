@@ -261,8 +261,7 @@ static __inline uint32_t
 math_expr_sim(mnc_score_t mnc_score,
               uint32_t depth_delta, uint32_t breath_delta)
 {
-	uint32_t mult = (depth_delta + 1) * (breath_delta + 1);
-	uint32_t score = (mult * mnc_score + 1) / mult;
+	uint32_t score = mnc_score / (depth_delta + breath_delta + 1);
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("mnc score = %u, depth delta = %u, breath delta = %u\n",
