@@ -9,10 +9,10 @@ you can add math expression(s) as some of your keywords to have search engine
 help you find similar expressions and return those documents that you may find
 relevant to your input. In short, a typical search engine plus math search.
 
-No worry, "the day after tomorrow" is a temporary name,
-will come up a more catchy name for this project someday.
+Will come up a catchy name for this project someday.
 Any suggestions?
-BTW. This project needs an icon too!
+
+BTW. This project needs an icon too! If you are interested to contribute an icon, contact me or send a pull request.
 
 ## Use case
 Math search can be helpful in math Q&A websites: Assume you are doing a tough
@@ -21,7 +21,7 @@ your textbook, after a second (maybe too much) you get all the similar questions
 that somebody has already asked about, they are perhaps answered!
 
 ## Online demo
-To be published soon.
+[https://approach0.xyz/demo](https://approach0.xyz/demo)
 
 ## A little history
 The author has been doing a
@@ -69,10 +69,8 @@ issue page), or contribute in any form.
 (Boxes are external dependencies, circles are internal modules)
 
 ## Documentation
-Please check out our documentation for other details.
-It's coming, keep your eyes open!
-
-(Will be hosted on a WEB site and open for editing on Github)
+Please check out our documentation for technical details.
+[https://approach0.xyz/docs](https://approach0.xyz/docs)
 
 ## License
 MIT
