@@ -1,7 +1,7 @@
-![](https://travis-ci.org/t-k-/the-day-after-tomorrow.svg)
-[![GitHub release](https://img.shields.io/github/release/t-k-/the-day-after-tomorrow.svg?maxAge=2592000)]()
+![](https://api.travis-ci.org/approach0/search-engine.svg)
+[![GitHub release](https://img.shields.io/github/release/approach0/search-engine.svg?maxAge=2592000)]()
 
-![](https://github.com/t-k-/cowpie-lab/raw/master/clip.gif)
+![](https://github.com/approach0/search-engine-docs-eng/raw/master/img/clip.gif)
 
 ## About
 This is a repo for a math-aware search engine. "Math-aware" means
@@ -64,7 +64,7 @@ just hoping someone can feel the usefulness, send some feedbacks (to Github
 issue page), or contribute in any form.
 
 ## Dependencies
-![module dependency](https://raw.githubusercontent.com/t-k-/cowpie-lab/master/dep.png)
+![module dependency](https://github.com/approach0/search-engine-docs-eng/raw/master/img/dep.png)
 
 (Boxes are external dependencies, circles are internal modules)
 
