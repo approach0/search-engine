@@ -69,7 +69,7 @@ issue page), or contribute in any form.
 (Boxes are external dependencies, circles are internal modules)
 
 ## Documentation
-Please check out our documentation for technical details.
+Please check out our documentation for technical details:
 [https://approach0.xyz/docs](https://approach0.xyz/docs)
 
 ## License
