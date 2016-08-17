@@ -40,34 +40,6 @@ structural content (see paper
 [1](https://github.com/tkhost/tkhost.github.io/raw/master/opmes/thesis-ref.pdf) and
 [2](https://github.com/tkhost/tkhost.github.io/raw/master/opmes/ecir2016.pdf))
 
-## Features
-* Math search with punning method, efficient for large scale corpus.
-* Posting lists can be configured to cache into memory (you can specify
-the size), using FOR delta-encode, and skip-list data structure.
-* Compact index, small indices size.
-* Chinese tokeniser available, multi-bytes awareness from the beginning
-of design.
-* Fulltext index writer/reader is based on Indri project (C++), other
-parts are mostly written from scratch in C. Why? Fast, simple and downright.
-Anyway, it is reinventing the wheel. I know!
-* Robust TeX parser, handles most user-created math content from
-math.stackexchange.com correctly.
-* Math commutative rules awareness.
-* Math symbol alpha-equivalence awareness.
-* BM25 Okapi scoring schema in fulltext part.
-* Proximity search using efficient "minDist" measurement.
-* Search results highlight.
-
-Special thanks to <a href="https://github.com/yzhan018">yzhan018</a> who
-submits the initial FOR-delta implementation. This project is made public
-just hoping someone can feel the usefulness, send some feedbacks (to Github
-issue page), or contribute in any form.
-
-## Dependencies
-![module dependency](https://github.com/approach0/search-engine-docs-eng/raw/master/img/dep.png)
-
-(Boxes are external dependencies, circles are internal modules)
-
 ## Documentation
 Please check out our documentation for technical details:
 [https://approach0.xyz/docs](https://approach0.xyz/docs)
