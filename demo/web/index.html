@@ -62,11 +62,11 @@ div.stick-bottom {
 			</div>
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box" class="pl_holder" placeholder="Enter here, type $ for TeX input."/>
+			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box" class="pl_holder" placeholder="Enter here, type $ for math input."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
-			<span class="pl_holder">Press enter after TeX edit</span>
+			<span class="pl_holder">Press enter after math edit</span>
 		</li>
 </template></ul>
 </div>
