@@ -57,7 +57,8 @@ function srch_qry(qry, page) {
 		handle_search_res(res, qry, page);
 	}).fail(function(res) {
 		response.ret_code = 101;
-		response.ret_str = "Ajax failed, server is down.";
+		response.ret_str = "Server is down right now, " +
+			"but will be back shortly";
 	});
 }
 
