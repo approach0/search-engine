@@ -17,9 +17,11 @@ const char *httpd_on_recv(const char* req, void* arg)
 	uint32_t         page;
 	ranked_results_t srch_res; /* search results */
 
-#ifdef DEBUG_SEARCHD
-	printf("request body:\n");
-	printf("%s\n", req);
+#ifdef SEARCHD_LOG_ENABLE
+	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
+	fprintf(log_fh, "JSON query: ");
+	fprintf(log_fh, "%s\n", req);
+	fflush(log_fh);
 #endif
 
 	/* parse JSON query into local query structure */
@@ -39,40 +41,45 @@ const char *httpd_on_recv(const char* req, void* arg)
 		goto reply;
 	}
 
-#ifdef DEBUG_SEARCHD
-	printf("requested page: %u\n", page);
-
-	printf("requested query: ");
-	query_print_to(qry, stdout);
-	printf("\n");
+#ifdef SEARCHD_LOG_ENABLE
+	fprintf(log_fh, "requested page: %u\n", page);
+	fprintf(log_fh, "parsed query: ");
+	query_print_to(qry, log_fh);
+	fprintf(log_fh, "\n");
+	fflush(log_fh);
 #endif
 
 	/* search query */
-#ifdef DEBUG_SEARCHD
-	printf("run query...\n");
+#ifdef SEARCHD_LOG_ENABLE
+	fprintf(log_fh, "run query...\n");
+	fflush(log_fh);
 #endif
 	srch_res = indices_run_query(indices, qry);
 
 	/* generate response JSON */
-#ifdef DEBUG_SEARCHD
-	printf("return results...\n");
+#ifdef SEARCHD_LOG_ENABLE
+	fprintf(log_fh, "return results...\n");
+	fflush(log_fh);
 #endif
 	ret = search_results_json(&srch_res, page - 1, indices);
 
 	/* free ranked results */
-#ifdef DEBUG_SEARCHD
-	printf("free results...\n");
+#ifdef SEARCHD_LOG_ENABLE
+	fprintf(log_fh, "free results...\n");
+	fflush(log_fh);
 #endif
 	free_ranked_results(&srch_res);
 
 reply:
-#ifdef DEBUG_SEARCHD
-	printf("delete query...\n");
+#ifdef SEARCHD_LOG_ENABLE
+	fprintf(log_fh, "delete query...\n");
+	fflush(log_fh);
 #endif
 	query_delete(qry);
 
-#ifdef DEBUG_SEARCHD
-	printf("query handled.\n");
+#ifdef SEARCHD_LOG_ENABLE
+	fprintf(log_fh, "query handled.\n\n");
+	fflush(log_fh);
 #endif
 	return ret;
 }
