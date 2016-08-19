@@ -15,7 +15,7 @@ fi
 
 if [ "$1" == "kill" ]; then
 	kill `cat respawn.pid.log`
-	killall `cat respawn.cmd.log`
+	killall --signal SIGINT `cat respawn.cmd.log`
 	exit
 fi;
 
