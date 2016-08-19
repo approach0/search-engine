@@ -19,6 +19,12 @@ const char *httpd_on_recv(const char* req, void* arg)
 
 #ifdef SEARCHD_LOG_ENABLE
 	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
+
+	if (log_fh == NULL) {
+		fprintf(stderr, "cannot open %s.\n", SEARCHD_LOG_FILE);
+		log_fh = fopen("/dev/null", "a");
+	}
+
 	fprintf(log_fh, "JSON query: ");
 	fprintf(log_fh, "%s\n", req);
 	fflush(log_fh);
