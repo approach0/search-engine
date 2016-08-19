@@ -11,3 +11,10 @@
 
 #define SEARCHD_LOG_FILE "searchd.log"
 #define SEARCHD_LOG_ENABLE
+
+/*
+ * usually no need to log IP, because most likely
+ * client is using PHP curl to relay request.
+ * Thus this IP will always be localhost.
+ */
+//#define SEARCHD_LOG_CLIENT_IP

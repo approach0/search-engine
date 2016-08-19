@@ -97,6 +97,7 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 #endif
 
 #ifdef SEARCHD_LOG_ENABLE
+#ifdef SEARCHD_LOG_CLIENT_IP
 	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
 
 	if (log_fh == NULL) {
@@ -107,6 +108,7 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 		fprintf(log_fh, "\n");
 		fclose(log_fh);
 	}
+#endif
 #endif
 
 	/* create HTTP response buffer */
