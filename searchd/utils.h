@@ -11,12 +11,12 @@ enum searchd_ret_code {
 };
 
 static const char searchd_ret_str_map[][128] = {
-	{"successful"},
-	{"empty or unrecognized query"},
-	{"invalid query JSON"},
-	{"no hit found"},
-	{"illegal page number"},
-	{"rank window calculation error"}
+	{"Successful"},
+	{"Empty or unrecognized query"},
+	{"Invalid query JSON"},
+	{"No hit found"},
+	{"Illegal page number"},
+	{"Rank window calculation error"}
 };
 
 /* parse query JSON into our query structure */
