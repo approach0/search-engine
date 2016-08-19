@@ -37,6 +37,26 @@ static void print_headers(struct evhttp_request *req)
 	}
 }
 
+static void log_client_IP(struct evhttp_request *req, FILE *fh)
+{
+	char *ip;
+	unsigned short port;
+	struct evhttp_connection *evcon;
+	evcon = evhttp_request_get_connection(req);
+
+	if (evcon) {
+		evhttp_connection_get_peer(evcon, &ip, &port);
+		/* no need to free string ip at this point,
+		 * it will be released when req is freed. */
+
+		fprintf(fh, "%s", ip);
+		fflush(fh);
+	} else {
+		fprintf(fh, "evhttp_connection_get_peer() "
+		        "fails.\n");
+	}
+}
+
 char *get_POST_str(struct evhttp_request *req)
 {
 	struct evbuffer *buf;
@@ -74,6 +94,19 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 #ifdef DEBUG_PRINT_HTTP_HEAD
 	printf("HTTP request header:\n");
 	print_headers(req);
+#endif
+
+#ifdef SEARCHD_LOG_ENABLE
+	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
+
+	if (log_fh == NULL) {
+		fprintf(stderr, "cannot open %s.\n", SEARCHD_LOG_FILE);
+	} else {
+		fprintf(log_fh, "from IP: ");
+		log_client_IP(req, log_fh);
+		fprintf(log_fh, "\n");
+		fclose(log_fh);
+	}
 #endif
 
 	/* create HTTP response buffer */

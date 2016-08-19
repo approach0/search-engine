@@ -86,6 +86,8 @@ reply:
 #ifdef SEARCHD_LOG_ENABLE
 	fprintf(log_fh, "query handled.\n\n");
 	fflush(log_fh);
+
+	fclose(log_fh);
 #endif
 	return ret;
 }
