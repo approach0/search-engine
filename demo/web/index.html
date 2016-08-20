@@ -2,8 +2,9 @@
 <html>
 
 <head>
-<title>Search Demo</title>
+<title>Approach0</title>
 <meta charset="utf-8"/>
+<link rel="shortcut icon" href="images/favicon.ico">
 <link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
 <link rel="stylesheet" href="search.css" type="text/css"/>
@@ -45,8 +46,14 @@ div.stick-bottom {
 <!-- Query Box App -->
 <div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
+<!-- Logo -->
+<a target="_blank" href="https://github.com/approach0/search-engine">
+<img style="float:left;" src="images/favicon.ico"/>
+</a>
+
 <!-- Query input area -->
-<div id="qry-input-area" v-on:click="area_on_click">
+<div style="padding-left: 40px;">
+<div id="qry-input-area" style="width:100%;" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
 			<div class="qry-div-fix">
@@ -62,7 +69,8 @@ div.stick-bottom {
 			</div>
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box" class="pl_holder" placeholder="Enter here, type $ for math input."/>
+			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box"
+			class="pl_holder" placeholder="Enter keywords here, type $ for math."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
@@ -70,42 +78,34 @@ div.stick-bottom {
 		</li>
 </template></ul>
 </div>
+</div>
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="margin-top: 8px;">
+<div style="margin-top: 8px; padding-left: 40px">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
-
-	<span class="collapse" title="About">(+) about</span>
-	<div>
-		<p>This is a demo page for a math-aware search engine. <i>Math-aware</i> means
-		you can add math expression(s) as some of your keywords to have search engine
-		help you find similar expressions and return those documents that you may find
-		relevant to your input. In short, a typical search engine plus math search.</p>
-
-		<h3>Demo Indices</h3>
-		<p>
-			Currently all the data are crawled from
-			 <a target="_blank" href="http://math.stackexchange.com/">
-			<img style="vertical-align:middle"
-			src="images/math-stackexchange.png"/>Mathematics Stack Exchange</a>.
-		</p>
-
-		<h3>Any thought?</h3>
-		<p>Send it to: zhongwei AT udel.edu</p>
-
-		<hr class="vsep"/>
-	</div>
 
 	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
 		<p>If you know TeX, it is faster to edit the equivalent raw query
 		(separate keywords by comma):</p>
-		<input id="qry" style="width: 100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
+		<input id="qry" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
 		<p>Its corresponding WEB API:</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
 		curl -v {{url_root}}search-relay.php?q='{{enc_uri}}'
 		<p>
+
+		<hr class="vsep"/>
+	</div>
+
+	<span class="collapse" title="Our indices">(+) indices</span>
+	<div>
+		<p>
+			Currently our data are crawled from
+			 <a target="_blank" href="http://math.stackexchange.com/">
+			<img style="vertical-align:middle"
+			src="images/math-stackexchange.png"/>Mathematics Stack Exchange</a>.
+		</p>
 	</div>
 
 </div>

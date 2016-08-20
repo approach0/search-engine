@@ -1,27 +1,19 @@
 ![](https://api.travis-ci.org/approach0/search-engine.svg)
 [![GitHub release](https://img.shields.io/github/release/approach0/search-engine.svg?maxAge=2592000)]()
 
-![](https://github.com/approach0/search-engine-docs-eng/raw/master/img/clip.gif)
+![](https://raw.githubusercontent.com/approach0/search-engine-docs-eng/master/logo.png)
 
-## About
-This is a repo for a math-aware search engine. "Math-aware" means
-you can add math expression(s) as some of your keywords to have search engine
-help you find similar expressions and return those documents that you may find
-relevant to your input. In short, a typical search engine plus math search.
+Approach0 is a math-aware search engine.
 
-Will come up a catchy name for this project someday.
-Any suggestions?
-
-BTW. This project needs an icon too! If you are interested to contribute an icon, contact me or send a pull request.
-
-## Use case
 Math search can be helpful in math Q&A websites: Assume you are doing a tough
 question on your math homework, you type in search box the exact question from
 your textbook, after a second (maybe too much) you get all the similar questions
 that somebody has already asked about, they are perhaps answered!
 
 ## Online demo
-[https://approach0.xyz/demo](https://approach0.xyz/demo)
+Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB demo.
+
+![](https://github.com/approach0/search-engine-docs-eng/raw/master/img/clip.gif)
 
 ## A little history
 The author has been doing a

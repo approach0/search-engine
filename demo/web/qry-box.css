@@ -28,6 +28,7 @@ div.qry-div-fix {
 	float: left;
 	outline: none;
 	border: none;
+	width: 400px;
 }
 
 #qry-input-area {
