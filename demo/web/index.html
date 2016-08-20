@@ -87,7 +87,7 @@ div.stick-bottom {
 	<div>
 		<p>If you know TeX, it is faster to edit the equivalent raw query
 		(separate keywords by comma):</p>
-		<input id="qry" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
+		<input id="qry" style="width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
 		<p>Its corresponding WEB API:</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
 		curl -v {{url_root}}search-relay.php?q='{{enc_uri}}'
