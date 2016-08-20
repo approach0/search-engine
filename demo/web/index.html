@@ -68,11 +68,11 @@ div.stick-bottom {
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
 			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box"
-			class="pl_holder" placeholder="Enter keywords here, type $ for math."/>
+			class="pl_holder" placeholder="Enter keywords here, type $ for math keyword."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
-			<span class="pl_holder">Press enter after math edit</span>
+			<span class="pl_holder">When you finish editing this math, press enter.</span>
 		</li>
 </template></ul>
 </div>
