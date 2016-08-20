@@ -1,4 +1,4 @@
-$(document).ready(function(){
+$(document).ready(function() {
 	var MQ = MathQuill.getInterface(2);
 
 	var query = {
@@ -74,6 +74,19 @@ $(document).ready(function(){
 		});
 	};
 
+	var switch_to_mq_2 = function (usr_type_str) {
+		query.items.pop();
+		query.items.push({
+			"type": "tex-input",
+			"str": usr_type_str
+		});
+
+		Vue.nextTick(function () {
+			var mq = render_mq_edit();
+			mq.typedText(usr_type_str);
+		});
+	};
+
 	var render_mq_edit = function () {
 		var ele = document.getElementById("math-input");
 		var mq = MQ.MathField(ele, {
@@ -101,6 +114,16 @@ $(document).ready(function(){
 		return mq;
 	};
 
+	function contains(str, substr) {
+		for (i = 0; i < substr.length; i ++) {
+			var c = substr[i];
+			if (str.indexOf(c) > -1)
+				return 1;
+		}
+
+		return 0;
+	}
+
 	var input_box_on_keyup = function (ev) {
 		arr = query.items;
 		input_box = arr[arr.length - 1];
@@ -114,11 +137,19 @@ $(document).ready(function(){
 					$("#qry-input-box").focus();
 				});
 			}
-		} else if ( /* user input a $ as first char */
-			ev.which == 52 &&
-			input_box.str[0] == "$"
-		) {
+		} else if (ev.which == 52) {
+			/* user input a '$' signe */
+
+			/* split by this '$', assume it is the last char */
+			if (input_box.str.length > 1) {
+				var head_str = input_box.str.slice(0, -2);
+				fix_input("term", head_str,function() {});
+			}
+
 			switch_to_mq("");
+
+		} else if (contains(input_box.str, "'+-*/\\!^_%()[]:{}=.<>")) {
+			switch_to_mq_2(input_box.str);
 		}
 	};
 
