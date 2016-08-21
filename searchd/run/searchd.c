@@ -9,9 +9,9 @@
 #include "httpd.h"
 #include "utils.h"
 
-const char *httpd_on_recv(const char* req, void* arg)
+const char *httpd_on_recv(const char* req, void* arg_)
 {
-	P_CAST(indices, struct indices, arg);
+	P_CAST(args, struct searcher_args, arg_);
 	const char      *ret = NULL;
 	struct query     qry;
 	uint32_t         page;
@@ -60,14 +60,14 @@ const char *httpd_on_recv(const char* req, void* arg)
 	fprintf(log_fh, "run query...\n");
 	fflush(log_fh);
 #endif
-	srch_res = indices_run_query(indices, qry);
+	srch_res = indices_run_query(args->indices, qry);
 
 	/* generate response JSON */
 #ifdef SEARCHD_LOG_ENABLE
 	fprintf(log_fh, "return results...\n");
 	fflush(log_fh);
 #endif
-	ret = search_results_json(&srch_res, page - 1, indices);
+	ret = search_results_json(&srch_res, page - 1, args);
 
 	/* free ranked results */
 #ifdef SEARCHD_LOG_ENABLE
@@ -94,14 +94,16 @@ reply:
 
 int main(int argc, char *argv[])
 {
-	int                 opt;
-	char               *index_path = NULL;
-	struct indices      indices;
-	unsigned short      cache_sz = SEARCHD_DEFAULT_CACHE_MB;
-	unsigned short      port = SEARCHD_DEFAULT_PORT;
+	int                   opt;
+	char                 *index_path = NULL;
+	struct indices        indices;
+	unsigned short        cache_sz = SEARCHD_DEFAULT_CACHE_MB;
+	unsigned short        port = SEARCHD_DEFAULT_PORT;
+	text_lexer            lex = lex_mix_file;
+	struct searcher_args  searcher_args;
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hi:t:p:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:t:p:c:e")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -112,6 +114,7 @@ int main(int argc, char *argv[])
 			       " -i <index path> |"
 			       " -p <port> | "
 			       " -c <cache size (MB)> | "
+			       " -e (English only) | "
 			       "\n", argv[0]);
 			printf("\n");
 			goto exit;
@@ -126,6 +129,10 @@ int main(int argc, char *argv[])
 
 		case 'c':
 			sscanf(optarg, "%hu", &cache_sz);
+			break;
+
+		case 'e':
+			lex = lex_eng_file;
 			break;
 
 		default:
@@ -158,7 +165,10 @@ int main(int argc, char *argv[])
 
 	/* run httpd */
 	printf("listen on port %hu\n", port);
-	httpd_run(port, &httpd_on_recv, &indices);
+
+	searcher_args.indices = &indices;
+	searcher_args.lex     = lex;
+	httpd_run(port, &httpd_on_recv, &searcher_args);
 
 	/* close text-segment dictionary */
 	printf("closing dictionary...\n");

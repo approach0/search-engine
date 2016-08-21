@@ -10,11 +10,6 @@
 #include "search.h"
 #include "search-utils.h"
 
-struct searcher_args {
-	struct indices *indices;
-	text_lexer      lex;
-};
-
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 {
 	char  *str;

@@ -27,7 +27,8 @@ void json_encode_str(char*, const char*);
 
 /* get response JSON with search results */
 const char
-*search_results_json(ranked_results_t*, uint32_t, struct indices*);
+*search_results_json(ranked_results_t*, uint32_t,
+                     struct searcher_args*);
 
 /* get response JSON to indicate an error */
 const char *search_errcode_json(enum searchd_ret_code);

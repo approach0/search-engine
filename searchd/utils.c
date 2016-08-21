@@ -34,7 +34,8 @@ enum parse_json_kw_res {
 /* append_result() callback function arguments */
 struct append_result_args {
 	struct indices *indices;
-	uint32_t n_results;
+	text_lexer      lex;
+	uint32_t        n_results;
 };
 
 /*
@@ -231,8 +232,8 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	doc_id_t    docID = hit->docID;
 	float       score = hit->score;
 
-	P_CAST(append_args, struct append_result_args, arg);
-	struct indices *indices = append_args->indices;
+	P_CAST(app_args, struct append_result_args, arg);
+	struct indices *indices = app_args->indices;
 
 #ifdef DEBUG_APPEND_RESULTS
 	printf("appending hit (docID = %u) ...\n", docID);
@@ -262,7 +263,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 #ifdef DEBUG_APPEND_RESULTS
 	printf("preparing highlight list...\n");
 #endif
-	hl_list = prepare_snippet(hit, doc, doc_sz, lex_mix_file);
+	hl_list = prepare_snippet(hit, doc, doc_sz, app_args->lex);
 
 	/* get snippet */
 #ifdef DEBUG_APPEND_RESULTS
@@ -285,7 +286,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	hit_json = response_hit_str(docID, score, url, snippet);
 	strcat(response, hit_json);
 
-	if (cnt + 1 < append_args->n_results)
+	if (cnt + 1 < app_args->n_results)
 		strcat(response, ", ");
 
 	/* free allocated strings */
@@ -298,7 +299,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 
 const char
 *search_results_json(ranked_results_t *rk_res, uint32_t i,
-                      struct indices *indices)
+                     struct searcher_args *se_args)
 {
 	struct rank_window wind;
 	uint32_t tot_pages;
@@ -317,14 +318,19 @@ const char
 	if (wind.to > 0) {
 		/* valid window, append search results in response */
 		uint32_t n_results = wind.to - wind.from;
-		struct append_result_args args = {indices, n_results};
+		struct append_result_args app_args = {
+			se_args->indices,
+			se_args->lex,
+			n_results
+		};
+
 		sprintf(
 			response, "{%s, \"hits\": [", response_head_str(
 				SEARCHD_RET_SUCC, tot_pages
 			)
 		);
 
-		rank_window_foreach(&wind, &append_result, &args);
+		rank_window_foreach(&wind, &append_result, &app_args);
 		strcat(response, "]}\n");
 	} else {
 		/* not valid calculation, return error */
