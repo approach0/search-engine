@@ -6,6 +6,7 @@
 *.d
 *.out
 *.log
+*.ln
 gen-*
 y.output
 y.*.h
