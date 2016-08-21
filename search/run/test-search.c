@@ -149,10 +149,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* open text segmentation dictionary */
-	if (lex == lex_mix_file) {
-		printf("opening dictionary...\n");
-		text_segment_init("../jieba/fork/dict");
-	}
+	printf("opening dictionary...\n");
+	text_segment_init("../jieba/fork/dict");
 
 	/*
 	 * open indices
@@ -193,9 +191,8 @@ close:
 	printf("closing index...\n");
 	indices_close(&indices);
 
-	if (lex == lex_mix_file) {
-		text_segment_free();
-	}
+	printf("free dictionary...\n");
+	text_segment_free();
 
 exit:
 	printf("existing...\n");
