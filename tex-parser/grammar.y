@@ -405,6 +405,8 @@ s_atom: atom {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | TIMES {
+	struct optr_node *var = $1;
+	var->wildcard = false;
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 ;
