@@ -1,22 +1,27 @@
 PROJ_DEP_MK := proj-dep.mk
 SRC_LIST_FILE := srclist.txt
 
-.PHONY: all_modules
+# macro that prints colorful notice for target name
+TARGET_COLOR_PRINT =  @ tput setaf 1 && echo '[$@] ' && tput sgr0;
+
+.PHONY: all_modules test
 
 include rules.mk
 
 all: all_modules tags
 
-# macro that prints colorful notice for make entering
-MODULE_ENTER_PRINT =  @ tput setaf 1 && echo '[$@] ' && tput sgr0;
-
 ##################################
 # general rules are listed below
 ##################################
 
+# this target is integration tests
+tests: all_modules
+	$(TARGET_COLOR_PRINT)
+	$(MAKE) -C $@
+
 # project library files
 %-module:
-	$(MODULE_ENTER_PRINT)
+	$(TARGET_COLOR_PRINT)
 	$(MAKE) -C $* lib
 
 # specify modules to be included for building
@@ -40,12 +45,12 @@ all_modules: $(MODULE_BINS)
 
 # binary files are dependent on library files (second pass)
 %-module-bin: $(MODULE_NAMES)
-	$(MODULE_ENTER_PRINT)
+	$(TARGET_COLOR_PRINT)
 	$(MAKE) -C $* all
 
 # clean rules
 %-module-clean:
-	$(MODULE_ENTER_PRINT)
+	$(TARGET_COLOR_PRINT)
 	$(MAKE) -C $* clean
 
 clean: tags-clean $(MODULE_CLEAN)
