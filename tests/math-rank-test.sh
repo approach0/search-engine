@@ -12,8 +12,9 @@ fi
 
 [ $# -ne 1 ] && echo 'bad arg.' && exit
 
-# make tmp directory
+# clear potential old corpus
 tmp_corpus=./tmp-corpus
+rm -rf $tmp_corpus
 mkdir -p $tmp_corpus
 
 # set variable
@@ -31,7 +32,7 @@ echo "[test query: $(cat "$tmp_corpus/query")]"
 
 # for each doc in docs
 i=0
-while read line
+while read -r line
 do
 	# parse line
 	prefix=$(echo "$line" | awk '{print $1}')
