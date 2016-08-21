@@ -80,18 +80,6 @@ int main(int argc, char* argv[])
 	const char index_path[] = "./tmp";
 	struct indices indices;
 
-	/* open text segmentation dictionary */
-	printf("opening dictionary...\n");
-	text_segment_init("");
-
-	/* open indices for writing */
-	printf("opening indices...\n");
-	system("rm -rf ./tmp");
-	if(indices_open(&indices, index_path, INDICES_OPEN_RW)) {
-		fprintf(stderr, "indices open failed.\n");
-		goto exit;
-	}
-
 	while ((opt = getopt(argc, argv, "hep:")) != -1) {
 		switch (opt) {
 		case 'h':
@@ -120,11 +108,28 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	/*
+	 * check program arguments.
+	 */
 	if (corpus_path) {
 		printf("corpus path: %s\n", corpus_path);
 	} else {
 		printf("no corpus path specified.\n");
 		goto exit;
+	}
+
+	/* open text segmentation dictionary */
+	if (lex == lex_mix_file) {
+		printf("opening dictionary...\n");
+		text_segment_init("../jieba/fork/dict");
+	}
+
+	/* open indices for writing */
+	printf("opening indices...\n");
+	system("rm -rf ./tmp");
+	if(indices_open(&indices, index_path, INDICES_OPEN_RW)) {
+		fprintf(stderr, "indices open failed.\n");
+		goto close;
 	}
 
 	indexer_assign(&indices);
@@ -138,7 +143,7 @@ int main(int argc, char* argv[])
 		if (fh == NULL) {
 			fprintf(stderr, "cannot open `%s', indexing aborted.\n",
 			        corpus_path);
-			goto exit;
+			goto close;
 		}
 
 		if (indexer_index_json(fh, lex))
@@ -159,11 +164,23 @@ int main(int argc, char* argv[])
 
 	printf("\ndone indexing!\n");
 
-exit:
+close:
+	/*
+	 * close indices
+	 */
+	printf("closing index...\n");
 	indices_close(&indices);
 
-	text_segment_free();
+	if (lex == lex_mix_file) {
+		text_segment_free();
+	}
 
+exit:
+	printf("existing...\n");
+
+	/*
+	 * free program arguments
+	 */
 	if (corpus_path)
 		free(corpus_path);
 
