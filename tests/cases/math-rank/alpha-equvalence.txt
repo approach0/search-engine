@@ -1,0 +1,5 @@
+a + \frac 1 a = a
+
+HIT a + \frac 1 a = a
+HIT b + \frac 1 b = b
+HIT a + \frac 1 b = a
