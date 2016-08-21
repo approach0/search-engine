@@ -1,23 +1,24 @@
 include ../rules.mk
 
-all: run/indexer.ln run/txt2json.ln run/searcher.ln \
-	run/search-math-doc-by-url.ln
+all: math-rank-test
 
-run:
-	mkdir run
+math-rank-test: links
+	@ find cases/math-rank/ -type f -exec ./$@.sh {} \;
 
-run/indexer.ln: run
+links: indexer.ln txt2json.ln searcher.ln \
+	search-math-doc-by-url.ln
+
+indexer.ln:
 	ln -sf `pwd`/../indexer/run/indexer.out $@
 
-run/txt2json.ln: run
+txt2json.ln:
 	ln -sf `pwd`/../indexer/scripts/txt2json.py $@
 
-run/searcher.ln: run
+searcher.ln:
 	ln -sf `pwd`/../search/run/test-search.out $@
 
-run/search-math-doc-by-url.ln: run
+search-math-doc-by-url.ln:
 	ln -sf `pwd`/../search/run/search-math-doc-by-url.out $@
 
 clean:
-	rm -rf run
 	rm -rf intermediate

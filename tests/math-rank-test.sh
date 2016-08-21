@@ -12,13 +12,13 @@ fi
 
 [ $# -ne 1 ] && echo 'bad arg.' && exit
 
+# set variable
+testcase="$1"
+
 # clear potential old corpus in intermediate directory
 itm=./intermediate
 rm -rf $itm
 mkdir -p $itm
-
-# set variable
-testcase="$1"
 
 # clear expected-rank file
 > $itm/expected-rank
@@ -46,7 +46,7 @@ do
 
 	# generate corpus files
 	echo "[imath]$tex[/imath]" > $itm/doc${i}
-	./run/txt2json.ln $itm/doc${i} > /dev/null
+	./txt2json.ln $itm/doc${i} > /dev/null
 
 	# generate expect ranking
 	if [ "$prefix" == 'HIT' ]; then
@@ -63,14 +63,14 @@ $(cat "$itm/docs")
 EOF
 
 # index those corpus files
-./run/indexer.ln -e -p $itm > /dev/null
+./indexer.ln -e -p $itm > /dev/null
 
 # search test query
 qry=$(cat "$itm/query")
 
 # echo full search command
 set -x
-./run/searcher.ln -e -n -i ./tmp -m "$qry" > $itm/search-results
+./searcher.ln -e -n -i ./tmp -m "$qry" > $itm/search-results
 set +x
 
 # extract search results
@@ -80,15 +80,23 @@ grep 'URL:' $itm/search-results | awk '{print $2}' | \
 echo 'Real ranking:'
 cat $itm/real-rank
 
-echo -n 'They are '
+# compare with expected ranking
 diff $itm/expected-rank $itm/real-rank > /dev/null
 
 if [ $? -eq 0 ]; then
 	# exact what we expect
-	echo 'the same'
+	tput setaf 2
+	echo "test pass."
+	tput sgr0
 	exit 0
 else
 	# different from what we expect
-	echo 'different'
+	tput setaf 1
+	echo "test fails."
+	tput sgr0
+
+	# log failure
+	echo "$testcase" >> fail.log
+
 	exit 1
 fi;
