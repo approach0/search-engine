@@ -159,9 +159,10 @@ tex: %prec NULL_REDUCE {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
 | tex NEG term {
-	struct optr_node *neg;
+	struct optr_node *neg, *add = optr_alloc(S_plus, T_ADD,
+	                                         WC_COMMUT_OPERATOR);
 	OPTR_ATTACH(neg, $3, NULL, $2);
-	OPTR_ATTACH($$, neg, NULL, $1);
+	OPTR_ATTACH($$, neg, $1, add);
 }
 | tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -229,9 +230,10 @@ abv_tex: %prec NULL_REDUCE {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
 | abv_tex NEG term {
-	struct optr_node *neg;
+	struct optr_node *neg, *add = optr_alloc(S_plus, T_ADD,
+	                                         WC_COMMUT_OPERATOR);
 	OPTR_ATTACH(neg, $3, NULL, $2);
-	OPTR_ATTACH($$, neg, NULL, $1);
+	OPTR_ATTACH($$, neg, $1, add);
 }
 | abv_tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -257,9 +259,10 @@ mat_tex: %prec NULL_REDUCE {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
 | mat_tex NEG term {
-	struct optr_node *neg;
+	struct optr_node *neg, *add = optr_alloc(S_plus, T_ADD,
+	                                         WC_COMMUT_OPERATOR);
 	OPTR_ATTACH(neg, $3, NULL, $2);
-	OPTR_ATTACH($$, neg, NULL, $1);
+	OPTR_ATTACH($$, neg, $1, add);
 }
 | mat_tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -392,9 +395,13 @@ s_atom: atom {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | ADD {
+	struct optr_node *var = $1;
+	var->wildcard = false;
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | NEG {
+	struct optr_node *var = $1;
+	var->wildcard = false;
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | TIMES {

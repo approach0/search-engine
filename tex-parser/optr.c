@@ -245,6 +245,36 @@ uint32_t optr_assign_values(struct optr_node *optr)
 	return leaf_cnt;
 }
 
+static TREE_IT_CALLBK(purne_nil_node)
+{
+	TREE_OBJ(struct optr_node, p, tnd);
+	P_CAST(pcnt, uint32_t, pa_extra);
+	bool res;
+
+	if (p->tnd.sons.now == NULL /* is leaf */ &&
+	    p->tnd.father != NULL /* can be pruned */ &&
+	    p->token_id == T_NIL) {
+
+		/* prune this NIL node */
+		res = tree_detach(&p->tnd, pa_now, pa_fwd);
+		optr_release(p);
+
+		(*pcnt)++;
+		return res;
+	}
+
+	LIST_GO_OVER;
+}
+
+uint32_t optr_prune_nil_nodes(struct optr_node *optr)
+{
+	uint32_t purne_cnt = 0;
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &purne_nil_node,
+	             0 /* excluding root */, &purne_cnt);
+
+	return purne_cnt;
+}
+
 struct subpath *create_subpath(struct optr_node *p, bool leaf)
 {
 	struct subpath *subpath = malloc(sizeof(struct subpath));
