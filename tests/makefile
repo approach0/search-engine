@@ -20,4 +20,4 @@ run/search-math-doc-by-url.ln: run
 
 clean:
 	rm -rf run
-	rm -rf tmp-corpus
+	rm -rf intermediate

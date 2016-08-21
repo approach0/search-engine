@@ -5,32 +5,33 @@ Description:
 Math rank test script to test one test-case.
 
 Examples:
-$0 cases/inequality.txt
+$0 cases/math-rank/inequality.txt
 USAGE
 exit
 fi
 
 [ $# -ne 1 ] && echo 'bad arg.' && exit
 
-# clear potential old corpus
-tmp_corpus=./tmp-corpus
-rm -rf $tmp_corpus
-mkdir -p $tmp_corpus
+# clear potential old corpus in intermediate directory
+itm=./intermediate
+rm -rf $itm
+mkdir -p $itm
 
 # set variable
 testcase="$1"
 
-# clear expect-rank file
-> expect-rank.log
+# clear expected-rank file
+> $itm/expected-rank
 
 # extract sections
-head -1 "$testcase" > $tmp_corpus/query
-tail -n +3 "$testcase" > $tmp_corpus/docs
+head -1 "$testcase" > $itm/query
+tail -n +3 "$testcase" > $itm/docs
 
 # print test query
-echo "[test query: $(cat "$tmp_corpus/query")]"
+echo "[test query] $(cat "$itm/query")"
 
 # for each doc in docs
+echo "Expected ranking:"
 i=0
 while read -r line
 do
@@ -44,48 +45,47 @@ do
 	fi;
 
 	# generate corpus files
-	echo "[imath]$tex[/imath]" > $tmp_corpus/doc${i}
-	./run/txt2json.ln $tmp_corpus/doc${i} > /dev/null
+	echo "[imath]$tex[/imath]" > $itm/doc${i}
+	./run/txt2json.ln $itm/doc${i} > /dev/null
 
 	# generate expect ranking
 	if [ "$prefix" == 'HIT' ]; then
-		echo "expect   doc${i}: $tex"
-		echo "doc${i}" >> expect-rank.log
+		echo "HIT doc${i}: $tex"
+		echo "doc${i}" >> $itm/expected-rank
 	else
-		echo "unexpect doc${i}: $tex"
+		echo "NOT doc${i}: $tex"
 	fi;
 
 	# increment i
 	let 'i=i+1'
 done << EOF
-$(cat "$tmp_corpus/docs")
+$(cat "$itm/docs")
 EOF
 
 # index those corpus files
-./run/indexer.ln -e -p $tmp_corpus > /dev/null
+./run/indexer.ln -e -p $itm > /dev/null
 
 # search test query
-qry=$(cat "$tmp_corpus/query")
-echo "[searching $qry]"
+qry=$(cat "$itm/query")
 
 # echo full search command
 set -x
-./run/searcher.ln -e -n -i ./tmp -m "$qry" > srch-res.log
+./run/searcher.ln -e -n -i ./tmp -m "$qry" > $itm/search-results
 set +x
 
 # extract search results
-grep 'URL:' srch-res.log | awk '{print $2}' | \
-	awk -F/ '{print $NF}' > rank.log
+grep 'URL:' $itm/search-results | awk '{print $2}' | \
+	awk -F/ '{print $NF}' > $itm/real-rank
 
-echo '[rank]'
-cat rank.log
+echo 'Real ranking:'
+cat $itm/real-rank
 
-echo '[diff]'
-diff expect-rank.log rank.log > /dev/null
+echo -n 'They are '
+diff $itm/expected-rank $itm/real-rank > /dev/null
 
 if [ $? -eq 0 ]; then
 	# exact what we expect
-	echo 'same'
+	echo 'the same'
 	exit 0
 else
 	# different from what we expect
