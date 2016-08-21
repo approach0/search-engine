@@ -157,9 +157,12 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 		msca_rst(msca, res.doc_id);
 	}
 
-	/* finally, accumulate score and positions of current
-	 * document */
-	msca->last.score += res.score;
+	/* finally, update current maximum expression score
+	 * inside of current evaluating document, also update
+	 * expression positions of current document */
+	if (res.score > msca->last.score)
+		msca->last.score = res.score;
+
 	msca_push_pos(msca, res.exp_id);
 }
 
