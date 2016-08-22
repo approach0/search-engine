@@ -8,7 +8,7 @@
 
 #define MAX_MERGE_POSTINGS 4096
 
-#define SNIPPET_PADDING    40
+#define SNIPPET_PADDING    80
 #define MAX_SNIPPET_SZ     4096
 
 //#define DEBUG_SNIPPET
