@@ -19,6 +19,9 @@ static const char searchd_ret_str_map[][128] = {
 	{"Rank window calculation error"}
 };
 
+/* log remote IP the request is relayed from */
+void log_json_qry_ip(FILE*, const char*);
+
 /* parse query JSON into our query structure */
 uint32_t parse_json_qry(const char*, text_lexer, struct query*);
 

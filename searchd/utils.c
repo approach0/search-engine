@@ -41,6 +41,33 @@ struct append_result_args {
 /*
  * Query parsing related
  */
+void
+log_json_qry_ip(FILE *fh, const char* req)
+{
+	yajl_val json_tr, json_node;
+	char err_str[1024] = {0};
+	const char *json_path[] = {"ip", NULL};
+
+	/* parse JSON tree */
+	json_tr = yajl_tree_parse(req, err_str, sizeof(err_str));
+	if (json_tr == NULL) {
+		fprintf(stderr, "JSON tree parse: %s\n", err_str);
+		return;
+	}
+
+	/* get query page */
+	json_node = yajl_tree_get(json_tr, json_path,
+	                          yajl_t_string);
+	if (json_node) {
+		char *val_str = YAJL_GET_STRING(json_node);
+		fprintf(fh, "%s", val_str);
+	} else {
+		fprintf(fh, "No IP available.");
+	}
+
+	yajl_tree_free(json_tr);
+}
+
 static enum parse_json_kw_res
 parse_json_kw_ele(yajl_val obj, struct query_keyword *kw,
                   char **phrase)

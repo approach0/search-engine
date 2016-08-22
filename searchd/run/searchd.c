@@ -28,6 +28,10 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	fprintf(log_fh, "JSON query: ");
 	fprintf(log_fh, "%s\n", req);
 	fflush(log_fh);
+
+	fprintf(log_fh, "relay from: ");
+	log_json_qry_ip(log_fh, req);
+	fprintf(log_fh, "\n");
 #endif
 
 	/* parse JSON query into local query structure */

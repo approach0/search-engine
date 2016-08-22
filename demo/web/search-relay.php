@@ -64,6 +64,11 @@ function qry_explode($qry_str)
 }
 
 /*
+ * get remote IP
+ */
+$remote_ip=$_SERVER['REMOTE_ADDR'];
+
+/*
  * parsing GET request parameters
  */
 $req_qry_str = '';
@@ -84,7 +89,11 @@ if(isset($_GET['p'])) /* p for page */
 /*
  * split and handle each query keyword
  */
-$qry_arr = array("page" => $req_page, "kw" => array());
+$qry_arr = array(
+	"ip" => $remote_ip,
+	"page" => $req_page,
+	"kw" => array()
+);
 $keywords = qry_explode($req_qry_str);
 
 foreach ($keywords as $kw) {
