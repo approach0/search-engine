@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html>
 
+<?php
+/*
+ * Redirect mobile visitors to PC/tablet,
+ * because mathquill does not support mobile.
+ */
+require_once 'vendor/mobile-detect/Mobile_Detect.php';
+$detect = new Mobile_Detect;
+if ($detect->isMobile()) {
+	header("Location: mobile.php");
+	exit;
+}
+?>
+
 <head>
 <title>Approach0</title>
 <meta charset="utf-8"/>
@@ -42,7 +55,6 @@ div.stick-bottom {
 </head>
 
 <body style="margin: 0;">
-
 <!-- Query Box App -->
 <div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 

@@ -19,13 +19,13 @@ div.qry-div-fix {
 	padding-right: 8px;
 	padding-bottom: 4px;
 	padding-top: 4px;
+	margin-bottom: 4px;
 
 	box-shadow: 0 1px 2px black;
 	border-radius: 4px;
 }
 
 #qry-input-box {
-	margin-top: 10px;
 	float: left;
 	outline: none;
 	border: none;
