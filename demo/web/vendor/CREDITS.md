@@ -51,3 +51,17 @@ By Han, Jeanine, and Mary (maintainers@mathquill.com)
 The Source Code Form of MathQuill is subject to the terms of the Mozilla Public License, v. 2.0.
 
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+## Mobile-Detect
+Copyright (c) <2011-2015> Serban Ghita, Nick Ilyin and contributors.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
