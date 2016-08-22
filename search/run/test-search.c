@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 			       " -p <page> |"
 			       " -t <term> |"
 			       " -m <tex> |"
-			       " -x <text>"
+			       " -x <English text>"
 			       " -e (English only)"
 			       " -n (no pause)"
 			       "\n", argv[0]);
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'x':
-			query_digest_utf8txt(&qry, optarg);
+			query_digest_utf8txt(&qry, lex_eng_file, optarg);
 			break;
 
 		case 'e':
@@ -149,8 +149,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* open text segmentation dictionary */
-	printf("opening dictionary...\n");
-	text_segment_init("../jieba/fork/dict");
+	if (lex == lex_mix_file) {
+		printf("opening dictionary...\n");
+		text_segment_init("../jieba/fork/dict");
+	}
 
 	/*
 	 * open indices
@@ -191,8 +193,10 @@ close:
 	printf("closing index...\n");
 	indices_close(&indices);
 
-	printf("free dictionary...\n");
-	text_segment_free();
+	if (lex == lex_mix_file) {
+		printf("free dictionary...\n");
+		text_segment_free();
+	}
 
 exit:
 	printf("existing...\n");

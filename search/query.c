@@ -1,5 +1,8 @@
+#include <string.h>
 #include "wstring/wstring.h"
 #include "term-index/term-index.h" /* for position_t */
+#include "indexer/index.h"
+
 #include "config.h"
 #include "proximity.h"
 #include "search.h"
@@ -58,28 +61,37 @@ void query_push_keyword(struct query *qry, const struct query_keyword* kw)
 	copy->pos = (qry->len ++);
 }
 
-static LIST_IT_CALLBK(add_into_qry)
+static struct query *adding_qry = NULL;
+static int add_into_qry(struct lex_slice *slice)
 {
-	LIST_OBJ(struct text_seg, seg, ln);
-	P_CAST(qry, struct query, pa_extra);
 	struct query_keyword kw;
-
 	kw.df   = 0;
 	kw.type = QUERY_KEYWORD_TERM;
-	wstr_copy(kw.wstr, mbstr2wstr(seg->str));
+	wstr_copy(kw.wstr, mbstr2wstr(slice->mb_str));
 
-	query_push_keyword(qry, &kw);
-	LIST_GO_OVER;
+	if (adding_qry)
+		query_push_keyword(adding_qry, &kw);
+
+	return 0;
 }
 
-LIST_DEF_FREE_FUN(txt_seg_list_free, struct text_seg,
-                  ln, free(p));
-
-void query_digest_utf8txt(struct query *qry, const char* txt)
+void query_digest_utf8txt(struct query *qry, text_lexer lex,
+                          const char* txt)
 {
-	list li = text_segment(txt);
-	list_foreach(&li, &add_into_qry, qry);
-	txt_seg_list_free(&li);
+	FILE *text_fh;
+
+	/* register lex handler  */
+	g_lex_handler = add_into_qry;
+
+	/* set static qry pointer */
+	adding_qry = qry;
+
+	/* invoke lexer */
+	text_fh = fmemopen((void *)txt, strlen(txt), "r");
+	lex(text_fh);
+
+	/* close file handler */
+	fclose(text_fh);
 }
 
 static

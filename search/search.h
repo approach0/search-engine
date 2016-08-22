@@ -1,14 +1,5 @@
-/*
- * query
- */
-
-#include "query.h"
-
-/*
- * search
- */
-
 #include "indexer/index.h" /* for text_lexer and indices */
+#include "query.h"
 #include "rank.h"
 #include "snippet.h"
 

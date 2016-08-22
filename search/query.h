@@ -25,8 +25,8 @@ struct query {
 
 /* query methods */
 struct query query_new(void);
-void         query_push_keyword(struct query*, const struct query_keyword*);
-void         query_digest_utf8txt(struct query*, const char*);
-void         query_print_to(struct query, FILE*);
-void         query_delete(struct query);
-void         query_sort(const struct query*);
+void query_push_keyword(struct query*, const struct query_keyword*);
+void query_digest_utf8txt(struct query*, text_lexer, const char*);
+void query_print_to(struct query, FILE*);
+void query_delete(struct query);
+void query_sort(const struct query*);

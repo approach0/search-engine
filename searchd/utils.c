@@ -86,7 +86,8 @@ parse_json_kw_ele(yajl_val obj, struct query_keyword *kw,
 	}
 }
 
-uint32_t parse_json_qry(const char* req, struct query *qry)
+uint32_t
+parse_json_qry(const char* req, text_lexer lex, struct query *qry)
 {
 	yajl_val json_tr, json_node;
 	char err_str[1024] = {0};
@@ -128,7 +129,7 @@ uint32_t parse_json_qry(const char* req, struct query *qry)
 
 			if (PARSE_JSON_KW_SUCC == res) {
 				if (kw.type == QUERY_KEYWORD_TERM && phrase)
-					query_digest_utf8txt(qry, phrase);
+					query_digest_utf8txt(qry, lex, phrase);
 				else
 					query_push_keyword(qry, &kw);
 			} else {

@@ -32,7 +32,7 @@ const char *httpd_on_recv(const char* req, void* arg_)
 
 	/* parse JSON query into local query structure */
 	qry = query_new();
-	page = parse_json_qry(req, &qry);
+	page = parse_json_qry(req, args->lex, &qry);
 
 	if (page == 0) {
 		fprintf(stderr, "requested JSON parse error.\n");
@@ -159,9 +159,11 @@ int main(int argc, char *argv[])
 	printf("setup cache size: %hu MB\n", cache_sz);
 	indices_cache(&indices, cache_sz MB);
 
-	/* open text-segment dictionary */
-	printf("opening dictionary...\n");
-	text_segment_init("../jieba/fork/dict");
+	/* open text-segment dictionary if needed */
+	if (lex == lex_mix_file) {
+		printf("opening dictionary...\n");
+		text_segment_init("../jieba/fork/dict");
+	}
 
 	/* run httpd */
 	printf("listen on port %hu\n", port);
@@ -170,9 +172,11 @@ int main(int argc, char *argv[])
 	searcher_args.lex     = lex;
 	httpd_run(port, &httpd_on_recv, &searcher_args);
 
-	/* close text-segment dictionary */
-	printf("closing dictionary...\n");
-	text_segment_free();
+	/* close text-segment dictionary if opened */
+	if (lex == lex_mix_file) {
+		printf("closing dictionary...\n");
+		text_segment_free();
+	}
 
 close:
 	/* close indices */

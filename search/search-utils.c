@@ -287,7 +287,7 @@ static int highlighter_arg_lex_setter(struct lex_slice *slice)
 list prepare_snippet(struct rank_hit* hit, const char *text,
                      size_t text_sz, text_lexer lex)
 {
-	FILE    *text_fh;
+	FILE *text_fh;
 
 	/* prepare highlighter arguments */
 	hi_arg.pos_arr = hit->occurs;
