@@ -30,14 +30,14 @@ var quiz_list = [
 		"search":  "$4k < 2^k$, by induction"
 	},
 	{ /* 3 */
-		"Q": "Prove [imath]\\sum_{k=1}^{1+m} 2^k k = 2^{m+2}m + 2[/imath] for all integers.",
+		"Q": "Show that [imath]d_1=\\min(d(x,y),2)[/imath] is a metric space if [imath]d(x,y)[/imath] is also a metric space.",
 		"hints": [
-			"Have I seen this equation before?",
-			"How come I always have zero impression when it comes to math equation...",
+			"Have I learned metric space before?",
+			"How come I always have zero impression on math concept...",
 			"This should been taught in today's class, I am 100% confident on that!",
 			"Hmmm... Can I <a href=\"#\">search it</a> on Internet?"
 		],
-		"search":  "$2^{m+2}m + 2$, integers"
+		"search":  "$\\min(d(x,y),2)$, metric space"
 	},
 	{ /* 4 */
 		"Q": "Please list all positive integers [imath]i,j,k[/imath] such that [imath]i^5 + j^6 = k^7[/imath]. ",
