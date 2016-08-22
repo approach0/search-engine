@@ -11,18 +11,40 @@ $(document).ready(function() {
 	/* query variable <--> raw query string convert */
 	var raw_str_2_query = function() {
 		var q = query;
-		var raw_str_arr = q.raw_str.split(",");
+		var dollar_open = false;
+		var kw_arr = [];
+		var kw = '';
+
+		/* get keyword array splitted by commas */
+		for (var i = 0; i < q.raw_str.length; i++) {
+			if (q.raw_str[i] == '$') {
+				if (dollar_open)
+					dollar_open = false;
+				else
+					dollar_open = true;
+			}
+
+			if (!dollar_open && q.raw_str[i] == ',') {
+				kw_arr.push(kw);
+				kw = '';
+			} else {
+				kw += q.raw_str[i];
+			}
+		}
+		kw_arr.push(kw);
+
+		/* for each of the keyword, add into query */
 		q.items = []; /* clear */
-		$.each(raw_str_arr, function(i, raw_item) {
-			if(raw_str_arr[0] == "")
+		$.each(kw_arr, function(i, kw) {
+			kw = $.trim(kw);
+			if (kw == "")
 				return true; /* continue */
 
-			raw_item = $.trim(raw_item);
-			if (raw_item[0] == "$") {
-				var s = raw_item.replace(/^\$|\$$/g, "");
+			if (kw[0] == "$") {
+				var s = kw.replace(/^\$|\$$/g, "");
 				q.items.push({"type":"tex", "str": s});
 			} else {
-				var s = raw_item;
+				var s = kw;
 				q.items.push({"type":"term", "str": s});
 			}
 		});
@@ -92,7 +114,7 @@ $(document).ready(function() {
 		var mq = MQ.MathField(ele, {
 			handlers: {
 				edit: function() {
-					arr = query.items;
+					var arr = query.items;
 					input_box = arr[arr.length - 1];
 					input_box.str = mq.latex();
 				},
@@ -133,11 +155,15 @@ $(document).ready(function() {
 				/* think this as search signal */
 				do_search();
 			} else {
+				/* replace all commas into space */
+				input_box.str = input_box.str.replace(/,/g, " ");
+
+				/* add this "term" keyword */
 				fix_input("term", input_box.str,function() {
 					$("#qry-input-box").focus();
 				});
 			}
-		} else if (ev.which == 52) {
+		} else if (contains(input_box.str, "$")) {
 			/* user input a '$' signe */
 
 			/* split by this '$', assume it is the last char */
@@ -148,7 +174,7 @@ $(document).ready(function() {
 
 			switch_to_mq("");
 
-		} else if (contains(input_box.str, "'+-*/\\!^_%()[]:{}=.<>")) {
+		} else if (contains(input_box.str, ".'+-*/\\!^_%()[]:;{}=<>")) {
 			switch_to_mq_2(input_box.str);
 		}
 	};

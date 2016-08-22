@@ -31,6 +31,39 @@ function search_relay($qry_arr)
 }
 
 /*
+ * qry_explode: return keywords array extracted from
+ * $qry_str, splitted by commas that are not wrapped
+ * by "$" signs.
+ */
+function qry_explode($qry_str)
+{
+	$kw_arr = array();
+	$kw = '';
+	$dollar_open = false;
+	$i = 0;
+
+	for ($i = 0; $i < strlen($qry_str); $i++) {
+		$c = $qry_str[$i];
+		if ($c == '$') {
+			if ($dollar_open)
+				$dollar_open = false;
+			else
+				$dollar_open = true;
+		}
+
+		if (! $dollar_open && $c == ',') {
+			array_push($kw_arr, $kw);
+			$kw = '';
+		} else {
+			$kw = $kw.$c;
+		}
+	}
+
+	array_push($kw_arr, $kw);
+	return $kw_arr;
+}
+
+/*
  * parsing GET request parameters
  */
 $req_qry_str = '';
@@ -52,7 +85,7 @@ if(isset($_GET['p'])) /* p for page */
  * split and handle each query keyword
  */
 $qry_arr = array("page" => $req_page, "kw" => array());
-$keywords = explode(",", $req_qry_str);
+$keywords = qry_explode($req_qry_str);
 
 foreach ($keywords as $kw) {
 	$kw = trim($kw);
