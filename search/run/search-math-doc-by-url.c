@@ -86,6 +86,20 @@ static LIST_IT_CALLBK(find_url)
 	LIST_GO_OVER;
 }
 
+static LIST_IT_CALLBK(dele_if_gener)
+{
+	bool res;
+	LIST_OBJ(struct subpath, sp, ln);
+
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
+		free(sp);
+		return res;
+	}
+
+	LIST_GO_OVER;
+}
+
 static void
 where_is_expr(char *tex, char *url)
 {
@@ -100,6 +114,8 @@ where_is_expr(char *tex, char *url)
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		optr_print(parse_ret.operator_tree, stdout);
+
+		list_foreach(&parse_ret.subpaths.li, &dele_if_gener, NULL);
 
 		printf("subpaths:\n");
 		subpaths_print(&parse_ret.subpaths, stdout);

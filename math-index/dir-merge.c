@@ -100,6 +100,10 @@ dir_search_callbk(const char* path, const char *srchpath,
 free_postings:
 	for (j = 0; j < i; j++)
 		math_posting_free_reader(postings[j]);
+
+#ifdef DEBUG_DIR_MERGE
+	printf("ret = %d.\n", ret);
+#endif
 	return ret;
 }
 
