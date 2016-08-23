@@ -1,6 +1,7 @@
 *.swp
 *.swo
 *.tmp
+*.img
 *.o
 *.a
 *.d

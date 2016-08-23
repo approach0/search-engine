@@ -74,20 +74,24 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 int main(int argc, char* argv[])
 {
-	int opt;
+	int opt, overwrite = 1;
 	text_lexer lex = lex_mix_file;
 	char *corpus_path = NULL;
 	const char index_path[] = "./tmp";
 	struct indices indices;
 
-	while ((opt = getopt(argc, argv, "hep:")) != -1) {
+	while ((opt = getopt(argc, argv, "heap:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
 			printf("index file(s) from a specified path. \n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -e (english only) | -p <corpus path>\n", argv[0]);
+			printf("%s -h | "
+			       "-e (English only) | "
+			       "-p <corpus path> | "
+			       "-a (No overwrite)"
+			       "\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -p ./some/where/file.txt\n", argv[0]);
@@ -100,6 +104,10 @@ int main(int argc, char* argv[])
 
 		case 'e':
 			lex = lex_eng_file;
+			break;
+
+		case 'a':
+			overwrite = 0;
 			break;
 
 		default:
@@ -124,9 +132,13 @@ int main(int argc, char* argv[])
 		text_segment_init("../jieba/fork/dict");
 	}
 
+	/* remove output directory if we are overwriting index */
+	if (overwrite) {
+		system("rm -rf ./tmp");
+	}
+
 	/* open indices for writing */
 	printf("opening indices...\n");
-	system("rm -rf ./tmp");
 	if(indices_open(&indices, index_path, INDICES_OPEN_RW)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
