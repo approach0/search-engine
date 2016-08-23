@@ -36,9 +36,12 @@ bool indices_open(struct indices* indices, const char* index_path,
 	 */
 	sprintf(path, "%s/term", index_path);
 
-	mkdir_p(path);
+	if (mode == INDICES_OPEN_RW)
+		mkdir_p(path);
 
-	term_index = term_index_open(path, TERM_INDEX_OPEN_CREATE);
+	term_index = term_index_open(path, (mode == INDICES_OPEN_RD) ?
+	                             TERM_INDEX_OPEN_EXISTS:
+	                             TERM_INDEX_OPEN_CREATE);
 	if (NULL == term_index) {
 		fprintf(stderr, "cannot create/open term index.\n");
 		open_err = 1;
