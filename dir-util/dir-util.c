@@ -1,5 +1,3 @@
-#define _BSD_SOURCE /* for DT_REG, DT_DIR... */
-
 #include <assert.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -73,20 +71,31 @@ int foreach_files_in(const char *path, ffi_callbk fun, void *arg)
 {
 	char *fname;
 	struct dirent *dent;
+	char newpath[MAX_DIR_PATH_NAME_LEN];
 	DIR  *dir = opendir(path);
+
 	if (dir == NULL)
 		return 1;
-	
+
 	while (1) {
 		dent = readdir(dir);
 		if (!dent)
 			break;
 
 		fname = dent->d_name;
-		if (dent->d_type & DT_REG) {
-			if (fun(fname, arg))
-				break;
-		}
+
+		if (fname[0] == '.')
+			/* not .. or . or hidden files*/
+			continue;
+
+		sprintf(newpath, "%s/%s", path, fname);
+
+		/* is a regular file ? */
+		if (!file_exists(newpath))
+			continue;
+
+		if (fun(fname, arg))
+			break;
 	}
 
 	closedir(dir);
@@ -121,19 +130,24 @@ _dir_search_podfs(const char *path, const char *srchpath, uint32_t level,
 		}
 
 		dname = dent->d_name;
-		if (dent->d_type & DT_DIR) {
-			if (strcmp(dname, "..") == 0 ||
-			    strcmp(dname, ".") == 0)
-				continue;
 
-			sprintf(newpath[0], "%s/%s", path, dname);
-			sprintf(newpath[1], "%s/%s", srchpath, dname);
-			res = _dir_search_podfs(newpath[0], newpath[1],
-			                        level + 1, fun, arg);
-			if (res == DS_RET_STOP_ALLDIR) {
-				ret = res;
-				break;
-			}
+		if (dname[0] == '.')
+			/* not .. or . or hidden files*/
+			continue;
+
+		sprintf(newpath[0], "%s/%s", path, dname);
+
+		/* is a directory ? */
+		if (!dir_exists(newpath[0]))
+			continue;
+
+		sprintf(newpath[1], "%s/%s", srchpath, dname);
+
+		res = _dir_search_podfs(newpath[0], newpath[1],
+		                        level + 1, fun, arg);
+		if (res == DS_RET_STOP_ALLDIR) {
+			ret = res;
+			break;
 		}
 	}
 

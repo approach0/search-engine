@@ -9,8 +9,8 @@ int foreach_file_callbk(const char *filename, void *arg)
 	char *path = (char*) arg;
 	char *ext = filename_ext(filename);
 
-	printf("file=%s/%s (ext:`%s')\n", path, filename,
-	                                  (ext == NULL) ? "null": ext);
+	printf("%s/%s (ext:`%s')\n", path, filename,
+	       (ext == NULL) ? "null": ext);
 	return 0;
 }
 
@@ -20,14 +20,13 @@ dir_search_callbk(const char* path, const char *srchpath,
 {
 	char *test_str = (char *)arg;
 	printf("%s@ level %u\n", test_str, level);
-	printf("path=%s\n", path);
-	printf("search path=%s\n", srchpath);
+	printf("path=%s (srchpath=%s):\n", path, srchpath);
 
-	printf("files in this directory:\n");
 	foreach_files_in(path, &foreach_file_callbk, (void*)path);
+	printf("\n");
 
 	if (level > 3) {
-		printf("level too large, terminate search.\n");
+		printf("max search level reached, terminate.\n");
 		return DS_RET_STOP_ALLDIR;
 	} else {
 		return DS_RET_CONTINUE;
