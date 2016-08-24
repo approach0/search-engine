@@ -17,8 +17,11 @@ void *__real_malloc(size_t);
 
 void *__wrap_malloc(size_t c)
 {
-	unfree++;
-	return __real_malloc(c);
+	void *p = __real_malloc(c);
+
+	if (p)
+		unfree++;
+	return p;
 }
 
 void *__real_free(size_t);
@@ -27,4 +30,15 @@ void *__wrap_free(size_t c)
 {
 	unfree--;
 	return __real_free(c);
+}
+
+void *__real_calloc(size_t, size_t);
+
+void *__wrap_calloc(size_t nmemb, size_t size)
+{
+	void *p = __real_calloc(nmemb, size);
+
+	if (p)
+		unfree++;
+	return p;
 }

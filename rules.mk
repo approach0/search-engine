@@ -33,7 +33,7 @@ COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter %.cpp, $^) -o $@
 CCDH = gcc -dH
 
 # linker
-MHOOK_FLAGS := -Wl,--wrap,malloc -Wl,--wrap,free
+MHOOK_FLAGS := -Wl,--wrap,malloc -Wl,--wrap,free -Wl,--wrap,calloc
 LD := gcc $(MHOOK_FLAGS)
 COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
