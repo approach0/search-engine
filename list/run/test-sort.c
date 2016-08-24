@@ -3,6 +3,7 @@
 #include <time.h>
 #include <assert.h>
 
+#include "mhook/mhook.h"
 #include "list.h"
 
 struct T
@@ -78,5 +79,7 @@ main()
 
 	/* free list */
 	list_release(&list);
+
+	mhook_print_unfree();
 	return 0;
 }

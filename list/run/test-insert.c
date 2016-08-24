@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "mhook/mhook.h"
 #include "list.h"
 
 struct T
@@ -35,5 +37,7 @@ int main()
 	printf("NULL \n");
 
 	list_release(&li);
+
+	mhook_print_unfree();
 	return 0;
 }

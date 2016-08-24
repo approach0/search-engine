@@ -33,7 +33,8 @@ COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter %.cpp, $^) -o $@
 CCDH = gcc -dH
 
 # linker
-LD := gcc
+MHOOK_FLAGS := -Wl,--wrap,malloc -Wl,--wrap,free
+LD := gcc $(MHOOK_FLAGS)
 COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
 # cycling libraries even if we use "-( .. -)", this is necessary
