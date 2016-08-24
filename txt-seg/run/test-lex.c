@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mhook/mhook.h"
+
 #include "lex.h"
 #include "offset-check.h"
 
@@ -71,5 +73,7 @@ int main(void)
 
 close:
 	fclose(fh);
+
+	mhook_print_unfree();
 	return 0;
 }

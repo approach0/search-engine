@@ -15,7 +15,6 @@ y.*.c
 lex.*.c
 tags
 srclist.txt
-linenoise-history.txt
 tmp/
 build/
 .build/

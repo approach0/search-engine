@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 
+#include "mhook/mhook.h"
 #include "postmerge.h"
 #include "math-expr-search.h"
 
@@ -108,5 +109,6 @@ exit:
 		math_index_close(mi);
 	}
 
+	mhook_print_unfree();
 	return 0;
 }

@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "term-index.h"
 #include <stdio.h>
 
@@ -49,5 +50,7 @@ int main()
 
 	printf("closing term index...\n");
 	term_index_close(ti);
+
+	mhook_print_unfree();
 	return 0;
 }

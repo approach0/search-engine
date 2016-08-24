@@ -1,7 +1,9 @@
 #include <stdio.h>
-#include "codec.h"
 #include <stdlib.h>
 #include <time.h>
+
+#include "mhook/mhook.h"
+#include "codec.h"
 
 int main()
 {
@@ -73,5 +75,7 @@ int main()
 
     printf("\n*******pass all the tests*******\n");
 	codec_free(codec);
+
+	mhook_print_unfree();
 	return 0;
 }

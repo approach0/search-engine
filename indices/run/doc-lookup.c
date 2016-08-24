@@ -3,6 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 
+#include "mhook/mhook.h"
 #include "codec/codec.h"
 #include "indexer/config.h" // for MAX_CORPUS_FILE_SZ
 #include "indices.h"
@@ -94,5 +95,7 @@ close:
 
 exit:
 	free(index_path);
+
+	mhook_print_unfree();
 	return 0;
 }

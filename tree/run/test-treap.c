@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "mhook/mhook.h"
+
 #include "list/list.h"
 #include "treap.h"
 
@@ -94,5 +96,7 @@ int main()
 
 	printf("root ptr = %p\n", root);
 	assert(root == NULL);
+
+	mhook_print_unfree();
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "mhook/mhook.h"
 #include "minheap.h"
 
 #define COL_BEG "\033[1m\033[34m"
@@ -106,5 +107,7 @@ int main(void)
 	heap_sort_desc(&heap);
 
 	heap_destory(&heap);
+
+	mhook_print_unfree();
 	return 0;
 }

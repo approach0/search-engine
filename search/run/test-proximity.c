@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "term-index/term-index.h"
 #include "proximity.h"
 
@@ -59,4 +60,7 @@ int main()
 
 	printf("=== test3 ===\n");
 	printf("res = %u.\n\n", test3());
+
+	mhook_print_unfree();
+	return 0;
 }

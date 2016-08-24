@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+
+#include "mhook/mhook.h"
 #include "codec.h"
 
 int main()
@@ -39,5 +41,7 @@ int main()
 
 	/* free compressed buffer */
 	free(compressed);
+
+	mhook_print_unfree();
 	return 0;
 }

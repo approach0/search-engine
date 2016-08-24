@@ -39,6 +39,9 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 	yy_delete_buffer(state_buf);
 	free(scan_buf);
 
+	/* avoid memory leakage */
+	yylex_destroy();
+
 	/* return operator tree or not, depends on `keep_optr' */
 	if (keep_optr)
 		ret.operator_tree = grammar_optr_root;

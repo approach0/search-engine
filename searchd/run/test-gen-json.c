@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "yajl/yajl_gen.h"
 
 #include <stdio.h>
@@ -26,5 +27,7 @@ int main()
 	}
 
 	yajl_gen_free(gen);
+
+	mhook_print_unfree();
 	return 0;
 }

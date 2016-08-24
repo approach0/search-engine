@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <getopt.h>
 
+#include "mhook/mhook.h"
+
 #include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indexer/index.h" /* for text_lexer and indices */
 #include "mem-index/mem-posting.h"
@@ -82,9 +84,11 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 	/* get URL */
 	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n\n", str);
+	free(str);
 
 	/* get document text */
 	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
+	free(str);
 
 	/* prepare highlighter arguments */
 	highlight_list = prepare_snippet(hit, str, str_sz, lex_eng_file);
@@ -136,8 +140,10 @@ test_term_search(struct indices *indices, enum postmerge_op op,
 	void *term_posting;
 
 	const term_id_t forked_term_id = 1;
-	printf("caching posting list[%u] of term `%s'...\n", forked_term_id,
-	       term_lookup_r(ti, forked_term_id));
+	char *forked_term = term_lookup_r(ti, forked_term_id);
+	printf("caching posting list[%u] of term `%s'...\n",
+	       forked_term_id, forked_term);
+	free(forked_term);
 
 	term_posting = term_index_get_posting(ti, forked_term_id);
 	fork_posting = postcache_fork_term_posting(term_posting);
@@ -361,5 +367,6 @@ exit:
 	if (index_path)
 		free(index_path);
 
+	mhook_print_unfree();
 	return 0;
 }

@@ -39,10 +39,11 @@ bool priority_Q_add_or_replace(struct priority_Q *Q, struct rank_hit *hit)
 		return 1;
 
 	} else {
-		void *top = heap_top(&Q->heap);
+		struct rank_hit *top = (struct rank_hit *)heap_top(&Q->heap);
 		minheap_delete(&Q->heap, 0);
 		minheap_insert(&Q->heap, hit);
 
+		free(top->occurs);
 		free(top);
 		return 0;
 	}

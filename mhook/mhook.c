@@ -50,6 +50,21 @@ void *__wrap_calloc(size_t nmemb, size_t size)
 	return p;
 }
 
+/* strdup() hook */
+void *__real_strdup(const char *);
+
+void *__wrap_strdup(const char *s)
+{
+	void *p = __real_strdup(s);
+
+	if (p) {
+		unfree++;
+		tot_allocs++;
+	}
+
+	return p;
+}
+
 /* free() hook */
 void __real_free(void*);
 

@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "tex-parser/tex-parser.h" /* for symbol_id_t */
 #include "mnc-score.h"
 
@@ -88,5 +89,7 @@ int main(void)
 	printf("lsb position of %#x: %d\n", 0x18, lsb_pos(0x18)); /* b11000 */
 	printf("lsb position of %#x: %d\n", 0x01, lsb_pos(0x01));
 	printf("lsb position of %#x: %d\n", 0x00, lsb_pos(0x00));
+
+	mhook_print_unfree();
 	return 0;
 }

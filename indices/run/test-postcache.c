@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "mhook/mhook.h"
 #include "mem-index/mem-posting.h"
 #include "term-index/term-index.h"
 #include "postcache.h"
@@ -61,5 +62,6 @@ exit:
 	if (ti)
 		term_index_close(ti);
 
+	mhook_print_unfree();
 	return 0;
 }

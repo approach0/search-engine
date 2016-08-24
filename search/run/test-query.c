@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "mhook/mhook.h"
 #include "wstring/wstring.h"
 #include "indexer/index.h"
 
@@ -45,5 +46,7 @@ int main()
 	printf("\n");
 
 	query_delete(qry);
+
+	mhook_print_unfree();
 	return 0;
 }

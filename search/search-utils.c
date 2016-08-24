@@ -113,6 +113,8 @@ struct rank_hit *new_hit(doc_id_t hitID, float score,
 	hit->docID = hitID;
 	hit->score = score;
 
+	hit->occurs = NULL;
+	hit->n_occurs = 0;
 	hit->occurs = malloc(sizeof(position_t) * MAX_HIGHLIGHT_OCCURS);
 	hit->n_occurs = mergesort(hit->occurs, prox_in, n);
 

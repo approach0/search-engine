@@ -118,8 +118,8 @@ uint32_t onflush_for_termpost(char *buf, uint32_t *buf_sz)
 	}
 
 	/* free codecs allocated */
-	free(codec[0]);
-	free(codec[1]);
+	codec_free(codec[0]);
+	codec_free(codec[1]);
 
 	return save_key;
 }
@@ -195,9 +195,9 @@ uint32_t onflush_for_termpost_with_pos(char *buf, uint32_t *buf_sz)
 	}
 
 	/* free codecs allocated */
-	free(codec[0]);
-	free(codec[1]);
-	free(codec[2]);
+	codec_free(codec[0]);
+	codec_free(codec[1]);
+	codec_free(codec[2]);
 
 	return save_key;
 }
@@ -261,8 +261,8 @@ void onrebuf_for_termpost(char *buf, uint32_t *buf_sz)
 	}
 
 	/* free codecs allocated */
-	free(codec[0]);
-	free(codec[1]);
+	codec_free(codec[0]);
+	codec_free(codec[1]);
 
 	return;
 }
@@ -318,9 +318,9 @@ void onrebuf_for_termpost_with_pos(char *buf, uint32_t *buf_sz)
 	}
 
 	/* free codecs allocated */
-	free(codec[0]);
-	free(codec[1]);
-	free(codec[2]);
+	codec_free(codec[0]);
+	codec_free(codec[1]);
+	codec_free(codec[2]);
 
 	return;
 }

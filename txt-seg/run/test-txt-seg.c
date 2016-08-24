@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "mhook/mhook.h"
+
 #include "config.h"
 #include "txt-seg.h"
 
@@ -54,5 +56,7 @@ int main(void)
 	}
 
 	text_segment_free();
+
+	mhook_print_unfree();
 	return 0;
 }

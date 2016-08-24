@@ -10,6 +10,8 @@
 #include "list/list.h"
 #include "bintr.h"
 
+#include "mhook/mhook.h"
+
 static void rank_seed(void)
 {
 	unsigned int ticks;
@@ -95,5 +97,7 @@ int main()
 
 	printf("root ptr = %p\n", root);
 	assert(root == NULL);
+
+	mhook_print_unfree();
 	return 0;
 }

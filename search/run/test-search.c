@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "mhook/mhook.h"
+
 #include "txt-seg/config.h"
 #include "txt-seg/txt-seg.h"
 #include "wstring/wstring.h"
@@ -31,7 +33,6 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 			printf("%u ", hit->occurs[i]);
 		printf("\n");
 	}
-
 	printf("\n");
 
 	/* get document text */
@@ -211,5 +212,7 @@ exit:
 	 * free query
 	 */
 	query_delete(qry);
+
+	mhook_print_unfree();
 	return 0;
 }

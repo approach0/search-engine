@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "tex-parser/vt100-color.h"
 #include "indexer/config.h" // for MAX_CORPUS_FILE_SZ
 #include "codec/codec.h"
@@ -33,6 +34,7 @@ int main()
 	for (i = 1; i <= MIN(max_terms_listed, termN); i++) {
 		term = term_lookup_r(indices.ti, i);
 		printf("#%u: `%s' ", i, term);
+		free(term);
 	}
 	printf("\n");
 
@@ -65,5 +67,6 @@ int main()
 close:
 	indices_close(&indices);
 
+	mhook_print_unfree();
 	return 0;
 }

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#include "mhook/mhook.h"
 #include "for.h"
 
 void print_int32_arr(uint32_t *arr, size_t len)
@@ -68,5 +70,7 @@ int main()
 	}
 
 	printf("[ pass all tests ]\n");
+
+	mhook_print_unfree();
 	return 0;
 }

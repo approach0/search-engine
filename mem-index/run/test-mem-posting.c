@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "mhook/mhook.h"
 #include "mem-posting.h"
 #include "config.h"
 
@@ -118,8 +119,6 @@ print_current:
 
 	mem_posting_finish(po);
 	printf("\n");
-
-	mem_posting_free(po);
 }
 
 static void run_testcase(enum test_option opt)
@@ -147,6 +146,7 @@ static void run_testcase(enum test_option opt)
 
 	test_iterator(po, opt);
 
+	mem_posting_free(po);
 	printf("\n");
 }
 
@@ -161,5 +161,6 @@ int main()
 	printf("{{{ TEST_CODEC_POSTING_WITH_POS }}}\n");
 	run_testcase(TEST_CODEC_POSTING_WITH_POS);
 
+	mhook_print_unfree();
 	return 0;
 }

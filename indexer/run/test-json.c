@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "mhook/mhook.h"
 #include "yajl/yajl_tree.h"
 
 int main()
@@ -25,5 +26,7 @@ int main()
 	}
 
 	yajl_tree_free(tr);
+
+	mhook_print_unfree();
 	return 0;
 }

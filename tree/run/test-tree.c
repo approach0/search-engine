@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "mhook/mhook.h"
 #include "tree.h"
 
 struct T {
@@ -163,5 +165,6 @@ main()
 	tree_foreach(&root.tnd, &tree_post_order_DFS, &release, 
 	             1, NULL);
 
+	mhook_print_unfree();
 	exit(0);
 }

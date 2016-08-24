@@ -1,4 +1,6 @@
 #include <stdio.h>
+
+#include "mhook/mhook.h"
 #include "codec.h"
 
 int main()
@@ -24,5 +26,6 @@ int main()
 		printf("%u ", check_arr[i]);
 	printf("\n");
 
+	mhook_print_unfree();
 	return 0;
 }

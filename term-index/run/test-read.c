@@ -8,6 +8,8 @@
 #undef N_DEBUG
 #include <assert.h>
 
+#include "mhook/mhook.h"
+
 static void print_help(char *argv[])
 {
 	printf("DESCRIPTION:\n");
@@ -187,5 +189,6 @@ exit:
 	if (index_path)
 		free(index_path);
 
+	mhook_print_unfree();
 	return 0;
 }

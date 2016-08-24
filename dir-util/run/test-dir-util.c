@@ -2,6 +2,8 @@
 #include <getopt.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "mhook/mhook.h"
 #include "dir-util.h"
 
 int foreach_file_callbk(const char *filename, void *arg)
@@ -90,5 +92,7 @@ int main(int argc, char* argv[])
 
 	free(path);
 exit:
+
+	mhook_print_unfree();
 	return 0;
 }

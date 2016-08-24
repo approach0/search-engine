@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include "mhook/mhook.h"
+
 #include "search/config.h"
 #include "search/search.h"
 
@@ -189,5 +191,7 @@ close:
 
 exit:
 	free(index_path);
+
+	mhook_print_unfree();
 	return 0;
 }

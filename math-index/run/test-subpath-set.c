@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "math-index.h"
 #include "subpath-set.h"
 
@@ -30,5 +31,6 @@ int main()
 		}
 	}
 
+	mhook_print_unfree();
 	return 0;
 }

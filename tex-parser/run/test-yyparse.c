@@ -1,7 +1,15 @@
+#include "mhook/mhook.h"
 #include "head.h"
 
 int main()
 {
-	tex_parse("1+2+3", 0, 0);
+	struct tex_parse_ret ret = tex_parse("f(x)", 0, 0);
+
+	if (ret.code != PARSER_RETCODE_ERR) {
+		subpaths_print(&ret.subpaths, stdout);
+		subpaths_release(&ret.subpaths);
+	}
+
+	mhook_print_unfree();
 	return 0;
 }

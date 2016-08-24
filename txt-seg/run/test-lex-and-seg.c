@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mhook/mhook.h"
+
 #include "lex.h"
 #include "config.h"
 #include "txt-seg.h"
@@ -85,5 +87,7 @@ free:
 
 	printf("closing file...\n");
 	fclose(fh);
+
+	mhook_print_unfree();
 	return 0;
 }

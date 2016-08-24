@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "mhook/mhook.h"
 #include "term-index/term-index.h" /* for doc_id_t */
 #include "rank.h"
 
@@ -66,5 +67,7 @@ int main(void)
 	} while (page < tot_pages);
 
 	priority_Q_free(&queue);
+
+	mhook_print_unfree();
 	return 0;
 }

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "mhook/mhook.h"
+
 #include "list/list.h"
 #include "snippet.h"
 
@@ -30,5 +32,7 @@ int main(void)
 
 	snippet_free_highlight_list(&hi_li);
 	fclose(fh);
+
+	mhook_print_unfree();
 	return 0;
 }

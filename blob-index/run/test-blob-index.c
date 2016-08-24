@@ -1,3 +1,4 @@
+#include "mhook/mhook.h"
 #include "blob-index.h"
 #include <string.h> /* for strlen() */
 #include <stdio.h>  /* for printf() */
@@ -45,4 +46,7 @@ int main()
 	}
 
 	blob_index_close(bi);
+
+	mhook_print_unfree();
+	return 0;
 }

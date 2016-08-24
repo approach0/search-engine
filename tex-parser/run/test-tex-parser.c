@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "mhook/mhook.h"
+
 #include "tex-parser.h"
 #include "vt100-color.h"
 #include "completion.h"
@@ -12,19 +15,17 @@ int main()
 {
 	char *line;
 	struct tex_parse_ret ret;
-	const char history_fname[] = "linenoise-history.txt";
 
 	/* hook up completion callback */
 	linenoiseSetCompletionCallback(completion_callbk);
 
-	/* Load the history at startup */
-	linenoiseHistoryLoad(history_fname);
+	/* FIXME: linenoise has memory leakages. However, because
+	 * test-tex-parser does not care about leakage too much,
+	 * we may leave this issue along. */
 
 	while ((line = linenoise("edit: ")) != NULL) {
 		/* Add to the history. */
 		linenoiseHistoryAdd(line);
-		/* Save the history on disk. */
-		linenoiseHistorySave(history_fname);
 
 		ret = tex_parse(line, 0, true);
 
@@ -50,5 +51,7 @@ int main()
 	}
 
 	printf("\n");
+
+	mhook_print_unfree();
 	return 0;
 }
