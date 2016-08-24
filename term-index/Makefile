@@ -1,6 +1,5 @@
-# specify Indri library path from indri-path.mk
-# for `make clean' to work, include indri-path.mk
-# optionally.
+# specify Indri library path for
+# $(INDRI) in dep/dep-indri.mk.
 -include indri-path.mk
 
 include ../rules.mk
