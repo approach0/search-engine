@@ -24,7 +24,7 @@ static LIST_IT_CALLBK(dele_if_gener)
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE) {
 		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-		free(sp);
+		subpath_free(sp);
 		return res;
 	}
 

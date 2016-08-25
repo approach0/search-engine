@@ -398,11 +398,18 @@ struct subpaths optr_subpaths(struct optr_node* optr)
 	return subpaths;
 }
 
-LIST_DEF_FREE_FUN(_subpath_nodes_release, struct subpath_node, ln, free(p));
+LIST_DEF_FREE_FUN(_subpath_nodes_release, struct subpath_node, ln,
+	free(p)
+);
+
+void subpath_free(struct subpath *subpath)
+{
+	_subpath_nodes_release(&subpath->path_nodes);
+	free(subpath);
+}
 
 LIST_DEF_FREE_FUN(_subpaths_release, struct subpath, ln,
-	_subpath_nodes_release(&p->path_nodes);
-	free(p);
+	subpath_free(p);
 );
 
 void subpaths_release(struct subpaths *subpaths)

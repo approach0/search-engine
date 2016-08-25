@@ -56,4 +56,5 @@ struct tex_parse_ret tex_parse(const char *, size_t,
 
 void subpaths_print(struct subpaths*, FILE*);
 
+void subpath_free(struct subpath*);
 void subpaths_release(struct subpaths*);
