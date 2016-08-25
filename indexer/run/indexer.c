@@ -2,6 +2,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "mhook/mhook.h"
 #include "index.h"
 
 struct indexer_args {
@@ -196,5 +197,6 @@ exit:
 	if (corpus_path)
 		free(corpus_path);
 
+	mhook_print_unfree();
 	return 0;
 }

@@ -292,9 +292,12 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 #endif
 	list_foreach(&subpaths.li, &path_index_step3, &arg);
 
+
 #ifdef DEBUG_MATH_INDEX
-	printf("done.\n");
+	printf("deleting subpath set...\n");
 #endif
+	subpath_set_free(&arg.subpath_set);
+
 	return 0;
 }
 
