@@ -90,7 +90,8 @@ reply:
 	query_delete(qry);
 
 #ifdef SEARCHD_LOG_ENABLE
-	fprintf(log_fh, "query handled.\n\n");
+	fprintf(log_fh, "query handled, "
+	        "unfree allocs: %ld.\n\n", mhook_unfree());
 	fflush(log_fh);
 
 	fclose(log_fh);
