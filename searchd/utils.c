@@ -10,8 +10,7 @@
 #include "search/search.h"
 #include "search/search-utils.h"
 
-#include "yajl/yajl_gen.h"
-#include "yajl/yajl_tree.h"
+#include "parson/parson.h"
 
 #include "config.h"
 #include "utils.h"
@@ -25,9 +24,7 @@ static char response[MAX_SEARCHD_RESPONSE_JSON_SZ];
 /* parse JSON keyword result */
 enum parse_json_kw_res {
 	PARSE_JSON_KW_LACK_KEY,
-	PARSE_JSON_KW_BAD_KEY_TYPE,
-	PARSE_JSON_KW_BAD_KEY,
-	PARSE_JSON_KW_BAD_VAL,
+	PARSE_JSON_KW_INVALID_TYPE,
 	PARSE_JSON_KW_SUCC
 };
 
@@ -44,136 +41,129 @@ struct append_result_args {
 void
 log_json_qry_ip(FILE *fh, const char* req)
 {
-	yajl_val json_tr, json_node;
-	char err_str[1024] = {0};
-	const char *json_path[] = {"ip", NULL};
+	JSON_Object *parson_obj;
 
-	/* parse JSON tree */
-	json_tr = yajl_tree_parse(req, err_str, sizeof(err_str));
-	if (json_tr == NULL) {
-		fprintf(stderr, "JSON tree parse: %s\n", err_str);
-		return;
+	JSON_Value *parson_val = json_parse_string(req);
+	if (parson_val == NULL) {
+		fprintf(fh, "JSON query parse error");
+		goto free;
 	}
 
-	/* get query page */
-	json_node = yajl_tree_get(json_tr, json_path,
-	                          yajl_t_string);
-	if (json_node) {
-		char *val_str = YAJL_GET_STRING(json_node);
-		fprintf(fh, "%s", val_str);
-	} else {
-		fprintf(fh, "No IP available.");
+	parson_obj = json_value_get_object(parson_val);
+	if (!json_object_has_value_of_type(parson_obj, "ip",
+	                                   JSONString)) {
+		fprintf(fh, "JSON query does not contain IP");
+		goto free;
 	}
 
-	yajl_tree_free(json_tr);
+	fprintf(fh, "%s", json_object_get_string(parson_obj, "ip"));
+
+free:
+	json_value_free(parson_val);
 }
 
 static enum parse_json_kw_res
-parse_json_kw_ele(yajl_val obj, struct query_keyword *kw,
-                  char **phrase)
+parse_json_kw_ele(JSON_Object *obj, size_t idx,
+                  struct query *qry, text_lexer lex)
 {
-	size_t j, n_ele = obj->u.object.len;
-	enum query_kw_type kw_type = QUERY_KEYWORD_INVALID;
-	wchar_t kw_wstr[MAX_QUERY_WSTR_LEN] = {0};
+	struct query_keyword kw;
+	const char *type, *str;
 
-	for (j = 0; j < n_ele; j++) {
-		const char *key = obj->u.object.keys[j];
-		yajl_val    val = obj->u.object.values[j];
-		char *val_str = YAJL_GET_STRING(val);
+	/* set keyword postition */
+	kw.pos = idx;
 
-		if (YAJL_IS_STRING(val)) {
-			if (0 == strcmp(key, "type")) {
-				if (0 == strcmp(val_str, "term"))
-					kw_type = QUERY_KEYWORD_TERM;
-				else if (0 == strcmp(val_str, "tex"))
-					kw_type = QUERY_KEYWORD_TEX;
-				else
-					return PARSE_JSON_KW_BAD_KEY_TYPE;
-
-			} else if (0 == strcmp(key, "str")) {
-				*phrase = val_str;
-				wstr_copy(kw_wstr, mbstr2wstr(val_str));
-			} else {
-				return PARSE_JSON_KW_BAD_KEY;
-			}
-		} else {
-			return PARSE_JSON_KW_BAD_VAL;
-		}
-	}
-
-	if (wstr_len(kw_wstr) != 0 &&
-	    kw_type != QUERY_KEYWORD_INVALID) {
-		/* set return keyword */
-		kw->type = kw_type;
-		wstr_copy(kw->wstr, kw_wstr);
-
-		return PARSE_JSON_KW_SUCC;
-	} else {
+	/* parsing keyword type */
+	if (!json_object_has_value_of_type(obj, "type", JSONString))
 		return PARSE_JSON_KW_LACK_KEY;
+
+	type = json_object_get_string(obj, "type");
+
+	if (0 == strcmp(type, "term"))
+		kw.type = QUERY_KEYWORD_TERM;
+	else if (0 == strcmp(type, "tex"))
+		kw.type = QUERY_KEYWORD_TEX;
+	else
+		return PARSE_JSON_KW_INVALID_TYPE;
+
+	/* parsing keyword str value */
+	if (!json_object_has_value_of_type(obj, "str", JSONString))
+		return PARSE_JSON_KW_LACK_KEY;
+
+	str = json_object_get_string(obj, "str");
+
+	if (kw.type == QUERY_KEYWORD_TERM) {
+		/* term */
+		query_digest_utf8txt(qry, lex, str);
+	} else {
+		/* tex */
+		wstr_copy(kw.wstr, mbstr2wstr(str));
+		query_push_keyword(qry, &kw);
 	}
+
+	return PARSE_JSON_KW_SUCC;
 }
 
 uint32_t
 parse_json_qry(const char* req, text_lexer lex, struct query *qry)
 {
-	yajl_val json_tr, json_node;
-	char err_str[1024] = {0};
-	const char *json_page_path[] = {"page", NULL};
-	const char *json_kw_path[] = {"kw", NULL};
+	JSON_Object *parson_obj;
+	JSON_Array *parson_arr;
 	uint32_t page = 0; /* page == zero indicates error */
+	size_t i;
 
-	/* parse JSON tree */
-	json_tr = yajl_tree_parse(req, err_str, sizeof(err_str));
-	if (json_tr == NULL) {
-		fprintf(stderr, "JSON tree parse: %s\n", err_str);
-		goto exit;
-	}
-
-	/* get query page */
-	json_node = yajl_tree_get(json_tr, json_page_path,
-	                          yajl_t_number);
-	if (json_node) {
-		page = YAJL_GET_INTEGER(json_node);
-	} else {
-		fprintf(stderr, "no page specified in request.\n");
+	JSON_Value *parson_val = json_parse_string(req);
+	if (parson_val == NULL) {
+		fprintf(stderr, "Parson fails to parse JSON query.\n");
 		goto free;
 	}
 
+	/* get query page */
+	parson_obj = json_value_get_object(parson_val);
+
+	if (!json_object_has_value_of_type(parson_obj, "page",
+	                                   JSONNumber)) {
+		fprintf(stderr, "JSON query has no page number.\n");
+		goto free;
+	}
+
+	page = (uint32_t)json_object_get_number(parson_obj, "page");
+
 	/* get query keywords array (key `kw' in JSON) */
-	json_node = yajl_tree_get(json_tr, json_kw_path,
-	                          yajl_t_array);
+    if (!json_object_has_value_of_type(parson_obj, "kw",
+	                                   JSONArray)) {
+		fprintf(stderr, "JSON query does not contain hits.\n");
+		page = 0;
+		goto free;
+	}
 
-	if (json_node && YAJL_IS_ARRAY(json_node)) {
-		size_t i, len = json_node->u.array.len;
-		struct query_keyword kw;
-		kw.pos = 0;
+	parson_arr = json_object_get_array(parson_obj, "kw");
 
-		for (i = 0; i < len; i++) {
-			enum parse_json_kw_res res;
-			yajl_val obj = json_node->u.array.values[i];
-			char *phrase = NULL;
-			res = parse_json_kw_ele(obj, &kw, &phrase);
+    if (parson_arr == NULL) {
+		fprintf(stderr, "parson_arr returns NULL.\n");
+		page = 0;
+		goto free;
+	}
 
-			if (PARSE_JSON_KW_SUCC == res) {
-				if (kw.type == QUERY_KEYWORD_TERM && phrase)
-					query_digest_utf8txt(qry, lex, phrase);
-				else
-					query_push_keyword(qry, &kw);
-			} else {
-				fprintf(stderr, "keywords JSON array "
-				        "parse err#%d.\n", res);
-				page = 0;
-				goto free;
-			}
+	for (i = 0; i < json_array_get_count(parson_arr); i++) {
+		JSON_Object *parson_arr_obj;
+		enum parse_json_kw_res res;
 
-			kw.pos ++;
+		/* get array object[i] */
+		parson_arr_obj = json_array_get_object(parson_arr, i);
+
+		/* parse this array element */
+		res = parse_json_kw_ele(parson_arr_obj, i, qry, lex);
+
+		if (PARSE_JSON_KW_SUCC != res) {
+			fprintf(stderr, "keywords JSON array "
+					"parse err#%d.\n", res);
+			page = 0;
+			goto free;
 		}
 	}
 
 free:
-	yajl_tree_free(json_tr);
-
-exit:
+	json_value_free(parson_val);
 	return page;
 }
 
@@ -204,25 +194,9 @@ const char *search_errcode_json(enum searchd_ret_code code)
 
 void json_encode_str(char *dest, const char *src)
 {
-	size_t len = 0;
-	yajl_gen gen;
-	yajl_gen_status st;
-
-	gen = yajl_gen_alloc(NULL);
-
-	yajl_gen_config(gen, yajl_gen_validate_utf8, 1);
-	st = yajl_gen_string(gen,(const unsigned char*)src,
-	                     strlen(src));
-
-	if (yajl_gen_status_ok == st) {
-		const unsigned char *buf;
-		yajl_gen_get_buf(gen, &buf, &len);
-
-		memcpy(dest, buf, len);
-	}
-
-	dest[len] = '\0';
-	yajl_gen_free(gen);
+	char *enc_str = json_encode_string(src);
+	strcpy(dest, enc_str);
+	free(enc_str);
 }
 
 static const char

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "yajl/yajl_tree.h"
+#include "parson/parson.h"
 #include "tex-parser/vt100-color.h"
 #include "index.h"
 #include "config.h"
@@ -187,30 +187,20 @@ static void index_maintain()
 	}
 }
 
-static bool get_json_val(const char *json, const char **path, char *val)
+static bool get_json_val(const char *json, const char *key, char *val)
 {
-	yajl_val tr, node;
-	char err_str[1024] = {0};
-	char *v;
+	JSON_Value *parson_val = json_parse_string(json);
+	JSON_Object *parson_obj;
 
-	tr = yajl_tree_parse(json, err_str, sizeof(err_str));
-
-	if (tr == NULL) {
-		fprintf(stderr, "JSON parser error: %s\n", err_str);
+	if (parson_val == NULL) {
+		json_value_free(parson_val);
 		return 0;
 	}
 
-	node = yajl_tree_get(tr, path, yajl_t_string);
+	parson_obj = json_value_get_object(parson_val);
+	strcpy(val, json_object_get_string(parson_obj, key));
 
-	if (node == NULL) {
-		fprintf(stderr, "JSON node not found.\n");
-		return 0;
-	}
-
-	v = YAJL_GET_STRING(node);
-	strcpy(val, v);
-
-	yajl_tree_free(tr);
+	json_value_free(parson_val);
 	return 1;
 }
 
@@ -252,8 +242,6 @@ static int index_text_field(const char *txt, text_lexer lex)
 
 int indexer_index_json(FILE *fh, text_lexer lex)
 {
-	const char *url_path[] = {"url", NULL};
-	const char *txt_path[] = {"text", NULL};
 	static char doc_json[MAX_CORPUS_FILE_SZ + 1];
 	static char url_field[MAX_CORPUS_FILE_SZ];
 	static char txt_field[MAX_CORPUS_FILE_SZ];
@@ -268,12 +256,12 @@ int indexer_index_json(FILE *fh, text_lexer lex)
 		return 1;
 	}
 
-	if (!get_json_val(doc_json, url_path, url_field)) {
+	if (!get_json_val(doc_json, "url", url_field)) {
 		fprintf(stderr, "JSON: get URL field failed.\n");
 		return 1;
 	}
 
-	if (!get_json_val(doc_json, txt_path, txt_field)) {
+	if (!get_json_val(doc_json, "text", txt_field)) {
 		fprintf(stderr, "JSON: get URL field failed.\n");
 		return 1;
 	}

@@ -4,7 +4,7 @@ cat << USAGE
 Description:
 Query searchd using curl, for test purpose.
 Examples:
-$0 ./query-valid.json
+$0 ./tests/query-valid.json
 USAGE
 exit
 fi
