@@ -147,7 +147,9 @@ doc: line | doc line;
 line: tex '\n';
 
 tex: %prec NULL_REDUCE {
-	OPTR_ATTACH($$, NULL, NULL, optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF));
+	struct optr_node *nil = optr_alloc(S_NIL, T_NIL,
+	                                   WC_NORMAL_LEAF);
+	OPTR_ATTACH($$, NULL, NULL, nil);
 }
 | term {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -218,7 +220,9 @@ rel: atom {
 ;
 
 abv_tex: %prec NULL_REDUCE {
-	OPTR_ATTACH($$, NULL, NULL, optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF));
+	struct optr_node *nil = optr_alloc(S_NIL, T_NIL,
+	                                   WC_NORMAL_LEAF);
+	OPTR_ATTACH($$, NULL, NULL, nil);
 }
 | term {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -247,7 +251,9 @@ abv_tex: %prec NULL_REDUCE {
 }
 
 mat_tex: %prec NULL_REDUCE {
-	OPTR_ATTACH($$, NULL, NULL, optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF));
+	struct optr_node *nil = optr_alloc(S_NIL, T_NIL,
+	                                   WC_NORMAL_LEAF);
+	OPTR_ATTACH($$, NULL, NULL, nil);
 }
 | term {
 	OPTR_ATTACH($$, NULL, NULL, $1);
