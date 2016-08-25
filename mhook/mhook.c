@@ -1,23 +1,23 @@
 #include <stdio.h>
 #include "mhook.h"
 
-static uint64_t unfree = 0;
-static uint64_t tot_allocs = 0;
+static int64_t unfree = 0;
+static int64_t tot_allocs = 0;
 
-uint64_t mhook_unfree()
+int64_t mhook_unfree()
 {
 	return unfree;
 }
 
-uint64_t mhook_tot_allocs()
+int64_t mhook_tot_allocs()
 {
 	return unfree;
 }
 
 void mhook_print_unfree()
 {
-	printf("Total memory allocs: %lu.\n", tot_allocs);
-	printf("Unfree memory allocs: %lu.\n", unfree);
+	printf("Total memory allocs: %ld.\n", tot_allocs);
+	printf("Unfree memory allocs: %ld.\n", unfree);
 }
 
 /* malloc() hook */

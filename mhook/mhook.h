@@ -3,8 +3,8 @@
 #include <malloc.h>
 #include <string.h>
 
-uint64_t mhook_unfree();
-uint64_t mhook_tot_allocs();
+int64_t mhook_unfree();
+int64_t mhook_tot_allocs();
 
 void mhook_print_unfree();
 

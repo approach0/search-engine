@@ -15,11 +15,11 @@ void print_process(uint64_t indexed_files, uint64_t tot_files)
 {
 	uint64_t n_tex_correct = n_parse_tex - n_parse_err;
 
-	printf("[process %3.0f%%] %lu/%lu file(s) indexed, "
-	       "TeX parsing success rate: %lu/%lu",
+	printf("[%3.0f%%] %lu/%lu file(s), Unfree: %ld, "
+	       "TeX parsing success: %lu/%lu",
 	       100.f * (float)indexed_files / (float)tot_files,
-	       indexed_files, tot_files, n_tex_correct,
-	       n_parse_tex);
+	       indexed_files, tot_files, mhook_unfree(),
+		   n_tex_correct, n_parse_tex);
 	fflush(stdout);
 }
 
