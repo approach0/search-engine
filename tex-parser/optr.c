@@ -191,7 +191,7 @@ static LIST_IT_CALLBK(digest_children)
 	LIST_OBJ(struct optr_node, p, tnd.ln);
 	P_CAST(children_hash, symbol_id_t, pa_extra);
 
-	*children_hash += p->symbol_id;
+	*children_hash += p->ge_hash;
 
 #ifdef OPTR_HASH_DEBUG
 	printf("after digest %s: %s\n", trans_symbol(p->symbol_id),
@@ -452,7 +452,7 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 	        sp->path_id, subpath_type_str(sp->type));
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE)
-		fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ",
+		fprintf(fh, "ge_hash=" C_BLUE "%s" C_RST ", ",
 		        optr_hash_str(sp->ge_hash));
 	else
 		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST ", ",

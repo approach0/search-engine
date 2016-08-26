@@ -6,3 +6,4 @@
 #define MAX_FLOAT_STR_LEN            32
 #define MAX_GRAMMAR_ERR_STR_LEN      MAX_PARSER_ERR_STR
 #define TYPE_MAP_STR_MAX             128
+//#define OPTR_HASH_DEBUG
