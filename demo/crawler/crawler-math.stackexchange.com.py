@@ -143,6 +143,8 @@ def list_post_links(page, c):
 	summary_tags = s.find_all('div', {"class": "question-summary"})
 	for div in summary_tags:
 		a_tag = div.find('a', {"class": "question-hyperlink"})
+		if not div.has_attr('id') or not a_tag.has_attr('href'):
+			continue
 		yield (div['id'], a_tag['href'], None)
 
 def process_post(post_id, post_txt, url):
