@@ -62,14 +62,12 @@ done << EOF
 $(cat "$itm/docs")
 EOF
 
-# index those corpus files
-./indexer.ln -e -p $itm > /dev/null
-
 # search test query
 qry=$(cat "$itm/query")
 
-# echo full search command
+# echo index/search command
 set -x
+./indexer.ln -e -p $itm > /dev/null
 ./searcher.ln -e -n -i ./tmp -m "$qry" > $itm/search-results
 set +x
 

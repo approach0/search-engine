@@ -1,0 +1,4 @@
+f(x) = \qvar{x} + \frac \qvar{x} 2
+
+HIT f(a) = a^2 + \frac {a^2} 2
+HIT f(a) = b^2 + \frac {a^2} 2
