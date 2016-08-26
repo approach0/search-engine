@@ -23,23 +23,17 @@ math_index_open(const char *path, enum math_index_open_opt open_opt)
 	math_index_t index;
 
 	index = malloc(sizeof(struct math_index));
-	sprintf(index->dir_gener, "%s/" GENER_PATH_NAME, path);
-	sprintf(index->dir_token, "%s/" TOKEN_PATH_NAME, path);
+	sprintf(index->dir, "%s", path);
 
 	index->open_opt = open_opt;
 
 	if (open_opt == MATH_INDEX_WRITE) {
 		mkdir_p(path);
-		mkdir_p(index->dir_gener);
-		mkdir_p(index->dir_token);
-
 		return index;
 
 	} else if (open_opt == MATH_INDEX_READ_ONLY) {
-		if (dir_exists(path) &&
-		    dir_exists(index->dir_gener) &&
-		    dir_exists(index->dir_token))
-				return index;
+		if (dir_exists(path))
+			return index;
 	}
 
 	free(index);
@@ -76,24 +70,23 @@ next:
 }
 
 bool
-math_index_mk_path_str(math_index_t index, struct subpath *sp,
-                       char *dest_path)
+math_index_mk_path_str(struct subpath *sp, char *dest_path)
 {
 	char *p = dest_path;
 	struct _mk_path_str_arg arg = {&p, 0};
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		p += sprintf(dest_path, "%s", index->dir_gener);
+		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
 		arg.skip_one = 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_WILDCARD) {
-		p += sprintf(dest_path, "%s", index->dir_gener);
+		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
 		arg.skip_one = 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_NORMAL) {
-		p += sprintf(dest_path, "%s", index->dir_token);
+		p += sprintf(dest_path, "%s", TOKEN_PATH_NAME);
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else {
@@ -173,8 +166,10 @@ static LIST_IT_CALLBK(path_index_step1)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
 
-	if (math_index_mk_path_str(arg->index, sp, path)) {
+	append += sprintf(append, "%s/", arg->index->dir);
+	if (math_index_mk_path_str(sp, append)) {
 		LIST_GO_OVER;
 	}
 
@@ -208,6 +203,7 @@ static LIST_IT_CALLBK(path_index_step2)
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
 
 	struct math_posting_item  po_item;
 	struct math_pathinfo_pack pathinfo_hd;
@@ -216,16 +212,25 @@ static LIST_IT_CALLBK(path_index_step2)
 	tmp.type = ele->dup[0]->type;
 	tmp.path_nodes = ele->dup[0]->path_nodes;
 
-	if (0 == math_index_mk_path_str(arg->index, &tmp, path)) {
+	append += sprintf(append, "%s/", arg->index->dir);
+	if (0 == math_index_mk_path_str(&tmp, append)) {
 		/* wirte posting item */
 		po_item.doc_id = arg->docID;
 		po_item.exp_id = arg->expID;
 		po_item.pathinfo_pos = pathinfo_len(path);
+#ifdef DEBUG_MATH_INDEX
+		printf("write item(docID=%u, expID=%u, pos=%u) @ %s.\n",
+		       po_item.doc_id, po_item.exp_id, po_item.pathinfo_pos, path);
+#endif
 		wirte_posting_item(path, &po_item);
 
 		/* wirte pathinfo head */
 		pathinfo_hd.n_paths = ele->dup_cnt + 1;
 		pathinfo_hd.n_lr_paths = arg->n_lr_paths;
+#ifdef DEBUG_MATH_INDEX
+		printf("write pathinfo head(n_paths=%u, n_lr_paths=%u) @ %s.\n",
+		       pathinfo_hd.n_paths, pathinfo_hd.n_lr_paths, path);
+#endif
 		write_pathinfo_head(path, &pathinfo_hd);
 	}
 
@@ -237,12 +242,18 @@ static LIST_IT_CALLBK(path_index_step3)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
 	struct math_pathinfo info = {sp->path_id, sp->ge_hash, sp->fr_hash};
 
-	if (math_index_mk_path_str(arg->index, sp, path)) {
+	append += sprintf(append, "%s/", arg->index->dir);
+	if (math_index_mk_path_str(sp, append)) {
 		LIST_GO_OVER;
 	}
 
+#ifdef DEBUG_MATH_INDEX
+	printf("write pathinfo item(pathID=%u, ge_hash/symbol=%x) @ %s.\n",
+	       info.path_id, info.lf_symb, path);
+#endif
 	if (0 != write_pathinfo_payload(path, &info)) {
 		fprintf(stderr, "cannot write path info @%s\n", path);
 		LIST_GO_OVER;
@@ -288,7 +299,7 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 	list_foreach(&arg.subpath_set, &path_index_step2, &arg);
 
 #ifdef DEBUG_MATH_INDEX
-	printf("path index step 2 (write pathinfo payload)...\n");
+	printf("path index step 3 (write pathinfo payload)...\n");
 #endif
 	list_foreach(&subpaths.li, &path_index_step3, &arg);
 

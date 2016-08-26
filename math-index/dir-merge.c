@@ -123,11 +123,12 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(args, struct assoc_ele_and_pathstr_args, pa_extra);
+	char *append = args->paths[args->i];
 	size_t len;
 
 	/* make path string */
-	if (math_index_mk_path_str(args->index, ele->dup[0],
-	                           args->paths[args->i])) {
+	append += sprintf(append, "%s/", args->index->dir);
+	if (math_index_mk_path_str(ele->dup[0], append)) {
 		args->i = 0; /* indicates error */
 		return LIST_RET_BREAK;
 	}

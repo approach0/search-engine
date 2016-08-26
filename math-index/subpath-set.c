@@ -36,13 +36,11 @@ subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 	return args.n_uniq;
 }
 
-static LIST_IT_CALLBK(print_subpath_nodes)
+static void _print_subpath(struct subpath *sp)
 {
-	LIST_OBJ(struct subpath_node, sp_nd, ln);
-	P_CAST(fh, FILE, pa_extra);
-
-	fprintf(fh, "%s/", trans_token(sp_nd->token_id));
-	LIST_GO_OVER;
+	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	math_index_mk_path_str(sp, path);
+	printf("%s ", path);
 }
 
 static LIST_IT_CALLBK(print_subpath)
@@ -51,9 +49,7 @@ static LIST_IT_CALLBK(print_subpath)
 	P_CAST(fh, FILE, pa_extra);
 	uint32_t i;
 
-	list_foreach(&ele->dup[0]->path_nodes,
-	             &print_subpath_nodes, fh);
-	printf(" ");
+	_print_subpath(ele->dup[0]);
 
 	printf("(duplicates: ");
 	for (i = 0; i <= ele->dup_cnt; i++)
@@ -72,6 +68,7 @@ struct _cmp_subpath_nodes_arg {
 	struct list_it    path_node2;
 	struct list_node *path_node2_end;
 	int res;
+	int skip_the_first;
 };
 
 static LIST_IT_CALLBK(cmp_subpath_nodes)
@@ -86,7 +83,9 @@ static LIST_IT_CALLBK(cmp_subpath_nodes)
 		return LIST_RET_BREAK;
 	}
 
-	if (n1->token_id == n2->token_id) {
+	if (n1->token_id == n2->token_id || arg->skip_the_first) {
+		arg->skip_the_first = 0;
+
 		if (arg->path_node2.now == arg->path_node2_end) {
 			if (pa_now->now == pa_head->last)
 				arg->res = 0;
@@ -115,17 +114,24 @@ static int compare(struct subpath *sp1, struct subpath *sp2)
 	arg.path_node2 = sp2->path_nodes;
 	arg.path_node2_end = sp2->path_nodes.last;
 	arg.res = 0;
+	arg.skip_the_first = 0;
 
-	if (sp1->type != sp2->type)
+	if (sp1->type != sp2->type) {
 		arg.res = 5;
-	else
+	} else {
+		if (sp1->type == SUBPATH_TYPE_GENERNODE)
+			arg.skip_the_first = 1;
+		else if (sp1->type == SUBPATH_TYPE_WILDCARD)
+			arg.skip_the_first = 1;
+
 		list_foreach(&sp1->path_nodes, &cmp_subpath_nodes, &arg);
+	}
 
 //#define DEBUG_SUBPATH_SET
 #ifdef DEBUG_SUBPATH_SET
-	list_foreach(&sp1->path_nodes, &print_subpath_nodes, stdout);
+	_print_subpath(sp1);
 	printf(" and ");
-	list_foreach(&sp2->path_nodes, &print_subpath_nodes, stdout);
+	_print_subpath(sp2);
 	printf(" ");
 
 	switch (arg.res) {
