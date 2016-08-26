@@ -12,7 +12,14 @@
 #include <stdio.h>
 #include <string.h>
 #include "tex-parser/tex-parser.h" /* for symbol_id_t */
+
+/* for trans_symbol() */
 #include "tex-parser/vt100-color.h"
+#include "tex-parser/config.h"
+#include "tex-parser/gen-token.h"
+#include "tex-parser/gen-symbol.h"
+#include "tex-parser/trans.h"
+
 #include "config.h"
 #include "mnc-score.h"
 
@@ -127,9 +134,9 @@ mnc_print(int highlight_qry_path, int max_subscore_idx)
 		goto print_bitmap;
 
 	/* print scores */
-	printf("Max sub-score: %u from doc symbol `%c'\n",
+	printf("Max sub-score: %u from doc symbol `%s'\n",
 	       doc_uniq_sym_score[max_subscore_idx],
-	       doc_uniq_sym[max_subscore_idx]);
+	       trans_symbol(doc_uniq_sym[max_subscore_idx]));
 
 	printf("%*s", _MAX_SYMBOL_STR_LEN, "Score: ");
 	for (i = 0; i < n_doc_uniq_syms; i++) {
@@ -141,7 +148,7 @@ mnc_print(int highlight_qry_path, int max_subscore_idx)
 	/* print document symbol slots */
 	printf("%*c", _MAX_SYMBOL_STR_LEN, ' ');
 	for (i = 0; i < n_doc_uniq_syms; i++) {
-		printf("%-*c ", 8, doc_uniq_sym[i]);
+		printf("%-*s ", 8, trans_symbol(doc_uniq_sym[i]));
 		_PADDING_SPACE;
 	}
 	printf("\n");
@@ -162,11 +169,11 @@ print_bitmap:
 	/* print main bitmaps */
 	for (i = 0; i < n_qry_syms; i++) {
 		if ((uint32_t)highlight_qry_path == i)
-			printf("-> %-*c", _MAX_SYMBOL_STR_LEN - 3,
-			       qry_sym[i]);
+			printf("-> %-*s", _MAX_SYMBOL_STR_LEN - 3,
+			       trans_symbol(qry_sym[i]));
 		else
-			printf("%-*c", _MAX_SYMBOL_STR_LEN,
-			       qry_sym[i]);
+			printf("%-*s", _MAX_SYMBOL_STR_LEN,
+			       trans_symbol(qry_sym[i]));
 
 		for (j = 0; j < n_doc_uniq_syms; j++)
 			print_slot((char*)&relevance_bitmap[i][j]);

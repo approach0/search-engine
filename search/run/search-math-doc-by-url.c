@@ -59,7 +59,7 @@ static void math_posting_find_expr(char* path, char *url)
 		doc_url = get_blob_string(indices.url_bi, po_item->doc_id,
 		                          false, &doc_url_sz);
 
-		if (0 == strcmp(doc_url, url)) {
+		if (0 == strcmp(doc_url, url) || url[0] == '*') {
 			printf("doc#%u, exp#%u;",
 					po_item->doc_id, po_item->exp_id);
 			print_pathinfo(po, pathinfo_pos);
@@ -77,9 +77,12 @@ static LIST_IT_CALLBK(find_url)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(url, char, pa_extra);
-	char path[MAX_DIR_PATH_NAME_LEN];
+	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
 
-	math_index_mk_path_str(indices.mi, ele->dup[0], path);
+	append += sprintf(append, "%s/", indices.mi->dir);
+	math_index_mk_path_str(ele->dup[0], append);
+
 	printf("searching path: %s\n", path);
 	math_posting_find_expr(path, url);
 
@@ -100,8 +103,7 @@ static LIST_IT_CALLBK(dele_if_gener)
 	LIST_GO_OVER;
 }
 
-static void
-where_is_expr(char *tex, char *url)
+static void where_is_expr(char *tex, char *url)
 {
 	struct tex_parse_ret parse_ret;
 	list subpath_set = LIST_NULL;
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
 			printf("%s -h |"
 			       " -i <index path> |"
 			       " -t <TeX> |"
-			       " -u <URL> |",
+			       " -u <URL> (can use * to match all) |",
 			       argv[0]);
 			printf("\n");
 			goto exit;

@@ -1,6 +1,13 @@
 #include "mhook/mhook.h"
 #include "tex-parser/tex-parser.h" /* for symbol_id_t */
+#include "tex-parser/gen-symbol.h"
 #include "mnc-score.h"
+
+static symbol_id_t alphabet_to_sym(char c)
+{
+	int inc = (int)(c - 'a');
+	return S_N + inc;
+}
 
 int main(void)
 {
@@ -15,17 +22,17 @@ int main(void)
 	 * query: b + b + 1/b = a + a
 	 *        1   0   5 2   4   3
 	 */
-	ref.sym = 'b'; /* 0 */
+	ref.sym = alphabet_to_sym('b'); /* 0 */
 	mnc_push_qry(ref);
-	ref.sym = 'b'; /* 1 */
+	ref.sym = alphabet_to_sym('b'); /* 1 */
 	mnc_push_qry(ref);
-	ref.sym = 'b'; /* 2 */
+	ref.sym = alphabet_to_sym('b'); /* 2 */
 	mnc_push_qry(ref);
-	ref.sym = 'a'; /* 3 */
+	ref.sym = alphabet_to_sym('a'); /* 3 */
 	mnc_push_qry(ref);
-	ref.sym = 'a'; /* 4 */
+	ref.sym = alphabet_to_sym('a'); /* 4 */
 	mnc_push_qry(ref);
-	ref.sym = '1'; /* 5 */
+	ref.sym = S_one; /* 5 */
 	mnc_push_qry(ref);
 
 	/* run twice to test init/uninit */
@@ -37,7 +44,7 @@ int main(void)
 		 * document: y + y + x = 1/x + x<--(use macro below to remove this x)
 		 *           0   1   2   3 4   5
 		 */
-		ref.sym = 'x'; /* 2 */
+		ref.sym = alphabet_to_sym('x'); /* 2 */
 		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
 		mnc_doc_add_rele(slot, 2, 1);
@@ -45,7 +52,7 @@ int main(void)
 		mnc_doc_add_rele(slot, 2, 4);
 		mnc_doc_add_rele(slot, 2, 3);
 
-		ref.sym = 'y'; /* 1 */
+		ref.sym = alphabet_to_sym('y'); /* 1 */
 		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
 		mnc_doc_add_rele(slot, 1, 1);
@@ -53,17 +60,17 @@ int main(void)
 		mnc_doc_add_rele(slot, 1, 4);
 		mnc_doc_add_rele(slot, 1, 3);
 
-		ref.sym = '1'; /* 3 */
+		ref.sym = S_one; /* 3 */
 		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
 		mnc_doc_add_rele(slot, 3, 5);
 
-		ref.sym = 'x'; /* 4 */
+		ref.sym = alphabet_to_sym('x'); /* 4 */
 		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
 		mnc_doc_add_rele(slot, 4, 2);
 
-		ref.sym = 'y'; /* 0 */
+		ref.sym = alphabet_to_sym('y'); /* 0 */
 		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
 		mnc_doc_add_rele(slot, 0, 3);
@@ -73,7 +80,7 @@ int main(void)
 
 //#define TEST_EARLY_TERMINATION
 #ifndef TEST_EARLY_TERMINATION
-		ref.sym = 'x'; /* 5 */
+		ref.sym = alphabet_to_sym('x'); /* 5 */
 		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
 		mnc_doc_add_rele(slot, 5, 4);
@@ -83,7 +90,7 @@ int main(void)
 #endif
 
 		score = mnc_score();
-		printf("final score = %u\n", score);
+		printf("score = %u.\n", score);
 	}
 
 	printf("lsb position of %#x: %d\n", 0x18, lsb_pos(0x18)); /* b11000 */
