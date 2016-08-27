@@ -51,7 +51,7 @@ var quiz_list = [
 		"search":  "all positive integers, $i^5 + j^6 = k^7$"
 	},
 	{ /* 5 */
-		"Q": "Which function represents the intersection of the cone [imath]z=\\sqrt{x^2+y^2}[/imath] and the plane [imath]z=1+y[/imath]",
+		"Q": "Which function represents the intersection of the cone [imath]z=\\sqrt{x^2+y^2}[/imath] and the plane [imath]z=1+y[/imath] ?",
 		"hints": [
 			"Let me think...",
 			"It reminds me when I drop my vanilla cone to the floor last time",
@@ -59,5 +59,15 @@ var quiz_list = [
 			"Or if it is possible to <a href=\"#\">search the answer</a> on Internet?"
 		],
 		"search":  "cone, $z=\\sqrt{x^2+y^2}$, plane, $z=1+y$"
+	},
+	{ /* 6 */
+		"Q": "Can you prove [imath](|x+y|)^2<(|x| + |y|)^2[/imath] ?",
+		"hints": [
+			"... This question looks familiar to me",
+			"It must be somewhere in the textbook...",
+			"Hold on, where is my textbook? Did I left it in my classroom ?!",
+			"OKay... Let's see if I can <a href=\"#\">search this question</a> on Internet?"
+		],
+		"search":  "Prove, $\\left(|x+y|\\right)^2<\\ ?$"
 	}
 ];
