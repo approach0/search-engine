@@ -17,7 +17,7 @@ function str_fmt() {
 	return res_str;
 }
 
-function handle_search_res(res, qry, page) {
+function handle_search_res(res, enc_qry, page) {
 	response.ret_code = res.ret_code;
 	response.ret_str = res.ret_str;
 	response.tot_pages = res.tot_pages;
@@ -27,16 +27,16 @@ function handle_search_res(res, qry, page) {
 
 	if (page - 1 > 0)
 		response.prev = str_fmt(
-			'srch_qry("{0}", {1})',
-			qry, page - 1
+			'srch_enc_qry("{0}", {1}, true)',
+			enc_qry, page - 1
 		);
 	else
 		response.prev = '';
 
 	if (page + 1 <= res.tot_pages)
 		response.next = str_fmt(
-			'srch_qry("{0}", {1})',
-			qry, page + 1
+			'srch_enc_qry("{0}", {1}, true)',
+			enc_qry, page + 1
 		);
 	else
 		response.next = '';
@@ -46,20 +46,35 @@ function handle_search_res(res, qry, page) {
 	}, 500);
 }
 
-function srch_qry(qry, page) {
-	console.log('srch_qry: ' + qry + ' @page' + page);
-
+function srch_enc_qry(enc_qry, page, is_pushState) {
 	$.ajax({
 		url: 'search-relay.php',
-		data: 'p=' + page + '&q=' + qry,
-		dataType: 'json',
+		data: 'p=' + page + '&q=' + enc_qry,
+		dataType: 'json'
 	}).done(function(res) {
-		handle_search_res(res, qry, page);
+		handle_search_res(res, enc_qry, page);
 	}).fail(function(res) {
 		response.ret_code = 101;
 		response.ret_str = "Server is down right now, " +
 			"but will be back shortly";
 	});
+
+	if (is_pushState) {
+
+		srch_state = {
+			"qry": decodeURIComponent(enc_qry),
+			"page": page
+		};
+
+		srch_state_str = JSON.stringify(srch_state);
+		//console.log(srch_state_str);
+		history.pushState(srch_state, srch_state_str);
+		//console.log('push history state...');
+	}
+}
+
+function srch_qry(qry, page, is_pushState) {
+	srch_enc_qry(encodeURIComponent(qry), page, is_pushState);
 }
 
 $(document).ready(function() {
@@ -67,4 +82,7 @@ $(document).ready(function() {
 		el: '#search-vue-app',
 		data: response
 	});
+
+	/* push a initial history state (clear forward states) */
+	history.pushState({"qry": "", "page": -1}, '');
 });

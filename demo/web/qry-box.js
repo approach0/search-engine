@@ -153,7 +153,7 @@ $(document).ready(function() {
 		if (ev.which == 13 /* enter */) {
 			if (input_box.str == '') {
 				/* think this as search signal */
-				do_search();
+				click_search(1, true);
 			} else {
 				/* replace all commas into space */
 				input_box.str = input_box.str.replace(/,/g, " ");
@@ -238,7 +238,7 @@ $(document).ready(function() {
 	});
 
 	/* search related */
-	function do_search() {
+	function click_search(page, is_pushState) {
 		arr = query.items;
 		input_box = arr[arr.length - 1];
 
@@ -248,36 +248,37 @@ $(document).ready(function() {
 					tex_render("div.qry-div-fix");
 					qry = $("#qry").val();
 
-					srch_qry(encodeURIComponent(qry), 1);
+					srch_qry(qry, page, is_pushState);
 				});
 				return;
 
 			} else if (input_box.type == 'term-input') {
 				fix_input("term", input_box.str, function() {
 					qry = $("#qry").val();
-					srch_qry(encodeURIComponent(qry), 1);
+					srch_qry(qry, page, is_pushState);
 				});
 				return;
 			}
 		}
 
 		qry = $("#qry").val();
-		srch_qry(encodeURIComponent(qry), 1);
+		srch_qry(qry, page, is_pushState);
 
 		quiz_hide();
 	}
 
 	$('#search_button').on('click', function() {
-		do_search();
+		click_search(1, true);
 	});
 
-	window.type_and_search = function (raw_qry_str) {
+	window.type_and_click_search =
+	function (qry, page, is_pushState) {
 //		console.log('search: ' + raw_qry_str);
-		query.raw_str = raw_qry_str;
+		query.raw_str = qry;
 		raw_str_2_query();
 		Vue.nextTick(function () {
 			tex_render("div.qry-div-fix");
-			do_search();
+			click_search(page, is_pushState);
 		});
 	};
 });

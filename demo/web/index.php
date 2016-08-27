@@ -57,12 +57,20 @@ $.fn.stickToBottom = function () {
 	}
 };
 
-$(document).ready(function() {
+$(window).resize(function() {
 	$('#init-footer').stickToBottom();
 });
 
-$(window).resize(function() {
+$(document).ready(function() {
 	$('#init-footer').stickToBottom();
+
+	/* handle state update (e.g. back/forward clicked) */
+	window.addEventListener('popstate', function(event) {
+		var state = event.state;
+		if (state && state.qry != "") {
+			type_and_click_search(state.qry, state.page, false);
+		}
+	});
 });
 </script>
 <style>

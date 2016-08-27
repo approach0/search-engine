@@ -28,7 +28,7 @@ $(function () {
 		backDelay: 1200,
 		callback: function() {
 			$("#quiz-hint").children("a").on("click", function () {
-				type_and_search(quiz.search);
+				type_and_click_search(quiz.search, 1, true);
 			});
 		}
 	});
