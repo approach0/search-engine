@@ -114,8 +114,6 @@ def save_preview(path, post_txt, url):
 	f.close()
 
 def save_json(path, post_txt, url):
-	if os.path.isfile(path):
-		print('[overwrite] ' + path)
 	f = open(path, "w")
 	f.write(json.dumps({
 		"url": url,
@@ -147,12 +145,15 @@ def list_post_links(page, c):
 			continue
 		yield (div['id'], a_tag['href'], None)
 
+def get_file_path(post_id):
+	directory = './tmp/' + str(post_id % DIVISIONS)
+	return directory + '/' + str(post_id)
+
 def process_post(post_id, post_txt, url):
 	# decide sub-directory
-	directory = './tmp/' + str(post_id % DIVISIONS)
-	file_path = directory + '/' + str(post_id)
+	file_path = get_file_path(post_id)
 	try:
-		mkdir_p(directory)
+		mkdir_p(os.path.dirname(file_path))
 	except:
 		raise
 	# process TeX mode pieces
@@ -177,10 +178,14 @@ def crawl_pages(start, end):
 			if not res:
 				print_err("div ID %s" % div_id)
 				continue
-			url = root_url + sub_url
+			ID = int(res.group(1))
+			file_path = get_file_path(ID);
+			if os.path.isfile(file_path + ".json"):
+				print('[already exists] ' + file_path)
+				continue
 			try:
+				url = root_url + sub_url
 				post_txt = crawl_post_page(sub_url, get_curl())
-				ID = int(res.group(1))
 				process_post(ID, post_txt, url)
 			except (KeyboardInterrupt, SystemExit):
 				print('[abort]')
@@ -220,6 +225,10 @@ def main(arg):
 			end_page = int(arg);
 			continue
 		if opt in ("-p", "--post"):
+			file_path = get_file_path(int(arg));
+			if os.path.isfile(file_path + ".json"):
+				print('[already exists] ' + file_path)
+				return
 			sub_url = "/questions/" + arg
 			full_url = root_url + sub_url
 			post_txt = crawl_post_page(sub_url, get_curl())
