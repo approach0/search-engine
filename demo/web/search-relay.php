@@ -106,6 +106,8 @@ foreach ($keywords as $kw) {
 		continue;
 	} else if ($kw[0] == '$') {
 		$kw_str = trim($kw, '$');
+		/* treat question mark as wildcard */
+		$kw_str = str_replace('?', '\qvar{x}', $kw_str);
 		$kw_type = 'tex';
 	} else {
 		$kw_str = $kw;
