@@ -234,6 +234,8 @@ $(document).ready(function() {
 			else
 				t = t.replace("-", "+");
 			head.text(t);
+
+			$('#init-footer').stickToBottom();
 		});
 	});
 
