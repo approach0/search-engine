@@ -17,6 +17,7 @@ if ($detect->isMobile()) {
 <head>
 <title>Approach0</title>
 <meta charset="utf-8"/>
+<meta name="description" content="Approach Zero: A math-aware search engine. Search Mathematics Stack Exchange.">
 <link rel="shortcut icon" href="images/favicon.ico">
 <link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
@@ -35,6 +36,35 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="quiz-list.js"></script>
 <script type="text/javascript" src="quiz.js"></script>
 <script type="text/javascript" src="qry-box.js"></script>
+<script>
+$.fn.stickToBottom = function () {
+	var ceil_ele = $('#quiz');
+	var ceil_pos = ceil_ele.offset().top + ceil_ele.outerHeight();
+	var wind_height = window.innerHeight;
+	var this_margin_top = parseInt($(this).css('margin-top'), 10);
+	var this_height = $(this).outerHeight() + this_margin_top;
+	var space = wind_height - ceil_pos;
+
+	if (space > this_height) {
+		$(this).css({
+			position: 'absolute',
+			bottom: 0
+		});
+	} else {
+		$(this).css({
+			position: 'static'
+		});
+	}
+};
+
+$(document).ready(function() {
+	$('#init-footer').stickToBottom();
+});
+
+$(window).resize(function() {
+	$('#init-footer').stickToBottom();
+});
+</script>
 <style>
 img.social {
 	height: 16px;
@@ -54,15 +84,14 @@ div.stick-bottom {
 </style>
 </head>
 
-<body style="margin: 0;">
-<!-- Query Box App -->
-<div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+<body style="margin: 0; border-top: 2px solid #46ece5;">
 
-<!-- Logo -->
-<img style="float:left;" src="images/logo64.icon"/>
+<!-- Query Box App -->
+<div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px;
+box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
-<div style="padding-left: 72px;">
+<div>
 <div id="qry-input-area" style="width:100%;" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
@@ -92,8 +121,14 @@ div.stick-bottom {
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="margin-top: 8px; padding-left: 72px">
+<div style="margin-top: 8px;">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
+
+	<span class="collapse" title="Lookup Math symbols">(+) math symbols</span>
+	<div>
+		<p> [ TODO: Some buttons here ] </p>
+		<hr class="vsep"/>
+	</div>
 
 	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
@@ -105,17 +140,6 @@ div.stick-bottom {
 		curl -v {{url_root}}search-relay.php?q='{{enc_uri}}'
 		<p>
 
-		<hr class="vsep"/>
-	</div>
-
-	<span class="collapse" title="Our indices">(+) indices</span>
-	<div>
-		<p>
-			Currently our data are crawled from
-			 <a target="_blank" href="http://math.stackexchange.com/">
-			<img style="vertical-align:middle"
-			src="images/math-stackexchange.png"/>Mathematics Stack Exchange</a>.
-		</p>
 	</div>
 
 </div>
@@ -126,15 +150,38 @@ div.stick-bottom {
 
 <!-- Quiz App -->
 <div id="quiz-vue-app" v-show="!hide">
-	<div class="center-v-pad"></div>
-	<div class="center-horiz">
-		<p id="quiz-question">
-		<b>Question</b>: &nbsp; {{Q}}
-		</p>
+	<div id="quiz">
+		<div class="center-v-pad"></div>
+		<div class="center-horiz">
+			<p id="quiz-question">
+			<b>Question</b>: &nbsp; {{Q}}
+			</p>
+		</div>
+		<div class="center-horiz" style="padding-top:20px;">
+			<span id="quiz-hint" class="mainfont"></span>
+		</div>
 	</div>
-	<div class="center-horiz" style="padding-top:20px;">
-		<span id="quiz-hint" class="mainfont"></span>
+
+	<!-- Initial Footer -->
+	<div v-show="!hide" id="init-footer" class="center-horiz"
+	style="font-size: small; margin-top: 40px; width: 100%;
+	bottom: 0px; position: absolute; background: #fbfefe;
+	padding-bottom: 15px; padding-top: 15px;
+	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+	<a target="_blank" href="https://twitter.com/approach0">
+	<img style="vertical-align:middle"
+	src="images/logo32.png"/></a>
+	+
+	<a target="_blank" href="http://math.stackexchange.com/">
+	<img style="vertical-align:middle"
+	src="images/math-stackexchange.png"/></a>
+	+
+	<span style="color: red;">♡ </span>
+	=
+	<p>A math-aware search engine for Mathematics Stack Exchange.</p>
 	</div>
+	<!-- Initial Footer END -->
+
 </div>
 <!-- Quiz App END -->
 
@@ -162,7 +209,9 @@ div.stick-bottom {
 <!-- Search Results END -->
 
 <!-- Footer -->
-<div v-show="ret_code == 0" style="padding-top: 20px; height: 30px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+<div v-show="ret_code == 0"
+style="padding-top: 20px; height: 30px; background: #fbfefe;
+box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Left Footer -->
 	<div style="float: left; padding-left: 20px;">
@@ -177,15 +226,15 @@ div.stick-bottom {
 
 <!-- Right Footer -->
 	<div style="float: right;">
-		<a href="https://twitter.com/intent/tweet?text=Check%20out%20this%20math-aware%20search%20engine!%20%40%20https%3A%2F%2Fwww.approach0.xyz%2Fdemo"
+		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>
 
-		<a href="https://plus.google.com/share?url=https%3A%2F%2Fwww.approach0.xyz%2Fdemo"
+		<a href="https://plus.google.com/share?url=https%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Share on Google+">
 		<img class="social" src="images/social/Google+.svg"></a>
 
-		<a href="http://www.reddit.com/submit?url=https%3A%2F%2Fwww.approach0.xyz%2Fdemo&title=Check%20out%20this%20math-aware%20search%20engine!"
+		<a href="http://www.reddit.com/submit?url=https%3A%2F%2Fwww.approach0.xyz&title=Check%20out%20this%20math-aware%20search%20engine!"
 		target="_blank" title="Submit to Reddit">
 		<img class="social" src="images/social/Reddit.svg"></a>
 

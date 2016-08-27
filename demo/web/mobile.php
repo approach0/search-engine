@@ -13,7 +13,7 @@ p {text-align: center;}
 </style>
 </head>
 <body>
-<img style="margin: 0 auto; display: block;" src="images/logo64.icon"/>
+<img style="margin: 0 auto; display: block;" src="images/logo64.png"/>
 <p>Please visit</p>
 <p> <?php echo $_SERVER['SERVER_NAME']; ?> <p>
 <p>on PC or tablet.</p>
