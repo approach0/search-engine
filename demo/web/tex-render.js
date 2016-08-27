@@ -24,7 +24,11 @@ function tex_render(scope_select) {
 		var tex = $(this).text();
 		ele = $(this).get(0);
 		try {
-			katex.render(tex, ele);
+			katex.render(tex, ele, {
+				macros: {
+					"\\qvar": "\\color{blue}"
+				}
+			});
 		} catch(err) {
 			$(this).html(
 				err_tag_open_0 + err + err_tag_open_1 +
