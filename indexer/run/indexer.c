@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "mhook/mhook.h"
+#include "config.h"
 #include "index.h"
 
 struct indexer_args {
@@ -75,13 +76,14 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 int main(int argc, char* argv[])
 {
-	int opt, overwrite = 1;
+	int opt, overwrite = 0;
 	text_lexer lex = lex_mix_file;
 	char *corpus_path = NULL;
-	const char index_path[] = "./tmp";
+	const char index_path[] = DEFAULT_INDEXER_OUTPUT_DIR;
 	struct indices indices;
+	doc_id_t max_doc_id;
 
-	while ((opt = getopt(argc, argv, "heap:")) != -1) {
+	while ((opt = getopt(argc, argv, "hop:e")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -91,7 +93,7 @@ int main(int argc, char* argv[])
 			printf("%s -h | "
 			       "-e (English only) | "
 			       "-p <corpus path> | "
-			       "-a (No overwrite)"
+			       "-o (overwrite)"
 			       "\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
@@ -107,8 +109,8 @@ int main(int argc, char* argv[])
 			lex = lex_eng_file;
 			break;
 
-		case 'a':
-			overwrite = 0;
+		case 'o':
+			overwrite = 1;
 			break;
 
 		default:
@@ -135,7 +137,8 @@ int main(int argc, char* argv[])
 
 	/* remove output directory if we are overwriting index */
 	if (overwrite) {
-		system("rm -rf ./tmp");
+		printf("remove old index...\n");
+		system("rm -rf " DEFAULT_INDEXER_OUTPUT_DIR);
 	}
 
 	/* open indices for writing */
@@ -145,7 +148,9 @@ int main(int argc, char* argv[])
 		goto close;
 	}
 
-	indexer_assign(&indices);
+	/* initialize indexer */
+	max_doc_id = indexer_assign(&indices);
+	printf("previous max docID = %u.\n", max_doc_id);
 	g_lex_handler = &indexer_handle_slice;
 
 	/* start indexing */

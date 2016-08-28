@@ -17,7 +17,7 @@ extern uint64_t n_parse_err;
 extern uint64_t n_parse_tex;
 
 /* main indexing functions */
-void indexer_assign(struct indices*);
+doc_id_t indexer_assign(struct indices*);
 
 typedef int (*text_lexer)(FILE*);
 int indexer_index_json(FILE*, text_lexer);

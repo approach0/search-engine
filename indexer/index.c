@@ -22,12 +22,19 @@ static position_t cur_position = 0;
 uint64_t n_parse_err = 0;
 uint64_t n_parse_tex = 0;
 
-void indexer_assign(struct indices *indices)
+doc_id_t indexer_assign(struct indices *indices)
 {
+	uint32_t max_docID;
+
 	term_index = indices->ti;
 	math_index = indices->mi;
 	blob_index_url = indices->url_bi;
 	blob_index_txt = indices->txt_bi;
+
+	max_docID = term_index_get_docN(term_index);
+	prev_docID = max_docID;
+
+	return max_docID;
 }
 
 static void
