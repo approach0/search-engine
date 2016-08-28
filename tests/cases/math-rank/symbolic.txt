@@ -1,5 +1,5 @@
-ax
+\beta x
 
-HIT ax
+HIT \beta x
 HIT bx
 HIT yz
