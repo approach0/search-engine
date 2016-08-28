@@ -111,17 +111,17 @@ static LIST_IT_CALLBK(add_postinglist)
 	case QUERY_KEYWORD_TEX:
 		n = add_math_postinglist(aa->pm, aa->indices, kw_utf8, kw_type);
 #ifdef VERBOSE_SEARCH
-		{
-			int i;
-			for (i = aa->idx; i < aa->idx + n; i++) {
-				printf("posting[%u]", i);
-				if (i + 1 == n)
-					printf(".");
-				else
-					printf(", ");
-			}
-			printf("\n");
-		}
+//		{
+//			int i;
+//			for (i = aa->idx; i < aa->idx + n; i++) {
+//				printf("posting[%u]", i);
+//				if (i + 1 == n)
+//					printf(".");
+//				else
+//					printf(", ");
+//			}
+//			printf("\n");
+//		}
 #endif
 		aa->idx += n;
 		break;
@@ -137,7 +137,7 @@ static LIST_IT_CALLBK(add_postinglist)
 	}
 }
 
-static void
+static uint32_t
 add_postinglists(struct indices *indices, const struct query *qry,
                  struct postmerge *pm, float *idf_arr)
 {
@@ -151,6 +151,8 @@ add_postinglists(struct indices *indices, const struct query *qry,
 
 	/* add posting list of every keyword for merge */
 	list_foreach((list*)&qry->keywords, &add_postinglist, &ap_args);
+
+	return ap_args.idx;
 }
 
 static void
@@ -270,6 +272,7 @@ indices_run_query(struct indices *indices, const struct query qry)
 	struct BM25_term_i_args         bm25args;
 	ranked_results_t                rk_res;
 	struct posting_merge_extra_args pm_args;
+	uint32_t                        n_add;
 
 	/* sort query, to prioritize keywords in highlight stage */
 	list_foreach((list*)&qry.keywords, &set_df_value, indices);
@@ -283,9 +286,13 @@ indices_run_query(struct indices *indices, const struct query qry)
 
 	/* initialize postmerge */
 	postmerge_posts_clear(&pm);
-	add_postinglists(indices, &qry, &pm, (float*)&bm25args.idf);
+	n_add = add_postinglists(indices, &qry, &pm,
+	                         (float*)&bm25args.idf);
 #ifdef VERBOSE_SEARCH
+	printf("adding %u posting lists.\n", n_add);
 	printf("\n");
+#else
+	n_add++; /* supress compile warning */
 #endif
 
 	/* prepare BM25 parameters */
@@ -296,9 +303,9 @@ indices_run_query(struct indices *indices, const struct query qry)
 	bm25args.frac_b_avgDocLen = BM25_DEFAULT_K1 / bm25args.avgDocLen;
 
 #ifdef VERBOSE_SEARCH
-	printf("BM25 arguments:\n");
-	BM25_term_i_args_print(&bm25args);
-	printf("\n");
+//	printf("BM25 arguments:\n");
+//	BM25_term_i_args_print(&bm25args);
+//	printf("\n");
 #endif
 
 	/* initialize ranking queue */

@@ -42,7 +42,7 @@ msca_push_pos(math_score_combine_args_t *msca, position_t pos)
 }
 
 static void
-msca_rst(math_score_combine_args_t *msca, doc_id_t docID)
+msca_set(math_score_combine_args_t *msca, doc_id_t docID)
 {
 	msca->last.docID   = docID;
 	msca->last.score   = 0;
@@ -97,6 +97,35 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(msca, math_score_combine_args_t, mesa->expr_srch_arg);
 
+	if (msca->wr_mem_po == NULL ||
+	    mesa->n_dir_visits != msca->last_visits) {
+		/* we are on a new directory, create a new posting list? */
+
+		if (msca->top_pm->n_postings + 1 >= MAX_MERGE_POSTINGS) {
+			/* stop traversing the next directory */
+			mesa->stop_dir_search = 1;
+			return;
+
+		} else {
+			/* yes, we need to create a new posting list */
+
+			/* swap old one */
+			if (msca->wr_mem_po)
+				add_math_score_posting(msca);
+
+			/* switch to a new posting list */
+			msca_set(msca, 0);
+			msca->wr_mem_po = mem_posting_create(
+				DEFAULT_SKIPPY_SPANS,
+				math_score_posting_plain_calls()
+			);
+			msca->n_mem_po ++;
+
+			/* update last_visits */
+			msca->last_visits = mesa->n_dir_visits;
+		}
+	}
+
 	/* calculate expression similarity on merge */
 	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
 	                               mesa->n_qry_lr_paths);
@@ -108,57 +137,17 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 #endif
 
 	/*
-	 * check whether we are reaching the limit of total number
-	 * of merging posting lists. If yes, force stop traverse
-	 * the next directory after this posting merge is done.
-	 */
-	if (msca->top_pm->n_postings + 1 >= MAX_MERGE_POSTINGS) {
-		/* remember to stop traversing the next directory */
-		mesa->stop_dir_search = 1;
-
-		/*
-		 * prevent creating a new posting list during this
-		 * posting merge.
-		 */
-		if (msca->wr_mem_po == NULL)
-			return;
-	}
-
-	/*
-	 * first, checkout to a new posting list when a new
-	 * directory is visited.
-	 */
-	if (msca->wr_mem_po == NULL ||
-	    mesa->n_dir_visits != msca->last_visits) {
-
-		/* if posting list is not NULL, add it */
-		if (msca->wr_mem_po)
-			add_math_score_posting(msca);
-
-		/* reset and create new posting list */
-		msca_rst(msca, 0);
-		msca->wr_mem_po = mem_posting_create(
-			DEFAULT_SKIPPY_SPANS,
-			math_score_posting_plain_calls()
-		);
-		msca->n_mem_po ++;
-
-		/* update last_visits */
-		msca->last_visits = mesa->n_dir_visits;
-	}
-
-	/*
-	 * second, write last posting list item when this
+	 * write last posting list item when this
 	 * expression is a new document ID.
 	 */
 	if (res.doc_id != msca->last.docID) {
 
 		write_math_score_posting(msca);
-		msca_rst(msca, res.doc_id);
+		msca_set(msca, res.doc_id);
 	}
 
 	/* finally, update current maximum expression score
-	 * inside of current evaluating document, also update
+	 * inside of current evaluating document, also add
 	 * expression positions of current document */
 	if (res.score > msca->last.score)
 		msca->last.score = res.score;
@@ -179,25 +168,21 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	msca.last_visits = 0;
 	msca.n_mem_po    = 0;
 	msca.mem_cost    = 0.f;
-	msca_rst(&msca, 0);
+	msca_set(&msca, 0);
 
 	/* merge and combine math scores */
 	math_expr_search(indices->mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,
 	                 &math_posting_on_merge, &msca);
 
-	if (msca.wr_mem_po)
-		/* flush and final adding */
-		add_math_score_posting(&msca);
-	else
-		/* add a NULL posting to indicate empty result */
-		postmerge_posts_add(msca.top_pm, NULL, NULL, kw_type);
+	/* flush and final adding */
+	add_math_score_posting(&msca);
 
 #ifdef VERBOSE_SEARCH
 	printf("`%s' has %u math score posting(s) (%f KB).\n",
 	       kw_utf8, msca.n_mem_po, msca.mem_cost / 1024.f);
 #endif
 
-	return msca.n_mem_po;
+	return msca.top_pm->n_postings;
 }
 
 static void print_math_score_posting(struct mem_posting *po)
