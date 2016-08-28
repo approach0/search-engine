@@ -95,8 +95,8 @@ int main(int argc, char *argv[])
 			       " -p <page> |"
 			       " -t <term> |"
 			       " -m <tex> |"
-			       " -x <English text>"
-			       " -e (English only)"
+			       " -x <English text> |"
+			       " -e (English only) |"
 			       " -n (no pause)"
 			       "\n", argv[0]);
 			printf("\n");

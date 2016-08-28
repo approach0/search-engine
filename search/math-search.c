@@ -194,8 +194,12 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	math_expr_search(indices->mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,
 	                 &math_posting_on_merge, &msca);
 
-	/* flush and final adding */
-	add_math_score_posting(&msca);
+	if (msca.wr_mem_po)
+		/* flush and final adding */
+		add_math_score_posting(&msca);
+	else
+		/* add a NULL posting to indicate empty result */
+		postmerge_posts_add(msca.top_pm, NULL, NULL, kw_type);
 
 #ifdef VERBOSE_SEARCH
 	printf("`%s' has %u math score posting(s) (%f KB).\n",
