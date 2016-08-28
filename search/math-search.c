@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "tex-parser/vt100-color.h"
 #include "mem-index/mem-posting.h"
 
 #include "config.h"
@@ -27,6 +28,9 @@ typedef struct {
 	/* document math score item buffer */
 	math_score_posting_item_t last;
 	position_t reserve[MAX_HIGHLIGHT_OCCURS];
+
+	/* index ptr for debug purpose */
+	struct indices *indices;
 
 } math_score_combine_args_t;
 #pragma pack(pop)
@@ -130,6 +134,22 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
 	                               mesa->n_qry_lr_paths);
 
+#ifdef DEBUG_PRINT_TARGET_DOC_MATH_SCORE
+	if (res.doc_id == 2550 || res.doc_id == 7055) {
+		printf("doc expression score: %u \n", res.score);
+		print_math_expr_at(msca->indices, res.doc_id, res.exp_id);
+		printf("\n");
+	}
+
+	if (res.doc_id != msca->last.docID) {
+		doc_id_t _last_ID = msca->last.docID;
+		if (_last_ID == 2550 || _last_ID == 7055) {
+			printf(C_BLUE "final doc#%u score: %u\n\n" C_RST,
+			       _last_ID, msca->last.score);
+		}
+	}
+#endif
+
 #ifdef DEBUG_MATH_SEARCH
 	printf("\n");
 	printf("directory visited: %u\n", mesa->n_dir_visits);
@@ -141,7 +161,6 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	 * expression is a new document ID.
 	 */
 	if (res.doc_id != msca->last.docID) {
-
 		write_math_score_posting(msca);
 		msca_set(msca, res.doc_id);
 	}
@@ -169,6 +188,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	msca.n_mem_po    = 0;
 	msca.mem_cost    = 0.f;
 	msca_set(&msca, 0);
+	msca.indices     = indices;
 
 	/* merge and combine math scores */
 	math_expr_search(indices->mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,

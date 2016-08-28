@@ -41,3 +41,5 @@ typedef struct {
 #pragma pack(pop)
 
 struct mem_posting_callbks math_score_posting_plain_calls();
+
+void print_math_expr_at(struct indices*, doc_id_t, exp_id_t);

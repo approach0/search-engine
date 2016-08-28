@@ -352,3 +352,26 @@ struct mem_posting_callbks math_score_posting_plain_calls()
 
 	return ret;
 }
+
+/* Below are debug functions */
+void
+print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
+{
+	char  *str;
+	size_t str_sz;
+	list   highlight_list;
+	position_t pos[1] = {expID};
+	struct rank_hit mock_hit = {docID, 0, 1, pos};
+
+	printf("expr#%u @ doc#%u:\n", expID, docID);
+
+	g_lex_handler = highlighter_arg_lex_setter;
+
+	str = get_blob_string(indices->txt_bi, docID, 1, &str_sz);
+	highlight_list = prepare_snippet(&mock_hit, str, str_sz,
+	                                 lex_eng_file);
+	free(str);
+
+	snippet_hi_print(&highlight_list);
+	snippet_free_highlight_list(&highlight_list);
+}
