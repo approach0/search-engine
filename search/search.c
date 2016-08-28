@@ -163,7 +163,8 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	uint32_t    i, j = 0;
 
 	float       tot_score;
-	float       math_score = 1.f, bm25_score = 1.f;
+	float       math_score, bm25_score = 1.f;
+	mnc_score_t max_math_score = 0;
 	position_t *pos_arr;
 
 #ifdef ENABLE_PROXIMITY_SCORE
@@ -201,7 +202,9 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 
 			case QUERY_KEYWORD_TEX:
 				mip = pm->cur_pos_item[i];
-				math_score += (float)mip->score;
+
+				if (mip->score > max_math_score)
+					max_math_score = mip->score;
 
 				/* set proximity input */
 				pos_arr = mip->pos_arr;
@@ -224,11 +227,16 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	prox_reset_inputs(pm_args->prox_in, j);
 #endif
 
+	/*
+	 * math score of a document is determined by the max
+	 * scored expression that occurs in this document.
+	 */
+	math_score = 1.f + (float)max_math_score;
+
 	tot_score = prox_score + math_score * bm25_score;
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
 	               pm_args->prox_in, j);
-	return;
 }
 
 static void free_math_postinglists(struct postmerge *pm)
