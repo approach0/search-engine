@@ -1,3 +1,14 @@
+var math_pad = [
+	{"tab_name": "Basic", "buttons": [
+		{'desc': 'square', 'cmd': 'x^', 'disp': 'x^\\Box'},
+		{'desc': 'root', 'cmd': '\\\\sqrt', 'disp': '\\sqrt{(\\Box)}'}
+	]},
+	{"tab_name": "Greek", "buttons": [
+		{'desc': 'alpha', 'cmd': '\\\\alpha', 'disp': '\\alpha'},
+		{'desc': 'beta', 'cmd': '\\\\beta', 'disp': '\\beta'}
+	]}
+];
+
 $(document).ready(function() {
 	var MQ = MathQuill.getInterface(2);
 
@@ -5,7 +16,8 @@ $(document).ready(function() {
 		"raw_str": "",
 		"items": [
 			{"type": "term-input", "str": ""}
-		]
+		],
+		"pad": math_pad
 	};
 
 	/* query variable <--> raw query string convert */
@@ -132,7 +144,7 @@ $(document).ready(function() {
 			}
 		});
 
-		mq.focus();
+		if (mq) mq.focus();
 		return mq;
 	};
 
@@ -319,4 +331,20 @@ $(document).ready(function() {
 
 		type_and_click_search(q, page, true);
 	}
+
+	/* render math pad */
+	Vue.nextTick(function () {
+		tex_render("#easy-pad");
+		console.log('rendered');
+	});
+
+	/* math pad button on clicked */
+	window.send_cmd = function (tex_cmd) {
+		var mq = render_mq_edit();
+		if (mq) {
+			mq.typedText(tex_cmd + ' ');
+		} else {
+			switch_to_mq_2(tex_cmd + ' ');
+		}
+	};
 });

@@ -97,9 +97,20 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <div style="margin-top: 8px;">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
-	<span class="collapse" title="Lookup Math symbols">(+) math symbols</span>
-	<div>
-		<p> [ TODO: Some buttons here ] </p>
+	<span class="collapse" title="Lookup TeX symbols">(+) easy pad</span>
+	<div id="easy-pad">
+		<template v-for="p in pad">
+		<h3>{{p.tab_name}}</h3>
+		<ul><template v-for="b in p.buttons">
+		<li>
+			<div v-bind:onclick="'send_cmd(\'' + b.cmd + '\')'">
+			<button v-bind:title="b.desc">
+			[imath]{{b.disp}}[/imath]
+			</button>
+			</div>
+		</li>
+		</template></ul>
+		</template>
 		<hr class="vsep"/>
 	</div>
 
