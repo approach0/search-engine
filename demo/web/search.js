@@ -59,6 +59,7 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 			"but will be back shortly";
 	});
 
+	/* push browser history if needed */
 	if (is_pushState) {
 
 		srch_state = {
@@ -68,7 +69,8 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 
 		srch_state_str = JSON.stringify(srch_state);
 		//console.log(srch_state_str);
-		history.pushState(srch_state, srch_state_str);
+		history.pushState(srch_state, srch_state_str,
+		                  "?q=" + enc_qry + "&p=" + page);
 		//console.log('push history state...');
 	}
 }

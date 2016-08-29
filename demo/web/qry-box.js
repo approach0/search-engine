@@ -308,4 +308,15 @@ $(document).ready(function() {
 			click_search(page, is_pushState);
 		});
 	};
+
+	/* go to URI-specified query, if any */
+	var q = $("#q").val();
+	var p = $("#p").val();
+	if (q != "") {
+		var page = 1;
+		if (p != "")
+			page = parseInt(p, 10);
+
+		type_and_click_search(q, page, true);
+	}
 });

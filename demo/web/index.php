@@ -107,8 +107,14 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 	<div>
 		<p>If you know TeX, it is faster to edit the equivalent raw query
 		(separate keywords by commas):</p>
-		<input id="qry" style="width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput" placeholder="empty"/>
-		<p>Its corresponding WEB API:</p>
+		<input id="qry" style="padding-left: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
+		placeholder="empty"/>
+
+		<!-- hidden URI parameters -->
+		<input id="q" type="hidden" value="<?php if (isset($_GET['q'])) echo $_GET['q']; ?>"/>
+		<input id="p" type="hidden" value="<?php if (isset($_GET['p'])) echo $_GET['p']; ?>"/>
+
+		<p>WEB API (for developers):</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
 		curl -v {{url_root}}search-relay.php?q='{{enc_uri}}'
 		<p>
