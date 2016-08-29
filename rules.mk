@@ -112,7 +112,7 @@ check-lib%:
 	@ $(CXX) $(LDFLAGS) -w -Xlinker \
 	--unresolved-symbols=ignore-all -l$*
 
-FIND := @ find . -type d \( -path './.git' \) -prune -o
+FIND := @ find . -type d \( -path './.git' -o -path '*/tmp' \) -prune -o
 
 regular-clean:
 	@ tput setaf 5 && echo [regular clean] && tput sgr0
