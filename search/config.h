@@ -8,8 +8,8 @@
 
 #define MAX_MERGE_POSTINGS 4096
 
-#define SNIPPET_PADDING    80
-#define MAX_SNIPPET_SZ     4096
+#define SNIPPET_PADDING    320
+#define MAX_SNIPPET_SZ     8192
 
 //#define DEBUG_SNIPPET
 
@@ -25,7 +25,7 @@
 
 //#define DEBUG_MATH_EXPR_SEARCH
 
-#define RANK_SET_DEFAULT_VOL 45
+#define RANK_SET_DEFAULT_VOL 155
 #define DEFAULT_RES_PER_PAGE 10
 
 //#define DEBUG_PROXIMITY
