@@ -147,8 +147,8 @@ $(document).ready(function() {
 	}
 
 	var input_box_on_keyup = function (ev) {
-		arr = query.items;
-		input_box = arr[arr.length - 1];
+		var arr = query.items;
+		var input_box = arr[arr.length - 1];
 
 		if (ev.which == 13 /* enter */) {
 			if (input_box.str == '') {
@@ -179,6 +179,30 @@ $(document).ready(function() {
 		}
 	};
 
+	var input_box_on_paste = function (ev) {
+		var clipboardData, pastedData;
+		var arr = query.items;
+		var input_box = arr[arr.length - 1];
+
+		if (ev.type == "paste") {
+			/* Stop data actually being pasted into <input> */
+			ev.stopPropagation();
+			ev.preventDefault();
+
+			/* Get pasted data via clipboard API */
+			clipboardData = ev.clipboardData || window.clipboardData;
+			pastedData = clipboardData.getData('Text');
+			//console.log(pastedData);
+
+			query.raw_str = pastedData;
+			raw_str_2_query();
+			Vue.nextTick(function () {
+				tex_render("div.qry-div-fix");
+				$("#qry-input-box").focus();
+			});
+		}
+	};
+
 	/* Vue instance */
 	var qry_vm = new Vue({
 		el: "#qry-input-vue-app",
@@ -196,6 +220,7 @@ $(document).ready(function() {
 				$("#qry-input-box").focus();
 			},
 			on_input: input_box_on_keyup,
+			on_paste: input_box_on_paste,
 			on_rawinput: function () {
 				raw_str_2_query();
 				Vue.nextTick(function () {

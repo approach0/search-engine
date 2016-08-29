@@ -80,8 +80,9 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 			</div>
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-model="i.str" type="text" id="qry-input-box"
-			class="pl_holder" placeholder="Enter keywords here, type $ for math keyword."/>
+			<input v-on:keyup="on_input" v-on:paste="on_paste" v-model="i.str"
+			type="text" id="qry-input-box" class="pl_holder"
+			placeholder="Enter keywords here, type $ for math keyword."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
