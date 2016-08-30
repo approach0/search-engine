@@ -153,6 +153,13 @@ int httpd_run(unsigned short port,
 	/* binding */
 	httpd = evhttp_start("0.0.0.0", port);
 
+	/* check if port is already binded */
+	if (httpd == NULL) {
+		fprintf(stderr, "Failed to listen on port %d.\n", port);
+		return 1;
+	}
+
+	/* set callback functions on receving */
 	evhttp_set_cb(httpd, SEARCHD_DEFAULT_URI,
 	              httpd_callbk, &callbk_arg);
 
