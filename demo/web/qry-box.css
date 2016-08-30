@@ -81,7 +81,7 @@ hr.vsep {
 	margin: 20px 0 20px 0;
 }
 
-#search_button {
+button {
 	color: #333;
 	border-color: #ccc;
 	background-color: #fff;
@@ -92,7 +92,20 @@ hr.vsep {
 	font-weight: 400;
 }
 
-#search_button:hover {
+button:hover {
 	background-color: #f8f8f8;
 	border-color: #adadad;
+}
+
+ul.pad-li-wrap {
+	list-style: none;
+}
+
+li.pad-li {
+	display:inline-block;
+	margin: 0px 5px 8px 0;
+}
+
+button.pad {
+	padding: 5px 5px 5px 5px;
 }

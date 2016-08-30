@@ -35,6 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="search.js"></script>
 <script type="text/javascript" src="quiz-list.js"></script>
 <script type="text/javascript" src="quiz.js"></script>
+<script type="text/javascript" src="pad.js"></script>
 <script type="text/javascript" src="qry-box.js"></script>
 <script type="text/javascript" src="footer.js"></script>
 <style>
@@ -97,20 +98,35 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <div style="margin-top: 8px;">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
-	<span class="collapse" title="Lookup TeX symbols">(+) easy pad</span>
-	<div id="easy-pad">
-		<template v-for="p in pad">
+	<span class="collapse" title="Lookup TeX commands">(+) handy pad</span>
+	<div id="handy-pad">
+		<div v-for="p in pad">
 		<h3>{{p.tab_name}}</h3>
-		<ul><template v-for="b in p.buttons">
-		<li>
+		<ul class="pad-li-warp"><template v-for="b in p.buttons">
+		<li class="pad-li">
 			<div v-bind:onclick="'send_cmd(\'' + b.cmd + '\')'">
-			<button v-bind:title="b.desc">
+			<button class="pad" v-bind:title="b.desc">
 			[imath]{{b.disp}}[/imath]
 			</button>
 			</div>
 		</li>
 		</template></ul>
-		</template>
+		</div>
+
+		<h3> Want More?</h3>
+		<p>Above only lists most frequently used math snippets. Refer to <a target="_blank"
+		href="http://www.onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">
+		this link</a> for a complete math-related TeX commands and use "raw query" to
+		input unlisted TeX commands.
+		</p>
+		<p>Willing to learn some Tex? <a target="_blank" href=
+		"https://en.wikibooks.org/wiki/LaTeX">Here</a> is a helpful tutorial.
+		</p>
+		<p>If you want to add more buttons on this "handy pad" or help us imporve in any way,
+		send us an issue (for suggestions) or a pull request (for proposed modifications) to our
+		<a target="_blank" href="https://github.com/approach0/search-engine/blob/master/demo/web/pad.js">
+		Github repository</a>.
+		</p>
 		<hr class="vsep"/>
 	</div>
 
