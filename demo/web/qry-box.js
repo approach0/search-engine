@@ -249,9 +249,8 @@ $(document).ready(function() {
 	};
 
 	/* expander */
-	$("span.collapse").next().hide();
-	$("span.collapse").click(function () {
-		head = $(this);
+	function toggle_expander(obj) {
+		head = obj;
 		below = head.next();
 		below.toggle("fast", function () {
 			t = head.text();
@@ -263,6 +262,10 @@ $(document).ready(function() {
 
 			$('#init-footer').stickToBottom();
 		});
+	}
+	$("span.collapse").next().hide();
+	$("span.collapse").click(function () {
+		toggle_expander($(this));
 	});
 
 	/* search related */
@@ -271,28 +274,37 @@ $(document).ready(function() {
 		input_box = arr[arr.length - 1];
 
 		if (input_box.str != '') {
+			/* push the last query to UI */
 			if (input_box.type == 'tex-input') {
 				fix_input("tex", input_box.str, function() {
 					tex_render("div.qry-div-fix");
-					qry = $("#qry").val();
 
+					/* perform search */
+					qry = $("#qry").val();
 					srch_qry(qry, page, is_pushState);
 				});
-				return;
 
 			} else if (input_box.type == 'term-input') {
 				fix_input("term", input_box.str, function() {
+
+					/* perform search */
 					qry = $("#qry").val();
 					srch_qry(qry, page, is_pushState);
 				});
-				return;
 			}
+		} else {
+			/* perform search */
+			qry = $("#qry").val();
+			srch_qry(qry, page, is_pushState);
 		}
 
-		qry = $("#qry").val();
-		srch_qry(qry, page, is_pushState);
-
+		/* hide quiz */
 		quiz_hide();
+
+		/* hide "handy pad" */
+		if ($("#handy-pad").is(":visible")) {
+			toggle_expander($("#handy-pad-expander"));
+		}
 	}
 
 	$('#search_button').on('click', function() {

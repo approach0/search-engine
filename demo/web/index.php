@@ -98,7 +98,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <div style="margin-top: 8px;">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
-	<span class="collapse" title="Lookup TeX commands">(+) handy pad</span>
+	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
 	<div id="handy-pad">
 		<div v-for="p in pad">
 		<h3>{{p.tab_name}}</h3>
