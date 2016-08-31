@@ -210,7 +210,9 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div style="display:none">docid: {{hit.docid}}</div>
 		<div style="display:none">score: {{hit.score}}</div>
 		<a target="_blank" v-bind:href="hit.url">{{hit.url}}</a><br/>
+		<div style="overflow-x: hidden;">
 		<p class="snippet">{{{ hit.snippet }}}</p>
+		</div>
 	</li>
 	</ol>
 </div>
