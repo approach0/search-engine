@@ -28,6 +28,10 @@ prepare_snippet(struct rank_hit*, const char*, size_t, text_lexer);
 void consider_top_K(ranked_results_t*, doc_id_t, float,
                     prox_input_t*, uint32_t);
 
+/* set keywords values (those related to indices) */
+#include "query.h"
+void set_keywords_val(struct query*, struct indices*);
+
 /* math related */
 #include "mnc-score.h"
 

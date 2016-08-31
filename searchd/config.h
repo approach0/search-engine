@@ -18,3 +18,6 @@
  * Thus this IP will always be localhost.
  */
 //#define SEARCHD_LOG_CLIENT_IP
+
+#define MAX_ACCEPTABLE_MATH_KEYWORDS 4
+#define MAX_ACCEPTABLE_TERM_KEYWORDS 20

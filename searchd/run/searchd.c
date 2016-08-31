@@ -46,15 +46,31 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	page = parse_json_qry(req, args->lex, &qry);
 
 	if (page == 0) {
-		fprintf(stderr, "requested JSON parse error.\n");
-
+#ifdef SEARCHD_LOG_ENABLE
+		fprintf(log_fh, "requested JSON parse error.\n");
+#endif
 		ret = search_errcode_json(SEARCHD_RET_BAD_QRY_JSON);
 		goto reply;
 
 	} else if (qry.len == 0) {
-		fprintf(stderr, "resulted qry of length zero.\n");
-
+#ifdef SEARCHD_LOG_ENABLE
+		fprintf(log_fh, "resulted qry of length zero.\n");
+#endif
 		ret = search_errcode_json(SEARCHD_RET_EMPTY_QRY);
+		goto reply;
+
+	} else if (qry.n_math > MAX_ACCEPTABLE_MATH_KEYWORDS) {
+#ifdef SEARCHD_LOG_ENABLE
+		fprintf(log_fh, "qry contains too many math keywords.\n");
+#endif
+		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_MATH_KW);
+		goto reply;
+
+	} else if (qry.n_term > MAX_ACCEPTABLE_TERM_KEYWORDS) {
+#ifdef SEARCHD_LOG_ENABLE
+		fprintf(log_fh, "qry contains too many term keywords.\n");
+#endif
+		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_TERM_KW);
 		goto reply;
 	}
 

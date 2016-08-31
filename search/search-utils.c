@@ -1,6 +1,7 @@
 #include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indexer/index.h" /* for text_lexer and indices */
 #include "mem-index/mem-posting.h"
+#include "wstring/wstring.h" /* for wstr2mbstr() */
 
 #include "config.h"
 #include "postmerge.h"
@@ -330,6 +331,45 @@ consider_top_K(ranked_results_t *rk_res,
 		hit = new_hit(docID, score, prox_in, n);
 		priority_Q_add_or_replace(rk_res, hit);
 	}
+}
+
+/*
+ * query related functions
+ */
+static LIST_IT_CALLBK(set_kw_values)
+{
+	LIST_OBJ(struct query_keyword, kw, ln);
+	P_CAST(indices, struct indices, pa_extra);
+	term_id_t term_id;
+
+	if (kw->type == QUERY_KEYWORD_TEX) {
+		/*
+		 * currently math expressions do not have cached posting
+		 * list, so set post_id to zero as a mark so that they
+		 * will not be deleted by query_uniq_by_post_id().
+		 */
+
+		kw->post_id = 0;
+		kw->df = 0;
+	} else if (kw->type == QUERY_KEYWORD_TERM) {
+		term_id = term_lookup(indices->ti, wstr2mbstr(kw->wstr));
+		kw->post_id = (int64_t)term_id;
+
+		if (term_id == 0)
+			kw->df = 0;
+		else
+			kw->df = (uint64_t)term_index_get_df(indices->ti,
+			                                     term_id);
+	} else {
+		assert(0);
+	}
+
+	LIST_GO_OVER;
+}
+
+void set_keywords_val(struct query *qry, struct indices *indices)
+{
+	list_foreach((list*)&qry->keywords, &set_kw_values, indices);
 }
 
 /*

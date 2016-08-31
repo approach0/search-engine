@@ -7,7 +7,9 @@ enum searchd_ret_code {
 	SEARCHD_RET_BAD_QRY_JSON,
 	SEARCHD_RET_NO_HIT_FOUND,
 	SEARCHD_RET_ILLEGAL_PAGENUM,
-	SEARCHD_RET_WIND_CALC_ERR
+	SEARCHD_RET_WIND_CALC_ERR,
+	SEARCHD_RET_TOO_MANY_MATH_KW,
+	SEARCHD_RET_TOO_MANY_TERM_KW
 };
 
 static const char searchd_ret_str_map[][128] = {
@@ -16,7 +18,9 @@ static const char searchd_ret_str_map[][128] = {
 	{"Invalid query JSON"},
 	{"No hit found"},
 	{"Illegal page number"},
-	{"Rank window calculation error"}
+	{"Rank window calculation error"},
+	{"Too many math keywords in query"},
+	{"Too many term keywords in query"}
 };
 
 /* log remote IP the request is relayed from */

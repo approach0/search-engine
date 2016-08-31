@@ -7,7 +7,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-#include "wstring/wstring.h"
+#include "wstring/wstring.h" /* for wstr2mbstr() */
 #include "mem-index/mem-posting.h"
 #include "indexer/index.h" /* for eng_to_lower_case() */
 #include "timer/timer.h"
@@ -272,22 +272,6 @@ static void free_math_postinglists(struct postmerge *pm)
 	}
 }
 
-static LIST_IT_CALLBK(set_df_value)
-{
-	LIST_OBJ(struct query_keyword, kw, ln);
-	P_CAST(indices, struct indices, pa_extra);
-	term_id_t term_id;
-
-	term_id = term_lookup(indices->ti, wstr2mbstr(kw->wstr));
-
-	if (term_id == 0)
-		kw->df = 0;
-	else
-		kw->df = (uint64_t)term_index_get_df(indices->ti, term_id);
-
-	LIST_GO_OVER;
-}
-
 ranked_results_t
 indices_run_query(struct indices *indices, const struct query qry)
 {
@@ -304,12 +288,20 @@ indices_run_query(struct indices *indices, const struct query qry)
 	timer_reset(&timer);
 #endif
 
+	/*
+	 * some query pre-merge process.
+	 */
+	set_keywords_val((struct query *)&qry, indices);
+
 	/* sort query, to prioritize keywords in highlight stage */
-	list_foreach((list*)&qry.keywords, &set_df_value, indices);
-	query_sort(&qry);
+	query_sort_by_df(&qry);
+
+	/* make query unique by post_id, avoid mem-posting overlap */
+	query_uniq_by_post_id((struct query *)&qry);
 
 #ifdef VERBOSE_SEARCH
-	printf("sorted query: ");
+	printf("\n");
+	printf("processed query: \n");
 	query_print_to(qry, stdout);
 	printf("\n\n");
 #endif
