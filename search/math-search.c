@@ -121,8 +121,13 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	    mesa->n_dir_visits != msca->last_visits) {
 		/* we are on a new directory, create a new posting list? */
 
-		/* restrict the max number of math-postings to be added */
-		if (msca->top_pm->n_postings + 1 >= MAX_POSTINGS_PER_MATH) {
+		/*
+		 * keep checking if total posting lists to be added is exceeding
+		 * the limit. At the mean time restrict the max number of math-
+		 * postings to be added for each math expression.
+		 */
+		if (msca->top_pm->n_postings + 1 >= MAX_MERGE_POSTINGS ||
+		    msca->n_mem_po + 1 >= MAX_POSTINGS_PER_MATH) {
 			/* stop traversing the next directory */
 			mesa->stop_dir_search = 1;
 			return;
@@ -235,7 +240,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	       timer_tot_msec(&msca.timer));
 #endif
 
-	return msca.top_pm->n_postings;
+	return msca.n_mem_po;
 }
 
 static void print_math_score_posting(struct mem_posting *po)
