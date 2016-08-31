@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "timer/timer.h"
 #include "tex-parser/vt100-color.h"
 #include "mem-index/mem-posting.h"
 
@@ -31,6 +32,10 @@ typedef struct {
 
 	/* index ptr for debug purpose */
 	struct indices *indices;
+
+	/* timer related */
+	struct timer timer;
+	long max_timecost;
 
 } math_score_combine_args_t;
 #pragma pack(pop)
@@ -91,6 +96,16 @@ add_math_score_posting(math_score_combine_args_t *msca)
 	pm_calls = get_memory_postmerge_callbks();
 	postmerge_posts_add(msca->top_pm, msca->wr_mem_po,
 	                    pm_calls, msca->kw_type);
+
+#ifdef VERBOSE_SEARCH
+	{
+		long last_timecost;
+		/* record max time of adding a math posting */
+		last_timecost = timer_last_msec(&msca->timer);
+		if (last_timecost > msca->max_timecost)
+			msca->max_timecost = last_timecost;
+	}
+#endif
 }
 
 static void
@@ -101,11 +116,13 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(msca, math_score_combine_args_t, mesa->expr_srch_arg);
 
+
 	if (msca->wr_mem_po == NULL ||
 	    mesa->n_dir_visits != msca->last_visits) {
 		/* we are on a new directory, create a new posting list? */
 
-		if (msca->top_pm->n_postings + 1 >= MAX_MERGE_POSTINGS) {
+		/* restrict the max number of math-postings to be added */
+		if (msca->top_pm->n_postings + 1 >= MAX_POSTINGS_PER_MATH) {
 			/* stop traversing the next directory */
 			mesa->stop_dir_search = 1;
 			return;
@@ -190,6 +207,12 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	msca_set(&msca, 0);
 	msca.indices     = indices;
 
+#ifdef VERBOSE_SEARCH
+	/* reset timer */
+	timer_reset(&msca.timer);
+	msca.max_timecost = 0;
+#endif
+
 	/* merge and combine math scores */
 	math_expr_search(indices->mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,
 	                 &math_posting_on_merge, &msca);
@@ -204,6 +227,12 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 #ifdef VERBOSE_SEARCH
 	printf("`%s' has %u math score posting(s) (%f KB).\n",
 	       kw_utf8, msca.n_mem_po, msca.mem_cost / 1024.f);
+
+	/* report time cost */
+	printf("math post-adding max cost: %ld msec.\n",
+	       msca.max_timecost);
+	printf("math post-adding total cost: %ld msec.\n",
+	       timer_tot_msec(&msca.timer));
 #endif
 
 	return msca.top_pm->n_postings;

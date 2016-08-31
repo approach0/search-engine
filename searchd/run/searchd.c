@@ -3,6 +3,7 @@
 #include <getopt.h>
 
 #include "mhook/mhook.h"
+#include "timer/timer.h"
 
 #include "search/config.h"
 #include "search/search.h"
@@ -18,6 +19,7 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	struct query     qry;
 	uint32_t         page;
 	ranked_results_t srch_res; /* search results */
+	struct timer     timer;
 
 #ifdef SEARCHD_LOG_ENABLE
 	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
@@ -35,6 +37,9 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	log_json_qry_ip(log_fh, req);
 	fprintf(log_fh, "\n");
 #endif
+
+	/* start timer */
+	timer_reset(&timer);
 
 	/* parse JSON query into local query structure */
 	qry = query_new();
@@ -66,6 +71,7 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	fprintf(log_fh, "run query...\n");
 	fflush(log_fh);
 #endif
+
 	srch_res = indices_run_query(args->indices, qry);
 
 	/* generate response JSON */
@@ -94,6 +100,9 @@ reply:
 	        "unfree allocs: %ld.\n\n", mhook_unfree());
 	fflush(log_fh);
 
+
+	fprintf(log_fh, "query handle time cost: %ld msec.\n",
+	        timer_tot_msec(&timer));
 	fclose(log_fh);
 #endif
 	return ret;

@@ -10,6 +10,7 @@
 #include "wstring/wstring.h"
 #include "mem-index/mem-posting.h"
 #include "indexer/index.h" /* for eng_to_lower_case() */
+#include "timer/timer.h"
 
 #include "config.h"
 #include "postmerge.h"
@@ -37,6 +38,12 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
 	bool ret;
 	void *ti;
 	term_id_t term_id;
+	struct timer timer;
+
+#ifdef VERBOSE_SEARCH
+	/* start timer */
+	timer_reset(&timer);
+#endif
 
 	/* some short-hand variables */
 	ti = indices->ti;
@@ -79,12 +86,15 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
 	/* add posting list for merge */
 	postmerge_posts_add(pm, post, pm_calls, kw_type);
 
+#ifdef VERBOSE_SEARCH
+	printf("term-post adding time cost: %ld msec.\n",
+	       timer_tot_msec(&timer));
+#endif
 	return ret;
 }
 
 static LIST_IT_CALLBK(add_postinglist)
 {
-	/* castings */
 	LIST_OBJ(struct query_keyword, kw, ln);
 	P_CAST(aa, struct adding_post_arg, pa_extra);
 	char *kw_utf8 = wstr2mbstr(kw->wstr);
@@ -285,6 +295,12 @@ indices_run_query(struct indices *indices, const struct query qry)
 	ranked_results_t                rk_res;
 	struct posting_merge_extra_args pm_args;
 	uint32_t                        n_add;
+	struct timer                    timer;
+
+#ifdef VERBOSE_SEARCH
+	/* start timer */
+	timer_reset(&timer);
+#endif
 
 	/* sort query, to prioritize keywords in highlight stage */
 	list_foreach((list*)&qry.keywords, &set_df_value, indices);
@@ -298,10 +314,14 @@ indices_run_query(struct indices *indices, const struct query qry)
 
 	/* initialize postmerge */
 	postmerge_posts_clear(&pm);
+
 	n_add = add_postinglists(indices, &qry, &pm,
 	                         (float*)&bm25args.idf);
 #ifdef VERBOSE_SEARCH
-	printf("adding %u posting lists.\n", n_add);
+	printf("post-adding total time cost: %ld msec.\n",
+	       timer_last_msec(&timer));
+
+	printf("%u posting lists added.\n", n_add);
 	printf("\n");
 #else
 	n_add++; /* supress compile warning */
@@ -338,6 +358,9 @@ indices_run_query(struct indices *indices, const struct query qry)
 		fprintf(stderr, "posting list merge failed.\n");
 
 #ifdef VERBOSE_SEARCH
+	printf("top-level merge time cost: %ld msec.\n",
+	       timer_last_msec(&timer));
+
 	printf("start ranking...\n");
 #endif
 	/* free proximity pointer array */
@@ -348,6 +371,12 @@ indices_run_query(struct indices *indices, const struct query qry)
 
 	/* rank top K hits */
 	priority_Q_sort(&rk_res);
+
+#ifdef VERBOSE_SEARCH
+	/* report search time cost */
+	printf("search time cost: %ld msec.\n",
+	       timer_tot_msec(&timer));
+#endif
 
 	/* return top K hits */
 	return rk_res;
