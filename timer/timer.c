@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "timer.h"
 
 void delay(time_t sec, long ms, long us)
