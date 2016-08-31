@@ -76,7 +76,7 @@ const char *httpd_on_recv(const char* req, void* arg_)
 
 #ifdef SEARCHD_LOG_ENABLE
 	fprintf(log_fh, "requested page: %u\n", page);
-	fprintf(log_fh, "parsed query: ");
+	fprintf(log_fh, "parsed query: \n");
 	query_print_to(qry, log_fh);
 	fprintf(log_fh, "\n");
 	fflush(log_fh);

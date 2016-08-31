@@ -37,7 +37,7 @@ int main()
 
 	query_digest_utf8txt(&qry, lex_eng_file, "hello world");
 
-	printf("before sorting: ");
+	printf("before sorting: \n");
 	query_print_to(qry, stdout);
 	printf("\n");
 
