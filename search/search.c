@@ -38,9 +38,10 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
 	bool ret;
 	void *ti;
 	term_id_t term_id;
-	struct timer timer;
 
 #ifdef VERBOSE_SEARCH
+	struct timer timer;
+
 	/* start timer */
 	timer_reset(&timer);
 #endif
@@ -295,9 +296,10 @@ indices_run_query(struct indices *indices, const struct query qry)
 	ranked_results_t                rk_res;
 	struct posting_merge_extra_args pm_args;
 	uint32_t                        n_add;
-	struct timer                    timer;
 
 #ifdef VERBOSE_SEARCH
+	struct timer timer;
+
 	/* start timer */
 	timer_reset(&timer);
 #endif

@@ -116,10 +116,20 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(msca, math_score_combine_args_t, mesa->expr_srch_arg);
 
+	/* calculate expression similarity on merge */
+	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
+	                               mesa->n_qry_lr_paths);
 
+	/* math expression with zero score is filtered. */
+	if (res.score == 0)
+		return;
+
+	/* otherwise, we need to add this expression */
+
+	/* check if we are on a new directory */
 	if (msca->wr_mem_po == NULL ||
 	    mesa->n_dir_visits != msca->last_visits) {
-		/* we are on a new directory, create a new posting list? */
+		/* create a new posting list? */
 
 		/*
 		 * keep checking if total posting lists to be added is exceeding
@@ -151,10 +161,6 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 			msca->last_visits = mesa->n_dir_visits;
 		}
 	}
-
-	/* calculate expression similarity on merge */
-	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
-	                               mesa->n_qry_lr_paths);
 
 #ifdef DEBUG_PRINT_TARGET_DOC_MATH_SCORE
 	if (res.doc_id == 2550 || res.doc_id == 7055) {
