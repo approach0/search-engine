@@ -2,8 +2,9 @@ OTHER_OBJS := lex.mix.o lex.eng.o
 
 include ../rules.mk
 include ../module.mk
+include jieba-path.mk
 
-CFLAGS += -I ../cppjieba/fork/include/ -I ../cppjieba/fork/deps/
+CFLAGS += -I $(JIEBA)/include -I $(JIEBA)/deps
 
 all:
 

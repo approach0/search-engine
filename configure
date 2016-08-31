@@ -3,6 +3,10 @@ import getopt, sys, os
 
 default_indri_path = 'indri-5.9'
 indri_path_mk = './term-index/indri-path.mk'
+
+default_jieba_path = 'cppjieba'
+jieba_path_mk = './txt-seg/jieba-path.mk'
+
 proj_dep_mk = 'proj-dep.mk'
 proj_dep_py = 'proj-dep.py'
 targets_mk = 'targets.mk'
@@ -15,6 +19,7 @@ def help(arg0):
 	      'SYNOPSIS:\n' \
 	      '%s [-h | --help] ' \
 	      '[--indri-path=<Indri source path>] ' \
+	      '[--jieba-path=<CppJieba source path>] ' \
 	      '[--clean] ' \
 	      '\n' \
 	      % (arg0))
@@ -23,10 +28,17 @@ def help(arg0):
 def main():
 	cmd = sys.argv[0]
 	args = sys.argv[1:]
+
 	indri_path = "{}/{}".format(os.environ['HOME'], default_indri_path)
+	jieba_path = "{}/{}".format(os.environ['HOME'], default_jieba_path)
+
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "h",
-		                           ['help', 'indri-path=', 'clean'])
+		opts, args = getopt.getopt(sys.argv[1:], "h", [
+                    'help',
+                    'indri-path=',
+                    'jieba-path=',
+                    'clean']
+                )
 	except:
 		help(cmd)
 
@@ -34,35 +46,40 @@ def main():
 		if opt in ("-h", "--help"):
 			help(cmd)
 		if opt in ("--indri-path"):
-			indri_path = arg
-			indri_path = indri_path.replace('~', os.environ['HOME'])
-			break
+			indri_path = os.path.abspath(arg)
+		if opt in ("--jieba-path"):
+			jieba_path = os.path.abspath(arg)
 		if opt in ("--clean"):
 			os.system('rm -f ' + targets_mk)
 			os.system('rm -f ' + proj_dep_mk)
 			os.system('rm -f ' + indri_path_mk)
+			os.system('rm -f ' + jieba_path_mk)
 			os.system('rm -f ' + srclist_txt)
 			print('done clean.')
 			sys.exit(0)
 
+        # checking dependency path
 	if not os.path.exists(indri_path):
-		print("Error: Default/specified Indri source code path"
-		      " @ '%s' does not exists." % (indri_path))
-		print("This project currently relies on Lemur/Indri library"
-		      " as dependency to provide full-text index functionality."
-		      " Please download and build Lemur/Indri library from:\n\n"
-		      "https://sourceforge.net/projects/lemur/files/lemur/"
-		      "indri-5.9/indri-5.9.tar.gz/download\n")
-		print("type `%s --help' for how to specify Indri source code path." %
-		      (cmd))
+		print("Error: directory '%s' does not exists." % (indri_path))
 		exit(1)
 
+	if not os.path.exists(jieba_path):
+		print("Error: directory '%s' does not exists." % (jieba_path))
+		exit(1)
+
+        # write dependency path .mk file
 	print('Use Indri path: {}'.format(indri_path), end="\n\n")
+	print('Use Jieba path: {}'.format(jieba_path), end="\n\n")
 
 	f = open(indri_path_mk, 'w')
-	f.write("INDRI=%s" % (indri_path))
+	f.write("INDRI=%s\n" % (indri_path))
 	f.close()
 
+	f = open(jieba_path_mk, 'w')
+	f.write("JIEBA=%s\n" % (jieba_path))
+	f.close()
+
+        # prepare building
 	print('Build targets:')
 	os.system(py + ' %s --targets | tee %s' % (proj_dep_py, targets_mk))
 	print('')

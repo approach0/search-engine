@@ -19,7 +19,6 @@ int text_segment_init(const char *dict_path)
 	if (jieba == NULL)
 		return 1;
 
-	jieba->SetQuerySegmentThreshold(2);
 	return 0;
 }
 
