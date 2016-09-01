@@ -46,8 +46,10 @@ LINK = $(LD) $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" \
 # archive
 AR := ar
 COLOR_AR = @ tput setaf 5 && echo '[archive] $@' && tput sgr0
-
-GEN_LIB = rm -f $@ && $(AR) -rcT $@ $(AROBJS) $(ARLIBS)
+EXTRACT_DEP_LIBS = $(foreach arlib, $(ARLIBS), ar -x ${arlib};)
+MV_DEP_OBJS := find . -maxdepth 1 -name '*.o' -type f -print0 \
+	-exec mv {} $(BUILD_DIR) \; > /dev/null
+GEN_LIB = rm -f $@ && $(AR) rcs $@ $(BUILD_DIR)/*.o
 COLOR_SHOW_LIB := @ tput setaf 5 && \
 	echo 'objects in this archive:' && tput sgr0
 SHOW_LIB = @ $(AR) -t $@ | tr '\n' ' ' && echo ''

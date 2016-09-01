@@ -1,2 +1,2 @@
 CFLAGS +=
-LDFLAGS += -L "../linenoise/fork"
+LDFLAGS += -L "../linenoise/$(BUILD_DIR)"
