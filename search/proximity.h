@@ -30,3 +30,5 @@ prox_reset_inputs(prox_input_t *in, uint32_t n)
 }
 
 #define MAX_N_POSITIONS UINT_MAX
+
+void prox_print(prox_input_t*, uint32_t);

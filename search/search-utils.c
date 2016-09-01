@@ -105,6 +105,7 @@ mergesort(position_t *dest, prox_input_t* in, uint32_t n)
 
 	return dest_end;
 }
+
 struct rank_hit *new_hit(doc_id_t hitID, float score,
                          prox_input_t *prox_in, uint32_t n)
 {

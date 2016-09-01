@@ -35,18 +35,16 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 			//printf("merge docID#%lu from posting[%d]\n", cur_min, i);
 			pip = pm->cur_pos_item[i];
 
-//			{ /* print position array */
-//				int j;
-//				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
-//				for (j = 0; j < pip->tf; j++) {
-//					printf("%u-", pos_arr[j]);
-//				}
-//				printf("\n");
-//			}
-
 			{
+//				int k;
 				/* set proximity input */
 				position_t *pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
+
+//				for (k = 0; k < pip->tf; k++) {
+//					printf("%u-", pos_arr[k]);
+//				}
+//				printf("\n");
+
 				prox_set_input(pm_args->prox_in + j, pos_arr, pip->tf);
 				j++;
 			}
@@ -59,6 +57,9 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	/* calculate overall score considering proximity. */
 	prox_score = prox_calc_score(prox_min_dist(pm_args->prox_in, j));
 	tot_score = bm25_score + prox_score;
+
+	/* reset prox_in for consider_top_K() function */
+	prox_reset_inputs(pm_args->prox_in, j);
 #else
 	tot_score = bm25_score;
 #endif
@@ -72,26 +73,41 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	return;
 }
 
-void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
+struct search_res_arg {
+	struct indices *indices;
+	text_lexer      lex;
+};
+
+void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 {
 	char  *str;
 	size_t str_sz;
 	list   highlight_list;
-	P_CAST(indices, struct indices, arg);
+	P_CAST(arg, struct search_res_arg, arg_);
 
 	printf("result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
 
 	/* get URL */
-	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
+	str = get_blob_string(arg->indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n\n", str);
 	free(str);
 
+	/* print occurs */
+	{
+		int i;
+		printf("occurs: ");
+		for (i = 0; i < hit->n_occurs; i++)
+			printf("%u ", hit->occurs[i]);
+		printf("\n");
+	}
+	printf("\n");
+
 	/* get document text */
-	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
-	free(str);
+	str = get_blob_string(arg->indices->txt_bi, hit->docID, 1, &str_sz);
 
 	/* prepare highlighter arguments */
-	highlight_list = prepare_snippet(hit, str, str_sz, lex_eng_file);
+	highlight_list = prepare_snippet(hit, str, str_sz, arg->lex);
+	free(str);
 
 	/* print snippet */
 	snippet_hi_print(&highlight_list);
@@ -102,17 +118,19 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg)
 }
 
 uint32_t
-print_all_rank_res(ranked_results_t *rk_res, struct indices *indices)
+print_all_rank_res(ranked_results_t *rk_res,
+                   struct indices *indices, text_lexer lex)
 {
 	struct rank_window win;
 	uint32_t tot_pages, page = 0;
+	struct search_res_arg arg = {indices, lex};
 
 	do {
 		win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
 		if (win.to > 0) {
 			printf("page#%u (from %u to %u):\n",
 			       page + 1, win.from, win.to);
-			rank_window_foreach(&win, &print_res_item, indices);
+			rank_window_foreach(&win, &print_res_item, &arg);
 			page ++;
 		}
 	} while (page < tot_pages);
@@ -364,7 +382,7 @@ int main(int argc, char *argv[])
 	/*
 	 * print ranked search results by page number.
 	 */
-	res_pages = print_all_rank_res(&results, &indices);
+	res_pages = print_all_rank_res(&results, &indices, lex);
 	printf("result(s): %u pages.\n", res_pages);
 
 	/*

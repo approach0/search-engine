@@ -3,7 +3,7 @@
 #include "proximity.h"
 #include "config.h"
 
-static void debug_print(prox_input_t *in, uint32_t n)
+void prox_print(prox_input_t *in, uint32_t n)
 {
 	uint32_t i, j;
 	for (i = 0; i < n; i++) {
@@ -36,7 +36,7 @@ position_t prox_min_dist(prox_input_t* in, uint32_t n)
 				}
 
 #ifdef DEBUG_PROXIMITY
-		debug_print(in, n);
+		prox_print(in, n);
 		printf("last: %u from [%u].\n", last, last_idx);
 		printf("min: %u from [%u].\n", min, min_idx);
 #endif
