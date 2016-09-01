@@ -186,9 +186,7 @@ int main(int argc, char* argv[])
 	term_index_close(ti);
 
 exit:
-	if (index_path)
-		free(index_path);
-
+	free(index_path);
 	mhook_print_unfree();
 	return 0;
 }

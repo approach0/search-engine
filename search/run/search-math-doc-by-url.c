@@ -200,8 +200,7 @@ int main(int argc, char *argv[])
 	where_is_expr(tex, url);
 
 exit:
-	if (index_path)
-		free(index_path);
+	free(index_path);
 
 	printf("closing indices...\n");
 	indices_close(&indices);

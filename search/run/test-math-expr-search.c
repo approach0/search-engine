@@ -101,8 +101,7 @@ int main(int argc, char *argv[])
 	                 &math_posting_on_merge, NULL);
 
 exit:
-	if (index_path)
-		free(index_path);
+	free(index_path);
 
 	if (mi) {
 		printf("closing math index...\n");

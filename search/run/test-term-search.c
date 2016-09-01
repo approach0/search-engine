@@ -255,6 +255,9 @@ int main(int argc, char *argv[])
 	int                     opt;
 	enum postmerge_op       op = POSTMERGE_OP_AND;
 
+	text_lexer              lex = lex_eng_file;
+	char                   *dict_path = NULL;
+
 	static char query[MAX_MERGE_POSTINGS][MAX_TERM_BYTES];
 	uint32_t   i, n_queries = 0;
 
@@ -263,25 +266,25 @@ int main(int argc, char *argv[])
 	uint32_t           res_pages;
 	ranked_results_t   results;
 
-	/* open text segmentation dictionary */
-	printf("opening dictionary...\n");
-	text_segment_init("");
-
-	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:t:o:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
 			printf("test for merge postings.\n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -p <index path> | -t <term> | -o <op>\n", argv[0]);
+			printf("%s -h | -i <index path> |"
+			       " -t <term> |"
+			       " -o <op> |"
+			       " -d <dict> \n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -p ./tmp -t 'nick ' -t 'wilde' -o OR\n", argv[0]);
-			printf("%s -p ./tmp -t 'give ' -t 'up' -t 'dream' -o AND\n", argv[0]);
+			printf("%s -p ./tmp -t 'give ' -t 'up' -t 'dream' -o AND\n",
+			       argv[0]);
 			goto exit;
 
-		case 'p':
+		case 'i':
 			index_path = strdup(optarg);
 			break;
 
@@ -300,6 +303,11 @@ int main(int argc, char *argv[])
 
 			break;
 		}
+
+		case 'd':
+			dict_path = strdup(optarg);
+			lex = lex_mix_file;
+			break;
 
 		default:
 			printf("bad argument(s). \n");
@@ -329,13 +337,22 @@ int main(int argc, char *argv[])
 	}
 	printf("\n");
 
+	/* open text segmentation dictionary */
+	if (lex == lex_mix_file) {
+		printf("opening dictionary...\n");
+		if (text_segment_init(dict_path)) {
+			fprintf(stderr, "cannot open dict.\n");
+			goto exit;
+		}
+	}
+
 	/*
 	 * open indices.
 	 */
 	printf("opening index...\n");
 	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
 		printf("indices open failed.\n");
-		goto exit;
+		goto close;
 	}
 
 	/*
@@ -355,17 +372,26 @@ int main(int argc, char *argv[])
 	 */
 	free_ranked_results(&results);
 
+close:
 	/*
 	 * close indices.
 	 */
 	printf("closing index...\n");
 	indices_close(&indices);
 
+	if (lex == lex_mix_file) {
+		printf("closing dict...\n");
+		text_segment_free();
+	}
+
 exit:
 	text_segment_free();
 
-	if (index_path)
-		free(index_path);
+	/*
+	 * free program arguments
+	 */
+	free(index_path);
+	free(dict_path);
 
 	mhook_print_unfree();
 	return 0;

@@ -6,6 +6,10 @@
 #define MAX_DIR_PATH_NAME_LEN 4096
 #define MAX_FILE_NAME_LEN     1024
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool dir_exists(const char*);
 
 int file_exists(const char*);
@@ -28,3 +32,7 @@ int foreach_files_in(const char*, ffi_callbk, void*);
 char *filename_ext(const char*);
 
 void mkdir_p(const char*);
+
+#ifdef __cplusplus
+}
+#endif

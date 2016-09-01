@@ -131,11 +131,12 @@ int main(int argc, char *argv[])
 	struct indices        indices;
 	unsigned short        cache_sz = SEARCHD_DEFAULT_CACHE_MB;
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
-	text_lexer            lex = lex_mix_file;
+	text_lexer            lex = lex_eng_file;
+	char                 *dict_path = NULL;
 	struct searcher_args  searcher_args;
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hi:t:p:c:e")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:t:p:c:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -146,7 +147,7 @@ int main(int argc, char *argv[])
 			       " -i <index path> |"
 			       " -p <port> | "
 			       " -c <cache size (MB)> | "
-			       " -e (English only) | "
+			       " -d <dict> "
 			       "\n", argv[0]);
 			printf("\n");
 			goto exit;
@@ -163,8 +164,9 @@ int main(int argc, char *argv[])
 			sscanf(optarg, "%hu", &cache_sz);
 			break;
 
-		case 'e':
-			lex = lex_eng_file;
+		case 'd':
+			dict_path = strdup(optarg);
+			lex = lex_mix_file;
 			break;
 
 		default:
@@ -173,14 +175,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/*
-	 * open indices
-	 */
+	/* check program arguments */
 	if (index_path == NULL) {
 		fprintf(stderr, "indices path not specified.\n");
 		goto exit;
 	}
 
+	/* open text-segment dictionary if needed */
+	if (lex == lex_mix_file) {
+		printf("opening dictionary...\n");
+		if (text_segment_init(dict_path)) {
+			fprintf(stderr, "cannot open dict.\n");
+			goto exit;
+		}
+	}
+
+	/* open indices */
 	printf("opening index at: `%s' ...\n", index_path);
 	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
 		printf("index open failed.\n");
@@ -191,12 +201,6 @@ int main(int argc, char *argv[])
 	printf("setup cache size: %hu MB\n", cache_sz);
 	indices_cache(&indices, cache_sz MB);
 
-	/* open text-segment dictionary if needed */
-	if (lex == lex_mix_file) {
-		printf("opening dictionary...\n");
-		text_segment_init("../jieba/fork/dict");
-	}
-
 	/* run httpd */
 	printf("listen on port %hu\n", port);
 
@@ -204,19 +208,23 @@ int main(int argc, char *argv[])
 	searcher_args.lex     = lex;
 	httpd_run(port, &httpd_on_recv, &searcher_args);
 
+close:
+	/* close indices */
+	printf("closing index...\n");
+	indices_close(&indices);
+
 	/* close text-segment dictionary if opened */
 	if (lex == lex_mix_file) {
 		printf("closing dictionary...\n");
 		text_segment_free();
 	}
 
-close:
-	/* close indices */
-	printf("closing index...\n");
-	indices_close(&indices);
-
 exit:
+	/*
+	 * free program arguments
+	 */
 	free(index_path);
+	free(dict_path);
 
 	mhook_print_unfree();
 	return 0;

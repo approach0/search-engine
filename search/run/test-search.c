@@ -76,14 +76,15 @@ int main(int argc, char *argv[])
 	uint32_t             page = 1;
 	char                *index_path = NULL;
 	ranked_results_t     results;
-	text_lexer           lex = lex_mix_file;
+	text_lexer           lex = lex_eng_file;
+	char                *dict_path = NULL;
 	struct searcher_args args;
 	int                  pause = 1;
 
 	/* a single new query */
 	qry = query_new();
 
-	while ((opt = getopt(argc, argv, "hi:p:t:m:x:en")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:p:t:m:x:d:n")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -95,8 +96,8 @@ int main(int argc, char *argv[])
 			       " -p <page> |"
 			       " -t <term> |"
 			       " -m <tex> |"
-			       " -x <English text> |"
-			       " -e (English only) |"
+			       " -x <text> |"
+			       " -d <dict> |"
 			       " -n (no pause)"
 			       "\n", argv[0]);
 			printf("\n");
@@ -127,8 +128,9 @@ int main(int argc, char *argv[])
 			query_digest_utf8txt(&qry, lex_eng_file, optarg);
 			break;
 
-		case 'e':
-			lex = lex_eng_file;
+		case 'd':
+			dict_path = strdup(optarg);
+			lex = lex_mix_file;
 			break;
 
 		case 'n':
@@ -152,7 +154,10 @@ int main(int argc, char *argv[])
 	/* open text segmentation dictionary */
 	if (lex == lex_mix_file) {
 		printf("opening dictionary...\n");
-		text_segment_init("../jieba/fork/dict");
+		if (text_segment_init(dict_path)) {
+			fprintf(stderr, "cannot open dict.\n");
+			goto exit;
+		}
 	}
 
 	/*
@@ -205,8 +210,8 @@ exit:
 	/*
 	 * free program arguments
 	 */
-	if (index_path)
-		free(index_path);
+	free(index_path);
+	free(dict_path);
 
 	/*
 	 * free query

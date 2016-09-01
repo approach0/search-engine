@@ -77,13 +77,14 @@ dir_search_callbk(const char* path, const char *srchpath,
 int main(int argc, char* argv[])
 {
 	int opt, overwrite = 0;
-	text_lexer lex = lex_mix_file;
+	text_lexer lex = lex_eng_file;
 	char *corpus_path = NULL;
+	char *dict_path = NULL;
 	const char index_path[] = DEFAULT_INDEXER_OUTPUT_DIR;
 	struct indices indices;
 	doc_id_t max_doc_id;
 
-	while ((opt = getopt(argc, argv, "hop:e")) != -1) {
+	while ((opt = getopt(argc, argv, "hop:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h | "
-			       "-e (English only) | "
+			       "-d <dict path> | "
 			       "-p <corpus path> | "
 			       "-o (overwrite)"
 			       "\n", argv[0]);
@@ -105,8 +106,9 @@ int main(int argc, char* argv[])
 			corpus_path = strdup(optarg);
 			break;
 
-		case 'e':
-			lex = lex_eng_file;
+		case 'd':
+			dict_path = strdup(optarg);
+			lex = lex_mix_file;
 			break;
 
 		case 'o':
@@ -132,7 +134,10 @@ int main(int argc, char* argv[])
 	/* open text segmentation dictionary */
 	if (lex == lex_mix_file) {
 		printf("opening dictionary...\n");
-		text_segment_init("../jieba/fork/dict");
+		if (text_segment_init(dict_path)) {
+			fprintf(stderr, "cannot open dict.\n");
+			goto exit;
+		}
 	}
 
 	/* remove output directory if we are overwriting index */
@@ -190,6 +195,7 @@ close:
 	indices_close(&indices);
 
 	if (lex == lex_mix_file) {
+		printf("closing dict...\n");
 		text_segment_free();
 	}
 
@@ -201,6 +207,9 @@ exit:
 	 */
 	if (corpus_path)
 		free(corpus_path);
+
+	if (dict_path)
+		free(dict_path);
 
 	mhook_print_unfree();
 	return 0;

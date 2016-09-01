@@ -134,11 +134,11 @@ regular-clean:
 	$(FIND) -type d \( -name '$(BUILD_DIR)' \) -print | xargs rm -rf
 
 grep-%:
-	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep --color -nH $* {} \;
-	$(FIND) -type f \( -name '*.cpp' \)    -exec grep --color -nH $* {} \;
-	$(FIND) -type f \( -name '*.[ly]' \)   -exec grep --color -nH $* {} \;
-	$(FIND) -type f \( -name 'Makefile' \) -exec grep --color -nH $* {} \;
-	$(FIND) -type f \( -name '*.mk' \)     -exec grep --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.[ch]' \)   -exec grep -C 2 --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.cpp' \)    -exec grep -C 2 --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.[ly]' \)   -exec grep -C 2 --color -nH $* {} \;
+	$(FIND) -type f \( -name 'Makefile' \) -exec grep -C 2 --color -nH $* {} \;
+	$(FIND) -type f \( -name '*.mk' \)     -exec grep -C 2 --color -nH $* {} \;
 
 show-swp:
 	$(FIND) -type f \( -name '*.swp' \) -print

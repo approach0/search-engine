@@ -1,3 +1,4 @@
+#include "dir-util/dir-util.h"
 #include "cppjieba/Jieba.hpp"
 
 #include "config.h"
@@ -5,17 +6,32 @@
 
 using namespace std;
 
-static const char DICT_PATH[] = "../cppjieba/fork/dict/jieba.dict.utf8";
-static const char HMM_PATH[] =  "../cppjieba/fork/dict/hmm_model.utf8";
-static const char USER_DICT_PATH[] = "../cppjieba/fork/dict/user.dict.utf8";
+#define DICT_NAME     "jieba.dict.utf8"
+#define HMM_NAME      "hmm_model.utf8"
+#define USR_DICT_NAME "user.dict.utf8"
 
 cppjieba::Jieba *jieba = NULL;
 
-int text_segment_init(const char *dict_path)
+int text_segment_init(const char *path)
 {
-	dict_path = NULL; /* using hard-coded paths for now */
+	char dict_path[MAX_DIR_PATH_NAME_LEN];
+	char hmm_path[MAX_DIR_PATH_NAME_LEN];
+	char usr_dict_path[MAX_DIR_PATH_NAME_LEN];
 
-	jieba = new cppjieba::Jieba(DICT_PATH, HMM_PATH, USER_DICT_PATH);
+	sprintf(dict_path, "%s/%s", path, DICT_NAME);
+	sprintf(hmm_path, "%s/%s", path, HMM_NAME);
+	sprintf(usr_dict_path, "%s/%s", path, USR_DICT_NAME);
+
+	if (!file_exists(dict_path) ||
+	    !file_exists(hmm_path) ||
+	    !file_exists(usr_dict_path)) {
+//		fprintf(stderr, "cannot open dict at (%s, %s, %s)\n",
+//		        dict_path, hmm_path, usr_dict_path);
+		return 1;
+	}
+
+	jieba = new cppjieba::Jieba(dict_path, hmm_path,
+	                            usr_dict_path);
 	if (jieba == NULL)
 		return 1;
 

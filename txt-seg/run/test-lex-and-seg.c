@@ -69,7 +69,10 @@ int main(void)
 	}
 
 	printf("open dictionary ...\n");
-	text_segment_init("");
+	if (text_segment_init("../../cppjieba/dict")) {
+		printf("cannot open dict.\n");
+		goto exit;
+	}
 
 	if (0 != file_offset_check_init(test_file_name))
 		goto free;
@@ -85,6 +88,7 @@ free:
 	printf("closing dict...\n");
 	text_segment_free();
 
+exit:
 	printf("closing file...\n");
 	fclose(fh);
 

@@ -43,7 +43,7 @@ int main(void)
 {
 	unsigned int i;
 	list li = LIST_NULL;
-	if (text_segment_init("")) {
+	if (text_segment_init("../../cppjieba/dict")) {
 		printf("open dict failed.\n");
 		return 1;
 	}
