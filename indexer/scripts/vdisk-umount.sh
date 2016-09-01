@@ -2,7 +2,7 @@
 if [ "$1" == "-h" ]; then
 cat << USAGE
 Description:
-unmount directory specified by mount.log.
+Unmount disk loop-back image.
 $0
 USAGE
 exit
@@ -10,7 +10,5 @@ fi
 
 touch /root/test || exit
 
-mnt=$(cat mount.log)
-umount $mnt
-
-rmdir $mnt
+umount ./tmp
+rmdir ./tmp

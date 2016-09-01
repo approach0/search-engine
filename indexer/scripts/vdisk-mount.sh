@@ -2,28 +2,22 @@
 if [ "$1" == "-h" ]; then
 cat << USAGE
 Description:
-mount disk file partitioned in reiserfs.
-$0 <usr> <mnt dir>
+Mount to disk loop-back image file.
+$0 <filesys>
 
 Examples:
-sudo $0 `whoami` ./tmp
+$0 reiserfs
+$0 btrfs
 USAGE
 exit
 fi
 
-[ $# -ne 2 ] && echo 'bad arg.' && exit
+[ $# -ne 1 ] && echo 'bad arg.' && exit
 touch /root/test || exit
 
-me="$1"
-mnt="$2"
-
-echo "mount $mnt for usr $me..."
-
-# make directory and log mounting dirname
-sudo -u $me sh << EOF
-mkdir -p "$mnt"
-echo "$mnt" > mount.log
-EOF
+filesys="$1"
 
 # mount
-mount -t reiserfs ./vdisk.img "$mnt"
+mkdir -p ./tmp
+chmod 777 ./tmp
+mount -t ${filesys} ./vdisk.img ./tmp
