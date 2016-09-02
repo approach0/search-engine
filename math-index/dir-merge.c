@@ -217,8 +217,8 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 
 	/* now we can start merge path directories */
 	if (type == DIR_MERGE_DEPTH_FIRST) {
-		dir_search_podfs(dm_args.base_paths[dm_args.longpath],
-		                 &dir_search_callbk, &dm_args);
+		dir_search_bfs(dm_args.base_paths[dm_args.longpath],
+		               &dir_search_callbk, &dm_args);
 	} else {
 		; /* not implemented yet */
 	}
