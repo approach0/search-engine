@@ -113,12 +113,13 @@ reply:
 
 #ifdef SEARCHD_LOG_ENABLE
 	fprintf(log_fh, "query handled, "
-	        "unfree allocs: %ld.\n\n", mhook_unfree());
+	        "unfree allocs: %ld.\n", mhook_unfree());
 	fflush(log_fh);
-
 
 	fprintf(log_fh, "query handle time cost: %ld msec.\n",
 	        timer_tot_msec(&timer));
+
+	fprintf(log_fh, "\n");
 	fclose(log_fh);
 #endif
 	return ret;
