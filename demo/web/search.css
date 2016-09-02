@@ -3,8 +3,10 @@ em.hl {
 }
 
 span.imath-err {
-	color: #CC0000;
-	border: 1px solid #CC0000;
+	/* set important to overwrite
+	 * MathJax .noError colors. */
+	color: #CC0000 !important;
+	border: 1px solid #CC0000 !important;
 }
 
 a.page-navi, a.page-navi:visited{

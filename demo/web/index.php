@@ -20,7 +20,6 @@ if ($detect->isMobile()) {
 <meta name="description" content="Approach Zero: A math-aware search engine. Search Mathematics Stack Exchange.">
 <link rel="shortcut icon" href="images/favicon.ico">
 <link rel="stylesheet" href="vendor/mathquill/mathquill.css" type="text/css"/>
-<link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
 <link rel="stylesheet" href="search.css" type="text/css"/>
 <link rel="stylesheet" href="qry-box.css" type="text/css"/>
 <link rel="stylesheet" href="font.css" type="text/css"/>
@@ -29,9 +28,19 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
 <script type="text/javascript" src="vendor/vue/vue.min.js"></script>
 <script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
-<script type="text/javascript" src="vendor/katex/katex.min.js"></script>
-<script type="text/javascript" src="vendor/typed/typed.js"></script>
+
+<!-- Math render vendor scripts -->
 <script type="text/javascript" src="tex-render.js"></script>
+<!--
+<script type="text/javascript" src="vendor/katex/katex.min.js"></script>
+<link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
+-->
+<script type="text/javascript" src="vendor/mathjax/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+<script type="text/x-mathjax-config">
+mathjax_init();
+</script>
+
+<script type="text/javascript" src="vendor/typed/typed.js"></script>
 <script type="text/javascript" src="search.js"></script>
 <script type="text/javascript" src="quiz-list.js"></script>
 <script type="text/javascript" src="quiz.js"></script>
