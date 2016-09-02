@@ -86,8 +86,13 @@ int main(int argc, char* argv[])
 	printf("\n");
 
 	if (dir_exists(path)) {
-		printf("[searching...]\n");
+		printf("[DFS ...]\n");
 		dir_search_podfs(path, &dir_search_callbk, test_str);
+		printf("\n");
+
+		printf("[BFS ...]\n");
+		dir_search_bfs(path, &dir_search_callbk, test_str);
+		printf("\n");
 	}
 
 	free(path);
