@@ -42,7 +42,7 @@ $(document).ready(function () {
 	});
 
 	Vue.nextTick(function () {
-		tex_render("#quiz-question");
+		tex_render_fast("#quiz-question");
 	});
 
 	window.quiz_hide = function () {

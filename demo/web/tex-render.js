@@ -111,6 +111,9 @@ function mathjax_init() {
 }
 
 function tex_render(scope_select) {
-	//katex_tex_render(scope_select);
 	mathjax_tex_render(scope_select);
+}
+
+function tex_render_fast(scope_select) {
+	katex_tex_render(scope_select);
 }

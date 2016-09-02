@@ -30,16 +30,15 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
 
 <!-- Math render vendor scripts -->
-<script type="text/javascript" src="tex-render.js"></script>
-<!--
 <script type="text/javascript" src="vendor/katex/katex.min.js"></script>
 <link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
--->
+
 <script type="text/javascript" src="vendor/mathjax/MathJax.js?config=TeX-AMS-MML_SVG"></script>
 <script type="text/x-mathjax-config">
 mathjax_init();
 </script>
 
+<script type="text/javascript" src="tex-render.js"></script>
 <script type="text/javascript" src="vendor/typed/typed.js"></script>
 <script type="text/javascript" src="search.js"></script>
 <script type="text/javascript" src="quiz-list.js"></script>
