@@ -98,18 +98,29 @@ enum postcache_err
 postcache_add_term_posting(struct postcache_pool *pool,
                            term_id_t term_id, void *term_posting)
 {
-	struct mem_posting *mem_po = postcache_fork_term_posting(term_posting);
-	struct postcache_item *new = malloc(sizeof(struct postcache_item));
+	struct mem_posting *mem_po;
+	struct postcache_item *new;
 	struct treap_node *inserted;
 
 	uint64_t trp_mem_usage, pos_mem_usage;
 
+	/* fork on-disk term posting list */
+	mem_po = postcache_fork_term_posting(term_posting);
+
+	/* get the size of memory consume */
 	trp_mem_usage = sizeof(struct postcache_item);
 	pos_mem_usage = mem_po->tot_sz;
 
 	if (pool->trp_mem_usage + trp_mem_usage +
-	    pool->pos_mem_usage + pos_mem_usage > pool->tot_mem_limit)
+	    pool->pos_mem_usage + pos_mem_usage >
+	    pool->tot_mem_limit) {
+
+		mem_posting_free(mem_po);
 		return POSTCACHE_EXCEED_MEM_LIMIT;
+	}
+
+	/* insert this forked posting into cache pool */
+	new = malloc(sizeof(struct postcache_item));
 
 	new->posting = mem_po;
 	new->type    = POSTCACHE_TERM_POSTING;
@@ -119,11 +130,13 @@ postcache_add_term_posting(struct postcache_pool *pool,
 
 	if (inserted == NULL) {
 		fprintf(stderr, "treap node with same term ID exists.\n");
+
 		mem_posting_free(mem_po);
 		free(new);
 		return POSTCACHE_SAME_KEY_EXISTS;
 	}
 
+	/* update memory usage */
 	pool->trp_mem_usage += trp_mem_usage;
 	pool->pos_mem_usage += pos_mem_usage;
 	return POSTCACHE_NO_ERR;
