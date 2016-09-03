@@ -216,7 +216,7 @@ Q_push(list *Q, char *path, char *srchpath, uint32_t level)
 
 LIST_DEF_FREE_FUN(Q_release, struct Q_ele, ln, free(p));
 
-struct Q_ele *Q_pop(list *Q)
+static struct Q_ele *Q_pop(list *Q)
 {
 	struct list_node *top_node = Q->now;
 

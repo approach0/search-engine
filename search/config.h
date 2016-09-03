@@ -37,7 +37,7 @@
 //#define DEBUG_HILIGHT_SEG
 
 //#define DEBUG_MATH_SCORE_POSTING
-//#define VERBOSE_SEARCH
+#define VERBOSE_SEARCH
 
 //#define DEBUG_MATH_SEARCH
 
