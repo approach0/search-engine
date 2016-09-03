@@ -17,7 +17,17 @@ touch /root/test || exit
 
 filesys="$1"
 
+if [ "$filesys" == "reiserfs" ]
+then
+	mount_opts=""
+elif [ "$filesys" == "btrfs" ]
+then
+	mount_opts="compress=lzo,ssd"
+fi
+
 # mount
 mkdir -p ./tmp
+set -x
+mount -t ${filesys} -o ${mount_opts} ./vdisk.img ./tmp
+set +x
 chmod 777 ./tmp
-mount -t ${filesys} ./vdisk.img ./tmp
