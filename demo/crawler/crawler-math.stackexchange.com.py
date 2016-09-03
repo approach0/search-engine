@@ -168,7 +168,7 @@ def process_post(post_id, post_txt, url):
 	save_preview(file_path + '.html',
 				 post_txt, url)
 
-def crawl_pages(start, end):
+def crawl_pages(start, end, extra_opt):
 	c = get_curl()
 	for page in range(start, end + 1):
 		print("[page] %d / %d" % (page, end))
@@ -183,8 +183,11 @@ def crawl_pages(start, end):
 			ID = int(res.group(1))
 			file_path = get_file_path(ID);
 			if os.path.isfile(file_path + ".json"):
-				print('[already exists] ' + file_path)
-				continue
+				if not extra_opt["overwrite"]:
+					print('[exists, skip] ' + file_path)
+					continue
+				else:
+					print('[exists, overwrite] ' + file_path)
 			try:
 				url = root_url + sub_url
 				post_txt = crawl_post_page(sub_url, get_curl())
@@ -203,31 +206,41 @@ def help(arg0):
 	      'SYNOPSIS:\n' \
 	      '%s [-b | --begin-page <page>] ' \
 	      '[-e | --end-page <page>] ' \
+	      '[--no-overwrite] ' \
+	      '[--hook-script <script name>] ' \
 	      '[-p | --post <post id>] ' \
 	      '\n' % (arg0))
 	sys.exit(1)
 
-def main(arg):
-	argv = arg[1:]
+def main(args):
+	argv = args[1:]
 	try:
-		opts, args = getopt.getopt(
-			argv, "b:e:p:",
-			['begin-page=', 'end-page=', 'post=']
+		opts, _ = getopt.getopt(
+			argv, "b:e:p:h", [
+				'begin-page=',
+				'end-page=',
+				'post=',
+				'no-overwrite',
+				'hook-script='
+			]
 		)
 	except:
-		help(arg[0])
+		help(args[0])
 
-	begin_page = 1;
-	end_page = -1;
+	# default arguments
+	extra_opt = {"overwrite": True, "hookscript": ""}
+	begin_page = 1
+	end_page = -1
+
 	for opt, arg in opts:
 		if opt in ("-b", "--begin-page"):
-			begin_page = int(arg);
+			begin_page = int(arg)
 			continue
-		if opt in ("-e", "--end-page"):
-			end_page = int(arg);
+		elif opt in ("-e", "--end-page"):
+			end_page = int(arg)
 			continue
-		if opt in ("-p", "--post"):
-			file_path = get_file_path(int(arg));
+		elif opt in ("-p", "--post"):
+			file_path = get_file_path(int(arg))
 			if os.path.isfile(file_path + ".json"):
 				print('[already exists] ' + file_path)
 				return
@@ -235,12 +248,22 @@ def main(arg):
 			full_url = root_url + sub_url
 			post_txt = crawl_post_page(sub_url, get_curl())
 			process_post(int(arg), post_txt, full_url)
-			return
+		elif opt in ("--no-overwrite"):
+			extra_opt["overwrite"] = False
+		elif opt in ("--hook-script"):
+			extra_opt["hookscript"] = arg
+		else:
+			help(args[0])
 
 	if (end_page >= begin_page):
-		crawl_pages(begin_page, end_page)
+		while True:
+			crawl_pages(begin_page, end_page, extra_opt)
+			if extra_opt["hookscript"]:
+				os.system(extra_opt["hookscript"])
+			else:
+				break
 	else:
-		help(arg[0])
+		help(args[0])
 
 if __name__ == "__main__":
 	main(sys.argv)
