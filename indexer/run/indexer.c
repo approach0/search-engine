@@ -1,16 +1,30 @@
 #include <string.h>
 #include <getopt.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include "mhook/mhook.h"
 #include "config.h"
 #include "index.h"
+
+static volatile int force_stop = 0;
 
 struct indexer_args {
 	uint64_t    indexed_files, tot_files;
 	char       *path;
 	text_lexer  lex;
 };
+
+static void signal_handler(int sig) {
+	switch (sig) {
+		case SIGTERM:
+		case SIGHUP:
+		case SIGQUIT:
+		case SIGINT:
+			force_stop = 1;
+			break;
+	}
+}
 
 void print_process(uint64_t indexed_files, uint64_t tot_files)
 {
@@ -29,6 +43,8 @@ static int foreach_file_callbk(const char *filename, void *arg)
 	P_CAST(i_args, struct indexer_args, arg);
 	char fullpath[MAX_FILE_NAME_LEN];
 	FILE *fh;
+
+	if (force_stop) return 1;
 
 	if (json_ext(filename)) {
 		sprintf(fullpath, "%s/%s", i_args->path, filename);
@@ -65,6 +81,16 @@ dir_search_callbk(const char* path, const char *srchpath,
 	printf("[directory] %s\n", path);
 
 	foreach_files_in(path, &foreach_file_callbk, i_args);
+
+	if (mhook_unfree() > UNFREE_CNT_INDEXER_MAINTAIN)
+		index_maintain();
+
+	if (force_stop) {
+		printf("\n");
+		printf("indexing aborted.\n");
+
+		return DS_RET_STOP_ALLDIR;
+	}
 
 	if (i_args->indexed_files != last)
 		printf("\n");
@@ -152,6 +178,9 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
+
+	/* set signal handler */
+	signal(SIGINT, signal_handler);
 
 	/* initialize indexer */
 	max_doc_id = indexer_assign(&indices);

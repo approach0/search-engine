@@ -24,6 +24,8 @@ int indexer_index_json(FILE*, text_lexer);
 
 int indexer_handle_slice(struct lex_slice*);
 
+int index_maintain();
+
 /* other utilities */
 #include <ctype.h> /* for tolower() */
 static __inline void eng_to_lower_case(char *str, size_t n_bytes)

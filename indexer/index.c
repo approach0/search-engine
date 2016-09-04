@@ -185,13 +185,14 @@ int indexer_handle_slice(struct lex_slice *slice)
 	return 0;
 }
 
-static void index_maintain()
+int index_maintain()
 {
-	if (term_index_maintain(term_index)) {
-		printf("\r[index maintaining...]");
-		fflush(stdout);
-		sleep(2);
-	}
+	printf("\r[index maintaining...]");
+	fflush(stdout);
+	term_index_maintain(term_index);
+	sleep(2);
+
+	return 0;
 }
 
 static bool get_json_val(const char *json, const char *key, char *val)
@@ -279,9 +280,6 @@ int indexer_index_json(FILE *fh, text_lexer lex)
 
 	/* text indexing */
 	ret = index_text_field(txt_field, lex);
-
-	/* maintain index (e.g. optimize, merge...) */
-	index_maintain();
 
 	return ret;
 }
