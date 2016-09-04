@@ -8,6 +8,7 @@ import re
 import json
 import sys
 import getopt
+import filecmp
 from replace_post_tex import replace_dollar_tex
 from replace_post_tex import replace_display_tex
 from replace_post_tex import replace_inline_tex
@@ -162,11 +163,23 @@ def process_post(post_id, post_txt, url):
 	post_txt = replace_display_tex(post_txt)
 	post_txt = replace_inline_tex(post_txt)
 	post_txt = replace_dollar_tex(post_txt)
-	# save files
-	save_json(file_path + '.json',
-				 post_txt, url)
-	save_preview(file_path + '.html',
-				 post_txt, url)
+
+	# do not touch time stamp if previously
+	# an identical file already exists.
+	jsonfile = file_path + ".json"
+	if os.path.isfile(jsonfile):
+		print('[exists]')
+		save_json('/tmp/tmp.json', post_txt, url)
+		if filecmp.cmp('/tmp/tmp.json', jsonfile):
+			# two files are identical, do not touch
+			print('[identical, no touch]')
+			return
+		else:
+			print('[overwrite]')
+
+	# two files are different, save files
+	save_json(jsonfile, post_txt, url)
+	save_preview(file_path + '.html', post_txt, url)
 
 def crawl_pages(start, end, extra_opt):
 	c = get_curl()
@@ -186,8 +199,6 @@ def crawl_pages(start, end, extra_opt):
 				if not extra_opt["overwrite"]:
 					print('[exists, skip] ' + file_path)
 					continue
-				else:
-					print('[exists, overwrite] ' + file_path)
 			try:
 				url = root_url + sub_url
 				post_txt = crawl_post_page(sub_url, get_curl())
