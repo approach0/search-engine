@@ -35,6 +35,7 @@ typedef struct {
 
 	/* timer related */
 	struct timer timer;
+	long first_timecost;
 	long max_timecost;
 
 } math_score_combine_args_t;
@@ -100,8 +101,13 @@ add_math_score_posting(math_score_combine_args_t *msca)
 #ifdef VERBOSE_SEARCH
 	{
 		long last_timecost;
-		/* record max time of adding a math posting */
 		last_timecost = timer_last_msec(&msca->timer);
+
+		/* record first-adding math posting time cost */
+		if (msca->first_timecost == -1)
+			msca->first_timecost = last_timecost;
+
+		/* record max time of adding a math posting */
 		if (last_timecost > msca->max_timecost)
 			msca->max_timecost = last_timecost;
 	}
@@ -222,6 +228,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	/* reset timer */
 	timer_reset(&msca.timer);
 	msca.max_timecost = 0;
+	msca.first_timecost = -1;
 #endif
 
 	/* merge and combine math scores */
@@ -240,9 +247,13 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	       kw_utf8, msca.n_mem_po, msca.mem_cost / 1024.f);
 
 	/* report time cost */
-	printf("math post-adding max cost: %ld msec.\n",
+	printf("math post-adding first time cost: %ld msec.\n",
+	       msca.first_timecost);
+	printf("math post-adding max time cost: %ld msec.\n",
 	       msca.max_timecost);
-	printf("math post-adding total cost: %ld msec.\n",
+	printf("math post-adding average time cost: %.2f msec.\n",
+	       (float)timer_tot_msec(&msca.timer) / msca.n_mem_po);
+	printf("math post-adding total time cost: %ld msec.\n",
 	       timer_tot_msec(&msca.timer));
 #endif
 
