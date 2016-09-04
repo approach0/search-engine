@@ -145,6 +145,7 @@ struct on_dir_merge_args {
 	struct postmerge_callbks   *calls;
 	uint32_t                    n_dir_visits;
 	void                       *expr_srch_arg;
+	int64_t                     n_tot_rd_items;
 };
 
 static enum dir_merge_ret
@@ -160,6 +161,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	struct subpath_ele *ele;
 
 	postmerge_posts_clear(pm);
+	pm->max_rd_items = MAX_MATH_EXP_SINGLE_MERGE_ITEMS;
 
 	for (i = 0; i < n_postings; i++) {
 		po = postings[i];
@@ -186,10 +188,15 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	res = posting_merge(pm, POSTMERGE_OP_AND,
 	                    on_dm_args->post_on_merge, &mes_arg);
 
+	/* increment read items counter */
+	on_dm_args->n_tot_rd_items += pm->n_rd_items;
+
 	/* increment directory visit counter */
 	on_dm_args->n_dir_visits ++;
 
-	if (!res || mes_arg.stop_dir_search) {
+	if (!res || mes_arg.stop_dir_search ||
+	    on_dm_args->n_tot_rd_items > MAX_MATH_EXP_SEARCH_ITEMS) {
+
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("math posting merge force-stopped.");
 #endif
@@ -199,9 +206,9 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	return DIR_MERGE_RET_CONTINUE;
 }
 
-int math_expr_search(math_index_t mi, char *tex,
-                     enum dir_merge_type dir_merge_type,
-                     post_merge_callbk fun, void *args)
+int64_t math_expr_search(math_index_t mi, char *tex,
+                         enum dir_merge_type dir_merge_type,
+                         post_merge_callbk fun, void *args)
 {
 	struct tex_parse_ret     parse_ret;
 	struct postmerge         pm;
@@ -242,19 +249,20 @@ int math_expr_search(math_index_t mi, char *tex,
 		on_dm_args.calls = &calls;
 		on_dm_args.n_dir_visits = 0;
 		on_dm_args.expr_srch_arg = args;
+		on_dm_args.n_tot_rd_items = 0;
 
 		math_index_dir_merge(mi, dir_merge_type, &parse_ret.subpaths,
 		                     &on_dir_merge, &on_dm_args);
 
 		subpaths_release(&parse_ret.subpaths);
+
+		return on_dm_args.n_tot_rd_items;
 	} else {
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("parser error: %s\n", parse_ret.msg);
 #endif
-		return 1;
+		return -1;
 	}
-
-	return 0;
 }
 
 static __inline uint32_t

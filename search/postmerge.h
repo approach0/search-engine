@@ -30,6 +30,9 @@ struct postmerge {
 	uint64_t            curIDs[MAX_MERGE_POSTINGS];
 	void               *cur_pos_item[MAX_MERGE_POSTINGS];
 	uint32_t            n_postings;
+	int64_t             max_rd_items;
+	/* n_rd_items is just an estimate on how many items been read */
+	int64_t             n_rd_items;
 
 	post_start_callbk   start[MAX_MERGE_POSTINGS];
 	post_next_callbk    next[MAX_MERGE_POSTINGS];

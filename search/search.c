@@ -312,6 +312,7 @@ indices_run_query(struct indices *indices, const struct query qry)
 	n_add = add_postinglists(indices, &qry, &pm,
 	                         (float*)&bm25args.idf);
 #ifdef VERBOSE_SEARCH
+	printf("\n");
 	printf("post-adding total time cost: %ld msec.\n",
 	       timer_last_msec(&timer));
 

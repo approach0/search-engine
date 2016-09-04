@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <limits.h>
 
+#include "config.h"
 #include "postmerge.h"
 
 void postmerge_posts_clear(struct postmerge *pm)
 {
 	pm->n_postings = 0;
+	pm->n_rd_items = 0;
+	pm->max_rd_items = LLONG_MAX;
 }
 
 void postmerge_posts_add(struct postmerge *pm, void *post,
@@ -78,6 +82,7 @@ next_id_OR(struct postmerge *pm, uint32_t *cur_min_idx)
 	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] <= cur_min) {
 			/* now, move head posting list iterator[i] */
+
 			if (pm->next[i](pm->postings[i])) {
 				/* update current pointer and ID for posting[i] */
 				pm->cur_pos_item[i] = pm->now[i](pm->postings[i]);
@@ -107,6 +112,7 @@ next_id_AND(struct postmerge *pm,
 	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] <= cur_min) {
 			/* now, move head posting list iterator[i] */
+
 			if (pm->curIDs[i] == cur_max) {
 				/* in this case we do not jump() because if all
 				 * curIDs[i] are equal, jump() will stuck here
@@ -156,6 +162,11 @@ posting_merge_OR(struct postmerge *pm, void *extra_args)
 #endif
 		pm->post_on_merge(cur_min, pm, extra_args);
 
+		/* checking max search items valve */
+		pm->n_rd_items += pm->n_postings;
+		if (pm->n_rd_items > pm->max_rd_items)
+			return;
+
 #ifdef DEBUG_POST_MERGE
 		printf("calling next_id_OR()\n");
 #endif
@@ -188,6 +199,11 @@ posting_merge_AND(struct postmerge *pm, void *extra_args)
 #endif
 		if (i == pm->n_postings)
 			pm->post_on_merge(cur_min, pm, extra_args);
+
+		/* checking max search items valve */
+		pm->n_rd_items += pm->n_postings;
+		if (pm->n_rd_items > pm->max_rd_items)
+			return;
 
 #ifdef DEBUG_POST_MERGE
 		printf("calling next_id_AND()\n");

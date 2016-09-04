@@ -213,6 +213,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
                      char *kw_utf8, enum query_kw_type *kw_type)
 {
 	math_score_combine_args_t msca;
+	int64_t n_tot_rd_items;
 
 	/* initialize score combine arguments */
 	msca.top_pm      = pm;
@@ -227,14 +228,15 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 #ifdef VERBOSE_SEARCH
 	/* reset timer */
 	timer_reset(&msca.timer);
-	msca.max_timecost = 0;
 	msca.first_timecost = -1;
+	msca.max_timecost = 0;
 #endif
 
 	/* merge and combine math scores */
-	math_expr_search(indices->mi, kw_utf8, DIR_MERGE_DEPTH_FIRST,
-	                 &math_posting_on_merge, &msca);
-
+	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
+	                                  DIR_MERGE_DEPTH_FIRST,
+	                                  &math_posting_on_merge,
+	                                  &msca);
 	if (msca.wr_mem_po)
 		/* flush and final adding */
 		add_math_score_posting(&msca);
@@ -243,8 +245,14 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 		postmerge_posts_add(msca.top_pm, NULL, NULL, kw_type);
 
 #ifdef VERBOSE_SEARCH
+	/* report number of adding math posting lists. */
 	printf("`%s' has %u math score posting(s) (%f KB).\n",
 	       kw_utf8, msca.n_mem_po, msca.mem_cost / 1024.f);
+
+	/* report number of read items */
+	printf("math post-adding total read items: %ld."
+	       " (negative indicates parse error)\n",
+	       n_tot_rd_items);
 
 	/* report time cost */
 	printf("math post-adding first time cost: %ld msec.\n",

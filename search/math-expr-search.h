@@ -23,8 +23,8 @@ struct math_expr_score_res {
 
 /* perform math expression search. Upon math posting list merge,
  * call the callback function specified in the argument. */
-int math_expr_search(math_index_t, char*, enum dir_merge_type,
-                     post_merge_callbk, void*);
+int64_t math_expr_search(math_index_t, char*, enum dir_merge_type,
+                         post_merge_callbk, void*);
 
 /* call this function in posting merge callback to score merged item
  * similarity compared with math query. */
