@@ -13,7 +13,12 @@
 
 #include <assert.h>
 
-typedef uint32_t blob_ptr_t;
+#if 0
+typedef off_t blob_ptr_t; /* large index */
+#else
+typedef uint32_t blob_ptr_t; /* small index */
+#endif
+
 typedef uint32_t blob_sz_t;
 
 struct blob_index {
@@ -21,7 +26,8 @@ struct blob_index {
 	FILE *dat_file;
 };
 
-blob_index_t blob_index_open(const char * path, const char *mode)
+blob_index_t
+blob_index_open(const char * path, enum blob_open_mode mode)
 {
 	struct blob_index *bi;
 	char ptr_file_path[BLOBINDEX_FILEPATH_MAX_LEN];
@@ -33,8 +39,26 @@ blob_index_t blob_index_open(const char * path, const char *mode)
 	bi = malloc(sizeof(struct blob_index));
 	assert(NULL != bi);
 
-	bi->ptr_file = fopen(ptr_file_path, mode);
-	bi->dat_file = fopen(dat_file_path, mode);
+	if (mode == BLOB_OPEN_RD) {
+		bi->ptr_file = fopen(ptr_file_path, "r");
+		bi->dat_file = fopen(dat_file_path, "r");
+	} else if (mode == BLOB_OPEN_WR) {
+		bi->ptr_file = fopen(ptr_file_path, "r+");
+		bi->dat_file = fopen(dat_file_path, "a");
+	}
+
+	if (mode == BLOB_OPEN_WR && bi->ptr_file == NULL) {
+		/*
+		 * file at ptr_file_path does not exists, since
+		 * "r+" mode does not create a file, we need to
+		 * create it ourself.
+		 */
+		bi->ptr_file = fopen(ptr_file_path, "w");
+		if (bi->ptr_file) {
+			fclose(bi->ptr_file);
+			bi->ptr_file = fopen(ptr_file_path, "r+");
+		}
+	}
 
 	if (bi->ptr_file == NULL ||
 	    bi->dat_file == NULL) {
@@ -49,7 +73,7 @@ blob_index_t blob_index_open(const char * path, const char *mode)
 static blob_ptr_t file_seek_end(FILE *fh)
 {
 	assert(0 == fseek(fh, 0L, SEEK_END));
-	return (blob_ptr_t)ftell(fh);;
+	return (blob_ptr_t)ftell(fh);
 }
 
 size_t
@@ -58,22 +82,16 @@ blob_index_write(blob_index_t index, doc_id_t docID,
 {
 	struct blob_index *bi = (struct blob_index *)index;
 	blob_ptr_t ptr_wr_pos = (docID * sizeof(blob_ptr_t));
-	blob_ptr_t ptr_file_end = file_seek_end(bi->ptr_file);
-	blob_ptr_t dat_pos;
+	blob_ptr_t dat_pos = ftell(bi->dat_file);
 	blob_sz_t  blob_sz;
 	size_t blob_sz_written;
 
-	if (ptr_wr_pos + sizeof(blob_ptr_t) <= ptr_file_end) {
-#ifdef DEBUG_BLOBINDEX
-		fprintf(stderr, "%lu <= %u, ", ptr_wr_pos + sizeof(blob_ptr_t),
-		        ptr_file_end);
-		fprintf(stderr, "docID already indexed.\n");
-#endif
-		return 0;
-	}
+	assert(0 == fseek(bi->ptr_file, ptr_wr_pos, SEEK_SET));
 
-	/* seek to data file end and save its position */
-	dat_pos = file_seek_end(bi->dat_file);
+#ifdef DEBUG_BLOBINDEX
+	printf("blob writing: ptr_wr_pos, dat_pos @ (%lu, %lu)\n",
+	       (off_t)ftell(bi->ptr_file), (off_t)dat_pos);
+#endif
 
 	/* write blob data file */
 	blob_sz = (blob_sz_t)size;
@@ -81,7 +99,6 @@ blob_index_write(blob_index_t index, doc_id_t docID,
 	blob_sz_written = fwrite(blob, 1, size, bi->dat_file);
 
 	/* write pointer file with saved blob data position */
-	assert(0 == fseek(bi->ptr_file, ptr_wr_pos, SEEK_SET));
 	fwrite(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
 	return blob_sz_written;
@@ -92,23 +109,25 @@ size_t blob_index_read(blob_index_t index, doc_id_t docID, void **blob)
 	struct blob_index *bi = (struct blob_index *)index;
 	blob_ptr_t ptr_rd_pos = (docID * sizeof(blob_ptr_t));
 	blob_ptr_t ptr_file_end = file_seek_end(bi->ptr_file);
-	blob_ptr_t dat_pos = 123;
-	blob_sz_t  blob_sz = 456;
+	blob_ptr_t dat_pos;
+	blob_sz_t  blob_sz;
 
 	if (ptr_rd_pos + sizeof(blob_ptr_t) > ptr_file_end) {
-#ifdef DEBUG_BLOBINDEX
-		fprintf(stderr, "%lu > %u, ", ptr_rd_pos + sizeof(blob_ptr_t),
-		        ptr_file_end);
-		fprintf(stderr, "not indexed docID.\n");
-#endif
+		fprintf(stderr, "blob index: not indexed docID.\n");
 		*blob = NULL;
 		return 0;
 	}
 
+#ifdef DEBUG_BLOBINDEX
+	printf("blob reading: ptr_wr_pos @ %lu.\n", (off_t)ptr_rd_pos);
+#endif
 	/* seek pointer file to get blob data position */
 	assert(0 == fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET));
 	fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
+#ifdef DEBUG_BLOBINDEX
+	printf("blob reading: dat_pos @ %lu.\n", (off_t)dat_pos);
+#endif
 	/* seek to that data position and first get blob size */
 	assert(0 == fseek(bi->dat_file, dat_pos, SEEK_SET));
 	fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);

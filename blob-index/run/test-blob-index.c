@@ -13,8 +13,9 @@ int main()
 	char    *blob_out = NULL;
 	doc_id_t docID;
 
+	/* write */
 	srand(time(NULL));
-	blob_index_t bi = blob_index_open("./test", "w+");
+	blob_index_t bi = blob_index_open("./test", BLOB_OPEN_WR);
 
 	for (docID = 0; docID < 100; docID++) {
 		rand_sz = rand() % 9 + 1;
@@ -25,6 +26,11 @@ int main()
 		size = blob_index_write(bi, docID, blob_in, rand_sz);
 		printf("written doc#%u: size = %lu\n\n", docID, size);
 	}
+
+	blob_index_close(bi);
+
+	/* read */
+	bi = blob_index_open("./test", BLOB_OPEN_RD);
 
 	for (i = 0; i < 10; i++) {
 		docID = rand() % 150;
