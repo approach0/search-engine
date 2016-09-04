@@ -25,6 +25,6 @@ then
 	mkfs_opts=""
 fi
 
-dd if=/dev/zero of=vdisk.img count=32K bs=1024K # 32GB
+dd if=/dev/zero of=vdisk.img count=16K bs=1024K # 16GB
 
 mkfs.${filesys} ${mkfs_opts} ./vdisk.img
