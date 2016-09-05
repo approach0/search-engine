@@ -190,7 +190,7 @@ int index_maintain()
 	printf("\r[index maintaining...]");
 	fflush(stdout);
 	term_index_maintain(term_index);
-	sleep(2);
+	sleep(10);
 
 	return 0;
 }
