@@ -66,7 +66,7 @@ bool indices_open(struct indices* indices, const char* index_path,
 	 */
 	sprintf(path, "%s/%s", index_path, blob_index_url_name);
 	blob_index_url = blob_index_open(path, (mode == INDICES_OPEN_RD) ?
-	                                 "r" : "w+");
+	                                 BLOB_OPEN_RD : BLOB_OPEN_WR);
 	if (NULL == blob_index_url) {
 		fprintf(stderr, "cannot create/open URL blob index.\n");
 
@@ -76,7 +76,7 @@ bool indices_open(struct indices* indices, const char* index_path,
 
 	sprintf(path, "%s/%s", index_path, blob_index_txt_name);
 	blob_index_txt = blob_index_open(path, (mode == INDICES_OPEN_RD) ?
-	                                 "r" : "w+");
+	                                 BLOB_OPEN_RD : BLOB_OPEN_WR);
 	if (NULL == blob_index_txt) {
 		fprintf(stderr, "cannot create/open text blob index.\n");
 
