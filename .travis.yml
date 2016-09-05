@@ -13,5 +13,5 @@ before_install:
   - (cd indri-5.9 && chmod +x configure && ./configure && make)
   - mv indri-5.9 /home/`whoami`/
 script:
-  - ./configure
+  - ./configure --indri-path=/home/`whoami`/indri-5.9
   - make
