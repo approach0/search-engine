@@ -268,11 +268,12 @@ def main(args):
 
 	if (end_page >= begin_page):
 		while True:
-			crawl_pages(begin_page, end_page, extra_opt)
 			if extra_opt["hookscript"]:
 				os.system(extra_opt["hookscript"])
 			else:
 				break
+			crawl_pages(begin_page, end_page, extra_opt)
+
 	else:
 		help(args[0])
 
