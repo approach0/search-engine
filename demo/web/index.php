@@ -206,7 +206,12 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <div v-if="ret_code > 0">
 <div class="center-v-pad"></div>
 <div class="center-horiz">
-	<p>Opps! {{ret_str}}. (return code #{{ret_code}})</p>
+	<template v-if="ret_code == 102">
+	<p><span class="dots" style="color:white"></span>
+	{{ret_str}}
+	<span class="dots"></span></p>
+	</template>
+	<p v-else>Opps! {{ret_str}}. (return code #{{ret_code}})</p>
 </div>
 </div>
 <!-- Error code END -->

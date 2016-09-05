@@ -47,17 +47,37 @@ function handle_search_res(res, enc_qry, page) {
 }
 
 function srch_enc_qry(enc_qry, page, is_pushState) {
+
+	/* a dot dot dot animation */
+	var dots_timer = window.setInterval(function() {
+		$("span.dots").each(function () {
+		var cur_dots = $(this).text();
+
+		if (cur_dots.length >= 3)
+			$(this).text("");
+		else
+			$(this).text(cur_dots + ".");
+		});
+	}, 100);
+
+	/* send AJAX request */
 	$.ajax({
 		url: 'search-relay.php',
 		data: 'p=' + page + '&q=' + enc_qry,
 		dataType: 'json'
 	}).done(function(res) {
 		handle_search_res(res, enc_qry, page);
+		clearInterval(dots_timer);
 	}).fail(function(res) {
 		response.ret_code = 101;
 		response.ret_str = "Server is down right now, " +
 			"but will be back shortly";
+		clearInterval(dots_timer);
 	});
+
+	/* let user know we are loading */
+	response.ret_code = 102;
+	response.ret_str = "Query is running hard";
 
 	/* push browser history if needed */
 	if (is_pushState) {
