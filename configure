@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import getopt, sys, os
 
-default_indri_path = 'indri-5.9'
+default_indri_path = 'indri-5.11'
 indri_path_mk = './term-index/indri-path.mk'
 
 default_jieba_path = 'cppjieba'
