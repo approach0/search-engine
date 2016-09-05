@@ -229,7 +229,7 @@ close:
 	}
 
 exit:
-	printf("existing...\n");
+	printf("exiting...\n");
 
 	/*
 	 * free program arguments
