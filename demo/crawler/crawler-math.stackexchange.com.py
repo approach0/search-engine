@@ -205,11 +205,12 @@ def crawl_pages(start, end, extra_opt):
 				process_post(ID, post_txt, url)
 			except (KeyboardInterrupt, SystemExit):
 				print('[abort]')
-				return
+				return 'abort'
 			except:
 				print_err("post %s" % url)
 				continue
 			time.sleep(0.6)
+	return 'finish'
 
 def help(arg0):
 	print('DESCRIPTION: crawler script for math.stackexchange.com.' \
@@ -272,7 +273,9 @@ def main(args):
 				os.system(extra_opt["hookscript"])
 			else:
 				break
-			crawl_pages(begin_page, end_page, extra_opt)
+			r = crawl_pages(begin_page, end_page, extra_opt)
+			if r == 'abort':
+				break
 
 	else:
 		help(args[0])
