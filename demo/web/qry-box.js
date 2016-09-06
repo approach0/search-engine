@@ -195,7 +195,16 @@ $(document).ready(function() {
 			pastedData = clipboardData.getData('Text');
 			//console.log(pastedData);
 
-			query.raw_str = pastedData;
+			if ($.trim(query.raw_str) == "") {
+				/* nothing in query box now */
+				query.raw_str = pastedData;
+			} else {
+				/* append to the end of current query */
+				query.raw_str += ', ';
+				query.raw_str += pastedData;
+			}
+
+			/* convert new raw query to UI */
 			raw_str_2_query();
 			Vue.nextTick(function () {
 				tex_render("div.qry-div-fix");
