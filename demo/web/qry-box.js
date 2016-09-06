@@ -124,7 +124,7 @@ $(document).ready(function() {
 						return;
 
 					fix_input("tex", mq.latex(), function() {
-						tex_render("div.qry-div-fix");
+						tex_render_fast("div.qry-div-fix");
 						setTimeout(function () {
 							$("#qry-input-box").focus();
 						}, 500);
@@ -207,7 +207,7 @@ $(document).ready(function() {
 			/* convert new raw query to UI */
 			raw_str_2_query();
 			Vue.nextTick(function () {
-				tex_render("div.qry-div-fix");
+				tex_render_fast("div.qry-div-fix");
 				$("#qry-input-box").focus();
 			});
 		}
@@ -234,7 +234,7 @@ $(document).ready(function() {
 			on_rawinput: function () {
 				raw_str_2_query();
 				Vue.nextTick(function () {
-					tex_render("div.qry-div-fix");
+					tex_render_fast("div.qry-div-fix");
 				});
 			}
 		}
@@ -247,7 +247,7 @@ $(document).ready(function() {
 
 		raw_str_2_query();
 		Vue.nextTick(function () {
-			tex_render("div.qry-div-fix");
+			tex_render_fast("div.qry-div-fix");
 		});
 	};
 
@@ -286,7 +286,7 @@ $(document).ready(function() {
 			/* push the last query to UI */
 			if (input_box.type == 'tex-input') {
 				fix_input("tex", input_box.str, function() {
-					tex_render("div.qry-div-fix");
+					tex_render_fast("div.qry-div-fix");
 
 					/* perform search */
 					qry = $("#qry").val();
@@ -326,7 +326,7 @@ $(document).ready(function() {
 		query.raw_str = qry;
 		raw_str_2_query();
 		Vue.nextTick(function () {
-			tex_render("div.qry-div-fix");
+			tex_render_fast("div.qry-div-fix");
 			click_search(page, is_pushState);
 		});
 	};
