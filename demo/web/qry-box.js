@@ -9,6 +9,8 @@ $(document).ready(function() {
 		"pad": math_pad /* from pad.js */
 	};
 
+	var tex_charset = ".'+-*/\\!^_%()[]:;{}=<>";
+
 	/* query variable <--> raw query string convert */
 	var raw_str_2_query = function() {
 		var q = query;
@@ -41,7 +43,7 @@ $(document).ready(function() {
 			if (kw == "")
 				return true; /* continue */
 
-			if (kw[0] == "$") {
+			if (kw[0] == "$" || contains(kw, tex_charset)) {
 				var s = kw.replace(/^\$|\$$/g, "");
 				q.items.push({"type":"tex", "str": s});
 			} else {
@@ -175,7 +177,7 @@ $(document).ready(function() {
 
 			switch_to_mq("");
 
-		} else if (contains(input_box.str, ".'+-*/\\!^_%()[]:;{}=<>")) {
+		} else if (contains(input_box.str, tex_charset)) {
 			switch_to_mq_2(input_box.str);
 		}
 	};
