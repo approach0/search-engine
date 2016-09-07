@@ -156,6 +156,11 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 	</div>
 
+	<a style="text-decoration: none; color: blue; font-size: 14px;"
+	href="/guide" target="_blank">
+	<img src="images/link.png" style="vertical-align: middle;"/>
+	user guide</a>
+
 </div>
 <!-- Search button and options END -->
 
