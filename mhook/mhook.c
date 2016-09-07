@@ -50,6 +50,21 @@ void *__wrap_calloc(size_t nmemb, size_t size)
 	return p;
 }
 
+/* realloc() hook */
+void *__real_realloc(void *, size_t);
+
+void *__wrap_realloc(void *ptr, size_t sz)
+{
+	if (ptr == NULL) {
+		unfree++;
+		tot_allocs++;
+	} else if (sz == 0) {
+		unfree--;
+	}
+
+	return __real_realloc(ptr, sz);
+}
+
 /* strdup() hook */
 void *__real_strdup(const char *);
 

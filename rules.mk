@@ -34,7 +34,7 @@ CCDH = gcc -dH
 
 # linker
 MHOOK_FLAGS := -Wl,--wrap,malloc -Wl,--wrap,free \
-               -Wl,--wrap,calloc -Wl,--wrap,strdup
+-Wl,--wrap,realloc -Wl,--wrap,calloc -Wl,--wrap,strdup
 LD := gcc $(MHOOK_FLAGS)
 COLOR_LINK = @ tput setaf 5 && echo '[link] $@' && tput sgr0
 
