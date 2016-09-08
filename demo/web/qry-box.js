@@ -39,6 +39,7 @@ $(document).ready(function() {
 
 		/* for each of the keyword, add into query */
 		q.items = []; /* clear */
+		var correct_raw_str = false;
 		$.each(kw_arr, function(i, kw) {
 			kw = $.trim(kw);
 			if (kw == "")
@@ -47,6 +48,10 @@ $(document).ready(function() {
 			if (kw[0] == "$" || contains(kw, tex_charset)) {
 				var s = kw.replace(/^\$|\$$/g, "");
 				q.items.push({"type":"tex", "str": s});
+
+				/* if user forgets to wrap a '$' */
+				if (kw[0] != "$")
+					correct_raw_str = true;
 			} else {
 				var s = kw;
 				q.items.push({"type":"term", "str": s});
@@ -54,6 +59,10 @@ $(document).ready(function() {
 		});
 
 		q.items.push({"type": "term-input", "str": ""});
+
+		/* help user wrap a '$' */
+		if (correct_raw_str)
+			query_2_raw_str();
 	};
 
 	var query_2_raw_str = function() {
