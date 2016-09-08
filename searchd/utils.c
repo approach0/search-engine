@@ -265,7 +265,25 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 #ifdef DEBUG_APPEND_RESULTS
 	printf("preparing highlight list...\n");
 #endif
+
+#ifdef DEBUG_JSON_ENCODE_ESCAPE
+	{
+		const char ori[] = "chars: \x003c \x0001 \x005C";
+		char *esc = json_encode_string(ori);
+
+		printf(">>> %s \n", ori);
+		printf("<<< %s \n", esc);
+		hit->n_occurs = 1;
+		free(hit->occurs);
+		hit->occurs = malloc(sizeof(position_t));
+		hit->occurs[0] = 0;
+		hl_list = prepare_snippet(hit, esc,
+		                          doc_sz, app_args->lex);
+		free(esc);
+	}
+#else
 	hl_list = prepare_snippet(hit, doc, doc_sz, app_args->lex);
+#endif
 
 	/* get snippet */
 #ifdef DEBUG_APPEND_RESULTS
