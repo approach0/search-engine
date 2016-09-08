@@ -273,7 +273,7 @@ static void free_math_postinglists(struct postmerge *pm)
 }
 
 ranked_results_t
-indices_run_query(struct indices *indices, const struct query qry)
+indices_run_query(struct indices *indices, struct query *qry)
 {
 	struct postmerge                pm;
 	struct BM25_term_i_args         bm25args;
@@ -291,25 +291,25 @@ indices_run_query(struct indices *indices, const struct query qry)
 	/*
 	 * some query pre-merge process.
 	 */
-	set_keywords_val((struct query *)&qry, indices);
+	set_keywords_val(qry, indices);
 
 	/* sort query, to prioritize keywords in highlight stage */
-	query_sort_by_df(&qry);
+	query_sort_by_df(qry);
 
 	/* make query unique by post_id, avoid mem-posting overlap */
-	query_uniq_by_post_id((struct query *)&qry);
+	query_uniq_by_post_id(qry);
 
 #ifdef VERBOSE_SEARCH
 	printf("\n");
 	printf("processed query: \n");
-	query_print_to(qry, stdout);
+	query_print_to(*qry, stdout);
 	printf("\n\n");
 #endif
 
 	/* initialize postmerge */
 	postmerge_posts_clear(&pm);
 
-	n_add = add_postinglists(indices, &qry, &pm,
+	n_add = add_postinglists(indices, qry, &pm,
 	                         (float*)&bm25args.idf);
 #ifdef VERBOSE_SEARCH
 	printf("\n");

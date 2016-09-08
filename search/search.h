@@ -9,4 +9,4 @@ struct searcher_args {
 };
 
 ranked_results_t
-indices_run_query(struct indices*, const struct query);
+indices_run_query(struct indices*, struct query*);

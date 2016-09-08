@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* search query */
-	results = indices_run_query(&indices, qry);
+	results = indices_run_query(&indices, &qry);
 
 	/* print ranked search results in pages */
 	args.indices = &indices;
