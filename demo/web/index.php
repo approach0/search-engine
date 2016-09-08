@@ -151,7 +151,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 		<p>WEB API (for developers):</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
-		curl -v {{url_root}}search-relay.php?q='{{enc_uri}}'
+		curl -v '{{url_root}}search-relay.php?p={{page}}&amp;q={{enc_uri}}'
 		<p>
 
 	</div>

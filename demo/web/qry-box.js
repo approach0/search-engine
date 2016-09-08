@@ -3,6 +3,7 @@ $(document).ready(function() {
 
 	var query = {
 		"raw_str": "",
+		"page": 1,
 		"items": [
 			{"type": "term-input", "str": ""}
 		],
@@ -281,6 +282,7 @@ $(document).ready(function() {
 
 	/* search related */
 	function click_search(page, is_pushState) {
+		query.page = page;
 		arr = query.items;
 		input_box = arr[arr.length - 1];
 
