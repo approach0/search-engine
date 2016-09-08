@@ -71,6 +71,9 @@ void query_push_keyword(struct query *qry, const struct query_keyword* kw)
 	memcpy(copy, kw, sizeof(struct query_keyword));
 	LIST_NODE_CONS(copy->ln);
 
+	if (copy->type == QUERY_KEYWORD_TERM)
+		eng_to_lower_case_w(copy->wstr, wstr_len(copy->wstr));
+
 	list_insert_one_at_tail(&copy->ln, &qry->keywords, NULL, NULL);
 	copy->pos = (qry->len ++);
 }
@@ -81,6 +84,7 @@ static int add_into_qry(struct lex_slice *slice)
 	struct query_keyword kw;
 	kw.df   = 0;
 	kw.type = QUERY_KEYWORD_TERM;
+	eng_to_lower_case(slice->mb_str, strlen(slice->mb_str));
 	wstr_copy(kw.wstr, mbstr2wstr(slice->mb_str));
 
 	if (adding_qry)

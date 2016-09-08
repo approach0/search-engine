@@ -9,7 +9,6 @@
 
 #include "wstring/wstring.h" /* for wstr2mbstr() */
 #include "mem-index/mem-posting.h"
-#include "indexer/index.h" /* for eng_to_lower_case() */
 #include "timer/timer.h"
 
 #include "config.h"
@@ -106,7 +105,6 @@ static LIST_IT_CALLBK(add_postinglist)
 	switch (kw->type) {
 	case QUERY_KEYWORD_TERM:
 		docN = (float)aa->docN;
-		eng_to_lower_case(kw_utf8, strlen(kw_utf8));
 
 		if (add_term_postinglist(aa->pm, aa->indices, kw_utf8, kw_type))
 			aa->idf[aa->idx] = BM25_idf(kw->df, docN);
