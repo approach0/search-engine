@@ -252,14 +252,11 @@ def main(args):
 			end_page = int(arg)
 			continue
 		elif opt in ("-p", "--post"):
-			file_path = get_file_path(int(arg))
-			if os.path.isfile(file_path + ".json"):
-				print('[already exists] ' + file_path)
-				return
 			sub_url = "/questions/" + arg
 			full_url = root_url + sub_url
 			post_txt = crawl_post_page(sub_url, get_curl())
 			process_post(int(arg), post_txt, full_url)
+			exit(0)
 		elif opt in ("--no-overwrite"):
 			extra_opt["overwrite"] = False
 		elif opt in ("--hook-script"):
