@@ -129,7 +129,7 @@ parse_json_qry(const char* req, text_lexer lex, struct query *qry)
 	page = (uint32_t)json_object_get_number(parson_obj, "page");
 
 	/* get query keywords array (key `kw' in JSON) */
-    if (!json_object_has_value_of_type(parson_obj, "kw",
+	if (!json_object_has_value_of_type(parson_obj, "kw",
 	                                   JSONArray)) {
 		fprintf(stderr, "JSON query does not contain hits.\n");
 		page = 0;
@@ -138,7 +138,7 @@ parse_json_qry(const char* req, text_lexer lex, struct query *qry)
 
 	parson_arr = json_object_get_array(parson_obj, "kw");
 
-    if (parson_arr == NULL) {
+	if (parson_arr == NULL) {
 		fprintf(stderr, "parson_arr returns NULL.\n");
 		page = 0;
 		goto free;
