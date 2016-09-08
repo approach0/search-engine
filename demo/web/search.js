@@ -68,7 +68,8 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 	}).done(function(res) {
 		handle_search_res(res, enc_qry, page);
 		clearInterval(dots_timer);
-	}).fail(function(res) {
+	}).fail(function(res, ajax_err_str) {
+		console.log("AJAX error: " + ajax_err_str);
 		response.ret_code = 101;
 		response.ret_str = "Server is down right now, " +
 			"but will be back shortly";
