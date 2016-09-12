@@ -146,8 +146,10 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		placeholder="empty"/>
 
 		<!-- hidden URI parameters -->
-		<input id="q" type="hidden" value="<?php if (isset($_GET['q'])) echo $_GET['q']; ?>"/>
-		<input id="p" type="hidden" value="<?php if (isset($_GET['p'])) echo $_GET['p']; ?>"/>
+		<input id="q" type="hidden" value=
+		"<?php if (isset($_GET['q']) && is_scalar($_GET['q'])) echo htmlentities($_GET['q'], ENT_QUOTES,'UTF-8'); ?>"/>
+		<input id="p" type="hidden" value=
+		"<?php if (isset($_GET['p']) && is_scalar($_GET['p'])) echo htmlentities($_GET['p'], ENT_QUOTES,'UTF-8'); ?>"/>
 
 		<p>WEB API (for developers):</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">

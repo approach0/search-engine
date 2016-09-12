@@ -74,7 +74,8 @@ $remote_ip=$_SERVER['REMOTE_ADDR'];
 $req_qry_str = '';
 $req_page = 1;
 
-if(!isset($_GET['q'])) { /* q for query string */
+/* q for query string */
+if(!isset($_GET['q']) || !is_scalar($_GET['q'])) {
 	http_response_code(400);
 	echo 'Dude, Bad GET Request!';
 	exit;
@@ -82,9 +83,9 @@ if(!isset($_GET['q'])) { /* q for query string */
 	$req_qry_str = $_GET['q'];
 }
 
-if(isset($_GET['p'])) /* p for page */
+/* p for page */
+if(isset($_GET['p']) && is_scalar($_GET['p']))
 	$req_page = intval($_GET['p']);
-
 
 /*
  * split and handle each query keyword
