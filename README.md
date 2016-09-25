@@ -1,5 +1,5 @@
 ![](https://api.travis-ci.org/approach0/search-engine.svg)
-[![GitHub release](https://img.shields.io/github/release/approach0/search-engine.svg?maxAge=2592000)]()
+![](http://github-release-version.herokuapp.com/github/approach0/search-engine/release.png)
 
 ![](https://raw.githubusercontent.com/approach0/search-engine-docs-eng/master/logo.png)
 
