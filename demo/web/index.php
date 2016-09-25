@@ -229,7 +229,10 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 	<li v-for="hit in hits">
 		<div style="display:none">docid: {{hit.docid}}</div>
 		<div style="display:none">score: {{hit.score}}</div>
-		<a target="_blank" v-bind:href="hit.url">{{hit.url}}</a><br/>
+		<a class="title" target="_blank" v-bind:href="hit.url"
+		style="text-decoration: none; font-size: 120%;">
+		{{hit.title}}</a><br/>
+		<span style="color:#006d21">{{hit.url}}</span>
 		<div style="overflow-x: hidden;">
 		<p class="snippet">{{{ hit.snippet }}}</p>
 		</div>

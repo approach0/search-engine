@@ -200,7 +200,7 @@ void json_encode_str(char *dest, const char *src)
 }
 
 static const char
-*response_hit_str(doc_id_t docID, float score,
+*response_hit_str(doc_id_t docID, float score, const char *title,
                   const char *url, const char *snippet)
 {
 	static char hit_str[MAX_SEARCHD_RESPONSE_JSON_SZ];
@@ -215,19 +215,41 @@ static const char
 	sprintf(hit_str, "{"
 		"\"docid\": %u, "     /* hit docID */
 		"\"score\": %.3f, "   /* hit score */
+		"\"title\": %s, "     /* hit title */
 		"\"url\": \"%s\", "   /* hit document URL */
-		"\"snippet\": %s" /* hit document snippet */
+		"\"snippet\": %s"     /* hit document snippet */
 		"}",
-		docID, score, url, enc_snippet
+		docID, score, title, url, enc_snippet
 	);
 
 	return hit_str;
 }
 
+static char *extract_title_string(const char *doc)
+{
+	char *title = NULL;
+	char *sep = strstr(doc, "\n\n");
+
+	if (NULL == sep) {
+		const char no_title[] = "No title available.";
+		title = malloc(strlen(no_title) + 1);
+		strcpy(title, no_title);
+	} else {
+		unsigned int len = sep - doc;
+		char *raw_title = malloc(len + 1);
+
+		snprintf(raw_title, len + 1, doc);
+		title = json_encode_string(raw_title);
+		free(raw_title);
+	}
+
+	return title;
+}
+
 static void
 append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 {
-	char       *url, *doc;
+	char       *url, *doc, *title;
 	const char *snippet, *hit_json;
 	size_t      url_sz, doc_sz;
 	list        hl_list;
@@ -260,6 +282,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	printf("getting doc text...\n");
 #endif
 	doc = get_blob_string(indices->txt_bi, docID, 1, &doc_sz);
+	title = extract_title_string(doc);
 
 	/* prepare highlighter arguments */
 #ifdef DEBUG_APPEND_RESULTS
@@ -303,7 +326,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 #ifdef DEBUG_APPEND_RESULTS
 	printf("append JSON result...\n");
 #endif
-	hit_json = response_hit_str(docID, score, url, snippet);
+	hit_json = response_hit_str(docID, score, title, url, snippet);
 	strcat(response, hit_json);
 
 	if (cnt + 1 < app_args->n_results)
@@ -311,10 +334,11 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 
 	/* free allocated strings */
 #ifdef DEBUG_APPEND_RESULTS
-	printf("free URL and doc text...\n");
+	printf("free URL, doc, title strings...\n");
 #endif
 	free(url);
 	free(doc);
+	free(title);
 }
 
 const char
