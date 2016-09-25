@@ -238,7 +238,11 @@ static char *extract_title_string(const char *doc)
 		unsigned int len = sep - doc;
 		char *raw_title = malloc(len + 1);
 
-		snprintf(raw_title, len + 1, doc);
+		/* extract titile into raw_title */
+		memcpy(raw_title, doc, len);
+		raw_title[len] = '\0';
+
+		/* JSON encode raw_title to titile */
 		title = json_encode_string(raw_title);
 		free(raw_title);
 	}
