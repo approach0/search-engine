@@ -270,7 +270,7 @@ int indexer_index_json(FILE *fh, text_lexer lex)
 	}
 
 	if (!get_json_val(doc_json, "text", txt_field)) {
-		fprintf(stderr, "JSON: get URL field failed.\n");
+		fprintf(stderr, "JSON: get TXT field failed.\n");
 		return 1;
 	}
 

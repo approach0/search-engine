@@ -73,12 +73,12 @@ def crawl_post_page(sub_url, c):
 	except:
 		raise
 	s = BeautifulSoup(post_page, "html.parser")
-	# get header/title
+	# get title
 	question_header = s.find(id='question-header')
 	if question_header is None:
 		raise
-	header = str(question_header.h1.string)
-	post_txt = header + '\n\n'
+	title = str(question_header.h1.string)
+	post_txt = title + '\n\n'
 	# get question
 	try:
 		post_txt += extract_p_tag_text(s, "question")
