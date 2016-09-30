@@ -140,6 +140,7 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %nonassoc _L_TEX_BRACKET _R_TEX_BRACKET
 %nonassoc _L_CEIL        _R_CEIL
 %nonassoc _L_FLOOR       _R_FLOOR
+%nonassoc _L_VERT        _R_VERT
 
 %%
 doc: line | doc line;
@@ -506,6 +507,11 @@ pair: _L_BRACKET tex _R_BRACKET {
 | _L_FLOOR tex _R_FLOOR {
 	struct optr_node *pair;
 	pair = optr_alloc(S_floor, T_FLOOR, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
+| _L_VERT tex _R_VERT {
+	struct optr_node *pair;
+	pair = optr_alloc(S_verts, T_VERTS, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 ;

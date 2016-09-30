@@ -19,6 +19,7 @@ enum symbol_id {
 	S_arrow,
 	S_ceil,
 	S_floor,
+	S_verts,
 
 	/* auto-generated symbol set */
 	/* INSERT_HERE */

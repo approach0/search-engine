@@ -20,6 +20,7 @@ enum token_id {
 	T_GROUP,
 	T_CEIL,
 	T_FLOOR,
+	T_VERTS,
 
 	/* auto-generated token set */
 	/* INSERT_HERE */

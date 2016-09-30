@@ -289,6 +289,10 @@ extern int lexer_warning_flag;
 \\rceil                                                              { return _R_CEIL; }
 \\rfloor                                                            { return _R_FLOOR; }
 
+ /* absolute value */
+\\left[ ]*\|                                                         { return _L_VERT; }
+\\right[ ]*\|                                                        { return _R_VERT; }
+
  /* =========================
   * primes and su[bp]scripts
   * ========================*/
