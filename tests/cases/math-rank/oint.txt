@@ -1,0 +1,4 @@
+\oint \frac{dz}{1-z^2}
+
+HIT \oint \frac{dz}{1-z^2}
+HIT \oint \frac{dx}{1-x^2}

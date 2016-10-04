@@ -67,8 +67,8 @@ qry=$(cat "$itm/query")
 
 # echo index/search command
 set -x
-./indexer.ln -e -o -p $itm > /dev/null
-./searcher.ln -e -n -i ./tmp -m "$qry" > $itm/search-results
+./indexer.ln -o -p $itm > /dev/null
+./searcher.ln -n -i ./tmp -m "$qry" > $itm/search-results
 set +x
 
 # extract search results
