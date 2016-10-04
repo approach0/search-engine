@@ -10,7 +10,6 @@ void postmerge_posts_clear(struct postmerge *pm)
 {
 	pm->n_postings = 0;
 	pm->n_rd_items = 0;
-	pm->max_rd_items = LLONG_MAX;
 }
 
 void postmerge_posts_add(struct postmerge *pm, void *post,
@@ -162,10 +161,8 @@ posting_merge_OR(struct postmerge *pm, void *extra_args)
 #endif
 		pm->post_on_merge(cur_min, pm, extra_args);
 
-		/* checking max search items valve */
+		/* update read item counter */
 		pm->n_rd_items += pm->n_postings;
-		if (pm->n_rd_items > pm->max_rd_items)
-			return;
 
 #ifdef DEBUG_POST_MERGE
 		printf("calling next_id_OR()\n");
@@ -200,10 +197,8 @@ posting_merge_AND(struct postmerge *pm, void *extra_args)
 		if (i == pm->n_postings)
 			pm->post_on_merge(cur_min, pm, extra_args);
 
-		/* checking max search items valve */
+		/* update read item counter */
 		pm->n_rd_items += pm->n_postings;
-		if (pm->n_rd_items > pm->max_rd_items)
-			return;
 
 #ifdef DEBUG_POST_MERGE
 		printf("calling next_id_AND()\n");

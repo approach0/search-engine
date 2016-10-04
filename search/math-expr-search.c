@@ -161,7 +161,6 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	struct subpath_ele *ele;
 
 	postmerge_posts_clear(pm);
-	pm->max_rd_items = MAX_MATH_EXP_SINGLE_MERGE_ITEMS;
 
 	for (i = 0; i < n_postings; i++) {
 		po = postings[i];
@@ -188,7 +187,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	res = posting_merge(pm, POSTMERGE_OP_AND,
 	                    on_dm_args->post_on_merge, &mes_arg);
 
-	/* increment read items counter */
+	/* increment total read item counter */
 	on_dm_args->n_tot_rd_items += pm->n_rd_items;
 
 	/* increment directory visit counter */
