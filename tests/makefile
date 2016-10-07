@@ -3,7 +3,8 @@ include ../rules.mk
 all: math-rank-test
 
 math-rank-test: links
-	@ find cases/math-rank/ -type f -exec ./$@.sh {} \;
+	@ find cases/math-rank/ -type f \
+	-exec echo {} \; -exec ./$@.sh {} \;
 
 links: indexer.ln txt2json.ln searcher.ln \
 	search-math-doc-by-url.ln
