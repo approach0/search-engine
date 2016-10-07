@@ -118,7 +118,6 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 	request = get_POST_str(req);
 	if (request != NULL) {
 		response = arg->on_recv(request, arg->arg);
-		free(request);
 	} else {
 		fprintf(stderr, "httpd: POST data is NULL.\n");
 		goto reply;
@@ -133,6 +132,12 @@ httpd_callbk(struct evhttp_request *req, void *arg_)
 	/* set HTTP response content */
 	if (response)
 		evbuffer_add_printf(buf, "%s", response);
+
+	/*
+	 * Free request after response is copied (in case they
+	 * have the same pointer address, e.g. an echo server)
+	 */
+	free(request);
 
 reply:
 	/* send response */
