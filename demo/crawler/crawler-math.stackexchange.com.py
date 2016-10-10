@@ -106,9 +106,9 @@ def save_preview(path, post_txt, url):
 	f = open("template.html", "r")
 	fmt_str = f.read()
 	f.close()
-	post_txt = post_txt.replace("\n", "</br>");
-	preview = fmt_str.replace("{PREVIEW}", post_txt);
-	preview = preview.replace("{URL}", url);
+	post_txt = post_txt.replace("\n", "</br>")
+	preview = fmt_str.replace("{PREVIEW}", post_txt)
+	preview = preview.replace("{URL}", url)
 	# save preview
 	f = open(path, "w")
 	f.write(preview)
@@ -132,7 +132,6 @@ def get_curl():
 	return c
 
 def list_post_links(page, c):
-	links = list()
 	sub_url = '/questions?sort=newest&page={}'.format(page)
 	try:
 		navi_page = curl(sub_url, c)
@@ -185,6 +184,7 @@ def crawl_pages(start, end, extra_opt):
 	c = get_curl()
 	for page in range(start, end + 1):
 		print("[page] %d / %d" % (page, end))
+		succ_posts = 0
 		for div_id, sub_url, e in list_post_links(page, c):
 			if e is not None:
 				print_err("page %d" % page)
@@ -194,10 +194,12 @@ def crawl_pages(start, end, extra_opt):
 				print_err("div ID %s" % div_id)
 				continue
 			ID = int(res.group(1))
-			file_path = get_file_path(ID);
+			file_path = get_file_path(ID)
 			if os.path.isfile(file_path + ".json"):
 				if not extra_opt["overwrite"]:
 					print('[exists, skip] ' + file_path)
+					# count on success
+					succ_posts += 1
 					continue
 			try:
 				url = root_url + sub_url
@@ -209,7 +211,18 @@ def crawl_pages(start, end, extra_opt):
 			except:
 				print_err("post %s" % url)
 				continue
+
+			# count on success
+			succ_posts += 1
+
+			# sleep to avoid over-frequent request.
 			time.sleep(0.6)
+
+		# log crawled page number
+		page_log = open("page.log", "a")
+		page_log.write('page %s: %d posts successful.\n' %
+		               (page, succ_posts))
+		page_log.close()
 	return 'finish'
 
 def help(arg0):
