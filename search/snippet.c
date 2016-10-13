@@ -49,15 +49,6 @@ void snippet_free_highlight_list(list* hi_li)
 	free_hi_list(hi_li);
 }
 
-static LIST_CMP_CALLBK(compare_kw_pos)
-{
-	struct snippet_hi
-	*p0 = MEMBER_2_STRUCT(pa_node0, struct snippet_hi, ln),
-	*p1 = MEMBER_2_STRUCT(pa_node1, struct snippet_hi, ln);
-
-	return p0->kw_pos < p1->kw_pos;
-}
-
 void snippet_push_highlight(list* hi_li, char* kw_str,
                             uint32_t kw_pos, uint32_t kw_len)
 {
