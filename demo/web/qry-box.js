@@ -26,6 +26,9 @@ $(document).ready(function() {
 					dollar_open = false;
 				else
 					dollar_open = true;
+			} else if (contains(q.raw_str[i], tex_charset)) {
+				/* in case user does not enclose math with '$' */
+				dollar_open = true;
 			}
 
 			if (!dollar_open && q.raw_str[i] == ',') {
@@ -46,6 +49,7 @@ $(document).ready(function() {
 				return true; /* continue */
 
 			if (kw[0] == "$" || contains(kw, tex_charset)) {
+				/* strip dollar sign and push into tex keywords */
 				var s = kw.replace(/^\$|\$$/g, "");
 				q.items.push({"type":"tex", "str": s});
 
@@ -60,7 +64,7 @@ $(document).ready(function() {
 
 		q.items.push({"type": "term-input", "str": ""});
 
-		/* help user wrap a '$' */
+		/* help user correct raw string if user does not wrap a '$' */
 		if (correct_raw_str)
 			query_2_raw_str();
 	};
