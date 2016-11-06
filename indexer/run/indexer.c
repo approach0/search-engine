@@ -102,15 +102,15 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 int main(int argc, char* argv[])
 {
-	int opt, overwrite = 0;
+	int opt;
 	text_lexer lex = lex_eng_file;
 	char *corpus_path = NULL;
 	char *dict_path = NULL;
-	const char index_path[] = DEFAULT_INDEXER_OUTPUT_DIR;
+	char *output_path = NULL;
 	struct indices indices;
 	doc_id_t max_doc_id;
 
-	while ((opt = getopt(argc, argv, "hop:d:")) != -1) {
+	while ((opt = getopt(argc, argv, "ho:p:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 			printf("%s -h | "
 			       "-d <dict path> | "
 			       "-p <corpus path> | "
-			       "-o (overwrite)"
+			       "-o <output path>"
 			       "\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 			break;
 
 		case 'o':
-			overwrite = 1;
+			output_path = strdup(optarg);
 			break;
 
 		default:
@@ -166,15 +166,13 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	/* remove output directory if we are overwriting index */
-	if (overwrite) {
-		printf("remove old index...\n");
-		system("rm -rf " DEFAULT_INDEXER_OUTPUT_DIR);
-	}
+	/* set output path to default if it is not specified */
+	if (NULL == output_path)
+		output_path = strdup(DEFAULT_INDEXER_OUTPUT_DIR);
 
 	/* open indices for writing */
 	printf("opening indices...\n");
-	if(indices_open(&indices, index_path, INDICES_OPEN_RW)) {
+	if(indices_open(&indices, output_path, INDICES_OPEN_RW)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
@@ -234,11 +232,9 @@ exit:
 	/*
 	 * free program arguments
 	 */
-	if (corpus_path)
-		free(corpus_path);
-
-	if (dict_path)
-		free(dict_path);
+	free(corpus_path);
+	free(dict_path);
+	free(output_path);
 
 	mhook_print_unfree();
 	return 0;
