@@ -231,7 +231,7 @@ static char *extract_title_string(const char *doc)
 	char *sep = strstr(doc, "\n\n");
 
 	if (NULL == sep) {
-		const char no_title[] = "No title available.";
+		const char no_title[] = "\"No title available.\"";
 		title = malloc(strlen(no_title) + 1);
 		strcpy(title, no_title);
 	} else {
