@@ -28,9 +28,10 @@ def help(arg0):
 def main():
 	cmd = sys.argv[0]
 	args = sys.argv[1:]
+	HOME = os.environ['HOME']
 
-	indri_path = "{}/{}".format(os.environ['HOME'], default_indri_path)
-	jieba_path = "{}/{}".format(os.environ['HOME'], default_jieba_path)
+	indri_path = "{}/{}".format(HOME, default_indri_path)
+	jieba_path = "{}/{}".format(HOME, default_jieba_path)
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "h", [
@@ -46,9 +47,9 @@ def main():
 		if opt in ("-h", "--help"):
 			help(cmd)
 		if opt in ("--indri-path"):
-			indri_path = os.path.abspath(arg)
+			indri_path = os.path.abspath(arg.replace('~', HOME))
 		if opt in ("--jieba-path"):
-			jieba_path = os.path.abspath(arg)
+			jieba_path = os.path.abspath(arg.replace('~', HOME))
 		if opt in ("--clean"):
 			os.system('rm -f ' + targets_mk)
 			os.system('rm -f ' + proj_dep_mk)
