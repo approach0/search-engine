@@ -61,14 +61,14 @@ var quiz_list = [
 		"search":  "cone, $z=\\sqrt{x^2+y^2}$, plane, $z=1+y$"
 	},
 	{ /* 6 */
-		"Q": "What is the value of the following limit [imath]\displaystyle\lim_{n\to\infty} e^{-n} \sum_{k=0}^{n} \frac{n^k}{k!}[/imath] ?",
-		"hint": [
+		"Q": "What is the value of the following limit [imath]\lim_{n\to\infty}e^{-n}\sum_{k=0}^{n}\frac{n^k}{k!}[/imath] ?",
+		"hints": [
 		        "Where do I start?",
 			"This seems impossible...",
 			"I'm running out of time, guess I shall give up some sleep time again...",
 	       		"Or is it possible to <a href=\"#\">find the answer</a> on the Internet?"	
 		],
-		"search": "$\lim_{n\to\infty} e^{-n} \sum_{k=0}^{n} \frac{n^k}{k!}$"
+		"search": "$\lim_{n\to\infty}e^{-n}\sum_{k=0}^{n}\frac{n^k}{k!}$"
         },	           
 	{ /* 7 */
 		"Q": "Can you prove [imath](|x+y|)^2<(|x| + |y|)^2[/imath] ?",
