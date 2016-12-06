@@ -55,15 +55,12 @@ def curl(sub_url, c):
 	buf.close()
 	return res_str
 
-def extract_p_tag_text(soup, id_str):
+def extract_p_tag_text(soup):
 	txt = ''
-	id_tag = soup.find(id=id_str)
-	if id_tag is None:
-		raise Exception("id_tag is None")
-	p_tags = id_tag.find_all('p')
+	p_tags = soup.find_all('p')
 	for p in p_tags:
-		if p.string is not None:
-			txt += str(p.string)
+		if p.text is not ' ':
+			txt += str(p.text)
 			txt += '\n'
 	return txt
 
@@ -80,16 +77,18 @@ def crawl_post_page(sub_url, c):
 	title = str(question_header.h1.string)
 	post_txt = title + '\n\n'
 	# get question
-	try:
-		post_txt += extract_p_tag_text(s, "question")
-	except:
-		raise
+	question = s.find(id="question")
+	if question is None:
+		raise Exception("question tag is None")
+	post_txt += extract_p_tag_text(question)
 	post_txt += '\n'
 	# get answers
-	try:
-		post_txt += extract_p_tag_text(s, "answers")
-	except:
-		raise
+	answers = s.find(id="answers")
+	if answers is None:
+		raise Exception("answers tag is None")
+	for answer in answers.findAll('div',{'class':'answer'}):
+		post_txt += extract_p_tag_text(answer)
+		post_txt += '\n'
 	return post_txt
 
 def mkdir_p(path):
