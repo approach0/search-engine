@@ -496,7 +496,6 @@ extern int lexer_warning_flag;
 ;                            { RET_TOK(semicolon, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \colon                       { RET_TOK(_AUTOGEN_, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 ":"                              { RET_TOK(colon, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
-\\:                              { RET_TOK(colon, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\And                        { RET_TOK(_AUTOGEN_, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\\&                               { RET_TOK(And, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\qquad                      { RET_TOK(_AUTOGEN_, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
@@ -881,6 +880,7 @@ extern int lexer_warning_flag;
 \\[a-zA-Z]+                                    { /* omit undefined control sequence */ }
 &                                                   { /* ignore when not in matrix. */ }
 "\\!"                                       { /* omit short space, before factorial */ }
+"\\:"                                           { /* omit short space, before colon */ }
 "\\;"                                       { /* omit short space, before semicolon */ }
 "\\,"                                           { /* omit short space, before comma */ }
 [\t ]                                                               { /* omit space */ }
