@@ -209,6 +209,9 @@ math_posting_pathinfo(math_posting_t po_, uint32_t position)
 
 	if (1 == fread(&ret.head, sizeof(struct math_pathinfo_pack),
 				   1, po->fh_pathinfo)) {
+		/* check the sanity of n_paths */
+		if (ret.head.n_paths > MAX_MATH_PATHS)
+			return NULL;
 
 		/* now, read all the path info items */
 		for (i = 0; i < ret.head.n_paths; i++) {
@@ -216,6 +219,8 @@ math_posting_pathinfo(math_posting_t po_, uint32_t position)
 				   1, po->fh_pathinfo))
 				return NULL;
 		}
+	} else {
+		return NULL;
 	}
 
 	return (struct math_pathinfo_pack*)&ret;

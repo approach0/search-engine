@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -289,7 +288,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 	struct math_pathinfo       *pathinfo;
 	struct subpath_ele         *subpath_ele;
 	bool                        skipped = 0;
-	struct math_expr_score_res  ret;
+	struct math_expr_score_res  ret = {0};
 
 	/* reset mnc for scoring new document */
 	uint32_t slot;
@@ -301,14 +300,21 @@ math_expr_score_on_merge(struct postmerge* pm,
 		posting = pm->postings[i];
 		po_item = pm->cur_pos_item[i];
 		subpath_ele = math_posting_get_ele(posting);
-		assert(NULL != subpath_ele);
 
 		/* get pathinfo position of corresponding merged item */
 		pathinfo_pos = po_item->pathinfo_pos;
 
 		/* use pathinfo position to get pathinfo packet */
 		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
-		assert(NULL != pathinfo_pack);
+
+		if (NULL == pathinfo_pack || NULL == subpath_ele) {
+			/* unexpected read error, e.g. file is corrupted */
+#ifdef DEBUG_MATH_EXPR_SEARCH
+			fprintf(stderr, "pathinfo_pack or subpath_ele is NULL.\n");
+#endif
+			skipped = 1;
+			break;
+		}
 
 		if (n_qry_lr_paths > pathinfo_pack->n_lr_paths) {
 			/* impossible to match, skip this math expression */
@@ -348,12 +354,12 @@ math_expr_score_on_merge(struct postmerge* pm,
 
 	/* finally calculate expression similarity score */
 	if (!skipped && pm->n_postings != 0) {
-		ret.score = math_expr_sim(mnc_score(), level,
-		                          pathinfo_pack->n_lr_paths - n_qry_lr_paths);
+		ret.score = math_expr_sim(
+		                mnc_score(), level,
+		                pathinfo_pack->n_lr_paths - n_qry_lr_paths
+		            );
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
-	} else {
-		ret.score = 0;
 	}
 
 	return ret;
