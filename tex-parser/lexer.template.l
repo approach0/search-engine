@@ -162,7 +162,7 @@ extern int lexer_warning_flag;
 
 \\array\{                               { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
 
-<mat>"{"                                             { mat_stack ++; return yytext[0]; }
+<mat>"{"                                          { mat_stack ++; return _L_TEX_BRACE; }
 
 <mat>\\\\                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
 <mat>\\cr                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
@@ -175,7 +175,7 @@ extern int lexer_warning_flag;
 		BEGIN(INITIAL);
 		return _END_MAT; 
 	} else {
-		return yytext[0]; 
+		return _R_TEX_BRACE;
 	}
 }
 
