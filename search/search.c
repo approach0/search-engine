@@ -171,14 +171,17 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	P_CAST(pm_args, struct posting_merge_extra_args, extra_args);
 	uint32_t    i, j = 0;
 
-	float       tot_score;
-	float       math_score, bm25_score = 1.f;
+	float       tot_score, math_score, bm25_term_score, bm25_score = 1.f;
 	mnc_score_t max_math_score = 0;
 	position_t *pos_arr;
 
 #ifdef ENABLE_PROXIMITY_SCORE
 	float       prox_score;
 	position_t  minDist;
+#endif
+
+#ifdef ENABLE_PARTIAL_MATCH_PENALTY
+	float       match_dim = 0.f;
 #endif
 
 	doc_id_t    docID = cur_min;
@@ -197,10 +200,17 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 			switch (*type) {
 			case QUERY_KEYWORD_TERM:
 				pip = pm->cur_pos_item[i];
-				bm25_score += BM25_term_i_score(
+				bm25_term_score = BM25_term_i_score(
 					pm_args->bm25args,
 					i, pip->tf, doclen
 				);
+
+				if (bm25_term_score != 0.f) {
+					bm25_score += bm25_term_score;
+#ifdef ENABLE_PARTIAL_MATCH_PENALTY
+					match_dim += 1.f;
+#endif
+				}
 
 				/* set proximity input */
 				pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
@@ -212,8 +222,12 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 			case QUERY_KEYWORD_TEX:
 				mip = pm->cur_pos_item[i];
 
-				if (mip->score > max_math_score)
+				if (mip->score > max_math_score) {
 					max_math_score = mip->score;
+#ifdef ENABLE_PARTIAL_MATCH_PENALTY
+					match_dim += 1.f;
+#endif
+				}
 
 				/* set proximity input */
 				pos_arr = mip->pos_arr;
@@ -247,6 +261,14 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 //	       docID, prox_score, math_score, bm25_score);
 
 	tot_score = prox_score + math_score * bm25_score;
+
+#ifdef ENABLE_PARTIAL_MATCH_PENALTY
+	/*
+	 * The purpose of partial-match penalty is to always rank
+	 * those hits with more non-zero match dimensions higher.
+	 */
+	tot_score += MATCH_DIM_WEIGHT * match_dim;
+#endif
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
 	               pm_args->prox_in, j);
