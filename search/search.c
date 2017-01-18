@@ -224,9 +224,9 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 
 				if (mip->score > max_math_score) {
 					max_math_score = mip->score;
-#ifdef ENABLE_PARTIAL_MATCH_PENALTY
-					match_dim += 1.f;
-#endif
+//#ifdef ENABLE_PARTIAL_MATCH_PENALTY
+//					match_dim += 1.f;
+//#endif
 				}
 
 				/* set proximity input */
@@ -267,6 +267,9 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	 * The purpose of partial-match penalty is to always rank
 	 * those hits with more non-zero match dimensions higher.
 	 */
+	if (max_math_score > 0)
+		match_dim += 1.f;
+
 	tot_score += MATCH_DIM_WEIGHT * match_dim;
 #endif
 
