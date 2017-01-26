@@ -16,6 +16,7 @@ from io import BytesIO
 from bs4 import BeautifulSoup
 
 root_url = "http://math.stackexchange.com"
+vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
 DIVISIONS = 500
@@ -130,8 +131,10 @@ def get_curl():
 	c.setopt(c.FOLLOWLOCATION, 1)
 	return c
 
-def list_post_links(page, c):
-	sub_url = '/questions?sort=newest&page={}'.format(page)
+def list_post_links(page, sortby, c):
+	# sortby can be 'newest', 'active' etc.
+	sub_url = '/questions?sort={}&page={}'.format(sortby, page)
+
 	try:
 		navi_page = curl(sub_url, c)
 	except Exception as e:
@@ -179,12 +182,14 @@ def process_post(post_id, post_txt, url):
 	save_json(jsonfile, post_txt, url)
 	save_preview(file_path + '.html', post_txt, url)
 
-def crawl_pages(start, end, extra_opt):
+def crawl_pages(sortby, start, end, extra_opt):
 	c = get_curl()
 	for page in range(start, end + 1):
-		print("[page] %d / %d" % (page, end))
+		print(vt100_BLUE)
+		print("[page] %d / %d order by %s" % (page, end, sortby))
+		print(vt100_RESET)
 		succ_posts = 0
-		for div_id, sub_url, e in list_post_links(page, c):
+		for div_id, sub_url, e in list_post_links(page, sortby, c):
 			if e is not None:
 				print_err("page %d" % page)
 				break
@@ -231,6 +236,7 @@ def help(arg0):
 	      '%s [-b | --begin-page <page>] ' \
 	      '[-e | --end-page <page>] ' \
 	      '[--no-overwrite] ' \
+	      '[--patrol] ' \
 	      '[--hook-script <script name>] ' \
 	      '[-p | --post <post id>] ' \
 	      '\n' % (arg0))
@@ -245,6 +251,7 @@ def main(args):
 				'end-page=',
 				'post=',
 				'no-overwrite',
+				'patrol',
 				'hook-script='
 			]
 		)
@@ -252,7 +259,11 @@ def main(args):
 		help(args[0])
 
 	# default arguments
-	extra_opt = {"overwrite": True, "hookscript": ""}
+	extra_opt = {
+		"overwrite": True,
+		"hookscript": "",
+		"patrol": False
+	}
 	begin_page = 1
 	end_page = -1
 
@@ -271,6 +282,8 @@ def main(args):
 			exit(0)
 		elif opt in ("--no-overwrite"):
 			extra_opt["overwrite"] = False
+		elif opt in ("--patrol"):
+			extra_opt["patrol"] = True
 		elif opt in ("--hook-script"):
 			extra_opt["hookscript"] = arg
 		else:
@@ -278,14 +291,31 @@ def main(args):
 
 	if (end_page >= begin_page):
 		while True:
-			r = crawl_pages(begin_page, end_page, extra_opt)
+			# crawling newest pages
+			r = crawl_pages('newest', begin_page, end_page,
+			                extra_opt)
 			if r == 'abort':
 				break
+
+			# if patrol mode is enabled, also crawl recently active
+			# posts.
+			if extra_opt['patrol']:
+				# crawling recently active pages
+				r = crawl_pages('active', begin_page, end_page,
+								extra_opt)
+				if r == 'abort':
+					break
+
+			# now it is the time to invoke hookscript.
 			if extra_opt["hookscript"]:
 				os.system(extra_opt["hookscript"])
+
+			if extra_opt['patrol']:
+				# if patrol mode is enabled, repeatedly crawl
+				# the page range instead of breaking out of loop.
+				pass
 			else:
 				break
-
 	else:
 		help(args[0])
 
