@@ -65,6 +65,16 @@ def extract_p_tag_text(soup):
 			txt += '\n'
 	return txt
 
+def extract_comments_text(soup):
+	txt = ''
+	div_tags = soup.find_all('div', class_="comments")
+	for div in div_tags:
+		span_tags = div.find_all('span', class_="comment-copy")
+		for span in span_tags:
+			txt += str(span.text)
+			txt += '\n'
+	return txt
+
 def crawl_post_page(sub_url, c):
 	try:
 		post_page = curl(sub_url, c)
@@ -83,12 +93,19 @@ def crawl_post_page(sub_url, c):
 		raise Exception("question tag is None")
 	post_txt += extract_p_tag_text(question)
 	post_txt += '\n'
+	# get question comments
+	post_txt += extract_comments_text(question)
+	post_txt += '\n'
+
 	# get answers
 	answers = s.find(id="answers")
 	if answers is None:
 		raise Exception("answers tag is None")
 	for answer in answers.findAll('div',{'class':'answer'}):
 		post_txt += extract_p_tag_text(answer)
+		post_txt += '\n'
+		# get answer comments
+		post_txt += extract_comments_text(answer)
 		post_txt += '\n'
 	return post_txt
 
