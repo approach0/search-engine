@@ -221,7 +221,8 @@ static int index_text_field(const char *txt, text_lexer lex)
 
 	/* safe check */
 	if (fh_txt == NULL) {
-		perror("fmemopen() function.");
+		perror("fmemopen() function");
+		fprintf(stderr, "txt: %s (size=%lu)", txt, txt_sz);
 		exit(EXIT_FAILURE);
 	}
 
@@ -271,6 +272,11 @@ int indexer_index_json(FILE *fh, text_lexer lex)
 
 	if (!get_json_val(doc_json, "text", txt_field)) {
 		fprintf(stderr, "JSON: get TXT field failed.\n");
+		return 1;
+	}
+
+	if (strlen(url_field) == 0 || strlen(txt_field) == 0) {
+		fprintf(stderr, "JSON: URL/TXT field strlen is zero.\n");
 		return 1;
 	}
 
