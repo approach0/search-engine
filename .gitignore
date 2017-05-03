@@ -8,6 +8,7 @@
 *.out
 *.log
 *.ln
+*.session
 gen-*
 y.output
 y.*.h
