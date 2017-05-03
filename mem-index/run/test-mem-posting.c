@@ -152,6 +152,8 @@ static void run_testcase(enum test_option opt)
 
 int main()
 {
+	printf("MEM_POSTING_BUF_SZ = %lu \n", MEM_POSTING_BUF_SZ);
+
 	printf("{{{ TEST_PLAIN_POSTING }}}\n");
 	run_testcase(TEST_PLAIN_POSTING);
 
