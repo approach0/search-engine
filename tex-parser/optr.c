@@ -24,6 +24,7 @@ struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
 	n->fr_hash = s_id;
 	n->ge_hash = 0;
 	n->path_id = 0;
+	n->node_id = 0;
 	TREE_NODE_CONS(n->tnd);
 	return n;
 }
@@ -111,8 +112,10 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 		fprintf(fh, C_BROWN "%s" C_RST, trans_symbol(p->symbol_id));
 		fprintf(fh, ") ");
 
-		fprintf(fh, "%u son(s), ", p->sons);
+		// fprintf(fh, "%u son(s), ", p->sons);
 	}
+
+	fprintf(fh, "ID_%u, ", p->node_id);
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
 	fprintf(fh, "path_id=%u, ", p->path_id);
@@ -201,6 +204,32 @@ static LIST_IT_CALLBK(digest_children)
 	LIST_GO_OVER;
 }
 
+static TREE_IT_CALLBK(leafroot_path)
+{
+	TREE_OBJ(struct optr_node, p, tnd);
+
+	if (p->tnd.sons.now == NULL /* is leaf */) {
+		struct optr_node *q = p;
+		while (q) {
+			printf("%u ", q->node_id);
+			q = MEMBER_2_STRUCT(q->tnd.father, struct optr_node, tnd);
+		}
+		q = p;
+		while (q) {
+			printf("%s ", trans_token(q->token_id));
+			q = MEMBER_2_STRUCT(q->tnd.father, struct optr_node, tnd);
+		}
+		printf("\n");
+	}
+	LIST_GO_OVER;
+}
+
+void optr_leafroot_path(struct optr_node* optr)
+{
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &leafroot_path,
+	             0 /* excluding root */, NULL);
+}
+
 static TREE_IT_CALLBK(assign_value)
 {
 	struct optr_node *q;
@@ -211,6 +240,7 @@ static TREE_IT_CALLBK(assign_value)
 	if (p->tnd.sons.now == NULL /* is leaf */) {
 		p->ge_hash = p->symbol_id;
 		p->path_id = ++(*lcnt);
+		p->node_id = p->path_id;
 
 		q = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 		while (q) {
@@ -235,10 +265,23 @@ static TREE_IT_CALLBK(assign_value)
 	LIST_GO_OVER;
 }
 
+static TREE_IT_CALLBK(assign_node_id)
+{
+	P_CAST(lcnt, uint32_t, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+
+	if (p->tnd.sons.now != NULL /* is not leaf */)
+		p->node_id = ++(*lcnt);
+
+	LIST_GO_OVER;
+}
+
 uint32_t optr_assign_values(struct optr_node *optr)
 {
 	uint32_t leaf_cnt = 0;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
+	             0 /* excluding root */, &leaf_cnt);
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_node_id,
 	             0 /* excluding root */, &leaf_cnt);
 
 	/* return the maximum path_id assigned */

@@ -14,6 +14,7 @@ struct optr_node {
 	uint32_t         rank;
 	symbol_id_t      fr_hash, ge_hash;
 	uint32_t         path_id;
+	uint32_t         node_id;
 	struct tree_node tnd;
 };
 
@@ -32,3 +33,5 @@ uint32_t optr_assign_values(struct optr_node*);
 uint32_t optr_prune_nil_nodes(struct optr_node*);
 
 struct subpaths optr_subpaths(struct optr_node*);
+
+void optr_leafroot_path(struct optr_node*);
