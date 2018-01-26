@@ -19,7 +19,7 @@ def parse_file(filepath):
     return inputs
 
 def hit(q, d):
-    return len(q) <= len(d) and q[0] == d[0]
+    return len(q) <= len(d) and q[0] == d[0] and q[1] == d[1]
 
 def align(t_q, t_d, qd_map, path_map):
     dq_map = {v:k for k,v in qd_map.items()}
@@ -47,38 +47,44 @@ def get_hitlist(query, doc):
         hitlist.append(hits)
     return hitlist
 
+def similarity(query, doc, hitlist):
+	queue = [(-1, -1, {}, {}, 0)]
+	level_hit = False
+	last_i = 0
+	best_map = {}
+	best_score = 0
+	while len(queue):
+		i, j, node_map, path_map, score = queue.pop(0)
+		if i != last_i:
+			level_max = 0
+			level_hit = False
+		last_i = i
+		if i != -1:
+			q = query[i]
+			d = doc[j]
+			prefix = align(q, d, node_map, path_map)
+			# print(i, j, path_map)
+			if prefix > 2:
+				level_hit = True
+				score += prefix
+				if score > level_max:
+					best_map = path_map
+					best_score = score
+			elif level_hit:
+				continue
+		if i + 1 < len(query):
+			for t in hitlist[i + 1]:
+				n = (i + 1, t, dict(node_map), dict(path_map), score)
+				queue.append(n);
+	return (best_score, best_map)
+
 query = parse_file(arg1)
 doc   = parse_file(arg2)
 hitlist = get_hitlist(query, doc)
+score, align = similarity(query, doc, hitlist)
 
-print(query)
-print('')
-print(doc)
-print('')
-print(*hitlist, sep='\n')
-print('')
- 
-queue = [(-1, -1, {}, {})]
-level_max = 0
-last_i = 0
-best = {}
-while len(queue):
-    i, j, node_map, path_map = queue.pop(0)
-    if i != last_i:
-        level_max = 0
-    last_i = i
-    if i != -1:
-        q = query[i]
-        d = doc[j]
-        res = align(q, d, node_map, path_map)
-        # print(i, j, path_map)
-        if res > 2:
-            level_max = 1
-            best = path_map
-        elif level_max > 0:
-            continue
-    if i + 1 < len(query):
-        for t in hitlist[i + 1]:
-            n = (i + 1, t, dict(node_map), dict(path_map))
-            queue.append(n);
-print(best)
+print(query, end='\n')
+print(doc, end='\n')
+print(*hitlist, sep='\n', end="\n")
+print(align)
+print('Score: ' + str(score))
