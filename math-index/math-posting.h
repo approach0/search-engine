@@ -29,6 +29,27 @@ struct math_pathinfo_pack {
 	uint32_t              n_lr_paths; /* number of paths in original tree */
 	struct math_pathinfo  pathinfo[];
 };
+
+struct math_posting_item_v2 {
+	uint32_t        exp_id     :20; /* lower address, less significant */
+	uint32_t        n_lr_paths :6; /* number of paths in original tree */
+	uint32_t        n_paths    :6; /* number of different paths followed */
+
+	doc_id_t        doc_id; /* higher address, more significant */
+
+	uint32_t  pathinfo_pos; /* pointing to path info */
+};
+
+struct math_nodeinfo {
+	uint32_t    id;
+	uint32_t    token;
+};
+
+struct math_pathinfo_pack_v2 {
+	uint32_t                 n_nodes; /* number of paths in original tree */
+	symbol_id_t              lf_symb;
+	struct math_nodeinfo     nodeinfo[];
+};
 #pragma pack(pop)
 
 struct subpath_ele;

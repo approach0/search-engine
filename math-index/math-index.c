@@ -175,7 +175,7 @@ static LIST_IT_CALLBK(path_index_step1)
 
 	mkdir_p(path);
 
-	subpath_set_add(&arg->subpath_set, sp);
+	subpath_set_add(&arg->subpath_set, sp, sp_tokens_comparer);
 
 	LIST_GO_OVER;
 }

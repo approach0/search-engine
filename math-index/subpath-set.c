@@ -7,8 +7,9 @@
 #include "head.h"
 
 struct add_subpaths_args {
-	uint32_t            n_uniq;
-	list               *set;
+	uint32_t              n_uniq;
+	list                 *set;
+	subpath_set_comparer *cmp;
 };
 
 static LIST_IT_CALLBK(add_subpaths)
@@ -16,16 +17,17 @@ static LIST_IT_CALLBK(add_subpaths)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(args, struct add_subpaths_args, pa_extra);
 
-	if (0 == subpath_set_add(args->set, sp))
+	if (0 == subpath_set_add(args->set, sp, args->cmp))
 		args->n_uniq ++;
 
 	LIST_GO_OVER;
 }
 
 uint32_t
-subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
+subpath_set_from_subpaths(struct subpaths* subpaths,
+                          subpath_set_comparer *cmp, list *set)
 {
-	struct add_subpaths_args args = {0, set};
+	struct add_subpaths_args args = {0, set, cmp};
 
 	if (NULL == subpaths ||
 	    subpaths->n_lr_paths > MAX_MATH_PATHS)
@@ -69,6 +71,7 @@ struct _cmp_subpath_nodes_arg {
 	struct list_node *path_node2_end;
 	int res;
 	int skip_the_first;
+	int max_cmp_nodes;
 };
 
 static LIST_IT_CALLBK(cmp_subpath_nodes)
@@ -108,7 +111,7 @@ static LIST_IT_CALLBK(cmp_subpath_nodes)
 	}
 }
 
-static int compare(struct subpath *sp1, struct subpath *sp2)
+int sp_tokens_comparer(struct subpath *sp1, struct subpath *sp2)
 {
 	struct _cmp_subpath_nodes_arg arg;
 	arg.path_node2 = sp2->path_nodes;
@@ -148,7 +151,7 @@ static int compare(struct subpath *sp1, struct subpath *sp2)
 		printf("are different. (the other is longer)");
 		break;
 	case 4:
-		printf("are different.");
+		printf("are different. (node tokens do not match)");
 		break;
 	case 5:
 		printf("are different. (the other is not the same type)");
@@ -162,6 +165,17 @@ static int compare(struct subpath *sp1, struct subpath *sp2)
 	return arg.res;
 }
 
+int sp_prefix_comparer(struct subpath *sp1, struct subpath *sp2)
+{
+	struct _cmp_subpath_nodes_arg arg;
+	arg.path_node2 = sp2->path_nodes;
+	arg.path_node2_end = sp2->path_nodes.last;
+	arg.res = 0;
+	arg.skip_the_first = 0;
+
+	list_foreach(&sp1->path_nodes, &cmp_subpath_nodes, &arg);
+}
+
 static struct subpath_ele *new_ele(struct subpath *sp)
 {
 	struct subpath_ele *newele;
@@ -173,13 +187,19 @@ static struct subpath_ele *new_ele(struct subpath *sp)
 	return newele;
 }
 
+struct _subpath_set_add_args {
+	struct subpath       *subpath;
+	subpath_set_comparer *cmp;
+};
+
 static LIST_IT_CALLBK(set_add)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
-	P_CAST(sp, struct subpath, pa_extra);
+	P_CAST(args, struct _subpath_set_add_args, pa_extra);
+	struct subpath     *sp = args->subpath;
 	struct subpath_ele *newele;
 
-	if (0 == compare(sp, ele->dup[0])) {
+	if (0 == (*args->cmp)(sp, ele->dup[0])) {
 		ele->dup_cnt ++;
 		ele->dup[ele->dup_cnt] = sp;
 		return LIST_RET_BREAK;
@@ -200,7 +220,8 @@ static LIST_IT_CALLBK(set_add)
 	}
 }
 
-bool subpath_set_add(list *set, struct subpath *sp)
+bool
+subpath_set_add(list *set, struct subpath *sp, subpath_set_comparer* cmp)
 {
 	struct subpath_ele *newele;
 	struct list_it br;
@@ -210,7 +231,8 @@ bool subpath_set_add(list *set, struct subpath *sp)
 		list_insert_one_at_tail(&newele->ln, set, NULL, NULL);
 		return 0;
 	} else {
-		br = list_foreach(set, &set_add, sp);
+		struct _subpath_set_add_args args = {sp, cmp};
+		br = list_foreach(set, &set_add, &args);
 
 		if (br.now == NULL) {
 			/* we just inserted an unique element */

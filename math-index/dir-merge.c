@@ -171,7 +171,8 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	                                 NULL /* base paths */,
 	                                 NULL /* full paths */};
 	/* generate subpath set */
-	n_uniq_paths = subpath_set_from_subpaths(subpaths, &subpath_set);
+	n_uniq_paths = subpath_set_from_subpaths(subpaths, &sp_tokens_comparer,
+	                                         &subpath_set);
 
 	/* allocate unique subpath string buffers */
 	dm_args.set_sz = n_uniq_paths;

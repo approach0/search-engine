@@ -18,6 +18,7 @@ int main()
 			subpaths_print(&parse_ret.subpaths, stdout);
 
 			n_uniq = subpath_set_from_subpaths(&parse_ret.subpaths,
+			                                   &sp_tokens_comparer,
 			                                   &subpath_set);
 
 			printf("%u unique subpaths:\n", n_uniq);
