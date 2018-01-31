@@ -5,6 +5,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq ctags bison flex
   - sudo apt-get install -qq libz-dev
+  - sudo apt-get install -qq libevent-dev
   - wget 'https://github.com/yanyiwu/cppjieba/archive/v4.8.1.tar.gz' -O cppjieba.tar.gz
   - mkdir -p /home/`whoami`/cppjieba
   - tar -xzf cppjieba.tar.gz -C /home/`whoami`/cppjieba --strip-components=1
