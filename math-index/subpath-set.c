@@ -72,6 +72,7 @@ struct _cmp_subpath_nodes_arg {
 	int res;
 	int skip_the_first;
 	int max_cmp_nodes;
+	int cnt_cmp_nodes;
 };
 
 static LIST_IT_CALLBK(cmp_subpath_nodes)
@@ -89,6 +90,16 @@ static LIST_IT_CALLBK(cmp_subpath_nodes)
 	if (n1->token_id == n2->token_id || arg->skip_the_first) {
 		arg->skip_the_first = 0;
 
+		/* for prefix-2 compare */
+		if (arg->max_cmp_nodes != 0) {
+			arg->cnt_cmp_nodes ++;
+			if (arg->cnt_cmp_nodes == arg->max_cmp_nodes) {
+				arg->res = 0;
+				return LIST_RET_BREAK;
+			}
+		}
+
+		/* for tokens compare */
 		if (arg->path_node2.now == arg->path_node2_end) {
 			if (pa_now->now == pa_head->last)
 				arg->res = 0;
@@ -118,6 +129,7 @@ int sp_tokens_comparer(struct subpath *sp1, struct subpath *sp2)
 	arg.path_node2_end = sp2->path_nodes.last;
 	arg.res = 0;
 	arg.skip_the_first = 0;
+	arg.max_cmp_nodes = 0;
 
 	if (sp1->type != sp2->type) {
 		arg.res = 5;
@@ -172,8 +184,43 @@ int sp_prefix_comparer(struct subpath *sp1, struct subpath *sp2)
 	arg.path_node2_end = sp2->path_nodes.last;
 	arg.res = 0;
 	arg.skip_the_first = 0;
+	arg.max_cmp_nodes = 2;
+	arg.cnt_cmp_nodes = 0;
 
 	list_foreach(&sp1->path_nodes, &cmp_subpath_nodes, &arg);
+
+//#define DEBUG_SUBPATH_SET
+#ifdef DEBUG_SUBPATH_SET
+	_print_subpath(sp1);
+	printf(" and ");
+	_print_subpath(sp2);
+	printf(" ");
+
+	switch (arg.res) {
+	case 0:
+		printf("are the same.");
+		break;
+	case 1:
+		printf("are different. (the other is empty)");
+		break;
+	case 2:
+		printf("are different. (the other is shorter)");
+		break;
+	case 3:
+		printf("are different. (the other is longer)");
+		break;
+	case 4:
+		printf("are different. (node tokens do not match)");
+		break;
+	case 5:
+		printf("are different. (the other is not the same type)");
+		break;
+	default:
+		printf("unexpected res number.\n");
+	}
+	printf("\n");
+#endif
+	return arg.res;
 }
 
 static struct subpath_ele *new_ele(struct subpath *sp)
@@ -244,3 +291,22 @@ subpath_set_add(list *set, struct subpath *sp, subpath_set_comparer* cmp)
 }
 
 LIST_DEF_FREE_FUN(subpath_set_free, struct subpath_ele, ln, free(p));
+
+static LIST_IT_CALLBK(dele_if_gener)
+{
+	bool res;
+	LIST_OBJ(struct subpath, sp, ln);
+
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
+		subpath_free(sp);
+		return res;
+	}
+
+	LIST_GO_OVER;
+}
+
+void delete_gener_paths(struct subpaths *subpaths)
+{
+	list_foreach(&subpaths->li, &dele_if_gener, NULL);
+}

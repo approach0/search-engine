@@ -21,3 +21,5 @@ void subpath_set_print(list*, FILE*);
 uint32_t /* return the number of unique subpaths added */
 subpath_set_from_subpaths(struct subpaths*, subpath_set_comparer*,
                           list* /* set output */);
+
+void delete_gener_paths(struct subpaths*);

@@ -6,6 +6,7 @@
 #include "tex-parser/head.h"
 #include "indexer/config.h"
 #include "indexer/index.h"
+#include "math-index/math-index.h"
 
 #include "search-utils.h"
 #include "math-expr-search.h"
@@ -89,20 +90,6 @@ static LIST_IT_CALLBK(find_url)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(dele_if_gener)
-{
-	bool res;
-	LIST_OBJ(struct subpath, sp, ln);
-
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-		free(sp);
-		return res;
-	}
-
-	LIST_GO_OVER;
-}
-
 static void where_is_expr(char *tex, char *url)
 {
 	struct tex_parse_ret parse_ret;
@@ -117,12 +104,13 @@ static void where_is_expr(char *tex, char *url)
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		optr_print(parse_ret.operator_tree, stdout);
 
-		list_foreach(&parse_ret.subpaths.li, &dele_if_gener, NULL);
+		delete_gener_paths(&parse_ret.subpaths);
 
 		printf("subpaths:\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
 
 		subpath_set_from_subpaths(&parse_ret.subpaths,
+		                          &sp_tokens_comparer,
 		                          &subpath_set);
 
 		printf("subpath set:\n");

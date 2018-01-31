@@ -16,20 +16,6 @@ static LIST_CMP_CALLBK(compare_qry_path)
 		return sp0->path_id > sp1->path_id;
 }
 
-static LIST_IT_CALLBK(dele_if_gener)
-{
-	bool res;
-	LIST_OBJ(struct subpath, sp, ln);
-
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-		subpath_free(sp);
-		return res;
-	}
-
-	LIST_GO_OVER;
-}
-
 struct cnt_same_symbol_args {
 	uint32_t    cnt;
 	symbol_id_t symbol_id;
@@ -103,7 +89,7 @@ static int prepare_math_qry(struct subpaths *subpaths)
 	uint32_t new_path_id = 0;
 
 	/* strip gener paths because they are not used for searching */
-	list_foreach(&subpaths->li, &dele_if_gener, NULL);
+	delete_gener_paths(subpaths);
 
 	/* HACK: overwrite path_id of subpaths to the number of paths belong
 	 * to this bond variable, i.e. bound variable size. */
