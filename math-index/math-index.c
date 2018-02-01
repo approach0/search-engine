@@ -51,6 +51,8 @@ void math_index_close(math_index_t index)
 struct _mk_path_str_arg {
 	char **p;
 	bool skip_one;
+	int max;
+	int cnt;
 };
 
 static LIST_IT_CALLBK(_mk_path_str)
@@ -63,6 +65,13 @@ static LIST_IT_CALLBK(_mk_path_str)
 		goto next;
 	}
 
+	if (arg->max != 0) {
+		if (arg->cnt == arg->max) {
+			return LIST_RET_BREAK;
+		}
+		arg->cnt ++;
+	}
+
 	*(arg->p) += sprintf(*(arg->p), "/%s", trans_token(sp_nd->token_id));
 
 next:
@@ -73,7 +82,7 @@ bool
 math_index_mk_path_str(struct subpath *sp, char *dest_path)
 {
 	char *p = dest_path;
-	struct _mk_path_str_arg arg = {&p, 0};
+	struct _mk_path_str_arg arg = {&p, 0, 0, 0};
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
@@ -94,6 +103,53 @@ math_index_mk_path_str(struct subpath *sp, char *dest_path)
 	}
 
 	return 0;
+}
+
+static LIST_IT_CALLBK(_cnt_nodes)
+{
+	P_CAST(cnt, uint32_t, pa_extra);
+	(*cnt) ++;
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(_write_nodeinfo)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(fh, FILE, pa_extra);
+	struct math_nodeinfo nodeinfo;
+
+	if (sp_nd->token_id >= T_DEGREE_VALVE &&
+	    sp_nd->token_id <= T_MAX_RANK) {
+		LIST_GO_OVER;
+	}
+
+	nodeinfo.id = sp_nd->node_id;
+	nodeinfo.token = sp_nd->token_id;
+	fwrite(&nodeinfo, 1, sizeof(nodeinfo), fh);
+
+	LIST_GO_OVER;
+}
+
+bool
+math_index_mk_prefix_path_str(struct subpath *sp,
+                              char *dest_path)
+{
+	char *p = dest_path;
+	struct _mk_path_str_arg arg = {&p, 0, 2, 0};
+
+	p += sprintf(dest_path, "%s", "prefix");
+	list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	return 0;
+}
+
+uint32_t get_subpath_nodes_num(struct subpath *sp)
+{
+	uint32_t cnt = 0;
+	list_foreach(&sp->path_nodes, &_cnt_nodes, &cnt);
+
+	return cnt;
 }
 
 /* ================
@@ -133,7 +189,7 @@ write_pathinfo_head(const char *path, struct math_pathinfo_pack* pack)
 }
 
 static int
-wirte_posting_item(const char *path, struct math_posting_item *po_item)
+write_posting_item(const char *path, struct math_posting_item *po_item)
 {
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
@@ -148,6 +204,52 @@ wirte_posting_item(const char *path, struct math_posting_item *po_item)
 
 	return 0;
 }
+
+static int
+write_posting_item_v2(const char *path,
+                      struct math_posting_item_v2 *item)
+{
+	FILE *fh;
+	char file_path[MAX_DIR_PATH_NAME_LEN];
+	sprintf(file_path, "%s/" MATH_POSTING_FNAME, path);
+
+	fh = fopen(file_path, "a");
+	if (fh == NULL)
+		return -1;
+
+	fwrite(item, 1, sizeof(struct math_posting_item_v2), fh);
+	fclose(fh);
+
+	return 0;
+}
+
+static int
+write_pathinfo_v2(const char *path, struct subpath *sp,
+                  uint32_t n_nodes)
+{
+	FILE *fh;
+	char file_path[MAX_DIR_PATH_NAME_LEN];
+	struct math_pathinfo_pack_v2 pathinfo;
+
+	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
+
+	fh = fopen(file_path, "a");
+	if (fh == NULL)
+		return -1;
+
+	/* write pathinfo */
+	pathinfo.n_nodes = n_nodes;
+	pathinfo.lf_symb = sp->lf_symbol_id;
+	fwrite(&pathinfo, 1, sizeof(pathinfo), fh);
+
+	/* write nodes info */
+	list_foreach(&sp->path_nodes, &_write_nodeinfo, fh);
+
+	fclose(fh);
+
+	return 0;
+}
+
 
 /* ======================
  * math path index steps
@@ -176,6 +278,29 @@ static LIST_IT_CALLBK(path_index_step1)
 	mkdir_p(path);
 
 	subpath_set_add(&arg->subpath_set, sp, sp_tokens_comparer);
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(path_index_step4)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(arg, struct _index_path_arg, pa_extra);
+	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
+	
+	if (sp->type != SUBPATH_TYPE_NORMAL) {
+		LIST_GO_OVER;
+	}
+
+	append += sprintf(append, "%s/", arg->index->dir);
+	if (math_index_mk_prefix_path_str(sp, append)) {
+		LIST_GO_OVER;
+	}
+
+	mkdir_p(path);
+
+	subpath_set_add(&arg->subpath_set, sp, sp_prefix_comparer);
 
 	LIST_GO_OVER;
 }
@@ -214,7 +339,7 @@ static LIST_IT_CALLBK(path_index_step2)
 
 	append += sprintf(append, "%s/", arg->index->dir);
 	if (0 == math_index_mk_path_str(&tmp, append)) {
-		/* wirte posting item */
+		/* write posting item */
 		po_item.doc_id = arg->docID;
 		po_item.exp_id = arg->expID;
 		po_item.pathinfo_pos = pathinfo_len(path);
@@ -222,9 +347,9 @@ static LIST_IT_CALLBK(path_index_step2)
 		printf("write item(docID=%u, expID=%u, pos=%u) @ %s.\n",
 		       po_item.doc_id, po_item.exp_id, po_item.pathinfo_pos, path);
 #endif
-		wirte_posting_item(path, &po_item);
+		write_posting_item(path, &po_item);
 
-		/* wirte pathinfo head */
+		/* write pathinfo head */
 		pathinfo_hd.n_paths = ele->dup_cnt + 1;
 		pathinfo_hd.n_lr_paths = arg->n_lr_paths;
 #ifdef DEBUG_MATH_INDEX
@@ -232,6 +357,39 @@ static LIST_IT_CALLBK(path_index_step2)
 		       pathinfo_hd.n_paths, pathinfo_hd.n_lr_paths, path);
 #endif
 		write_pathinfo_head(path, &pathinfo_hd);
+	}
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(path_index_step5)
+{
+	LIST_OBJ(struct subpath_ele, ele, ln);
+	P_CAST(arg, struct _index_path_arg, pa_extra);
+	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
+	uint32_t i;
+
+	struct math_posting_item_v2  po_item;
+
+	struct subpath tmp;
+	tmp.path_nodes = ele->dup[0]->path_nodes;
+
+	append += sprintf(append, "%s/", arg->index->dir);
+	if (0 == math_index_mk_prefix_path_str(&tmp, append)) {
+		/* write posting item */
+		po_item.exp_id       = arg->expID;
+		po_item.n_lr_paths   = arg->n_lr_paths;
+		po_item.n_paths      = ele->dup_cnt + 1;
+		po_item.doc_id       = arg->docID;
+		po_item.pathinfo_pos = pathinfo_len(path);
+		write_posting_item_v2(path, &po_item);
+
+		for (i = 0; i <= ele->dup_cnt; i++) {
+			struct subpath * sp = ele->dup[i];
+			uint32_t n_nodes = get_subpath_nodes_num(sp);
+			write_pathinfo_v2(path, sp, n_nodes);
+		}
 	}
 
 	LIST_GO_OVER;
@@ -303,11 +461,15 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 #endif
 	list_foreach(&subpaths.li, &path_index_step3, &arg);
 
-
 #ifdef DEBUG_MATH_INDEX
 	printf("deleting subpath set...\n");
 #endif
 	subpath_set_free(&arg.subpath_set);
+
+
+	LIST_CONS(arg.subpath_set);
+	list_foreach(&subpaths.li, &path_index_step4, &arg);
+	list_foreach(&arg.subpath_set, &path_index_step5, &arg);
 
 	return 0;
 }

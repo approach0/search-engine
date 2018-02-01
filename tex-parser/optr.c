@@ -361,12 +361,14 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
 
 		/* create and insert token node */
 		nd = create_subpath_node(p->token_id, p->sons);
+		nd->node_id = p->node_id;
 		list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
 
 		/* create and insert rank node if necessary */
 		if (f && !f->commutative) {
 			nd = create_subpath_node(
 				T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank), 1);
+			nd->node_id = 0;
 			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,
 			                        NULL, NULL);
 		}
