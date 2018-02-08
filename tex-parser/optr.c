@@ -355,6 +355,7 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
 {
 	struct subpath_node *nd;
 	struct optr_node *f;
+	uint32_t cnt = 0;
 
 	do {
 		f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
@@ -373,8 +374,11 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
 			                        NULL, NULL);
 		}
 
+		cnt ++;
 		p = f;
-	} while(p);
+	} while (p);
+
+	subpath->n_nodes = cnt;
 }
 
 static TREE_IT_CALLBK(gen_subpaths)

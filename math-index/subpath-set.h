@@ -10,12 +10,12 @@ struct subpath_ele {
 
 LIST_DECL_FREE_FUN(subpath_set_free);
 
-typedef int subpath_set_comparer(struct subpath*, struct subpath*);
+typedef int subpath_set_comparer(struct subpath*, struct subpath*, int);
 
 subpath_set_comparer sp_tokens_comparer;
 subpath_set_comparer sp_prefix_comparer;
 
-bool subpath_set_add(list*, struct subpath*, subpath_set_comparer*);
+bool subpath_set_add(list*, struct subpath*, int, subpath_set_comparer*);
 void subpath_set_print(list*, FILE*);
 
 uint32_t /* return the number of unique subpaths added */

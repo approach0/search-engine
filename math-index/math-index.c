@@ -132,11 +132,14 @@ static LIST_IT_CALLBK(_write_nodeinfo)
 }
 
 bool
-math_index_mk_prefix_path_str(struct subpath *sp,
+math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
                               char *dest_path)
 {
 	char *p = dest_path;
-	struct _mk_path_str_arg arg = {&p, 0, 2, 0};
+	struct _mk_path_str_arg arg = {&p, 0, prefix_len, 0};
+
+	if (prefix_len > sp->n_nodes)
+		return 1;
 
 	p += sprintf(dest_path, "%s", "prefix");
 	list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
@@ -261,6 +264,7 @@ struct _index_path_arg {
 	exp_id_t       expID;
 	list           subpath_set;
 	uint32_t       n_lr_paths;
+	int            prefix_len;
 };
 
 static LIST_IT_CALLBK(path_index_step1)
@@ -277,7 +281,7 @@ static LIST_IT_CALLBK(path_index_step1)
 
 	mkdir_p(path);
 
-	subpath_set_add(&arg->subpath_set, sp, sp_tokens_comparer);
+	subpath_set_add(&arg->subpath_set, sp, 0, sp_tokens_comparer);
 
 	LIST_GO_OVER;
 }
@@ -294,13 +298,13 @@ static LIST_IT_CALLBK(path_index_step4)
 	}
 
 	append += sprintf(append, "%s/", arg->index->dir);
-	if (math_index_mk_prefix_path_str(sp, append)) {
+	if (math_index_mk_prefix_path_str(sp, arg->prefix_len, append)) {
 		LIST_GO_OVER;
 	}
 
 	mkdir_p(path);
 
-	subpath_set_add(&arg->subpath_set, sp, sp_prefix_comparer);
+	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len, sp_prefix_comparer);
 
 	LIST_GO_OVER;
 }
@@ -376,7 +380,7 @@ static LIST_IT_CALLBK(path_index_step5)
 	tmp.path_nodes = ele->dup[0]->path_nodes;
 
 	append += sprintf(append, "%s/", arg->index->dir);
-	if (0 == math_index_mk_prefix_path_str(&tmp, append)) {
+	if (0 == math_index_mk_prefix_path_str(&tmp, arg->prefix_len, append)) {
 		/* write posting item */
 		po_item.exp_id       = arg->expID;
 		po_item.n_lr_paths   = arg->n_lr_paths;
@@ -467,9 +471,18 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 	subpath_set_free(&arg.subpath_set);
 
 
-	LIST_CONS(arg.subpath_set);
-	list_foreach(&subpaths.li, &path_index_step4, &arg);
-	list_foreach(&arg.subpath_set, &path_index_step5, &arg);
+	for (arg.prefix_len = 2;; arg.prefix_len++) {
+		LIST_CONS(arg.subpath_set);
+		list_foreach(&subpaths.li, &path_index_step4, &arg);
+
+		if (arg.subpath_set.now == arg.subpath_set.last) {
+			printf("prefix index: break at prefix_len = %d.\n", arg.prefix_len);
+			break;
+		}
+
+		list_foreach(&arg.subpath_set, &path_index_step5, &arg);
+		subpath_set_free(&arg.subpath_set);
+	}
 
 	return 0;
 }
