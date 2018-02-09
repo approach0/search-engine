@@ -40,8 +40,10 @@ with open(fname) as f:
         fields = line.split()
         docid_and_pos = fields[0]
         latex = ' '.join(fields[1:])
-        docid = docid_and_pos.split(':')[0]
-        pos = docid_and_pos.split(':')[1]
+
+        docid = docid_and_pos
+        # docid = docid_and_pos.split(':')[0]
+        # pos = docid_and_pos.split(':')[1]
 
         if first_time or docid == last_docid:
             first_time = False
