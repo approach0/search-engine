@@ -247,7 +247,7 @@ dir_search_bfs(const char *path_, ds_callbk fun, void *arg)
 		/* open current directory */
 		dir = opendir(top->path);
 		if (dir == NULL) {
-			fprintf(stderr, "BFS open err: %s.\n", top->path);
+			//fprintf(stderr, "BFS open err: %s.\n", top->path);
 
 			free(top);
 			break;

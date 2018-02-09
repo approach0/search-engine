@@ -476,7 +476,9 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 		list_foreach(&subpaths.li, &path_index_step4, &arg);
 
 		if (arg.subpath_set.now == arg.subpath_set.last) {
+#ifdef DEBUG_MATH_INDEX
 			printf("prefix index: break at prefix_len = %d.\n", arg.prefix_len);
+#endif
 			break;
 		}
 

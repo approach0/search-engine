@@ -57,7 +57,7 @@ static int foreach_file_callbk(const char *filename, void *arg)
 			return 1;
 		}
 
-		if (indexer_index_json(fh, i_args->lex))
+		if (indexer_index_json_file(fh, i_args->lex))
 			fprintf(stderr, "@ %s\n", fullpath);
 
 		i_args->indexed_files ++;
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
 			goto close;
 		}
 
-		if (indexer_index_json(fh, lex))
+		if (indexer_index_json_file(fh, lex))
 			fprintf(stderr, "@ %s\n", corpus_path);
 
 		print_process(1, 1);

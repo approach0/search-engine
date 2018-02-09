@@ -122,7 +122,10 @@ void term_index_doc_add(void *handle, char *term)
 doc_id_t term_index_doc_end(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	doc_id_t new_docID = ti->repo.addDocument(&ti->document);
+
+	static doc_id_t new_docID = 0;
+	new_docID ++;
+	//doc_id_t new_docID = ti->repo.addDocument(&ti->document);
 
 	vector<char*>::iterator it;
 	vector<char*> &terms = ti->save;

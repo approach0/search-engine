@@ -21,7 +21,8 @@ extern uint64_t n_parse_tex;
 doc_id_t indexer_assign(struct indices*);
 
 typedef int (*text_lexer)(FILE*);
-int indexer_index_json(FILE*, text_lexer);
+int indexer_index_json_file(FILE*, text_lexer);
+int indexer_index_json(const char *, text_lexer);
 
 int indexer_handle_slice(struct lex_slice*);
 

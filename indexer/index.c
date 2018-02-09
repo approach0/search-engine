@@ -249,13 +249,10 @@ static int index_text_field(const char *txt, text_lexer lex)
 	return ret;
 }
 
-int indexer_index_json(FILE *fh, text_lexer lex)
+int indexer_index_json_file(FILE *fh, text_lexer lex)
 {
 	static char doc_json[MAX_CORPUS_FILE_SZ + 1];
-	static char url_field[MAX_CORPUS_FILE_SZ];
-	static char txt_field[MAX_CORPUS_FILE_SZ];
 	size_t      rd_sz;
-	int         ret;
 
 	rd_sz = fread(doc_json, 1, MAX_CORPUS_FILE_SZ, fh);
 	doc_json[rd_sz] = '\0';
@@ -264,6 +261,15 @@ int indexer_index_json(FILE *fh, text_lexer lex)
 		fprintf(stderr, "corpus file too large!\n");
 		return 1;
 	}
+
+	return indexer_index_json(doc_json, lex);
+}
+
+int indexer_index_json(const char *doc_json, text_lexer lex)
+{
+	static char url_field[MAX_CORPUS_FILE_SZ];
+	static char txt_field[MAX_CORPUS_FILE_SZ];
+	int         ret;
 
 	if (!get_json_val(doc_json, "url", url_field)) {
 		fprintf(stderr, "JSON: get URL field failed.\n");
