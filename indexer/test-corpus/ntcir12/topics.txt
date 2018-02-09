@@ -1,0 +1,40 @@
+NTCIR12-MathWiki-1	-0.026838601\ldots
+NTCIR12-MathWiki-2	\mathfrak{P}
+NTCIR12-MathWiki-3	N=\left\lfloor 0.5-\log_{2}\left(\frac{\text{Frequency of this item}}{\text{ Frequency of most common item}}\right)\right\rfloor
+NTCIR12-MathWiki-4	\mathbf{\nabla}\times\mathbf{B}=\mu_{0}\mathbf{J}+\underbrace{\mu_{0}\epsilon_{0}\frac{\partial}{\partial t}\mathbf{E}}_{\mathrm{Maxwell^{\prime}s\ term}}
+NTCIR12-MathWiki-5	1+\cfrac{1}{2+\cfrac{1}{5+\cfrac{1}{5+\cfrac{1}{4+\ddots}}}}
+NTCIR12-MathWiki-6	\,{}^{238}_{92}\mathrm{U}+\,^{64}_{28}\mathrm{Ni}\to\,^{302}_{120}\mathrm{Ubn}^{*}\to\ \mathit{fission\ only}
+NTCIR12-MathWiki-7	0\to G^{\wedge}\stackrel{\pi^{\wedge}}{\to}X^{\wedge}\stackrel{\imath^{\wedge}}{\to}H^{\wedge}\to 0
+NTCIR12-MathWiki-8	w=\begin{cases}w^{*}&\mbox{if }w^{*}>\frac{1}{2},\\ \frac{1}{2}&\mbox{if }w^{*}\leq\frac{1}{2}.\\ \end{cases}
+NTCIR12-MathWiki-9	\begin{bmatrix}V_{1}\\ I_{2}\end{bmatrix}=\begin{bmatrix}h_{11}&h_{12}\\ h_{21}&h_{22}\end{bmatrix}\begin{bmatrix}I_{1}\\ V_{2}\end{bmatrix}
+NTCIR12-MathWiki-10	L(\lambda,\alpha,s)=\sum_{n=0}^{\infty}\frac{\exp(2\pi i\lambda n)}{(n+\alpha)^{s}}.
+NTCIR12-MathWiki-11	\ ax^{2}+bx+c=0
+NTCIR12-MathWiki-12	O(mn\log m)
+NTCIR12-MathWiki-13	A\oplus B=(A^{c}\ominus B^{s})^{c}
+NTCIR12-MathWiki-14	\cos\alpha=-\cos\beta\cos\gamma+\sin\beta\sin\gamma\cosh\frac{a}{k},\,
+NTCIR12-MathWiki-15	\forall x,y\in A\;[x\neq y\rightarrow\neg\exists z\in X\;[z\leq x\land z\leq y]].
+NTCIR12-MathWiki-16	\tau_{\text{rms}}=\sqrt{\frac{\int_{0}^{\infty}(\tau-\overline{\tau})^{2}A_{c}(\tau)d\tau}{\int_{0}^{\infty}A_{c}(\tau)d\tau}}
+NTCIR12-MathWiki-17	x-1-\frac{1}{2}-\frac{1}{4}-\frac{1}{5}-\frac{1}{6}-\frac{1}{9}-\cdots=1
+NTCIR12-MathWiki-18	P_{i}^{x}=\frac{N!}{n_{x}!(N-n_{x})!}p_{x}^{n_{x}}(1-p_{x})^{N-n_{x}}
+NTCIR12-MathWiki-19	H_{ij}=\begin{bmatrix}{\partial^{2}V_{ij}\over\partial x_{i}\partial x_{j}}&{\partial^{2}V_{ij}\over\partial x_{i}\partial y_{j}}&{\partial^{2}V_{ij}\over\partial x_{i}\partial z_{j}}\\ {\partial^{2}V_{ij}\over\partial y_{i}\partial x_{j}}&{\partial^{2}V_{ij}\over\partial y_{i}\partial y_{j}}&{\partial^{2}V_{ij}\over\partial y_{i}\partial z_{j}}\\ {\partial^{2}V_{ij}\over\partial z_{i}\partial x_{j}}&{\partial^{2}V_{ij}\over\partial z_{i}\partial y_{j}}&{\partial^{2}V_{ij}\over\partial z_{i}\partial z_{j}}\end{bmatrix}
+NTCIR12-MathWiki-20	r_{xy}=\frac{\sum\limits_{i=1}^{n}(x_{i}-\bar{x})(y_{i}-\bar{y})}{(n-1)s_{x}s_{y}}=\frac{\sum\limits_{i=1}^{n}(x_{i}-\bar{x})(y_{i}-\bar{y})}{\sqrt{\sum\limits_{i=1}^{n}(x_{i}-\bar{x})^{2}\sum\limits_{i=1}^{n}(y_{i}-\bar{y})^{2}}},
+NTCIR12-MathWiki-21	-0.\qvar{*1*}\ldots
+NTCIR12-MathWiki-22	\mathfrak{P}^{\qvar{*1*}}
+NTCIR12-MathWiki-23	\qvar{*1*}\left(\frac{\text{Frequency \qvar{*2*}}}{\text{Frequency \qvar{*3*}}}\right)
+NTCIR12-MathWiki-24	\underbrace{\qvar{*1*}}_{\qvar{*2*}}
+NTCIR12-MathWiki-25	1+\cfrac{1}{\qvar{*1*}+\cfrac{1}{\qvar{*2*}}}
+NTCIR12-MathWiki-26	\,{}^{238}_{92}\mathrm{U}+\qvar{*1*}\to\qvar{*2*}
+NTCIR12-MathWiki-27	\qvar{*1*}^{\wedge}\stackrel{\qvar{*2*}^{\wedge}}{\to}\qvar{*3*}^{\wedge}
+NTCIR12-MathWiki-28	\qvar{*1*}=\{\begin{array}[]{ll}\qvar{*2*}&\mbox{if }\qvar{*3*}>\frac{1}{2}\\ \qvar{*4*}&\mbox{if }\qvar{*3*}\leq\frac{1}{2}\\ \end{array}
+NTCIR12-MathWiki-29	\qvar{*1*}=\begin{bmatrix}\qvar{*2*}&\qvar{*3*}\\ \qvar{*4*}&\qvar{*5*}\end{bmatrix}\begin{bmatrix}\qvar{*6*}\\ \qvar{*7*}\end{bmatrix}
+NTCIR12-MathWiki-30	L(\qvar{*1*},\qvar{*2*},\qvar{*3*})=\sum_{\qvar{*4*}=0}^{\infty}\frac{\exp(2\pi i\qvar{*1*}\qvar{*4*})}{(\qvar{*4*}+\qvar{*2*})^{\qvar{*3*}}}
+NTCIR12-MathWiki-31	\qvar{*1*}x^{2}+\qvar{*2*}x+\qvar{*3*}=0
+NTCIR12-MathWiki-32	O(\qvar{*1*}\log\qvar{*2*})
+NTCIR12-MathWiki-33	A~{}\qvar{*1*}~{}B=(\qvar{*2*})^{\qvar{*3*}}
+NTCIR12-MathWiki-34	\qvar{*1*}\alpha=-\qvar{*1*}\beta\qvar{*1*}\gamma+\qvar{*2*}\beta\qvar{*2*}\gamma\qvar{*3*}
+NTCIR12-MathWiki-35	\forall x,y\in\qvar{*1*}\;[x\neq y\rightarrow\qvar{*2*}]
+NTCIR12-MathWiki-36	\qvar{*1*}=\sqrt{\frac{\int_{0}^{\infty}\qvar{*2*}^{2}\qvar{*3*}~{}d\qvar{*1*}}{\int_{0}^{\infty}\qvar{*3*}~{}d\qvar{*1*}}}
+NTCIR12-MathWiki-37	\frac{1}{\qvar{*1*}}-\frac{1}{\qvar{*2*}}-\frac{1}{\qvar{*3*}}-\frac{1}{\qvar{*4*}}-\frac{1}{\qvar{*5*}}
+NTCIR12-MathWiki-38	\frac{N!}{\qvar{*1*}!(N-\qvar{*1*})!}p^{\qvar{*1*}}(1-p)^{N-\qvar{*1*}}
+NTCIR12-MathWiki-39	H_{\qvar{*1*}}=\begin{bmatrix}{\partial^{2}\qvar{*2*}\over\qvar{*3*}}\end{bmatrix}
+NTCIR12-MathWiki-40	\frac{\sum\limits_{i=1}^{n}(\qvar{*1*}_{i}-\bar{\qvar{*1*}})(\qvar{*2*}_{i}-\bar{\qvar{*2*}})}{\sqrt{\sum\limits_{i=1}^{n}(\qvar{*1*}_{i}-\bar{\qvar{*1*}})^{2}\sum\limits_{i=1}^{n}(\qvar{*2*}_{i}-\bar{\qvar{*2*}})^{2}}}
