@@ -27,8 +27,10 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 	/* get URL */
 	str = get_blob_string(args->indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n", str);
+	printf("rank: %u" "\n", args->_rank);
 
-	fprintf(fh_trec_output, "%s 1  %s %f APPROACH0\n", trec_topic_id, str, hit->score);
+	fprintf(fh_trec_output, "%s 1 %s %u %f APPROACH0\n", trec_topic_id, str,
+	        args->_rank ++, hit->score);
 	free(str);
 
 	{
@@ -65,6 +67,7 @@ print_res(ranked_results_t *rk_res, uint32_t ___, struct searcher_args *args)
 		win = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
 	 	printf("page %u/%u, top result(s) from %u to %u:\n",
 	 		   i + 1, tot_pages, win.from + 1, win.to);
+		args->_rank = i * DEFAULT_RES_PER_PAGE + win.from + 1;
 	 	rank_window_foreach(&win, &print_res_item, args);
 	}
 
