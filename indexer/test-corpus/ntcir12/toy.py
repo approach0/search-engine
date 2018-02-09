@@ -6,7 +6,7 @@ import time
 fname = "NTCIR12_latex_expressions.txt"
 #fname = "toy.txt"
 
-limit = 100
+limit = -1
 first_time = True
 
 def file_len(fname):
