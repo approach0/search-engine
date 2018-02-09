@@ -56,20 +56,26 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 }
 
 void
-print_res(ranked_results_t *rk_res, uint32_t page, struct searcher_args *args)
+print_res(ranked_results_t *rk_res, uint32_t ___, struct searcher_args *args)
 {
 	struct rank_window win;
-	uint32_t tot_pages;
+	uint32_t i, tot_pages = 1;
 
-	win = rank_window_calc(rk_res, page, DEFAULT_RES_PER_PAGE, &tot_pages);
-	if (page >= tot_pages)
-		printf("No such page. (total page(s): %u)\n", tot_pages);
-
-	if (win.to > 0) {
-		printf("page %u/%u, top result(s) from %u to %u:\n",
-			   page + 1, tot_pages, win.from + 1, win.to);
-		rank_window_foreach(&win, &print_res_item, args);
+	for (i = 0; i < tot_pages; i++) {
+		win = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
+	 	printf("page %u/%u, top result(s) from %u to %u:\n",
+	 		   i + 1, tot_pages, win.from + 1, win.to);
+	 	rank_window_foreach(&win, &print_res_item, args);
 	}
+
+	// if (page >= tot_pages)
+	// 	printf("No such page. (total page(s): %u)\n", tot_pages);
+
+	// if (win.to > 0) {
+	// 	printf("page %u/%u, top result(s) from %u to %u:\n",
+	// 		   page + 1, tot_pages, win.from + 1, win.to);
+	// 	rank_window_foreach(&win, &print_res_item, args);
+	// }
 }
 
 int main(int argc, char *argv[])
@@ -93,7 +99,7 @@ int main(int argc, char *argv[])
 	/* a single new query */
 	qry = query_new();
 
-	while ((opt = getopt(argc, argv, "hi:p:t:m:x:d:n")) != -1) {
+	while ((opt = getopt(argc, argv, "hq:i:p:t:m:x:d:n")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");

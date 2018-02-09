@@ -1,1 +1,1 @@
-/home/tk/Desktop/phd/NTCIR-12-corpus/NTCIR12_latex_expressions.txt
+/home/tk/Desktop/ntcir-12/NTCIR12_latex_expressions.txt
