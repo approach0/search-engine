@@ -171,9 +171,7 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 
 	text_lexer *lex = (text_lexer*)arg_;
 
-	if (indexer_index_json(req, *lex))
-		fprintf(stderr, "ERR !\n");
-
+	indexer_index_json(req, *lex);
 	return req;
 }
 

@@ -286,6 +286,9 @@ int indexer_index_json(const char *doc_json, text_lexer lex)
 		return 1;
 	}
 
+	// printf("URL::::::::: %s\n", url_field);
+	// printf("text:::::::: %s\n", txt_field);
+
 	/* URL blob indexing, it is done prior than text indexing
 	 * because prev_docID is not updated at this point. */
 	index_blob(blob_index_url, url_field, strlen(url_field), 0);
