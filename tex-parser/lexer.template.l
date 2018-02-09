@@ -14,6 +14,7 @@
 
 int ret_var(char*, struct optr_node **, char);
 int ret_num(char*, struct optr_node **);
+int ret_qvar_num(char*, struct optr_node **);
 int ret_float_num(char*, struct optr_node **);
 int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
@@ -41,6 +42,8 @@ extern int lexer_warning_flag;
 "%"                                           { BEGIN(cmt); }
 <cmt>\n                      { BEGIN(INITIAL); return '\n'; }
 <cmt>.                                       { /* ignore */ }
+
+"*"[0-9]+"*"                                 { return ret_qvar_num(yytext, LVAL); }
 
  /* ========================
   *  commands to be ignored
@@ -913,6 +916,17 @@ static uint32_t num2symbol_id(uint32_t n)
 		n = n + S_N + 52;
 	return n;
 }
+
+int ret_qvar_num(char *text, struct optr_node **tr)
+{
+	uint32_t n;
+	sscanf(text, "*%u*", &n);
+
+	n = num2symbol_id(n);
+	*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF);
+	return NUM;
+}
+
 
 int ret_num(char *text, struct optr_node **tr)
 {
