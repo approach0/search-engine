@@ -12,6 +12,9 @@
 #include "search.h"
 #include "search-utils.h"
 
+FILE *fh_trec_output;
+char trec_topic_id[1024] = "NTCIR12-MathWiki-?";
+
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 {
 	char  *str;
@@ -24,6 +27,8 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 	/* get URL */
 	str = get_blob_string(args->indices->url_bi, hit->docID, 0, &str_sz);
 	printf("URL: %s" "\n", str);
+
+	fprintf(fh_trec_output, "%s 1  %s %f APPROACH0\n", trec_topic_id, str, hit->score);
 	free(str);
 
 	{
@@ -81,6 +86,10 @@ int main(int argc, char *argv[])
 	struct searcher_args args;
 	int                  pause = 1;
 
+	fh_trec_output = fopen("trec_fmt_result.txt", "a");
+	if (fh_trec_output == NULL)
+		return 1;
+
 	/* a single new query */
 	qry = query_new();
 
@@ -98,6 +107,7 @@ int main(int argc, char *argv[])
 			       " -m <tex> |"
 			       " -x <text> |"
 			       " -d <dict> |"
+			       " -q <TREC topic ID> |"
 			       " -n (no pause)"
 			       "\n", argv[0]);
 			printf("\n");
@@ -135,6 +145,10 @@ int main(int argc, char *argv[])
 
 		case 'n':
 			pause = 0;
+			break;
+
+		case 'q':
+			strcpy(trec_topic_id, optarg);
 			break;
 
 		default:
@@ -217,6 +231,8 @@ exit:
 	 * free query
 	 */
 	query_delete(qry);
+
+	fclose(fh_trec_output);
 
 	mhook_print_unfree();
 	return 0;
