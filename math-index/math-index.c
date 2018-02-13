@@ -113,24 +113,6 @@ static LIST_IT_CALLBK(_cnt_nodes)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(_write_nodeinfo)
-{
-	LIST_OBJ(struct subpath_node, sp_nd, ln);
-	P_CAST(fh, FILE, pa_extra);
-	struct math_nodeinfo nodeinfo;
-
-	if (sp_nd->token_id >= T_DEGREE_VALVE &&
-	    sp_nd->token_id <= T_MAX_RANK) {
-		LIST_GO_OVER;
-	}
-
-	nodeinfo.id = sp_nd->node_id;
-	nodeinfo.token = sp_nd->token_id;
-	fwrite(&nodeinfo, 1, sizeof(nodeinfo), fh);
-
-	LIST_GO_OVER;
-}
-
 bool
 math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
                               char *dest_path)
@@ -226,30 +208,59 @@ write_posting_item_v2(const char *path,
 	return 0;
 }
 
+struct _set_pathinfo_v2_arg {
+	uint32_t                 prefix_len;
+	uint32_t                 cnt;
+	struct math_pathinfo_v2  pathinfo;
+};
+
+static LIST_IT_CALLBK(_set_pathinfo_v2)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(arg, struct _set_pathinfo_v2_arg, pa_extra);
+	
+	if (pa_now->now == pa_head->now)
+		arg->pathinfo.leaf_id = sp_nd->node_id;
+
+	if (arg->cnt >= arg->prefix_len - 1 ||
+	    pa_now->now == pa_head->last) {
+		arg->pathinfo.subr_id = sp_nd->node_id;
+		return LIST_RET_BREAK;
+	} else {
+		arg->cnt ++;
+		return LIST_RET_CONTINUE;
+	}
+}
+
 static int
 write_pathinfo_v2(const char *path, struct subpath *sp,
-                  uint32_t n_nodes)
+                  uint32_t prefix_len)
 {
+	struct _set_pathinfo_v2_arg arg;
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
-	struct math_pathinfo_pack_v2 pathinfo;
-
 	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
 
 	fh = fopen(file_path, "a");
 	if (fh == NULL)
 		return -1;
 
-	/* write pathinfo */
-	pathinfo.n_nodes = n_nodes;
-	pathinfo.lf_symb = sp->lf_symbol_id;
-	fwrite(&pathinfo, 1, sizeof(pathinfo), fh);
+	arg.pathinfo.lf_symb = sp->lf_symbol_id;
+	arg.cnt = 0;
+	arg.prefix_len = prefix_len;
 
-	/* write nodes info */
-	list_foreach(&sp->path_nodes, &_write_nodeinfo, fh);
+	list_foreach(&sp->path_nodes, &_set_pathinfo_v2, &arg);
 
+#ifdef DEBUG_MATH_INDEX
+	printf("writing pathinfo @ %s: %u, %u, %u \n", path,
+		arg.pathinfo.leaf_id,
+		arg.pathinfo.subr_id,
+		arg.pathinfo.lf_symb
+	);
+#endif
+
+	fwrite(&arg.pathinfo, 1, sizeof(arg.pathinfo), fh);
 	fclose(fh);
-
 	return 0;
 }
 
@@ -302,6 +313,7 @@ static LIST_IT_CALLBK(path_index_step4)
 		LIST_GO_OVER;
 	}
 
+	//printf("mkdir -p %s \n", path);
 	mkdir_p(path);
 
 	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len, sp_prefix_comparer);
@@ -389,10 +401,10 @@ static LIST_IT_CALLBK(path_index_step5)
 		po_item.pathinfo_pos = pathinfo_len(path);
 		write_posting_item_v2(path, &po_item);
 
+		/* write n_paths number of pathinfo structure */
 		for (i = 0; i <= ele->dup_cnt; i++) {
 			struct subpath * sp = ele->dup[i];
-			uint32_t n_nodes = get_subpath_nodes_num(sp);
-			write_pathinfo_v2(path, sp, n_nodes);
+			write_pathinfo_v2(path, sp, arg->prefix_len);
 		}
 	}
 
@@ -474,8 +486,12 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 	for (arg.prefix_len = 2;; arg.prefix_len++) {
 		LIST_CONS(arg.subpath_set);
 		list_foreach(&subpaths.li, &path_index_step4, &arg);
+#ifdef DEBUG_MATH_INDEX
+		printf("subpath set at prefix_len = %d.\n", arg.prefix_len);
+		subpath_set_print(&arg.subpath_set, stdout);
+#endif
 
-		if (arg.subpath_set.now == arg.subpath_set.last) {
+		if (arg.subpath_set.now == NULL) {
 #ifdef DEBUG_MATH_INDEX
 			printf("prefix index: break at prefix_len = %d.\n", arg.prefix_len);
 #endif
@@ -546,6 +562,77 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 			}
 
 			if (i + 1 != pathinfo_pack->n_paths)
+				fprintf(fh, ", ");
+		}
+		fprintf(fh, "}");
+
+		/* finish probing this posting item */
+		fprintf(fh, "\n");
+	} while (math_posting_next(po));
+
+free:
+	math_posting_finish(po);
+	math_posting_free_reader(po);
+
+	return ret;
+}
+
+int math_inex_probe_v2(const char* path, bool trans, FILE *fh)
+{
+	int ret = 0;
+	uint32_t i;
+	uint32_t pos;
+	math_posting_t *po;
+
+	struct math_posting_item_v2 *po_item;
+
+	/* allocate memory for posting reader */
+	po = math_posting_new_reader(NULL, path);
+
+	/* start reading posting list (try to open file) */
+	if (!math_posting_start(po)) {
+		ret = 1;
+		fprintf(stderr, "cannot start reading posting list.\n");
+		goto free;
+	}
+
+	do {
+		/* read posting list item */
+		po_item = (struct math_posting_item_v2*)math_posting_current(po);
+		pos = po_item->pathinfo_pos;
+		fprintf(fh, "doc#%u, exp#%u pathinfo@%u;" " %u lr_paths, %u paths {",
+		        po_item->doc_id, po_item->exp_id, pos, po_item->n_lr_paths,
+		        po_item->n_paths);
+
+		/* then read path info items */
+		struct math_pathinfo_v2 pathinfo[MAX_MATH_PATHS];
+		if (math_posting_pathinfo_v2(po, pos, po_item->n_paths, pathinfo)) {
+			ret = 1;
+			fprintf(stderr, "\n");
+			fprintf(stderr, "fails to read math posting pathinfo.\n");
+			goto free;
+		}
+
+		#ifdef DEBUG_MATH_INDEX
+		printf("\nreading pathinfo @ %s:pos%u: %u, %u, %u \n", path, pos,
+			pathinfo[0].leaf_id,
+			pathinfo[0].subr_id,
+			pathinfo[0].lf_symb
+		);
+		#endif
+
+		/* upon success, print path info items */
+		for (i = 0; i < po_item->n_paths; i++) {
+			struct math_pathinfo_v2 *p = pathinfo + i;
+			if (!trans) {
+				fprintf(fh, "[%u ~ %u, %x]", p->subr_id, p->leaf_id,
+				                             p->lf_symb);
+			} else {
+				fprintf(fh, "[%u ~ %u, %s]", p->subr_id, p->leaf_id,
+				                             trans_symbol(p->lf_symb));
+			}
+
+			if (i + 1 != po_item->n_paths)
 				fprintf(fh, ", ");
 		}
 		fprintf(fh, "}");

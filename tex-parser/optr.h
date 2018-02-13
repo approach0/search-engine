@@ -3,6 +3,8 @@
 #define WC_NONCOM_OPERATOR  0
 #define WC_COMMUT_OPERATOR  1
 
+#define SPECIAL_NODE_ID_BEGIN  1024
+
 struct optr_node {
 	union {
 		bool         commutative;

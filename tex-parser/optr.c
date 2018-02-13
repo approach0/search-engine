@@ -118,9 +118,9 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 	fprintf(fh, "ID_%u, ", p->node_id);
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
-	fprintf(fh, "path_id=%u, ", p->path_id);
-	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->ge_hash));
-	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->fr_hash));
+	//fprintf(fh, "path_id=%u, ", p->path_id);
+	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->ge_hash));
+	//fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->fr_hash));
 	fprintf(fh, "\n");
 }
 
@@ -351,7 +351,12 @@ struct subpath_node *create_subpath_node(enum token_id token_id, uint32_t sons)
 	return nd;
 }
 
-void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
+struct _gen_subpaths_arg {
+	struct subpaths *sp;
+	uint32_t special_node_ids; /* for assigning rank node ids */
+};
+
+void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t *sn_ids)
 {
 	struct subpath_node *nd;
 	struct optr_node *f;
@@ -369,7 +374,7 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
 		if (f && !f->commutative) {
 			nd = create_subpath_node(
 				T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank), 1);
-			nd->node_id = 0;
+			nd->node_id = (*sn_ids)++;
 			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,
 			                        NULL, NULL);
 		}
@@ -383,7 +388,7 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p)
 
 static TREE_IT_CALLBK(gen_subpaths)
 {
-	P_CAST(ret, struct subpaths, pa_extra);
+	P_CAST(arg, struct _gen_subpaths_arg, pa_extra);
 	TREE_OBJ(struct optr_node, p, tnd);
 	struct subpath   *subpath;
 	struct optr_node *f;
@@ -394,7 +399,7 @@ static TREE_IT_CALLBK(gen_subpaths)
 		is_leaf = true;
 
 		/* count leaf-root paths */
-		ret->n_lr_paths ++;
+		arg->sp->n_lr_paths ++;
 
 		do {
 			f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
@@ -413,13 +418,13 @@ static TREE_IT_CALLBK(gen_subpaths)
 				/* insert only when not inserted before */
 				if (!gen_subpaths_bitmap[bitmap_idx]) {
 					subpath = create_subpath(p, is_leaf);
-					insert_subpath_nodes(subpath, p);
-					list_insert_one_at_tail(&subpath->ln, &ret->li,
+					insert_subpath_nodes(subpath, p, &arg->special_node_ids);
+					list_insert_one_at_tail(&subpath->ln, &arg->sp->li,
 					                        NULL, NULL);
 					gen_subpaths_bitmap[bitmap_idx] = 1;
 
 					/* count total subpaths generated. */
-					ret->n_subpaths ++;
+					arg->sp->n_subpaths ++;
 				}
 			}
 
@@ -442,8 +447,9 @@ struct subpaths optr_subpaths(struct optr_node* optr)
 	/* clear bitmap */
 	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
 
+	struct _gen_subpaths_arg arg = {&subpaths, SPECIAL_NODE_ID_BEGIN};
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
-	             0 /* excluding root */, &subpaths);
+	             0 /* excluding root */, &arg);
 	return subpaths;
 }
 
@@ -482,8 +488,8 @@ static LIST_IT_CALLBK(print_subpath_path_node)
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(fh, FILE, pa_extra);
 
-	fprintf(fh, C_BROWN "%s" C_RST "(%u)/",
-	        trans_token(sp_nd->token_id), sp_nd->sons);
+	fprintf(fh, C_BROWN "%s" C_RST "(ID_%u)/",
+	        trans_token(sp_nd->token_id), sp_nd->node_id);
 
 	LIST_GO_OVER;
 }
@@ -501,13 +507,11 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 	        sp->path_id, subpath_type_str(sp->type));
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE)
-		fprintf(fh, "ge_hash=" C_BLUE "%s" C_RST ", ",
+		fprintf(fh, "ge_hash=" C_BLUE "%s" C_RST,
 		        optr_hash_str(sp->ge_hash));
 	else
-		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST ", ",
+		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST,
 		        trans_symbol(sp->lf_symbol_id));
-
-	fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST, optr_hash_str(sp->fr_hash));
 
 	fprintf(fh, "]\n");
 

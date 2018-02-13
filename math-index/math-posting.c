@@ -226,6 +226,23 @@ math_posting_pathinfo(math_posting_t po_, uint32_t position)
 	return (struct math_pathinfo_pack*)&ret;
 }
 
+int math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_paths,
+                             struct math_pathinfo_v2 *pathinfo)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+
+	/* first go the specified file & position */
+	if (-1 == fseek(po->fh_pathinfo, position, SEEK_SET))
+		return 1;
+
+	if (n_paths == fread(pathinfo, sizeof(struct math_pathinfo_v2),
+				   n_paths, po->fh_pathinfo)) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
 void math_posting_print_info(math_posting_t po_)
 {
 	uint32_t i;

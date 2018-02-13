@@ -40,15 +40,10 @@ struct math_posting_item_v2 {
 	uint32_t  pathinfo_pos; /* pointing to path info */
 };
 
-struct math_nodeinfo {
-	uint32_t    id;
-	uint32_t    token;
-};
-
-struct math_pathinfo_pack_v2 {
-	uint32_t                 n_nodes; /* number of paths in original tree */
-	symbol_id_t              lf_symb;
-	struct math_nodeinfo     nodeinfo[];
+struct math_pathinfo_v2 {
+	uint32_t    leaf_id;
+	uint32_t    subr_id;
+	symbol_id_t lf_symb;
 };
 #pragma pack(pop)
 
@@ -72,6 +67,8 @@ math_posting_current(math_posting_t);
 
 struct math_pathinfo_pack*
 math_posting_pathinfo(math_posting_t, uint32_t);
+
+int math_posting_pathinfo_v2(math_posting_t, uint32_t, uint32_t, struct math_pathinfo_v2*);
 
 /* print math posting path and its subpath set duplicate elements */
 void math_posting_print_info(math_posting_t);
