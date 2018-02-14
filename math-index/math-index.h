@@ -34,6 +34,7 @@ math_index_open(const char *, enum math_index_open_opt);
 int math_index_add_tex(math_index_t, doc_id_t, exp_id_t, struct subpaths);
 
 bool math_index_mk_path_str(struct subpath*, char*);
+bool math_index_mk_prefix_path_str(struct subpath*, int, char*);
 
 int math_inex_probe(const char*, bool, FILE*); /* mainly for debug */
 int math_inex_probe_v2(const char*, bool, FILE*);

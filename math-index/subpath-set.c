@@ -7,41 +7,77 @@
 #include "head.h"
 
 struct add_subpaths_args {
-	uint32_t              n_uniq;
-	list                 *set;
-	subpath_set_comparer *cmp;
+	uint32_t new_uniq;
+	uint32_t new_dups;
+	list    *set;
+	uint32_t prefix_len;
 };
+
+static void _print_subpath(struct subpath *sp, uint32_t prefix_len);
 
 static LIST_IT_CALLBK(add_subpaths)
 {
+	struct subpath_ele_added added;
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(args, struct add_subpaths_args, pa_extra);
 
-	if (0 == subpath_set_add(args->set, sp, 0, args->cmp))
-		args->n_uniq ++;
+	added = subpath_set_add(args->set, sp, args->prefix_len);
+	args->new_uniq += added.new_uniq;
+	args->new_dups += added.new_dups;
+
+#ifdef DEBUG_SUBPATH_SET
+	fprintf(stdout, "after adding subpath: \n");
+	_print_subpath(sp, args->prefix_len);
+	printf("\n");
+#endif
+#ifdef DEBUG_SUBPATH_SET
+	fprintf(stdout, "subpath set becomes: \n");
+	subpath_set_print(args->set, stdout);
+	printf("\n");
+#endif
 
 	LIST_GO_OVER;
 }
 
-uint32_t
-subpath_set_from_subpaths(struct subpaths* subpaths,
-                          subpath_set_comparer *cmp, list *set)
+struct subpath_ele_added
+prefix_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 {
-	struct add_subpaths_args args = {0, set, cmp};
+	struct subpath_ele_added ret = {0, 0};
+
+	for (uint32_t l = 2;; l++) {
+		struct add_subpaths_args args = {0, 0, set, l};
+		list_foreach(&subpaths->li, &add_subpaths, &args);
+		ret.new_uniq += args.new_uniq;
+		ret.new_dups += args.new_dups;
+
+		if (args.new_dups == 0)
+			break;
+	}
+
+	return ret;
+}
+
+struct subpath_ele_added
+lr_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
+{
+	struct subpath_ele_added ret = {0, 0};
+	struct add_subpaths_args args = {0, 0, set, 0};
 
 	if (NULL == subpaths ||
 	    subpaths->n_lr_paths > MAX_MATH_PATHS)
-		return 0;
+		return ret;
 
 	list_foreach(&subpaths->li, &add_subpaths, &args);
 
-	return args.n_uniq;
+	ret.new_uniq = args.new_uniq;
+	ret.new_dups = args.new_dups;
+	return ret;
 }
 
-static void _print_subpath(struct subpath *sp)
+static void _print_subpath(struct subpath *sp, uint32_t prefix_len)
 {
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	math_index_mk_path_str(sp, path);
+	math_index_mk_prefix_path_str(sp, prefix_len, path);
 	printf("%s ", path);
 }
 
@@ -51,7 +87,8 @@ static LIST_IT_CALLBK(print_subpath)
 	P_CAST(fh, FILE, pa_extra);
 	uint32_t i;
 
-	_print_subpath(ele->dup[0]);
+	_print_subpath(ele->dup[0], ele->prefix_len);
+	printf(" prefix_len=%u ", ele->prefix_len);
 
 	printf("(duplicates: ");
 	for (i = 0; i <= ele->dup_cnt; i++)
@@ -90,7 +127,7 @@ static LIST_IT_CALLBK(cmp_subpath_nodes)
 	if (n1->token_id == n2->token_id || arg->skip_the_first) {
 		arg->skip_the_first = 0;
 
-		/* for prefix-2 compare */
+		/* reaching max compare? */
 		if (arg->max_cmp_nodes != 0) {
 			arg->cnt_cmp_nodes ++;
 			if (arg->cnt_cmp_nodes == arg->max_cmp_nodes) {
@@ -122,14 +159,15 @@ static LIST_IT_CALLBK(cmp_subpath_nodes)
 	}
 }
 
-int sp_tokens_comparer(struct subpath *sp1, struct subpath *sp2, int _)
+int sp_tokens_comparer(struct subpath *sp1, struct subpath *sp2, int prefix_len)
 {
 	struct _cmp_subpath_nodes_arg arg;
 	arg.path_node2 = sp2->path_nodes;
 	arg.path_node2_end = sp2->path_nodes.last;
 	arg.res = 0;
 	arg.skip_the_first = 0;
-	arg.max_cmp_nodes = 0;
+	arg.max_cmp_nodes = prefix_len;
+	arg.cnt_cmp_nodes = 0;
 
 	if (sp1->type != sp2->type) {
 		arg.res = 5;
@@ -144,9 +182,9 @@ int sp_tokens_comparer(struct subpath *sp1, struct subpath *sp2, int _)
 
 //#define DEBUG_SUBPATH_SET
 #ifdef DEBUG_SUBPATH_SET
-	_print_subpath(sp1);
+	_print_subpath(sp1, prefix_len);
 	printf(" and ");
-	_print_subpath(sp2);
+	_print_subpath(sp2, prefix_len);
 	printf(" ");
 
 	switch (arg.res) {
@@ -177,67 +215,22 @@ int sp_tokens_comparer(struct subpath *sp1, struct subpath *sp2, int _)
 	return arg.res;
 }
 
-int sp_prefix_comparer(struct subpath *sp1, struct subpath *sp2, int prefix_len)
-{
-	struct _cmp_subpath_nodes_arg arg;
-	arg.path_node2 = sp2->path_nodes;
-	arg.path_node2_end = sp2->path_nodes.last;
-	arg.res = 0;
-	arg.skip_the_first = 0;
-	arg.max_cmp_nodes = prefix_len;
-	arg.cnt_cmp_nodes = 0;
-
-	list_foreach(&sp1->path_nodes, &cmp_subpath_nodes, &arg);
-
-//#define DEBUG_SUBPATH_SET
-#ifdef DEBUG_SUBPATH_SET
-	_print_subpath(sp1);
-	printf(" and ");
-	_print_subpath(sp2);
-	printf(" ");
-
-	switch (arg.res) {
-	case 0:
-		printf("are the same.");
-		break;
-	case 1:
-		printf("are different. (the other is empty)");
-		break;
-	case 2:
-		printf("are different. (the other is shorter)");
-		break;
-	case 3:
-		printf("are different. (the other is longer)");
-		break;
-	case 4:
-		printf("are different. (node tokens do not match)");
-		break;
-	case 5:
-		printf("are different. (the other is not the same type)");
-		break;
-	default:
-		printf("unexpected res number.\n");
-	}
-	printf("\n");
-#endif
-	return arg.res;
-}
-
-static struct subpath_ele *new_ele(struct subpath *sp)
+static struct subpath_ele *new_ele(struct subpath *sp, uint32_t prefix_len)
 {
 	struct subpath_ele *newele;
 	newele = malloc(sizeof(struct subpath_ele));
 	LIST_NODE_CONS(newele->ln);
 	newele->dup_cnt = 0;
 	newele->dup[0] = sp;
+	newele->prefix_len = prefix_len;
 
 	return newele;
 }
 
 struct _subpath_set_add_args {
-	struct subpath       *subpath;
-	subpath_set_comparer *cmp;
-	int prefix_len;
+	struct subpath *subpath;
+	uint32_t        prefix_len;
+	uint32_t        new_uniq_inserted;
 };
 
 static LIST_IT_CALLBK(set_add)
@@ -247,52 +240,56 @@ static LIST_IT_CALLBK(set_add)
 	struct subpath     *sp = args->subpath;
 	struct subpath_ele *newele;
 
-	if (0 == (*args->cmp)(sp, ele->dup[0], args->prefix_len)) {
+	if (ele->prefix_len == args->prefix_len &&
+	    0 == sp_tokens_comparer(sp, ele->dup[0], args->prefix_len)) {
 		ele->dup_cnt ++;
 		ele->dup[ele->dup_cnt] = sp;
 		return LIST_RET_BREAK;
+	}
+
+	if (pa_now->now == pa_head->last) {
+		newele = new_ele(sp, args->prefix_len);
+		list_insert_one_at_tail(&newele->ln, pa_head, pa_now, pa_fwd);
+
+		/* indicate we inserted one into set */
+		args->new_uniq_inserted = 1;
+
+		return LIST_RET_BREAK;
 	} else {
-		if (pa_now->now == pa_head->last) {
-			newele = new_ele(sp);
-			list_insert_one_at_tail(&newele->ln, pa_head,
-			                        pa_now, pa_fwd);
-
-			/* indicate we inserted one into set */
-			pa_now->now = NULL;
-
-			return LIST_RET_BREAK;
-		} else {
-			/* not the last element */
-			return LIST_RET_CONTINUE;
-		}
+		/* not the last element */
+		return LIST_RET_CONTINUE;
 	}
 }
 
-bool
-subpath_set_add(list *set, struct subpath *sp, int prefix_len,
-                subpath_set_comparer* cmp)
+struct subpath_ele_added
+subpath_set_add(list *set, struct subpath *sp, int prefix_len)
 {
+	struct subpath_ele_added ret = {0, 0};
 	struct subpath_ele *newele;
-	struct list_it br;
 
 	if (prefix_len > sp->n_nodes)
-		return 1;
+		return ret;
+	else if (prefix_len == 0)
+		prefix_len = sp->n_nodes;
+	/* if prefix_len is zero, indicating it is the full leaf-root path */
 
 	if (set->now == NULL) {
-		newele = new_ele(sp);
+		newele = new_ele(sp, prefix_len);
 		list_insert_one_at_tail(&newele->ln, set, NULL, NULL);
-		return 0;
+		ret.new_uniq ++;
+		ret.new_dups ++;
 	} else {
-		struct _subpath_set_add_args args = {sp, cmp, prefix_len};
-		br = list_foreach(set, &set_add, &args);
+		struct _subpath_set_add_args args = {sp, prefix_len, 0};
+		list_foreach(set, &set_add, &args);
 
-		if (br.now == NULL) {
+		if (args.new_uniq_inserted) {
 			/* we just inserted an unique element */
-			return 0;
+			ret.new_uniq ++;
 		}
+		ret.new_dups ++;
 	}
 
-	return 1;
+	return ret;
 }
 
 LIST_DEF_FREE_FUN(subpath_set_free, struct subpath_ele, ln, free(p));

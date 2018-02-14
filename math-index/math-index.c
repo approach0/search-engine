@@ -292,7 +292,7 @@ static LIST_IT_CALLBK(path_index_step1)
 
 	mkdir_p(path);
 
-	subpath_set_add(&arg->subpath_set, sp, 0, sp_tokens_comparer);
+	subpath_set_add(&arg->subpath_set, sp, 0);
 
 	LIST_GO_OVER;
 }
@@ -316,7 +316,7 @@ static LIST_IT_CALLBK(path_index_step4)
 	//printf("mkdir -p %s \n", path);
 	mkdir_p(path);
 
-	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len, sp_prefix_comparer);
+	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len);
 
 	LIST_GO_OVER;
 }
@@ -349,9 +349,7 @@ static LIST_IT_CALLBK(path_index_step2)
 	struct math_posting_item  po_item;
 	struct math_pathinfo_pack pathinfo_hd;
 
-	struct subpath tmp;
-	tmp.type = ele->dup[0]->type;
-	tmp.path_nodes = ele->dup[0]->path_nodes;
+	struct subpath tmp = *(ele->dup[0]);
 
 	append += sprintf(append, "%s/", arg->index->dir);
 	if (0 == math_index_mk_path_str(&tmp, append)) {
@@ -388,8 +386,7 @@ static LIST_IT_CALLBK(path_index_step5)
 
 	struct math_posting_item_v2  po_item;
 
-	struct subpath tmp;
-	tmp.path_nodes = ele->dup[0]->path_nodes;
+	struct subpath tmp = *(ele->dup[0]);
 
 	append += sprintf(append, "%s/", arg->index->dir);
 	if (0 == math_index_mk_prefix_path_str(&tmp, arg->prefix_len, append)) {

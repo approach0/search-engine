@@ -109,9 +109,7 @@ static void where_is_expr(char *tex, char *url)
 		printf("subpaths:\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
 
-		subpath_set_from_subpaths(&parse_ret.subpaths,
-		                          &sp_tokens_comparer,
-		                          &subpath_set);
+		lr_subpath_set_from_subpaths(&parse_ret.subpaths, &subpath_set);
 
 		printf("subpath set:\n");
 		subpath_set_print(&subpath_set, stdout);

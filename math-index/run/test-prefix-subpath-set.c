@@ -4,9 +4,16 @@
 
 int main()
 {
-	const char *test[] = {"ab", "a+k(b+c)", "k(b+c)+a"};
-	uint32_t i, n_uniq, n_test = sizeof(test)/sizeof(char*);
-	struct tex_parse_ret parse_ret;
+	/* normal test */
+	const char *test[] = {
+		"a+k(b+c)",
+		"a+bc+xy"
+	};
+
+ 	struct tex_parse_ret parse_ret;
+ 	uint32_t i, n_test = sizeof(test)/sizeof(char*);
+
+	struct subpath_ele_added added;
 	list subpath_set = LIST_NULL;
 
 	for (i = 0; i < n_test; i++) {
@@ -14,14 +21,14 @@ int main()
 		parse_ret = tex_parse(test[i], 0, false);
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
+			delete_gener_paths(&parse_ret.subpaths);
 			printf("%u subpaths:\n", parse_ret.subpaths.n_subpaths);
 			subpaths_print(&parse_ret.subpaths, stdout);
 
-			n_uniq = subpath_set_from_subpaths(&parse_ret.subpaths,
-			                                   &sp_tokens_comparer,
-			                                   &subpath_set);
+			added =
+				prefix_subpath_set_from_subpaths(&parse_ret.subpaths, &subpath_set);
 
-			printf("%u unique subpaths:\n", n_uniq);
+			printf("%u unique subpaths:\n", added.new_uniq);
 			subpath_set_print(&subpath_set, stdout);
 			subpath_set_free(&subpath_set);
 
@@ -31,7 +38,6 @@ int main()
 			printf("parser error: %s\n", parse_ret.msg);
 		}
 	}
-
-	mhook_print_unfree();
+ 	mhook_print_unfree();
 	return 0;
 }
