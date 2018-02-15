@@ -234,7 +234,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 
 	/* merge and combine math scores */
 	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
-	                                  DIR_MERGE_DEPTH_FIRST,
+	                                  DIR_MERGE_BREADTH_FIRST,
 	                                  &math_posting_on_merge,
 	                                  &msca);
 	if (msca.wr_mem_po)

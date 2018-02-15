@@ -123,6 +123,15 @@ static uint64_t math_posting_current_id_wrap(void *po_item_)
 	return *id64;
 };
 
+static uint64_t math_posting_current_id_v2_wrap(void *po_item_)
+{
+	/* this casting requires `struct math_posting_item' has
+	 * docID and expID as first two structure members. */
+	uint64_t *id64 = (uint64_t *)po_item_;
+
+	return (*id64) & 0xffffffff000fffff;
+};
+
 struct on_dir_merge_args {
 	uint32_t                    n_qry_lr_paths;
 	struct postmerge           *pm;
@@ -131,6 +140,7 @@ struct on_dir_merge_args {
 	uint32_t                    n_dir_visits;
 	void                       *expr_srch_arg;
 	int64_t                     n_tot_rd_items;
+	enum postmerge_op           posmerge_op;
 };
 
 static enum dir_merge_ret
@@ -169,7 +179,7 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	mes_arg.stop_dir_search = 0;
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
 
-	res = posting_merge(pm, POSTMERGE_OP_AND,
+	res = posting_merge(pm, on_dm_args->posmerge_op,
 	                    on_dm_args->post_on_merge, &mes_arg);
 
 	/* increment total read item counter */
@@ -204,7 +214,11 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 	calls.jump = &math_posting_jump;
 	calls.next = &math_posting_next;
 	calls.now = &math_posting_current_wrap;
-	calls.now_id = &math_posting_current_id_wrap;
+
+	if (dir_merge_type == DIR_MERGE_DIRECT)
+		calls.now_id = &math_posting_current_id_v2_wrap;
+	else
+		calls.now_id = &math_posting_current_id_wrap;
 
 	/* parse TeX */
 	parse_ret = tex_parse(tex, 0, false);
@@ -234,6 +248,10 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		on_dm_args.n_dir_visits = 0;
 		on_dm_args.expr_srch_arg = args;
 		on_dm_args.n_tot_rd_items = 0;
+		if (dir_merge_type == DIR_MERGE_DIRECT)
+			on_dm_args.posmerge_op = POSTMERGE_OP_OR;
+		else
+			on_dm_args.posmerge_op = POSTMERGE_OP_AND;
 
 		math_index_dir_merge(mi, dir_merge_type, &parse_ret.subpaths,
 		                     &on_dir_merge, &on_dm_args);

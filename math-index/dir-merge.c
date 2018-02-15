@@ -117,6 +117,7 @@ struct assoc_ele_and_pathstr_args {
 	size_t               max_strlen;
 	char               (*paths)[MAX_DIR_PATH_NAME_LEN];
 	struct subpath_ele **eles;
+	enum dir_merge_type  type;
 };
 
 static LIST_IT_CALLBK(assoc_ele_and_pathstr)
@@ -128,7 +129,12 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 
 	/* make path string */
 	append += sprintf(append, "%s/", args->index->dir);
-	if (math_index_mk_path_str(ele->dup[0], append)) {
+
+	if (args->type == DIR_MERGE_DIRECT &&
+	    math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append)) {
+		args->i = 0; /* indicates error */
+		return LIST_RET_BREAK;
+	} else if (math_index_mk_path_str(ele->dup[0], append)) {
 		args->i = 0; /* indicates error */
 		return LIST_RET_BREAK;
 	}
@@ -171,8 +177,14 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	                                 NULL /* base paths */,
 	                                 NULL /* full paths */};
 	/* generate subpath set */
-	struct subpath_ele_added added =
-		lr_subpath_set_from_subpaths(subpaths, &subpath_set);
+	struct subpath_ele_added added;
+	
+	if (type == DIR_MERGE_DIRECT) {
+		added = prefix_subpath_set_from_subpaths(subpaths, &subpath_set);
+	} else {
+		added = lr_subpath_set_from_subpaths(subpaths, &subpath_set);
+	}
+
 	n_uniq_paths = added.new_uniq;
 
 	/* allocate unique subpath string buffers */
@@ -189,6 +201,7 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	assoc_args.max_strlen = 0;
 	assoc_args.paths = dm_args.base_paths;
 	assoc_args.eles = dm_args.eles;
+	assoc_args.type = type;
 
 	list_foreach(&subpath_set, &assoc_ele_and_pathstr, &assoc_args);
 
@@ -218,11 +231,17 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 #endif
 
 	/* now we can start merge path directories */
-	if (type == DIR_MERGE_DEPTH_FIRST) {
+	if (type == DIR_MERGE_BREADTH_FIRST) {
 		dir_search_bfs(dm_args.base_paths[dm_args.longpath],
 		               &dir_search_callbk, &dm_args);
+	} else if (type == DIR_MERGE_DEPTH_FIRST) {
+		dir_search_podfs(dm_args.base_paths[dm_args.longpath],
+		               &dir_search_callbk, &dm_args);
+	} else if (type == DIR_MERGE_DIRECT) {
+		dir_search_callbk("", "", 0, &dm_args);
 	} else {
-		; /* not implemented yet */
+		fprintf(stderr, "DIR_MERGE type %u not implemented.\n", type);
+		abort();
 	}
 
 exit:

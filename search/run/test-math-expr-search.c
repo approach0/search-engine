@@ -11,19 +11,26 @@ static void
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
-	struct math_expr_score_res res;
+	struct math_posting_item_v2   *po_item;
+	//P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
 
-	/* get additional math score arguments */
-	P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
+	for (int i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			po_item = pm->cur_pos_item[i];
+			printf("doc#%u, exp#%u\n", po_item->doc_id, po_item->exp_id);
+			printf("lr_paths=%u, paths=%u, @pos%u\n", po_item->n_lr_paths,
+			        po_item->n_paths, po_item->pathinfo_pos);
+		}
+	}
 
 	/* calculate math similarity on merge */
-	res = math_expr_score_on_merge(pm, mes_arg->dir_merge_level,
-	                               mes_arg->n_qry_lr_paths);
+	//res = math_expr_score_on_merge(pm, mes_arg->dir_merge_level,
+	//                              mes_arg->n_qry_lr_paths);
 
-	if (res.score > 0.f) {
-		printf("docID#%u expID#%u score: %u\n",
-		       res.doc_id, res.exp_id, res.score);
-	}
+	// if (res.score > 0.f) {
+	// 	printf("docID#%u expID#%u score: %u\n",
+	// 	       res.doc_id, res.exp_id, res.score);
+	// }
 }
 
 int main(int argc, char *argv[])
@@ -31,20 +38,23 @@ int main(int argc, char *argv[])
 	uint32_t                i;
 	int                     opt;
 	math_index_t            mi = NULL;
+	enum dir_merge_type     directory_merge_method = DIR_MERGE_DIRECT;
 
 	static char query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
 	uint32_t   n_queries = 0;
 
 	char      *index_path = NULL;
 
-	while ((opt = getopt(argc, argv, "hp:t:o:")) != -1) {
+	while ((opt = getopt(argc, argv, "hp:t:o:m:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
 			printf("test for math search.\n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -p <index path> | -t <TeX>\n", argv[0]);
+			printf("%s -h | -p <index path> | -t <TeX> | "
+			           "-m <1:dfs,2:bfs,3:direct>"
+			           "\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -p ./tmp -t 'a+b'\n", argv[0]);
@@ -52,6 +62,16 @@ int main(int argc, char *argv[])
 
 		case 'p':
 			index_path = strdup(optarg);
+			break;
+
+		case 'm':
+			if (optarg[0] == '1')
+				directory_merge_method = DIR_MERGE_BREADTH_FIRST;
+			else if (optarg[0] == '2')
+				directory_merge_method = DIR_MERGE_DEPTH_FIRST;
+			else
+				directory_merge_method = DIR_MERGE_DIRECT;
+
 			break;
 
 		case 't':
@@ -97,7 +117,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* for now only single (query[0]) is searched */
-	math_expr_search(mi, query[0], DIR_MERGE_DEPTH_FIRST,
+	math_expr_search(mi, query[0], directory_merge_method,
 	                 &math_posting_on_merge, NULL);
 
 exit:

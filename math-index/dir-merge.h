@@ -6,6 +6,7 @@ enum dir_merge_ret {
 };
 
 enum dir_merge_type {
+	DIR_MERGE_DIRECT,
 	DIR_MERGE_DEPTH_FIRST,
 	DIR_MERGE_BREADTH_FIRST
 };

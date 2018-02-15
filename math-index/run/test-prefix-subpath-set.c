@@ -7,7 +7,8 @@ int main()
 	/* normal test */
 	const char *test[] = {
 		"a+k(b+c)",
-		"a+bc+xy"
+		"a+bc+xy",
+		"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \\binom{n}{r} "
 	};
 
  	struct tex_parse_ret parse_ret;
