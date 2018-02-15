@@ -13,7 +13,7 @@
 
 //#define DEBUG_SUBPATH_SET
 
-//#define DEBUG_DIR_MERGE
+#define DEBUG_DIR_MERGE
 
 //#define DEBUG_MATH_POSTING
 
