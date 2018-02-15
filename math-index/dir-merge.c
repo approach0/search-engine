@@ -130,13 +130,18 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 	/* make path string */
 	append += sprintf(append, "%s/", args->index->dir);
 
-	if (args->type == DIR_MERGE_DIRECT &&
-	    math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append)) {
-		args->i = 0; /* indicates error */
-		return LIST_RET_BREAK;
-	} else if (math_index_mk_path_str(ele->dup[0], append)) {
-		args->i = 0; /* indicates error */
-		return LIST_RET_BREAK;
+	if (args->type == DIR_MERGE_DIRECT) {
+		printf("aaaaaaaaaa\n");
+	    if (math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append)) {
+			args->i = 0; /* indicates error */
+			return LIST_RET_BREAK;
+		}
+	} else {
+		printf("bbbbbbbbbb\n");
+		if (math_index_mk_path_str(ele->dup[0], append)) {
+			args->i = 0; /* indicates error */
+			return LIST_RET_BREAK;
+		}
 	}
 
 	/* associate paths[i] with a subpath set element */
@@ -203,6 +208,7 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	assoc_args.eles = dm_args.eles;
 	assoc_args.type = type;
 
+	printf("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 	list_foreach(&subpath_set, &assoc_ele_and_pathstr, &assoc_args);
 
 	if (assoc_args.i == 0) {

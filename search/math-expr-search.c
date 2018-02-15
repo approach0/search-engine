@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "config.h"
 #include "math-expr-search.h"
 
 static LIST_CMP_CALLBK(compare_qry_path)
