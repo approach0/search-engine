@@ -77,15 +77,6 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 		postings[i] = math_posting_new_reader(dm_args->eles[i],
 		                               dm_args->full_paths[i]);
-
-		if (!dir_exists(dm_args->full_paths[i])) {
-#ifdef DEBUG_DIR_MERGE
-			printf("stop subdir merging @ %s/%s.\n", path, srchpath);
-#endif
-			ret = DS_RET_STOP_SUBDIR;
-			i ++;
-			goto free_postings;
-		}
 	}
 
 #ifdef DEBUG_DIR_MERGE
@@ -97,7 +88,6 @@ dir_search_callbk(const char* path, const char *srchpath,
 	                                       level, dm_args->args))
 		ret = DS_RET_STOP_ALLDIR;
 
-free_postings:
 	for (j = 0; j < i; j++)
 		math_posting_free_reader(postings[j]);
 
