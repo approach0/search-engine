@@ -232,10 +232,10 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		/* prepare math query */
 		prepare_math_qry(&parse_ret.subpaths);
 
-#ifdef DEBUG_MATH_EXPR_SEARCH
+//#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("after prepare_math_qry():\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
-#endif
+//#endif
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("calling math_index_dir_merge()...\n");

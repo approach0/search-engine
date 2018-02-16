@@ -4,6 +4,13 @@
 #include <string.h>
 
 #include "mhook/mhook.h"
+
+#include "tex-parser/tex-parser.h"
+#include "tex-parser/config.h"
+#include "tex-parser/gen-token.h"
+#include "tex-parser/gen-symbol.h"
+#include "tex-parser/trans.h"
+
 #include "postmerge.h"
 #include "math-expr-search.h"
 
@@ -12,15 +19,29 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
 	struct math_posting_item_v2   *po_item;
+	//struct subpath_ele            *subpath_ele;
+	math_posting_t                 posting;
+	struct math_pathinfo_v2        pathinfo[MAX_MATH_PATHS];
+	int i, j;
 	//P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
 
-	for (int i = 0; i < pm->n_postings; i++) {
+	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {
+			posting = pm->postings[i];
+			//subpath_ele = math_posting_get_ele(posting);
 			po_item = pm->cur_pos_item[i];
+			math_posting_pathinfo_v2(posting, po_item->pathinfo_pos, po_item->n_paths,
+			                         pathinfo);
+
 			printf("from posting[%u]: ", i);
-			printf("doc#%u, exp#%u, ", po_item->doc_id, po_item->exp_id);
-			printf("lr_paths=%u, paths=%u, @pos%u\n", po_item->n_lr_paths,
-			        po_item->n_paths, po_item->pathinfo_pos);
+			printf("doc#%u, exp#%u with originally %u lr_paths {\n",
+			       po_item->doc_id, po_item->exp_id, po_item->n_lr_paths);
+			for (j = 0; j < po_item->n_paths; j++) {
+				struct math_pathinfo_v2 *p = pathinfo + j;
+					printf("\t [%u ~ %u, %s]\n", p->subr_id, p->leaf_id,
+					        trans_symbol(p->lf_symb));
+			}
+			printf("}\n");
 		}
 	}
 	printf("\n");
