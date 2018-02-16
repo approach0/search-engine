@@ -369,6 +369,7 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t
 		nd = create_subpath_node(p->token_id, p->sons);
 		nd->node_id = p->node_id;
 		list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
+		cnt ++; // increment subpath nodes counter
 
 		/* create and insert rank node if necessary */
 		if (f && !f->commutative) {
@@ -377,9 +378,9 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t
 			nd->node_id = (*sn_ids)++;
 			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,
 			                        NULL, NULL);
+			cnt ++; // increment subpath nodes counter
 		}
 
-		cnt ++;
 		p = f;
 	} while (p);
 

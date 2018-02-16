@@ -11,15 +11,67 @@ struct add_subpaths_args {
 	uint32_t new_dups;
 	list    *set;
 	uint32_t prefix_len;
+	uint32_t keep_going;
 };
 
 static void _print_subpath(struct subpath *sp, uint32_t prefix_len);
+
+struct test_interest_args {
+	uint32_t interest;
+	uint32_t cnt, max;
+};
+
+int interested_token(enum token_id tokid)
+{
+	enum token_id rank_base = T_MAX_RANK - OPTR_INDEX_RANK_MAX;
+	if (rank_base < tokid && tokid < T_MAX_RANK) {
+		//printf("Not interested at subr token %s.\n", trans_token(tokid));
+		return 0;
+	} else {
+		//printf("subr token %s is interesting.\n", trans_token(tokid));
+		return 1;
+	}
+}
+
+static LIST_IT_CALLBK(test_interest)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(arg, struct test_interest_args, pa_extra);
+
+	arg->cnt ++;
+
+	if (arg->cnt == arg->max) {
+		arg->interest = interested_token(sp_nd->token_id);
+		return LIST_RET_BREAK;
+	} else if (pa_now->now == pa_head->last) {
+		arg->interest = 1;
+		return LIST_RET_BREAK;
+	} else {
+		return LIST_RET_CONTINUE;
+	}
+}
+
+uint32_t
+interesting_prefix(struct subpath *sp, uint32_t prefix_len)
+{
+	struct test_interest_args arg = {0, 0, prefix_len};
+	list_foreach(&sp->path_nodes, &test_interest, &arg);
+	return arg.interest;
+}
 
 static LIST_IT_CALLBK(add_subpaths)
 {
 	struct subpath_ele_added added;
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(args, struct add_subpaths_args, pa_extra);
+
+	if (!interesting_prefix(sp, args->prefix_len)) {
+		// if this level are not interesting tokens, we
+		// still need to go next level in case there are
+		// nodes there.
+		args->keep_going = 1;
+		LIST_GO_OVER;
+	}
 
 	added = subpath_set_add(args->set, sp, args->prefix_len);
 	args->new_uniq += added.new_uniq;
@@ -45,12 +97,12 @@ prefix_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 	struct subpath_ele_added ret = {0, 0};
 
 	for (uint32_t l = 2;; l++) {
-		struct add_subpaths_args args = {0, 0, set, l};
+		struct add_subpaths_args args = {0, 0, set, l, 0};
 		list_foreach(&subpaths->li, &add_subpaths, &args);
 		ret.new_uniq += args.new_uniq;
 		ret.new_dups += args.new_dups;
 
-		if (args.new_dups == 0)
+		if (args.new_dups == 0 && !args.keep_going)
 			break;
 	}
 
@@ -61,7 +113,7 @@ struct subpath_ele_added
 lr_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 {
 	struct subpath_ele_added ret = {0, 0};
-	struct add_subpaths_args args = {0, 0, set, 0};
+	struct add_subpaths_args args = {0, 0, set, 0, 0};
 
 	if (NULL == subpaths ||
 	    subpaths->n_lr_paths > MAX_MATH_PATHS)

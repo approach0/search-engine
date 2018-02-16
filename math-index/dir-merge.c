@@ -79,11 +79,11 @@ dir_search_callbk(const char* path, const char *srchpath,
 		                               dm_args->full_paths[i]);
 	}
 
-#ifdef DEBUG_DIR_MERGE
+//#ifdef DEBUG_DIR_MERGE
 	printf("post merging at directories:\n");
 	print_all_dir_strings(dm_args);
 	printf("\n");
-#endif
+//#endif
 	if (DIR_MERGE_RET_STOP == dm_args->fun(postings, dm_args->set_sz,
 	                                       level, dm_args->args))
 		ret = DS_RET_STOP_ALLDIR;
