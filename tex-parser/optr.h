@@ -3,8 +3,6 @@
 #define WC_NONCOM_OPERATOR  0
 #define WC_COMMUT_OPERATOR  1
 
-#define SPECIAL_NODE_ID_BEGIN  1024
-
 struct optr_node {
 	union {
 		bool         commutative;
@@ -37,3 +35,5 @@ uint32_t optr_prune_nil_nodes(struct optr_node*);
 struct subpaths optr_subpaths(struct optr_node*);
 
 void optr_leafroot_path(struct optr_node*);
+
+uint32_t optr_max_node_id(struct optr_node*);

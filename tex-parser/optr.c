@@ -438,19 +438,43 @@ static TREE_IT_CALLBK(gen_subpaths)
 	LIST_GO_OVER;
 }
 
+static TREE_IT_CALLBK(find_max_node_id)
+{
+	P_CAST(max_node_id, uint32_t, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+
+	if (*max_node_id < p->node_id) {
+		*max_node_id = p->node_id;
+	}
+	
+	LIST_GO_OVER;
+}
+
+uint32_t optr_max_node_id(struct optr_node *optr)
+{
+	uint32_t max_node_id = 0;
+
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &find_max_node_id,
+	             0 /* including root */, &max_node_id);
+	return max_node_id;
+}
+
 struct subpaths optr_subpaths(struct optr_node* optr)
 {
 	struct subpaths subpaths;
+	uint32_t special_node_id = 0;
 	LIST_CONS(subpaths.li);
 	subpaths.n_lr_paths = 0;
 	subpaths.n_subpaths = 0;
 
+	special_node_id = optr_max_node_id(optr) + 1;
+	
 	/* clear bitmap */
 	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
 
-	struct _gen_subpaths_arg arg = {&subpaths, SPECIAL_NODE_ID_BEGIN};
+	struct _gen_subpaths_arg arg = {&subpaths, special_node_id};
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
-	             0 /* excluding root */, &arg);
+	             0 /* including root */, &arg);
 	return subpaths;
 }
 
