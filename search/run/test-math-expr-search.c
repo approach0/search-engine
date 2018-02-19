@@ -22,14 +22,14 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	struct math_posting_item_v2   *po_item;
 	math_posting_t                 posting;
 	struct math_pathinfo_v2        pathinfo[MAX_MATH_PATHS];
-	int i, j;
+	struct subpath_ele            *subpath_ele;
+	int i, j, k;
 	uint32_t topk_cnt[3];
 	P_CAST(mes_arg, struct math_extra_score_arg, extra_args);
 
 	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {
 			posting = pm->postings[i];
-			//subpath_ele = math_posting_get_ele(posting);
 			po_item = pm->cur_pos_item[i];
 			math_posting_pathinfo_v2(posting, po_item->pathinfo_pos, po_item->n_paths,
 			                         pathinfo);
@@ -37,19 +37,36 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 			printf("from posting[%u]: ", i);
 			printf("doc#%u, exp#%u with originally %u lr_paths {\n",
 			       po_item->doc_id, po_item->exp_id, po_item->n_lr_paths);
-			for (j = 0; j < po_item->n_paths; j++) {
-				struct math_pathinfo_v2 *p = pathinfo + j;
-				printf("\t [%u ~ %u, %s]\n", p->subr_id, p->leaf_id,
-				        trans_symbol(p->lf_symb));
+
+			subpath_ele = math_posting_get_ele(posting);
+			for (j = 0; j < subpath_ele->dup_cnt; j++) {
+				uint32_t qr, ql;
+				qr = subpath_ele->rid[j];
+				ql = subpath_ele->dup[j]->path_id;
+				printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+				       trans_symbol(subpath_ele->dup[j]->lf_symbol_id));
+
+				for (k = 0; k < po_item->n_paths; k++) {
+					uint32_t dr, dl;
+					struct math_pathinfo_v2 *p = pathinfo + k;
+					dr = p->subr_id;
+					dl = p->leaf_id;
+
+					printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
+					       trans_symbol(p->lf_symb));
+					pq_hit(&mes_arg->pq, qr, ql, dr, dl);
+				}
 			}
+
 			printf("}\n");
 		}
 	}
-	printf("\n");
 
 	pq_align(&mes_arg->pq, topk_cnt, 3);
 	printf("topk_cnt: %u, %u, %u\n", topk_cnt[0], topk_cnt[1], topk_cnt[2]);
 	pq_reset(&mes_arg->pq);
+
+	printf("\n");
 
 	/* calculate math similarity on merge */
 	//res = math_expr_score_on_merge(pm, mes_arg->dir_merge_level,
