@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 #define MAX_NODE_IDS 4096

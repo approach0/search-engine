@@ -6,6 +6,7 @@ struct subpath_ele {
 	struct list_node ln;
 	uint32_t         dup_cnt;
 	struct subpath  *dup[MAX_MATH_PATHS];
+	uint32_t         rid[MAX_MATH_PATHS]; /*  node ID of prefix root */
 	uint32_t         prefix_len;
 };
 

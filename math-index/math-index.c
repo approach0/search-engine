@@ -105,14 +105,6 @@ math_index_mk_path_str(struct subpath *sp, char *dest_path)
 	return 0;
 }
 
-static LIST_IT_CALLBK(_cnt_nodes)
-{
-	P_CAST(cnt, uint32_t, pa_extra);
-	(*cnt) ++;
-
-	LIST_GO_OVER;
-}
-
 bool
 math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
                               char *dest_path)
@@ -127,14 +119,6 @@ math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
 	list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	return 0;
-}
-
-uint32_t get_subpath_nodes_num(struct subpath *sp)
-{
-	uint32_t cnt = 0;
-	list_foreach(&sp->path_nodes, &_cnt_nodes, &cnt);
-
-	return cnt;
 }
 
 /* ================

@@ -144,7 +144,7 @@ static LIST_IT_CALLBK(print_subpath)
 
 	printf("(duplicates: ");
 	for (i = 0; i <= ele->dup_cnt; i++)
-		fprintf(fh, "path#%u ", ele->dup[i]->path_id);
+		fprintf(fh, "%u~path#%u ", ele->rid[i], ele->dup[i]->path_id);
 	printf(")\n");
 
 	LIST_GO_OVER;
@@ -274,6 +274,7 @@ static struct subpath_ele *new_ele(struct subpath *sp, uint32_t prefix_len)
 	LIST_NODE_CONS(newele->ln);
 	newele->dup_cnt = 0;
 	newele->dup[0] = sp;
+	newele->rid[0] = get_subpath_nodeid_at(sp, prefix_len);
 	newele->prefix_len = prefix_len;
 
 	return newele;
@@ -296,6 +297,7 @@ static LIST_IT_CALLBK(set_add)
 	    0 == sp_tokens_comparer(sp, ele->dup[0], args->prefix_len)) {
 		ele->dup_cnt ++;
 		ele->dup[ele->dup_cnt] = sp;
+		ele->rid[ele->dup_cnt] = get_subpath_nodeid_at(sp, ele->prefix_len);
 		return LIST_RET_BREAK;
 	}
 

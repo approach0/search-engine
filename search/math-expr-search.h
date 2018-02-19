@@ -4,6 +4,7 @@
 
 #include "postmerge.h"
 #include "mnc-score.h"
+#include "math-prefix-qry.h"
 
 struct math_extra_score_arg {
 	uint32_t n_qry_lr_paths;
@@ -11,6 +12,7 @@ struct math_extra_score_arg {
 	uint32_t n_dir_visits;
 	bool     stop_dir_search;
 	void    *expr_srch_arg;
+	struct math_prefix_qry pq;
 };
 
 #pragma pack(push, 1)

@@ -54,7 +54,7 @@ print_all_dir_strings(struct dir_merge_args *dm_args)
 
 		printf("(duplicates: ");
 		for (j = 0; j <= ele->dup_cnt; j++)
-			printf("path#%u ", ele->dup[j]->path_id);
+			printf("%u~path#%u ", ele->rid[j], ele->dup[j]->path_id);
 		printf(")\n");
 	}
 }

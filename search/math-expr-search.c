@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "tex-parser/head.h"
 #include "config.h"
 #include "math-expr-search.h"
 
@@ -142,6 +143,7 @@ struct on_dir_merge_args {
 	void                       *expr_srch_arg;
 	int64_t                     n_tot_rd_items;
 	enum postmerge_op           posmerge_op;
+	uint32_t                    n_max_qry_node_id;
 };
 
 static enum dir_merge_ret
@@ -179,9 +181,13 @@ on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
 	mes_arg.n_dir_visits    = on_dm_args->n_dir_visits;
 	mes_arg.stop_dir_search = 0;
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
+	printf("allocating prefix-query structure ...\n");
+	mes_arg.pq = pq_allocate(on_dm_args->n_max_qry_node_id);
 
 	res = posting_merge(pm, on_dm_args->posmerge_op,
 	                    on_dm_args->post_on_merge, &mes_arg);
+
+	pq_free(mes_arg.pq);
 
 	/* increment total read item counter */
 	on_dm_args->n_tot_rd_items += pm->n_rd_items;
@@ -222,7 +228,14 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		calls.now_id = &math_posting_current_id_wrap;
 
 	/* parse TeX */
-	parse_ret = tex_parse(tex, 0, false);
+	parse_ret = tex_parse(tex, 0, true);
+
+	if (parse_ret.operator_tree) {
+		on_dm_args.n_max_qry_node_id = optr_max_node_id((struct optr_node *)
+		                                                parse_ret.operator_tree);
+		optr_release((struct optr_node*)parse_ret.operator_tree);
+		printf("max query node id: %u\n", on_dm_args.n_max_qry_node_id);
+	}
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 #ifdef DEBUG_MATH_EXPR_SEARCH
@@ -249,6 +262,7 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		on_dm_args.n_dir_visits = 0;
 		on_dm_args.expr_srch_arg = args;
 		on_dm_args.n_tot_rd_items = 0;
+
 		if (dir_merge_type == DIR_MERGE_DIRECT)
 			on_dm_args.posmerge_op = POSTMERGE_OP_OR;
 		else

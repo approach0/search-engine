@@ -60,3 +60,5 @@ void subpaths_print(struct subpaths*, FILE*);
 
 void subpath_free(struct subpath*);
 void subpaths_release(struct subpaths*);
+
+uint32_t get_subpath_nodeid_at(struct subpath*, uint32_t);
