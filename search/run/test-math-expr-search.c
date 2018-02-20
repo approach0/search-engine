@@ -31,15 +31,19 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 		if (pm->curIDs[i] == cur_min) {
 			posting = pm->postings[i];
 			po_item = pm->cur_pos_item[i];
-			math_posting_pathinfo_v2(posting, po_item->pathinfo_pos, po_item->n_paths,
-			                         pathinfo);
+			math_posting_pathinfo_v2(
+				posting,
+				po_item->pathinfo_pos,
+				po_item->n_paths,
+				pathinfo
+			);
 
 			printf("from posting[%u]: ", i);
 			printf("doc#%u, exp#%u with originally %u lr_paths {\n",
 			       po_item->doc_id, po_item->exp_id, po_item->n_lr_paths);
 
 			subpath_ele = math_posting_get_ele(posting);
-			for (j = 0; j < subpath_ele->dup_cnt; j++) {
+			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = subpath_ele->rid[j];
 				ql = subpath_ele->dup[j]->path_id;
@@ -48,13 +52,17 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 				for (k = 0; k < po_item->n_paths; k++) {
 					uint32_t dr, dl;
+					uint64_t res = 0;
 					struct math_pathinfo_v2 *p = pathinfo + k;
 					dr = p->subr_id;
 					dl = p->leaf_id;
 
 					printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
 					       trans_symbol(p->lf_symb));
-					pq_hit(&mes_arg->pq, qr, ql, dr, dl);
+					res = pq_hit(&mes_arg->pq, qr, ql, dr, dl);
+					printf("\t\t hit returns 0x%lu \n", res);
+					//pq_print(mes_arg->pq, 16);
+					printf("\n");
 				}
 			}
 

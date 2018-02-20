@@ -3,13 +3,18 @@
 
 int main()
 {
-	/* normal test */
+	/* simple test */
+//	const char *test[] = {
+//		"ab",             // expID = 0
+//		"a+k(b+c)",       // expID = 1
+//		"a+bc+xy",        // expID = 2
+//		"a(b+cd)",        // expID = 3
+//		"\\sqrt{pq + m}", // expID = 4
+//	};
+
+	/* prefix match test */
 	const char *test[] = {
-		"ab",             // expID = 0
-		"a+k(b+c)",       // expID = 1
-		"a+bc+xy",        // expID = 2
-		"a(b+cd)",        // expID = 3
-		"\\sqrt{pq + m}"  // expID = 4
+		"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \binom{n}{r}"
 	};
 
 //	/* extreme-condition test */

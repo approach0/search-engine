@@ -69,7 +69,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	uint32_t i, j;
 	enum ds_ret ret = DS_RET_CONTINUE;
 	P_CAST(dm_args, struct dir_merge_args, arg);
-	math_posting_t postings[MAX_MATH_PATHS];
+	math_posting_t postings[MAX_PREFIX_QUERY_MATH_PATHS];
 
 	for (i = 0; i < dm_args->set_sz; i++) {
 		sprintf(dm_args->full_paths[i], "%s/%s",

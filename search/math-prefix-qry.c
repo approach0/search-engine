@@ -46,7 +46,7 @@ void pq_reset(struct math_prefix_qry *pq)
 void pq_print(struct math_prefix_qry pq, uint32_t d_maxid)
 {
 	uint32_t i, j, k;
-	printf("n_dirty = %u\n", pq.n_dirty);
+	//printf("n_dirty = %u\n", pq.n_dirty);
 
 	printf("%3s | ", "qr");
 	for (j = 0; j < d_maxid; j++) {
@@ -61,9 +61,11 @@ void pq_print(struct math_prefix_qry pq, uint32_t d_maxid)
 			for (k = 0; k < pq.n_dirty; k++) {
 				if (0 == memcmp(&loc, pq.dirty + k,
 				                sizeof(struct math_prefix_loc)))
-					printf(C_GRAY);
+					break;
 			}
 
+			if (k == pq.n_dirty)
+				printf(C_GRAY);
 			printf(" %2u  ", pq.cell[i][j].cnt);
 			printf(C_RST);
 		}

@@ -147,7 +147,7 @@ struct on_dir_merge_args {
 };
 
 static enum dir_merge_ret
-on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
+on_dir_merge(math_posting_t *postings, uint32_t n_postings,
              uint32_t level, void *args)
 {
 	P_CAST(on_dm_args, struct on_dir_merge_args, args);

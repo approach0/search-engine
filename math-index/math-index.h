@@ -8,6 +8,7 @@
 #include "term-index/term-index.h" /* for doc_id_t and position_t */
 
 #define MAX_MATH_PATHS MAX_SUBPATH_ID
+#define MAX_PREFIX_QUERY_MATH_PATHS (MAX_SUBPATH_ID * 4)
 
 typedef uint8_t  pathinfo_num_t;
 
