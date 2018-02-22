@@ -181,7 +181,7 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 	mes_arg.n_dir_visits    = on_dm_args->n_dir_visits;
 	mes_arg.stop_dir_search = 0;
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
-	printf("allocating prefix-query structure ...\n");
+	// printf("allocating prefix-query structure ...\n");
 	mes_arg.pq = pq_allocate(on_dm_args->n_max_qry_node_id);
 
 	res = posting_merge(pm, on_dm_args->posmerge_op,

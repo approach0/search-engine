@@ -32,8 +32,8 @@ def print_err(err_str):
 
 def curl(sub_url, c):
 	buf = BytesIO()
-	print('[curl] %s' % sub_url)
 	url = root_url + sub_url
+	print('[curl] %s' % url)
 	url = url.encode('iso-8859-1')
 	c.setopt(c.URL, url)
 	c.setopt(c.WRITEFUNCTION, buf.write)
@@ -237,7 +237,7 @@ def crawl_pages(sortby, start, end, extra_opt):
 			succ_posts += 1
 
 			# sleep to avoid over-frequent request.
-			time.sleep(0.6)
+			time.sleep(2)
 
 		# log crawled page number
 		page_log = open("page.log", "a")
