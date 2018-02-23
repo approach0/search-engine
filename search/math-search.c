@@ -123,8 +123,13 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(msca, math_score_combine_args_t, mesa->expr_srch_arg);
 
 	/* calculate expression similarity on merge */
+#ifdef MATH_PREFIX_SEARCH_ONLY
+	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
+	                                      &mesa->pq);
+#else
 	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
 	                               mesa->n_qry_lr_paths);
+#endif
 
 	/* math expression with zero score is filtered. */
 	if (res.score == 0)
@@ -233,10 +238,18 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 #endif
 
 	/* merge and combine math scores */
+#ifdef MATH_PREFIX_SEARCH_ONLY
+	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
+	                                  DIR_MERGE_DIRECT,
+	                                  &math_posting_on_merge,
+	                                  &msca);
+#else
 	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
 	                                  DIR_MERGE_BREADTH_FIRST,
 	                                  &math_posting_on_merge,
 	                                  &msca);
+#endif
+
 	if (msca.wr_mem_po)
 		/* flush and final adding */
 		add_math_score_posting(&msca);

@@ -14,7 +14,7 @@ int main()
 
 	/* prefix match test */
 //	const char *test[] = {
-//		"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \binom{n}{r}"
+//		"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \\binom{n}{r}"
 //	};
 
 //	/* extreme-condition test */
