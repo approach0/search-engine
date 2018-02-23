@@ -383,3 +383,87 @@ math_expr_score_on_merge(struct postmerge* pm,
 
 	return ret;
 }
+
+struct math_expr_score_res
+math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
+                                uint32_t n_qry_lr_paths,
+                                struct math_prefix_qry *pq)
+{
+	struct math_posting_item_v2   *po_item;
+	math_posting_t                 posting;
+	struct math_pathinfo_v2        pathinfo[MAX_MATH_PATHS];
+	struct subpath_ele            *subpath_ele;
+	struct math_expr_score_res     ret = {0};
+	int i, j, k;
+	uint32_t topk_cnt[3];
+
+	for (i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			posting = pm->postings[i];
+			po_item = pm->cur_pos_item[i];
+			if (math_posting_pathinfo_v2(
+				posting,
+				po_item->pathinfo_pos,
+				po_item->n_paths,
+				pathinfo
+			)) {
+				continue;
+			}
+
+#ifdef DEBUG_MATH_EXPR_SEARCH
+			printf("from posting[%u]: ", i);
+			printf("doc#%u, exp#%u with originally %u lr_paths {\n",
+			       po_item->doc_id, po_item->exp_id, po_item->n_lr_paths);
+#endif
+
+			subpath_ele = math_posting_get_ele(posting);
+			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
+				uint32_t qr, ql;
+				qr = subpath_ele->rid[j];
+				ql = subpath_ele->dup[j]->path_id;
+#ifdef DEBUG_MATH_EXPR_SEARCH
+				printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+				       trans_symbol(subpath_ele->dup[j]->lf_symbol_id));
+#endif
+				for (k = 0; k < po_item->n_paths; k++) {
+					uint32_t dr, dl;
+					struct math_pathinfo_v2 *p = pathinfo + k;
+					dr = p->subr_id;
+					dl = p->leaf_id;
+#ifdef DEBUG_MATH_EXPR_SEARCH
+					{
+						uint64_t res = 0;
+						res = pq_hit(pq, qr, ql, dr, dl);
+						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
+						       trans_symbol(p->lf_symb));
+						printf("\t\t hit returns 0x%lu \n", res);
+						//pq_print(*pq, 16);
+						printf("\n");
+					}
+#else
+					pq_hit(pq, qr, ql, dr, dl);
+#endif
+				}
+			}
+#ifdef DEBUG_MATH_EXPR_SEARCH
+			printf("}\n");
+#endif
+		}
+	}
+
+	pq_align(pq, topk_cnt, 3);
+	pq_reset(pq);
+
+#ifdef DEBUG_MATH_EXPR_SEARCH
+	printf("topk_cnt: %u, %u, %u\n", topk_cnt[0], topk_cnt[1], topk_cnt[2]);
+	printf("\n");
+#endif
+
+	if (pm->n_postings != 0) {
+		ret.score = topk_cnt[0] * 10000 + topk_cnt[1] * 100 + topk_cnt[2];
+		ret.doc_id = po_item->doc_id;
+		ret.exp_id = po_item->exp_id;
+	}
+
+	return ret;
+}
