@@ -113,6 +113,9 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 {
 	uint32_t i, j;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+	uint32_t save_qr, save_dr;
+#endif
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
 	struct math_prefix_cell max_cell;
@@ -126,9 +129,10 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 	// for (j = 0; j < pq->n_dirty; j++) {
 	// 	struct math_prefix_loc   loc = pq->dirty[j];
 	// 	struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-	// 	printf("%u == %u\n",
+	// 	printf("%u == %u == %u \n",
 	// 		__builtin_popcountll(cell->qmask),
-	// 		__builtin_popcountll(cell->dmask)
+	// 		__builtin_popcountll(cell->dmask),
+	// 		cell->cnt
 	// 	);
 	// }
 
@@ -136,21 +140,37 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 		max_cell.qmask = 0;
 		max_cell.dmask = 0;
 		max_cell.cnt = 0;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+		save_qr = 0;
+		save_dr = 0;
+#endif
 
 		for (j = 0; j < pq->n_dirty; j++) {
 			struct math_prefix_loc   loc = pq->dirty[j];
 			struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
 
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
-			if (cur_max_qmask & cell->qmask && cur_max_dmask & cell->dmask) {
+			uint64_t overlap_qmask = cur_max_qmask & cell->qmask;
+			uint64_t overlap_dmask = cur_max_dmask & cell->dmask;
+			if (overlap_qmask && overlap_dmask) {
 				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
-					// printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+					printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+#endif
 					qmap[loc.qr] = loc.dr;
 					dmap[loc.dr] = loc.qr;
 				} else if (qmap[loc.qr] != loc.dr ||
 						   dmap[loc.dr] != loc.qr) {
-					// printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
-					topk[i - 1] -= MIN(topk[i - 1], cell->cnt);
+					topk[i - 1] -= __builtin_popcountll(overlap_qmask);
+					cur_max_qmask &= ~ cell->qmask;
+					cur_max_dmask &= ~ cell->dmask;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+					printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+					printf("minus %u =?= %u \n",
+						__builtin_popcountll(cell->qmask),
+						__builtin_popcountll(cell->dmask)
+					);
+#endif
 				}
 			}
 #endif
@@ -162,14 +182,21 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 				max_cell.cnt = cell->cnt;
 				max_cell.qmask = cell->qmask;
 				max_cell.dmask = cell->dmask;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+				save_qr = loc.qr;
+				save_dr = loc.dr;
+#endif
 			}
 		}
 
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+		printf("max_cell[qr%u, dr%u] = %u\n", save_qr, save_dr, max_cell.cnt);
+#endif
 		topk[i] = max_cell.cnt;
 		exclude_qmask |= max_cell.qmask;
 		exclude_dmask |= max_cell.dmask;
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
-		cur_max_qmask = max_cell.dmask;
+		cur_max_qmask = max_cell.qmask;
 		cur_max_dmask = max_cell.dmask;
 #endif
 	}

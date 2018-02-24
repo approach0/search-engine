@@ -20,6 +20,7 @@ int main()
 	/* joint node constraints test */
 	const char *test[] = {
 		"abcd + 1",
+		"a+bc+xy",
 		"ab + cd"
 	};
 
