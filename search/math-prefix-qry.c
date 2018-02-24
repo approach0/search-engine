@@ -107,30 +107,58 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 	}
 }
 
+#define MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 {
-	uint64_t qmask = 0;
-	uint64_t dmask = 0;
 	uint32_t i, j;
+	uint64_t exclude_qmask = 0;
+	uint64_t exclude_dmask = 0;
 	struct math_prefix_cell max_cell;
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+	uint64_t cur_max_qmask = 0;
+	uint64_t cur_max_dmask = 0;
+	uint32_t qmap[MAX_NODE_IDS] = {0};
+	uint32_t dmap[MAX_NODE_IDS] = {0};
+#endif
+
+	// for (j = 0; j < pq->n_dirty; j++) {
+	// 	struct math_prefix_loc   loc = pq->dirty[j];
+	// 	struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+	// 	printf("%u == %u\n",
+	// 		__builtin_popcountll(cell->qmask),
+	// 		__builtin_popcountll(cell->dmask)
+	// 	);
+	// }
 
 	for (i = 0; i < k; i++) {
 		max_cell.qmask = 0;
 		max_cell.dmask = 0;
 		max_cell.cnt = 0;
+
 		for (j = 0; j < pq->n_dirty; j++) {
 			struct math_prefix_loc   loc = pq->dirty[j];
 			struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-			uint64_t qr_subset = qmask & cell->qmask;
-			uint64_t dr_subset = dmask & cell->dmask;
-			if (qr_subset & dr_subset) {
-				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
-				// topk[i - 1] = 0;
-				continue;
-			} else if (qr_subset | dr_subset) {
-				//printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+			if (cur_max_qmask & cell->qmask && cur_max_dmask & cell->dmask) {
+				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
+					// printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+					qmap[loc.qr] = loc.dr;
+					dmap[loc.dr] = loc.qr;
+				} else if (qmap[loc.qr] != loc.dr ||
+						   dmap[loc.dr] != loc.qr) {
+					// printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+					topk[i - 1] -= MIN(topk[i - 1], cell->cnt);
+				}
+			}
+#endif
+
+			if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
 				continue;
 			} else if (cell->cnt > max_cell.cnt) {
+				/* greedily assume the two max-subtrees match */
 				max_cell.cnt = cell->cnt;
 				max_cell.qmask = cell->qmask;
 				max_cell.dmask = cell->dmask;
@@ -138,7 +166,11 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 		}
 
 		topk[i] = max_cell.cnt;
-		qmask |= max_cell.qmask;
-		dmask |= max_cell.dmask;
+		exclude_qmask |= max_cell.qmask;
+		exclude_dmask |= max_cell.dmask;
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+		cur_max_qmask = max_cell.dmask;
+		cur_max_dmask = max_cell.dmask;
+#endif
 	}
 }
