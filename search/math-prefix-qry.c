@@ -111,27 +111,34 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 {
 	uint64_t qmask = 0;
 	uint64_t dmask = 0;
-	uint32_t max, i, j;
-	struct math_prefix_cell *max_cell;
+	uint32_t i, j;
+	struct math_prefix_cell max_cell;
 
 	for (i = 0; i < k; i++) {
-		max = 0;
-		max_cell = NULL;
+		max_cell.qmask = 0;
+		max_cell.dmask = 0;
+		max_cell.cnt = 0;
 		for (j = 0; j < pq->n_dirty; j++) {
 			struct math_prefix_loc   loc = pq->dirty[j];
 			struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-			if (qmask & cell->qmask || dmask & cell->dmask) {
+			uint64_t qr_subset = qmask & cell->qmask;
+			uint64_t dr_subset = dmask & cell->dmask;
+			if (qr_subset & dr_subset) {
+				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+				// topk[i - 1] = 0;
 				continue;
-			} else if (cell->cnt > max) {
-				max = cell->cnt;
-				max_cell = cell;
+			} else if (qr_subset | dr_subset) {
+				//printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+				continue;
+			} else if (cell->cnt > max_cell.cnt) {
+				max_cell.cnt = cell->cnt;
+				max_cell.qmask = cell->qmask;
+				max_cell.dmask = cell->dmask;
 			}
 		}
 
-		topk[i] = max;
-		if (max_cell) {
-			qmask |= max_cell->qmask;
-			dmask |= max_cell->dmask;
-		}
+		topk[i] = max_cell.cnt;
+		qmask |= max_cell.qmask;
+		dmask |= max_cell.dmask;
 	}
 }
