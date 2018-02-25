@@ -160,7 +160,7 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 					qmap[loc.qr] = loc.dr;
 					dmap[loc.dr] = loc.qr;
 				} else if (qmap[loc.qr] != loc.dr ||
-						   dmap[loc.dr] != loc.qr) {
+					       dmap[loc.dr] != loc.qr) {
 					topk[i - 1] -= __builtin_popcountll(overlap_qmask);
 					cur_max_qmask &= ~ cell->qmask;
 					cur_max_dmask &= ~ cell->dmask;
