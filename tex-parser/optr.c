@@ -278,11 +278,12 @@ static TREE_IT_CALLBK(assign_node_id)
 
 uint32_t optr_assign_values(struct optr_node *optr)
 {
-	uint32_t leaf_cnt = 0;
+	uint32_t node_cnt, leaf_cnt = 0;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
 	             0 /* excluding root */, &leaf_cnt);
+	node_cnt = leaf_cnt;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_node_id,
-	             0 /* excluding root */, &leaf_cnt);
+	             0 /* excluding root */, &node_cnt);
 
 	/* return the maximum path_id assigned */
 	return leaf_cnt;

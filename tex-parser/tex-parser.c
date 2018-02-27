@@ -73,7 +73,8 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 					strcpy(ret.msg, "character(s) escaped.");
 				} else {
 					ret.code = PARSER_RETCODE_SUCC;
-					strcpy(ret.msg, "no error.");
+					sprintf(ret.msg, "no error (max path ID = %u).",
+					        max_path_id);
 				}
 
 			} else {
@@ -82,7 +83,7 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 				ret.subpaths.n_subpaths = 0;
 
 				ret.code = PARSER_RETCODE_ERR;
-				strcpy(ret.msg, "too many subpaths.");
+				sprintf(ret.msg, "too many subpaths (max=%u).", max_path_id);
 			}
 
 			if (!keep_optr)

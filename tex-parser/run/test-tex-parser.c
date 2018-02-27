@@ -29,7 +29,8 @@ int main()
 
 		ret = tex_parse(line, 0, true);
 
-		printf("return code:%d\n", ret.code);
+		printf("return string: %s\n", ret.msg);
+		printf("return code: %d\n", ret.code);
 
 		if (ret.code != PARSER_RETCODE_ERR) {
 			printf("Operator tree:\n");
