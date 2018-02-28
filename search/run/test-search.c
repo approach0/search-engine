@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	struct searcher_args args;
 	int                  pause = 1;
 
-	fh_trec_output = fopen("trec_fmt_result.txt", "a");
+	fh_trec_output = fopen("tmp.txt", "a");
 	if (fh_trec_output == NULL)
 		return 1;
 
