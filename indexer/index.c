@@ -79,6 +79,7 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		/* warning or completely successful */
 #ifdef DEBUG_INDEXER
 		printf("[index tex] `%s'\n", tex);
+		subpaths_print(&parse_ret.subpaths, stdout);
 #endif
 		/* actual tex indexing */
 		math_index_add_tex(math_index, prev_docID + 1,
@@ -285,9 +286,6 @@ int indexer_index_json(const char *doc_json, text_lexer lex)
 		fprintf(stderr, "JSON: URL/TXT field strlen is zero.\n");
 		return 1;
 	}
-
-	// printf("URL::::::::: %s\n", url_field);
-	// printf("text:::::::: %s\n", txt_field);
 
 	/* URL blob indexing, it is done prior than text indexing
 	 * because prev_docID is not updated at this point. */

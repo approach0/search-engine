@@ -108,6 +108,7 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 }
 
 #define MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+#define MATH_PREFIX_QRY_DEBUG_PRINT
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)

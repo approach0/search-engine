@@ -67,6 +67,7 @@ qry=$(cat "$itm/query")
 
 # echo index/search command
 set -x
+rm -rf ./tmp
 ./indexer.ln -o ./tmp -p $itm > /dev/null
 ./searcher.ln -n -i ./tmp -m "$qry" > $itm/search-results
 set +x

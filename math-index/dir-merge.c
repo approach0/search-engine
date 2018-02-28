@@ -156,10 +156,6 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
                          struct subpaths *subpaths, dir_merge_callbk fun,
                          void *args)
 {
-#ifdef DEBUG_DIR_MERGE
-	int i;
-#endif
-
 	int  n_uniq_paths, ret = 0;
 	list subpath_set = LIST_NULL;
 	struct assoc_ele_and_pathstr_args assoc_args;
@@ -205,9 +201,12 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	}
 
 #ifdef DEBUG_DIR_MERGE
-	printf("base path strings:\n");
-	for (i = 0; i < n_uniq_paths; i++)
-		printf("path string [%u]: %s\n", i, dm_args.base_paths[i]);
+	{
+		int i;
+		printf("base path strings:\n");
+		for (i = 0; i < n_uniq_paths; i++)
+			printf("path string [%u]: %s\n", i, dm_args.base_paths[i]);
+	}
 #endif
 
 	/* now we get longpath index, we can pass it to dir-merge */

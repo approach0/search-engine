@@ -1,0 +1,4 @@
+\sqrt{2}=1+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\ddots}}}}
+
+HIT   1+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\ddots}}}}
+HIT   \delta_{S}=2+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\ddots}}}
