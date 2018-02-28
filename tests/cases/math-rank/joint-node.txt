@@ -1,0 +1,3 @@
+xy + ab + 1
+
+HIT   xyab + 1 

@@ -125,6 +125,8 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 	uint64_t cur_max_dmask = 0;
 	uint32_t qmap[MAX_NODE_IDS] = {0};
 	uint32_t dmap[MAX_NODE_IDS] = {0};
+	uint64_t qmap_mask[MAX_NODE_IDS];
+	uint64_t dmap_mask[MAX_NODE_IDS];
 #endif
 
 	// for (j = 0; j < pq->n_dirty; j++) {
@@ -160,22 +162,53 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 #endif
 					qmap[loc.qr] = loc.dr;
 					dmap[loc.dr] = loc.qr;
+					qmap_mask[loc.qr] = cell->qmask;
+					dmap_mask[loc.dr] = cell->dmask;
+
+					printf("qmask[%u] = %lx. \n", loc.qr, cell->qmask);
+					printf("dmask[%u] = %lx. \n", loc.dr, cell->dmask);
 				} else if (qmap[loc.qr] != loc.dr ||
 					       dmap[loc.dr] != loc.qr) {
-					topk[i - 1] -= __builtin_popcountll(overlap_qmask);
-					cur_max_qmask &= ~ cell->qmask;
-					cur_max_dmask &= ~ cell->dmask;
+					int conflict = 0;
+					printf("\nconflict qr%u >-< dr%u \n", loc.qr, loc.dr);
+
+					if (dmap[loc.dr]) {
+						uint64_t qshadow1 = cell->qmask | qmap_mask[loc.qr];
+						uint64_t qshadow2 = qmap_mask[dmap[loc.dr]];
+						printf("qshadow %lx & %lx = %lx. \n", qshadow1, qshadow2, qshadow1 & qshadow2);
+						if ((qshadow1 & qshadow2) == 0) {
+							conflict = 1;
+							goto conflict;
+						}
+					}
+
+					if (qmap[loc.qr]) {
+						uint64_t dshadow1 = cell->dmask | dmap_mask[loc.dr]; // 0!!! not c0
+						printf("dmap_mask[%u] = %lx. \n", loc.dr, dshadow1);
+						uint64_t dshadow2 = dmap_mask[qmap[loc.qr]]; // ff
+						printf("dshadow %lx & %lx = %lx. \n", dshadow1, dshadow2, dshadow1 & dshadow2);
+						if ((dshadow1 & dshadow2) == 0) {
+							conflict = 1;
+							goto conflict;
+						}
+					} 
+					//printf("%lx & %lx && %lx & %lx \n", , cell->qmask, dmap_mask[loc.dr], cell->dmask);
+
+conflict:
+					if (conflict) {
+						topk[i - 1] -= __builtin_popcountll(overlap_qmask);
+						cur_max_qmask &= ~ cell->qmask;
+						cur_max_dmask &= ~ cell->dmask;
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-					printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
-					printf("minus %u =?= %u \n",
-						__builtin_popcountll(cell->qmask),
-						__builtin_popcountll(cell->dmask)
-					);
+						printf("!!!!! penalty %u =?= %u \n",
+							__builtin_popcountll(overlap_qmask),
+							__builtin_popcountll(overlap_dmask)
+						);
 #endif
+					}
 				}
 			}
 #endif
-
 			if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
 				continue;
 			} else if (cell->cnt > max_cell.cnt) {

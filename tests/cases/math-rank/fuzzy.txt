@@ -1,4 +1,3 @@
-\sqrt{2}=1+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\ddots}}}}
+x= 9+\cfrac{10}{11+\cfrac{12}{13+\cfrac{14}{15 +\ddots}}} 
 
-HIT   1+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\ddots}}}}
-HIT   \delta_{S}=2+\cfrac{1}{2+\cfrac{1}{2+\cfrac{1}{2+\ddots}}}
+HIT   2+\cfrac{3}{4+\cfrac{5}{6+\cfrac{7}{8 +\ddots}}} 
