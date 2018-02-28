@@ -152,12 +152,26 @@ def list_post_links(page, sortby, c):
 	# sortby can be 'newest', 'active' etc.
 	sub_url = '/questions?sort={}&page={}'.format(sortby, page)
 
-	try:
-		navi_page = curl(sub_url, c)
-	except Exception as e:
-		yield (None, None, e)
-	s = BeautifulSoup(navi_page, "html.parser")
-	summary_tags = s.find_all('div', {"class": "question-summary"})
+	retry_cnt = 0
+	while True:
+		try:
+			navi_page = curl(sub_url, c)
+		except Exception as e:
+			yield (None, None, e)
+		s = BeautifulSoup(navi_page, "html.parser")
+		summary_tags = s.find_all('div', {"class": "question-summary"})
+
+		# if server is showing us our frequency is too much...
+		print("%d questions in this page" % len(summary_tags))
+		if len(summary_tags) == 0:
+			if retry_cnt < 60:
+				retry_cnt += 1
+			wait_time = retry_cnt * 10.0
+			print('too frequent request? Wait %f sec ...' % wait_time)
+			sleep(wait_time)
+		else:
+			break
+
 	for div in summary_tags:
 		a_tag = div.find('a', {"class": "question-hyperlink"})
 		if a_tag is None:
@@ -237,7 +251,7 @@ def crawl_pages(sortby, start, end, extra_opt):
 			succ_posts += 1
 
 			# sleep to avoid over-frequent request.
-			time.sleep(2)
+			time.sleep(1.5)
 
 		# log crawled page number
 		page_log = open("page.log", "a")
