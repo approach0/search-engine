@@ -107,19 +107,58 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 	}
 }
 
+void counting_sort(struct math_prefix_qry *pq)
+{
+	uint32_t i, count[MAX_CELL_CNT] = {0};
+	struct math_prefix_loc dirty[pq->n_dirty];
+
+	for (i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc   loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+		count[cell->cnt] ++;
+	}
+
+	for (i = 1; i < MAX_CELL_CNT; ++i)
+		count[i] += count[i - 1];
+	
+	for (i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc   loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+		dirty[count[cell->cnt] - 1] = pq->dirty[i];
+		count[cell->cnt] -= 1;
+	}
+
+	memcpy(pq->dirty, dirty, sizeof(struct math_prefix_loc) * pq->n_dirty);
+}
+
+void print_dirty_array(struct math_prefix_qry *pq)
+{
+	uint32_t i;
+	for (i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc   loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+		printf("[%u]", cell->cnt);
+		// printf("%u == %u == %u \n",
+		// 	__builtin_popcountll(cell->qmask),
+		// 	__builtin_popcountll(cell->dmask),
+		// 	cell->cnt
+		// );
+	}
+	printf("\n");
+}
+
 #define MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
 #define MATH_PREFIX_QRY_DEBUG_PRINT
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 {
-	uint32_t i, j;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-	uint32_t save_qr, save_dr;
-#endif
+	uint32_t i, j = 0;
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
-	struct math_prefix_cell max_cell;
+	struct math_prefix_loc loc;
+	struct math_prefix_cell *cell;
+
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
 	uint64_t cur_max_qmask = 0;
 	uint64_t cur_max_dmask = 0;
@@ -129,109 +168,80 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 	uint64_t dmap_mask[MAX_NODE_IDS];
 #endif
 
-	// for (j = 0; j < pq->n_dirty; j++) {
-	// 	struct math_prefix_loc   loc = pq->dirty[j];
-	// 	struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-	// 	printf("%u == %u == %u \n",
-	// 		__builtin_popcountll(cell->qmask),
-	// 		__builtin_popcountll(cell->dmask),
-	// 		cell->cnt
-	// 	);
-	// }
+	//print_dirty_array(pq);
+	counting_sort(pq);
+	//print_dirty_array(pq);
 
-	for (i = 0; i < k; i++) {
-		max_cell.qmask = 0;
-		max_cell.dmask = 0;
-		max_cell.cnt = 0;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-		save_qr = 0;
-		save_dr = 0;
-#endif
-
-		for (j = 0; j < pq->n_dirty; j++) {
-			struct math_prefix_loc   loc = pq->dirty[j];
-			struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+	i = pq->n_dirty;
+	while (i && j < k) {
+		i = i - 1;
+		loc = pq->dirty[i];
+		cell = &pq->cell[loc.qr][loc.dr];
 
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
-			uint64_t overlap_qmask = cur_max_qmask & cell->qmask;
-			uint64_t overlap_dmask = cur_max_dmask & cell->dmask;
-			if (overlap_qmask && overlap_dmask) {
-				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
+		uint64_t overlap_qmask = cur_max_qmask & cell->qmask;
+		uint64_t overlap_dmask = cur_max_dmask & cell->dmask;
+		if (overlap_qmask && overlap_dmask) {
+			if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
+				qmap[loc.qr] = loc.dr;
+				dmap[loc.dr] = loc.qr;
+				qmap_mask[loc.qr] = cell->qmask;
+				dmap_mask[loc.dr] = cell->dmask;
+
+				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+				// printf("qmap_mask[%u] = %lx. \n", loc.qr, cell->qmask);
+				// printf("dmap_mask[%u] = %lx. \n", loc.dr, cell->dmask);
+			} else if (qmap[loc.qr] != loc.dr ||
+					   dmap[loc.dr] != loc.qr) {
+				printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+
+				uint64_t qshadow = 0, dshadow = 0;
+				if (dmap[loc.dr]) {
+					qshadow |= qmap_mask[dmap[loc.dr]];
+					dshadow |= dmap_mask[loc.dr];
+				}
+				if (qmap[loc.qr]) {
+					qshadow |= qmap_mask[loc.qr];
+					dshadow |= dmap_mask[qmap[loc.qr]];
+				}
+
+				if ((qshadow & cell->qmask) == 0 || (dshadow & cell->dmask) == 0) {
+					topk[j - 1] -= __builtin_popcountll(overlap_qmask);
+					cur_max_qmask &= ~ cell->qmask;
+					cur_max_dmask &= ~ cell->dmask;
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-					printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+					printf("!!!!! penalty topk[%u] = %u =?= %u \n", j - 1,
+						__builtin_popcountll(overlap_qmask),
+						__builtin_popcountll(overlap_dmask)
+					);
 #endif
-					qmap[loc.qr] = loc.dr;
-					dmap[loc.dr] = loc.qr;
-					qmap_mask[loc.qr] = cell->qmask;
-					dmap_mask[loc.dr] = cell->dmask;
-
-					printf("qmask[%u] = %lx. \n", loc.qr, cell->qmask);
-					printf("dmask[%u] = %lx. \n", loc.dr, cell->dmask);
-				} else if (qmap[loc.qr] != loc.dr ||
-					       dmap[loc.dr] != loc.qr) {
-					int conflict = 0;
-					printf("\nconflict qr%u >-< dr%u \n", loc.qr, loc.dr);
-
-					if (dmap[loc.dr]) {
-						uint64_t qshadow1 = cell->qmask | qmap_mask[loc.qr];
-						uint64_t qshadow2 = qmap_mask[dmap[loc.dr]];
-						printf("qshadow %lx & %lx = %lx. \n", qshadow1, qshadow2, qshadow1 & qshadow2);
-						if ((qshadow1 & qshadow2) == 0) {
-							conflict = 1;
-							goto conflict;
-						}
-					}
-
-					if (qmap[loc.qr]) {
-						uint64_t dshadow1 = cell->dmask | dmap_mask[loc.dr]; // 0!!! not c0
-						printf("dmap_mask[%u] = %lx. \n", loc.dr, dshadow1);
-						uint64_t dshadow2 = dmap_mask[qmap[loc.qr]]; // ff
-						printf("dshadow %lx & %lx = %lx. \n", dshadow1, dshadow2, dshadow1 & dshadow2);
-						if ((dshadow1 & dshadow2) == 0) {
-							conflict = 1;
-							goto conflict;
-						}
-					} 
-					//printf("%lx & %lx && %lx & %lx \n", , cell->qmask, dmap_mask[loc.dr], cell->dmask);
-
-conflict:
-					if (conflict) {
-						topk[i - 1] -= __builtin_popcountll(overlap_qmask);
-						cur_max_qmask &= ~ cell->qmask;
-						cur_max_dmask &= ~ cell->dmask;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-						printf("!!!!! penalty %u =?= %u \n",
-							__builtin_popcountll(overlap_qmask),
-							__builtin_popcountll(overlap_dmask)
-						);
-#endif
-					}
 				}
 			}
-#endif
-			if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
-				continue;
-			} else if (cell->cnt > max_cell.cnt) {
-				/* greedily assume the two max-subtrees match */
-				max_cell.cnt = cell->cnt;
-				max_cell.qmask = cell->qmask;
-				max_cell.dmask = cell->dmask;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-				save_qr = loc.qr;
-				save_dr = loc.dr;
-#endif
-			}
 		}
+#endif
 
+		if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
+			/* intersect */
+			continue;
+		} else {
+			/* greedily assume the two max-subtrees match */
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-		printf("max_cell[qr%u, dr%u] = %u\n", save_qr, save_dr, max_cell.cnt);
+			printf("max_cell[%u](qr%u, dr%u) = %u\n", j, loc.qr, loc.dr, cell->cnt);
 #endif
-		topk[i] = max_cell.cnt;
-		exclude_qmask |= max_cell.qmask;
-		exclude_dmask |= max_cell.dmask;
+			topk[j++] = cell->cnt;
+			exclude_qmask |= cell->qmask;
+			exclude_dmask |= cell->dmask;
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
-		cur_max_qmask = max_cell.qmask;
-		cur_max_dmask = max_cell.dmask;
+			cur_max_qmask = cell->qmask;
+			cur_max_dmask = cell->dmask;
+
+				qmap[loc.qr] = loc.dr;
+				dmap[loc.dr] = loc.qr;
+				qmap_mask[loc.qr] = cell->qmask;
+				dmap_mask[loc.dr] = cell->dmask;
+
+				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
+		}
 	}
 }

@@ -31,6 +31,11 @@ int main()
 //		"abcdefghijkl" /* 64 */
 //	};
 
+	/* joint node constraints test 2 */
+//	const char *test[] = {
+//"2+\\cfrac{3}{4+\\cfrac{5}{6+\\cfrac{7}{8 +\\ddots}}}"
+//	};
+
 	doc_id_t docID = 1;
 	exp_id_t expID = 0;
 	uint32_t i, n_test = sizeof(test)/sizeof(char*);

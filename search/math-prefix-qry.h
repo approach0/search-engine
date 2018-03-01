@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #define MAX_NODE_IDS 4096
+#define MAX_CELL_CNT 64
 
 struct math_prefix_loc {
 	uint32_t qr, dr;
