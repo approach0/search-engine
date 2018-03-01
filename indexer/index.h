@@ -17,6 +17,10 @@
 extern uint64_t n_parse_err;
 extern uint64_t n_parse_tex;
 
+/* tex-parse exception handler */
+typedef int (*indexer_tex_exception_handler)(char *, char *, uint64_t, uint64_t);
+extern indexer_tex_exception_handler on_tex_index_exception;
+
 /* main indexing functions */
 doc_id_t indexer_assign(struct indices*);
 

@@ -22,6 +22,8 @@ static position_t cur_position = 0;
 uint64_t n_parse_err = 0;
 uint64_t n_parse_tex = 0;
 
+indexer_tex_exception_handler on_tex_index_exception = NULL;
+
 doc_id_t indexer_assign(struct indices *indices)
 {
 	uint32_t max_docID;
@@ -65,10 +67,9 @@ index_blob(blob_index_t bi, const char *str, size_t str_sz, bool compress)
 	}
 }
 
-static int
+struct tex_parse_ret
 index_tex(char *tex, uint32_t offset, size_t n_bytes)
 {
-	int ret;
 	struct tex_parse_ret parse_ret;
 #ifdef DEBUG_INDEXER
 	printf("[parse tex] `%s'\n", tex);
@@ -85,20 +86,16 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		math_index_add_tex(math_index, prev_docID + 1,
 		                   cur_position, parse_ret.subpaths);
 		subpaths_release(&parse_ret.subpaths);
-
-		ret = 0; /* successful */
 	} else {
 		/* grammar error or too many subpaths */
 		fprintf(stderr, C_RED "`%s': %s\n" C_RST,
 		        tex, parse_ret.msg);
-
-		ret = 1;
 	}
 
 	/* increment position */
 	cur_position ++;
 
-	return ret;
+	return parse_ret;
 }
 
 static void index_term(char *term, uint32_t offset, size_t n_bytes)
@@ -136,6 +133,7 @@ int indexer_handle_slice(struct lex_slice *slice)
 {
 	size_t str_sz = strlen(slice->mb_str);
 	list   li     = LIST_NULL;
+	struct tex_parse_ret tex_parse_ret;
 
 #ifdef DEBUG_INDEXER
 	printf("input slice: [%s]\n", slice->mb_str);
@@ -157,8 +155,12 @@ int indexer_handle_slice(struct lex_slice *slice)
 		/* count how many TeX parsed */
 		n_parse_tex ++;
 
-		if (index_tex(slice->mb_str, slice->offset, str_sz)) {
+		tex_parse_ret = index_tex(slice->mb_str, slice->offset, str_sz);
+		if (tex_parse_ret.code == PARSER_RETCODE_ERR) {
 			n_parse_err++;
+			if (on_tex_index_exception)
+				on_tex_index_exception(slice->mb_str, tex_parse_ret.msg,
+				                       n_parse_err, n_parse_tex);
 			return 1;
 		}
 

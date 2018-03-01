@@ -55,3 +55,7 @@ with open(fname) as f:
         json_obj['url'] = docid;
         json_obj['text'] += '[imath]' + latex + '[/imath]  ';
         last_docid = docid
+
+print(json_obj)
+send_json(json_obj)
+json_obj = {"text": '', "url": 'undefined'}
