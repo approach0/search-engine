@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "config.h"
 #include "math-prefix-qry.h"
 
 struct math_prefix_qry
@@ -147,25 +148,20 @@ void print_dirty_array(struct math_prefix_qry *pq)
 	printf("\n");
 }
 
-#define MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
-#define MATH_PREFIX_QRY_DEBUG_PRINT
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-
-void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
+uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 {
 	uint32_t i, j = 0;
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
 	struct math_prefix_loc loc;
 	struct math_prefix_cell *cell;
+	uint32_t n_joint_nodes = 0;
 
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
 	uint64_t cur_max_qmask = 0;
 	uint64_t cur_max_dmask = 0;
 	uint32_t qmap[MAX_NODE_IDS] = {0};
 	uint32_t dmap[MAX_NODE_IDS] = {0};
-	uint64_t qmap_mask[MAX_NODE_IDS];
-	uint64_t dmap_mask[MAX_NODE_IDS];
 #endif
 
 	//print_dirty_array(pq);
@@ -178,45 +174,24 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 		loc = pq->dirty[i];
 		cell = &pq->cell[loc.qr][loc.dr];
 
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
 		uint64_t overlap_qmask = cur_max_qmask & cell->qmask;
 		uint64_t overlap_dmask = cur_max_dmask & cell->dmask;
 		if (overlap_qmask && overlap_dmask) {
 			if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
 				qmap[loc.qr] = loc.dr;
 				dmap[loc.dr] = loc.qr;
-				qmap_mask[loc.qr] = cell->qmask;
-				dmap_mask[loc.dr] = cell->dmask;
-
+				n_joint_nodes ++;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
 				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
-				// printf("qmap_mask[%u] = %lx. \n", loc.qr, cell->qmask);
-				// printf("dmap_mask[%u] = %lx. \n", loc.dr, cell->dmask);
-			} else if (qmap[loc.qr] != loc.dr ||
+#endif
+			}
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+			else if (qmap[loc.qr] != loc.dr ||
 					   dmap[loc.dr] != loc.qr) {
 				printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
-
-				uint64_t qshadow = 0, dshadow = 0;
-				if (dmap[loc.dr]) {
-					qshadow |= qmap_mask[dmap[loc.dr]];
-					dshadow |= dmap_mask[loc.dr];
-				}
-				if (qmap[loc.qr]) {
-					qshadow |= qmap_mask[loc.qr];
-					dshadow |= dmap_mask[qmap[loc.qr]];
-				}
-
-				if ((qshadow & cell->qmask) == 0 || (dshadow & cell->dmask) == 0) {
-					topk[j - 1] -= __builtin_popcountll(overlap_qmask);
-					cur_max_qmask &= ~ cell->qmask;
-					cur_max_dmask &= ~ cell->dmask;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-					printf("!!!!! penalty topk[%u] = %u =?= %u \n", j - 1,
-						__builtin_popcountll(overlap_qmask),
-						__builtin_popcountll(overlap_dmask)
-					);
-#endif
-				}
 			}
+#endif
 		}
 #endif
 
@@ -227,21 +202,31 @@ void pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 			/* greedily assume the two max-subtrees match */
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
 			printf("max_cell[%u](qr%u, dr%u) = %u\n", j, loc.qr, loc.dr, cell->cnt);
+			printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
 			topk[j++] = cell->cnt;
 			exclude_qmask |= cell->qmask;
 			exclude_dmask |= cell->dmask;
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_CONSTRATINTS
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
+			qmap[loc.qr] = loc.dr;
+			dmap[loc.dr] = loc.qr;
+			n_joint_nodes ++;
+
 			cur_max_qmask = cell->qmask;
 			cur_max_dmask = cell->dmask;
-
-				qmap[loc.qr] = loc.dr;
-				dmap[loc.dr] = loc.qr;
-				qmap_mask[loc.qr] = cell->qmask;
-				dmap_mask[loc.dr] = cell->dmask;
-
-				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
 		}
 	}
+
+	while (j < k) {
+		topk[j++] = 0;
+	}
+
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+	for (i = 0; i < k; i++) {
+		printf("top[%u] = %u \n", i, topk[i]);
+	}
+	printf("joint nodes = %u \n", n_joint_nodes);
+#endif
+	return n_joint_nodes;
 }

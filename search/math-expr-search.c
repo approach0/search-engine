@@ -395,7 +395,7 @@ math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
 	struct subpath_ele            *subpath_ele;
 	struct math_expr_score_res     ret = {0};
 	int i, j, k;
-	uint32_t topk_cnt[3];
+	uint32_t n_joint_nodes, topk_cnt[3];
 
 	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {
@@ -451,7 +451,7 @@ math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
 		}
 	}
 
-	pq_align(pq, topk_cnt, 3);
+	n_joint_nodes = pq_align(pq, topk_cnt, 3);
 	pq_reset(pq);
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
@@ -460,7 +460,9 @@ math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
 #endif
 
 	if (pm->n_postings != 0) {
-		ret.score = topk_cnt[0] * 10000 + topk_cnt[1] * 100 + topk_cnt[2];
+		ret.score = (topk_cnt[0] * 10 + n_joint_nodes) * 10000
+		          + topk_cnt[1] * 100
+		          + topk_cnt[2];
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
 	}
