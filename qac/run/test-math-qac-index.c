@@ -11,23 +11,29 @@ int main()
 	};
 
 	uint32_t i, n_test = sizeof(test)/sizeof(char*);
-	exp_id_t expID = 1;
 
-	math_index_t index = math_index_open("./tmp", MATH_INDEX_WRITE);
-
-	if (index == NULL) {
-		printf("cannot open index.\n");
-		return 1;
-	}
+	qac_index_t *qi = qac_index_open("./tmp", QAC_INDEX_WRITE_READ);
 
 	for (i = 0; i < n_test; i++) {
-		printf("try to add: `%s' as experssion#%u\n", test[i], expID);
-		math_qac_index_uniq_tex(index, test[i], 1, expID);
-		expID ++;
+		uint32_t texID = math_qac_index_uniq_tex(qi, test[i]);
+		printf("texID#%u: `%s'\n", texID, test[i]);
+	}
+	printf("\n");
+
+	for (i = 0; i < 3; i++) {
+		struct qac_tex_info tex_info;
+		char *tex;
+		printf("getting ID=%u ...\n", i);
+		tex_info = math_qac_get(qi, i, &tex);
+		if (tex) {
+			printf("%s (freq=%u)\n", tex, tex_info.freq);
+			free(tex);
+		} else {
+			printf("No such ID.\n");
+		}
 	}
 
-	math_index_close(index);
-
+	qac_index_close(qi);
 	mhook_print_unfree();
 	return 0;
 }

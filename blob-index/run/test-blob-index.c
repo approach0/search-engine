@@ -11,7 +11,7 @@ int main()
 	char     blob_in[10];
 	size_t   i, j, rand_sz;
 	char    *blob_out = NULL;
-	doc_id_t docID;
+	doc_id_t docID, newID = 101;
 
 	/* write */
 	srand(time(NULL));
@@ -52,6 +52,46 @@ int main()
 	}
 
 	blob_index_close(bi);
+
+	/* write and read */
+	bi = blob_index_open("./test", BLOB_OPEN_RMA_RANDOM);
+	for (j = 0; j < 150; j++) {
+		docID = rand() % 200;
+		size = blob_index_read(bi, docID, (void **)&blob_out);
+		printf("read doc#%u: size = %lu, ", docID, size);
+
+		if (blob_out) {
+			for (i = 0; i < size; i++)
+				printf("[%c]", blob_out[i]);
+			printf("\n");
+
+			for (i = 0; i < size; i++)
+				blob_in[i] = 'a' + i;
+			
+//			printf("replacing to ");
+//			for (i = 0; i < size; i++)
+//				printf("[%c]", blob_in[i]);
+//			printf("\n");
+
+			size = blob_index_replace(bi, docID, blob_in);
+			blob_free(blob_out);
+		} else {
+			printf("not found ...\n");
+		}
+
+		rand_sz = rand() % 9 + 1;
+		for (i = 0; i < rand_sz; i++)
+			blob_in[i] = '0' + (rand_sz - i);
+
+		size = blob_index_append(bi, newID, blob_in, rand_sz);
+		printf("append doc#%u: size = %lu, ", newID, size);
+//		for (i = 0; i < size; i++)
+//			printf("[%c]", blob_in[i]);
+//		printf("\n");
+		newID ++;
+	}
+	blob_index_close(bi);
+
 
 	mhook_print_unfree();
 	return 0;

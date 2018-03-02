@@ -233,7 +233,9 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		on_dm_args.n_max_qry_node_id = optr_max_node_id((struct optr_node *)
 		                                                parse_ret.operator_tree);
 		optr_release((struct optr_node*)parse_ret.operator_tree);
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("max query node id: %u\n", on_dm_args.n_max_qry_node_id);
+#endif
 	}
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
@@ -244,10 +246,10 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		/* prepare math query */
 		prepare_math_qry(&parse_ret.subpaths);
 
-//#ifdef DEBUG_MATH_EXPR_SEARCH
+#ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("after prepare_math_qry():\n");
 		subpaths_print(&parse_ret.subpaths, stdout);
-//#endif
+#endif
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("calling math_index_dir_merge()...\n");
@@ -272,7 +274,7 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		case MATH_SRCH_EXACT_STRUCT:
 			calls.now_id = &math_posting_current_id_wrap;
 			on_dm_args.posmerge_op = POSTMERGE_OP_AND;
-			dir_merge_type         = DIR_MERGE_DEPTH_FIRST;
+			dir_merge_type         = DIR_MERGE_DIRECT;
 			dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
 			break;
 		case MATH_SRCH_SUBEXPRESSION:

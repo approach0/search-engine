@@ -42,8 +42,8 @@ struct subpath {
 
 struct subpaths {
 	list      li;
-	uint32_t  n_lr_paths;
-	uint32_t  n_subpaths;
+	uint32_t  n_lr_paths; /* number of leaf-root paths */
+	uint32_t  n_subpaths; /* total subpaths generated. */
 };
 
 struct tex_parse_ret {

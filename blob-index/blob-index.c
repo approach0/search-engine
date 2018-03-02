@@ -36,6 +36,7 @@ blob_index_open(const char * path, enum blob_open_mode mode)
 	sprintf(ptr_file_path, "%s.ptr.bin", path);
 	sprintf(dat_file_path, "%s.dat.bin", path);
 
+reopen:
 	bi = malloc(sizeof(struct blob_index));
 	assert(NULL != bi);
 
@@ -44,19 +45,37 @@ blob_index_open(const char * path, enum blob_open_mode mode)
 		bi->dat_file = fopen(dat_file_path, "r");
 	} else if (mode == BLOB_OPEN_WR) {
 		bi->ptr_file = fopen(ptr_file_path, "r+");
-		bi->dat_file = fopen(dat_file_path, "a");
-	}
-
-	if (mode == BLOB_OPEN_WR && bi->ptr_file == NULL) {
 		/*
 		 * file at ptr_file_path does not exists, since
 		 * "r+" mode does not create a file, we need to
 		 * create it ourself.
 		 */
-		bi->ptr_file = fopen(ptr_file_path, "w");
-		if (bi->ptr_file) {
-			fclose(bi->ptr_file);
-			bi->ptr_file = fopen(ptr_file_path, "r+");
+		if (bi->ptr_file == NULL) {
+			bi->ptr_file = fopen(ptr_file_path, "w");
+			if (bi->ptr_file) {
+				blob_index_close(bi);
+				goto reopen;
+			}
+		}
+
+		bi->dat_file = fopen(dat_file_path, "a");
+	} else if (mode == BLOB_OPEN_RMA_RANDOM) {
+		bi->ptr_file = fopen(ptr_file_path, "r+");
+		if (bi->ptr_file == NULL) {
+			bi->ptr_file = fopen(ptr_file_path, "w");
+			if (bi->ptr_file) {
+				blob_index_close(bi);
+				goto reopen;
+			}
+		}
+
+		bi->dat_file = fopen(dat_file_path, "r+");
+		if (bi->dat_file == NULL) {
+			bi->dat_file = fopen(dat_file_path, "w");
+			if (bi->dat_file) {
+				blob_index_close(bi);
+				goto reopen;
+			}
 		}
 	}
 
@@ -102,6 +121,37 @@ blob_index_write(blob_index_t index, doc_id_t docID,
 	fwrite(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
 	return blob_sz_written;
+}
+
+size_t
+blob_index_replace(blob_index_t index, doc_id_t docID,
+                   const void *blob)
+{
+	struct blob_index *bi = (struct blob_index *)index;
+	blob_ptr_t ptr_rd_pos = (docID * sizeof(blob_ptr_t));
+	blob_ptr_t dat_pos;
+	blob_sz_t  blob_sz;
+	size_t blob_sz_written;
+
+	/* read pointer file at ptr_rd_pos position */
+	assert(0 == fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET));
+	fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
+
+	/* replace blob data file */
+	assert(0 == fseek(bi->dat_file, dat_pos, SEEK_SET));
+	fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
+	blob_sz_written = fwrite(blob, 1, blob_sz, bi->dat_file);
+
+	return blob_sz_written;
+}
+
+size_t
+blob_index_append(blob_index_t index, doc_id_t docID,
+                  const void *blob, size_t size)
+{
+	struct blob_index *bi = (struct blob_index *)index;
+	file_seek_end(bi->dat_file);
+	return blob_index_write(index, docID, blob, size);
 }
 
 size_t blob_index_read(blob_index_t index, doc_id_t docID, void **blob)

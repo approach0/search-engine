@@ -54,7 +54,7 @@ int main()
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
 			subpaths_print(&parse_ret.subpaths, stdout);
-			math_index_add_tex(index, docID, expID, parse_ret.subpaths);
+			math_index_add_tex(index, docID, expID, parse_ret.subpaths, MATH_INDEX_ALL);
 			subpaths_release(&parse_ret.subpaths);
 			expID ++;
 		} else {
