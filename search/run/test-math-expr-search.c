@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	uint32_t                i;
 	int                     opt;
 	math_index_t            mi = NULL;
-	enum dir_merge_type     directory_merge_method = DIR_MERGE_DIRECT;
+	enum math_expr_search_policy srch_policy = MATH_SRCH_SUBEXPRESSION;
 
 	static char query[MAX_MERGE_POSTINGS][MAX_QUERY_BYTES];
 	uint32_t   n_queries = 0;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h | -p <index path> | -t <TeX> | "
-			           "-m <1:dfs,2:bfs,3:direct>"
+			           "-m <1:exact,2:subexpr,3:fuzzy>"
 			           "\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
@@ -60,11 +60,11 @@ int main(int argc, char *argv[])
 
 		case 'm':
 			if (optarg[0] == '1')
-				directory_merge_method = DIR_MERGE_BREADTH_FIRST;
+				srch_policy = MATH_SRCH_EXACT_STRUCT;
 			else if (optarg[0] == '2')
-				directory_merge_method = DIR_MERGE_DEPTH_FIRST;
+				srch_policy = MATH_SRCH_SUBEXPRESSION;
 			else
-				directory_merge_method = DIR_MERGE_DIRECT;
+				srch_policy = MATH_SRCH_FUZZY_STRUCT;
 
 			break;
 
@@ -111,8 +111,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* for now only single (query[0]) is searched */
-	math_expr_search(mi, query[0], directory_merge_method,
-	                 &math_posting_on_merge, NULL);
+	math_expr_search(mi, query[0], srch_policy, &math_posting_on_merge, NULL);
 
 exit:
 	free(index_path);
