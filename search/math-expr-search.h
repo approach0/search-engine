@@ -15,6 +15,12 @@ struct math_extra_score_arg {
 	struct math_prefix_qry pq;
 };
 
+enum math_expr_search_policy {
+	MATH_SRCH_EXACT_STRUCT,
+	MATH_SRCH_FUZZY_STRUCT,
+	MATH_SRCH_SUBEXPRESSION
+};
+
 #pragma pack(push, 1)
 struct math_expr_score_res {
 	doc_id_t  doc_id;
@@ -25,7 +31,7 @@ struct math_expr_score_res {
 
 /* perform math expression search. Upon math posting list merge,
  * call the callback function specified in the argument. */
-int64_t math_expr_search(math_index_t, char*, enum dir_merge_type,
+int64_t math_expr_search(math_index_t, char*, enum math_expr_search_policy,
                          post_merge_callbk, void*);
 
 /* call this function in posting merge callback to score merged item

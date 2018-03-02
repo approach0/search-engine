@@ -208,7 +208,7 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 }
 
 int64_t math_expr_search(math_index_t mi, char *tex,
-                         enum dir_merge_type dir_merge_type,
+                         enum math_expr_search_policy search_policy,
                          post_merge_callbk fun, void *args)
 {
 	struct tex_parse_ret     parse_ret;
@@ -216,16 +216,15 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 	struct on_dir_merge_args on_dm_args;
 	struct postmerge_callbks calls;
 
+	enum dir_merge_type dir_merge_type = DIR_MERGE_DIRECT;
+	enum dir_merge_pathset_type dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
+
 	calls.start = &math_posting_start;
 	calls.finish = &math_posting_finish;
 	calls.jump = &math_posting_jump;
 	calls.next = &math_posting_next;
 	calls.now = &math_posting_current_wrap;
-
-	if (dir_merge_type == DIR_MERGE_DIRECT)
-		calls.now_id = &math_posting_current_id_v2_wrap;
-	else
-		calls.now_id = &math_posting_current_id_wrap;
+	calls.now_id = &math_posting_current_id_wrap;
 
 	/* parse TeX */
 	parse_ret = tex_parse(tex, 0, true);
@@ -263,13 +262,31 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 		on_dm_args.expr_srch_arg = args;
 		on_dm_args.n_tot_rd_items = 0;
 
-		if (dir_merge_type == DIR_MERGE_DIRECT)
+		switch (search_policy) {
+		case MATH_SRCH_FUZZY_STRUCT:
+			calls.now_id           = &math_posting_current_id_v2_wrap;
 			on_dm_args.posmerge_op = POSTMERGE_OP_OR;
-		else
+			dir_merge_type         = DIR_MERGE_DIRECT;
+			dir_merge_pathset_type = DIR_PATHSET_PREFIX_PATH;
+			break;
+		case MATH_SRCH_EXACT_STRUCT:
+			calls.now_id = &math_posting_current_id_wrap;
 			on_dm_args.posmerge_op = POSTMERGE_OP_AND;
+			dir_merge_type         = DIR_MERGE_DEPTH_FIRST;
+			dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
+			break;
+		case MATH_SRCH_SUBEXPRESSION:
+			calls.now_id = &math_posting_current_id_wrap;
+			on_dm_args.posmerge_op = POSTMERGE_OP_AND;
+			dir_merge_type         = DIR_MERGE_BREADTH_FIRST;
+			dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
+			break;
+		default:
+			fprintf(stderr, "Unknown search policy: %u\n", search_policy);
+		}
 
-		math_index_dir_merge(mi, dir_merge_type, &parse_ret.subpaths,
-		                     &on_dir_merge, &on_dm_args);
+		math_index_dir_merge(mi, dir_merge_type, dir_merge_pathset_type,
+		                     &parse_ret.subpaths, &on_dir_merge, &on_dm_args);
 
 		subpaths_release(&parse_ret.subpaths);
 

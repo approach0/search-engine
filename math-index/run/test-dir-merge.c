@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 		subpaths_print(&parse_ret.subpaths, stdout);
 
 		printf("calling math_index_dir_merge()...\n");
-		math_index_dir_merge(index, DIR_MERGE_DEPTH_FIRST,
+		math_index_dir_merge(index, DIR_MERGE_DEPTH_FIRST, DIR_PATHSET_LEAFROOT_PATH,
 		                     &parse_ret.subpaths, &on_dir_merge, NULL);
 		
 		subpaths_release(&parse_ret.subpaths);
