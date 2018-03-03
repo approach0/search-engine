@@ -4,10 +4,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include "math-index/math-index.h"
-#include "blob-index/blob-index.h"
-#include "search/postmerge.h"
-#include "search/math-expr-search.h"
 #include "qac.h"
 
 struct qac_index {
@@ -91,18 +87,16 @@ void qac_index_close(void *qi_)
 }
 
 static void
-math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
+set_touch_id_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(touchID, uint32_t, mesa->expr_srch_arg);
 	struct math_posting_item *po_item;
-	for (int i = 0; i < pm->n_postings; i++) {
-		po_item = pm->cur_pos_item[i];
+	po_item = pm->cur_pos_item[0];
 #ifdef QAC_INDEX_DEBUG_PRINT
-		printf("HIT: doc#%u, exp#%u.\n", po_item->doc_id, po_item->exp_id);
+	printf("HIT: doc#%u, exp#%u.\n", po_item->doc_id, po_item->exp_id);
 #endif
-	}
 	*touchID = po_item->exp_id;
 }
 
@@ -113,7 +107,7 @@ uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
 	uint32_t touchID = 0;
 
 	math_expr_search(qi->mi, (char *)tex, MATH_SRCH_EXACT_STRUCT,
-	                 &math_posting_on_merge, &touchID);
+	                 &set_touch_id_on_merge, &touchID);
 
 	if (touchID) {
 		struct qac_tex_info *tex_info = NULL;
@@ -167,4 +161,46 @@ struct qac_tex_info math_qac_get(qac_index_t* qi_, uint32_t texID, char **tex)
 		*tex = NULL;
 	}
 	return ret;
+}
+
+struct qac_on_merge_args {
+	ranked_results_t *rk_res;
+	struct qac_index *qi;
+};
+
+static void
+qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
+                      void* extra_args)
+{
+	P_CAST(mesa, struct math_extra_score_arg, extra_args);
+	P_CAST(args, struct qac_on_merge_args, mesa->expr_srch_arg);
+	struct math_posting_item *po_item;
+	struct qac_tex_info tex_info;
+	char *tex;
+
+	po_item = pm->cur_pos_item[0];
+	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
+	assert(NULL != tex);
+	//printf("%s frequency: %u \n", tex, tex_info.freq);
+	free(tex);
+
+	consider_top_K(args->rk_res, po_item->exp_id, (float)tex_info.freq,
+	               NULL, 0);
+}
+
+ranked_results_t math_qac_query(qac_index_t* qi_, const char *tex)
+{
+	struct qac_index *qi = (struct qac_index*)qi_;
+	ranked_results_t rk_res;
+	struct qac_on_merge_args args = {&rk_res, qi};
+
+	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
+
+	//printf("searching %s\n", tex);
+	math_expr_search(qi->mi, (char*)tex, MATH_SRCH_SUBEXPRESSION,
+	                 &qac_suggestion_on_merge, &args);
+
+	priority_Q_sort(&rk_res);
+
+	return rk_res;
 }

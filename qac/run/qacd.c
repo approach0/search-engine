@@ -31,10 +31,38 @@ static const char *post_log_on_recv(const char* req, void* arg_)
 	return req;
 }
 
+void print_suggestion(struct rank_hit* hit, uint32_t cnt, void* arg_)
+{
+	qac_index_t *qi = (qac_index_t*)arg_;
+	struct qac_tex_info tex_info;
+	char *tex;
+
+	tex_info = math_qac_get(qi, hit->docID, &tex);
+	assert(NULL != tex);
+
+	printf("doc#%u, popularity: %u \n", hit->docID, tex_info.freq);
+	printf("%s \n\n", tex);
+	free(tex);
+}
+
 static const char *qac_query_on_recv(const char* req, void* arg_)
 {
-	//qac_index_t *qi = (qac_index_t*)arg_;
+	qac_index_t *qi = (qac_index_t*)arg_;
 
+	JSON_Value *parson_val = json_parse_string(req);
+	JSON_Object *parson_obj = json_value_get_object(parson_val);
+	const char *tex = json_object_get_string(parson_obj, "tex");
+	struct rank_window win;
+	uint32_t tot_pages;
+
+	printf("QAC query: %s \n\n", tex);
+	ranked_results_t rk_res = math_qac_query(qi, tex);
+
+	win = rank_window_calc(&rk_res, 0, DEFAULT_QAC_SUGGESTIONS, &tot_pages);
+ 	rank_window_foreach(&win, &print_suggestion, qi);
+
+	priority_Q_free(&rk_res);
+	json_value_free(parson_val);
 	return req;
 }
 
