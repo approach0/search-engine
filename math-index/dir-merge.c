@@ -101,13 +101,13 @@ dir_search_callbk(const char* path, const char *srchpath,
  * dir-merge initialization related functions.
  */
 struct assoc_ele_and_pathstr_args {
-	uint32_t             i;
-	math_index_t         index;
-	uint32_t             longpath;
-	size_t               max_strlen;
-	char               (*paths)[MAX_DIR_PATH_NAME_LEN];
-	struct subpath_ele **eles;
-	enum dir_merge_type  pathset_type;
+	uint32_t                     i;
+	math_index_t                 index;
+	uint32_t                     longpath;
+	size_t                       max_strlen;
+	char                         (*paths)[MAX_DIR_PATH_NAME_LEN];
+	struct subpath_ele           **eles;
+	enum dir_merge_pathset_type  pathset_type;
 };
 
 static LIST_IT_CALLBK(assoc_ele_and_pathstr)

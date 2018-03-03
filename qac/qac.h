@@ -28,4 +28,4 @@ uint32_t qac_index_touch(void*, uint32_t);
 
 ranked_results_t math_qac_query(qac_index_t*, const char*);
 
-#define DEFAULT_QAC_SUGGESTIONS 5
+#define DEFAULT_QAC_SUGGESTIONS 10
