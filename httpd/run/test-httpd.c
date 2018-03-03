@@ -3,13 +3,15 @@
 
 static const char *hello_on_recv(const char* req, void* arg_)
 {
-	printf("hello: %s \n\n", req);
+	unsigned short *port = (unsigned short*)arg_;
+	printf("hello: %s @ %u \n\n", req, *port);
 	return req;
 }
 
 static const char *world_on_recv(const char* req, void* arg_)
 {
-	printf("world: %s \n\n", req);
+	unsigned short *port = (unsigned short*)arg_;
+	printf("world: %s @ %u \n\n", req, *port);
 	return req;
 }
 
