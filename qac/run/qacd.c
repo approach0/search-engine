@@ -1,29 +1,31 @@
+#include <assert.h>
 #include "mhook/mhook.h"
 #include "httpd/httpd.h"
 #include "qac.h"
 
-//		printf("texID#%u: `%s'\n", texID, test[i]);
-//		struct qac_tex_info tex_info;
-//		char *tex;
-//		printf("getting ID=%u ...\n", i);
-//		tex_info = math_qac_get(qi, i, &tex);
-//		if (tex) {
-//			printf("%s (freq=%u)\n", tex, tex_info.freq);
-//			free(tex);
-//		} else {
-//			printf("No such ID.\n");
-//		}
-//
-
 static const char *post_log_on_recv(const char* req, void* arg_)
 {
 	qac_index_t *qi = (qac_index_t*)arg_;
+
+	uint32_t texID = math_qac_index_uniq_tex(qi, req);
+	printf("post_log `%s' \n", req);
+	printf("TeX ID#%u ", texID);
+
+	{
+		struct qac_tex_info tex_info;
+		char *tex;
+		tex_info = math_qac_get(qi, texID, &tex);
+		assert(NULL != tex);
+		printf("%s frequency: %u \n", tex, tex_info.freq);
+		free(tex);
+	}
+
 	return req;
 }
 
 static const char *qac_query_on_recv(const char* req, void* arg_)
 {
-	qac_index_t *qi = (qac_index_t*)arg_;
+	//qac_index_t *qi = (qac_index_t*)arg_;
 	return req;
 }
 
