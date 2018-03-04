@@ -7,6 +7,7 @@
 #undef NDEBUG
 #include <assert.h>
 
+#include "term-index/config.h"
 #include "wstring/wstring.h" /* for wstr2mbstr() */
 #include "mem-index/mem-posting.h"
 #include "timer/timer.h"
@@ -154,7 +155,11 @@ add_postinglists(struct indices *indices, const struct query *qry,
 	struct adding_post_arg ap_args;
 	ap_args.indices = indices;
 	ap_args.pm = pm;
+#ifndef IGNORE_TERM_INDEX
 	ap_args.docN = term_index_get_docN(indices->ti);
+#else
+	ap_args.docN = 1;
+#endif
 	ap_args.idx = 0;
 	ap_args.idf = idf_arr;
 
@@ -187,7 +192,11 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	doc_id_t    docID = cur_min;
 	float       doclen;
 
+#ifndef IGNORE_TERM_INDEX
 	doclen = (float)term_index_get_docLen(pm_args->indices->ti, docID);
+#else
+	doclen = 1;
+#endif
 
 	enum query_kw_type        *type;
 	struct term_posting_item  *pip;
@@ -351,7 +360,11 @@ indices_run_query(struct indices *indices, struct query *qry)
 
 	/* prepare BM25 parameters */
 	bm25args.n_postings = pm.n_postings;
+#ifndef IGNORE_TERM_INDEX
 	bm25args.avgDocLen = (float)term_index_get_avgDocLen(indices->ti);
+#else
+	bm25args.avgDocLen = (float)1.f;
+#endif
 	bm25args.b  = BM25_DEFAULT_B;
 	bm25args.k1 = BM25_DEFAULT_K1;
 	bm25args.frac_b_avgDocLen = BM25_DEFAULT_K1 / bm25args.avgDocLen;

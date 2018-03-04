@@ -4,6 +4,7 @@
 
 #include "mhook/mhook.h"
 
+#include "term-index/config.h"
 #include "txt-seg/config.h"
 #include "txt-seg/txt-seg.h"
 #include "wstring/wstring.h"
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 	struct searcher_args args;
 	int                  pause = 1;
 
-	fh_trec_output = fopen("tmp.txt", "a");
+	fh_trec_output = fopen("trec-format-results.tmp", "a");
 	if (fh_trec_output == NULL)
 		return 1;
 
@@ -193,7 +194,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* setup cache */
+#ifndef IGNORE_TERM_INDEX
 	indices_cache(&indices, 32 MB);
+#endif
 
 	/*
 	 * pause and continue on key press to have an idea
