@@ -37,7 +37,7 @@ int main()
 	const char err_output_file[] = "./indexd-parser-error.tmp";
 	unsigned short port = 8934;
 	struct uri_handler uri_handlers[] = {
-		{"/" INDEXD_DEFAULT_URI, httpd_on_recv}
+		{INDEXD_DEFAULT_URI, httpd_on_recv}
 	};
 	unsigned int len = sizeof(uri_handlers) / sizeof(struct uri_handler);
 	

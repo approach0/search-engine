@@ -37,7 +37,7 @@ blob_index_open(const char * path, enum blob_open_mode mode)
 	sprintf(dat_file_path, "%s.dat.bin", path);
 
 reopen:
-	bi = malloc(sizeof(struct blob_index));
+	bi = calloc(1, sizeof(struct blob_index));
 	assert(NULL != bi);
 
 	if (mode == BLOB_OPEN_RD) {
