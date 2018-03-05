@@ -18,7 +18,7 @@ def send_json(json_obj):
 	r = requests.post('http://localhost:8934/index',
 		json=json_obj,
 		headers=headers)
-	print(r.status_code)
+	# print(r.status_code)
 
 with open(fname) as f:
 	cnt = 0
@@ -29,11 +29,11 @@ with open(fname) as f:
 		latex = ' '.join(fields[1:])
 		latex = latex.replace('% ', '')
 		docid = docid_and_pos
-		# print(latex)
 
 		json_obj = {}
 		json_obj['url'] = docid;
 		json_obj['text'] = '[imath]' + latex + '[/imath]  ';
+		# print(latex)
 		send_json(json_obj)
 
 		cnt += 1
