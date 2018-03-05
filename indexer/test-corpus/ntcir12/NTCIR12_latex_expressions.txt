@@ -1,1 +1,1 @@
-/home/tk/Desktop/ntcir-12/NTCIR12_latex_expressions.txt
+/home/tk/rotate-disk/ext4/ntcir-12/NTCIR12_latex_expressions.txt
