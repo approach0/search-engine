@@ -240,12 +240,12 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 	/* merge and combine math scores */
 #ifdef MATH_PREFIX_SEARCH_ONLY
 	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
-	                                  DIR_MERGE_DIRECT,
+	                                  MATH_SRCH_FUZZY_STRUCT,
 	                                  &math_posting_on_merge,
 	                                  &msca);
 #else
 	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
-	                                  DIR_MERGE_BREADTH_FIRST,
+	                                  MATH_SRCH_SUBEXPRESSION,
 	                                  &math_posting_on_merge,
 	                                  &msca);
 #endif

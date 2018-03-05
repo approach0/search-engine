@@ -24,6 +24,11 @@ enum math_index_open_opt {
 	MATH_INDEX_WRITE
 };
 
+enum math_index_wr_opt {
+	MATH_INDEX_WO_PREFIX,
+	MATH_INDEX_ALL
+};
+
 typedef struct math_index {
 	enum math_index_open_opt open_opt;
 	char dir[MAX_DIR_PATH_NAME_LEN];
@@ -32,7 +37,8 @@ typedef struct math_index {
 math_index_t
 math_index_open(const char *, enum math_index_open_opt);
 
-int math_index_add_tex(math_index_t, doc_id_t, exp_id_t, struct subpaths);
+int math_index_add_tex(math_index_t, doc_id_t, exp_id_t,
+                       struct subpaths, enum math_index_wr_opt);
 
 bool math_index_mk_path_str(struct subpath*, char*);
 bool math_index_mk_prefix_path_str(struct subpath*, int, char*);

@@ -101,13 +101,13 @@ dir_search_callbk(const char* path, const char *srchpath,
  * dir-merge initialization related functions.
  */
 struct assoc_ele_and_pathstr_args {
-	uint32_t             i;
-	math_index_t         index;
-	uint32_t             longpath;
-	size_t               max_strlen;
-	char               (*paths)[MAX_DIR_PATH_NAME_LEN];
-	struct subpath_ele **eles;
-	enum dir_merge_type  type;
+	uint32_t                     i;
+	math_index_t                 index;
+	uint32_t                     longpath;
+	size_t                       max_strlen;
+	char                         (*paths)[MAX_DIR_PATH_NAME_LEN];
+	struct subpath_ele           **eles;
+	enum dir_merge_pathset_type  pathset_type;
 };
 
 static LIST_IT_CALLBK(assoc_ele_and_pathstr)
@@ -120,7 +120,7 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 	/* make path string */
 	append += sprintf(append, "%s/", args->index->dir);
 
-	if (args->type == DIR_MERGE_DIRECT) {
+	if (args->pathset_type == DIR_PATHSET_PREFIX_PATH) {
 	    if (math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append)) {
 			args->i = 0; /* indicates error */
 			return LIST_RET_BREAK;
@@ -152,9 +152,11 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 #define NEW_SUBPATHS_DIR_BUF(_n_paths) \
 	malloc(_n_paths * MAX_DIR_PATH_NAME_LEN);
 
-int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
-                         struct subpaths *subpaths, dir_merge_callbk fun,
-                         void *args)
+int
+math_index_dir_merge( math_index_t index,
+	enum dir_merge_type dir_merge_type,
+	enum dir_merge_pathset_type pathset_type,
+	struct subpaths *subpaths, dir_merge_callbk fun, void *args)
 {
 	int  n_uniq_paths, ret = 0;
 	list subpath_set = LIST_NULL;
@@ -168,9 +170,12 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	/* generate subpath set */
 	struct subpath_ele_added added;
 	
-	if (type == DIR_MERGE_DIRECT) {
+	switch (pathset_type) {
+	case DIR_PATHSET_PREFIX_PATH:
 		added = prefix_subpath_set_from_subpaths(subpaths, &subpath_set);
-	} else {
+		break;
+	case DIR_PATHSET_LEAFROOT_PATH:
+	default:
 		added = lr_subpath_set_from_subpaths(subpaths, &subpath_set);
 	}
 
@@ -190,7 +195,7 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 	assoc_args.max_strlen = 0;
 	assoc_args.paths = dm_args.base_paths;
 	assoc_args.eles = dm_args.eles;
-	assoc_args.type = type;
+	assoc_args.pathset_type = pathset_type;
 
 	list_foreach(&subpath_set, &assoc_ele_and_pathstr, &assoc_args);
 
@@ -223,16 +228,16 @@ int math_index_dir_merge(math_index_t index, enum dir_merge_type type,
 #endif
 
 	/* now we can start merge path directories */
-	if (type == DIR_MERGE_BREADTH_FIRST) {
+	if (dir_merge_type == DIR_MERGE_BREADTH_FIRST) {
 		dir_search_bfs(dm_args.base_paths[dm_args.longpath],
 		               &dir_search_callbk, &dm_args);
-	} else if (type == DIR_MERGE_DEPTH_FIRST) {
+	} else if (dir_merge_type == DIR_MERGE_DEPTH_FIRST) {
 		dir_search_podfs(dm_args.base_paths[dm_args.longpath],
 		               &dir_search_callbk, &dm_args);
-	} else if (type == DIR_MERGE_DIRECT) {
+	} else if (dir_merge_type == DIR_MERGE_DIRECT) {
 		dir_search_callbk("", "", 0, &dm_args);
 	} else {
-		fprintf(stderr, "DIR_MERGE type %u not implemented.\n", type);
+		fprintf(stderr, "DIR_MERGE type %u not implemented.\n", dir_merge_type);
 		abort();
 	}
 

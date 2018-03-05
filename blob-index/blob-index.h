@@ -3,6 +3,7 @@
 
 enum blob_open_mode {
 	BLOB_OPEN_RD,
+	BLOB_OPEN_RMA_RANDOM,
 	BLOB_OPEN_WR
 };
 
@@ -17,3 +18,6 @@ size_t blob_index_read(blob_index_t, doc_id_t, void **);
 void blob_free(void *);
 
 void blob_index_close(blob_index_t);
+
+size_t blob_index_append(blob_index_t, doc_id_t, const void*, size_t);
+size_t blob_index_replace(blob_index_t, doc_id_t, const void*);

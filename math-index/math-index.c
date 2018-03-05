@@ -418,8 +418,8 @@ static LIST_IT_CALLBK(path_index_step3)
 }
 
 int
-math_index_add_tex(math_index_t index, doc_id_t docID,
-                   exp_id_t expID, struct subpaths subpaths)
+math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
+                   struct subpaths subpaths, enum math_index_wr_opt opt)
 {
 	struct _index_path_arg arg;
 	arg.index = (math_index_t)index;
@@ -463,6 +463,8 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 #endif
 	subpath_set_free(&arg.subpath_set);
 
+	if (opt == MATH_INDEX_WO_PREFIX)
+		goto skip_prefix;
 
 	for (arg.prefix_len = 2;; arg.prefix_len++) {
 		LIST_CONS(arg.subpath_set);
@@ -483,6 +485,7 @@ math_index_add_tex(math_index_t index, doc_id_t docID,
 		subpath_set_free(&arg.subpath_set);
 	}
 
+skip_prefix:
 	return 0;
 }
 

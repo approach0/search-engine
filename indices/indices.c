@@ -1,3 +1,4 @@
+#include "term-index/config.h"
 #include "indices.h"
 #include "config.h"
 
@@ -42,12 +43,14 @@ bool indices_open(struct indices* indices, const char* index_path,
 	term_index = term_index_open(path, (mode == INDICES_OPEN_RD) ?
 	                             TERM_INDEX_OPEN_EXISTS:
 	                             TERM_INDEX_OPEN_CREATE);
+#ifndef IGNORE_TERM_INDEX
 	if (NULL == term_index) {
 		fprintf(stderr, "cannot create/open term index.\n");
 		open_err = 1;
 
 		goto skip;
 	}
+#endif
 
 	/*
 	 * open math index.
