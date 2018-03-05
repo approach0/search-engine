@@ -3,9 +3,10 @@
 
 #include "mhook/mhook.h"
 #include "httpd/httpd.h"
+#include "parson/parson.h"
 #include "tex-parser.h"
 
-#define PARSER_ERR_LOGD_URI  "/index"
+#define PARSER_ERR_LOGD_URI  "/parser"
 
 static FILE *fh_err_output = NULL;
 static unsigned int total_cnt = 0;
@@ -15,30 +16,36 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 {
 	struct tex_parse_ret ret;
 	printf("%s \n\n", req);
-	ret = tex_parse(req, 0, false);
+
+	JSON_Value *parson_val = json_parse_string(req);
+	JSON_Object *parson_obj = json_value_get_object(parson_val);
+	const char *tex = json_object_get_string(parson_obj, "tex");
+
+	ret = tex_parse(tex, 0, false);
 	total_cnt ++;
 
 	if (ret.code != PARSER_RETCODE_ERR) {
 		subpaths_release(&ret.subpaths);
 	} else {
 		error_cnt ++;
-		printf("%s\n", req);
-		printf("%s (%u/%u)\n", ret.msg, error_cnt, total_cnt);
+		fprintf(fh_err_output, "%s\n", tex);
+		fprintf(fh_err_output, "%s (%u/%u)\n", ret.msg, error_cnt, total_cnt);
 	}
 
+	json_value_free(parson_val);
 	return req;
 }
 
 int main()
 {
-	const char err_output_file[] = "./parser-error-log.tmp";
-	unsigned short port = 8934;
+	const char err_output_file[] = "./parser-err-log.tmp";
+	unsigned short port = 8998;
 	struct uri_handler uri_handlers[] = {
 		{PARSER_ERR_LOGD_URI, httpd_on_recv}
 	};
 	unsigned int len = sizeof(uri_handlers) / sizeof(struct uri_handler);
 	
-	fh_err_output = fopen(err_output_file, "a");
+	fh_err_output = fopen(err_output_file, "w");
 	if (fh_err_output == NULL)
 		return 1;
 	

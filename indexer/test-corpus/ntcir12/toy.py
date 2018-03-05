@@ -1,10 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import json
 import requests
 import time
 
+#url= 'http://localhost:8934/index'
+url= 'http://localhost:8998/parser'
+
 fname = "NTCIR12_latex_expressions.txt"
-#fname = "toy.txt"
 
 def file_len(fname):
 	with open(fname) as f:
@@ -15,9 +17,7 @@ total_lines = file_len(fname)
 
 def send_json(json_obj):
 	headers = {'content-type': 'application/json'}
-	r = requests.post('http://localhost:8934/index',
-		json=json_obj,
-		headers=headers)
+	r = requests.post(url, json=json_obj, headers=headers)
 	# print(r.status_code)
 
 with open(fname) as f:
@@ -33,6 +33,7 @@ with open(fname) as f:
 		json_obj = {}
 		json_obj['url'] = docid;
 		json_obj['text'] = '[imath]' + latex + '[/imath]  ';
+		json_obj['tex'] = latex;
 		# print(latex)
 		send_json(json_obj)
 
