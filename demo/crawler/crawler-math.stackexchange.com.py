@@ -168,7 +168,7 @@ def list_post_links(page, sortby, c):
 				retry_cnt += 1
 			wait_time = retry_cnt * 10.0
 			print('too frequent request? Wait %f sec ...' % wait_time)
-			sleep(wait_time)
+			time.sleep(wait_time)
 		else:
 			break
 
