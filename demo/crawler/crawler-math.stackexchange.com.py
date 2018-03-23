@@ -136,7 +136,7 @@ def save_json(path, post_txt, url):
 	f.write(json.dumps({
 		"url": url,
 		"text": post_txt
-	}))
+	}, sort_keys=True))
 	f.close()
 
 def get_curl():
@@ -200,7 +200,7 @@ def process_post(post_id, post_txt, url):
 	# an identical file already exists.
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
-		print('[exists]')
+		print('[exists]' + jsonfile)
 		save_json('/tmp/tmp.json', post_txt, url)
 		if filecmp.cmp('/tmp/tmp.json', jsonfile):
 			# two files are identical, do not touch
@@ -208,6 +208,7 @@ def process_post(post_id, post_txt, url):
 			return
 		else:
 			print('[overwrite]')
+
 
 	# two files are different, save files
 	save_json(jsonfile, post_txt, url)
