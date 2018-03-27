@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="a\pm b+c+d" display="block">
+  <mrow>
+    <mrow>
+      <mi>a</mi>
+      <mo>±</mo>
+      <mi>b</mi>
+    </mrow>
+    <mo>+</mo>
+    <mi>c</mi>
+    <mo>+</mo>
+    <mi>d</mi>
+  </mrow>
+</math>
