@@ -1,14 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="a\pm b+c+d" display="block">
+<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="a+b+c+\frac{1}{n}+x_{1}^{2+y}" display="block">
   <mrow>
-    <mrow>
-      <mi>a</mi>
-      <mo>±</mo>
-      <mi>b</mi>
-    </mrow>
+    <mi>a</mi>
+    <mo>+</mo>
+    <mi>b</mi>
     <mo>+</mo>
     <mi>c</mi>
     <mo>+</mo>
-    <mi>d</mi>
+    <mfrac>
+      <mn>1</mn>
+      <mi>n</mi>
+    </mfrac>
+    <mo>+</mo>
+    <msubsup>
+      <mi>x</mi>
+      <mn>1</mn>
+      <mrow>
+        <mn>2</mn>
+        <mo>+</mo>
+        <mi>y</mi>
+      </mrow>
+    </msubsup>
   </mrow>
 </math>
