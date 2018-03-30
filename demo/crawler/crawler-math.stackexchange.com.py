@@ -20,6 +20,7 @@ vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
 DIVISIONS = 500
+PAGESIZE = 30
 
 def print_err(err_str):
 	f = open("error.log", "a")
@@ -150,7 +151,8 @@ def get_curl():
 
 def list_post_links(page, sortby, c):
 	# sortby can be 'newest', 'active' etc.
-	sub_url = '/questions?sort={}&page={}'.format(sortby, page)
+	sub_url = '/questions?pagesize={}&sort={}&page={}'.format(
+	          PAGESIZE, sortby, page)
 
 	retry_cnt = 0
 	while True:
