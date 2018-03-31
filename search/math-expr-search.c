@@ -302,10 +302,13 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 }
 
 static __inline uint32_t
-math_expr_sim(mnc_score_t mnc_score,
-              uint32_t depth_delta, uint32_t breath_delta)
+math_expr_sim(mnc_score_t mnc_score, uint32_t depth_delta,
+              uint32_t qry_lr_paths, uint32_t doc_lr_paths)
 {
-	uint32_t score = mnc_score / (depth_delta + breath_delta + 1);
+	uint32_t breath_delta = doc_lr_paths - qry_lr_paths;
+	uint32_t norm_mnc_score = (mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
+	                          (qry_lr_paths * MNC_MARK_SCORE);
+	uint32_t score = norm_mnc_score / (depth_delta + breath_delta + 1);
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("mnc score = %u, depth delta = %u, breath delta = %u\n",
@@ -392,10 +395,8 @@ math_expr_score_on_merge(struct postmerge* pm,
 
 	/* finally calculate expression similarity score */
 	if (!skipped && pm->n_postings != 0) {
-		ret.score = math_expr_sim(
-		                mnc_score(), level,
-		                pathinfo_pack->n_lr_paths - n_qry_lr_paths
-		            );
+		ret.score = math_expr_sim(mnc_score(), level, n_qry_lr_paths,
+		                          pathinfo_pack->n_lr_paths);
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
 	}

@@ -213,6 +213,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 		msca->last.score = res.score;
 
 	msca_push_pos(msca, res.exp_id);
+	return 0;
 }
 
 uint32_t
