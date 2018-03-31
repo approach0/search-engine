@@ -415,7 +415,7 @@ math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
 	struct subpath_ele            *subpath_ele;
 	struct math_expr_score_res     ret = {0};
 	int i, j, k;
-	uint32_t n_joint_nodes, topk_cnt[3];
+	uint32_t n_joint_nodes, topk_cnt[3] = {0};
 
 	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {

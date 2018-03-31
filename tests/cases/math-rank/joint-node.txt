@@ -1,3 +1,4 @@
 xy + ab + 1
 
+HIT   xy + ab + 1 
 HIT   xyab + 1 

@@ -188,7 +188,7 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 			}
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
 			else if (qmap[loc.qr] != loc.dr ||
-					   dmap[loc.dr] != loc.qr) {
+				     dmap[loc.dr] != loc.qr) {
 				printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
 			}
 #endif
@@ -216,10 +216,6 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 			cur_max_dmask = cell->dmask;
 #endif
 		}
-	}
-
-	while (j < k) {
-		topk[j++] = 0;
 	}
 
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
