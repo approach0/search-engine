@@ -307,7 +307,7 @@ math_expr_sim(mnc_score_t mnc_score, uint32_t depth_delta,
 {
 	uint32_t breath_delta = doc_lr_paths - qry_lr_paths;
 	uint32_t norm_mnc_score = (mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                          (qry_lr_paths * MNC_MARK_SCORE);
+	                          (qry_lr_paths * (1 + MNC_MARK_SCORE));
 	uint32_t score = norm_mnc_score / (depth_delta + breath_delta + 1);
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
