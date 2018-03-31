@@ -14,7 +14,7 @@ RUN_DIR := run
 CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 
 # reset CFLAGS
-CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE
+CFLAGS = -Wall -Wno-unused-function -Wno-format-truncation -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
 # compiler

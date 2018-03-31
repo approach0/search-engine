@@ -114,7 +114,7 @@ add_math_score_posting(math_score_combine_args_t *msca)
 #endif
 }
 
-static void
+static int
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
@@ -135,7 +135,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 	/* math expression with zero score is filtered. */
 	if (res.score == 0)
-		return;
+		return 0;
 
 	/* otherwise, we need to add this expression */
 
@@ -153,7 +153,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 		    msca->n_mem_po + 1 >= MAX_POSTINGS_PER_MATH) {
 			/* stop traversing the next directory */
 			mesa->stop_dir_search = 1;
-			return;
+			return 1;
 
 		} else {
 			/* yes, we need to create a new posting list */

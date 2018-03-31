@@ -61,12 +61,12 @@ uint32_t        n_qry_syms;
 symbol_id_t     doc_uniq_sym[MAX_DOC_UNIQ_SYM];
 uint32_t        n_doc_uniq_syms;
 
-/* query / document bitmaps (assume all zeros in BSS segment) */
+/* query / document bitmaps */
 mnc_slot_t      doc_mark_bitmap[MAX_DOC_UNIQ_SYM];
 mnc_slot_t      doc_cross_bitmap[MAX_DOC_UNIQ_SYM];
 mnc_slot_t      relevance_bitmap[MAX_SUBPATH_ID][MAX_DOC_UNIQ_SYM];
 
-/* query / document slot sub-scores (assume all zero in BSS segment) */
+/* query / document slot sub-scores */
 mnc_score_t     doc_uniq_sym_score[MAX_DOC_UNIQ_SYM];
 
 /*

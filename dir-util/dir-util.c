@@ -54,7 +54,7 @@ void mkdir_p(const char *path)
 	char *p = NULL;
 	size_t len;
 
-	sprintf(dir, "%s", path);
+	snprintf(dir, MAX_DIR_PATH_NAME_LEN, "%s", path);
 	len = strlen(dir);
 
 	if(dir[len - 1] == '/')
@@ -91,7 +91,7 @@ int foreach_files_in(const char *path, ffi_callbk fun, void *arg)
 			/* not .. or . or hidden files*/
 			continue;
 
-		sprintf(newpath, "%s/%s", path, fname);
+		snprintf(newpath, MAX_DIR_PATH_NAME_LEN, "%s/%s", path, fname);
 
 		/* is a regular file ? */
 		if (!file_exists(newpath))
@@ -138,13 +138,13 @@ _dir_search_podfs(const char *path, const char *srchpath, uint32_t level,
 			/* not .. or . or hidden files*/
 			continue;
 
-		sprintf(newpath[0], "%s/%s", path, dname);
+		snprintf(newpath[0], MAX_DIR_PATH_NAME_LEN, "%s/%s", path, dname);
 
 		/* is a directory ? */
 		if (!dir_exists(newpath[0]))
 			continue;
 
-		sprintf(newpath[1], "%s/%s", srchpath, dname);
+		snprintf(newpath[1], MAX_DIR_PATH_NAME_LEN, "%s/%s", srchpath, dname);
 
 		res = _dir_search_podfs(newpath[0], newpath[1],
 		                        level + 1, fun, arg);
@@ -279,13 +279,15 @@ dir_search_bfs(const char *path_, ds_callbk fun, void *arg)
 				/* not .. or . or hidden files*/
 				continue;
 
-			sprintf(newpath[0], "%s/%s", top->path, dname);
+			snprintf(newpath[0], MAX_DIR_PATH_NAME_LEN, "%s/%s",
+			         top->path, dname);
 
 			/* is a directory ? */
 			if (!dir_exists(newpath[0]))
 				continue;
 
-			sprintf(newpath[1], "%s/%s", top->srchpath, dname);
+			snprintf(newpath[1], MAX_DIR_PATH_NAME_LEN, "%s/%s",
+			         top->srchpath, dname);
 			Q_push(&Q, newpath[0], newpath[1], top->level + 1);
 		}
 

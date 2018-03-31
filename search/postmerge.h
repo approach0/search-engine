@@ -16,7 +16,7 @@ typedef bool           (*post_jump_callbk)(void *, uint64_t);
 typedef bool           (*post_next_callbk)(void *);
 typedef post_item_t    (*post_now_callbk)(void *);
 typedef uint64_t       (*post_now_id_callbk)(post_item_t);
-typedef void           (*post_merge_callbk)(uint64_t, struct postmerge*, void*);
+typedef int            (*post_merge_callbk)(uint64_t, struct postmerge*, void*);
 
 enum postmerge_op {
 	POSTMERGE_OP_UNDEF,

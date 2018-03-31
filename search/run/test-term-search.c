@@ -13,7 +13,7 @@
 #include "snippet.h"
 #include "search-utils.h"
 
-void
+static int
 term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
@@ -70,7 +70,7 @@ term_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
 	               pm_args->prox_in, j);
-	return;
+	return 0;
 }
 
 struct search_res_arg {

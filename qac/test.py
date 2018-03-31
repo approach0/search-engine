@@ -43,5 +43,5 @@ def test_qac_query(qry_tex):
 # post_query_logs(10000)
 # post_query_logs(sys.maxsize)
 
-test_qac_query('a^2')
+test_qac_query('x^2+y')
 #test_qac_query('1+1/n')

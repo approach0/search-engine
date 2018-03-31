@@ -159,7 +159,8 @@ posting_merge_OR(struct postmerge *pm, void *extra_args)
 #ifdef DEBUG_POST_MERGE
 		printf("calling post_on_merge(cur_min=%lu)\n", cur_min);
 #endif
-		pm->post_on_merge(cur_min, pm, extra_args);
+		if (0 != pm->post_on_merge(cur_min, pm, extra_args))
+			break;
 
 		/* update read item counter */
 		pm->n_rd_items += pm->n_postings;
@@ -195,7 +196,8 @@ posting_merge_AND(struct postmerge *pm, void *extra_args)
 		printf("calling post_on_merge(cur_min=%lu)\n", cur_min);
 #endif
 		if (i == pm->n_postings)
-			pm->post_on_merge(cur_min, pm, extra_args);
+			if (0 != pm->post_on_merge(cur_min, pm, extra_args))
+				break;
 
 		/* update read item counter */
 		pm->n_rd_items += pm->n_postings;

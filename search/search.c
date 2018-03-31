@@ -169,7 +169,7 @@ add_postinglists(struct indices *indices, const struct query *qry,
 	return ap_args.idx;
 }
 
-static void
+static int
 mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
                        void *extra_args)
 {
@@ -288,6 +288,7 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 
 	consider_top_K(pm_args->rk_res, docID, tot_score,
 	               pm_args->prox_in, j);
+	return 0;
 }
 
 static void free_math_postinglists(struct postmerge *pm)

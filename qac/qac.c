@@ -86,7 +86,7 @@ void qac_index_close(void *qi_)
 	free(qi);
 }
 
-static void
+static int
 set_touch_id_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
@@ -98,6 +98,8 @@ set_touch_id_on_merge(uint64_t cur_min, struct postmerge* pm,
 	printf("HIT: doc#%u, exp#%u.\n", po_item->doc_id, po_item->exp_id);
 #endif
 	*touchID = po_item->exp_id;
+
+	return 0;
 }
 
 uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
@@ -168,7 +170,7 @@ struct qac_on_merge_args {
 	struct qac_index *qi;
 };
 
-static void
+static int
 qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {

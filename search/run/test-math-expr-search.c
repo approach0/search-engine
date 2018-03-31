@@ -15,7 +15,7 @@
 #include "math-expr-search.h"
 #include "math-prefix-qry.h"
 
-static void
+static int
 math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
                       void* extra_args)
 {
@@ -25,6 +25,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
 	                                      &mesa->pq);
 	printf("doc#%u, exp#%u score: %u \n", res.doc_id, res.exp_id, res.score);
+	return 0;
 }
 
 int main(int argc, char *argv[])
