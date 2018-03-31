@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "qac.h"
 
@@ -202,11 +203,11 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 	float sim = (float)sim_res.score / 100.f;
 	float level = (float)mesa->dir_merge_level;
 	float freq = (float)tex_info.freq;
-	float score = (sim * freq * level) / (1.f + level * level);
+	float score = (sim * freq * level) / (1.f + level * logf(level + 1.f));
 
-	printf("tex#%u `%s' frequency: %u, level: %u, sim: %.2f. \n",
-	       po_item->exp_id, tex, tex_info.freq,
-	       mesa->dir_merge_level, sim);
+//	printf("tex#%u `%s' frequency: %u, level: %u, sim: %.2f. \n",
+//	       po_item->exp_id, tex, tex_info.freq,
+//	       mesa->dir_merge_level, sim);
 	consider_top_K(args->rk_res, po_item->exp_id, score, NULL, 0);
 	return 0;
 }

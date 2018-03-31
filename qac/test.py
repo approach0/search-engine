@@ -55,6 +55,6 @@ def test_qac_query(qry_tex):
 # post_query_logs(10000)
 # post_query_logs(sys.maxsize)
 
-test_qac_query('x^2')
+#test_qac_query('x^2')
 #test_qac_query('x^2+')
-#test_qac_query('x^2 + y^2')
+test_qac_query('x^2 + y^2')
