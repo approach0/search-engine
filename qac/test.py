@@ -4,7 +4,7 @@ import requests
 import time
 import sys
 
-fname = "test.tmp"
+fname = "ntcir12.tmp"
 urlbase = 'http://localhost:8913'
 
 def file_len(fname):
@@ -25,8 +25,11 @@ def post_query_logs(limit):
     cnt = 0
     with open(fname) as f:
         for line in f:
-            latex = line.rstrip()
-            print(latex);
+            fields = line.split()
+            print(fields[0]);
+            latex = ' '.join(fields[1:]);
+            latex = latex.replace('% ', '');
+            latex = latex.rstrip()
             json_obj = {"tex": latex}
             print(json_obj);
             send_json('/post_log', json_obj)
@@ -40,8 +43,18 @@ def test_qac_query(qry_tex):
     print(json_obj);
     send_json('/qac_query', json_obj)
 
+# json_obj = {"tex": "a+a+c"}
+# send_json('/post_log', json_obj)
+# json_obj = {"tex": "x+x+z"}
+# send_json('/post_log', json_obj)
+# json_obj = {"tex": "a+a+c"}
+# send_json('/post_log', json_obj)
+# json_obj = {"tex": "a+c"}
+# send_json('/post_log', json_obj)
+
 # post_query_logs(10000)
 # post_query_logs(sys.maxsize)
 
-test_qac_query('x^2+y')
-#test_qac_query('1+1/n')
+test_qac_query('x^2')
+#test_qac_query('x^2+')
+#test_qac_query('x^2 + y^2')

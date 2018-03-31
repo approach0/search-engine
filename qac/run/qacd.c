@@ -28,6 +28,7 @@ static const char *post_log_on_recv(const char* req, void* arg_)
 	}
 
 	json_value_free(parson_val);
+	printf("\n");
 	return req;
 }
 
@@ -40,7 +41,8 @@ void print_suggestion(struct rank_hit* hit, uint32_t cnt, void* arg_)
 	tex_info = math_qac_get(qi, hit->docID, &tex);
 	assert(NULL != tex);
 
-	printf("doc#%u, popularity: %u \n", hit->docID, tex_info.freq);
+	printf("tex#%u, popularity: %u, score: %.2f \n",
+	       hit->docID, tex_info.freq, hit->score);
 	printf("%s \n\n", tex);
 	free(tex);
 }

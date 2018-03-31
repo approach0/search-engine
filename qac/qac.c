@@ -72,7 +72,7 @@ void *qac_index_open(char *path, enum qac_index_open_opt opt)
 		printf("cannot open index.\n");
 		return NULL;
 	}
-	
+
 	qac_index_touch(qi, 0);
 	return qi;
 }
@@ -92,12 +92,19 @@ set_touch_id_on_merge(uint64_t cur_min, struct postmerge* pm,
 {
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(touchID, uint32_t, mesa->expr_srch_arg);
-	struct math_posting_item *po_item;
-	po_item = pm->cur_pos_item[0];
+
+	struct math_expr_score_res res;
+	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
+	                               mesa->n_qry_lr_paths);
+	if (res.score > 90) {
+		*touchID = res.exp_id;
+		return 1;
+	}
+
 #ifdef QAC_INDEX_DEBUG_PRINT
-	printf("HIT: doc#%u, exp#%u.\n", po_item->doc_id, po_item->exp_id);
+	printf("doc#%u, exp#%u, score: %u.\n",
+	       res.doc_id, res.exp_id, res.score);
 #endif
-	*touchID = po_item->exp_id;
 
 	return 0;
 }
@@ -139,8 +146,8 @@ uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
 #ifdef QAC_INDEX_DEBUG_PRINT
 		printf("added as #%u\n", texID);
 #endif
-		math_index_add_tex(qi->mi, 1, texID, parse_ret.subpaths,
-		                   MATH_INDEX_WO_PREFIX);
+		math_index_add_tex(qi->mi, 1 /* always docID#1 */, texID,
+		                   parse_ret.subpaths, MATH_INDEX_WO_PREFIX);
 		subpaths_release(&parse_ret.subpaths);
 		return texID;
 	} else {
@@ -180,14 +187,28 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 	struct qac_tex_info tex_info;
 	char *tex;
 
+	/* similarity */
+	struct math_expr_score_res sim_res;
+	sim_res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
+	                                   mesa->n_qry_lr_paths);
+
+	/* tex string */
 	po_item = pm->cur_pos_item[0];
 	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
 	assert(NULL != tex);
-	//printf("%s frequency: %u \n", tex, tex_info.freq);
 	free(tex);
 
-	consider_top_K(args->rk_res, po_item->exp_id, (float)tex_info.freq,
-	               NULL, 0);
+	/* suggestion score */
+	float sim = (float)sim_res.score / 100.f;
+	float level = (float)mesa->dir_merge_level;
+	float freq = (float)tex_info.freq;
+	float score = (sim * freq * level) / (1.f + level * level);
+
+	printf("tex#%u `%s' frequency: %u, level: %u, sim: %.2f. \n",
+	       po_item->exp_id, tex, tex_info.freq,
+	       mesa->dir_merge_level, sim);
+	consider_top_K(args->rk_res, po_item->exp_id, score, NULL, 0);
+	return 0;
 }
 
 ranked_results_t math_qac_query(qac_index_t* qi_, const char *tex)

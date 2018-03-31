@@ -4,6 +4,7 @@
 #include "search/config.h"
 #include "search/search.h"
 #include "search/search-utils.h"
+#include "config.h"
 
 typedef void qac_index_t;
 
@@ -27,5 +28,3 @@ struct qac_tex_info math_qac_get(qac_index_t*, uint32_t, char **);
 uint32_t qac_index_touch(void*, uint32_t);
 
 ranked_results_t math_qac_query(qac_index_t*, const char*);
-
-#define DEFAULT_QAC_SUGGESTIONS 10
