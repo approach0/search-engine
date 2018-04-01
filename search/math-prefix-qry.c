@@ -148,7 +148,8 @@ void print_dirty_array(struct math_prefix_qry *pq)
 	printf("\n");
 }
 
-uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
+uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
+                  struct math_prefix_loc *rmap, uint32_t k)
 {
 	uint32_t i, j = 0;
 	uint64_t exclude_qmask = 0;
@@ -204,7 +205,10 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk, uint32_t k)
 			printf("max_cell[%u](qr%u, dr%u) = %u\n", j, loc.qr, loc.dr, cell->cnt);
 			printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
-			topk[j++] = cell->cnt;
+			topk[j] = cell->cnt;
+			rmap[j].qr = loc.qr;
+			rmap[j].dr = loc.dr;
+			j++;
 			exclude_qmask |= cell->qmask;
 			exclude_dmask |= cell->dmask;
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS

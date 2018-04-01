@@ -67,11 +67,14 @@ static LIST_IT_CALLBK(assign_path_id_in_order)
 
 static LIST_IT_CALLBK(push_query_path)
 {
+	uint32_t q_path_id;
 	LIST_OBJ(struct subpath, sp, ln);
 	struct mnc_ref mnc_ref;
 
 	mnc_ref.sym = sp->lf_symbol_id;
-	mnc_push_qry(mnc_ref);
+	q_path_id = mnc_push_qry(mnc_ref);
+//	printf("MNC: push query path#%u %s\n", q_path_id,
+//	       trans_symbol(mnc_ref.sym));
 
 	LIST_GO_OVER;
 }
@@ -395,13 +398,72 @@ math_expr_score_on_merge(struct postmerge* pm,
 
 	/* finally calculate expression similarity score */
 	if (!skipped && pm->n_postings != 0) {
-		ret.score = math_expr_sim(mnc_score(), level, n_qry_lr_paths,
+		ret.score = math_expr_sim(mnc_score(true), level, n_qry_lr_paths,
 		                          pathinfo_pack->n_lr_paths);
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
 	}
 
 	return ret;
+}
+
+static mnc_score_t
+prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
+                            struct math_prefix_loc *rmap, uint32_t n)
+{
+	struct math_posting_item_v2   *po_item;
+	math_posting_t                 posting;
+	struct math_pathinfo_v2        pathinfo[MAX_MATH_PATHS];
+	struct subpath_ele            *subpath_ele;
+	int i, j, k, m;
+
+	/* reset mnc for scoring new document */
+	mnc_reset_docs();
+
+	for (i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			posting = pm->postings[i];
+			po_item = pm->cur_pos_item[i];
+			if (math_posting_pathinfo_v2(
+				posting,
+				po_item->pathinfo_pos,
+				po_item->n_paths,
+				pathinfo
+			)) {
+				continue;
+			}
+
+			subpath_ele = math_posting_get_ele(posting);
+			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
+				uint32_t qr, ql;
+				qr = subpath_ele->rid[j];
+				ql = subpath_ele->dup[j]->path_id;
+
+				for (m = 0; m < n; m++) {
+					if (qr == rmap[m].qr) {
+						for (k = 0; k < po_item->n_paths; k++) {
+							uint32_t dr, dl;
+							struct math_pathinfo_v2 *p = pathinfo + k;
+							dr = p->subr_id;
+							dl = p->leaf_id;
+							if (dr == rmap[m].dr) {
+								uint32_t slot;
+								struct mnc_ref mnc_ref;
+								mnc_ref.sym = p->lf_symb;
+								slot = mnc_map_slot(mnc_ref);
+								mnc_doc_add_rele(slot, dl - 1, ql - 1);
+//								printf("prefix MNC: add <ql%u ~ dl%u>: %s "
+//								       "@slot%u\n", ql, dl,
+//								       trans_symbol(p->lf_symb), slot);
+							}
+						}
+					}
+				}
+			}
+		} /* end if */
+	} /* end for */
+
+	return mnc_score(false);
 }
 
 struct math_expr_score_res
@@ -416,6 +478,8 @@ math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
 	struct math_expr_score_res     ret = {0};
 	int i, j, k;
 	uint32_t n_joint_nodes, topk_cnt[3] = {0};
+	struct math_prefix_loc rmap[3] = {0};
+	mnc_score_t symbol_sim;
 
 	for (i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {
@@ -471,13 +535,21 @@ math_expr_prefix_score_on_merge(uint64_t cur_min, struct postmerge* pm,
 		}
 	}
 
-	n_joint_nodes = pq_align(pq, topk_cnt, 3);
+	n_joint_nodes = pq_align(pq, topk_cnt, rmap, 3);
 	pq_reset(pq);
 
-#ifdef DEBUG_MATH_EXPR_SEARCH
-	printf("topk_cnt: %u, %u, %u\n", topk_cnt[0], topk_cnt[1], topk_cnt[2]);
+//	printf("rmap: <%u-%u>, <%u-%u>, <%u-%u>\n",
+//	       rmap[0].qr, rmap[0].dr,
+//	       rmap[1].qr, rmap[1].dr,
+//	       rmap[2].qr, rmap[2].dr);
+	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, 3);
+
+//#ifdef DEBUG_MATH_EXPR_SEARCH
+	printf("sim:%u, joint nodes:%u, topk_cnt: %u, %u, %u\n",
+	       symbol_sim, n_joint_nodes,
+	       topk_cnt[0], topk_cnt[1], topk_cnt[2]);
 	printf("\n");
-#endif
+//#endif
 
 	if (pm->n_postings != 0) {
 		ret.score = (topk_cnt[0] * 10 + n_joint_nodes) * 10000

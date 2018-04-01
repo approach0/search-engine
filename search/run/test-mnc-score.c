@@ -89,7 +89,7 @@ int main(void)
 		mnc_doc_add_rele(slot, 5, 0);
 #endif
 
-		score = mnc_score();
+		score = mnc_score(true);
 		printf("score = %u.\n", score);
 	}
 

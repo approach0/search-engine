@@ -74,10 +74,11 @@ mnc_score_t     doc_uniq_sym_score[MAX_DOC_UNIQ_SYM];
  */
 
 /* push query (should be pushed in the order of query path symbol) */
-void
+uint32_t
 mnc_push_qry(struct mnc_ref qry_path_ref)
 {
 	qry_sym[n_qry_syms ++] = qry_path_ref.sym;
+	return n_qry_syms;
 }
 
 /* return slot index that this document path belongs */
@@ -261,7 +262,7 @@ static __inline void cross(int max_slot)
 	memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
 }
 
-mnc_score_t mnc_score()
+mnc_score_t mnc_score(bool en_early_termination /* enable early termination */)
 {
 	uint32_t i, j, max_subscore_idx = 0;
 	bool early_termination = false;
@@ -275,7 +276,7 @@ mnc_score_t mnc_score()
 #endif
 
 	for (i = 0; i < n_qry_syms && !early_termination; i++) {
-		early_termination = true;
+		early_termination = en_early_termination;
 		for (j = 0; j < n_doc_uniq_syms; j++) {
 			mark_score = mark(i, j);
 

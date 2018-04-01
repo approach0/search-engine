@@ -31,4 +31,5 @@ uint64_t pq_hit(struct math_prefix_qry*,
                 uint32_t, uint32_t,
                 uint32_t, uint32_t);
 
-uint32_t pq_align(struct math_prefix_qry*, uint32_t*, uint32_t);
+uint32_t pq_align(struct math_prefix_qry*, uint32_t*,
+                  struct math_prefix_loc*, uint32_t);
