@@ -126,7 +126,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 #ifdef MATH_PREFIX_SEARCH_ONLY
 	/* formula subforest matching */
 	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
-	                                      &mesa->pq);
+	                                      &mesa->pq, mesa->dir_merge_level);
 #else
 	/* Mark-and-Cross scoring */
 	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,

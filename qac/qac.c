@@ -94,10 +94,11 @@ set_touch_id_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(touchID, uint32_t, mesa->expr_srch_arg);
 
+	uint32_t threshold = (uint32_t)((float)MAX_MATH_EXPR_SIM_SCALE * 0.9f);
 	struct math_expr_score_res res;
 	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
 	                               mesa->n_qry_lr_paths);
-	if (res.score > 90) {
+	if (res.score > threshold) {
 		*touchID = res.exp_id;
 		return 1;
 	}
@@ -200,7 +201,7 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 	free(tex);
 
 	/* suggestion score */
-	float sim = (float)sim_res.score / 100.f;
+	float sim = (float)sim_res.score / ((float)MAX_MATH_EXPR_SIM_SCALE);
 	float level = (float)mesa->dir_merge_level;
 	float freq = (float)tex_info.freq;
 	float score = (sim * freq * level) / (1.f + level * logf(level + 1.f));

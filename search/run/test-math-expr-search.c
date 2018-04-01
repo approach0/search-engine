@@ -23,7 +23,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 
 	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
-	                                      &mesa->pq);
+	                                      &mesa->pq, mesa->dir_merge_level);
 	printf("doc#%u, exp#%u score: %u \n", res.doc_id, res.exp_id, res.score);
 	return 0;
 }
