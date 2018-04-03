@@ -200,8 +200,15 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 	/* increment directory visit counter */
 	on_dm_args->n_dir_visits ++;
 
+#ifdef DEBUG_MATH_EXPR_SEARCH
+	printf("rd, dir counter: %lu (limit: %u), %u (limit: %u)\n",
+	       on_dm_args->n_tot_rd_items, MAX_MATH_EXP_SEARCH_ITEMS,
+	       on_dm_args->n_dir_visits, MAX_MATH_EXP_SEARCH_DIRS);
+#endif
+
 	if (!res || mes_arg.stop_dir_search ||
-	    on_dm_args->n_tot_rd_items > MAX_MATH_EXP_SEARCH_ITEMS) {
+	    on_dm_args->n_tot_rd_items > MAX_MATH_EXP_SEARCH_ITEMS ||
+	    on_dm_args->n_dir_visits > MAX_MATH_EXP_SEARCH_DIRS) {
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("math posting merge force-stopped.");
