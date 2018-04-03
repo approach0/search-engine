@@ -2,6 +2,7 @@
 #include "mhook/mhook.h"
 #include "httpd/httpd.h"
 #include "parson/parson.h"
+
 #include "qac.h"
 
 #define MAX_QUERY_LOG_ITEM_SZ  (1024 * 16)
@@ -47,6 +48,34 @@ void print_suggestion(struct rank_hit* hit, uint32_t cnt, void* arg_)
 	free(tex);
 }
 
+static char res_json_str[4096 * 8];
+void write_suggestion(struct rank_hit* hit, uint32_t cnt, void* arg_)
+{
+	qac_index_t *qi = (qac_index_t*)arg_;
+	char tmp_str[4096 * 8];
+	char *json_tex;
+	struct qac_tex_info tex_info;
+	char *tex;
+
+	tex_info = math_qac_get(qi, hit->docID, &tex);
+	assert(NULL != tex);
+
+	json_tex = json_encode_string(tex);
+	free(tex);
+
+	sprintf(tmp_str, "{"
+		"\"tex\": %s, "
+		"\"score\": %.3f,"
+		"\"freq\": %u"
+		"}", json_tex, hit->score, tex_info.freq
+	);
+	free(json_tex);
+
+	strcat(res_json_str, tmp_str);
+	if (cnt != DEFAULT_QAC_SUGGESTIONS - 1)
+		strcat(res_json_str, ", ");
+}
+
 static const char *qac_query_on_recv(const char* req, void* arg_)
 {
 	qac_index_t *qi = (qac_index_t*)arg_;
@@ -58,14 +87,27 @@ static const char *qac_query_on_recv(const char* req, void* arg_)
 	uint32_t tot_pages;
 
 	printf("QAC query: %s \n\n", tex);
+	if (tex == NULL) {
+		res_json_str[0] = '\0';
+		strcat(res_json_str, "{\"qac\": [");
+		strcat(res_json_str, "]}");
+		return res_json_str;
+	}
 	ranked_results_t rk_res = math_qac_query(qi, tex);
 
 	win = rank_window_calc(&rk_res, 0, DEFAULT_QAC_SUGGESTIONS, &tot_pages);
  	rank_window_foreach(&win, &print_suggestion, qi);
 
-	priority_Q_free(&rk_res);
+	{ /* return json list here */
+		res_json_str[0] = '\0';
+		strcat(res_json_str, "{\"qac\": [");
+		rank_window_foreach(&win, &write_suggestion, qi);
+		strcat(res_json_str, "]}");
+	}
+
 	json_value_free(parson_val);
-	return req;
+	priority_Q_free(&rk_res);
+	return res_json_str;
 }
 
 int main()
