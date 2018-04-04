@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import os
 
-fname = "tmp.txt"
+fname = "trec-format-results.tmp"
 docdict = dict()
 doclist = list()
 

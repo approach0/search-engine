@@ -6,7 +6,7 @@ import os
 #fname = "indexer/test-corpus/ntcir12/topics.txt"
 fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
 index = "/home/tk/rotate-disk/ext4/index-prefix-ntcir12/"
-output = 'tmp.txt'
+output = 'trec-format-results.tmp'
 
 print('rm -f {}'.format(output))
 
