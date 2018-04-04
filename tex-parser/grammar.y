@@ -178,8 +178,16 @@ tex: %prec NULL_REDUCE {
 | tex REL_CLASS tex {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
+| tex REL_CLASS script tex {
+	optr_release($3);
+	OPTR_ATTACH($$, $1, $4, $2);
+}
 | tex SEP_CLASS tex {
 	OPTR_ATTACH($$, $1, $3, $2);
+}
+| tex SEP_CLASS script tex {
+	optr_release($3);
+	OPTR_ATTACH($$, $1, $4, $2);
 }
 | tex MODULAR tex {
 	OPTR_ATTACH($$, $1, $3, $2);

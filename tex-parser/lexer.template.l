@@ -53,7 +53,7 @@ extern int lexer_warning_flag;
 \\hbox\{                        { BEGIN(ign); ign_stack ++; }
 \\label\{                       { BEGIN(ign); ign_stack ++; }
 \\tag\{                         { BEGIN(ign); ign_stack ++; }
-\\text\{                        { BEGIN(ign); ign_stack ++; }
+\\text\{           { BEGIN(ign); ign_stack ++; RET_TOK(ast, STAR, WC_NORMAL_LEAF, VAR);}
 \\leftroot\{                    { BEGIN(ign); ign_stack ++; }
 \\uproot\{                      { BEGIN(ign); ign_stack ++; }
 
@@ -407,6 +407,7 @@ extern int lexer_warning_flag;
 \\xi                                   { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\zeta                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\backepsilon                          { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
+\\hbar                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 
  /* ==================================
   *  miscellaneous special variables
