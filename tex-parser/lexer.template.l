@@ -326,6 +326,15 @@ extern int lexer_warning_flag;
  /* unicode variables */
 α                                          { RET_TOK(alpha, VAR, WC_NORMAL_LEAF, VAR); }
 β                                          { RET_TOK(beta,  VAR, WC_NORMAL_LEAF, VAR); }
+ε                                       { RET_TOK(epsilon,  VAR, WC_NORMAL_LEAF, VAR); }
+τ                                           { RET_TOK(tau,  VAR, WC_NORMAL_LEAF, VAR); }
+χ                                           { RET_TOK(chi,  VAR, WC_NORMAL_LEAF, VAR); }
+\\hbar                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
+ħ                                           { RET_TOK(hbar, VAR, WC_NORMAL_LEAF, VAR); }
+κ                                          { RET_TOK(kappa, VAR, WC_NORMAL_LEAF, VAR); }
+λ                                         { RET_TOK(lambda, VAR, WC_NORMAL_LEAF, VAR); }
+φ                                            { RET_TOK(phi, VAR, WC_NORMAL_LEAF, VAR); }
+
 
  /* auto-generated discriminative tokens, where NIL is to be 
   * replaced by specially assigned symbol. */
@@ -407,7 +416,6 @@ extern int lexer_warning_flag;
 \\xi                                   { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\zeta                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\backepsilon                          { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
-\\hbar                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 
  /* ==================================
   *  miscellaneous special variables
@@ -415,9 +423,11 @@ extern int lexer_warning_flag;
  /* partial */
 \\partial                          { RET_TOK(_AUTOGEN_, PARTIAL, WC_NORMAL_LEAF, VAR); }
 \\nabla                            { RET_TOK(_AUTOGEN_, PARTIAL, WC_NORMAL_LEAF, VAR); }
+∂                                      { RET_TOK(nabla, PARTIAL, WC_NORMAL_LEAF, VAR); }
 
  /* PI */
 \\pi                                    { RET_TOK(_AUTOGEN_, PI, WC_NORMAL_LEAF, VAR); }
+"π"                                            { RET_TOK(pi, PI, WC_NORMAL_LEAF, VAR); }
 
  /* infty */
 \\infty                              { RET_TOK(_AUTOGEN_, INFTY, WC_NORMAL_LEAF, VAR); }

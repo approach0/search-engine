@@ -165,6 +165,10 @@ tex: %prec NULL_REDUCE {
 | tex ADD {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
+| tex ADD script {
+	OPTR_ATTACH($$, $1, NULL, $2);
+	optr_release($3);
+}
 | tex NEG term {
 	struct optr_node *neg, *add = optr_alloc(S_plus, T_ADD,
 	                                         WC_COMMUT_OPERATOR);
@@ -330,6 +334,10 @@ term: factor {
 | TIMES {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
+| TIMES script {
+	OPTR_ATTACH($$, NULL, NULL, $1);
+	optr_release($2);
+}
 | term DIV factor {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
@@ -374,6 +382,9 @@ atom: VAR {
 	 * and it is treated as atom. Think about that
 	 * the command "\frac a {b+c}" works, but the
 	 * command "\frac a (b+c)" does not. */
+	OPTR_ATTACH($$, NULL, NULL, $2);
+}
+| _L_TEX_BRACE FACT _R_TEX_BRACE {
 	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 | FUN_CLASS {
