@@ -177,6 +177,9 @@ tex: %prec NULL_REDUCE {
 | tex SEP_CLASS tex {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
+| tex MODULAR tex {
+	OPTR_ATTACH($$, $1, $3, $2);
+}
 | tex ABOVE tex {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
@@ -274,6 +277,9 @@ mat_tex: %prec NULL_REDUCE {
 | mat_tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 	optr_release($2);
+}
+| mat_tex REL_CLASS mat_tex {
+	OPTR_ATTACH($$, $1, $3, $2);
 }
 | mat_tex SEP_CLASS mat_tex {
 	OPTR_ATTACH($$, $1, $3, $2);
@@ -385,9 +391,6 @@ atom: VAR {
 | ROOT atom _OF atom {
 	/* example: \root 3 \of 8 = 2 */
 	OPTR_ATTACH($$, $4, $2, $1);
-}
-| atom MODULAR atom {
-	OPTR_ATTACH($$, $1, $3, $2);
 }
 | _QVAR VAR {
 	struct optr_node *var = $2;
