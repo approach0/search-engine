@@ -302,8 +302,11 @@ term: factor {
 	times = optr_alloc(S_times, T_TIMES, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $1, $2, times);
 }
-| term TIMES factor {
-	OPTR_ATTACH($$, $1, $3, $2);
+| term TIMES {
+	OPTR_ATTACH($$, $1, NULL, $2);
+}
+| TIMES {
+	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | term DIV factor {
 	OPTR_ATTACH($$, $1, $3, $2);
