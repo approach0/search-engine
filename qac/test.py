@@ -18,7 +18,7 @@ def send_json(uri, json_obj):
     r = requests.post(urlbase + uri,
         json=json_obj,
         headers=headers)
-    print(r.status_code, end=": ")
+    print(r.text)
 
 def post_query_logs(limit):
     total_lines = file_len(fname)
@@ -57,4 +57,6 @@ def test_qac_query(qry_tex):
 
 #test_qac_query('x^2')
 #test_qac_query('x^2+')
-test_qac_query('x^2 + y^2')
+#test_qac_query('x^2 + y^2')
+
+test_qac_query('y')

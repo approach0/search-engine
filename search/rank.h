@@ -39,3 +39,8 @@ typedef void (*rank_window_it_callbk)(struct rank_hit*, uint32_t, void*);
 
 uint32_t
 rank_window_foreach(struct rank_window*, rank_window_it_callbk, void*);
+
+typedef void (*rank_window_it_callbk2)(struct rank_hit*, uint32_t, uint32_t, void*);
+
+uint32_t
+rank_window_foreach2(struct rank_window*, rank_window_it_callbk2, void*);

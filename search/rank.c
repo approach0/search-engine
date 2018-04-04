@@ -137,3 +137,17 @@ rank_window_foreach(struct rank_window *wind,
 
 	return cnt;
 }
+
+uint32_t
+rank_window_foreach2(struct rank_window *wind,
+                    rank_window_it_callbk2 fun, void *arg)
+{
+	uint32_t i;
+	struct heap *h = &wind->results->heap;
+
+	for (i = wind->from; i < wind->to; i++) {
+		(*fun)((struct rank_hit*)h->array[i], i, wind->to, arg);
+	}
+
+	return 0;
+}
