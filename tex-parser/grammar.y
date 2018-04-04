@@ -158,6 +158,10 @@ tex: %prec NULL_REDUCE {
 | tex ADD term {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
+| tex ADD script term {
+	OPTR_ATTACH($$, $1, $4, $2);
+	optr_release($3);
+}
 | tex ADD {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
@@ -310,6 +314,10 @@ term: factor {
 }
 | term TIMES {
 	OPTR_ATTACH($$, $1, NULL, $2);
+}
+| term TIMES script {
+	OPTR_ATTACH($$, $1, NULL, $2);
+	optr_release($3);
 }
 | TIMES {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -490,6 +498,26 @@ pair: _L_BRACKET tex _R_BRACKET {
 	pair = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
+| _L_ANGLE tex _R_DOT {
+	struct optr_node *pair;
+	pair = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
+| _L_ANGLE tex _R_VERT {
+	struct optr_node *pair;
+	pair = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
+| _L_VERT tex _R_ANGLE {
+	struct optr_node *pair;
+	pair = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
+| _L_DOT tex _R_ANGLE {
+	struct optr_node *pair;
+	pair = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
 | _L_SLASH tex _R_SLASH {
 	struct optr_node *pair;
 	pair = optr_alloc(S_slash, T_GROUP, WC_COMMUT_OPERATOR);
@@ -521,6 +549,16 @@ pair: _L_BRACKET tex _R_BRACKET {
 	OPTR_ATTACH($$, $2, NULL, pair);
 }
 | _L_VERT tex _R_VERT {
+	struct optr_node *pair;
+	pair = optr_alloc(S_verts, T_VERTS, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
+| _L_VERT tex _R_DOT {
+	struct optr_node *pair;
+	pair = optr_alloc(S_verts, T_VERTS, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, $2, NULL, pair);
+}
+| _L_DOT tex _R_VERT {
 	struct optr_node *pair;
 	pair = optr_alloc(S_verts, T_VERTS, WC_COMMUT_OPERATOR);
 	OPTR_ATTACH($$, $2, NULL, pair);

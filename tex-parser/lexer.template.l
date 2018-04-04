@@ -246,7 +246,7 @@ extern int lexer_warning_flag;
  /* left short match */
 \\left                                                                { return _L_DOT; }
 \\lgroup                                                          { return _L_BRACKET; }
-\\langle                                                            { return _L_ANGLE; }
+\\langle                             { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
 \\lmoustache                                                         { return _L_HAIR; }
 \\lbrace                                                          { return _L_BRACKET; }
 \\lbrack                                                          { return _L_BRACKET; }
@@ -270,7 +270,7 @@ extern int lexer_warning_flag;
  /* right short match */
 \\right                                                               { return _R_DOT; }
 \\rgroup                                                          { return _R_BRACKET; }
-\\rangle                                                            { return _R_ANGLE; }
+\\rangle                             { RET_TOK(_AUTOGEN_, ANGLE, WC_NORMAL_LEAF, VAR); }
 \\rmoustache                                                         { return _R_HAIR; }
 \\rbrace                                                          { return _R_BRACKET; }
 \\rbrack                                                          { return _R_BRACKET; }
