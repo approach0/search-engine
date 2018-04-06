@@ -1,0 +1,1 @@
+Lucene spreads its index across several on-disk files, each format purpose-built for a specific use case. These files are organized into logical “segments” that represents subsets of documents across the corpus.
