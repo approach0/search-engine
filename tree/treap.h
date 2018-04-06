@@ -189,3 +189,18 @@ treap_detach(struct treap_node **root_, bintr_key_t key)
 
 	return MEMBER_2_STRUCT(ref.this_, struct treap_node, bintr_nd);
 }
+
+
+static __inline struct treap_node*
+treap_find(struct treap_node *root, bintr_key_t key)
+{
+	struct bintr_node *bintr_root = &root->bintr_nd;
+	struct bintr_ref ref;
+	ref = bintr_find(&bintr_root, key);
+
+	if (ref.this_ == NULL) {
+		return NULL;
+	} else {
+		return MEMBER_2_STRUCT(ref.this_, struct treap_node, bintr_nd);
+	}
+}

@@ -356,11 +356,11 @@ lookup_walk_cb(struct datrie *dat, datrie_state_t cur, datrie_state_t next,
 {
 	datrie_state_t *found = (datrie_state_t *)arg;
 
-	if (next >= dat->len)
-		return WALK_CNTL_BREAK; /* out of index */
+	if (dat->check[next] != cur /* non-existing node */ ||
+	    next >= dat->len        /* out of index */)
+		return WALK_CNTL_BREAK; /* give up searching */
 
-	if (next == dat->base[cur] + 0 /* tail node */ &&
-	    dat->check[next] == cur /* existing value */)
+	if (next == dat->base[cur] + 0 /* tail node */)
 		*found = dat->base[next]; /* found */
 
 	return WALK_CNTL_CONTINUE;
