@@ -44,7 +44,7 @@ static int my_lex_handler(struct lex_slice *slice)
 	switch (slice->type) {
 	case LEX_SLICE_TYPE_ENG_SEG:
 		eng_to_lower_case(slice->mb_str, n_bytes);
-		printf("%s <%u, %u>\n", slice->mb_str, slice->offset, n_bytes);
+		// printf("%s <%u, %u>\n", slice->mb_str, slice->offset, n_bytes);
 
 		text_index_segment_push_word(&s_idx_seg, slice->mb_str);
 		break;
@@ -101,15 +101,18 @@ text_index_segment_push_word(struct text_index_segment* seg, char *word)
 
 	if (termID == 0) {
 		termID = datrie_insert(seg->dict, word);
+#ifdef TEXT_MEM_INDEX_DEBUG
 		printf("inserted a new term `%s' (assigned termID#%u)\n",
 		       word, termID);
-
+#endif
 		/* insert new treap node */
 		mapped_term = calloc(1, sizeof(struct text_index_term));
 		TREAP_NODE_CONS(mapped_term->trp_nd, termID);
 		mapped_node = treap_insert(&seg->trp_root, &mapped_term->trp_nd);
 	} else {
+#ifdef TEXT_MEM_INDEX_DEBUG
 		printf("mapped to existing termID#%u\n", termID);
+#endif
 		mapped_node = treap_find(seg->trp_root, termID);
 
 		/* casting node to term structure */
@@ -137,7 +140,9 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 	struct text_index_term    *mapped_term;
 	struct text_index_post_item post_item;
 
+#ifdef TEXT_MEM_INDEX_DEBUG
 	printf("doc#%u end: \n", seg->cur_docID);
+#endif
 
 	/* for each unique document term */
 	for (i = 0; i < seg->cur_term_cnt; i++) {
@@ -151,15 +156,23 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 		/* append to the corresponding posting list */
 		post_item.docID = seg->cur_docID;
 		post_item.tf = mapped_term->cur_doc_tf;
-		//mem_posting_write(mapped_term->posting, &post_item, sizeof(post_item));
+
+		if (NULL == mapped_term->posting) {
+			mapped_term->posting = mem_posting_create(DEFAULT_SKIPPY_SPANS,
+			                       mem_term_posting_codec_calls());
+		}
+		mem_posting_write(mapped_term->posting, &post_item, sizeof(post_item));
+		mem_posting_write_complete(mapped_term->posting);
 
 		/* update document frequency for this term */
 		mapped_term->df ++;
 		/* reset previous document tf counter */
 		mapped_term->cur_doc_tf = 0;
 
+#ifdef TEXT_MEM_INDEX_DEBUG
 		printf("term#%u (df=%u) appends: [doc#%u, tf=%u]\n",
 		       termID, mapped_term->df, post_item.docID, post_item.tf);
+#endif
 	}
 
 	/* reset numbers for the next document */
@@ -186,9 +199,33 @@ int main()
 	struct datrie dict = datrie_new();
 	g_lex_handler = my_lex_handler;
 	s_idx_seg = text_index_segment_new(&dict);
-	
+
 	testcase_index_txtfile("test/1.txt");
 	testcase_index_txtfile("test/2.txt");
+
+	{
+		int i;
+		const char query[][128] = {
+			"to",
+			"of"
+		};
+		struct treap_node         *mapped_node;
+		struct text_index_term    *mapped_term;
+		datrie_state_t termID;
+		for (i = 0; i < sizeof(query) / 128; i++) {
+			printf("query keyword `%s': ", query[i]);
+			termID = datrie_lookup(&dict, query[i]);
+			mapped_node = treap_find(s_idx_seg.trp_root, termID);
+			mapped_term = MEMBER_2_STRUCT(mapped_node, text_index_term_t, trp_nd);
+			struct mem_posting *po = mapped_term->posting;
+			mem_posting_start(po);
+			do {
+				struct text_index_post_item *pi = mem_posting_cur_item(po);
+				printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
+			} while (mem_posting_next(po));
+			printf("\n");
+		}
+	}
 
 	text_index_segment_free(&s_idx_seg);
 
