@@ -59,4 +59,6 @@ def test_qac_query(qry_tex):
 #test_qac_query('x^2+')
 #test_qac_query('x^2 + y^2')
 
-test_qac_query('y')
+#test_qac_query('x^2+y^2')
+
+test_qac_query('1+1/n')

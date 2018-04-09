@@ -198,18 +198,21 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 	po_item = pm->cur_pos_item[0];
 	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
 	assert(NULL != tex);
-	free(tex);
 
 	/* suggestion score */
-	float sim = (float)sim_res.score / ((float)MAX_MATH_EXPR_SIM_SCALE);
+	float sim = (float)sim_res.score;
 	float level = (float)mesa->dir_merge_level;
 	float freq = (float)tex_info.freq;
-	float score = (sim * freq * level) / (1.f + level * logf(level + 1.f));
+	float score = sim * freq;
+	if (level == 0)
+		score = 0;
 
-//	printf("tex#%u `%s' frequency: %u, level: %u, sim: %.2f. \n",
-//	       po_item->exp_id, tex, tex_info.freq,
-//	       mesa->dir_merge_level, sim);
+//	printf("tex#%u `%s' freq: %u, level: %u, sim: %.2f, final score: %.2f\n",
+//	       po_item->exp_id, tex, tex_info.freq, mesa->dir_merge_level,
+//	       sim, score);
 	consider_top_K(args->rk_res, po_item->exp_id, score, NULL, 0);
+
+	free(tex);
 	return 0;
 }
 

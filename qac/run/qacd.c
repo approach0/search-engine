@@ -96,7 +96,7 @@ static const char *qac_query_on_recv(const char* req, void* arg_)
 	ranked_results_t rk_res = math_qac_query(qi, tex);
 
 	win = rank_window_calc(&rk_res, 0, DEFAULT_QAC_SUGGESTIONS, &tot_pages);
- 	// rank_window_foreach(&win, &print_suggestion, qi);
+ 	rank_window_foreach(&win, &print_suggestion, qi);
 
 	{ /* return json list here */
 		res_json_str[0] = '\0';

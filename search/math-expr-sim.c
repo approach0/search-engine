@@ -237,7 +237,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 	struct subpath_ele         *subpath_ele;
 	bool                        skipped = 0;
 	struct math_expr_score_res  ret = {0};
-	int                         lcs;
+	int                         lcs = 0;
 
 	/* reset mnc for scoring new document */
 	uint32_t slot;
@@ -301,7 +301,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 	printf("posting merge level: %u\n", level);
 #endif
 
-	lcs = symbolseq_similarity(pm);
+	//lcs = symbolseq_similarity(pm);
 
 	/* finally calculate expression similarity score */
 	if (!skipped && pm->n_postings != 0) {
@@ -399,7 +399,7 @@ math_expr_prefix_score_on_merge(
 //	       rmap[2].qr, rmap[2].dr);
 	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, 3);
 
-	// lcs = prefix_symbolseq_similarity(cur_min, pm);
+	//lcs = prefix_symbolseq_similarity(cur_min, pm);
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("sim:%u, joint nodes:%u, topk_cnt: %u, %u, %u\n",
