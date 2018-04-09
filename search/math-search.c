@@ -38,6 +38,9 @@ typedef struct {
 	long first_timecost;
 	long max_timecost;
 
+	/* search policy */
+	enum math_expr_search_policy policy;
+
 } math_score_combine_args_t;
 #pragma pack(pop)
 
@@ -242,17 +245,13 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 
 	/* merge and combine math scores */
 #ifdef MATH_PREFIX_SEARCH_ONLY
-	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
-	                                  MATH_SRCH_FUZZY_STRUCT,
-	                                  &math_posting_on_merge,
-	                                  &msca);
+	msca.policy = MATH_SRCH_FUZZY_STRUCT;
 #else
-	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8,
-	                                  MATH_SRCH_SUBEXPRESSION,
+	msca.policy = MATH_SRCH_SUBEXPRESSION;
+#endif
+	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8, msca.policy,
 	                                  &math_posting_on_merge,
 	                                  &msca);
-#endif
-
 	if (msca.wr_mem_po)
 		/* flush and final adding */
 		add_math_score_posting(&msca);

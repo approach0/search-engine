@@ -263,12 +263,12 @@ mixed_posting_on_merge(uint64_t cur_min, struct postmerge *pm,
 	 * math score of a document is determined by the max
 	 * scored expression that occurs in this document.
 	 */
-#ifdef MATH_PREFIX_SEARCH_ONLY
+//#ifdef MATH_PREFIX_SEARCH_ONLY
 	math_score = (float)max_math_score;
-#else
-	math_score = 1.f + (float)max_math_score;
-	math_score = math_score / 2.f;
-#endif
+//#else
+//	math_score = 1.f + (float)max_math_score;
+//	math_score = math_score / 2.f;
+//#endif
 
 //	printf("doc#%u, prox_score %f, math score %f, bm25 score %f.\n",
 //	       docID, prox_score, math_score, bm25_score);

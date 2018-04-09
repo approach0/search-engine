@@ -324,6 +324,7 @@ struct subpath *create_subpath(struct optr_node *p, bool leaf)
 	struct subpath *subpath = malloc(sizeof(struct subpath));
 
 	subpath->path_id = p->path_id;
+	subpath->node_id = p->node_id;
 	LIST_CONS(subpath->path_nodes);
 
 	if (leaf) {
@@ -529,8 +530,8 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
 
 	fprintf(fh, "[");
-	fprintf(fh, "path_id=%u: type=%s, ",
-	        sp->path_id, subpath_type_str(sp->type));
+	fprintf(fh, "path_id=%u, node_id=%u: type=%s, ",
+	        sp->path_id, sp->node_id, subpath_type_str(sp->type));
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE)
 		fprintf(fh, "ge_hash=" C_BLUE "%s" C_RST,

@@ -46,7 +46,7 @@ static int my_lex_handler(struct lex_slice *slice)
 		break;
 
 	case LEX_SLICE_TYPE_MIX_SEG:
-		li = text_segment(slice->mb_str);
+		li = text_segment(slice->mb_str); /* text segment */
 		list_foreach(&li, &add_check_node, &slice->offset);
 		break;
 
