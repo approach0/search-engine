@@ -162,7 +162,7 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 			                       mem_term_posting_codec_calls());
 		}
 		mem_posting_write(mapped_term->posting, &post_item, sizeof(post_item));
-		mem_posting_write_complete(mapped_term->posting);
+		//mem_posting_write_complete(mapped_term->posting);
 
 		/* update document frequency for this term */
 		mapped_term->df ++;
@@ -196,12 +196,19 @@ void testcase_index_txtfile(const char *fname)
 
 int main()
 {
+	int cnt = 0;
 	struct datrie dict = datrie_new();
 	g_lex_handler = my_lex_handler;
 	s_idx_seg = text_index_segment_new(&dict);
 
-	testcase_index_txtfile("test/1.txt");
-	testcase_index_txtfile("test/2.txt");
+	while (cnt < 9000) {
+		testcase_index_txtfile("test/1.txt");
+		testcase_index_txtfile("test/2.txt");
+		cnt ++;
+	}
+
+	printf("enter to continue...\n");
+	getchar();
 
 	{
 		int i;
@@ -218,11 +225,15 @@ int main()
 			mapped_node = treap_find(s_idx_seg.trp_root, termID);
 			mapped_term = MEMBER_2_STRUCT(mapped_node, text_index_term_t, trp_nd);
 			struct mem_posting *po = mapped_term->posting;
-			mem_posting_start(po);
+			if (0 == mem_posting_start(po))
+				goto skip;
 			do {
 				struct text_index_post_item *pi = mem_posting_cur_item(po);
 				printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
+				//printf(".");
 			} while (mem_posting_next(po));
+skip:
+			mem_posting_finish(po);
 			printf("\n");
 		}
 	}
