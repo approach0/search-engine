@@ -208,34 +208,37 @@ int main()
 	}
 
 	printf("enter to continue...\n");
-	getchar();
-
 	{
-		int i;
-		const char query[][128] = {
-			"to",
-			"of"
-		};
-		struct treap_node         *mapped_node;
-		struct text_index_term    *mapped_term;
-		datrie_state_t termID;
-		for (i = 0; i < sizeof(query) / 128; i++) {
-			printf("query keyword `%s': ", query[i]);
-			termID = datrie_lookup(&dict, query[i]);
-			mapped_node = treap_find(s_idx_seg.trp_root, termID);
-			mapped_term = MEMBER_2_STRUCT(mapped_node, text_index_term_t, trp_nd);
-			struct mem_posting *po = mapped_term->posting;
-			if (0 == mem_posting_start(po))
-				goto skip;
-			do {
-				struct text_index_post_item *pi = mem_posting_cur_item(po);
-				printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
-				//printf(".");
-			} while (mem_posting_next(po));
-skip:
-			mem_posting_finish(po);
-			printf("\n");
+		int i, n_keywords = 0;
+		char query[128][128];
+		while (EOF != scanf("%s", query[n_keywords])) {
+			n_keywords ++;
 		}
+
+		for (i = 0; i < n_keywords; i++) {
+			printf("keyword[%d]: %s\n", i, query[i]);
+		}
+
+//		struct treap_node         *mapped_node;
+//		struct text_index_term    *mapped_term;
+//		datrie_state_t termID;
+//		for (i = 0; i < sizeof(query) / 128; i++) {
+//			printf("query keyword `%s': ", query[i]);
+//			termID = datrie_lookup(&dict, query[i]);
+//			mapped_node = treap_find(s_idx_seg.trp_root, termID);
+//			mapped_term = MEMBER_2_STRUCT(mapped_node, text_index_term_t, trp_nd);
+//			struct mem_posting *po = mapped_term->posting;
+//			if (0 == mem_posting_start(po))
+//				goto skip;
+//			do {
+//				struct text_index_post_item *pi = mem_posting_cur_item(po);
+//				printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
+//				printf(".");
+//			} while (mem_posting_next(po));
+//skip:
+//			mem_posting_finish(po);
+//			printf("\n");
+//		}
 	}
 
 	text_index_segment_free(&s_idx_seg);
