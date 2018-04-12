@@ -18,20 +18,21 @@ score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
 {
 	size_t url_sz;
 	char *url = get_blob_string(indices->url_bi, hit.doc_id, 0, &url_sz);
-	//char *txt = get_blob_string(indices->txt_bi, hit.doc_id, 1, &url_sz);
+	char *txt = get_blob_string(indices->txt_bi, hit.doc_id, 1, &url_sz);
 	//if (0 == strcmp(url, "Correlation_and_dependence:1")) {
 	//if (0 == strcmp(url, "Nested_radical:8")) {
 	//if (0 == strcmp(url, "Pearson_product-moment_correlation_coefficient:17")) {
 
-	if (hit.doc_id == 68557  || hit.doc_id == 97423 || hit.doc_id == 16120 ||
-	    hit.doc_id == 249340 || hit.doc_id == 173685) {
+//	if (hit.doc_id == 68557  || hit.doc_id == 97423 || hit.doc_id == 16120 ||
+//	    hit.doc_id == 249340 || hit.doc_id == 173685) {
 		printf("%s: doc %u, expr %u, url: %s\n", __func__,
 		       hit.doc_id, hit.exp_id, url);
+		printf("%s \n", txt);
 		return 1;
-	}
+//	}
 
 	free(url);
-	//free(txt);
+	free(txt);
 
 	return 0;
 }
@@ -44,7 +45,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * (1 + MNC_MARK_SCORE));
+	                (qn * MNC_MARK_FULL_SCORE);
 	float alpha = 0.15f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
@@ -57,7 +58,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 
 	score = score * 100000.f;
 #ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("struct = %.3f, ", st);
+	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
 	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
 		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
 		   sy, qn, dn, jo, fmeasure, score);

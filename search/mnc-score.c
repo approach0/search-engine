@@ -248,9 +248,9 @@ static __inline mnc_score_t mark(int i, int j)
 
 	/* return score */
 	if (qry_sym[i] == doc_uniq_sym[j])
-		return MNC_MARK_SCORE + 1; /* bonus for exact match */
+		return MNC_MARK_FULL_SCORE; /* bonus for exact match */
 	else
-		return MNC_MARK_SCORE; /* normal match */
+		return MNC_MARK_BASE_SCORE; /* normal match */
 }
 
 static __inline void cross(int max_slot)

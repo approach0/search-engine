@@ -17,7 +17,8 @@
 //#define DEBUG_POST_MERGE
 
 /* max mark score, type of mnc_score_t */
-#define MNC_MARK_SCORE 99
+#define MNC_MARK_BASE_SCORE 80
+#define MNC_MARK_FULL_SCORE 100
 
 /*
 #define MNC_DEBUG
