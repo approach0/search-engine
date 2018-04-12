@@ -115,25 +115,25 @@ uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
 {
 	struct qac_index *qi = (struct qac_index*)qi_;
 	struct tex_parse_ret parse_ret;
-	uint32_t touchID = 0;
-
-	math_expr_search(qi->mi, (char *)tex, MATH_SRCH_EXACT_STRUCT,
-	                 &set_touch_id_on_merge, &touchID);
-
-	if (touchID) {
-		struct qac_tex_info *tex_info = NULL;
-		(void)blob_index_read(qi->bi_tex_info, touchID, (void **)&tex_info);
-
-		assert(tex_info != NULL);
-		tex_info->freq ++;
-		blob_index_replace(qi->bi_tex_info, touchID, tex_info);
-#ifdef QAC_INDEX_DEBUG_PRINT
-		printf("Identical expression (#%u, new freq=%u) exists in index.\n",
-		       touchID, tex_info->freq);
-#endif
-		free(tex_info);
-		return touchID;
-	}
+//	uint32_t touchID = 0;
+//
+//	math_expr_search(qi->mi, (char *)tex, MATH_SRCH_EXACT_STRUCT,
+//	                 &set_touch_id_on_merge, &touchID);
+//
+//	if (touchID) {
+//		struct qac_tex_info *tex_info = NULL;
+//		(void)blob_index_read(qi->bi_tex_info, touchID, (void **)&tex_info);
+//
+//		assert(tex_info != NULL);
+//		tex_info->freq ++;
+//		blob_index_replace(qi->bi_tex_info, touchID, tex_info);
+//#ifdef QAC_INDEX_DEBUG_PRINT
+//		printf("Identical expression (#%u, new freq=%u) exists in index.\n",
+//		       touchID, tex_info->freq);
+//#endif
+//		free(tex_info);
+//		return touchID;
+//	}
 
 	parse_ret = tex_parse(tex, 0, false);
 
@@ -203,9 +203,9 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 	float sim = (float)sim_res.score;
 	float level = (float)mesa->dir_merge_level;
 	float freq = (float)tex_info.freq;
-	float score = sim * freq;
-	if (level == 0)
-		score = 0;
+	float score = sim;// * freq;
+//	if (level == 0)
+//		score = 0;
 
 //	printf("tex#%u `%s' freq: %u, level: %u, sim: %.2f, final score: %.2f\n",
 //	       po_item->exp_id, tex, tex_info.freq, mesa->dir_merge_level,

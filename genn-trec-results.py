@@ -5,7 +5,8 @@ import os
 
 #fname = "indexer/test-corpus/ntcir12/topics.txt"
 fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
-index = "/home/tk/rotate-disk/ext4/index-prefix-ntcir12/"
+#index = "/home/tk/rotate-disk/ext4/index-prefix-ntcir12/"
+index = "/home/tk/Desktop/approach0/indexer/tmp"
 output = 'trec-format-results.tmp'
 
 print('rm -f {}'.format(output))
@@ -17,7 +18,7 @@ with open(fname) as f:
         fields = line.split()
         qry_id = fields[0]
         latex = ' '.join(fields[1:])
-        exestr = "./search/run/test-search.out -n -i {} -m '{}' -q {}".format(index, latex, qry_id)
+        exestr = "./search/run/test-search.out -p 0 -n -i {} -m '{}' -q {}".format(index, latex, qry_id)
         print(exestr)
         os.system(exestr);
 

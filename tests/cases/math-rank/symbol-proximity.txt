@@ -1,0 +1,5 @@
+abcd 
+
+HIT   abcd
+HIT   bacd 
+HIT   acbd

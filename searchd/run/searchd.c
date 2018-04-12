@@ -7,9 +7,9 @@
 
 #include "search/config.h"
 #include "search/search.h"
+#include "httpd/httpd.h"
 
 #include "config.h"
-#include "httpd.h"
 #include "utils.h"
 
 const char *httpd_on_recv(const char* req, void* arg_)
@@ -207,7 +207,8 @@ int main(int argc, char *argv[])
 
 	searcher_args.indices = &indices;
 	searcher_args.lex     = lex;
-	httpd_run(port, &httpd_on_recv, &searcher_args);
+	struct uri_handler uri_handlers[] = {{"/search" , &httpd_on_recv}};
+	httpd_run(port, uri_handlers, 1, &searcher_args);
 
 close:
 	/* close indices */

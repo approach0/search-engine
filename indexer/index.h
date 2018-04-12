@@ -51,3 +51,5 @@ static __inline bool json_ext(const char *filename)
 }
 
 uint64_t total_json_files(const char *dir);
+
+doc_id_t index_get_prev_docID();

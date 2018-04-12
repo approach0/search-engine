@@ -58,28 +58,27 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 	snippet_free_highlight_list(&highlight_list);
 }
 
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 void
-print_res(ranked_results_t *rk_res, uint32_t ___, struct searcher_args *args)
+print_res(ranked_results_t *rk_res, uint32_t page, struct searcher_args *args)
 {
-	struct rank_window win;
-	uint32_t i, tot_pages = 1;
+	struct rank_window wind;
+	uint32_t i, from_page = page, to_page = page, tot_pages = 1;
+	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
 
-	for (i = 0; i < tot_pages; i++) {
-		win = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
-	 	printf("page %u/%u, top result(s) from %u to %u:\n",
-	 		   i + 1, tot_pages, win.from + 1, win.to);
-		args->_rank = i * DEFAULT_RES_PER_PAGE + win.from + 1;
-	 	rank_window_foreach(&win, &print_res_item, args);
+	if (page == 0) {
+		from_page = 1;
+		to_page = tot_pages;
 	}
 
-	// if (page >= tot_pages)
-	// 	printf("No such page. (total page(s): %u)\n", tot_pages);
+	for (i = from_page - 1; i < MIN(to_page, tot_pages); i++) {
+		printf("page %u/%u, top result(s) from %u to %u:\n",
+			   i + 1, tot_pages, wind.from + 1, wind.to);
+		args->_rank = i * DEFAULT_RES_PER_PAGE + wind.from + 1;
 
-	// if (win.to > 0) {
-	// 	printf("page %u/%u, top result(s) from %u to %u:\n",
-	// 		   page + 1, tot_pages, win.from + 1, win.to);
-	// 	rank_window_foreach(&win, &print_res_item, args);
-	// }
+		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
+		rank_window_foreach(&wind, &print_res_item, args);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -213,7 +212,7 @@ int main(int argc, char *argv[])
 	/* print ranked search results in pages */
 	args.indices = &indices;
 	args.lex = lex;
-	print_res(&results, page - 1, &args);
+	print_res(&results, page, &args);
 
 	/* free ranked results */
 	free_ranked_results(&results);

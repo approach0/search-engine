@@ -328,3 +328,8 @@ uint64_t total_json_files(const char *dir)
 
 	return cnt;
 }
+
+doc_id_t index_get_prev_docID()
+{
+	return prev_docID;
+}

@@ -11,12 +11,15 @@
 
 static const char *httpd_on_recv(const char* req, void* arg_)
 {
+	static char retjson[1024];
 	printf("%s \n\n", req);
 
 	text_lexer *lex = (text_lexer*)arg_;
 
 	indexer_index_json(req, *lex);
-	return req;
+
+	sprintf(retjson, "{\"docid\": %u}", index_get_prev_docID());
+	return retjson;
 }
 
 static FILE *fh_err_output = NULL;

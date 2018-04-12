@@ -43,22 +43,31 @@ def test_qac_query(qry_tex):
     print(json_obj);
     send_json('/qac_query', json_obj)
 
-# json_obj = {"tex": "a+a+c"}
-# send_json('/post_log', json_obj)
-# json_obj = {"tex": "x+x+z"}
-# send_json('/post_log', json_obj)
-# json_obj = {"tex": "a+a+c"}
-# send_json('/post_log', json_obj)
-# json_obj = {"tex": "a+c"}
-# send_json('/post_log', json_obj)
+#json_obj = {"tex": "cdab"}
+#send_json('/post_log', json_obj)
+#json_obj = {"tex": "abcd"}
+#send_json('/post_log', json_obj)
+#json_obj = {"tex": "acbd"}
+#send_json('/post_log', json_obj)
+#json_obj = {"tex": "abdc"}
+#send_json('/post_log', json_obj)
 
 # post_query_logs(10000)
 # post_query_logs(sys.maxsize)
 
-#test_qac_query('x^2')
-#test_qac_query('x^2+')
-#test_qac_query('x^2 + y^2')
+test_qac_query('x^2')
+test_qac_query('x^2+')
+test_qac_query('x^2 + y')
 
-#test_qac_query('x^2+y^2')
+test_qac_query('ax')
+test_qac_query('ax^2')
+test_qac_query('ax^2+')
+test_qac_query('ax^2+b')
 
+test_qac_query('1+')
 test_qac_query('1+1/n')
+test_qac_query('(1+1/n)')
+test_qac_query('(1+1/n)^n')
+
+test_qac_query('ta')
+test_qac_query('si')

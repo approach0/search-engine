@@ -2,21 +2,37 @@
 import os
 
 fname = "trec-format-results.tmp"
-docdict = dict()
-doclist = list()
+run_name = 'a0-ntcir-concrete-2018-4-11'
+
+d = dict()
+out_d = dict()
 
 with open(fname) as f:
     for line in f:
         fields = line.split();
+        query = fields[0]
         docid = fields[2]
+        rank  = fields[3]
         score = fields[4]
-        if docid in docdict:
+        run = run_name
+        key = query + docid;
+        if key in d:
             continue
-        #fields[2] += ":2"
-        #fields[4] = "0.9"
-        doclist.append(fields)
-        docdict[docid] = 1
+        else:
+            d[key] = True
+        if query in out_d:
+            l = out_d[query]
+            rank = len(l) + 1
+        else:
+            out_d[query] = list()
+            rank = 1
+        hit = [query, "1", docid, str(rank), score, run]
+        out_d[query].append(hit)
 
-for item in doclist:
-    string = ' '.join(item)
-    print(string)
+order_key = list(out_d.keys())
+order_key = sorted(order_key, key=lambda x: int(x.split('-MathWiki-')[1]))
+for k in order_key:
+    l = out_d[k]
+    for res in l:
+        line = ' '.join(res)
+        print(line)
