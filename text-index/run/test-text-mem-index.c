@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 #include "mhook/mhook.h"
 
@@ -12,8 +13,10 @@
 #include "txt-seg/lex.h"
 
 #include "mem-index/mem-posting.h"
+#include "postmerge.h"
 
-#define TEXT_INDEX_MAX_DOC_TERMS (65536)
+#define TEXT_INDEX_MAX_DOC_TERMS 65536
+#define TEXT_INDEX_MAX_QRY_BYTES 1024
 
 struct text_index_post_item {
 	uint32_t docID;
@@ -29,7 +32,7 @@ typedef struct text_index_term {
 struct text_index_segment {
 	struct treap_node *trp_root;
 	struct datrie     *dict;
-	uint32_t           cur_docID, cur_word_pos, cur_term_cnt;
+	uint32_t           tot_doc, cur_word_pos, cur_term_cnt;
 	datrie_state_t     cur_doc_terms[TEXT_INDEX_MAX_DOC_TERMS];
 };
 
@@ -60,7 +63,7 @@ struct text_index_segment
 text_index_segment_new(struct datrie *dict)
 {
 	struct text_index_segment ret = {0};
-	ret.cur_docID = 1; /* docID starting from 1 */
+	ret.tot_doc = 0;
 	ret.dict = dict; /* save the global dict */
 
 	rand_timeseed(); /* new random seed */
@@ -140,8 +143,10 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 	struct text_index_term    *mapped_term;
 	struct text_index_post_item post_item;
 
+	/* docID starting from 1 */
+	seg->tot_doc ++;
 #ifdef TEXT_MEM_INDEX_DEBUG
-	printf("doc#%u end: \n", seg->cur_docID);
+	printf("doc#%u end: \n", seg->tot_doc);
 #endif
 
 	/* for each unique document term */
@@ -154,7 +159,7 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 		mapped_term = MEMBER_2_STRUCT(mapped_node, text_index_term_t, trp_nd);
 
 		/* append to the corresponding posting list */
-		post_item.docID = seg->cur_docID;
+		post_item.docID = seg->tot_doc;
 		post_item.tf = mapped_term->cur_doc_tf;
 
 		if (NULL == mapped_term->posting) {
@@ -175,7 +180,6 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 	}
 
 	/* reset numbers for the next document */
-	seg->cur_docID ++;
 	seg->cur_word_pos = 0;
 	seg->cur_term_cnt = 0;
 }
@@ -234,26 +238,36 @@ void testcase_index_txtfile(const char *fname)
 	fclose(fh);
 }
 
-void print_posting(struct text_index_segment *seg,
-                   struct datrie *dict, const char *keyword)
+static text_index_term_t*
+lookup_term_node(struct text_index_segment *seg, struct datrie *dict,
+                 const char *keyword)
 {
+	datrie_state_t          termID;
 	struct treap_node       *node;
 	struct text_index_term  *term;
-	datrie_state_t           termID;
-	struct mem_posting      *po;
 
 	termID = datrie_lookup(dict, keyword);
 	if (termID == 0) {
-		printf("[undefined]");
-		return;
+		return NULL;
 	}
 	node = treap_find(seg->trp_root, termID);
 	term = MEMBER_2_STRUCT(node, text_index_term_t, trp_nd);
-	po = term->posting;
+	return term;
+}
+
+void print_posting(struct text_index_segment *seg,
+                   struct datrie *dict, const char *keyword)
+{
+	text_index_term_t *nd = lookup_term_node(seg, dict, keyword);
+	struct mem_posting *po = nd->posting;
+	if (po == NULL) {
+		printf("[undefined]");
+		return;
+	}
 
 	if (0 == mem_posting_start(po)) {
 		printf("[empty]");
-		goto skip;
+		goto finish;
 	}
 
 	do {
@@ -262,8 +276,68 @@ void print_posting(struct text_index_segment *seg,
 		printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
 	} while (mem_posting_next(po));
 
-skip:
+finish:
 	mem_posting_finish(po);
+}
+
+static struct postmerge_callbks *get_memory_postmerge_callbks()
+{
+	static struct postmerge_callbks ret;
+	ret.start  = &mem_posting_start;
+	ret.finish = &mem_posting_finish;
+	ret.jump   = &mem_posting_jump;
+	ret.next   = &mem_posting_next;
+	ret.now    = &mem_posting_cur_item;
+	ret.now_id = &mem_posting_cur_item_id;
+
+	return &ret;
+}
+
+static int
+posting_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
+{
+	int i;
+	float tf, idf, score = 0.f;
+	uint64_t docID = cur_min;
+	struct text_index_post_item  *pi;
+
+	for (i = 0; i < pm->n_postings; i++) {
+		if (cur_min != pm->curIDs[i])
+			continue;
+		pi = pm->cur_pos_item[i];
+		tf = (float)pi->tf;
+		idf = *(float*)pm->posting_args[i];
+		score += tf * idf;
+		//printf("docID#%lu, tf=%.3f, idf=%.3f \n", docID, tf, idf);
+	}
+
+	printf("docID#%lu, score=%.3f \n", docID, score);
+	return 0;
+}
+
+void merge_search(struct text_index_segment *seg, struct datrie *dict,
+                  const char (*keyword)[TEXT_INDEX_MAX_QRY_BYTES], int n)
+{
+	struct postmerge pm;
+	struct postmerge_callbks *pm_calls;
+	int i;
+	float *idf = malloc(sizeof(float) * n);
+
+	postmerge_posts_clear(&pm);
+	pm_calls = get_memory_postmerge_callbks();
+
+	for (i = 0; i < n; i++) {
+		text_index_term_t *nd = lookup_term_node(seg, dict, keyword[i]);
+		struct mem_posting *posting = nd->posting;
+		float N = (float)seg->tot_doc;
+		float df = (float)nd->df;
+		idf[i] = logf(1.f + N / df);
+		//printf("adding posting[%d] (idf=%.3f)...\n", i, idf[i]);
+		postmerge_posts_add(&pm, posting, pm_calls, idf + i);
+	}
+
+	posting_merge(&pm, POSTMERGE_OP_OR, &posting_on_merge, NULL);
+	free(idf);
 }
 
 int main()
@@ -283,16 +357,19 @@ int main()
 	printf("enter keywords ...\n");
 	{
 		int i, n_keywords = 0;
-		char query[128][128];
+		char query[128][TEXT_INDEX_MAX_QRY_BYTES];
 		while (EOF != scanf("%s", query[n_keywords])) {
 			n_keywords ++;
 		}
 
 		for (i = 0; i < n_keywords; i++) {
-			printf("keyword[%d]: %s \n", i, query[i]);
-			print_posting(&s_idx_seg, &dict, query[i]);
-			printf("\n");
+		// 	printf("keyword[%d]: %s \n", i, query[i]);
+		// 	print_posting(&s_idx_seg, &dict, query[i]);
+		// 	printf("\n");
 		}
+
+		printf("searching ...\n");
+		merge_search(&s_idx_seg, &dict, query, n_keywords);
 	}
 
 	text_index_segment_free(&s_idx_seg);
