@@ -162,7 +162,6 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 			                       mem_term_posting_codec_calls());
 		}
 		mem_posting_write(mapped_term->posting, &post_item, sizeof(post_item));
-		//mem_posting_write_complete(mapped_term->posting);
 
 		/* update document frequency for this term */
 		mapped_term->df ++;
@@ -181,6 +180,47 @@ void text_index_segment_doc_end(struct text_index_segment* seg)
 	seg->cur_term_cnt = 0;
 }
 
+static enum bintr_it_ret
+print_term_info(struct bintr_ref *ref, uint32_t level, void *arg)
+{
+	text_index_term_t *node;
+	bintr_key_t key = ref->this_->key;
+	node = MEMBER_2_STRUCT(ref->this_, text_index_term_t,
+	                       trp_nd.bintr_nd);
+	printf("term#%u df: %u \n", key, node->df);
+	return BINTR_IT_CONTINUE;
+}
+
+void text_index_print_terms_info(struct text_index_segment* seg)
+{
+	if (seg->trp_root == NULL)
+		return;
+
+	struct bintr_node *bintr_nd = &seg->trp_root->bintr_nd;
+	bintr_foreach((struct bintr_node **)&bintr_nd, &bintr_inorder,
+	              &print_term_info, NULL);
+}
+
+static enum bintr_it_ret
+posting_flush(struct bintr_ref *ref, uint32_t level, void *arg)
+{
+	text_index_term_t *node;
+	node = MEMBER_2_STRUCT(ref->this_, text_index_term_t,
+	                       trp_nd.bintr_nd);
+	mem_posting_write_complete(node->posting);
+	return BINTR_IT_CONTINUE;
+}
+
+void text_index_segment_end(struct text_index_segment* seg)
+{
+	if (seg->trp_root == NULL)
+		return;
+
+	struct bintr_node *bintr_nd = &seg->trp_root->bintr_nd;
+	bintr_foreach((struct bintr_node **)&bintr_nd, &bintr_inorder,
+	              &posting_flush, NULL);
+}
+
 void testcase_index_txtfile(const char *fname)
 {
 	FILE *fh = fopen(fname, "r");
@@ -194,6 +234,38 @@ void testcase_index_txtfile(const char *fname)
 	fclose(fh);
 }
 
+void print_posting(struct text_index_segment *seg,
+                   struct datrie *dict, const char *keyword)
+{
+	struct treap_node       *node;
+	struct text_index_term  *term;
+	datrie_state_t           termID;
+	struct mem_posting      *po;
+
+	termID = datrie_lookup(dict, keyword);
+	if (termID == 0) {
+		printf("[undefined]");
+		return;
+	}
+	node = treap_find(seg->trp_root, termID);
+	term = MEMBER_2_STRUCT(node, text_index_term_t, trp_nd);
+	po = term->posting;
+
+	if (0 == mem_posting_start(po)) {
+		printf("[empty]");
+		goto skip;
+	}
+
+	do {
+		struct text_index_post_item *pi;
+		pi = mem_posting_cur_item(po);
+		printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
+	} while (mem_posting_next(po));
+
+skip:
+	mem_posting_finish(po);
+}
+
 int main()
 {
 	int cnt = 0;
@@ -201,13 +273,14 @@ int main()
 	g_lex_handler = my_lex_handler;
 	s_idx_seg = text_index_segment_new(&dict);
 
-	while (cnt < 9000) {
+	//while (cnt < 9) {
 		testcase_index_txtfile("test/1.txt");
 		testcase_index_txtfile("test/2.txt");
 		cnt ++;
-	}
+	//}
+	text_index_segment_end(&s_idx_seg);
 
-	printf("enter to continue...\n");
+	printf("enter keywords ...\n");
 	{
 		int i, n_keywords = 0;
 		char query[128][128];
@@ -216,29 +289,10 @@ int main()
 		}
 
 		for (i = 0; i < n_keywords; i++) {
-			printf("keyword[%d]: %s\n", i, query[i]);
+			printf("keyword[%d]: %s \n", i, query[i]);
+			print_posting(&s_idx_seg, &dict, query[i]);
+			printf("\n");
 		}
-
-//		struct treap_node         *mapped_node;
-//		struct text_index_term    *mapped_term;
-//		datrie_state_t termID;
-//		for (i = 0; i < sizeof(query) / 128; i++) {
-//			printf("query keyword `%s': ", query[i]);
-//			termID = datrie_lookup(&dict, query[i]);
-//			mapped_node = treap_find(s_idx_seg.trp_root, termID);
-//			mapped_term = MEMBER_2_STRUCT(mapped_node, text_index_term_t, trp_nd);
-//			struct mem_posting *po = mapped_term->posting;
-//			if (0 == mem_posting_start(po))
-//				goto skip;
-//			do {
-//				struct text_index_post_item *pi = mem_posting_cur_item(po);
-//				printf("[docID=%u, tf=%u] ", pi->docID, pi->tf);
-//				printf(".");
-//			} while (mem_posting_next(po));
-//skip:
-//			mem_posting_finish(po);
-//			printf("\n");
-//		}
 	}
 
 	text_index_segment_free(&s_idx_seg);
