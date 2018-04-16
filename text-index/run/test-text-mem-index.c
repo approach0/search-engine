@@ -14,9 +14,11 @@
 
 #include "mem-index/mem-posting.h"
 #include "postmerge.h"
+#include "rank.h"
 
 #define TEXT_INDEX_MAX_DOC_TERMS 65536
 #define TEXT_INDEX_MAX_QRY_BYTES 1024
+#define TEXT_INDEX_RANK_SET_SIZE 100
 
 struct text_index_post_item {
 	uint32_t docID;
@@ -300,6 +302,7 @@ posting_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
 	float tf, idf, score = 0.f;
 	uint64_t docID = cur_min;
 	struct text_index_post_item  *pi;
+	ranked_results_t *rk_res = (ranked_results_t*)args;
 
 	for (i = 0; i < pm->n_postings; i++) {
 		if (cur_min != pm->curIDs[i])
@@ -311,16 +314,25 @@ posting_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
 		//printf("docID#%lu, tf=%.3f, idf=%.3f \n", docID, tf, idf);
 	}
 
-	printf("docID#%lu, score=%.3f \n", docID, score);
+	if (!priority_Q_full(rk_res) ||
+	    score > priority_Q_min_score(rk_res)) {
+		struct rank_hit *hit = malloc(sizeof(struct rank_hit));
+		hit->score = score;
+		hit->docID = docID;
+		priority_Q_add_or_replace(rk_res, hit);
+	}
+	//printf("docID#%lu, score=%.3f \n", docID, score);
 	return 0;
 }
 
-void merge_search(struct text_index_segment *seg, struct datrie *dict,
-                  const char (*keyword)[TEXT_INDEX_MAX_QRY_BYTES], int n)
+ranked_results_t
+merge_search(struct text_index_segment *seg, struct datrie *dict,
+             const char (*keyword)[TEXT_INDEX_MAX_QRY_BYTES], int n)
 {
+	int i;
 	struct postmerge pm;
 	struct postmerge_callbks *pm_calls;
-	int i;
+	ranked_results_t rk_res;
 	float *idf = malloc(sizeof(float) * n);
 
 	postmerge_posts_clear(&pm);
@@ -328,22 +340,37 @@ void merge_search(struct text_index_segment *seg, struct datrie *dict,
 
 	for (i = 0; i < n; i++) {
 		text_index_term_t *nd = lookup_term_node(seg, dict, keyword[i]);
-		struct mem_posting *posting = nd->posting;
-		float N = (float)seg->tot_doc;
-		float df = (float)nd->df;
-		idf[i] = logf(1.f + N / df);
-		//printf("adding posting[%d] (idf=%.3f)...\n", i, idf[i]);
-		postmerge_posts_add(&pm, posting, pm_calls, idf + i);
+		if (nd == NULL) {
+			//printf("adding posting[%d] (empty)...\n", i);
+			postmerge_posts_add(&pm, NULL, NULL, idf + i);
+		} else {
+			struct mem_posting *posting = nd->posting;
+			float N = (float)seg->tot_doc;
+			float df = (float)nd->df;
+			idf[i] = logf(1.f + N / df);
+			//printf("adding posting[%d] (idf=%.3f)...\n", i, idf[i]);
+			postmerge_posts_add(&pm, posting, pm_calls, idf + i);
+		}
 	}
 
-	posting_merge(&pm, POSTMERGE_OP_OR, &posting_on_merge, NULL);
+	priority_Q_init(&rk_res, TEXT_INDEX_RANK_SET_SIZE);
+	posting_merge(&pm, POSTMERGE_OP_OR, &posting_on_merge, &rk_res);
 	free(idf);
+
+	return rk_res;
+}
+
+void print_search_res(struct rank_hit* hit, uint32_t rank, void* _)
+{
+	if (hit)
+		printf("rank#%u: doc#%u score: %.3f \n", rank, hit->docID, hit->score);
 }
 
 int main()
 {
 	int cnt = 0;
 	struct datrie dict = datrie_new();
+	ranked_results_t rk_res;
 	g_lex_handler = my_lex_handler;
 	s_idx_seg = text_index_segment_new(&dict);
 
@@ -368,8 +395,13 @@ int main()
 		// 	printf("\n");
 		}
 
-		printf("searching ...\n");
-		merge_search(&s_idx_seg, &dict, query, n_keywords);
+		rk_res = merge_search(&s_idx_seg, &dict, query, n_keywords);
+		priority_Q_sort(&rk_res);
+		{
+			struct rank_window wind = {&rk_res, 0, rk_res.n_elements};
+			rank_window_foreach(&wind, &print_search_res, NULL);
+		}
+		priority_Q_free(&rk_res);
 	}
 
 	text_index_segment_free(&s_idx_seg);
