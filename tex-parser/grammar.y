@@ -71,7 +71,6 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %token _L_ANGLE
 %token _L_SLASH
 %token _L_HAIR
-%token _L_BSLASH
 %token _L_ARROW
 %token _L_TEX_BRACE
 %token _L_TEX_BRACKET

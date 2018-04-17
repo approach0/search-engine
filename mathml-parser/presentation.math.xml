@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="a+b+c+\frac{1}{n}+x_{1}^{2+y}" display="block">
+<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="\sum_{i=1}^{\infty}a_{i}" display="block">
   <mrow>
-    <mi>a</mi>
-    <mo>+</mo>
-    <mi>b</mi>
-    <mo>+</mo>
-    <mi>c</mi>
-    <mo>+</mo>
-    <mfrac>
-      <mn>1</mn>
-      <mi>n</mi>
-    </mfrac>
-    <mo>+</mo>
-    <msubsup>
-      <mi>x</mi>
-      <mn>1</mn>
+    <munderover>
+      <mo largeop="true" movablelimits="false" symmetric="true">∑</mo>
       <mrow>
-        <mn>2</mn>
-        <mo>+</mo>
-        <mi>y</mi>
+        <mi>i</mi>
+        <mo>=</mo>
+        <mn>1</mn>
       </mrow>
-    </msubsup>
+      <mi mathvariant="normal">∞</mi>
+    </munderover>
+    <msub>
+      <mi>a</mi>
+      <mi>i</mi>
+    </msub>
   </mrow>
 </math>

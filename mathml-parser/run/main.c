@@ -9,14 +9,80 @@
 
 struct optr_node *lexer_gen_node(const char *str)
 {
-	union YYSTYPE tmp;
+	union YYSTYPE val;
+	enum yytokentype tok;
 	yy_scan_string(str);
-	(void)yylex();
-	tmp = yylval;
-	// optr_print(tmp.nd, stdout);
-	// optr_release(tmp.nd);
+	tok = yylex();
+	val = yylval;
+
+	if (NULL != val.nd) {
+		goto skip;
+	}
+
+	switch (tok) {
+	case _L_BRACKET:
+	case _R_BRACKET:
+		val.nd = optr_alloc(S_bracket, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _L_DOT:
+	case _R_DOT:
+		val.nd = optr_alloc(S_array, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _L_ANGLE:
+	case _R_ANGLE:
+		val.nd = optr_alloc(S_angle, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _L_SLASH:
+	case _R_SLASH:
+		val.nd = optr_alloc(S_slash, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _L_HAIR:
+	case _R_HAIR:
+		val.nd = optr_alloc(S_hair, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _L_ARROW:
+	case _R_ARROW:
+		val.nd = optr_alloc(S_arrow, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _L_TEX_BRACE: /* I doubt it can reach this case */
+	case _R_TEX_BRACE:
+		val.nd = NULL;
+		break;
+	case _L_TEX_BRACKET:
+	case _R_TEX_BRACKET:
+		val.nd = optr_alloc(S_bracket, T_GROUP, WC_COMMUT_OPERATOR);
+		break;
+	case _OVER:
+	case _OF:
+	case _QVAR:
+	case _BEGIN_MAT:
+	case _END_MAT:
+	case _STACKREL:
+	case _BUILDREL:
+	case _SET_REL:
+		val.nd = NULL;
+		break;
+	default:
+		/* "ab" will result a empty <mo></mo> */
+		val.nd = optr_alloc(S_times, T_TIMES, WC_COMMUT_OPERATOR); /* important */
+	}
+
+skip:
+	/* reset yylval to ensure next it is NULL */
+	yylval.nd = NULL; /* important */
 	yylex_destroy();
-	return tmp.nd;
+	return val.nd;
+}
+
+void lift_and_replace_parent(struct optr_node *parent, char *op_name)
+{
+	struct optr_node* op_nd = lexer_gen_node(op_name);
+	if (op_nd == NULL)
+		return;
+	parent->symbol_id = op_nd->symbol_id;
+	parent->token_id  = op_nd->token_id;
+	parent->wildcard  = op_nd->wildcard;
+	optr_release(op_nd);
 }
 
 void print(xmlNodePtr cur, int level)
@@ -48,7 +114,8 @@ struct optr_node *mathml2opt(xmlNodePtr cur, struct optr_node *parent, int rank)
 			if (xmlNodeIsText(cur)) {
 				struct optr_node *leaf;
 				leaf = lexer_gen_node((char*)cur->content);
-				optr_attach(leaf, parent);
+				if (leaf)
+					optr_attach(leaf, parent);
 			} else {
 				const char *tag = (char*)cur->name;
 				cur_rank += 1;
@@ -63,10 +130,10 @@ struct optr_node *mathml2opt(xmlNodePtr cur, struct optr_node *parent, int rank)
 					mathml2opt(cur->xmlChildrenNode, frac, 0);
 					optr_attach(frac, parent);
 				} else if (0 == strcmp(tag, "mrow")) {
-					struct optr_node *add;
-					add = optr_alloc(S_plus, T_ADD, WC_COMMUT_OPERATOR);
-					mathml2opt(cur->xmlChildrenNode, add, 0);
-					optr_attach(add, parent);
+					struct optr_node *times; /* it is assuming TIMES by default */
+					times = optr_alloc(S_times, T_TIMES, WC_COMMUT_OPERATOR);
+					mathml2opt(cur->xmlChildrenNode, times, 0);
+					optr_attach(times, parent);
 				} else if (0 == strcmp(tag, "msubsup")) {
 					struct optr_node *hanger, *base, *sup, *sub;
 					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
@@ -85,6 +152,8 @@ struct optr_node *mathml2opt(xmlNodePtr cur, struct optr_node *parent, int rank)
 					/* attach hanger to parent */
 					optr_attach(hanger, parent);
 				} else if (0 == strcmp(tag, "mo")) {
+					char *op_name = (char*)cur->xmlChildrenNode->content;
+					lift_and_replace_parent(parent, op_name);
 				} else if (0 == strcmp(tag, "mi")) {
 					mathml2opt(cur->xmlChildrenNode, parent, 0);
 				} else if (0 == strcmp(tag, "mn")) {
@@ -106,10 +175,9 @@ int main()
 {
 	xmlNodePtr cur;
 	xmlDocPtr doc = xmlParseFile("presentation.math.xml");
+	xmlDocDump(stdout, doc);
 
 	cur = xmlDocGetRootElement(doc);
-	// print(cur, 0);
-
 	{
 		struct optr_node *root;
 		root = optr_alloc(S_root, T_ROOT, WC_COMMUT_OPERATOR);
@@ -118,9 +186,7 @@ int main()
 		optr_release(root);
 	}
 
-	xmlDocDump(stdout, doc);
 	xmlFreeDoc(doc);
-
 	mhook_print_unfree();
 	return 0;
 }
