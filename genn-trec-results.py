@@ -9,7 +9,8 @@ fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
 index = "/home/tk/Desktop/approach0/indexer/tmp"
 output = 'trec-format-results.tmp'
 
-print('rm -f {}'.format(output))
+rmcmf = 'rm -f {}'.format(output)
+os.system(rmcmf);
 
 with open(fname) as f:
     for line in f:

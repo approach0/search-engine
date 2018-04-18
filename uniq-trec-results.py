@@ -2,7 +2,7 @@
 import os
 
 fname = "trec-format-results.tmp"
-run_name = 'a0-ntcir-concrete-2018-4-11'
+run_name = 'a0-ntcir-tmp'
 
 d = dict()
 out_d = dict()
