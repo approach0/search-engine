@@ -846,6 +846,8 @@ extern int lexer_warning_flag;
 \\underset                                                          { return _SET_REL; }
 \\xleftarrow                 { RET_TOK(_AUTOGEN_, ARROW, WC_COMMUT_OPERATOR, X_ARROW); }
 \\xrightarrow                { RET_TOK(_AUTOGEN_, ARROW, WC_COMMUT_OPERATOR, X_ARROW); }
+\\underbrace                                               { return _UNDER_OVER_BRACE; }
+\\overbrace                                                { return _UNDER_OVER_BRACE; }
 
  /* ============================
   *  skip evironment statements

@@ -64,6 +64,7 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %token _STACKREL
 %token _BUILDREL
 %token _SET_REL
+%token _UNDER_OVER_BRACE
 %token <nd> X_ARROW
 
 %token _L_BRACKET
@@ -115,6 +116,7 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %right ABOVE
 %left  NULL_REDUCE
 %left  ADD NEG
+%left  _UNDER_OVER_BRACE /* should precede script */
 
 /* factor precedence */
 %nonassoc FACT
@@ -432,6 +434,13 @@ atom: VAR {
 	struct optr_node *var = $3;
 	var->wildcard = true;
 	OPTR_ATTACH($$, NULL, NULL, $3);
+}
+| _UNDER_OVER_BRACE atom script {
+	OPTR_ATTACH($$, NULL, NULL, $2);
+	optr_release($3);
+}
+| _UNDER_OVER_BRACE atom {
+	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 ;
 
