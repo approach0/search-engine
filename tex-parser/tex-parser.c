@@ -65,25 +65,19 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			 * structure, we need to make sure path_id is in
 			 * a legal range.
 			 */
-			if (max_path_id <= MAX_SUBPATH_ID) {
-				ret.subpaths = optr_subpaths(grammar_optr_root);
+			ret.subpaths = optr_subpaths(grammar_optr_root);
 
-				if (lexer_warning_flag) {
-					ret.code = PARSER_RETCODE_WARN;
-					strcpy(ret.msg, "character(s) escaped.");
-				} else {
-					ret.code = PARSER_RETCODE_SUCC;
-					sprintf(ret.msg, "no error (max path ID = %u).",
-					        max_path_id);
-				}
-
+			if (max_path_id > MAX_SUBPATH_ID) {
+				ret.code = PARSER_RETCODE_WARN;
+				sprintf(ret.msg, "too many subpaths (%u/%u).",
+				        max_path_id, MAX_SUBPATH_ID);
+			} else if (lexer_warning_flag) {
+				ret.code = PARSER_RETCODE_WARN;
+				strcpy(ret.msg, "character(s) escaped.");
 			} else {
-				LIST_CONS(ret.subpaths.li);
-				ret.subpaths.n_lr_paths = 0;
-				ret.subpaths.n_subpaths = 0;
-
-				ret.code = PARSER_RETCODE_ERR;
-				sprintf(ret.msg, "too many subpaths (max=%u).", max_path_id);
+				ret.code = PARSER_RETCODE_SUCC;
+				sprintf(ret.msg, "no error (max path ID = %u).",
+					max_path_id);
 			}
 
 			if (!keep_optr)
