@@ -226,8 +226,8 @@ math_expr_set_score_6(struct math_expr_sim_factors* factor,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
 	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, jo, fmeasure, score);
+		   "fmeasure = %.2f, final score = %.2f \n",
+		   sy, qn, dn, fmeasure, score);
 	printf("\n");
 	//score = 1.f;
 #endif
@@ -240,6 +240,7 @@ void
 math_expr_set_score(struct math_expr_sim_factors* factor,
                     struct math_expr_score_res* hit)
 {
+	/// math_expr_set_score_3(factor, hit);
 	math_expr_set_score_6(factor, hit);
 }
 
@@ -573,12 +574,15 @@ math_expr_prefix_score_on_merge(
 				continue;
 			}
 
-			n_doc_lr_paths = po_item->n_lr_paths;
+			if (po_item->n_lr_paths)
+				n_doc_lr_paths = po_item->n_lr_paths;
+			else
+				n_doc_lr_paths = MAX_MATH_PATHS; /* handle overflow */
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 			printf("from posting[%u]: ", i);
 			printf("doc#%u, exp#%u with originally %u lr_paths {\n",
-			       po_item->doc_id, po_item->exp_id, po_item->n_lr_paths);
+			       po_item->doc_id, po_item->exp_id, n_doc_lr_paths);
 #endif
 
 			subpath_ele = math_posting_get_ele(posting);
