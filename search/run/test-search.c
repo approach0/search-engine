@@ -71,11 +71,10 @@ print_res(ranked_results_t *rk_res, uint32_t page, struct searcher_args *args)
 		to_page = tot_pages;
 	}
 
+	args->_rank = 1;
 	for (i = from_page - 1; i < MIN(to_page, tot_pages); i++) {
 		printf("page %u/%u, top result(s) from %u to %u:\n",
 			   i + 1, tot_pages, wind.from + 1, wind.to);
-		args->_rank = i * DEFAULT_RES_PER_PAGE + wind.from + 1;
-
 		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
 		rank_window_foreach(&wind, &print_res_item, args);
 	}
