@@ -36,6 +36,7 @@ extern int lexer_warning_flag;
 %s mat
 
 %%
+"{"[ ]*"}"                                         { /* ignore */ }
  /* ============
   *  comments
   * ===========*/

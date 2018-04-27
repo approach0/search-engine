@@ -342,6 +342,16 @@ term: factor {
 | term DIV factor {
 	OPTR_ATTACH($$, $1, $3, $2);
 }
+| script pack {
+	struct optr_node *times, *nil, *base;
+	times = optr_alloc(S_times, T_TIMES, WC_COMMUT_OPERATOR);
+	nil = optr_alloc(S_NIL, T_NIL, WC_NORMAL_LEAF);
+	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+	OPTR_ATTACH($$, nil, NULL, base);
+
+	OPTR_ATTACH($$, base, NULL, $1);
+	OPTR_ATTACH($$, $1, $2, times);
+}
 ;
 
 factor: pack {
