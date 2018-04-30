@@ -4,19 +4,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void latexml_gen_mathml_file(const char *fname, const char *tex)
+int latexml_gen_mathml_file(const char *fname, const char *tex)
 {
-// 	pid_t pid;
-// 	int status, timeout = 3000;
-// 	const char argv[] = {"usr/bin/latexml", "--presentationmathml"
-// 
-// 	if (0 == (pid = fork())) {
-// 		if (-1 == execve(arg)
-// 	}
+	pid_t pid;
+	int status, timeout = 3;
+	const char *argv[] = {
+		"/usr/bin/latexmlmath", tex,
+		"--presentationmathml", fname,
+		NULL
+	};
 
-	char cmdbuf[4096];
-	snprintf(cmdbuf, 4096, "echo '%s' | "
-	"latexmlmath --presentationmathml=%s -", tex, fname);
-	printf("%s\n", cmdbuf);
-	system(cmdbuf);
+	if (0 == (pid = fork())) {
+		if (-1 == execve(argv[0], (char**)argv, NULL)) {
+			perror("child process execve failed.");
+			return -1;
+		}
+	}
+
+	while (0 == waitpid(pid, &status, WNOHANG)) {
+		if (timeout <= 0) {
+			perror("child process execve timeout.");
+			return -1;
+		}
+		timeout--;
+		sleep(1);
+	}
+
+	if (1 != WIFEXITED(status) || 0 != WEXITSTATUS(status)) {
+		perror("child process execve return non-zero.");
+		return -1;
+	}
+
+	return 0;
 }
