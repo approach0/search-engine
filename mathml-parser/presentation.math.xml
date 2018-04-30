@@ -1,18 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="\sum_{i=1}^{\infty}a_{i}" display="block">
+<math xmlns="http://www.w3.org/1998/Math/MathML" alttext="[a,b]" display="block">
   <mrow>
-    <munderover>
-      <mo largeop="true" movablelimits="false" symmetric="true">∑</mo>
-      <mrow>
-        <mi>i</mi>
-        <mo>=</mo>
-        <mn>1</mn>
-      </mrow>
-      <mi mathvariant="normal">∞</mi>
-    </munderover>
-    <msub>
-      <mi>a</mi>
-      <mi>i</mi>
-    </msub>
+    <mo stretchy="false">[</mo>
+    <mi xml:id="XM1">a</mi>
+    <mo>,</mo>
+    <mi xml:id="XM2">b</mi>
+    <mo stretchy="false">]</mo>
   </mrow>
 </math>

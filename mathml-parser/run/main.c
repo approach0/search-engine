@@ -71,6 +71,10 @@ skip:
 	/* reset yylval to ensure next it is NULL */
 	yylval.nd = NULL; /* important */
 	yylex_destroy();
+
+	// printf("scan: %s\n", str);
+	// optr_print(val.nd, stdout);
+
 	return val.nd;
 }
 
@@ -104,6 +108,28 @@ void print(xmlNodePtr cur, int level)
 	}
 }
 
+char *get_tag_str(xmlNodePtr cur, int rank)
+{
+	int cur_rank = 0;
+	while (cur != NULL) {
+		if (xmlIsBlankNode(cur)) {
+			;
+		} else {
+			if (xmlNodeIsText(cur)) {
+				return NULL;
+			} else {
+				char *tag = (char*)cur->name;
+				cur_rank += 1;
+				if (cur_rank == rank) {
+					return tag;
+				}
+			}
+		}
+		cur = cur->next;
+	}
+	return NULL;
+}
+
 struct optr_node *mathml2opt(xmlNodePtr cur, struct optr_node *parent, int rank)
 {
 	int cur_rank = 0;
@@ -124,17 +150,76 @@ struct optr_node *mathml2opt(xmlNodePtr cur, struct optr_node *parent, int rank)
 				}
 				if (0 == strcmp(tag, "math")) {
 					mathml2opt(cur->xmlChildrenNode, parent, 0);
+				} else if (0 == strcmp(tag, "mpadded")) {
+					mathml2opt(cur->xmlChildrenNode, parent, 0);
 				} else if (0 == strcmp(tag, "mfrac")) {
 					struct optr_node *frac;
 					frac = optr_alloc(S_frac, T_FRAC, WC_NONCOM_OPERATOR);
 					mathml2opt(cur->xmlChildrenNode, frac, 0);
 					optr_attach(frac, parent);
+				} else if (0 == strcmp(tag, "mroot")) {
+					struct optr_node *root;
+					root = optr_alloc(S_root, T_ROOT, WC_NONCOM_OPERATOR);
+					mathml2opt(cur->xmlChildrenNode, root, 1);
+					mathml2opt(cur->xmlChildrenNode, root, 2);
+					/* attach hanger to parent */
+					optr_attach(root, parent);
+				} else if (0 == strcmp(tag, "msqrt")) {
+					struct optr_node *root;
+					root = optr_alloc(S_root, T_ROOT, WC_NONCOM_OPERATOR);
+					mathml2opt(cur->xmlChildrenNode, root, 1);
+					/* attach hanger to parent */
+					optr_attach(root, parent);
+				//} else if (0 == strcmp(tag, "mfenced")) {
 				} else if (0 == strcmp(tag, "mrow")) {
 					struct optr_node *times; /* it is assuming TIMES by default */
 					times = optr_alloc(S_times, T_TIMES, WC_COMMUT_OPERATOR);
 					mathml2opt(cur->xmlChildrenNode, times, 0);
 					optr_attach(times, parent);
+				} else if (0 == strcmp(tag, "msup")) {
+					struct optr_node *hanger, *base, *sup;
+					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+					/* base */
+					base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+					optr_attach(base, hanger);
+					mathml2opt(cur->xmlChildrenNode, base, 1);
+					/* superscript */
+					sup = optr_alloc(S_supscript, T_SUPSCRIPT, WC_COMMUT_OPERATOR);
+					optr_attach(sup, hanger);
+					mathml2opt(cur->xmlChildrenNode, sup, 2);
+					/* attach hanger to parent */
+					optr_attach(hanger, parent);
+				} else if (0 == strcmp(tag, "msub")) {
+					struct optr_node *hanger, *base, *sub;
+					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+					/* base */
+					base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+					optr_attach(base, hanger);
+					mathml2opt(cur->xmlChildrenNode, base, 1);
+					/* subscript */
+					sub = optr_alloc(S_subscript, T_SUBSCRIPT, WC_COMMUT_OPERATOR);
+					optr_attach(sub, hanger);
+					mathml2opt(cur->xmlChildrenNode, sub, 2);
+					/* attach hanger to parent */
+					optr_attach(hanger, parent);
 				} else if (0 == strcmp(tag, "msubsup")) {
+					struct optr_node *hanger, *base, *sup, *sub;
+					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+					/* base */
+					base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+					mathml2opt(cur->xmlChildrenNode, base, 1);
+					optr_attach(base, hanger);
+					/* subscript */
+					sub = optr_alloc(S_subscript, T_SUBSCRIPT, WC_COMMUT_OPERATOR);
+					optr_attach(sub, hanger);
+					mathml2opt(cur->xmlChildrenNode, sub, 2);
+					/* superscript */
+					sup = optr_alloc(S_supscript, T_SUPSCRIPT, WC_COMMUT_OPERATOR);
+					optr_attach(sup, hanger);
+					mathml2opt(cur->xmlChildrenNode, sup, 3);
+					/* attach hanger to parent */
+					optr_attach(hanger, parent);
+				} else if (0 == strcmp(tag, "munderover")) {
 					struct optr_node *hanger, *base, *sup, *sub;
 					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
 					/* base */
@@ -149,6 +234,60 @@ struct optr_node *mathml2opt(xmlNodePtr cur, struct optr_node *parent, int rank)
 					sup = optr_alloc(S_supscript, T_SUPSCRIPT, WC_COMMUT_OPERATOR);
 					optr_attach(sup, hanger);
 					mathml2opt(cur->xmlChildrenNode, sup, 3);
+					/* attach hanger to parent */
+					optr_attach(hanger, parent);
+				} else if (0 == strcmp(tag, "munder")) {
+					struct optr_node *hanger, *base, *sub;
+					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+					/* base */
+					base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+					optr_attach(base, hanger);
+					mathml2opt(cur->xmlChildrenNode, base, 1);
+					/* subscript */
+					sub = optr_alloc(S_subscript, T_SUBSCRIPT, WC_COMMUT_OPERATOR);
+					optr_attach(sub, hanger);
+					mathml2opt(cur->xmlChildrenNode, sub, 2);
+					/* attach hanger to parent */
+					optr_attach(hanger, parent);
+				} else if (0 == strcmp(tag, "mmultiscripts")) {
+					struct optr_node *hanger, *base, *sup, *sub;
+					char *sep_tag = get_tag_str(cur->xmlChildrenNode, 2);
+					hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+					/* base */
+					base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+					optr_attach(base, hanger);
+					mathml2opt(cur->xmlChildrenNode, base, 1);
+					/* test special syntax of mmultiscripts */
+					if (0 == strcmp(sep_tag, "mprescripts")) {
+						/* pre-subscript */
+						sub = optr_alloc(S_subscript, T_PRE_SUBSCRIPT, WC_COMMUT_OPERATOR);
+						optr_attach(sub, hanger);
+						mathml2opt(cur->xmlChildrenNode, sub, 3);
+						/* pre-superscript */
+						sup = optr_alloc(S_supscript, T_PRE_SUPSCRIPT, WC_COMMUT_OPERATOR);
+						optr_attach(sup, hanger);
+						mathml2opt(cur->xmlChildrenNode, sup, 4);
+					} else {
+						sep_tag = get_tag_str(cur->xmlChildrenNode, 4);
+						if (0 == strcmp(sep_tag, "mprescripts")) {
+							/* subscript */
+							sub = optr_alloc(S_subscript, T_SUBSCRIPT, WC_COMMUT_OPERATOR);
+							optr_attach(sub, hanger);
+							mathml2opt(cur->xmlChildrenNode, sub, 2);
+							/* superscript */
+							sup = optr_alloc(S_supscript, T_SUPSCRIPT, WC_COMMUT_OPERATOR);
+							optr_attach(sup, hanger);
+							mathml2opt(cur->xmlChildrenNode, sup, 3);
+							/* pre-subscript */
+							sub = optr_alloc(S_subscript, T_PRE_SUBSCRIPT, WC_COMMUT_OPERATOR);
+							optr_attach(sub, hanger);
+							mathml2opt(cur->xmlChildrenNode, sub, 5);
+							/* pre-superscript */
+							sup = optr_alloc(S_supscript, T_PRE_SUPSCRIPT, WC_COMMUT_OPERATOR);
+							optr_attach(sup, hanger);
+							mathml2opt(cur->xmlChildrenNode, sup, 6);
+						}
+					}
 					/* attach hanger to parent */
 					optr_attach(hanger, parent);
 				} else if (0 == strcmp(tag, "mo")) {
@@ -180,7 +319,7 @@ int main()
 	cur = xmlDocGetRootElement(doc);
 	{
 		struct optr_node *root;
-		root = optr_alloc(S_root, T_ROOT, WC_COMMUT_OPERATOR);
+		root = optr_alloc(S_root, T_MATHML_ROOT, WC_COMMUT_OPERATOR);
 		mathml2opt(cur, root, 0);
 		optr_print(root, stdout);
 		optr_release(root);

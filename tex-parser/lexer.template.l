@@ -304,6 +304,9 @@ extern int lexer_warning_flag;
 \\prime                              { RET_TOK(_AUTOGEN_, PRIME, WC_NORMAL_LEAF, VAR); }
 "_"                    { RET_TOK(subscript, SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
 "^"                    { RET_TOK(supscript, SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
+"_hack___"         { RET_TOK(subscript, PRE_SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
+"_hack^^^"         { RET_TOK(supscript, PRE_SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
+"_hackROOT"                    { RET_TOK(root, MATHML_ROOT, WC_COMMUT_OPERATOR, ROOT); }
 
  /* =================
   *  numbers
@@ -517,6 +520,7 @@ extern int lexer_warning_flag;
 \\quad                       { RET_TOK(_AUTOGEN_, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 
  /* arrows */
+→                                 { RET_TOK(to, ARROW, WC_COMMUT_OPERATOR, SEP_CLASS); }
 \\to                       { RET_TOK(_AUTOGEN_, ARROW, WC_COMMUT_OPERATOR, SEP_CLASS); }
 \\searrow                  { RET_TOK(_AUTOGEN_, ARROW, WC_COMMUT_OPERATOR, SEP_CLASS); }
 \\uparrow                  { RET_TOK(_AUTOGEN_, ARROW, WC_COMMUT_OPERATOR, SEP_CLASS); }
@@ -655,6 +659,7 @@ extern int lexer_warning_flag;
 \\bigtriangledown               { RET_TOK(_AUTOGEN_, BIGO, WC_NORMAL_LEAF, SUM_CLASS); }
 \\bigtriangleup                 { RET_TOK(_AUTOGEN_, BIGO, WC_NORMAL_LEAF, SUM_CLASS); }
 
+∑                                      { RET_TOK(sum, SUM, WC_NORMAL_LEAF, SUM_CLASS); }
 \\sum                            { RET_TOK(_AUTOGEN_, SUM, WC_NORMAL_LEAF, SUM_CLASS); }
 
 \\prod                          { RET_TOK(_AUTOGEN_, PROD, WC_NORMAL_LEAF, SUM_CLASS); }
@@ -666,6 +671,7 @@ extern int lexer_warning_flag;
 \\varprojlim                     { RET_TOK(_AUTOGEN_, LIM, WC_NORMAL_LEAF, SUM_CLASS); }
 \\projlim                        { RET_TOK(_AUTOGEN_, LIM, WC_NORMAL_LEAF, SUM_CLASS); }
 
+∫                                      { RET_TOK(int, INT, WC_NORMAL_LEAF, SUM_CLASS); }
 \\idotsint                       { RET_TOK(_AUTOGEN_, INT, WC_NORMAL_LEAF, SUM_CLASS); }
 \\int                            { RET_TOK(_AUTOGEN_, INT, WC_NORMAL_LEAF, SUM_CLASS); }
 \\iint                           { RET_TOK(_AUTOGEN_, INT, WC_NORMAL_LEAF, SUM_CLASS); }
