@@ -1,4 +1,5 @@
 #include "mhook/mhook.h"
+#include "head.h"
 #include "mathml-parser.h"
 
 int main()

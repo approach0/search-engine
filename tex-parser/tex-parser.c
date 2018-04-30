@@ -1,5 +1,9 @@
 #include "head.h"
 
+#ifdef TEX_PARSER_USE_LATEXML
+#include "mathml-parser.h"
+#endif
+
 extern struct optr_node *grammar_optr_root;
 extern bool grammar_err_flag;
 extern char grammar_last_err_str[];
@@ -41,6 +45,10 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 
 	/* avoid memory leakage */
 	yylex_destroy();
+
+#ifdef TEX_PARSER_USE_LATEXML
+	latexml_gen_mathml_file("math.xml.tmp", tex_str);
+#endif
 
 	/* return operator tree or not, depends on `keep_optr' */
 	if (keep_optr)

@@ -87,7 +87,7 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		                   parse_ret.subpaths, MATH_INDEX_ALL);
 		subpaths_release(&parse_ret.subpaths);
 	} else {
-		/* grammar error or too many subpaths */
+		/* grammar error */
 		fprintf(stderr, C_RED "`%s': %s\n" C_RST,
 		        tex, parse_ret.msg);
 	}
