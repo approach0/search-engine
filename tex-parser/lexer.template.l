@@ -967,17 +967,27 @@ int ret_num(char *text, struct optr_node **tr)
 
 int ret_float_num(char *text, struct optr_node **tr)
 {
-	struct optr_node  *tr_decimal, *tr_intger;
-	uint32_t           decimal, intger;
+	struct optr_node  *tr_decimal, *tr_integer;
+	uint32_t           decimal, integer;
+	enum token_id      inttok;
 
 	if (strlen(text) < MAX_FLOAT_STR_LEN) {
-		sscanf(text, "%u.%u", &intger, &decimal);
+		sscanf(text, "%u.%u", &integer, &decimal);
 
 		*tr = optr_alloc(S_float, T_FLOAT, WC_NONCOM_OPERATOR);
-		tr_intger = optr_alloc(num2symbol_id(intger), T_NUM, WC_NORMAL_LEAF);
+
+		if (0 == integer) {
+			inttok = T_ZERO;
+		} else if (1 == integer) {
+			inttok = T_ONE;
+		} else {
+			inttok = T_NUM;
+		}
+
+		tr_integer = optr_alloc(num2symbol_id(integer), inttok, WC_NORMAL_LEAF);
 		tr_decimal = optr_alloc(num2symbol_id(decimal), T_NUM, WC_NORMAL_LEAF);
 
-		optr_attach(tr_intger, *tr);
+		optr_attach(tr_integer, *tr);
 		optr_attach(tr_decimal, *tr);
 
 		return NUM;
