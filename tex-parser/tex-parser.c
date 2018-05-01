@@ -1,4 +1,6 @@
+#include <assert.h>
 #include "head.h"
+#include "mathml-parser.h"
 
 extern struct optr_node *grammar_optr_root;
 extern bool grammar_err_flag;
@@ -41,6 +43,19 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 
 	/* avoid memory leakage */
 	yylex_destroy();
+
+#ifdef TEX_PARSER_USE_LATEXML
+	if (grammar_err_flag) {
+		struct optr_node *mathml_root;
+		latexml_gen_mathml_file("math.xml.tmp", tex_str);
+		mathml_root = mathml_parse_file("math.xml.tmp");
+		optr_print(mathml_root, stdout);
+		assert(NULL == grammar_optr_root);
+
+		grammar_optr_root = mathml_root;
+		grammar_err_flag = 0;
+	}
+#endif
 
 	/* return operator tree or not, depends on `keep_optr' */
 	if (keep_optr)

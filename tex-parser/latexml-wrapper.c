@@ -15,7 +15,7 @@ int latexml_gen_mathml_file(const char *fname, const char *tex)
 	};
 
 	if (0 == (pid = fork())) {
-		if (-1 == execve(argv[0], (char**)argv, NULL)) {
+		if (-1 == execv(argv[0], (char**)argv)) {
 			perror("child process execve failed.");
 			return -1;
 		}
