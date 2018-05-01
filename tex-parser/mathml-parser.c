@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tex-parser/head.h"
-#include "tex-parser/y.tab.h"
+#include "head.h"
+#include "y.tab.h"
 
 static
 void _debug_print(xmlNodePtr cur, int level)
@@ -31,6 +31,7 @@ struct optr_node *lexer_gen_node(const char *str)
 {
 	union YYSTYPE val;
 	enum yytokentype tok;
+	yylval.nd = NULL; /* important */
 	yy_scan_string(str);
 	tok = yylex();
 	val = yylval;
@@ -89,7 +90,6 @@ struct optr_node *lexer_gen_node(const char *str)
 
 skip:
 	/* reset yylval to ensure next it is NULL */
-	yylval.nd = NULL; /* important */
 	yylex_destroy();
 
 	// printf("scan: %s\n", str);
