@@ -94,20 +94,37 @@ set_touch_id_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(touchID, uint32_t, mesa->expr_srch_arg);
 
-	uint32_t threshold = (uint32_t)((float)MAX_MATH_EXPR_SIM_SCALE * 0.9f);
-	struct math_expr_score_res res;
-	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
-	                               mesa->n_qry_lr_paths);
-	if (res.score > threshold) {
-		*touchID = res.exp_id;
-		return 1;
+	/* tree leaves */
+	uint32_t n_qry_lr_paths = mesa->n_qry_lr_paths;
+	uint32_t n_doc_lr_paths = math_expr_doc_lr_paths(pm);
+
+	if (n_qry_lr_paths == 1)
+		return 1; /* stop searching */
+
+	if (n_qry_lr_paths != n_doc_lr_paths)
+		return 0; /* continue searching */
+
+	/* compute similarity */
+	struct math_expr_score_res sim_res;
+	sim_res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
+	                                   mesa->n_qry_lr_paths);
+	uint32_t nsim;
+	nsim = (sim_res.score * MAX_MATH_EXPR_SIM_SCALE) /
+	       (n_qry_lr_paths * MNC_MARK_FULL_SCORE);
+
+//	/* tex string */
+//	po_item = pm->cur_pos_item[0];
+//	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
+//	assert(NULL != tex);
+//#ifdef QAC_INDEX_DEBUG_PRINT
+//	printf("doc#%u, exp#%u, score: %u.\n",
+//	       res.doc_id, res.exp_id, res.score);
+//#endif
+
+	if (nsim == MAX_MATH_EXPR_SIM_SCALE) {
+		*touchID = sim_res.exp_id;
+		return 1; /* stop searching */
 	}
-
-#ifdef QAC_INDEX_DEBUG_PRINT
-	printf("doc#%u, exp#%u, score: %u.\n",
-	       res.doc_id, res.exp_id, res.score);
-#endif
-
 	return 0;
 }
 
@@ -115,32 +132,40 @@ uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
 {
 	struct qac_index *qi = (struct qac_index*)qi_;
 	struct tex_parse_ret parse_ret;
-//	uint32_t touchID = 0;
-//
-//	math_expr_search(qi->mi, (char *)tex, MATH_SRCH_EXACT_STRUCT,
-//	                 &set_touch_id_on_merge, &touchID);
-//
-//	if (touchID) {
-//		struct qac_tex_info *tex_info = NULL;
-//		(void)blob_index_read(qi->bi_tex_info, touchID, (void **)&tex_info);
-//
-//		assert(tex_info != NULL);
-//		tex_info->freq ++;
-//		blob_index_replace(qi->bi_tex_info, touchID, tex_info);
+
+#define QAC_INDEX_UNIQUE_EXPR
+#ifdef QAC_INDEX_UNIQUE_EXPR
+	uint32_t touchID = 0;
+
+	math_expr_search(qi->mi, (char *)tex, MATH_SRCH_EXACT_STRUCT,
+	                 &set_touch_id_on_merge, &touchID);
+
+	if (touchID) {
+		struct qac_tex_info *tex_info = NULL;
+		(void)blob_index_read(qi->bi_tex_info, touchID, (void **)&tex_info);
+
+		assert(tex_info != NULL);
+		tex_info->freq ++;
+		blob_index_replace(qi->bi_tex_info, touchID, tex_info);
 //#ifdef QAC_INDEX_DEBUG_PRINT
-//		printf("Identical expression (#%u, new freq=%u) exists in index.\n",
-//		       touchID, tex_info->freq);
+		if (tex_info->freq > 10)
+			printf("freq expr: [%u] `%s'.\n", tex_info->freq, tex);
 //#endif
-//		free(tex_info);
-//		return touchID;
-//	}
+		free(tex_info);
+		return touchID;
+	}
+#endif
 
 	parse_ret = tex_parse(tex, 0, false);
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		uint32_t n_lr_paths = parse_ret.subpaths.n_lr_paths;
+		uint32_t texID = 0;
+		if (n_lr_paths == 1)
+			goto skip;
+
 		struct qac_tex_info tex_info = {1, n_lr_paths};
-		uint32_t texID = qac_index_touch(qi, 1);
+		texID = qac_index_touch(qi, 1);
 
 		blob_index_append(qi->bi_tex_str, texID, tex, strlen(tex) + 1);
 		blob_index_append(qi->bi_tex_info, texID, &tex_info, sizeof(tex_info));
@@ -150,6 +175,7 @@ uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
 #endif
 		math_index_add_tex(qi->mi, 1 /* always docID#1 */, texID,
 		                   parse_ret.subpaths, MATH_INDEX_WO_PREFIX);
+skip:
 		subpaths_release(&parse_ret.subpaths);
 		return texID;
 	} else {
@@ -185,34 +211,43 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 {
 	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 	P_CAST(args, struct qac_on_merge_args, mesa->expr_srch_arg);
-	struct math_posting_item *po_item;
+	struct math_posting_item *po_item = pm->cur_pos_item[0];
 	struct qac_tex_info tex_info;
-	char *tex;
 
 	/* similarity */
 	struct math_expr_score_res sim_res;
-	sim_res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
-	                                   mesa->n_qry_lr_paths);
+	sim_res = math_expr_filter_on_merge(pm, mesa->dir_merge_level,
+	                                    mesa->n_qry_lr_paths);
 
-	/* tex string */
-	po_item = pm->cur_pos_item[0];
-	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
-	assert(NULL != tex);
+	/* exclude zero scored hits */
+	if (sim_res.score == 0)
+		return 0;
 
 	/* suggestion score */
-	float sim = (float)sim_res.score;
+	uint32_t n_qry_lr_paths = mesa->n_qry_lr_paths;
+	uint32_t n_doc_lr_paths = math_expr_doc_lr_paths(pm);
+	uint32_t int_sim;
+	int_sim = (sim_res.score * MAX_MATH_EXPR_SIM_SCALE) /
+		      (n_qry_lr_paths * MNC_MARK_FULL_SCORE);
 	float level = (float)mesa->dir_merge_level;
 	float freq = (float)tex_info.freq;
-	float score = sim;// * freq;
-//	if (level == 0)
-//		score = 0;
+	float sim = (float)int_sim;
+	float score = sim * logf(1.f + freq) /
+	              logf(1.f + (float)n_doc_lr_paths);
+	if (level == 0 && n_qry_lr_paths == n_doc_lr_paths)
+		return 0;
 
-//	printf("tex#%u `%s' freq: %u, level: %u, sim: %.2f, final score: %.2f\n",
-//	       po_item->exp_id, tex, tex_info.freq, mesa->dir_merge_level,
-//	       sim, score);
-	consider_top_K(args->rk_res, po_item->exp_id, score, NULL, 0);
-
+#if 0
+	/* DEBUG: get tex string */
+	char *tex;
+	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
+	assert(NULL != tex);
+	printf("tex#%u `%s' freq: %.1f, level: %.1f, sim: %.2f => score: %.2f\n",
+	       po_item->exp_id, tex, freq, level, sim, score);
 	free(tex);
+#endif
+
+	consider_top_K(args->rk_res, po_item->exp_id, score, NULL, 0);
 	return 0;
 }
 
@@ -224,7 +259,7 @@ ranked_results_t math_qac_query(qac_index_t* qi_, const char *tex)
 
 	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
 
-	//printf("searching %s\n", tex);
+	printf("searching %s\n", tex);
 	math_expr_search(qi->mi, (char*)tex, MATH_SRCH_SUBEXPRESSION,
 	                 &qac_suggestion_on_merge, &args);
 

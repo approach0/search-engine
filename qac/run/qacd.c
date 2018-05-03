@@ -13,23 +13,21 @@ static const char *post_log_on_recv(const char* req, void* arg_)
 	
 	JSON_Value *parson_val = json_parse_string(req);
 	JSON_Object *parson_obj = json_value_get_object(parson_val);
+
 	const char *tex = json_object_get_string(parson_obj, "tex");
-
 	uint32_t texID = math_qac_index_uniq_tex(qi, tex);
-	printf("post_log `%s' \n", tex);
-	printf("TeX ID#%u ", texID);
+	//printf("TeX ID#%u `%s'", texID, tex);
 
-	{
-		struct qac_tex_info tex_info;
-		char *tex;
-		tex_info = math_qac_get(qi, texID, &tex);
-		assert(NULL != tex);
-		printf("%s frequency: %u \n", tex, tex_info.freq);
-		free(tex);
-	}
+//	{
+//		struct qac_tex_info tex_info;
+//		char *tex;
+//		tex_info = math_qac_get(qi, texID, &tex);
+//		assert(NULL != tex);
+//		printf("%s frequency: %u \n", tex, tex_info.freq);
+//		free(tex);
+//	}
 
 	json_value_free(parson_val);
-	printf("\n");
 	return req;
 }
 
@@ -87,12 +85,15 @@ static const char *qac_query_on_recv(const char* req, void* arg_)
 	uint32_t tot_pages;
 
 	printf("QAC query: %s \n\n", tex);
+
+	/* if malformated query */
 	if (tex == NULL) {
 		res_json_str[0] = '\0';
 		strcat(res_json_str, "{\"qac\": [");
 		strcat(res_json_str, "]}");
 		return res_json_str;
 	}
+
 	ranked_results_t rk_res = math_qac_query(qi, tex);
 
 	win = rank_window_calc(&rk_res, 0, DEFAULT_QAC_SUGGESTIONS, &tot_pages);

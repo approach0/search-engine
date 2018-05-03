@@ -25,4 +25,9 @@ struct math_expr_score_res
 math_expr_score_on_merge(struct postmerge*, uint32_t, uint32_t);
 
 struct math_expr_score_res
+math_expr_filter_on_merge(struct postmerge*, uint32_t, uint32_t);
+
+uint32_t math_expr_doc_lr_paths(struct postmerge*);
+
+struct math_expr_score_res
 math_expr_prefix_score_on_merge(uint64_t, struct postmerge*, uint32_t, struct math_prefix_qry*, uint32_t, void*);

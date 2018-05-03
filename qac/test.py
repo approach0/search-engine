@@ -52,22 +52,23 @@ def test_qac_query(qry_tex):
 #json_obj = {"tex": "abdc"}
 #send_json('/post_log', json_obj)
 
-# post_query_logs(10000)
+# post_query_logs(10)
+post_query_logs(10000)
 # post_query_logs(sys.maxsize)
 
-test_qac_query('x^2')
-test_qac_query('x^2+')
-test_qac_query('x^2 + y')
-
-test_qac_query('ax')
-test_qac_query('ax^2')
-test_qac_query('ax^2+')
-test_qac_query('ax^2+b')
-
-test_qac_query('1+')
-test_qac_query('1+1/n')
-test_qac_query('(1+1/n)')
-test_qac_query('(1+1/n)^n')
-
-test_qac_query('ta')
-test_qac_query('si')
+# test_qac_query('x^2')
+# test_qac_query('x^2+')
+# test_qac_query('x^2 + y')
+# 
+# test_qac_query('ax')
+# test_qac_query('ax^2')
+# test_qac_query('ax^2+')
+# test_qac_query('ax^2+b')
+# 
+# test_qac_query('1+')
+# test_qac_query('1+1/n')
+# test_qac_query('(1+1/n)')
+# test_qac_query('(1+1/n)^n')
+# 
+# test_qac_query('ta')
+# test_qac_query('si')
