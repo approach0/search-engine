@@ -311,7 +311,7 @@ extern int lexer_warning_flag;
  /* =================
   *  numbers
   * ================*/
-[0-9]+\.[0-9]*                                   { return ret_float_num(yytext, LVAL); }
+[0-9]+\.[0-9]+                                   { return ret_float_num(yytext, LVAL); }
 [0-9]+                                                 { return ret_num(yytext, LVAL); }
 
  /* =============

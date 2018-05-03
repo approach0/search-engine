@@ -6,8 +6,8 @@ int main()
 {
 	struct optr_node *root;
 
-	//const char tex[] = "\\root 3 \\of x";
-	//latexml_gen_mathml_file("math.xml.tmp", tex);
+	const char tex[] = "\\root 3 \\of x";
+	latexml_gen_mathml_file("math.xml.tmp", tex);
 
 	root = mathml_parse_file("math.xml.tmp");
 
