@@ -12,11 +12,13 @@ enum {
 static int depth_flag[MAX_OPTR_PRINT_DEPTH];
 static bool gen_subpaths_bitmap[MAX_SUBPATH_ID * 2];
 
-struct optr_node* optr_alloc(enum symbol_id s_id, enum token_id t_id, bool uwc)
+struct optr_node*
+optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 {
 	struct optr_node *n = malloc(sizeof(struct optr_node));
 
-	n->wildcard = uwc;
+	n->commutative = comm; /* commutativity */
+	n->wildcard = false; /* wildcard operand */
 	n->symbol_id = s_id;
 	n->token_id = t_id;
 	n->sons = 0;

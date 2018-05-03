@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
 #include "tex-parser/head.h"
 #include "indexer/config.h"
@@ -539,6 +540,7 @@ symbolseq_similarity(struct postmerge* pm)
 	struct math_pathinfo_pack  *pathinfo_pack;
 	struct math_pathinfo       *pathinfo;
 	struct subpath_ele         *subpath_ele;
+	int ret = 0;
 
 	enum symbol_id querystr[64] = {0};
 	enum symbol_id candistr[64] = {0};
@@ -557,6 +559,7 @@ symbolseq_similarity(struct postmerge* pm)
 
 		for (j = 0; j < pathinfo_pack->n_paths; j++) {
 			pathinfo = pathinfo_pack->pathinfo + j;
+			assert(pathinfo->path_id <= 64);
 			candistr[pathinfo->path_id - 1] = pathinfo->lf_symb;
 
 			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
@@ -567,25 +570,25 @@ symbolseq_similarity(struct postmerge* pm)
 		}
 	}
 
-	{
-		int ret = substring_filter(querystr, candistr);
-		if (0) {
-		//if (8325 == po_item->exp_id) {
-			printf("Query: ");
-			for (i = 0; i < 64; i++) {
-				if (querystr[i] == 0)
-					break;
-				printf("%s ", trans_symbol(querystr[i]));
-			} printf("\n");
-			printf("expr#%d, Candi: ", po_item->exp_id);
-			for (i = 0; i < 64; i++) {
-				printf("%s ", trans_symbol(candistr[i]));
-			} printf("\n");
-			printf("Return: %d\n", ret);
-		}
-
-		return ret;
+	if (pm->n_postings != 0) {
+		ret = substring_filter(querystr, candistr);
+//		if (0) {
+//		//if (8325 == po_item->exp_id) {
+//			printf("Query: ");
+//			for (i = 0; i < 64; i++) {
+//				if (querystr[i] == 0)
+//					break;
+//				printf("%s ", trans_symbol(querystr[i]));
+//			} printf("\n");
+//			printf("expr#%d, Candi: ", po_item->exp_id);
+//			for (i = 0; i < 64; i++) {
+//				printf("%s ", trans_symbol(candistr[i]));
+//			} printf("\n");
+//			printf("Return: %d\n", ret);
+//		}
 	}
+
+	return ret;
 }
 
 uint32_t math_expr_doc_lr_paths(struct postmerge* pm)

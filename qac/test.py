@@ -53,8 +53,8 @@ def test_qac_query(qry_tex):
 #send_json('/post_log', json_obj)
 
 # post_query_logs(10)
-post_query_logs(10000)
-# post_query_logs(sys.maxsize)
+# post_query_logs(10000)
+post_query_logs(sys.maxsize)
 
 # test_qac_query('x^2')
 # test_qac_query('x^2+')

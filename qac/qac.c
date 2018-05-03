@@ -213,40 +213,38 @@ qac_suggestion_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(args, struct qac_on_merge_args, mesa->expr_srch_arg);
 	struct math_posting_item *po_item = pm->cur_pos_item[0];
 	struct qac_tex_info tex_info;
+	char *tex;
 
 	/* similarity */
 	struct math_expr_score_res sim_res;
 	sim_res = math_expr_filter_on_merge(pm, mesa->dir_merge_level,
 	                                    mesa->n_qry_lr_paths);
-
 	/* exclude zero scored hits */
 	if (sim_res.score == 0)
 		return 0;
 
 	/* suggestion score */
+	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
+	assert(NULL != tex);
+#if 0
+	/* get tex string and frequency */
+	printf("tex#%u `%s' freq: %.1f, level: %.1f, sim: %.2f => score: %.2f\n",
+	       po_item->exp_id, tex, freq, level, sim, score);
+#endif
+	free(tex);
+
 	uint32_t n_qry_lr_paths = mesa->n_qry_lr_paths;
 	uint32_t n_doc_lr_paths = math_expr_doc_lr_paths(pm);
-	uint32_t int_sim;
-	int_sim = (sim_res.score * MAX_MATH_EXPR_SIM_SCALE) /
-		      (n_qry_lr_paths * MNC_MARK_FULL_SCORE);
+//	uint32_t int_sim;
+//	int_sim = (sim_res.score * MAX_MATH_EXPR_SIM_SCALE) /
+//		      (n_qry_lr_paths * MNC_MARK_FULL_SCORE);
+//	float sim = (float)int_sim;
 	float level = (float)mesa->dir_merge_level;
-	float freq = (float)tex_info.freq;
-	float sim = (float)int_sim;
-	float score = sim * logf(1.f + freq) /
-	              logf(1.f + (float)n_doc_lr_paths);
 	if (level == 0 && n_qry_lr_paths == n_doc_lr_paths)
 		return 0;
 
-#if 0
-	/* DEBUG: get tex string */
-	char *tex;
-	tex_info = math_qac_get(args->qi, po_item->exp_id, &tex);
-	assert(NULL != tex);
-	printf("tex#%u `%s' freq: %.1f, level: %.1f, sim: %.2f => score: %.2f\n",
-	       po_item->exp_id, tex, freq, level, sim, score);
-	free(tex);
-#endif
-
+	float freq = (float)tex_info.freq;
+	float score = freq / logf(1.f + (float)n_doc_lr_paths);
 	consider_top_K(args->rk_res, po_item->exp_id, score, NULL, 0);
 	return 0;
 }

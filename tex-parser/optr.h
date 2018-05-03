@@ -1,13 +1,10 @@
-#define WC_NORMAL_LEAF      0
-#define WC_WILDCD_LEAF      1
 #define WC_NONCOM_OPERATOR  0
 #define WC_COMMUT_OPERATOR  1
+#define WC_NORMAL_LEAF      1
 
 struct optr_node {
-	union {
-		bool         commutative;
-		bool         wildcard;
-	};
+	bool             commutative;
+	bool             wildcard;
 	enum symbol_id   symbol_id;
 	enum token_id    token_id;
 	uint32_t         sons;
