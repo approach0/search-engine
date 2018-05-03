@@ -2,6 +2,7 @@
 *.swo
 *.tmp
 *.img
+*.dat
 *.o
 *.a
 *.d
@@ -17,8 +18,11 @@ lex.*.c
 tags
 srclist.txt
 tmp/
+tmp
 build/
 .build/
 proj-dep.mk
 targets.mk
 __pycache__
+trec_eval
+trec_eval2
