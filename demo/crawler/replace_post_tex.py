@@ -1,4 +1,5 @@
 import re
+import bbcode
 
 def replace_dollar_tex(s):
 	l = len(s)
@@ -41,6 +42,15 @@ def replace_dollar_tex(s):
 			new_txt += s[i]
 		i += 1
 	return new_txt
+
+def replace_canonical_tex(s):
+	s = s.replace('\\minus{}','-')
+	s = s.replace('\\plus{}', '+')
+	s = s.replace('\\equal{}', '=')
+	s = s.replace('\\/', '/')
+	parser = bbcode.Parser()
+	s = parser.strip(s)
+	return s
 
 def replace_display_tex(s):
 	# replace '\[ * \]'
