@@ -128,7 +128,7 @@ def save_preview(path, post_txt, url):
 	preview = fmt_str.replace("{PREVIEW}", post_txt)
 	preview = preview.replace("{URL}", url)
 	# save preview
-	f = open(path, "w")
+	f = open(path, "w", encoding="utf8")
 	f.write(preview)
 	f.close()
 

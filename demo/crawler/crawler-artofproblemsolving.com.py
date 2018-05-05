@@ -163,7 +163,7 @@ def save_preview(path, post_txt, url):
     preview = fmt_str.replace("{PREVIEW}", post_txt)
     preview = preview.replace("{URL}", url)
     # save preview
-    f = open(path, "w")
+    f = open(path, "w", encoding="utf8")
     f.write(preview)
     f.close()
 
@@ -375,7 +375,7 @@ def main(args):
         sub_url = "/community/c{}h{}".format(category, post)
         full_url = root_url + sub_url
         post_txt = crawl_post_page(sub_url, get_curl())
-        process_post(arg, post_txt, full_url)
+        process_post(post, post_txt, full_url)
         exit(0)
 
     if (category > 0):
