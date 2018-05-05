@@ -242,13 +242,13 @@ def list_category_links(category, newest, oldest, c):
         except Exception as e:
             yield (None, None, e)
 
-def get_file_path(post_id):
+def get_file_path(post_id, prefix=''):
     directory = './tmp/' + str(post_id % DIVISIONS)
-    return directory + '/' + str(post_id)
+    return directory + '/' + prefix + str(post_id)
 
 def process_post(post_id, post_txt, url):
     # decide sub-directory
-    file_path = get_file_path(post_id)
+    file_path = get_file_path(post_id, 'aos')
     try:
         mkdir_p(os.path.dirname(file_path))
     except:
