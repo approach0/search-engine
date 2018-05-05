@@ -3,6 +3,7 @@ import time
 import pycurl
 import os
 import errno
+import certifi
 import code
 import re
 import json
@@ -15,7 +16,7 @@ from replace_post_tex import replace_inline_tex
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-root_url = "http://math.stackexchange.com"
+root_url = "https://mathoverflow.net"
 vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
@@ -84,7 +85,7 @@ def crawl_post_page(sub_url, c):
 	# get title
 	question_header = s.find(id='question-header')
 	if question_header is None:
-		raise
+		raise Exception("question header is None")
 	title = str(question_header.h1.string)
 	post_txt = title + '\n\n'
 	# get question
@@ -143,6 +144,7 @@ def get_curl():
 	c = pycurl.Curl()
 	c.setopt(c.CONNECTTIMEOUT, 8)
 	c.setopt(c.TIMEOUT, 10)
+	c.setopt(pycurl.CAINFO, certifi.where())
 
 	# redirect on 3XX error
 	c.setopt(c.FOLLOWLOCATION, 1)
