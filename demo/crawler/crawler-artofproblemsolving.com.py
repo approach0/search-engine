@@ -199,13 +199,15 @@ def list_category_links(category, newest, oldest, c):
     user_id = session['user_id']
     server_time = int(parsed['AoPS.bootstrap_data']['init_time'])
 
-    oldest_post_time = 0
-    newest_post_time = 0
     oldest_post_time = server_time - oldest * 24 * 60 * 60
     newest_post_time = server_time - newest * 24 * 60 * 60
 
     fetch_after = newest_post_time
     while fetch_after >= oldest_post_time:
+        print(vt100_BLUE)
+        print("[category] %d , [before-time] %s " %
+              (category, time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_after))))
+        print(vt100_RESET)
         sub_url = '/m/community/ajax.php'
 
         postfields = {"category_type": "forum",
@@ -239,7 +241,7 @@ def list_category_links(category, newest, oldest, c):
             yield (None, None, e)
 
 def get_file_path(post_id):
-    directory = './tmp/' + str(post_id) # str(post_id % DIVISIONS)
+    directory = './tmp/' + str(post_id % DIVISIONS)
     return directory + '/' + str(post_id)
 
 def process_post(post_id, post_txt, url):
@@ -277,10 +279,6 @@ def crawl_category_pages(category, newest, oldest, extra_opt):
 
     succ_posts = 0
     for category, post, e in list_category_links(category, newest, oldest, c):
-        print(vt100_BLUE)
-        print("[topic] %d , time %s " % (post['topic_id'],
-                                         time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int(post['first_post_time'])))))
-        print(vt100_RESET)
         if e is not None:
             print_err("category %d" % category)
             break
