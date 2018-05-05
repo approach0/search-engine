@@ -189,8 +189,8 @@ def process_post(post_id, post_txt, url):
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
 		print('[exists]')
-		save_json('/tmp/tmp.json', post_txt, url)
-		if filecmp.cmp('/tmp/tmp.json', jsonfile):
+		save_json('./tmp/tmp.json', post_txt, url)
+		if filecmp.cmp('./tmp/tmp.json', jsonfile):
 			# two files are identical, do not touch
 			print('[identical, no touch]')
 			return
