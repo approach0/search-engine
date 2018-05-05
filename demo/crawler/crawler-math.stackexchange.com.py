@@ -16,7 +16,7 @@ from replace_post_tex import replace_inline_tex
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-root_url = "https://mathoverflow.net"
+root_url = "http://math.stackexchange.com"
 vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
