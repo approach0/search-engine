@@ -110,11 +110,10 @@ def parse_node(node):
         return "<UnknownRight>"
     return ret
 
-def get_bootstrap_data(page):
+def get_aos_data(page):
     s = BeautifulSoup(page, "html.parser")
     parser = slimit_parser
     for script in s.findAll('script'):
-        # parse all assignments
         if 'AoPS.bootstrap_data' in script.text:
             try:
                 tree = parser.parse(script.text)
@@ -131,7 +130,7 @@ def crawl_post_page(sub_url, c):
     except:
         raise
 
-    parsed = get_bootstrap_data(post_page)
+    parsed = get_aos_data(post_page)
     topic_data = parsed['AoPS.bootstrap_data']['preload_cmty_data']['topic_data']
 
     # get title
@@ -193,27 +192,25 @@ def list_category_links(category, newest, oldest, c):
 
     community_page = curl(sub_url, c)
 
-    parsed = get_bootstrap_data(community_page)
+    parsed = get_aos_data(community_page)
     session = parsed['AoPS.session']
     session_id = session['id']
     user_id = session['user_id']
     server_time = int(parsed['AoPS.bootstrap_data']['init_time'])
 
-    oldest_post_time = server_time - oldest * 24 * 60 * 60
-    newest_post_time = server_time - newest * 24 * 60 * 60
-
-    fetch_after = newest_post_time
-    while fetch_after >= oldest_post_time:
+    fetch_before = server_time - oldest * 24 * 60 * 60
+    fetch_after = server_time - newest * 24 * 60 * 60
+    while fetch_after >= fetch_before:
         print(vt100_BLUE)
         print("[category] %d, [before] %s, [after] %s " %
               (category,
                time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_after)),
-               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(oldest_post_time))))
+               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_before))))
         print(vt100_RESET)
         sub_url = '/m/community/ajax.php'
 
         postfields = {"category_type": "forum",
-                      "log_visit": 1,
+                      "log_visit": 0,
                       "required_tag": "",
                       "fetch_before": fetch_after,
                       "user_id": 0,
@@ -231,13 +228,11 @@ def list_category_links(category, newest, oldest, c):
             parsed = json.loads(navi_page)
 
             resp = parsed['response']
-
             if 'no_more_topics' in resp and resp['no_more_topics']:
                 break
 
             for post in resp['topics']:
-                last_post_time = int(post['last_post_time'])
-                fetch_after = last_post_time
+                fetch_after = int(post['last_post_time'])
                 yield (category, post, None)
         except Exception as e:
             yield (None, None, e)
