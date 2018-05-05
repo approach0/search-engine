@@ -3,8 +3,6 @@ import time
 import pycurl
 import os
 import errno
-import code
-import re
 import json
 import sys
 import getopt
@@ -17,7 +15,6 @@ from replace_post_tex import replace_inline_tex
 from replace_post_tex import replace_canonical_tex
 from slimit import ast
 from slimit.parser import Parser
-from slimit.visitors import nodevisitor
 from io import BytesIO
 from bs4 import BeautifulSoup
 
@@ -27,6 +24,7 @@ vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
 DIVISIONS = 500
 
+# load parser globally for sharing, it is painfully slow
 slimit_parser = Parser()
 
 def print_err(err_str):
@@ -112,30 +110,29 @@ def parse_node(node):
         return "<UnknownRight>"
     return ret
 
-def crawl_post_page(sub_url, c):
-    try:
-        post_page = curl(sub_url, c)
-    except:
-        raise
-    s = BeautifulSoup(post_page, "html.parser")
+def get_bootstrap_data(page):
+    s = BeautifulSoup(page, "html.parser")
     parser = slimit_parser
-    topic_data = None
     for script in s.findAll('script'):
         # parse all assignments
         if 'AoPS.bootstrap_data' in script.text:
             try:
                 tree = parser.parse(script.text)
                 parsed = parse_node(tree)
-                if 'AoPS.bootstrap_data' in parsed:
-                    topic_data = parsed['AoPS.bootstrap_data']['preload_cmty_data']['topic_data']
-                    break
+                return parsed
             except SyntaxError:
-                pass
+                return None
 
+    return None
 
+def crawl_post_page(sub_url, c):
+    try:
+        post_page = curl(sub_url, c)
+    except:
+        raise
 
-    if not topic_data:
-        raise BaseException('No data found...')
+    parsed = get_bootstrap_data(post_page)
+    topic_data = parsed['AoPS.bootstrap_data']['preload_cmty_data']['topic_data']
 
     # get title
     title = topic_data['topic_title']
@@ -183,8 +180,8 @@ def get_curl():
     c.setopt(pycurl.CAINFO, certifi.where())
     c.setopt(c.CONNECTTIMEOUT, 8)
     c.setopt(c.TIMEOUT, 10)
-    c.setopt(c.COOKIEJAR, 'cookie_1.txt')
-    c.setopt(c.COOKIEFILE, 'cookie_1.txt')
+    c.setopt(c.COOKIEJAR, 'cookie.txt')
+    c.setopt(c.COOKIEFILE, 'cookie.txt')
 
     # redirect on 3XX error
     c.setopt(c.FOLLOWLOCATION, 1)
@@ -196,86 +193,50 @@ def list_category_links(category, newest, oldest, c):
 
     community_page = curl(sub_url, c)
 
-    s = BeautifulSoup(community_page, "html.parser")
-    parser = slimit_parser
-    session_id = None
-    user_id = None
-    server_time = None
-    for script in s.findAll('script'):
-        # parse all assignments
-        tree = parser.parse(script.text)
-        parsed = parse_node(tree)
-        if 'AoPS.bootstrap_data' in parsed:
-            session_id = parsed['AoPS.session']['id']
-            user_id = parsed['AoPS.session']['user_id']
-            server_time = int(parsed['AoPS.bootstrap_data']['init_time'])
-            break
+    parsed = get_bootstrap_data(community_page)
+    session = parsed['AoPS.session']
+    session_id = session['id']
+    user_id = session['user_id']
+    server_time = int(parsed['AoPS.bootstrap_data']['init_time'])
 
     oldest_post_time = 0
     newest_post_time = 0
-    if oldest:
-        oldest_post_time = server_time - oldest * 24 * 60 * 60
-    if newest:
-        newest_post_time = server_time - newest * 24 * 60 * 60
-    first = True
+    oldest_post_time = server_time - oldest * 24 * 60 * 60
+    newest_post_time = server_time - newest * 24 * 60 * 60
 
-    last_topic_time = oldest_post_time
-    while last_topic_time >= oldest_post_time:
+    fetch_after = newest_post_time
+    while fetch_after >= oldest_post_time:
         sub_url = '/m/community/ajax.php'
 
-        if first:
-            postfields = {"category_type": "forum",
-                          "log_visit": 1,
-                          "required_tag": "",
-                          "fetch_before": newest_post_time,
-                          "user_id": 0,
-                          "fetch_archived": 0,
-                          "fetch_announcements": 0,
-                          "category_id": category,
-                          "a": "fetch_topics",
-                          "aops_logged_in": "false",
-                          "aops_user_id": user_id,
-                          "aops_session_id": session_id
-                          }
-        else:
-            postfields = {"category_type": "forum",
-                          "log_visit": 1,
-                          "required_tag": "",
-                          "fetch_before": last_topic_time,
-                          "user_id": 0,
-                          "fetch_archived": 0,
-                          "fetch_announcements": 0,
-                          "category_id": category,
-                          "a": "fetch_topics",
-                          "aops_logged_in": "false",
-                          "aops_user_id": user_id,
-                          "aops_session_id": session_id
-                          }
-
-        first = False
+        postfields = {"category_type": "forum",
+                      "log_visit": 1,
+                      "required_tag": "",
+                      "fetch_before": fetch_after,
+                      "user_id": 0,
+                      "fetch_archived": 0,
+                      "fetch_announcements": 0,
+                      "category_id": category,
+                      "a": "fetch_topics",
+                      "aops_logged_in": "false",
+                      "aops_user_id": user_id,
+                      "aops_session_id": session_id
+                      }
 
         try:
             navi_page = curl(sub_url, c, post=postfields)
+            parsed = json.loads(navi_page)
+
+            resp = parsed['response']
+
+            if 'no_more_topics' in resp and resp['no_more_topics']:
+                break
+
+            for post in resp['topics']:
+                last_post_time = int(post['last_post_time'])
+                fetch_after = last_post_time
+                yield (category, post, None)
         except Exception as e:
             yield (None, None, e)
-        parsed = json.loads(navi_page)
-
-        resp = parsed['response']
-
-        if 'no_more_topics' in resp and resp['no_more_topics']:
-            break
-
-        for post in resp['topics']:
-           last_update_time = int(post['last_update_time'])
-           first_post_time = int(post['first_post_time'])
-           last_post_time = int(post['last_post_time'])
-           last_topic_time = last_post_time
-           print(post['topic_id'], time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(last_post_time)))
-           yield (category, post['topic_id'], None)
-
-        time.sleep(2)
-
-
 
 def get_file_path(post_id):
     directory = './tmp/' + str(post_id) # str(post_id % DIVISIONS)
@@ -316,19 +277,24 @@ def crawl_category_pages(category, newest, oldest, extra_opt):
 
     succ_posts = 0
     for category, post, e in list_category_links(category, newest, oldest, c):
+        print(vt100_BLUE)
+        print("[topic] %d , time %s " % (post['topic_id'],
+                                         time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int(post['first_post_time'])))))
+        print(vt100_RESET)
         if e is not None:
             print_err("category %d" % category)
             break
         try:
-            sub_url = '/community/c{}h{}'.format(category, post)
+            post_id = post['topic_id']
+            sub_url = '/community/c{}h{}'.format(category, post_id)
             url = root_url + sub_url
             post_txt = crawl_post_page(sub_url, get_curl())
-            process_post(post, post_txt, url)
+            process_post(post_id, post_txt, url)
         except (KeyboardInterrupt, SystemExit):
             print('[abort]')
             return 'abort'
         except BaseException as e:
-            print_err("post %s" % url)
+            print_err("post %s (%s)" % (url, str(e)))
             continue
 
         # count on success
@@ -345,11 +311,11 @@ def crawl_category_pages(category, newest, oldest, extra_opt):
     return 'finish'
 
 def help(arg0):
-    print('DESCRIPTION: crawler script for math.stackexchange.com.' \
+    print('DESCRIPTION: crawler script for artofproblemsolving.com.' \
           '\n\n' \
           'SYNOPSIS:\n' \
-          '%s [-b | --begin-page <page>] ' \
-          '[-e | --end-page <page>] ' \
+          '%s [-n | --newest <days>] ' \
+          '[-o | --oldest <days>] ' \
           '[--no-overwrite] ' \
           '[--patrol] ' \
           '[--hook-script <script name>] ' \
@@ -361,12 +327,10 @@ def main(args):
     argv = args[1:]
     try:
         opts, _ = getopt.getopt(
-            argv, "n:o:c:b:e:p:h", [
+            argv, "n:o:c:p:h", [
                 'newest=',
                 'oldest=',
                 'category=',
-                'begin-page=',
-                'end-page=',
                 'post=',
                 'no-overwrite',
                 'patrol',
@@ -382,8 +346,6 @@ def main(args):
         "hookscript": "",
         "patrol": False
     }
-    begin_page = 1
-    end_page = -1
     category = -1
     post = -1
     newest = 0
@@ -398,12 +360,6 @@ def main(args):
             continue
         if opt in ("-c", "--category"):
             category = int(arg)
-            continue
-        if opt in ("-b", "--begin-page"):
-            begin_page = int(arg)
-            continue
-        elif opt in ("-e", "--end-page"):
-            end_page = int(arg)
             continue
         elif opt in ("-p", "--post"):
             post = int(arg)
