@@ -205,8 +205,10 @@ def list_category_links(category, newest, oldest, c):
     fetch_after = newest_post_time
     while fetch_after >= oldest_post_time:
         print(vt100_BLUE)
-        print("[category] %d , [before-time] %s " %
-              (category, time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_after))))
+        print("[category] %d, [before] %s, [after] %s " %
+              (category,
+               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_after)),
+               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(oldest_post_time))))
         print(vt100_RESET)
         sub_url = '/m/community/ajax.php'
 
