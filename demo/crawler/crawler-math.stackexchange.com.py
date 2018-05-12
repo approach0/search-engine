@@ -20,6 +20,7 @@ vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
 DIVISIONS = 500
+PAGESIZE = 30
 
 def print_err(err_str):
 	f = open("error.log", "a")
@@ -32,8 +33,8 @@ def print_err(err_str):
 
 def curl(sub_url, c):
 	buf = BytesIO()
-	print('[curl] %s' % sub_url)
 	url = root_url + sub_url
+	print('[curl] %s' % url)
 	url = url.encode('iso-8859-1')
 	c.setopt(c.URL, url)
 	c.setopt(c.WRITEFUNCTION, buf.write)
@@ -136,7 +137,7 @@ def save_json(path, post_txt, url):
 	f.write(json.dumps({
 		"url": url,
 		"text": post_txt
-	}))
+	}, sort_keys=True))
 	f.close()
 
 def get_curl():
@@ -150,14 +151,29 @@ def get_curl():
 
 def list_post_links(page, sortby, c):
 	# sortby can be 'newest', 'active' etc.
-	sub_url = '/questions?sort={}&page={}'.format(sortby, page)
+	sub_url = '/questions?pagesize={}&sort={}&page={}'.format(
+	          PAGESIZE, sortby, page)
 
-	try:
-		navi_page = curl(sub_url, c)
-	except Exception as e:
-		yield (None, None, e)
-	s = BeautifulSoup(navi_page, "html.parser")
-	summary_tags = s.find_all('div', {"class": "question-summary"})
+	retry_cnt = 0
+	while True:
+		try:
+			navi_page = curl(sub_url, c)
+		except Exception as e:
+			yield (None, None, e)
+		s = BeautifulSoup(navi_page, "html.parser")
+		summary_tags = s.find_all('div', {"class": "question-summary"})
+
+		# if server is showing us our frequency is too much...
+		print("%d questions in this page" % len(summary_tags))
+		if len(summary_tags) == 0:
+			if retry_cnt < 60:
+				retry_cnt += 1
+			wait_time = retry_cnt * 10.0
+			print('too frequent request? Wait %f sec ...' % wait_time)
+			time.sleep(wait_time)
+		else:
+			break
+
 	for div in summary_tags:
 		a_tag = div.find('a', {"class": "question-hyperlink"})
 		if a_tag is None:
@@ -186,14 +202,15 @@ def process_post(post_id, post_txt, url):
 	# an identical file already exists.
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
-		print('[exists]')
-		save_json('./tmp/tmp.json', post_txt, url)
-		if filecmp.cmp('./tmp/tmp.json', jsonfile):
+		print('[exists]' + jsonfile)
+		save_json('./tmp.json', post_txt, url)
+		if filecmp.cmp('./tmp.json', jsonfile):
 			# two files are identical, do not touch
 			print('[identical, no touch]')
 			return
 		else:
 			print('[overwrite]')
+
 
 	# two files are different, save files
 	save_json(jsonfile, post_txt, url)
@@ -237,7 +254,7 @@ def crawl_pages(sortby, start, end, extra_opt):
 			succ_posts += 1
 
 			# sleep to avoid over-frequent request.
-			time.sleep(0.6)
+			time.sleep(1.5)
 
 		# log crawled page number
 		page_log = open("page.log", "a")
