@@ -48,9 +48,8 @@ def replace_canonical_tex(s):
 	s = s.replace('\\plus{}', '+')
 	s = s.replace('\\equal{}', '=')
 	s = s.replace('\\/', '/')
-	regex = re.compile(r'\\bold\{(.+?)\}')
-	s = re.sub(regex, r"\1", s)
-	s = bbcode.Parser().strip(s)
+	parser = bbcode.Parser()
+	s = parser.strip(s)
 	return s
 
 def replace_display_tex(s):
