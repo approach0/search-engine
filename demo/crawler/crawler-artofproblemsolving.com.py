@@ -12,7 +12,6 @@ from urllib.parse import urlencode
 from replace_post_tex import replace_dollar_tex
 from replace_post_tex import replace_display_tex
 from replace_post_tex import replace_inline_tex
-from replace_post_tex import replace_canonical_tex
 from slimit import ast
 from slimit.parser import Parser
 from io import BytesIO
@@ -249,7 +248,6 @@ def process_post(post_id, post_txt, url):
     except:
         raise
     # process TeX mode pieces
-    post_txt = replace_canonical_tex(post_txt)
     post_txt = replace_display_tex(post_txt)
     post_txt = replace_inline_tex(post_txt)
     post_txt = replace_dollar_tex(post_txt)
