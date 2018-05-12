@@ -70,7 +70,10 @@ def parse_op_name(obj):
         l = obj.node.value + "." + obj.identifier.value
     elif isinstance(obj, ast.String):
         l = obj.value
-        l = l.strip('"')
+        # no using strip here, because it can remove more than 1
+        # instance of quotes, which is not desired and can cause issues
+        if l.startswith('"') and l.endswith('"'):
+            l = l[1:-1]
         l = l.encode().decode('unicode_escape')
     elif hasattr(obj, 'value'):
         l = obj.value
