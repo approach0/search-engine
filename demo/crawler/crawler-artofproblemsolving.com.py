@@ -178,8 +178,8 @@ def get_curl():
     c.setopt(pycurl.CAINFO, certifi.where())
     c.setopt(c.CONNECTTIMEOUT, 8)
     c.setopt(c.TIMEOUT, 10)
-    c.setopt(c.COOKIEJAR, 'cookie.txt')
-    c.setopt(c.COOKIEFILE, 'cookie.txt')
+    c.setopt(c.COOKIEJAR, 'cookie.tmp')
+    c.setopt(c.COOKIEFILE, 'cookie.tmp')
 
     # redirect on 3XX error
     c.setopt(c.FOLLOWLOCATION, 1)
@@ -309,7 +309,7 @@ def help(arg0):
           'SYNOPSIS:\n' \
           '%s [-n | --newest <days>] ' \
           '[-o | --oldest <days>] ' \
-          '[--no-overwrite] ' \
+          '[-c | --category <cnum>] ' \
           '[--patrol] ' \
           '[--hook-script <script name>] ' \
           '[-p | --post <post id>] ' \
@@ -325,7 +325,6 @@ def main(args):
                 'oldest=',
                 'category=',
                 'post=',
-                'no-overwrite',
                 'patrol',
                 'hook-script='
             ]
@@ -335,7 +334,6 @@ def main(args):
 
     # default arguments
     extra_opt = {
-        "overwrite": True,
         "hookscript": "",
         "patrol": False
     }
@@ -357,8 +355,6 @@ def main(args):
         elif opt in ("-p", "--post"):
             post = int(arg)
             continue
-        elif opt in ("--no-overwrite"):
-            extra_opt["overwrite"] = False
         elif opt in ("--patrol"):
             extra_opt["patrol"] = True
         elif opt in ("--hook-script"):
@@ -386,8 +382,7 @@ def main(args):
                 os.system(extra_opt["hookscript"])
 
             if extra_opt['patrol']:
-                # if patrol mode is enabled, repeatedly crawl
-                # the page range instead of breaking out of loop.
+                # if patrol mode is enabled, loop forever.
                 pass
             else:
                 break
