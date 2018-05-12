@@ -1,4 +1,5 @@
 import re
+import bbcode
 
 def replace_dollar_tex(s):
 	l = len(s)
@@ -42,14 +43,24 @@ def replace_dollar_tex(s):
 		i += 1
 	return new_txt
 
+def replace_canonical_tex(s):
+	s = s.replace('\\minus{}','-')
+	s = s.replace('\\plus{}', '+')
+	s = s.replace('\\equal{}', '=')
+	s = s.replace('\\/', '/')
+	regex = re.compile(r'\\bold\{(.+?)\}')
+	s = re.sub(regex, r"\1", s)
+	s = bbcode.Parser().strip(s)
+	return s
+
 def replace_display_tex(s):
 	# replace '\[ * \]'
-	regex = re.compile('\\\\\[(.+?)\\\\\]')
+	regex = re.compile('\\\\\[(.+?)\\\\\]', re.DOTALL)
 	return re.sub(regex, r"[imath]\1[/imath]", s)
 
 def replace_inline_tex(s):
 	# replace '\\( * \\)'
-	regex = re.compile('\\\\\\\\\((.+)\\\\\\\\\)')
+	regex = re.compile(r'\\\((.+)\\\)')
 	return re.sub(regex, r"[imath]\1[/imath]", s)
 
 # curl http://math.stackexchange.com/questions/1886701/justify-a-function-series-is-approximating-another-function

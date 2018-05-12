@@ -3,6 +3,7 @@ import time
 import pycurl
 import os
 import errno
+import certifi
 import code
 import re
 import json
@@ -84,7 +85,7 @@ def crawl_post_page(sub_url, c):
 	# get title
 	question_header = s.find(id='question-header')
 	if question_header is None:
-		raise
+		raise Exception("question header is None")
 	title = str(question_header.h1.string)
 	post_txt = title + '\n\n'
 	# get question
@@ -127,7 +128,7 @@ def save_preview(path, post_txt, url):
 	preview = fmt_str.replace("{PREVIEW}", post_txt)
 	preview = preview.replace("{URL}", url)
 	# save preview
-	f = open(path, "w")
+	f = open(path, "w", encoding="utf8")
 	f.write(preview)
 	f.close()
 
@@ -143,6 +144,7 @@ def get_curl():
 	c = pycurl.Curl()
 	c.setopt(c.CONNECTTIMEOUT, 8)
 	c.setopt(c.TIMEOUT, 10)
+	c.setopt(pycurl.CAINFO, certifi.where())
 
 	# redirect on 3XX error
 	c.setopt(c.FOLLOWLOCATION, 1)
@@ -187,8 +189,8 @@ def process_post(post_id, post_txt, url):
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
 		print('[exists]')
-		save_json('/tmp/tmp.json', post_txt, url)
-		if filecmp.cmp('/tmp/tmp.json', jsonfile):
+		save_json('./tmp/tmp.json', post_txt, url)
+		if filecmp.cmp('./tmp/tmp.json', jsonfile):
 			# two files are identical, do not touch
 			print('[identical, no touch]')
 			return
