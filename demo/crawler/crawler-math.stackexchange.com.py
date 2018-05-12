@@ -3,7 +3,6 @@ import time
 import pycurl
 import os
 import errno
-import certifi
 import code
 import re
 import json
@@ -144,7 +143,6 @@ def get_curl():
 	c = pycurl.Curl()
 	c.setopt(c.CONNECTTIMEOUT, 8)
 	c.setopt(c.TIMEOUT, 10)
-	c.setopt(pycurl.CAINFO, certifi.where())
 
 	# redirect on 3XX error
 	c.setopt(c.FOLLOWLOCATION, 1)
