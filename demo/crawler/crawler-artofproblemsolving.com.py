@@ -82,6 +82,15 @@ def parse_op_name(obj):
         l = "<UnknownName>"
     return l
 
+# In AoPS post_canonical field, some weird LaTeX macro are used,
+# we need to replace them to commonly used LaTeX symbols.
+def convert_canonical_tex(s):
+    s = s.replace('\\minus{}','-')
+    s = s.replace('\\plus{}', '+')
+    s = s.replace('\\equal{}', '=')
+    s = s.replace('\\/', '/')
+    return s
+
 def parse_node(node):
     ret = {}
     if hasattr(node, 'value') or isinstance(node, ast.DotAccessor):
@@ -284,6 +293,7 @@ def process_post(post_id, post_txt, url):
     except:
         raise
     # process TeX mode pieces
+    post_txt = convert_canonical_tex(post_txt)
     post_txt = replace_display_tex(post_txt)
     post_txt = replace_inline_tex(post_txt)
     post_txt = replace_dollar_tex(post_txt)
