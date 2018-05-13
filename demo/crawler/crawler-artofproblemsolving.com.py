@@ -200,21 +200,21 @@ def list_category_links(category, newest, oldest, c):
     user_id = session['user_id']
     server_time = int(parsed['AoPS.bootstrap_data']['init_time'])
 
-    fetch_before = server_time - oldest * 24 * 60 * 60
-    fetch_after = server_time - newest * 24 * 60 * 60
-    while fetch_after >= fetch_before:
+    fetch_after = server_time - oldest * 24 * 60 * 60
+    fetch_before = server_time - newest * 24 * 60 * 60
+    while fetch_before >= fetch_after:
         print(vt100_BLUE)
         print("[category] %d, [before] %s, [after] %s " %
               (category,
-               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_after)),
-               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_before))))
+               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_before)),
+               time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(fetch_after))))
         print(vt100_RESET)
         sub_url = '/m/community/ajax.php'
 
         postfields = {"category_type": "forum",
                       "log_visit": 0,
                       "required_tag": "",
-                      "fetch_before": fetch_after,
+                      "fetch_before": fetch_before,
                       "user_id": 0,
                       "fetch_archived": 0,
                       "fetch_announcements": 0,
@@ -234,7 +234,7 @@ def list_category_links(category, newest, oldest, c):
                 break
 
             for post in resp['topics']:
-                fetch_after = int(post['last_post_time'])
+                fetch_before = int(post['last_post_time'])
                 yield (category, post, None)
         except Exception as e:
             yield (None, None, e)
