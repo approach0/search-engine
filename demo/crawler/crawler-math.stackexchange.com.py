@@ -16,6 +16,8 @@ from io import BytesIO
 from bs4 import BeautifulSoup
 
 root_url = "http://math.stackexchange.com"
+file_prefix = 'mse'
+
 vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
@@ -184,7 +186,7 @@ def list_post_links(page, sortby, c):
 
 def get_file_path(post_id):
 	directory = './tmp/' + str(post_id % DIVISIONS)
-	return directory + '/' + str(post_id)
+	return directory + '/' + file_prefix + str(post_id)
 
 def process_post(post_id, post_txt, url):
 	# decide sub-directory
@@ -203,14 +205,13 @@ def process_post(post_id, post_txt, url):
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
 		print('[exists]' + jsonfile)
-		save_json('./tmp.json', post_txt, url)
-		if filecmp.cmp('./tmp.json', jsonfile):
+		save_json(file_prefix + '.tmp', post_txt, url)
+		if filecmp.cmp(file_prefix + '.tmp', jsonfile):
 			# two files are identical, do not touch
 			print('[identical, no touch]')
 			return
 		else:
 			print('[overwrite]')
-
 
 	# two files are different, save files
 	save_json(jsonfile, post_txt, url)
@@ -257,7 +258,7 @@ def crawl_pages(sortby, start, end, extra_opt):
 			time.sleep(1.5)
 
 		# log crawled page number
-		page_log = open("page.log", "a")
+		page_log = open(file_prefix + ".log", "a")
 		page_log.write('page %s: %d posts successful.\n' %
 		               (page, succ_posts))
 		page_log.close()
