@@ -7,7 +7,6 @@ import json
 import sys
 import getopt
 import filecmp
-import certifi
 from urllib.parse import urlencode
 from replace_post_tex import replace_dollar_tex
 from replace_post_tex import replace_display_tex
@@ -17,7 +16,7 @@ from slimit.parser import Parser
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-root_url = "https://artofproblemsolving.com"
+root_url = "http://artofproblemsolving.com"
 file_prefix = 'aops'
 
 vt100_BLUE = '\033[94m'
@@ -180,7 +179,6 @@ def save_json(path, post_txt, url):
 
 def get_curl():
     c = pycurl.Curl()
-    c.setopt(pycurl.CAINFO, certifi.where())
     c.setopt(c.CONNECTTIMEOUT, 8)
     c.setopt(c.TIMEOUT, 10)
     c.setopt(c.COOKIEJAR, file_prefix + '-cookie.tmp')
