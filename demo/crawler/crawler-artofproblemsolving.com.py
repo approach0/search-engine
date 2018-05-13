@@ -127,25 +127,58 @@ def get_aos_data(page):
 
     return None
 
-def crawl_post_page(sub_url, c):
+def crawl_topic_page(sub_url, topic_id, c):
     try:
-        post_page = curl(sub_url, c)
+        topic_page = curl(sub_url, c)
     except:
         raise
 
-    parsed = get_aos_data(post_page)
+    parsed = get_aos_data(topic_page)
     topic_data = parsed['AoPS.bootstrap_data']['preload_cmty_data']['topic_data']
+    session_data = parsed['AoPS.session']
 
     # get title
     title = topic_data['topic_title']
-    post_txt = title + '\n\n'
+    topic_txt = title + '\n\n'
 
-    # get posts
-    for post in topic_data['posts_data']:
-        post_txt += post['post_canonical']
-        post_txt += '\n\n'
+    num_posts = int(topic_data['num_posts'])
+    posts_data = topic_data['posts_data']
+    if len(posts_data) < num_posts:
+        # now this is a bit tricky, but if there are more posts
+        # than we received, AoPS sens first 15 and last 15 posts,
+        # so to simplify stuff, we are gonna ignore the second half, and request
+        # all subsequent posts through Ajax
+        posts_data = posts_data[:len(posts_data)//2]
 
-    return post_txt
+    fetched_posts = 0
+    while fetched_posts < num_posts:
+        # get posts
+        for post in posts_data:
+            topic_txt += post['post_canonical']
+            topic_txt += '\n\n'
+
+        fetched_posts += len(posts_data)
+
+        if fetched_posts < num_posts:
+            # we need to request more...
+            postfields = {"topic_id": topic_id,
+                          "direction": "forwards",
+                          "start_post_id": -1,
+                          "start_post_num": fetched_posts + 1,
+                          "show_from_time": -1,
+                          "num_to_fetch": 50,
+                          "a": "fetch_posts_for_topic",
+                          "aops_logged_in": "false",
+                          "aops_user_id": session_data['user_id'],
+                          "aops_session_id": session_data['id']
+                          }
+
+            sub_url = '/m/community/ajax.php'
+            topic_page = curl(sub_url, c, post=postfields)
+            parsed = json.loads(topic_page)
+            posts_data = parsed['response']['posts']
+
+    return topic_txt
 
 def mkdir_p(path):
     try:
@@ -272,7 +305,7 @@ def process_post(post_id, post_txt, url):
     save_json(jsonfile, post_txt, url)
     save_preview(file_path + '.html', post_txt, url)
 
-def crawl_category_pages(category, newest, oldest, extra_opt):
+def crawl_category_topics(category, newest, oldest, extra_opt):
     c = get_curl()
 
     succ_posts = 0
@@ -281,11 +314,11 @@ def crawl_category_pages(category, newest, oldest, extra_opt):
             print_err("category %d" % category)
             break
         try:
-            post_id = post['topic_id']
-            sub_url = '/community/c{}h{}'.format(category, post_id)
+            topic_id = post['topic_id']
+            sub_url = '/community/c{}h{}'.format(category, topic_id)
             url = root_url + sub_url
-            post_txt = crawl_post_page(sub_url, get_curl())
-            process_post(post_id, post_txt, url)
+            topic_txt = crawl_topic_page(sub_url, topic_id, get_curl())
+            process_post(topic_id, topic_txt, url)
         except (KeyboardInterrupt, SystemExit):
             print('[abort]')
             return 'abort'
@@ -368,15 +401,15 @@ def main(args):
     if post > 0:
         sub_url = "/community/c{}h{}".format(category, post)
         full_url = root_url + sub_url
-        post_txt = crawl_post_page(sub_url, get_curl())
+        post_txt = crawl_topic_page(sub_url, post, get_curl())
         process_post(post, post_txt, full_url)
         exit(0)
 
     if (category > 0):
         while True:
             # crawling newest pages
-            r = crawl_category_pages(category, newest, oldest,
-                            extra_opt)
+            r = crawl_category_topics(category, newest, oldest,
+                                      extra_opt)
             if r == 'abort':
                 break
 
