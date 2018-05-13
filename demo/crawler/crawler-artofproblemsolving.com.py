@@ -18,6 +18,8 @@ from io import BytesIO
 from bs4 import BeautifulSoup
 
 root_url = "https://artofproblemsolving.com"
+file_prefix = 'aops'
+
 vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
@@ -170,7 +172,7 @@ def save_json(path, post_txt, url):
     f.write(json.dumps({
         "url": url,
         "text": post_txt
-	}, sort_keys=True))
+    }, sort_keys=True))
     f.close()
 
 def get_curl():
@@ -178,8 +180,8 @@ def get_curl():
     c.setopt(pycurl.CAINFO, certifi.where())
     c.setopt(c.CONNECTTIMEOUT, 8)
     c.setopt(c.TIMEOUT, 10)
-    c.setopt(c.COOKIEJAR, 'cookie.tmp')
-    c.setopt(c.COOKIEFILE, 'cookie.tmp')
+    c.setopt(c.COOKIEJAR, file_prefix + '-cookie.tmp')
+    c.setopt(c.COOKIEFILE, file_prefix + '-cookie.tmp')
 
     # redirect on 3XX error
     c.setopt(c.FOLLOWLOCATION, 1)
@@ -236,13 +238,13 @@ def list_category_links(category, newest, oldest, c):
         except Exception as e:
             yield (None, None, e)
 
-def get_file_path(post_id, prefix=''):
+def get_file_path(post_id):
     directory = './tmp/' + str(post_id % DIVISIONS)
-    return directory + '/' + prefix + str(post_id)
+    return directory + '/' + file_prefix + str(post_id)
 
 def process_post(post_id, post_txt, url):
     # decide sub-directory
-    file_path = get_file_path(post_id, 'aos')
+    file_path = get_file_path(post_id)
     try:
         mkdir_p(os.path.dirname(file_path))
     except:
@@ -257,8 +259,8 @@ def process_post(post_id, post_txt, url):
     jsonfile = file_path + ".json"
     if os.path.isfile(jsonfile):
         print('[exists]' + jsonfile)
-        save_json('./tmp.json', post_txt, url)
-        if filecmp.cmp('./tmp.json', jsonfile):
+        save_json(file_prefix + '.tmp', post_txt, url)
+        if filecmp.cmp(file_prefix + '.tmp', jsonfile):
             # two files are identical, do not touch
             print('[identical, no touch]')
             return
@@ -297,7 +299,7 @@ def crawl_category_pages(category, newest, oldest, extra_opt):
         time.sleep(0.6)
 
     # log crawled page number
-    page_log = open("page.log", "a")
+    page_log = open(file_prefix + ".log", "a")
     page_log.write('category %s: %d posts successful.\n' %
                    (category, succ_posts))
     page_log.close()
