@@ -342,11 +342,11 @@ def crawl_category_topics(category, newest, oldest, extra_opt):
         # sleep to avoid over-frequent request.
         time.sleep(0.6)
 
-    # log crawled page number
-    page_log = open(file_prefix + ".log", "a")
-    page_log.write('category %s: %d posts successful.\n' %
-                   (category, succ_posts))
-    page_log.close()
+        # log crawled topics
+        page_log = open(file_prefix + ".log", "a")
+        page_log.write('category %d, topic_id: %s \n' %
+		               (category, post['topic_id']))
+        page_log.close()
     return 'finish'
 
 def help(arg0):
