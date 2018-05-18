@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 import os
+import time
+import sys
 
 # ./search/run/test-search.out -n -i ./tmp/ -m 'a+b' -q 'NTCIR12-MathWiki-123'
 
 #fname = "indexer/test-corpus/ntcir12/topics.txt"
 fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
 index = "/home/tk/Desktop/approach0/indexer/tmp"
-#index = "/home/tk/rotate-disk/ext4/index-prefix-ntcir12-fix-bottleneck"
+# index = "/home/tk/rotate-disk/ext4/index-prefix-ntcir12-fix-bottleneck"
 output = 'trec-format-results.tmp'
 
 rmcmf = 'rm -f {}'.format(output)
@@ -21,6 +23,10 @@ with open(fname) as f:
         latex = ' '.join(fields[1:])
         exestr = "./search/run/test-search.out -p 0 -n -i {} -m '{}' -q {}".format(index, latex, qry_id)
         print(exestr)
+        t0 = time.time()
         os.system(exestr);
+        t1 = time.time()
+        sys.stderr.write('%s %f seconds \n' % (qry_id, t1 - t0))
+        sys.stderr.flush()
 
 print('output file: %s' % output)
