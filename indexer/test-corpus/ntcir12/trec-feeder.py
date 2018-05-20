@@ -5,7 +5,7 @@ import time
 import sys
 import os
 
-run = 'full-professor'
+run = 'a0-new1'
 output = 'trec-format-results.tmp'
 
 def get_latex_list(queryID):
@@ -22,7 +22,7 @@ def get_latex_list(queryID):
 
 def create_trec_corpus():
 	os.system('rm -rf ./trec-index.tmp')
-	for qnum in range(1, 11):
+	for qnum in range(1, 21):
 		queryID = 'NTCIR12-MathWiki-' + str(qnum)
 		text = get_latex_list(queryID)
 		for idx, line in enumerate(text.split('\n')):
@@ -61,7 +61,7 @@ def create_trec_results():
 	os.system('ln -sf ../../run/indexer.out')
 	os.system('ln -sf ../../../search/run/test-search.out')
 	os.system('rm -f %s' % output)
-	for qnum in range(1, 11):
+	for qnum in range(1, 21):
 		queryID = 'NTCIR12-MathWiki-' + str(qnum)
 		query = get_query(queryID)
 		if query == '':
@@ -70,7 +70,7 @@ def create_trec_results():
 		foo = os.system # print
 		foo('./indexer.out -p ./trec-index.tmp/%s' % queryID)
 		foo('./test-search.out -p 0 -n -i ./tmp/ -m "%s" -q %s > /dev/null' % (query, queryID))
-	print('output:', output)
+		print('output:', output)
 
 create_trec_corpus()
 create_trec_results()
