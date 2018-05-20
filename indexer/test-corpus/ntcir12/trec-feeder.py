@@ -5,7 +5,7 @@ import time
 import sys
 import os
 
-run = 'a0-new1'
+run = 'tangent-s'
 output = 'trec-format-results.tmp'
 
 def get_latex_list(queryID):
