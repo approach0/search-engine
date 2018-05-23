@@ -14,6 +14,8 @@
 
 //#define DEBUG_MATH_SCORE_INSPECT
 
+void math_expr_set_score(struct math_expr_sim_factors*, struct math_expr_score_res*); 
+
 static int
 score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
 {
@@ -21,16 +23,15 @@ score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
 	char *url = get_blob_string(indices->url_bi, hit.doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, hit.doc_id, 1, &url_sz);
 	//if (0 == strcmp(url, "Correlation_and_dependence:1")) {
-	//if (0 == strcmp(url, "Nested_radical:8")) {
-	//if (0 == strcmp(url, "Pearson_product-moment_correlation_coefficient:17")) {
+	if (0 == strcmp(url, "Models_of_DNA_evolution:80") ||
+	    0 == strcmp(url, "Conjectural_variation:15")) {
+	//if (hit.doc_id == 227659 || hit.doc_id == 274896) {
 
-//	if (hit.doc_id == 68557  || hit.doc_id == 97423 || hit.doc_id == 16120 ||
-//	    hit.doc_id == 249340 || hit.doc_id == 173685) {
 		printf("%s: doc %u, expr %u, url: %s\n", __func__,
-		       hit.doc_id, hit.exp_id, url);
-		printf("%s \n", txt);
+		        hit.doc_id, hit.exp_id, url);
+		// printf("%s \n", txt);
 		return 1;
-//	}
+	}
 
 	free(url);
 	free(txt);
@@ -38,206 +39,7 @@ score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
 	return 0;
 }
 
-void
-math_expr_set_score_1(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.15f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0;// + ((float)t[1] / 10.f) + ((float)t[2] / 100.f);
-	float fmeasure = st*sy / (st + sy);
 
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, jo, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_2(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.15f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0 + ((float)t[1] / 100.f) + ((float)t[2] / 1000.f);
-	float fmeasure = st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, jo, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_3(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.15f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float jol = logf(1.f + (float)jo);
-	float st = st0 + (jol / 10.f) + ((float)t[1] / 100.f) + ((float)t[2] / 1000.f);
-	float fmeasure = st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, jo, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_4(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.10f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float jol = logf(1.f + (float)jo);
-	float st = st0 + (jol / 10.f) + ((float)t[1] / 100.f) + ((float)t[2] / 1000.f);
-	float fmeasure = st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, jo, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_5(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.10f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0;// + ((float)t[1] / 10.f) + ((float)t[2] / 100.f);
-	float fmeasure = st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "joints = %u, fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, jo, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_6(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.05f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0;// + ((float)t[1] / 10.f) + ((float)t[2] / 100.f);
-	float fmeasure = st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-/* best one */
 void math_expr_set_score_7(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
@@ -250,89 +52,10 @@ void math_expr_set_score_7(struct math_expr_sim_factors* factor,
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
 	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0;// + ((float)t[1] / 10.f) + ((float)t[2] / 100.f);
-	float fmeasure = 2.f * st*sy / (st + sy);
-
+	float st = st0;
+	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
 	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_8(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.05f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0 + ((float)t[1] / 100.f) + ((float)t[2] / 1000.f);
-	float fmeasure = 2.f * st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_9(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.15f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0 + ((float)t[1] / 100.f) + ((float)t[2] / 1000.f);
-	float fmeasure = 2.f * st*sy / (st + sy);
-
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
-	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
-
-	/* set score for this hit */
 	hit->score = (uint32_t)(score);
 }
 
@@ -352,22 +75,61 @@ math_expr_set_score_10(struct math_expr_sim_factors* factor,
 	float st1 = (float)t[1]/(float)(qn);
 	float st2 = (float)t[2]/(float)(qn);
 	float st = st0 + st1 + st2 / 10.f;
-	float fmeasure = 2.f * st*sy / (st + sy);
-
+	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	//score = score * 100.f + (float)jo;
-
 	score = score * 100000.f;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("mnc = %u, struct = %.3f, ", factor->mnc_score, st);
-	printf("symbol = %.3f, qry, doc lr_paths = %u, %u, "
-		   "fmeasure = %.2f, final score = %.2f \n",
-		   sy, qn, dn, fmeasure, score);
-	printf("\n");
-	//score = 1.f;
-#endif
+	hit->score = (uint32_t)(score);
+}
 
-	/* set score for this hit */
+/* CIKM-2018 run-1 */
+void math_expr_set_score_1(struct math_expr_sim_factors* factor,
+                           struct math_expr_score_res* hit)
+{
+	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
+	uint32_t qn = factor->qry_lr_paths;
+	uint32_t dn = factor->doc_lr_paths;
+	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
+	                (qn * MNC_MARK_FULL_SCORE);
+	float alpha = 0.05f;
+	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
+	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
+	float st0 = (float)t[0]/(float)(qn);
+	float st = st0;
+	float fmeasure = st*sy / (st + sy);
+	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
+	printf("st = %f, %f, %f \n", st0, st1, st2);
+	printf("fmeasure = %f, score = %f \n", fmeasure, score);
+#endif
+	score = score * 100000.f;
+	hit->score = (uint32_t)(score);
+}
+
+/* CIKM-2018 run-2 */
+void math_expr_set_score_2(struct math_expr_sim_factors* factor,
+                           struct math_expr_score_res* hit)
+{
+	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
+	uint32_t qn = factor->qry_lr_paths;
+	uint32_t dn = factor->doc_lr_paths;
+	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
+	                (qn * MNC_MARK_FULL_SCORE);
+	float alpha = 0.05f;
+	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
+	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
+	float st0 = (float)t[0]/(float)(qn);
+	float st1 = (float)t[1]/(float)(qn);
+	float st2 = (float)t[2]/(float)(qn);
+	float st = 0.65f * st0 + 0.3 * st1 + 0.05f * st2;
+	float fmeasure = st*sy / (st + sy);
+	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
+	printf("st = %f, %f, %f \n", st0, st1, st2);
+	printf("fmeasure = %f, score = %f \n", fmeasure, score);
+#endif
+	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
 }
 
@@ -375,8 +137,11 @@ void
 math_expr_set_score(struct math_expr_sim_factors* factor,
                     struct math_expr_score_res* hit)
 {
-	math_expr_set_score_7(factor, hit);
+	//math_expr_set_score_7(factor, hit);
 	//math_expr_set_score_10(factor, hit);
+	
+	math_expr_set_score_1(factor, hit);
+	//math_expr_set_score_2(factor, hit);
 }
 
 static mnc_score_t
