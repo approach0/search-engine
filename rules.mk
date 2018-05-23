@@ -18,7 +18,7 @@ CFLAGS = -Wall -Wno-unused-function -Wno-format-truncation -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
 # compiler
-CC := gcc -std=c99
+CC := gcc -std=gnu99
 CC_DEP := @ gcc -MM -MT
 COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
        tput sgr0

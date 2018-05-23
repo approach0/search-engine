@@ -36,6 +36,8 @@ int list_next(list li, struct list_iterator *g)
 	}
 }
 
+#define tostring(_e) (# _e)
+
 int main()
 {
 	list li = LIST_NULL;
@@ -63,6 +65,7 @@ int main()
 	{
 		struct list_iterator g = list_generator(li);
 		do {
+			__typeof__(p) g;
 			struct T *t = MEMBER_2_STRUCT(g.cur.now, struct T, ln);
 			printf("%d\n", t->i);
 		} while (list_next(li, &g));
