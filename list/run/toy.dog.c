@@ -16,7 +16,7 @@ struct list_iterator {
 	struct list_it fwd, cur;
 };
 
-struct list_iterator list_generator(list li)
+struct list_iterator list_mk_iterator(list li)
 {
 	struct list_iterator g;
 	g.cur = list_get_it(li.now);
@@ -36,15 +36,6 @@ int list_next(list li, struct list_iterator *g)
 	}
 }
 
-
-#define FOREACH(_iter, _type, _collection, _stmts) \
-	{ \
-		struct _type ## _iterator _iter = _type ## _generator(_collection); \
-		do { \
-			_stmts \
-		} while (_type ## _next(_collection, &_iter)); \
-	}
-
 #define LIST_ITEM(_item, _type, _iter) \
 	_type *_item = MEMBER_2_STRUCT(_iter.cur.now, _type, ln)
 
@@ -62,38 +53,14 @@ int main()
 		list_insert_one_at_tail(&p->ln, &li, NULL, NULL);
 	}
 
-//	/* generic for */
-//	{
-//		struct list_iterator g = list_generator(li);
-//		do {
-//			struct T *t = MEMBER_2_STRUCT(g.cur.now, struct T, ln);
-//			printf("- %d\n", t->i);
-//	
-//			/* generic for */
-//			{
-//				struct list_iterator g = list_generator(li);
-//				do {
-//					struct T *t = MEMBER_2_STRUCT(g.cur.now, struct T, ln);
-//					printf("-- %d\n", t->i);
-//				} while (list_next(li, &g));
-//			}
-//		} while (list_next(li, &g));
-//	}
-
-	int idx = 0;
-	FOREACH(iter1, list, li,
-		FOREACH(iter2, list, li,
-			LIST_ITEM(t1, struct T, iter1);
+	foreach (iter1, list, li) {
+		LIST_ITEM(t1, struct T, iter1);
+		int i = 0;
+		foreach (iter2, list, li) {
 			LIST_ITEM(t2, struct T, iter2);
-			printf("[%d] %d -> %d\n", idx, t1->i, t2->i);
-
-		)
-
-		if (idx == 4) {
-			break;
+			printf("%d -- [%d]: %d\n", t1->i, i++, t2->i);
 		}
-		idx += 1;
-	)
+	}
 	
 	/* release memory */
 	list_release(&li);
