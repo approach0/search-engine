@@ -2,7 +2,7 @@ include ../rules.mk
 EXCLUDE_SRC := run/toy.dog.c
 include ../module.mk
 
-all: run/toy.out
+all: #run/toy.out
 
 run/toy.out: .build/toy.main.o
 
