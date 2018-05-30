@@ -14,5 +14,6 @@ struct strmap {
 };
 
 struct strmap *strmap_new();
-void strmap_free(struct strmap*);
-void **strmap_val_ptr(struct strmap*, char*);
+void           strmap_free(struct strmap*);
+void         **strmap_val_ptr(struct strmap*, char*);
+struct strmap *strmap_va_list(int, ...);

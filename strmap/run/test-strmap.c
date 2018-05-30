@@ -51,7 +51,7 @@ int main()
 	printf("test_1\n");
 	test_1();
 	printf("\n");
-	
+
 	printf("test_2\n");
 	struct strmap *m = test_2();
 
@@ -64,6 +64,19 @@ int main()
 	free(*strmap_val_ptr(m, "school"));
 	strmap_free(m);
 	printf("\n");
+
+	printf("test_3\n");
+	m = strmap_va_list(6,
+		"good", "bad",
+		"small", "large",
+		"pretty", "ugly"
+	);
+
+	printf("%s\n", (char *)(*strmap_val_ptr(m, "good")));
+	printf("%s\n", (char *)(*strmap_val_ptr(m, "small")));
+	printf("%s\n", (char *)(*strmap_val_ptr(m, "pretty")));
+
+	strmap_free(m);
 
 	mhook_print_unfree();
 	return 0;

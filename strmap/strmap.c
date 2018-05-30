@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include "strmap.h"
@@ -22,7 +23,7 @@ strmap_t *strmap_new()
 
 void strmap_free(strmap_t *map)
 {
-	for (int i = 0; i < map->n_entries; i++) {
+	for (int i = 0; i < map->length; i++) {
 		free(map->entries[i].keystr);
 	}
 
@@ -59,4 +60,19 @@ void **strmap_val_ptr(strmap_t *map, char *key)
 	ent->value = NULL;
 
 	return &ent->value;
+}
+
+struct strmap *strmap_va_list(int n, ...)
+{
+	struct strmap *m = strmap_new();
+
+	va_list valist;
+	va_start(valist, n);
+	for (int i = 0; i < n / 2; i++) {
+		char *key = va_arg(valist, char*);
+		void *val = va_arg(valist, void*);
+		(*strmap_val_ptr(m, key)) = val;
+	}
+
+	return m;
 }
