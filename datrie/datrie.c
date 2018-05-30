@@ -147,7 +147,7 @@ datrie_state_t datrie_cmap(const char c)
 		 * to indicate this is the finishing walk step. */
 		return 0;
 	else
-		return (datrie_state_t)(uc - 'a' + 1);
+		return (datrie_state_t)(uc - '\0' + 1);
 }
 
 static datrie_state_t

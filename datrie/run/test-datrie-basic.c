@@ -10,6 +10,7 @@ int main()
 	datrie_state_t ret, i;
 	struct datrie dict;
 	const char test_string[][64] = {
+		"C",
 		"bachelor",
 		"jar",
 		"air",

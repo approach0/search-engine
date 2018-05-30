@@ -8,7 +8,8 @@
 int main()
 {
 	char utf8_str[2048] = "彩票潮";
-	unsigned int df, cnt = 0;
+	unsigned int df;
+//	unsigned int cnt = 0;
 	datrie_state_t ret;
 	struct datrie dict;
 
