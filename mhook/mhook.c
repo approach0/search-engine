@@ -55,14 +55,22 @@ void *__real_realloc(void *, size_t);
 
 void *__wrap_realloc(void *ptr, size_t sz)
 {
-	if (ptr == NULL) {
-		unfree++;
-		tot_allocs++;
-	} else if (sz == 0) {
-		unfree--;
+	void *p = __real_realloc(ptr, sz);
+
+	if (p) {
+		if (ptr == NULL) {
+			/* equivalent to malloc */
+			unfree++;
+			tot_allocs++;
+		} else if (sz == 0) {
+			/* equivalent to free */
+			unfree--;
+		} else {
+			; /* realloc takes care of the old buffer */
+		}
 	}
 
-	return __real_realloc(ptr, sz);
+	return p;
 }
 
 /* strdup() hook */
