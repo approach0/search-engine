@@ -66,7 +66,7 @@ int main()
 	printf("\n");
 
 	printf("test_3\n");
-	m = strmap_va_list(6,
+	m = strmap(
 		"good", "bad",
 		"small", "large",
 		"pretty", "ugly"
