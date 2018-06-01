@@ -71,7 +71,7 @@ struct strmap *strmap_va_list(int n, ...)
 	for (int i = 0; i < n / 2; i++) {
 		char *key = va_arg(valist, char*);
 		void *val = va_arg(valist, void*);
-		(*strmap_val_ptr(m, key)) = val;
+		*strmap_val_ptr(m, key) = val;
 	}
 
 	return m;
