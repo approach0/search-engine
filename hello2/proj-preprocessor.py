@@ -1,84 +1,60 @@
 import re
 
-fname = 'print-hello-world.dt.c'
+def parse_blk(begin, end, stack, iterator, sep, prev):
+	try:
+		tok = next(iterator)
+	except StopIteration:
+		return [];
+	base = [tok]
+	if tok == begin:
+		if stack == 0: base = []
+		stack += 1
+	elif tok == end:
+		stack -= 1
+		if stack == 0: return []
+	elif tok == sep:
+		base = [] # skip separator
 
-def parse(scope_open, scope_close, iterator, **kwargs):
-	stack_num = 1
-	scope_ele = []
-	sep = kwargs["sep"] if "sep" in kwargs else None
-	while True:
-		try:
-			tok = next(iterator)
-		except StopIteration:
-			break
-		if tok == ' ' or tok == '':
-			continue
-		elif tok == scope_open:
-			stack_num += 1
-			scope_ele.append(scope_open)
-		elif tok == scope_close:
-			stack_num -= 1
-			# break immediately if stack is empty
-			if stack_num == 0:
-				break
-			else:
-				scope_ele.append(scope_close)
-		elif tok != sep:
-			scope_ele.append(tok)
-	return scope_ele
-
-def foreach_headler(context, output):
-	c = context
-	tok = c["curr_tok"]
-	iterator = c["iterator"]
 	if tok == "foreach":
-		c['scope_nm'] = "foreach_args"
-	elif c['scope_nm'] == "foreach_args" and tok == "(":
-		c["args"] = parse('(', ')', iterator, sep=',')
-		c['scope_nm'] = "foreach_block"
-	elif c['scope_nm'] == "foreach_block" and tok == "{":
-		block = parse('{', '}', iterator)
-		args = c["args"]
+		args = parse_blk('(', ')', 0, iterator, ',', prev)
+		block = parse_blk('{', '}', 0, iterator, None, prev)
 		emit = (
 			"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
 			"%s } while (%s_next(%s, & %s)); } \n"
 			) % (
 				args[1], args[0], args[1], args[2],
 				' '.join(block), args[0], args[2], args[0]
-			);
-		output.append(emit)
-		c['scope_nm'] = None
+			)
+		base = [emit]
+	elif tok == "[":
+		core = parse_blk('[', ']', 1, iterator, None, prev)
+		if len(core) > 0 and core[0][0] == '"':
+			keystr = ' '.join(core)
+			emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
+			base = ['', emit]
+		else:
+			base = ['['] + core + [']']
+	prev = tok
+	return base + parse_blk(begin, end, stack, iterator, sep, prev)
 
-# def dict_headler(context, output):
-# 	c = context
-# 	tok = c["curr_tok"]
-# 	iterator = c["iterator"]
-# 	if tok == "[":
+def hacky_join(toks):
+	new_toks = []
+	for i, tok in enumerate(toks):
+		if i + 1 < len(toks) and toks[i + 1] == '':
+			continue
+		elif tok == '':
+			continue
+		new_toks.append(tok)
+	return ' '.join(new_toks)
 
-#
-# Main
-#
+def preprocess(content):
+	toks = re.split('(\[|\]|\(|\)|,| |\t|\n)', content)
+	toks = [tok for tok in toks if tok != ' ']
+	toks = [tok for tok in toks if tok != '']
+	toks = parse_blk('', '', 0, iter(toks), '', None)
+	return hacky_join(toks)
 
+fname = 'test.dt.c'
 with open(fname) as fh:
 	content = fh.read()
-	toks = re.split('(\[|\]|\(|\)|,| |\t|\n)', content)
-
-context  = {
-	"scope_nm": None,
-	"prev_tok": None,
-	"curr_tok": None,
-	"iterator": iter(toks)
-	"stack": iter(toks)
-}
-output   = []
-for tok in context["iterator"]:
-	if tok == ' ' or tok == '':
-		continue
-	elif context['scope_nm'] is None:
-		output.append(tok)
-	# handle FOREACH statement pattern
-	context["curr_tok"] = tok
-	foreach_headler(context, output)
-	context["prev_tok"] = tok
-
-print(' '.join(output))
+	print(preprocess(content))
