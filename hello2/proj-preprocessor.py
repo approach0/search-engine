@@ -77,7 +77,7 @@ def DFS_detect_cycle(stack, cur, dep):
 	if cur not in dep: return False
 	for d in dep[cur]:
 		if d == stack[0]:
-			print(stack)
+			print('#pragma message "CYCLE: %s"' % stack)
 			return True
 		else:
 			newstack = [x for x in stack]
@@ -129,7 +129,7 @@ def headers(dep):
 			lines.append(line)
 	return '\n'.join(lines)
 
-def parse_blk(begin, end, stack, iterator, sep):
+def parse_blk(begin, end, stack, iterator, sep, prev):
 	ret_tokens = []
 	while True:
 		try:
@@ -147,8 +147,8 @@ def parse_blk(begin, end, stack, iterator, sep):
 			base = [] # skip separator
 
 		if tok == "foreach":
-			args = parse_blk('(', ')', 0, iterator, ',')
-			block = parse_blk('{', '}', 0, iterator, None)
+			args = parse_blk('(', ')', 0, iterator, ',', prev)
+			block = parse_blk('{', '}', 0, iterator, None, prev)
 			emit = (
 				"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
 				"%s } while (%s_next(%s, & %s)); }"
@@ -158,7 +158,7 @@ def parse_blk(begin, end, stack, iterator, sep):
 				)
 			base = [emit]
 		elif tok == "[":
-			core = parse_blk('[', ']', 1, iterator, None)
+			core = parse_blk('[', ']', 1, iterator, None, prev)
 			if len(core) > 0 and core[0][0] == '"':
 				keystr = ' '.join(core)
 				emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
@@ -166,9 +166,10 @@ def parse_blk(begin, end, stack, iterator, sep):
 			else:
 				base = ['['] + core + [']']
 		elif tok == "#require" or tok == "#include":
-			after = parse_blk('', '', 0, iterator, '')
+			after = parse_blk('', '', 0, iterator, '', prev)
 			base = ['/* require', after[0], '*/'] + after[1:]
 			DFS_add_dep(process_file, after[0])
+		prev = tok
 		ret_tokens.extend(base)
 	return ret_tokens
 
@@ -191,7 +192,7 @@ def preprocess(content):
 	toks = re.split('(\[|\]|\(|\)|,| |\t|\n)', content)
 	toks = [tok for tok in toks if tok != ' ']
 	toks = [tok for tok in toks if tok != '']
-	toks = parse_blk('', '', 0, iter(toks), '')
+	toks = parse_blk('', '', 0, iter(toks), '', None)
 	return hacky_join(toks)
 
 with open(process_file) as fh:
@@ -199,7 +200,7 @@ with open(process_file) as fh:
 	output_body = preprocess(content)
 	output_head = headers(dependency)
 	if output_head is None:
-		print('cycle detected!')
+		print('#error "cycle detected!"')
 	else:
 		print(output_head)
-		print(output_body)
+	print(output_body)
