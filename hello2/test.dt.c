@@ -1,11 +1,6 @@
-#require "dat.h"
+#require "dat/dat.h"
 int foo(struct dat);
 	
-#require "tad.h"
-int bar(struct tad);
-
-#require "dta.h"
-
 idx_arr[127]
 idx_arr[a++]
 idx_arr[a + 1]

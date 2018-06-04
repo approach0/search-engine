@@ -1,21 +1,13 @@
 import re
 import os
 
-#process_file = '../search/search.h'
-process_file = './test.dt.c'
-
-dependency = dict()
+process_file = '../search/search.h'
 srch_dirs = ['.', '..']
 
-def search_file(prefix, fpath):
-	if prefix == '':
-		prefix = '.'
-	for srch_dir in srch_dirs:
-		loc = prefix + '/' + srch_dir + '/' + fpath;
-		if os.path.isfile(loc):
-			return loc
-	# canonicalize the relative path name
-	return None
+process_file = './test.dt.c'
+srch_dirs = ['.']
+
+dependency = dict()
 
 def add_dependency(a, b):
 	if a not in dependency:
@@ -42,31 +34,90 @@ def parse_deptok(fpath):
 			extract_next = False
 	return toks
 
-def DFS_add_deptok(prefix, a, token):
-	if token[0] == '<':
-		add_dependency(a, token)
+def search_file(prefix, cd, fpath):
+	for srch_dir in srch_dirs:
+		loc = prefix + '/' + cd + '/' + srch_dir + '/' + fpath
+		if os.path.isfile(loc):
+			rpath = cd + '/' + srch_dir + '/' + fpath
+			return (loc, os.path.relpath(rpath))
+	return (None, None)
+
+def DFS_add_deptok(prefix, cd, a, b):
+	if prefix == '':
+		prefix = '.'
+	if b[0] == '<':
+		add_dependency(a, b)
 	else:
 		# add file 'b' as dependency
-		fpath = token.strip('"')
-		fpath = os.path.relpath(fpath)
-		b = '"' + fpath + '"'
+		b = b.strip('"')
+		loc, b = search_file(prefix, cd, b)
+		if loc is None:
+			print('cannot find %s from prefix %s and %s' %
+			      (b, prefix, cd))
+			return
 		if not add_dependency(a, b):
 			return # added before, stop here
 		# add dependencies in file 'b'
-		loc = search_file(prefix, fpath)
-		if loc is None:
-			print('cannot find %s from prefix %s' % (
-				fpath, prefix))
-			return
 		dep_toks = parse_deptok(loc)
-		for tok in dep_toks:
-			DFS_add_deptok(prefix, b, tok)
+		for c in dep_toks:
+			cd = os.path.dirname(b)
+			if cd == '': cd = '.'
+			DFS_add_deptok(prefix, cd, b, c)
+
+def count(incoming_edges, dep, node, incr):
+	if node in incoming_edges:
+		incoming_edges[node] += incr
+	else:
+		incoming_edges[node] = incr
+
+def topological_order(dep):
+	incoming_edges = dict()
+	for n in dep:
+		count(incoming_edges, dep, n, 0)
+		for d in dep[n]:
+			count(incoming_edges, dep, d, 1)
+	topo = list()
+	S = list()
+	this_file_nm = os.path.basename(process_file)
+	if incoming_edges[this_file_nm] == 0:
+		S.append(this_file_nm)
+	while len(S):
+		v = S.pop()
+		topo.append(v)
+		if v not in dep:
+			continue
+		for vn in dep[v]:
+			if incoming_edges[vn] > 0:
+				incoming_edges[vn] -= 1
+			if incoming_edges[vn] == 0:
+				S.append(vn)
+	for ie in incoming_edges:
+		if incoming_edges[ie] > 0:
+			print('cycle detected!')
+			break
+	return topo
+
+def headers(dep):
+	topo = topological_order(dep)
+	lines = []
+	for h in reversed(topo):
+		if h[0] == '<':
+			lines.append(' '.join(['#include', h]))
+		else:
+			line = ' '.join(['#include', '"' + h + '"'])
+			if h in dep:
+				line += " /* "
+				for hh in dep[h]:
+					line += hh + ' '
+				line += "*/"
+			lines.append(line)
+	return '\n'.join(lines)
 
 def parse_blk(begin, end, stack, iterator, sep, prev):
 	try:
 		tok = next(iterator)
 	except StopIteration:
-		return [];
+		return []
 	base = [tok]
 	if tok == begin:
 		if stack == 0: base = []
@@ -102,9 +153,8 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 		global process_file
 		process_file = os.path.relpath(process_file)
 		fname = os.path.basename(process_file)
-		dname = os.path.dirname(process_file)
-		# print('include:', dname, fname)
-		DFS_add_deptok(dname, fname, after[0])
+		prefix = os.path.dirname(process_file)
+		DFS_add_deptok(prefix, '.', fname, after[0])
 
 		return base + after[1:]
 
@@ -136,5 +186,6 @@ def preprocess(content):
 with open(process_file) as fh:
 	content = fh.read()
 	output_body = preprocess(content)
-	print(dependency)
+	output_head = headers(dependency)
+	print(output_head)
 	print(output_body)
