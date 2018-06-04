@@ -3,6 +3,7 @@
 *.tmp
 *.img
 *.dat
+*.gch
 *.o
 *.a
 *.d

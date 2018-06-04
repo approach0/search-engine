@@ -1,10 +1,9 @@
 import re
 import os
+import getopt, sys
 
-process_file = '../searchd/run/searchd.c'
-process_file = './test.dt'
-additional_srch_dirs = ['.', '..']
-
+process_file = None
+additional_srch_dirs = []
 dependency = dict()
 
 def add_dependency(a, b):
@@ -202,10 +201,47 @@ def preprocess(content):
 	toks = parse_blk('', '', 0, iter(toks), '', None)
 	return hacky_join(toks)
 
-with open(process_file) as fh:
-	content = fh.read()
-	output_body = preprocess(content)
-	output_head = headers(dependency)
-	if output_head is not None:
-		print(output_head)
-	print(output_body)
+def help(arg0):
+	print('DESCRIPTION: Duct-taped C preprocessor.' \
+	      '\n' \
+	      'SYNOPSIS:\n' \
+	      '%s [-h | --help] ' \
+	      '[-I <search directory>] ' \
+	      '<input file> ' \
+	      '\n' \
+	      % (arg0))
+	sys.exit(1)
+
+def main():
+	global process_file
+	global additional_srch_dirs
+
+	cmd = sys.argv[0]
+	args = sys.argv[1:]
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "hI:", ['help'])
+	except:
+		help(cmd)
+
+	if len(args) == 0:
+		help(cmd)
+
+	for opt, arg in opts:
+		if opt in ("-h", "--help"):
+			help(cmd)
+			break
+		elif opt in ("-I"):
+			additional_srch_dirs.append(arg)
+
+	process_file = args[0]
+
+	with open(process_file) as fh:
+		content = fh.read()
+		output_body = preprocess(content)
+		output_head = headers(dependency)
+		if output_head is not None:
+			print(output_head)
+		print(output_body)
+
+if __name__ == "__main__":
+	main()
