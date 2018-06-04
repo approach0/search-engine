@@ -1,10 +1,8 @@
-#header "a.h" {
-	#require "dat.h"
-	int foo(struct dat);
+#require "dat.h"
+int foo(struct dat);
 	
-	#require "tad.h"
-	int bar(struct tad);
-}
+#require "tad.h"
+int bar(struct tad);
 
 #require "list.h"
 

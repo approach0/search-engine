@@ -20,7 +20,7 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 		block = parse_blk('{', '}', 0, iterator, None, prev)
 		emit = (
 			"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
-			"%s } while (%s_next(%s, & %s)); } \n"
+			"%s } while (%s_next(%s, & %s)); }"
 			) % (
 				args[1], args[0], args[1], args[2],
 				' '.join(block), args[0], args[2], args[0]
@@ -34,18 +34,29 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 			base = ['', emit]
 		else:
 			base = ['['] + core + [']']
+	elif tok == "#require":
+		after = parse_blk('', '', 0, iterator, '', prev)
+		base = ['/* require', after[0], '*/']
+		print('include: ', after[0])
+		return base + after[1:]
+
 	prev = tok
 	return base + parse_blk(begin, end, stack, iterator, sep, prev)
 
 def hacky_join(toks):
-	new_toks = []
+	joined = ''
 	for i, tok in enumerate(toks):
-		if i + 1 < len(toks) and toks[i + 1] == '':
+		if i + 1 == len(toks) and tok == '\n':
+			continue
+		elif i + 1 < len(toks) and toks[i + 1] == '':
 			continue
 		elif tok == '':
 			continue
-		new_toks.append(tok)
-	return ' '.join(new_toks)
+		elif tok == '\n':
+			joined += tok
+		else:
+			joined += tok + ' '
+	return joined
 
 def preprocess(content):
 	toks = re.split('(\[|\]|\(|\)|,| |\t|\n)', content)
