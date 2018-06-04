@@ -2,10 +2,12 @@ import re
 import os
 
 process_file = '../searchd/run/searchd.c'
-srch_dirs = ['.', '..']
 
 # process_file = './test.dt.c'
 # srch_dirs = ['.']
+
+#process_file = '../search/search.h'
+srch_dirs = ['.', '..', '../..']
 
 dependency = dict()
 
@@ -71,6 +73,7 @@ def count(incoming_edges, dep, node, incr):
 		incoming_edges[node] = incr
 
 def DFS_detect_cycle(stack, cur, dep):
+	if cur not in dep: return False
 	for d in dep[cur]:
 		if d == stack[0]:
 			print(stack)
@@ -95,8 +98,7 @@ def topological_order(dep):
 	while len(S):
 		v = S.pop()
 		topo.append(v)
-		if v not in dep:
-			continue
+		if v not in dep: continue
 		for vn in dep[v]:
 			if incoming_edges[vn] > 0:
 				incoming_edges[vn] -= 1
@@ -127,52 +129,52 @@ def headers(dep):
 	return '\n'.join(lines)
 
 def parse_blk(begin, end, stack, iterator, sep, prev):
-	try:
-		tok = next(iterator)
-	except StopIteration:
-		return []
-	base = [tok]
-	if tok == begin:
-		if stack == 0: base = []
-		stack += 1
-	elif tok == end:
-		stack -= 1
-		if stack == 0: return []
-	elif tok == sep:
-		base = [] # skip separator
+	ret_tokens = []
+	while True:
+		try:
+			tok = next(iterator)
+		except StopIteration:
+			break
+		base = [tok]
+		if tok == begin:
+			if stack == 0: base = []
+			stack += 1
+		elif tok == end:
+			stack -= 1
+			if stack == 0: break
+		elif tok == sep:
+			base = [] # skip separator
 
-	if tok == "foreach":
-		args = parse_blk('(', ')', 0, iterator, ',', prev)
-		block = parse_blk('{', '}', 0, iterator, None, prev)
-		emit = (
-			"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
-			"%s } while (%s_next(%s, & %s)); }"
-			) % (
-				args[1], args[0], args[1], args[2],
-				' '.join(block), args[0], args[2], args[0]
-			)
-		base = [emit]
-	elif tok == "[":
-		core = parse_blk('[', ']', 1, iterator, None, prev)
-		if len(core) > 0 and core[0][0] == '"':
-			keystr = ' '.join(core)
-			emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
-			base = ['', emit]
-		else:
-			base = ['['] + core + [']']
-	elif tok == "#require" or tok == "#include":
-		after = parse_blk('', '', 0, iterator, '', prev)
-		base = ['/* require', after[0], '*/']
-		global process_file
-		process_file = os.path.relpath(process_file)
-		fname = os.path.basename(process_file)
-		prefix = os.path.dirname(process_file)
-		DFS_add_deptok(prefix, '.', fname, after[0])
-
-		return base + after[1:]
-
-	prev = tok
-	return base + parse_blk(begin, end, stack, iterator, sep, prev)
+		if tok == "foreach":
+			args = parse_blk('(', ')', 0, iterator, ',', prev)
+			block = parse_blk('{', '}', 0, iterator, None, prev)
+			emit = (
+				"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
+				"%s } while (%s_next(%s, & %s)); }"
+				) % (
+					args[1], args[0], args[1], args[2],
+					' '.join(block), args[0], args[2], args[0]
+				)
+			base = [emit]
+		elif tok == "[":
+			core = parse_blk('[', ']', 1, iterator, None, prev)
+			if len(core) > 0 and core[0][0] == '"':
+				keystr = ' '.join(core)
+				emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
+				base = ['', emit]
+			else:
+				base = ['['] + core + [']']
+		elif tok == "#require" or tok == "#include":
+			after = parse_blk('', '', 0, iterator, '', prev)
+			base = ['/* require', after[0], '*/'] + after[1:]
+			global process_file
+			process_file = os.path.relpath(process_file)
+			fname = os.path.basename(process_file)
+			prefix = os.path.dirname(process_file)
+			DFS_add_deptok(prefix, '.', fname, after[0])
+		prev = tok
+		ret_tokens.extend(base)
+	return ret_tokens
 
 def hacky_join(toks):
 	joined = ''
@@ -199,9 +201,9 @@ def preprocess(content):
 with open(process_file) as fh:
 	content = fh.read()
 	output_body = preprocess(content)
-#	output_head = headers(dependency)
-#	if output_head is None:
-#		print('cycle detected!')
-#	else:
-#		print(output_head)
-#		print(output_body)
+	output_head = headers(dependency)
+	if output_head is None:
+		print('cycle detected!')
+	else:
+		print(output_head)
+		print(output_body)
