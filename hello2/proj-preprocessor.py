@@ -1,4 +1,53 @@
 import re
+import os
+
+dependency = dict()
+srch_dirs = ['./', '../']
+
+def search_file(fpath):
+	path = fpath
+	for prefix in srch_dirs:
+		if os.path.isfile(prefix + fpath):
+			path = prefix + fpath
+			break
+	# canonicalize the relative path name
+	return os.path.relpath(path)
+
+def add_dependency(a, b):
+	if a not in dependency:
+		dependency[a] = list()
+	if b not in dependency[a]:
+		dependency[a].append(b)
+
+def parse_deptok(fpath):
+	toks = []
+	if not os.path.isfile(fpath):
+		return []
+	with open(fpath) as fh:
+		content = fh.read()
+		tokens = content.split()
+	extract_next = False
+	for tok in tokens:
+		if tok == '#include' or tok == '#require':
+			extract_next = True
+		elif extract_next:
+			toks.append(tok)
+			extract_next = False
+	return toks
+
+def DFS_add_deptok(a, token):
+	if token[0] == '<':
+		add_dependency(a, token)
+	else:
+		# add file 'b' as dependency
+		fpath = token.strip('"')
+		fpath = search_file(fpath)
+		b = '"' + fpath + '"'
+		add_dependency(a, b)
+		# add dependencies in file 'b'
+		dep_toks = parse_deptok(fpath)
+		for tok in dep_toks:
+			DFS_add_deptok(b, tok)
 
 def parse_blk(begin, end, stack, iterator, sep, prev):
 	try:
@@ -34,10 +83,11 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 			base = ['', emit]
 		else:
 			base = ['['] + core + [']']
-	elif tok == "#require":
+	elif tok == "#require" or tok == "#include":
 		after = parse_blk('', '', 0, iterator, '', prev)
 		base = ['/* require', after[0], '*/']
-		print('include: ', after[0])
+		DFS_add_deptok('_self_', after[0])
+
 		return base + after[1:]
 
 	prev = tok
@@ -65,7 +115,11 @@ def preprocess(content):
 	toks = parse_blk('', '', 0, iter(toks), '', None)
 	return hacky_join(toks)
 
-fname = 'test.dt.c'
+#fname = 'test.dt.c'
+
+fname = '../search/search.h'
 with open(fname) as fh:
 	content = fh.read()
-	print(preprocess(content))
+	output_body = preprocess(content)
+	print(dependency)
+	print(output_body)
