@@ -1,11 +1,11 @@
 import re
 import os
 
-process_file = '../search/search.h'
+process_file = '../searchd/run/searchd.c'
 srch_dirs = ['.', '..']
 
-process_file = './test.dt.c'
-srch_dirs = ['.']
+# process_file = './test.dt.c'
+# srch_dirs = ['.']
 
 dependency = dict()
 
@@ -70,6 +70,17 @@ def count(incoming_edges, dep, node, incr):
 	else:
 		incoming_edges[node] = incr
 
+def DFS_detect_cycle(stack, cur, dep):
+	for d in dep[cur]:
+		if d == stack[0]:
+			print(stack)
+			return True
+		else:
+			newstack = [x for x in stack]
+			newstack.append(d)
+			return DFS_detect_cycle(newstack, d, dep)
+	return False
+
 def topological_order(dep):
 	incoming_edges = dict()
 	for n in dep:
@@ -91,15 +102,17 @@ def topological_order(dep):
 				incoming_edges[vn] -= 1
 			if incoming_edges[vn] == 0:
 				S.append(vn)
-	for ie in incoming_edges:
-		if incoming_edges[ie] > 0:
-			print('cycle detected!')
-			break
+	for n in incoming_edges:
+		if incoming_edges[n] > 0:
+			if DFS_detect_cycle([n], n, dep):
+				return None
 	return topo
 
 def headers(dep):
 	topo = topological_order(dep)
 	lines = []
+	if topo is None:
+		return None
 	for h in reversed(topo):
 		if h[0] == '<':
 			lines.append(' '.join(['#include', h]))
@@ -186,6 +199,9 @@ def preprocess(content):
 with open(process_file) as fh:
 	content = fh.read()
 	output_body = preprocess(content)
-	output_head = headers(dependency)
-	print(output_head)
-	print(output_body)
+#	output_head = headers(dependency)
+#	if output_head is None:
+#		print('cycle detected!')
+#	else:
+#		print(output_head)
+#		print(output_body)
