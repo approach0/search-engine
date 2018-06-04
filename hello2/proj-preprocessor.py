@@ -128,7 +128,7 @@ def headers(dep):
 			lines.append(line)
 	return '\n'.join(lines)
 
-def parse_blk(begin, end, stack, iterator, sep, prev):
+def parse_blk(begin, end, stack, iterator, sep):
 	ret_tokens = []
 	while True:
 		try:
@@ -146,8 +146,8 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 			base = [] # skip separator
 
 		if tok == "foreach":
-			args = parse_blk('(', ')', 0, iterator, ',', prev)
-			block = parse_blk('{', '}', 0, iterator, None, prev)
+			args = parse_blk('(', ')', 0, iterator, ',')
+			block = parse_blk('{', '}', 0, iterator, None)
 			emit = (
 				"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
 				"%s } while (%s_next(%s, & %s)); }"
@@ -157,7 +157,7 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 				)
 			base = [emit]
 		elif tok == "[":
-			core = parse_blk('[', ']', 1, iterator, None, prev)
+			core = parse_blk('[', ']', 1, iterator, None)
 			if len(core) > 0 and core[0][0] == '"':
 				keystr = ' '.join(core)
 				emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
@@ -165,14 +165,13 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 			else:
 				base = ['['] + core + [']']
 		elif tok == "#require" or tok == "#include":
-			after = parse_blk('', '', 0, iterator, '', prev)
+			after = parse_blk('', '', 0, iterator, '')
 			base = ['/* require', after[0], '*/'] + after[1:]
 			global process_file
 			process_file = os.path.relpath(process_file)
 			fname = os.path.basename(process_file)
 			prefix = os.path.dirname(process_file)
 			DFS_add_deptok(prefix, '.', fname, after[0])
-		prev = tok
 		ret_tokens.extend(base)
 	return ret_tokens
 
@@ -195,7 +194,7 @@ def preprocess(content):
 	toks = re.split('(\[|\]|\(|\)|,| |\t|\n)', content)
 	toks = [tok for tok in toks if tok != ' ']
 	toks = [tok for tok in toks if tok != '']
-	toks = parse_blk('', '', 0, iter(toks), '', None)
+	toks = parse_blk('', '', 0, iter(toks), '')
 	return hacky_join(toks)
 
 with open(process_file) as fh:
