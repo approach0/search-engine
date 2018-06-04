@@ -1,8 +1,8 @@
 import re
 import os
 
-#process_file = '../searchd/run/searchd.c'
-process_file = './test.dt.c'
+process_file = '../searchd/run/searchd.c'
+#process_file = './test.dt.c'
 additional_srch_dirs = ['.', '..']
 
 dependency = dict()
@@ -24,7 +24,7 @@ def parse_deptok(fpath):
 		tokens = content.split()
 	extract_next = False
 	for tok in tokens:
-		if tok == '#include' or tok == '#require':
+		if tok == '#require' or tok == '#include':
 			extract_next = True
 		elif extract_next:
 			toks.append(tok)
@@ -78,6 +78,7 @@ def DFS_detect_cycle(stack, cur, dep):
 	for d in dep[cur]:
 		if d == stack[0]:
 			print('#pragma message "CYCLE: %s"' % stack)
+			print('#error "cycle detected!"')
 			return True
 		else:
 			newstack = [x for x in stack]
@@ -94,8 +95,9 @@ def topological_order(dep):
 	topo = list()
 	S = list()
 	this_file = os.path.relpath(process_file)
-	if incoming_edges[this_file] == 0:
-		S.append(this_file)
+	if this_file in incoming_edges:
+		if incoming_edges[this_file] == 0:
+			S.append(this_file)
 	while len(S):
 		v = S.pop()
 		topo.append(v)
@@ -121,13 +123,18 @@ def headers(dep):
 			lines.append(' '.join(['#include', h]))
 		else:
 			line = ' '.join(['#include', '"' + h + '"'])
+			lines.append(line)
 			if h in dep:
-				line += " /* "
+				line = "/* deps: "
 				for hh in dep[h]:
 					line += hh + ' '
 				line += "*/"
-			lines.append(line)
-	return '\n'.join(lines)
+				lines.append(line)
+		lines.append('\n')
+	if len(lines):
+		return '\n'.join(lines)
+	else:
+		return None
 
 def parse_blk(begin, end, stack, iterator, sep, prev):
 	ret_tokens = []
@@ -199,8 +206,6 @@ with open(process_file) as fh:
 	content = fh.read()
 	output_body = preprocess(content)
 	output_head = headers(dependency)
-	if output_head is None:
-		print('#error "cycle detected!"')
-	else:
+	if output_head is not None:
 		print(output_head)
 	print(output_body)
