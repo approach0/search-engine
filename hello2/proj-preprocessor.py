@@ -1,20 +1,15 @@
 import re
 import os
 
-process_file = '../searchd/run/searchd.c'
-
-# process_file = './test.dt.c'
-# srch_dirs = ['.']
-
-#process_file = '../search/search.h'
-srch_dirs = ['.', '..', '../..']
+#process_file = '../searchd/run/searchd.c'
+process_file = './test.dt.c'
+additional_srch_dirs = ['.', '..']
 
 dependency = dict()
 
 def add_dependency(a, b):
 	if a not in dependency:
 		dependency[a] = list()
-		return True
 	if b not in dependency[a]:
 		dependency[a].append(b)
 		return True
@@ -36,35 +31,41 @@ def parse_deptok(fpath):
 			extract_next = False
 	return toks
 
-def search_file(prefix, cd, fpath):
-	for srch_dir in srch_dirs:
-		loc = prefix + '/' + cd + '/' + srch_dir + '/' + fpath
+def search_file_from(a, b):
+	# first search relatively to the dir of 'a'
+	first_srch_dir = os.path.dirname(a)
+	if first_srch_dir == '':
+		first_srch_dir = '.'
+	# append additional search dirs specified
+	srch_dirs = [first_srch_dir]
+	srch_dirs.extend(additional_srch_dirs)
+	# search 'b' file in above order
+	for prefix in srch_dirs:
+		loc = prefix + '/' + b
 		if os.path.isfile(loc):
-			rpath = cd + '/' + srch_dir + '/' + fpath
-			return (loc, os.path.relpath(rpath))
-	return (None, None)
+			return os.path.relpath(loc)
+	return None
 
-def DFS_add_deptok(prefix, cd, a, b):
-	if prefix == '':
-		prefix = '.'
+def DFS_add_dep(a, b):
+	# canonicalize path
+	a = os.path.relpath(a)
+	# depending on the form <*.h> or "*.h"
 	if b[0] == '<':
 		add_dependency(a, b)
-	else:
-		# add file 'b' as dependency
+		return
+	elif b[0] == '"':
 		b = b.strip('"')
-		loc, b = search_file(prefix, cd, b)
-		if loc is None:
-			print('cannot find %s from prefix %s and %s' %
-			      (b, prefix, cd))
-			return
-		if not add_dependency(a, b):
-			return # added before, stop here
-		# add dependencies in file 'b'
-		dep_toks = parse_deptok(loc)
-		for c in dep_toks:
-			cd = os.path.dirname(b)
-			if cd == '': cd = '.'
-			DFS_add_deptok(prefix, cd, b, c)
+	# add file 'b' as dependency
+	b_rpath = search_file_from(a, b)
+	if b_rpath is None:
+		print('cannot find %s included in %s' % (b, a))
+		return
+	if not add_dependency(a, b_rpath):
+		return # added before, stop here
+	# add dependencies in file 'b'
+	dep_toks = parse_deptok(b_rpath)
+	for c in dep_toks:
+		DFS_add_dep(b_rpath, c)
 
 def count(incoming_edges, dep, node, incr):
 	if node in incoming_edges:
@@ -92,9 +93,9 @@ def topological_order(dep):
 			count(incoming_edges, dep, d, 1)
 	topo = list()
 	S = list()
-	this_file_nm = os.path.basename(process_file)
-	if incoming_edges[this_file_nm] == 0:
-		S.append(this_file_nm)
+	this_file = os.path.relpath(process_file)
+	if incoming_edges[this_file] == 0:
+		S.append(this_file)
 	while len(S):
 		v = S.pop()
 		topo.append(v)
@@ -167,11 +168,7 @@ def parse_blk(begin, end, stack, iterator, sep):
 		elif tok == "#require" or tok == "#include":
 			after = parse_blk('', '', 0, iterator, '')
 			base = ['/* require', after[0], '*/'] + after[1:]
-			global process_file
-			process_file = os.path.relpath(process_file)
-			fname = os.path.basename(process_file)
-			prefix = os.path.dirname(process_file)
-			DFS_add_deptok(prefix, '.', fname, after[0])
+			DFS_add_dep(process_file, after[0])
 		ret_tokens.extend(base)
 	return ret_tokens
 
