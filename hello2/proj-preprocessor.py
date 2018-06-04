@@ -1,23 +1,30 @@
 import re
 import os
 
-dependency = dict()
-srch_dirs = ['./', '../']
+#process_file = '../search/search.h'
+process_file = './test.dt.c'
 
-def search_file(fpath):
-	path = fpath
-	for prefix in srch_dirs:
-		if os.path.isfile(prefix + fpath):
-			path = prefix + fpath
-			break
+dependency = dict()
+srch_dirs = ['.', '..']
+
+def search_file(prefix, fpath):
+	if prefix == '':
+		prefix = '.'
+	for srch_dir in srch_dirs:
+		loc = prefix + '/' + srch_dir + '/' + fpath;
+		if os.path.isfile(loc):
+			return loc
 	# canonicalize the relative path name
-	return os.path.relpath(path)
+	return None
 
 def add_dependency(a, b):
 	if a not in dependency:
 		dependency[a] = list()
+		return True
 	if b not in dependency[a]:
 		dependency[a].append(b)
+		return True
+	return False
 
 def parse_deptok(fpath):
 	toks = []
@@ -35,19 +42,25 @@ def parse_deptok(fpath):
 			extract_next = False
 	return toks
 
-def DFS_add_deptok(a, token):
+def DFS_add_deptok(prefix, a, token):
 	if token[0] == '<':
 		add_dependency(a, token)
 	else:
 		# add file 'b' as dependency
 		fpath = token.strip('"')
-		fpath = search_file(fpath)
+		fpath = os.path.relpath(fpath)
 		b = '"' + fpath + '"'
-		add_dependency(a, b)
+		if not add_dependency(a, b):
+			return # added before, stop here
 		# add dependencies in file 'b'
-		dep_toks = parse_deptok(fpath)
+		loc = search_file(prefix, fpath)
+		if loc is None:
+			print('cannot find %s from prefix %s' % (
+				fpath, prefix))
+			return
+		dep_toks = parse_deptok(loc)
 		for tok in dep_toks:
-			DFS_add_deptok(b, tok)
+			DFS_add_deptok(prefix, b, tok)
 
 def parse_blk(begin, end, stack, iterator, sep, prev):
 	try:
@@ -86,7 +99,12 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 	elif tok == "#require" or tok == "#include":
 		after = parse_blk('', '', 0, iterator, '', prev)
 		base = ['/* require', after[0], '*/']
-		DFS_add_deptok('_self_', after[0])
+		global process_file
+		process_file = os.path.relpath(process_file)
+		fname = os.path.basename(process_file)
+		dname = os.path.dirname(process_file)
+		# print('include:', dname, fname)
+		DFS_add_deptok(dname, fname, after[0])
 
 		return base + after[1:]
 
@@ -115,10 +133,7 @@ def preprocess(content):
 	toks = parse_blk('', '', 0, iter(toks), '', None)
 	return hacky_join(toks)
 
-#fname = 'test.dt.c'
-
-fname = '../search/search.h'
-with open(fname) as fh:
+with open(process_file) as fh:
 	content = fh.read()
 	output_body = preprocess(content)
 	print(dependency)

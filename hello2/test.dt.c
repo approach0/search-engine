@@ -4,7 +4,7 @@ int foo(struct dat);
 #require "tad.h"
 int bar(struct tad);
 
-#require "list.h"
+#require "dta.h"
 
 idx_arr[127]
 idx_arr[a++]
