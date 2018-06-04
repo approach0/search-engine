@@ -2,7 +2,7 @@ import re
 import os
 
 process_file = '../searchd/run/searchd.c'
-#process_file = './test.dt.c'
+process_file = './test.dt'
 additional_srch_dirs = ['.', '..']
 
 dependency = dict()
