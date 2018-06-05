@@ -114,6 +114,7 @@ def topological_order(dep):
 
 def headers(dep):
 	topo = topological_order(dep)
+	topo = topo[1:] # exclude current file.
 	lines = []
 	if topo is None:
 		return None
@@ -121,15 +122,22 @@ def headers(dep):
 		if h[0] == '<':
 			lines.append(' '.join(['#include', h]))
 		else:
-			line = ' '.join(['#include', '"' + h + '"'])
-			lines.append(line)
+			# empty line
+			lines.append('')
+			# comment on dependencies
 			if h in dep:
 				line = "/* deps: "
 				for hh in dep[h]:
 					line += hh + ' '
 				line += "*/"
 				lines.append(line)
-		lines.append('\n')
+			# actual #include
+			line = ' '.join(['#include', '"' + h + '"'])
+			lines.append(line)
+			# empty line
+			lines.append('')
+	# empty line
+	lines.append('')
 	if len(lines):
 		return '\n'.join(lines)
 	else:
@@ -156,11 +164,13 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 			args = parse_blk('(', ')', 0, iterator, ',', prev)
 			block = parse_blk('{', '}', 0, iterator, None, prev)
 			emit = (
-				"{ struct %s_iterator %s = %s_iterator(%s); do {\n"
-				"%s } while (%s_next(%s, & %s)); }"
+				"if (!%s_empty(%s)) "
+				"{ struct %s_iterator %s = %s_iterator(%s); do { "
+				"%s } while (%s_iter_next(%s, & %s)); }"
 				) % (
+					args[1], args[2],
 					args[1], args[0], args[1], args[2],
-					' '.join(block), args[0], args[2], args[0]
+					hacky_join(block), args[1], args[2], args[0]
 				)
 			base = [emit]
 		elif tok == "[":
@@ -189,6 +199,16 @@ def hacky_join(toks):
 		elif tok == '':
 			continue
 		elif i + 1 < len(toks) and tok == '\\' and toks[i + 1] == '\n':
+			joined += tok
+		elif i + 1 < len(toks) and toks[i + 1] == '[':
+			joined += tok
+		elif i + 1 < len(toks) and toks[i + 1] == ']':
+			joined += tok
+		elif i + 1 < len(toks) and toks[i + 1] == '(':
+			joined += tok
+		elif i + 1 < len(toks) and toks[i + 1] == ')':
+			joined += tok
+		elif i + 1 < len(toks) and toks[i + 1] == ',':
 			joined += tok
 		elif tok == '\n':
 			joined += tok
