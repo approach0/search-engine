@@ -188,6 +188,8 @@ def hacky_join(toks):
 			continue
 		elif tok == '':
 			continue
+		elif i + 1 < len(toks) and tok == '\\' and toks[i + 1] == '\n':
+			joined += tok
 		elif tok == '\n':
 			joined += tok
 		else:
