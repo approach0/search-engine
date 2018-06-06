@@ -46,6 +46,41 @@ struct strmap *test_2()
 	return m;
 }
 
+void test_valist_construct()
+{
+	struct strmap *m = strmap(
+		"good", "bad",
+		"small", "large",
+		"pretty", "ugly"
+	);
+
+	printf("%s\n", (char *)(*strmap_val_ptr(m, "good")));
+	printf("%s\n", (char *)(*strmap_val_ptr(m, "small")));
+	printf("%s\n", (char *)(*strmap_val_ptr(m, "pretty")));
+	printf("\n");
+
+	strmap_free(m);
+}
+
+void test_iterator()
+{
+	strmap_t m = NULL;
+	printf("strmap empty? %d\n", strmap_empty(m));
+
+	m = strmap(
+		"good", "bad",
+		"small", "large",
+		"pretty", "ugly"
+	);
+	printf("strmap empty? %d\n", strmap_empty(m));
+	
+	if (!strmap_empty(m)) { struct strmap_iterator iter = strmap_iterator(m); do {
+		printf( "%s -> %s\n", iter.cur->keystr,( char*) iter.cur->value) ;
+	} while (strmap_iter_next(m, & iter)); }
+	
+	strmap_free(m);
+}
+
 int main()
 {
 	printf("test_1\n");
@@ -65,18 +100,13 @@ int main()
 	strmap_free(m);
 	printf("\n");
 
-	printf("test_3\n");
-	m = strmap(
-		"good", "bad",
-		"small", "large",
-		"pretty", "ugly"
-	);
+	printf("test_valist_construct\n");
+	test_valist_construct();
+	printf("\n");
 
-	printf("%s\n", (char *)(*strmap_val_ptr(m, "good")));
-	printf("%s\n", (char *)(*strmap_val_ptr(m, "small")));
-	printf("%s\n", (char *)(*strmap_val_ptr(m, "pretty")));
-
-	strmap_free(m);
+	printf("test_iterator\n");
+	test_iterator();
+	printf("\n");
 
 	mhook_print_unfree();
 	return 0;

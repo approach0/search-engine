@@ -8,9 +8,8 @@
 #include "config.h"
 
 typedef struct strmap_entry entry_t;
-typedef struct strmap strmap_t;
 
-strmap_t *strmap_new()
+strmap_t strmap_new()
 {
 	struct strmap *map = malloc(sizeof(struct strmap));
 	map->length = 0;
@@ -21,7 +20,7 @@ strmap_t *strmap_new()
 	return map;
 }
 
-void strmap_free(strmap_t *map)
+void strmap_free(strmap_t map)
 {
 	for (int i = 0; i < map->length; i++) {
 		free(map->entries[i].keystr);
@@ -32,7 +31,7 @@ void strmap_free(strmap_t *map)
 	free(map);
 }
 
-void **strmap_val_ptr(strmap_t *map, char *key)
+void **strmap_val_ptr(strmap_t map, char *key)
 {
 	struct strmap_entry *ent;
 	datrie_state_t key_idx;
@@ -75,4 +74,24 @@ struct strmap *strmap_va_list(int n, ...)
 	}
 
 	return m;
+}
+
+struct strmap_iterator strmap_iterator(strmap_t m)
+{
+	return (struct strmap_iterator) {0, m->entries};
+}
+
+int strmap_empty(strmap_t m)
+{
+	return (m == NULL);
+}
+
+int strmap_iter_next(strmap_t m, struct strmap_iterator *iter)
+{
+	iter->cur += 1;
+	iter->idx += 1;
+	if (iter->idx > m->length - 1)
+		return 0;
+	else
+		return 1;
 }

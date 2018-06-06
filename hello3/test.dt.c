@@ -46,10 +46,10 @@ void dict_demo()
 
 	d["new"] = "old";
 
-	printf("%s\n", d["small"]);
-	printf("%s\n", d["pretty"]);
-	printf("%s\n", d["good"]);
-	printf("%s\n", d["new"]);
+	foreach (iter, strmap, d) {
+		char *key = iter.cur->keystr;
+		printf("d[%s] = %s\n", "pretty", d["pretty"]);
+	}
 
 	strmap_free(d);
 }
