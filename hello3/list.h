@@ -119,3 +119,15 @@ int list_iter_next(list_t li, struct list_iterator *iter)
 		n->data = _arr[i]; \
 		list_append(&(_list), &n->ln); \
 	} do {} while (0)
+
+#define list_free_entry(_type, _iter) \
+	{ \
+		int sz = list_size((_iter).cur); \
+		list_detach((_iter).cur->prev, (_iter).cur->next); \
+		_type *obj = list_element(obj, (_iter).cur); \
+		free(obj); \
+		if (sz - 1 == 0) { \
+			li = NULL; \
+			break; \
+		} \
+	} do {} while (0)

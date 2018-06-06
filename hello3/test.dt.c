@@ -14,23 +14,15 @@ void list_demo()
 	list_t li = NULL;
 	list_append_array(li, a);
 
-	foreach(iter, list, li) {
+	foreach (iter, list, li) {
 		struct person *a = list_element(a, iter.cur);
 		printf("name: %s, age: %d, salary: %d\n", a->name, a->age, a->salary);
 	}
 
-	foreach(iter, list, li) {
-		int sz = list_size(iter.cur);
-		list_detach(iter.cur->prev, iter.cur->next);
-
+	foreach (iter, list, li) {
 		struct person *a = list_element(a, iter.cur);
 		printf("free %s\n", a->name);
-		free(a);
-
-		if (sz - 1 == 0) {
-			li = NULL;
-			break;
-		}
+		list_free_entry(struct person, iter);
 	}
 
 	printf("list empty? %d\n", list_empty(li));
@@ -45,12 +37,17 @@ void dict_demo()
 	);
 
 	d["new"] = "old";
+	d["cool"] = "hot";
+	d["hot"] = "cool";
+
+	printf("d[%s] = %s\n", "hot", (char*)d["hot"]);
 
 	foreach (iter, strmap, d) {
 		char *key = iter.cur->keystr;
-		printf("d[%s] = %s\n", "pretty", (char*)d["pretty"]);
+		printf("d[%s] = %s\n", key, (char*)d[[key]]);
 	}
 
+	printf("dict empty? %d\n", strmap_empty(d));
 	strmap_free(d);
 }
 
