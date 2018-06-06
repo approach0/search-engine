@@ -1,5 +1,5 @@
 #require <stdio.h> // for printf
-#require "list.h"
+#require "linkli/list.h"
 #require "strmap/strmap.h"
 
 void list_demo()

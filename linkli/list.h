@@ -13,8 +13,9 @@ typedef struct list_node *list_t;
 	({ __typeof__(*_entry) *_new_entry = malloc(sizeof(__typeof__(*_entry))); \
 	   list_node_init(_new_entry->ln); _new_entry; })
 
-void list_insert(struct list_node *_new,
-                 struct list_node *prev, struct list_node *next)
+static inline void
+list_insert(struct list_node *_new,
+            struct list_node *prev, struct list_node *next)
 {
 	next->prev = _new;
 	_new->next = next;
@@ -22,13 +23,15 @@ void list_insert(struct list_node *_new,
 	prev->next = _new;
 }
 
-void list_detach(struct list_node *prev, struct list_node *next)
+static inline void
+list_detach(struct list_node *prev, struct list_node *next)
 {
 	next->prev = prev;
 	prev->next = next;
 }
 
-struct list_node *list_remove(list_t *li, struct list_node *entry)
+static inline struct list_node *
+list_remove(list_t *li, struct list_node *entry)
 {
 	list_detach(entry->prev, entry->next);
 	if (entry == *li) {
@@ -41,12 +44,12 @@ struct list_node *list_remove(list_t *li, struct list_node *entry)
 	return entry;
 }
 
-int list_empty(list_t li)
+static inline int list_empty(list_t li)
 {
 	return (li == NULL);
 }
 
-int list_size(list_t li)
+static inline int list_size(list_t li)
 {
 	struct list_node *n = li;
 	int cnt = 0;
@@ -58,7 +61,8 @@ int list_size(list_t li)
 	return cnt;
 }
 
-void list_append(list_t *li, struct list_node *_new)
+static inline void
+list_append(list_t *li, struct list_node *_new)
 {
 	if (*li == NULL)
 		*li = _new;
@@ -66,7 +70,8 @@ void list_append(list_t *li, struct list_node *_new)
 		list_insert(_new, (*li)->prev, *li);
 }
 
-void list_insert_front(list_t *li, struct list_node *_new)
+static inline void
+list_insert_front(list_t *li, struct list_node *_new)
 {
 	list_append(li, _new);
 	*li = _new;
@@ -76,12 +81,14 @@ struct list_iterator {
 	struct list_node *cur;
 };
 
-struct list_iterator list_iterator(list_t li)
+static inline struct list_iterator
+list_iterator(list_t li)
 {
 	return ((struct list_iterator) {li});
 }
 
-int list_iter_next(list_t li, struct list_iterator *iter)
+static inline int
+list_iter_next(list_t li, struct list_iterator *iter)
 {
 	if (iter->cur == NULL)
 		return 0;
