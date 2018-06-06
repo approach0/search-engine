@@ -1,3 +1,3 @@
 #define INIT_ENTRIES 4
 
-#define DEBUG_STRMAP
+//#define DEBUG_STRMAP

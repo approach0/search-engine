@@ -1,8 +1,8 @@
-#include "list.h"
-
 #require <stdio.h> // for printf
+#require "list.h"
+#require "strmap/strmap.h"
 
-int main()
+void list_demo()
 {
 	struct person {
 		char name[128];
@@ -33,7 +33,31 @@ int main()
 		}
 	}
 
-	printf("empty? %d\n", list_empty(li));
+	printf("list empty? %d\n", list_empty(li));
+}
+
+void dict_demo()
+{
+	struct strmap *d = strmap(
+		"good", "bad",
+		"small", "large",
+		"pretty", "ugly"
+	);
+
+	d["new"] = "old";
+
+	printf("%s\n", d["small"]);
+	printf("%s\n", d["pretty"]);
+	printf("%s\n", d["good"]);
+	printf("%s\n", d["new"]);
+
+	strmap_free(d);
+}
+
+int main()
+{
+	list_demo();
+	dict_demo();
 
 	return 0;
 }
