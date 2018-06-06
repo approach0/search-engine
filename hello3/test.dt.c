@@ -1,0 +1,39 @@
+#include "list.h"
+
+#require <stdio.h> // for printf
+
+int main()
+{
+	struct person {
+		char name[128];
+		int age, salary;
+	};
+
+	struct person a[] = {{"Tim", 23, 200}, {"Denny", 35, 982}, {"Wei", 28, 0}};
+
+	list_t li = NULL;
+	list_append_array(li, a);
+
+	foreach(iter, list, li) {
+		struct person *a = list_element(a, iter.cur);
+		printf("name: %s, age: %d, salary: %d\n", a->name, a->age, a->salary);
+	}
+
+	foreach(iter, list, li) {
+		int sz = list_size(iter.cur);
+		list_detach(iter.cur->prev, iter.cur->next);
+
+		struct person *a = list_element(a, iter.cur);
+		printf("free %s\n", a->name);
+		free(a);
+
+		if (sz - 1 == 0) {
+			li = NULL;
+			break;
+		}
+	}
+
+	printf("empty? %d\n", list_empty(li));
+
+	return 0;
+}
