@@ -48,7 +48,7 @@ void dict_demo()
 
 	foreach (iter, strmap, d) {
 		char *key = iter.cur->keystr;
-		printf("d[%s] = %s\n", "pretty", d["pretty"]);
+		printf("d[%s] = %s\n", "pretty", (char*)d["pretty"]);
 	}
 
 	strmap_free(d);

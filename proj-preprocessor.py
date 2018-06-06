@@ -124,16 +124,16 @@ def headers(dep):
 		else:
 			# empty line
 			lines.append('')
+			# actual #include
+			line = ' '.join(['#include', '"' + h + '"'])
+			lines.append(line)
 			# comment on dependencies
 			if h in dep:
-				line = "/* deps: "
+				line = "/* depends on: "
 				for hh in dep[h]:
 					line += hh + ' '
 				line += "*/"
 				lines.append(line)
-			# actual #include
-			line = ' '.join(['#include', '"' + h + '"'])
-			lines.append(line)
 			# empty line
 			lines.append('')
 	# empty line
@@ -143,7 +143,7 @@ def headers(dep):
 	else:
 		return None
 
-def parse_blk(begin, end, stack, iterator, sep, prev):
+def parse_blk(begin, end, stack, iterator, ignores, prev):
 	ret_tokens = []
 	while True:
 		try:
@@ -157,11 +157,10 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 		elif tok == end:
 			stack -= 1
 			if stack == 0: break
-		elif tok == sep:
-			base = [] # skip separator
-
-		if tok == "foreach":
-			args = parse_blk('(', ')', 0, iterator, ',', prev)
+		elif ignores is not None and tok in ignores:
+			base = [] # skip ignored tokens
+		elif tok == "foreach":
+			args = parse_blk('(', ')', 0, iterator, [',', ' '], prev)
 			block = parse_blk('{', '}', 0, iterator, None, prev)
 			emit = (
 				"if (!%s_empty(%s)) "
@@ -183,42 +182,29 @@ def parse_blk(begin, end, stack, iterator, sep, prev):
 				base = ['['] + core + [']']
 		elif tok == "#require" or tok == "#include":
 			after = parse_blk('', '', 0, iterator, '', prev)
-			base = ['/* require', after[0], '*/'] + after[1:]
-			DFS_add_dep(process_file, after[0])
-		prev = tok
+			for i in range(len(after)):
+				if after[i] != ' ':
+					base = ['/* require', after[0], '*/'] + after[i + 1:]
+					DFS_add_dep(process_file, after[i])
+					break
+		if tok != ' ':
+			prev = tok
 		ret_tokens.extend(base)
 	return ret_tokens
 
 def hacky_join(toks):
 	joined = ''
 	for i, tok in enumerate(toks):
-		if i + 1 == len(toks) and tok == '\n':
-			continue
-		elif i + 1 < len(toks) and toks[i + 1] == '':
+		# '' represents a backspace here
+		if i + 1 < len(toks) and toks[i + 1] == '':
 			continue
 		elif tok == '':
 			continue
-		elif i + 1 < len(toks) and tok == '\\' and toks[i + 1] == '\n':
-			joined += tok
-		elif i + 1 < len(toks) and toks[i + 1] == '[':
-			joined += tok
-		elif i + 1 < len(toks) and toks[i + 1] == ']':
-			joined += tok
-		elif i + 1 < len(toks) and toks[i + 1] == '(':
-			joined += tok
-		elif i + 1 < len(toks) and toks[i + 1] == ')':
-			joined += tok
-		elif i + 1 < len(toks) and toks[i + 1] == ',':
-			joined += tok
-		elif tok == '\n':
-			joined += tok
-		else:
-			joined += tok + ' '
+		joined += tok
 	return joined
 
 def preprocess(content):
 	toks = re.split('(\[|\]|\(|\)|,| |\t|\n)', content)
-	toks = [tok for tok in toks if tok != ' ']
 	toks = [tok for tok in toks if tok != '']
 	toks = parse_blk('', '', 0, iter(toks), '', None)
 	return hacky_join(toks)
