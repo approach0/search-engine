@@ -178,6 +178,12 @@ def parse_blk(begin, end, stack, iterator, ignores, prev):
 				keystr = ' '.join(core)
 				emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
 				base = ['', emit]
+			elif len(core) > 0 and core[0][0] == '[':
+				core = core[1:-1]
+				if len(core) > 0:
+					keystr = core[0]
+					emit = "(*strmap_val_ptr(%s, %s))" % (prev, keystr)
+					base = ['', emit]
 			else:
 				base = ['['] + core + [']']
 		elif tok == "#require" or tok == "#include":
@@ -223,11 +229,13 @@ def help(arg0):
 def main():
 	global process_file
 	global additional_srch_dirs
+	dry_run = False
 
 	cmd = sys.argv[0]
 	args = sys.argv[1:]
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hI:", ['help'])
+		opts, args = getopt.getopt(sys.argv[1:], "hI:",
+			['help', 'dry-run'])
 	except:
 		help(cmd)
 
@@ -238,6 +246,8 @@ def main():
 		if opt in ("-h", "--help"):
 			help(cmd)
 			break
+		if opt in ("--dry-run"):
+			dry_run = True
 		elif opt in ("-I"):
 			additional_srch_dirs.append(arg)
 
@@ -247,9 +257,10 @@ def main():
 		content = fh.read()
 		output_body = preprocess(content)
 		output_head = headers(dependency)
-		if output_head is not None:
-			print(output_head)
-		print(output_body)
+		if not dry_run:
+			if output_head is not None:
+				print(output_head)
+			print(output_body)
 
 if __name__ == "__main__":
 	main()
