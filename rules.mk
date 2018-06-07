@@ -22,7 +22,7 @@ CC := gcc -std=gnu99
 CC_DEP := @ gcc -MM -MT
 COLOR_CC =  @ tput setaf 5 && echo "[compile C source] $<" && \
        tput sgr0
-COMPILE_CC = $(CC) -c $(CFLAGS) $(filter %.c, $^)  -o $@
+COMPILE_CC = $(CC) -c $(CFLAGS) $(filter %.c, $^) -o $@
 
 CXX := g++
 CXX_DEP = @ g++ -MM -MT
