@@ -1,6 +1,7 @@
 #require <stdio.h> // for printf
 #require "linkli/list.h"
 #require "strmap/strmap.h"
+#require "sds/sds.h"
 
 void list_demo()
 {
@@ -51,8 +52,28 @@ void dict_demo()
 	strmap_free(d);
 }
 
+void string_demo()
+{
+	sds s = sdsnew("Hello");
+	s = sdscat(s, " ");
+	s = sdscat(s, "World");
+	printf("%s\n", s);
+
+	int cnt;
+	sds *tokens = sdssplitlen(s, sdslen(s), " ", 1, &cnt);
+	for (int i = 0; i < cnt; i++) {
+		printf("%s\n", tokens[i]);
+	}
+
+	for (int i = 0; i < cnt; i++)
+		sdsfree(tokens[i]);
+	free(tokens);
+	sdsfree(s);
+}
+
 int main()
 {
+	string_demo();
 	list_demo();
 	dict_demo();
 
