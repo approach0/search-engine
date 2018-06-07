@@ -105,6 +105,15 @@ $(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
 	$(COLOR_LINK)
 	$(strip $(LINK))
 
+$(BUILD_DIR)/lib%.a: $(ALL_OBJS)
+	$(COLOR_AR)
+	$(CREAT_BUILD_DIR)
+	$(EXTRACT_DEP_LIBS)
+	$(MV_DEP_OBJS)
+	$(strip $(GEN_LIB))
+	$(COLOR_SHOW_LIB)
+	$(SHOW_LIB)
+
 # header validity
 validate-%.h: %.h
 	$(CCDH) $(CFLAGS) $*.h

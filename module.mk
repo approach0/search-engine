@@ -76,17 +76,7 @@ ARCHIVE := $(BUILD_DIR)/lib$(CURDIRNAME).a
 AUTO_MERGE_AR = $(call lib_paths, $(LDFLAGS))
 
 # let ar know what objects/libraries to archive.
-AROBJS = $(ALL_OBJS)
 ARLIBS = $(sort $(AUTO_MERGE_AR) $(OTHER_MERGE_AR))
-
-$(ARCHIVE): $(ALL_OBJS)
-	$(COLOR_AR)
-	$(CREAT_BUILD_DIR)
-	$(EXTRACT_DEP_LIBS)
-	$(MV_DEP_OBJS)
-	$(strip $(GEN_LIB))
-	$(COLOR_SHOW_LIB)
-	$(SHOW_LIB)
 endif
 
 # summary what a module needs to make.

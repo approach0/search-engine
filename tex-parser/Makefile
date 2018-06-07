@@ -1,6 +1,6 @@
 include ../rules.mk
 
-# objects below are generated at compile-time.
+# objects below are associated to generated auto-generated source code.
 OTHER_OBJS := lex.yy.o y.tab.o gen-trans.o gen-completion.o
 # source file below is excluded from compiling.
 EXCLUDE_SRC := trans.template.c completion.template.c
