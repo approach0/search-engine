@@ -18,15 +18,15 @@ RUN_SRC := $(filter-out $(EXCLUDE_SRC),$(RUN_SRC))
 RUN_BINS := $(RUN_SRC:.dt.c=.out)
 RUN_BINS := $(RUN_BINS:.c=.out)
 
-INC_PATHS = -I . -I ..
-
+# add include paths to CFLAGS
+INC_PATHS := -I . -I ..
 CFLAGS += $(INC_PATHS)
 
 # union set of all objects (make all the elements unique),
 # OTHER_OBJS is for objects files generated from something
 # like Bison/Flex.
 OTHER_OBJS := $(addprefix $(BUILD_DIR)/, $(OTHER_OBJS))
-ALL_OBJS := $(sort $(SRC_OBJS) $(OTHER_OBJS))
+ALL_OBJS += $(sort $(SRC_OBJS) $(OTHER_OBJS))
 
 # include dependency .mk files, e.g. dep-LDLIB.mk.
 DEP_LINKS := $(wildcard $(DEP_DIR)/dep-*.mk)
@@ -45,7 +45,6 @@ LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:$(DEP_DIR)/dep-%=-l%})
 # link to local .a only if ALL_OBJS is non-empty.
 ifneq ($(ALL_OBJS), )
 # add local .a into LDLIBS for linking binaries.
-CURDIRNAME := $(notdir $(CURDIR))
 LDLIBS += -l$(CURDIRNAME)
 LOCAL_LDPATH := -L$(BUILD_DIR)
 LDFLAGS += $(LOCAL_LDPATH)
@@ -76,15 +75,14 @@ ARLIBS = $(sort $(AUTO_MERGE_AR) $(OTHER_MERGE_AR))
 endif
 
 # summary what a module needs to make.
-module_lib := $(ALL_OBJS) $(ARCHIVE)
-module_bin := $(RUN_BINS)
+module_lib = $(ALL_OBJS) $(ARCHIVE)
+module_bin = $(RUN_BINS)
 
-# list module conventional rules.
+# add new .PHONY name
 .PHONY: lib
 
-all: $(module_lib) $(module_bin)
-bin: run/test.out
-lib: $(module_lib)
+all: lib $(module_bin)
+lib: $(module_lib) $(warning module_lib: $(module_lib))
 
 # rebuild all bins if any lib changes.
 $(module_bin): $(module_lib)

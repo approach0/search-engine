@@ -7,6 +7,9 @@
 # build files (e.g. .o/.d) directory
 BUILD_DIR := .build
 
+# current directory name
+CURDIRNAME := $(notdir $(CURDIR))
+
 # executables (e.g. .out) directory
 RUN_DIR := run
 
