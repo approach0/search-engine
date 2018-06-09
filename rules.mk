@@ -17,6 +17,10 @@ CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 CFLAGS = -Wall -Wno-unused-function -Wno-format-truncation -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
+# preprocessor print
+PP := python3 ../proj-preprocessor.py
+COLOR_PP =  @ tput setaf 5 && echo "[preprocess] $<" && tput sgr0
+
 # compiler
 CC := gcc -std=gnu99
 CC_DEP := @ gcc -MM -MT
@@ -89,11 +93,31 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
 
+$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
+	$(COLOR_CC)
+	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(strip $(COMPILE_CC))
+
+$(BUILD_DIR)/%.c: %.dt.c
+	$(COLOR_PP)
+	$(CREAT_BUILD_DIR)
+	$(PP) $(INC_PATHS) $<  > $@
+
 $(BUILD_DIR)/%.main.o: $(RUN_DIR)/%.c
 	$(COLOR_CC)
 	$(CREAT_BUILD_DIR)
 	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
+
+$(BUILD_DIR)/%.main.o: $(BUILD_DIR)/%.main.c
+	$(COLOR_CC)
+	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(strip $(COMPILE_CC))
+
+$(BUILD_DIR)/%.main.c: $(RUN_DIR)/%.dt.c
+	$(COLOR_PP)
+	$(CREAT_BUILD_DIR)
+	$(PP) $(INC_PATHS) $<  > $@
 
 $(BUILD_DIR)/%.o: %.cpp
 	$(COLOR_CXX)

@@ -1,4 +1,4 @@
-#require <stdio.h> // for printf
+#require <stdio.h>
 #require "linkli/list.h"
 #require "strmap/strmap.h"
 #require "sds/sds.h"
@@ -69,13 +69,4 @@ void string_demo()
 		sdsfree(tokens[i]);
 	free(tokens);
 	sdsfree(s);
-}
-
-int main()
-{
-	string_demo();
-	list_demo();
-	dict_demo();
-
-	return 0;
 }

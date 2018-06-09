@@ -7,6 +7,7 @@ SRC := $(wildcard *.c) $(wildcard *.cpp)
 
 SRC_OBJS := $(SRC)
 SRC_OBJS := $(filter-out $(EXCLUDE_SRC),$(SRC))
+SRC_OBJS := $(SRC_OBJS:.dt.c=.o)
 SRC_OBJS := $(SRC_OBJS:.c=.o)
 SRC_OBJS := $(SRC_OBJS:.cpp=.o)
 SRC_OBJS := $(addprefix $(BUILD_DIR)/, $(SRC_OBJS))
@@ -14,17 +15,12 @@ SRC_OBJS := $(addprefix $(BUILD_DIR)/, $(SRC_OBJS))
 # test files / final executable files
 RUN_SRC := $(wildcard $(RUN_DIR)/*.c)
 RUN_SRC := $(filter-out $(EXCLUDE_SRC),$(RUN_SRC))
-RUN_OBJS := $(RUN_SRC:.c=.main.o)
-RUN_OBJS := $(BUILD_DIR)/$(notdir $(RUN_OBJS))
-RUN_BINS := $(RUN_SRC:.c=.out)
+RUN_BINS := $(RUN_SRC:.dt.c=.out)
+RUN_BINS := $(RUN_BINS:.c=.out)
 
-# when you run gcc ./path/main.c with a "path", you need
-# to specify current include directory.
-CFLAGS += -I .
-# a good practice is to write #include "module/module.h"
-# instead of just #include "module.h", so that another
-# module who uses this will also find the header file.
-CFLAGS += -I ..
+INC_PATHS = -I . -I ..
+
+CFLAGS += $(INC_PATHS)
 
 # union set of all objects (make all the elements unique),
 # OTHER_OBJS is for objects files generated from something
@@ -87,6 +83,7 @@ module_bin := $(RUN_BINS)
 .PHONY: lib
 
 all: $(module_lib) $(module_bin)
+bin: run/test.out
 lib: $(module_lib)
 
 # rebuild all bins if any lib changes.
