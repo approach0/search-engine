@@ -81,8 +81,8 @@ module_bin = $(RUN_BINS)
 # add new .PHONY name
 .PHONY: lib
 
-all: lib $(module_bin)
-lib: $(module_lib) $(warning module_lib: $(module_lib))
+all: lib $(module_bin) #DEBUG: $(warning $(module_lib))
+lib: $(module_lib)
 
 # rebuild all bins if any lib changes.
 $(module_bin): $(module_lib)
