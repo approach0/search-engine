@@ -33,14 +33,21 @@ DEP_LINKS := $(wildcard $(DEP_DIR)/dep-*.mk)
 -include $(DEP_LINKS)
 
 # strip off suffix ".mk" from DEP_LINKS where "LDFLAGS" can be found.
-LDLIBS := $(foreach dep_link, ${DEP_LINKS}, \
-              $(if $(findstring LDFLAGS, $(shell cat $(dep_link))), \
-                  ${dep_link:.mk=} \
-              ) \
-          )
+LDLIBS := ${DEP_LINKS:.mk=}
 
 # further strip off leading "dep-" and replace with "-l".
 LDLIBS := $(foreach dep_link, ${LDLIBS}, ${dep_link:$(DEP_DIR)/dep-%=-l%})
+
+# get module paths of only internal dependency.
+DEP_MODS := $(foreach path, $(LDFLAGS), \
+                $(if $(findstring $(BUILD_DIR), ${path}), \
+                     $(shell echo $(subst /$(BUILD_DIR),, ${path})) \
+                 ) \
+             )
+
+# get library paths of only internal dependency.
+DEP_LIBS := $(foreach depmod, $(subst ../,,$(DEP_MODS)), \
+              ../${depmod}/$(BUILD_DIR)/lib${depmod}.a)
 
 # link to local .a only if ALL_OBJS is non-empty.
 ifneq ($(ALL_OBJS), )
@@ -74,15 +81,33 @@ AUTO_MERGE_AR = $(call lib_paths, $(LDFLAGS))
 ARLIBS = $(sort $(AUTO_MERGE_AR) $(OTHER_MERGE_AR))
 endif
 
-# summary what a module needs to make.
-module_lib = $(ALL_OBJS) $(ARCHIVE)
-module_bin = $(RUN_BINS)
-
 # add new .PHONY name
-.PHONY: lib
+.PHONY: lib bin
 
-all: lib $(module_bin) #DEBUG: $(warning $(module_lib))
-lib: $(module_lib)
+# top rules.
+all: lib bin
+lib: $(DEP_LIBS) $(ALL_OBJS) $(ARCHIVE)
+bin: $(RUN_BINS) #DEBUG: $(warning $(RUN_BINS))
+
+# more specific dependency rules ...
+# re-create archive if any lib changes.
+$(ARCHIVE): $(ALL_OBJS)
+
+# re-create archive if any external lib updates.
+$(ARCHIVE): $(DEP_LIBS)
 
 # rebuild all bins if any lib changes.
-$(module_bin): $(module_lib)
+$(RUN_BINS): $(DEP_LIBS) $(ALL_OBJS) $(ARCHIVE)
+
+# project-wise dependency awareness
+PROJ_DEP_MK := proj-dep.mk
+-include ../$(PROJ_DEP_MK)
+
+# update all direct/indirect dependencies
+update: $(CURDIRNAME)-module
+	$(MAKE) bin
+
+# issue make in other modules
+%-module:
+	$(TARGET_COLOR_PRINT)
+	$(MAKE) -C ../$* lib

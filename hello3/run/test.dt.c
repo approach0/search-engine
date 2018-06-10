@@ -1,3 +1,4 @@
+#require "mhook/mhook.h"
 #require "foo.h"
 
 int main()
@@ -6,5 +7,6 @@ int main()
 	list_demo();
 	dict_demo();
 
+	mhook_print_unfree();
 	return 0;
 }

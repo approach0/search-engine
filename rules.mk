@@ -20,6 +20,9 @@ CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 CFLAGS = -Wall -Wno-unused-function -Wno-format-truncation -D_DEFAULT_SOURCE
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
+# target color print
+TARGET_COLOR_PRINT =  @ tput setaf 1 && echo '[$@] ' && tput sgr0;
+
 # preprocessor print
 PP := python3 ../proj-preprocessor.py
 COLOR_PP =  @ tput setaf 5 && echo "[preprocess] $<" && tput sgr0

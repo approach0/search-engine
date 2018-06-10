@@ -1,9 +1,6 @@
 PROJ_DEP_MK := proj-dep.mk
 SRC_LIST_FILE := srclist.txt
 
-# macro that prints colorful notice for target name
-TARGET_COLOR_PRINT =  @ tput setaf 1 && echo '[$@] ' && tput sgr0;
-
 .PHONY: all_modules test
 
 include rules.mk

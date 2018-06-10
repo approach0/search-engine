@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "hello/hello.h" /* another module */
-#include "hello2.h" /* own module */
+#include "hello2.h" /* this module */
 
 int main()
 {
