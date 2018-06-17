@@ -117,13 +117,17 @@ postlist_random(uint n, struct postlist_codec_fields fields)
 	srand(time(0));
 	for (uint i = 0; i < n; i++) {
 		void *cur = (char *)po + i * fields.tot_size;
-		// printf("doc[%u]: \n", i);
+#ifdef DEBUG_POSTLIST_CODEC
+		printf("doc[%u]: \n", i);
+#endif
 		for (uint j = 0; j < fields.n_fields; j++) {
 			uint *p = (uint *)((char *)cur + fields.offset(j));
 			uint len = fields.len(cur, j);
 			for (uint k = 0; k < len; k++) {
 				p[k] = rand() % 10 + 1;
-				// printf("field[%u][%u] = %u \n", j, k, p[k]);
+#ifdef DEBUG_POSTLIST_CODEC
+				printf("field[%u][%u] = %u \n", j, k, p[k]);
+#endif
 			}
 		}
 	}
@@ -152,6 +156,15 @@ postlist_print(void *po, uint n, struct postlist_codec_fields fields)
 	}
 }
 
+static void _print_codec_arrays(struct postlist_codec c)
+{
+	for (uint j = 0; j < c.fields.n_fields; j++) {
+		for (uint i = 0; i < c.pos[j]; i++)
+			printf("%u ", c.array[j][i]);
+		printf("\n");
+	}
+}
+
 size_t
 postlist_compress(void *dest, void *src, struct postlist_codec c)
 {
@@ -164,7 +177,9 @@ postlist_compress(void *dest, void *src, struct postlist_codec c)
 			c.pos[j] += len;
 		}
 	}
-
+#ifdef DEBUG_POSTLIST_CODEC
+	_print_codec_arrays(c);
+#endif
 	char *d = (char *)dest;
 	for (uint j = 0; j < c.fields.n_fields; j++) {
 		struct codec *codec = c.fields.field_codec[j];
@@ -202,7 +217,9 @@ postlist_decompress(void *dest, void *src, struct postlist_codec c)
 			c.pos[j] += len;
 		}
 	}
-
+#ifdef DEBUG_POSTLIST_CODEC
+	_print_codec_arrays(c);
+#endif
 	return (size_t)(s - (char*)src);
 }
 
@@ -235,7 +252,7 @@ int main()
 	printf("%lu bytes compressed into %lu bytes. \n", 5 * sizeof(struct A), sz);
 	char decoded[215];
 	sz = postlist_decompress(decoded, encoded, c);
-	printf("%lu bytes compressed decoded. \n", sz);
+	printf("%lu bytes compressed data decoded. \n", sz);
 	postlist_print(decoded, 5, c.fields);
 	free(doc);
 
