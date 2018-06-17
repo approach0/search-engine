@@ -6,6 +6,7 @@
 #include "codec/codec.h"
 #include "tex-parser/vt100-color.h"
 
+typedef uint16_t u16;
 typedef uint32_t u32;
 typedef unsigned int uint;
 
@@ -56,7 +57,7 @@ struct codec **codec_new_array(int num, ...)
 
 	return codec;
 }
-	
+
 void codec_array_free(int num, struct codec **codec)
 {
 	for (int j = 0; j < num; j++) {
@@ -154,8 +155,7 @@ postlist_print(void *po, uint n, struct postlist_codec_fields fields)
 size_t
 postlist_compress(void *dest, void *src, struct postlist_codec c)
 {
-	uint n = c.len;
-	for (uint i = 0; i < n; i++) {
+	for (uint i = 0; i < c.len; i++) {
 		void *cur = (char *)src + i * c.fields.tot_size;
 		for (uint j = 0; j < c.fields.n_fields; j++) {
 			uint *p = (uint *)((char *)cur + c.fields.offset(j));
@@ -168,11 +168,42 @@ postlist_compress(void *dest, void *src, struct postlist_codec c)
 	char *d = (char *)dest;
 	for (uint j = 0; j < c.fields.n_fields; j++) {
 		struct codec *codec = c.fields.field_codec[j];
+		/* write length info */
+		*(u16 *)d = (u16)c.pos[j];
+		d += sizeof(u16);
+		/* write compressed data */
 		d += codec_compress_ints(codec, c.array[j], c.pos[j], d);
-		c.pos[j] = 0; /* reset postition */
+		c.pos[j] = 0; /* reset position */
 	}
 
 	return (size_t)(d - (char*)dest);
+}
+
+size_t
+postlist_decompress(void *dest, void *src, struct postlist_codec c)
+{
+	char *s = (char *)src;
+	for (uint j = 0; j < c.fields.n_fields; j++) {
+		struct codec *codec = c.fields.field_codec[j];
+		/* read length info */
+		u16 l = *(u16 *)s;
+		s += sizeof(u16);
+		/* write decompressed data */
+		s += codec_decompress_ints(codec, s, c.array[j], l);
+		c.pos[j] = 0; /* reset position */
+	}
+
+	for (uint i = 0; i < c.len; i++) {
+		void *cur = (char *)dest + i * c.fields.tot_size;
+		for (uint j = 0; j < c.fields.n_fields; j++) {
+			uint *p = (uint *)((char *)cur + c.fields.offset(j));
+			uint len = c.fields.len(cur, j);
+			memcpy(p, c.array[j] + c.pos[j], len * sizeof(u32));
+			c.pos[j] += len;
+		}
+	}
+
+	return (size_t)(s - (char*)src);
 }
 
 #define postlist_codec_alloc(_alloc_space, _tot_size, _n_fields, \
@@ -193,14 +224,19 @@ int main()
 		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
 	);
+	size_t sz;
 
 	postlist_print_fields(c.fields);
 
 	struct A *doc = postlist_random(5, c.fields);
 	postlist_print(doc, 5, c.fields);
-	char *dest[256];
-	size_t sz = postlist_compress(dest, doc, c);
+	char encoded[256];
+	sz = postlist_compress(encoded, doc, c);
 	printf("%lu bytes compressed into %lu bytes. \n", 5 * sizeof(struct A), sz);
+	char decoded[215];
+	sz = postlist_decompress(decoded, encoded, c);
+	printf("%lu bytes compressed decoded. \n", sz);
+	postlist_print(decoded, 5, c.fields);
 	free(doc);
 
 	postlist_codec_free(c);
