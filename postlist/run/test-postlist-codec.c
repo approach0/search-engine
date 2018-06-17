@@ -26,70 +26,76 @@ uint  test_field_offset(uint);
 char *test_field_info(uint);
 uint  test_field_len(void*, uint);
 
-struct postlist_codec_args {
-	uint           size;
+struct postlist_codec_fields {
+	uint           tot_size;
 	uint           n_fields;
-	uint          (*field_offset)(uint);
-	uint          (*field_len)(void*, uint);
-	uint          (*field_size)(uint);
-	char         *(*field_info)(uint);
-	struct codec *(*field_codec)(uint);
+	uint          (*offset)(uint);
+	uint          (*len)(void*, uint);
+	uint          (*size)(uint);
+	char         *(*info)(uint);
+	struct codec **field_codec;
 };
 
 struct postlist_codec {
 	u32  **array; /* temporary ints array */
 	uint  *pos;   /* array current positions */
-	struct postlist_codec_args args;
+	uint   len;   /* array total length */
+	struct postlist_codec_fields fields;
 };
 
 struct postlist_codec
-postlist_codec_alloc(uint n, struct postlist_codec_args args)
+postlist_codec_alloc(uint n, struct postlist_codec_fields fields)
 {
 	struct postlist_codec c;
-	char *int_arr = malloc(args.size * n);
-	c.pos         = malloc(args.n_fields);
-	c.array       = malloc(args.n_fields);
-	c.args        = args;
+	char *int_arr = malloc(fields.tot_size * n);
+	c.array       = malloc(fields.n_fields);
+	c.pos         = malloc(fields.n_fields);
+	c.len         = n;
+	c.fields      = fields;
 
 	uint offset = 0;
-	for (uint j = 0; j < args.n_fields; j++) {
+	for (uint j = 0; j < fields.n_fields; j++) {
 		c.array[j] = (u32 *)(int_arr + offset);
 		c.pos[j] = 0;
-		offset += n * args.field_size(j);
+		offset += n * fields.size(j);
 	}
 
 	return c;
 }
 
-void postlist_codec_free(struct postlist_codec *c)
+void postlist_codec_free(struct postlist_codec c)
 {
-	free(c->array[0]); /* free entire encode buffer */
-	free(c->array); /* free array pointers */
-	free(c->pos); /* free array positions */
+	free(c.array[0]); /* free entire encode buffer */
+	free(c.array); /* free array pointers */
+	free(c.pos); /* free array positions */
 }
 
 void
-postlist_print_fields(struct postlist_codec_args args)
+postlist_print_fields(struct postlist_codec_fields fields)
 {
-	for (uint j = 0; j < args.n_fields; j++) {
-		prinfo("Field [%s]", args.field_info(j));
-		prinfo("offset: %u", args.field_offset(j));
-		prinfo("size: %u", args.field_size(j));
+	for (uint j = 0; j < fields.n_fields; j++) {
+		prinfo("Field '%s'", fields.info(j));
+		prinfo("offset: %u", fields.offset(j));
+		prinfo("size: %u", fields.size(j));
+		if (fields.field_codec) {
+			enum codec_method m = fields.field_codec[j]->method;
+			prinfo("codec: %s", codec_method_str(m));
+		}
 	}
 }
 
 void*
-postlist_random(uint n, struct postlist_codec_args args)
+postlist_random(uint n, struct postlist_codec_fields fields)
 {
-	void *po = malloc(n * args.size);
+	void *po = malloc(n * fields.tot_size);
 	srand(time(0));
 	for (uint i = 0; i < n; i++) {
-		void *cur = (char *)po + i * args.size;
+		void *cur = (char *)po + i * fields.tot_size;
 		// printf("doc[%u]: \n", i);
-		for (uint j = 0; j < args.n_fields; j++) {
-			uint *p = (uint *)((char *)cur + args.field_offset(j));
-			uint field_len = args.field_len(cur, j);
-			for (uint k = 0; k < field_len; k++) {
+		for (uint j = 0; j < fields.n_fields; j++) {
+			uint *p = (uint *)((char *)cur + fields.offset(j));
+			uint len = fields.len(cur, j);
+			for (uint k = 0; k < len; k++) {
 				p[k] = rand() % 10 + 1;
 				// printf("field[%u][%u] = %u \n", j, k, p[k]);
 			}
@@ -100,17 +106,17 @@ postlist_random(uint n, struct postlist_codec_args args)
 }
 
 void
-postlist_print(void *po, uint n, struct postlist_codec_args args)
+postlist_print(void *po, uint n, struct postlist_codec_fields fields)
 {
 	for (uint i = 0; i < n; i++) {
-		void *cur = (char *)po + i * args.size;
-		for (uint j = 0; j < args.n_fields; j++) {
-			uint *p = (uint *)((char *)cur + args.field_offset(j));
-			uint field_len = args.field_len(cur, j);
+		void *cur = (char *)po + i * fields.tot_size;
+		for (uint j = 0; j < fields.n_fields; j++) {
+			uint *p = (uint *)((char *)cur + fields.offset(j));
+			uint len = fields.len(cur, j);
 			printf("[");
-			for (uint k = 0; k < field_len; k++) {
+			for (uint k = 0; k < len; k++) {
 				printf("%u", p[k]);
-				if (k + 1 != field_len) {
+				if (k + 1 != len) {
 					printf(", ");
 				}
 			}
@@ -120,22 +126,75 @@ postlist_print(void *po, uint n, struct postlist_codec_args args)
 	}
 }
 
+size_t
+postlist_compress(void *dest, void *src, struct postlist_codec c)
+{
+	uint n = c.len;
+	for (uint i = 0; i < n; i++) {
+		void *cur = (char *)src + i * c.fields.tot_size;
+		for (uint j = 0; j < c.fields.n_fields; j++) {
+			uint *p = (uint *)((char *)cur + c.fields.offset(j));
+			uint len = c.fields.len(cur, j);
+			memcpy(c.array[j] + c.pos[j], p, len * sizeof(u32));
+			c.pos[j] += len;
+		}
+	}
+
+	char *d = (char *)dest;
+	for (uint j = 0; j < c.fields.n_fields; j++) {
+		struct codec *codec = c.fields.field_codec[j];
+		d += codec_compress_ints(codec, c.array[j], c.pos[j], d);
+		c.pos[j] = 0; /* reset postition */
+	}
+
+	return (size_t)(d - (char*)dest);
+}
+
+#include <stdarg.h>
+struct codec **codec_new_array(int num, ...)
+{
+	va_list valist;
+	struct codec **codec = malloc(sizeof(struct codec) * num);
+	va_start(valist, num);
+	for (int i = 0; i < num; i++) {
+		codec[i] = va_arg(valist, struct codec *);
+	}
+	va_end(valist);
+
+	return codec;
+}
+	
+void codec_array_free(int num, struct codec **codec)
+{
+	for (int j = 0; j < num; j++) {
+		codec_free(codec[j]);
+	}
+	free(codec);
+}
+
 int main()
 {
-	struct postlist_codec_args args = {
+	struct postlist_codec_fields fields = {
 		sizeof(struct A), 3, test_field_offset, test_field_len,
-		test_field_size, test_field_info, NULL
+		test_field_size, test_field_info, codec_new_array(3,
+			codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+			codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+			codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
+		)
 	};
 
-	postlist_print_fields(args);
+	postlist_print_fields(fields);
 
-	struct A *doc = postlist_random(5, args);
-	postlist_print(doc, 5, args);
+	struct A *doc = postlist_random(5, fields);
+	postlist_print(doc, 5, fields);
 	free(doc);
 
-	struct postlist_codec c = postlist_codec_alloc(5, args);
-	postlist_codec_free(&c);
+	struct postlist_codec c = postlist_codec_alloc(5, fields);
+	postlist_codec_free(c);
 
+	codec_array_free(3, fields.field_codec);
+
+	mhook_print_unfree();
 	return 0;
 }
 
