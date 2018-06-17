@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 #include "mhook/mhook.h"
 #include "linkli/list.h"
 #include "codec/codec.h"
 #include "tex-parser/vt100-color.h"
+
+#include <string.h>
 
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -123,8 +126,21 @@ postlist_random(uint n, struct postlist_codec_fields fields)
 		for (uint j = 0; j < fields.n_fields; j++) {
 			uint *p = (uint *)((char *)cur + fields.offset(j));
 			uint len = fields.len(cur, j);
+			char *info = fields.info(j);
 			for (uint k = 0; k < len; k++) {
-				p[k] = rand() % 10 + 1;
+				if (k == 0) {
+					if (i == 0 || strstr(info, "ID") == NULL) {
+						p[0] = rand() % 10 + 1;
+					} else {
+						uint last = *(uint *)((char *)po +
+						             (i - 1) * fields.tot_size +
+						             fields.offset(j));
+						// printf("last = %u \n", last);
+						p[0] = last + rand() % 10;
+					}
+				} else {
+					p[k] = p[k - 1] + rand() % 10;
+				}
 #ifdef DEBUG_POSTLIST_CODEC
 				printf("field[%u][%u] = %u \n", j, k, p[k]);
 #endif
