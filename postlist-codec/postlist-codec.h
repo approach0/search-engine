@@ -25,10 +25,10 @@ struct postlist_codec {
 		_field_info, codec_new_array(_n_fields, __VA_ARGS__) \
 	});
 
-struct postlist_codec
+struct postlist_codec *
 _postlist_codec_alloc(uint, struct postlist_codec_fields);
 
-void postlist_codec_free(struct postlist_codec);
+void postlist_codec_free(struct postlist_codec*);
 
 void postlist_print_fields(struct postlist_codec_fields);
 
@@ -36,6 +36,6 @@ void* postlist_random(uint, struct postlist_codec_fields);
 
 void postlist_print(void*, uint, struct postlist_codec_fields);
 
-size_t postlist_compress(void*, void*, uint, struct postlist_codec);
+size_t postlist_compress(void*, void*, uint, struct postlist_codec*);
 
-size_t postlist_decompress(void*, void*, uint, struct postlist_codec);
+size_t postlist_decompress(void*, void*, uint, struct postlist_codec*);

@@ -76,7 +76,7 @@ char *test_field_info(uint j)
 int main()
 {
 	size_t sz;
-	struct postlist_codec c = postlist_codec_alloc(
+	struct postlist_codec *c = postlist_codec_alloc(
 		5, sizeof(struct A), 3,
 		test_field_offset, test_field_len,
 		test_field_size, test_field_info,
@@ -86,11 +86,11 @@ int main()
 	);
 
 	/* print the fields codec */
-	postlist_print_fields(c.fields);
+	postlist_print_fields(c->fields);
 
 	/* create a test posting list */
-	struct A *doc = postlist_random(5, c.fields);
-	postlist_print(doc, 5, c.fields);
+	struct A *doc = postlist_random(5, c->fields);
+	postlist_print(doc, 5, c->fields);
 
 	/* compress the posting into a buffer */
 	char encoded[256];
@@ -103,7 +103,7 @@ int main()
 	printf("%lu bytes compressed data decoded. \n", sz);
 
 	/* print the decompressed buffer */
-	postlist_print(decoded, 5, c.fields);
+	postlist_print(decoded, 5, c->fields);
 
 	/* free original posting list and fields codec */
 	free(doc);
