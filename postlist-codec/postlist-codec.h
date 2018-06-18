@@ -14,7 +14,6 @@ struct postlist_codec_fields {
 struct postlist_codec {
 	u32  **array; /* temporary ints array */
 	uint  *pos;   /* array current positions */
-	uint   len;   /* array total length */
 	struct postlist_codec_fields fields;
 };
 
@@ -37,6 +36,6 @@ void* postlist_random(uint, struct postlist_codec_fields);
 
 void postlist_print(void*, uint, struct postlist_codec_fields);
 
-size_t postlist_compress(void*, void*, struct postlist_codec);
+size_t postlist_compress(void*, void*, uint, struct postlist_codec);
 
-size_t postlist_decompress(void*, void*, struct postlist_codec);
+size_t postlist_decompress(void*, void*, uint, struct postlist_codec);

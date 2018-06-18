@@ -94,12 +94,12 @@ int main()
 
 	/* compress the posting into a buffer */
 	char encoded[256];
-	sz = postlist_compress(encoded, doc, c);
+	sz = postlist_compress(encoded, doc, 5, c);
 	printf("%lu bytes compressed into %lu bytes. \n", 5 * sizeof(struct A), sz);
 
 	/* decompress back to original posting list */
 	char decoded[215];
-	sz = postlist_decompress(decoded, encoded, c);
+	sz = postlist_decompress(decoded, encoded, 5, c);
 	printf("%lu bytes compressed data decoded. \n", sz);
 
 	/* print the decompressed buffer */

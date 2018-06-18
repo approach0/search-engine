@@ -13,7 +13,6 @@ _postlist_codec_alloc(uint n, struct postlist_codec_fields fields)
 	char *int_arr = malloc(fields.tot_size * n);
 	c.array       = malloc(fields.n_fields);
 	c.pos         = malloc(fields.n_fields);
-	c.len         = n;
 	c.fields      = fields;
 
 	uint offset = 0;
@@ -119,9 +118,9 @@ static void _print_codec_arrays(struct postlist_codec c)
 }
 
 size_t
-postlist_compress(void *dest, void *src, struct postlist_codec c)
+postlist_compress(void *dest, void *src, uint n, struct postlist_codec c)
 {
-	for (uint i = 0; i < c.len; i++) {
+	for (uint i = 0; i < n; i++) {
 		void *cur = (char *)src + i * c.fields.tot_size;
 		for (uint j = 0; j < c.fields.n_fields; j++) {
 			uint *p = (uint *)((char *)cur + c.fields.offset(j));
@@ -148,7 +147,7 @@ postlist_compress(void *dest, void *src, struct postlist_codec c)
 }
 
 size_t
-postlist_decompress(void *dest, void *src, struct postlist_codec c)
+postlist_decompress(void *dest, void *src, uint n, struct postlist_codec c)
 {
 	char *s = (char *)src;
 	for (uint j = 0; j < c.fields.n_fields; j++) {
@@ -161,7 +160,7 @@ postlist_decompress(void *dest, void *src, struct postlist_codec c)
 		c.pos[j] = 0; /* reset position */
 	}
 
-	for (uint i = 0; i < c.len; i++) {
+	for (uint i = 0; i < n; i++) {
 		void *cur = (char *)dest + i * c.fields.tot_size;
 		for (uint j = 0; j < c.fields.n_fields; j++) {
 			uint *p = (uint *)((char *)cur + c.fields.offset(j));
