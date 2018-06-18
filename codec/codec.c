@@ -186,3 +186,25 @@ codec_decompress(struct codec* codec, const void* src, size_t src_sz,
 
 	return dest_sz;
 }
+
+#include <stdarg.h>
+struct codec **codec_new_array(int num, ...)
+{
+	va_list valist;
+	struct codec **codec = malloc(sizeof(struct codec) * num);
+	va_start(valist, num);
+	for (int i = 0; i < num; i++) {
+		codec[i] = va_arg(valist, struct codec *);
+	}
+	va_end(valist);
+
+	return codec;
+}
+
+void codec_array_free(int num, struct codec **codec)
+{
+	for (int j = 0; j < num; j++) {
+		codec_free(codec[j]);
+	}
+	free(codec);
+}

@@ -36,3 +36,7 @@ size_t codec_compress(struct codec*, const void*, size_t, void**);
 size_t codec_decompress(struct codec*, const void*, size_t, void*, size_t);
 
 char *codec_method_str(enum codec_method);
+
+/* codec array constructor/deconstructor */
+struct codec **codec_new_array(int, ...);
+void codec_array_free(int, struct codec **);
