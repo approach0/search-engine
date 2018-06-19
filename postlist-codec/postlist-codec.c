@@ -10,9 +10,9 @@ struct postlist_codec *
 _postlist_codec_alloc(uint n, struct postlist_codec_fields fields)
 {
 	struct postlist_codec *c = malloc(sizeof(struct postlist_codec));
-	char *int_arr = malloc(fields.tot_size * n);
-	c->array       = malloc(fields.n_fields);
-	c->pos         = malloc(fields.n_fields);
+	char *int_arr  = malloc(fields.tot_size * n);
+	c->array       = malloc(sizeof(u32*) * fields.n_fields);
+	c->pos         = malloc(sizeof(uint) * fields.n_fields);
 	c->fields      = fields;
 
 	uint offset = 0;

@@ -191,7 +191,7 @@ codec_decompress(struct codec* codec, const void* src, size_t src_sz,
 struct codec **codec_new_array(int num, ...)
 {
 	va_list valist;
-	struct codec **codec = malloc(sizeof(struct codec) * num);
+	struct codec **codec = malloc(sizeof(struct codec *) * num);
 	va_start(valist, num);
 	for (int i = 0; i < num; i++) {
 		codec[i] = va_arg(valist, struct codec *);

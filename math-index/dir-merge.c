@@ -75,6 +75,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 		sprintf(dm_args->full_paths[i], "%s/%s",
 		        dm_args->base_paths[i], srchpath);
 
+		/* map a full path to math posting list */
 		postings[i] = math_posting_new_reader(dm_args->eles[i],
 		                               dm_args->full_paths[i]);
 	}
