@@ -55,7 +55,7 @@ static struct term_posting_item
 }
 
 
-static void test_gen_data(struct postlist *po, enum test_option opt)
+static void test_gen_data(struct postlist *po)
 {
 	struct   term_posting_item *pi;
 	size_t   fl_sz;
@@ -77,12 +77,11 @@ static void test_gen_data(struct postlist *po, enum test_option opt)
 	printf("flush %lu bytes.\n", fl_sz);
 }
 
-static void test_iterator(struct postlist *po, enum test_option opt)
+static void test_iterator(struct postlist *po)
 {
 	struct term_posting_item *pi;
 	position_t *pos_arr;
 	uint32_t i;
-	uint64_t id;
 	uint32_t fromID;
 	uint64_t jumpID;
 	int      jumped = 0;
@@ -95,9 +94,6 @@ static void test_iterator(struct postlist *po, enum test_option opt)
 	do {
 print_current:
 		pi = postlist_cur_item(po);
-		id = postlist_cur_item_id(pi);
-
-		(void)id; assert(id == pi->doc_id);
 
 		printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
 
@@ -139,11 +135,11 @@ static void run_testcase(enum test_option opt)
 		assert(0);
 	};
 
-	test_gen_data(po, opt);
+	test_gen_data(po);
 
 	postlist_print_info(po);
 
-	test_iterator(po, opt);
+	test_iterator(po);
 
 	postlist_free(po);
 	printf("\n");

@@ -84,7 +84,7 @@ append_node(struct postlist *po, struct postlist_node *node)
 	po->n_blk ++;
 
 #ifdef DEBUG_POSTLIST
-	printf("appending skippy node...\n");
+	//printf("appending skippy node...\n");
 #endif
 	skippy_append(&po->skippy, &node->sn);
 }
@@ -224,12 +224,6 @@ void* postlist_cur_item(void *po_)
 {
 	struct postlist *po = (struct postlist*)po_;
 	return po->buf + po->buf_idx;
-}
-
-uint64_t postlist_cur_item_id(void *item)
-{
-	uint32_t *curID = (uint32_t*)item;
-	return (uint64_t)(*curID);
 }
 
 bool postlist_jump(void *po_, uint64_t target_)
