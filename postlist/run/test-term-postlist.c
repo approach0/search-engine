@@ -2,16 +2,20 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "mhook/mhook.h"
-#include "term-index/term-index.h" /* for doc_id_t */
+
+#include "term-index/term-index.h"
+#include "term-index/config.h" /* for MAX_TERM_INDEX_ITEM_POSITIONS */
+
+#define TERM_POSTLIST_ITEM_SZ \
+	(sizeof(struct term_posting_item) + \
+	 sizeof(uint32_t) * MAX_TERM_INDEX_ITEM_POSITIONS)
 
 #include "config.h"
 #include "postlist.h"
 #include "term-postlist.h"
-
-#undef N_DEBUG
-#include <assert.h>
 
 enum test_option {
 	TEST_PLAIN_POSTING,
@@ -92,7 +96,8 @@ static void test_iterator(struct postlist *po, enum test_option opt)
 print_current:
 		pi = postlist_cur_item(po);
 		id = postlist_cur_item_id(pi);
-		assert(id == pi->doc_id);
+
+		(void)id; assert(id == pi->doc_id);
 
 		printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
 

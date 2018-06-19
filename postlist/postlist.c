@@ -60,7 +60,7 @@ postlist_create(uint32_t skippy_spans, uint32_t buf_sz, uint32_t item_sz,
 	return ret;
 }
 
-static struct postlist_node *create_node(uint32_t key, size_t size)
+static struct postlist_node *create_node(uint64_t key, size_t size)
 {
 	struct postlist_node *ret;
 	ret = malloc(sizeof(struct postlist_node));
@@ -91,7 +91,8 @@ append_node(struct postlist *po, struct postlist_node *node)
 
 static uint32_t postlist_flush(struct postlist *po)
 {
-	uint32_t flush_key, flush_sz;
+	uint64_t flush_key;
+	uint32_t flush_sz;
 	struct postlist_node *node;
 
 	/* invoke flush callback and get flush size */

@@ -1,9 +1,9 @@
 #pragma once
 #include <stdint.h>
-#include "skippy.h"
+#include "skippy/skippy.h"
 
 /* callback types */
-typedef uint32_t (*postlist_flush_callbk)(char*, uint32_t*, void *);
+typedef uint64_t (*postlist_flush_callbk)(char*, uint32_t*, void *);
 typedef void     (*postlist_rebuf_callbk)(char*, uint32_t*, void *);
 typedef void     (*postlist_free_callbk)(void *);
 

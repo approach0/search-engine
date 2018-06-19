@@ -4,15 +4,46 @@
 #include <string.h>
 
 #include "config.h"
+
+#ifdef DEBUG_POSTLIST
+#undef NDEBUG
+#else
+#define NDEBUG
+#endif
 #include <assert.h>
+
+#include "term-index/term-index.h" /* for position_t */
+#include "term-index/config.h" /* for MAX_TERM_INDEX_ITEM_POSITIONS */
 
 #include "common/common.h"
 #include "codec/codec.h"
 #include "postlist-codec/postlist-codec.h"
-#include "term-index/term-index.h" /* for position_t */
 #include "postlist.h"
+#include "term-postlist.h"
 
-static uint32_t
+#define TERM_POSTLIST_ITEM_SZ \
+	(sizeof(struct term_posting_item) + \
+	 sizeof(uint32_t) * MAX_TERM_INDEX_ITEM_POSITIONS)
+
+#define MIN_TERM_POSTING_BUF_SZ \
+	(sizeof(doc_id_t) + sizeof(uint32_t) + \
+	MAX_TERM_INDEX_ITEM_POSITIONS * sizeof(position_t))
+
+#ifdef DEBUG_POSTLIST
+#define TERM_POSTLIST_SKIP_SPAN       2
+#else
+#define TERM_POSTLIST_SKIP_SPAN       DEFAULT_SKIPPY_SPANS
+#endif
+
+#ifdef DEBUG_POSTLIST
+#define TERM_POSTLIST_BUF_SZ          (MIN_TERM_POSTING_BUF_SZ * 2)
+#else
+#define TERM_POSTLIST_BUF_SZ          ROUND_UP(MIN_TERM_POSTING_BUF_SZ, 4096)
+#endif
+
+#define TERM_POSTLIST_BUF_MAX_ITEMS   (TERM_POSTLIST_BUF_SZ / MIN_TERM_POSTING_BUF_SZ)  
+
+static uint64_t
 onflush_for_plain_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 {
 	doc_id_t *docID = (doc_id_t *)buf;
@@ -25,7 +56,7 @@ onrebuf_for_plain_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 	return;
 }
 
-static uint32_t
+static uint64_t
 onflush_for_compressed_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 {
 	doc_id_t docID = *(doc_id_t *)buf;
