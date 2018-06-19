@@ -31,6 +31,8 @@ void postlist_print_info(struct postlist *po)
 	printf("==== memory posting list info ====\n");
 	printf("%u blocks (%.2f KB).\n", po->n_blk,
 	       (float)po->tot_sz / 1024.f);
+	printf("item size: %u\n", po->item_sz);
+	printf("buffer size: %u\n", po->buf_sz);
 
 	skippy_print(&po->skippy);
 }
