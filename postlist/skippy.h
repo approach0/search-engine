@@ -113,7 +113,7 @@ _skippy_append_level(struct skippy *sk, struct skippy_node *sn, int level)
 	else
 		n_nodes = sk->n_nodes[level - 1];
 
-	if (n_nodes % sk->n_spans == 1 /* this is one so that we make every
+	if (n_nodes % sk->n_spans == 1 /* set to 1 so that we make every
 	    level have the first skippy element as its head. */) {
 		if (sk->head[level] == NULL) {
 			sk->head[level] = sn;
@@ -152,7 +152,7 @@ skippy_print(struct skippy *sk)
 {
 	int i = SKIPPY_TOTAL_LEVELS - 1;
 	struct skippy_node *cur, *save;
-	printf("skippy heads:\n");
+	printf("skippy list (span = %u):\n", sk->n_spans);
 	while (1) {
 		printf("level %d (%u nodes): ", i, sk->n_nodes[i]);
 		skippy_foreach(cur, save, sk, i) {

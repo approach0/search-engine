@@ -1,16 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "postlist.h"
-#include "config.h"
 
-/* include assert */
-#ifdef DEBUG_MEM_POSTING
-#undef N_DEBUG
-#else
-#define N_DEBUG
-#endif
+#include "config.h"
 #include <assert.h>
+
+#include "postlist.h"
 
 /* buffer setup/free macro */
 #define SETUP_BUFFER(_po) \
@@ -88,7 +83,7 @@ append_node(struct postlist *po, struct postlist_node *node)
 	po->tot_sz += node->blk_sz;
 	po->n_blk ++;
 
-#ifdef DEBUG_MEM_POSTING
+#ifdef DEBUG_POSTLIST
 	printf("appending skippy node...\n");
 #endif
 	skippy_append(&po->skippy, &node->sn);
@@ -133,7 +128,7 @@ postlist_write(struct postlist *po, const void *in, size_t size)
 	memcpy(po->buf + po->buf_end, in, size);
 	po->buf_end += size;
 
-#ifdef DEBUG_MEM_POSTING
+#ifdef DEBUG_POSTLIST
 	printf("buffer after writting: [%u/%u]\n",
 	       po->buf_end, po->buf_sz);
 #endif
@@ -248,13 +243,13 @@ bool postlist_jump(void *po_, uint64_t target_)
 
 	if (jump_to != &po->cur->sn) {
 		/* if we can jump over some blocks */
-#ifdef DEBUG_MEM_POSTING
+#ifdef DEBUG_POSTLIST
 		printf("jump to a different node.\n");
 #endif
 		po->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
 		rebuf_cur(po);
 	}
-#ifdef DEBUG_MEM_POSTING
+#ifdef DEBUG_POSTLIST
 	else
 		printf("stay in the same node.\n");
 #endif

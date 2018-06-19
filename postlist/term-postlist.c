@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "config.h"
 #include <assert.h>
 
 #include "common/common.h"
@@ -9,7 +11,6 @@
 #include "postlist-codec/postlist-codec.h"
 #include "term-index/term-index.h" /* for position_t */
 #include "postlist.h"
-#include "config.h"
 
 static uint32_t
 onflush_for_plain_post(char *buf, uint32_t *buf_sz, void *buf_arg)
