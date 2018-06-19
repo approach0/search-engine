@@ -50,9 +50,9 @@ postlist_create(uint32_t skippy_spans, uint32_t buf_sz, uint32_t item_sz,
 	ret->buf_end = 0;
 	ret->buf_arg = buf_arg;
 
-	ret->on_flush    = calls.on_flush;
-	ret->on_rebuf    = calls.on_rebuf;
-	ret->on_free     = calls.on_free;
+	ret->on_flush = calls.on_flush;
+	ret->on_rebuf = calls.on_rebuf;
+	ret->on_free  = calls.on_free;
 
 	/* leave iterator-related initializations to postlist_start() */
 	ret->item_sz = item_sz;
