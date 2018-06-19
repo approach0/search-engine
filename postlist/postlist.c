@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "mem-posting.h"
+#include "postlist.h"
 #include "config.h"
 
 /* include assert */
@@ -12,59 +12,21 @@
 #endif
 #include <assert.h>
 
-#ifdef  DEBUG_MEM_POSTING_SMALL_BUF_SZ
-#undef  MEM_POSTING_BUF_SZ
-#define MEM_POSTING_BUF_SZ DEBUG_MEM_POSTING_SMALL_BUF_SZ
-#endif
-
 /* buffer setup/free macro */
 #define SETUP_BUFFER(_po) \
 	if (_po->buf == NULL) { \
-		_po->buf = malloc(MEM_POSTING_BUF_SZ); \
-		_po->tot_sz += MEM_POSTING_BUF_SZ; \
+		_po->buf = malloc(_po->buf_sz); \
+		_po->tot_sz += _po->buf_sz; \
 	} do {} while (0)
 
 #define FREE_BUFFER(_po) \
 	if (_po->buf) { \
 		free(_po->buf); \
 		_po->buf = NULL; \
-		_po->tot_sz -= MEM_POSTING_BUF_SZ; \
+		_po->tot_sz -= _po->buf_sz; \
 	} do {} while (0)
 
-struct mem_posting_callbks mem_term_posting_plain_calls()
-{
-	struct mem_posting_callbks ret = {
-		onflush_for_plainpost,
-		onrebuf_for_plainpost,
-		getposarr_for_termpost
-	};
-
-	return ret;
-}
-
-struct mem_posting_callbks mem_term_posting_codec_calls()
-{
-	struct mem_posting_callbks ret = {
-		onflush_for_termpost,
-		onrebuf_for_termpost,
-		getposarr_for_termpost,
-	};
-
-	return ret;
-};
-
-struct mem_posting_callbks mem_term_posting_with_pos_codec_calls()
-{
-	struct mem_posting_callbks ret = {
-		onflush_for_termpost_with_pos,
-		onrebuf_for_termpost_with_pos,
-		getposarr_for_termpost_with_pos
-	};
-
-	return ret;
-};
-
-void mem_posting_print_info(struct mem_posting *po)
+void postlist_print_info(struct postlist *po)
 {
 	printf("==== memory posting list info ====\n");
 	printf("%u blocks (%.2f KB).\n", po->n_blk,
@@ -73,34 +35,38 @@ void mem_posting_print_info(struct mem_posting *po)
 	skippy_print(&po->skippy);
 }
 
-struct mem_posting *mem_posting_create(uint32_t skippy_spans,
-                                       struct mem_posting_callbks calls)
+struct postlist *
+postlist_create(uint32_t skippy_spans, uint32_t buf_sz, uint32_t item_sz,
+                void *buf_arg, struct postlist_callbks calls)
 {
-	struct mem_posting *ret;
-	ret = malloc(sizeof(struct mem_posting));
+	struct postlist *ret;
+	ret = malloc(sizeof(struct postlist));
 
 	/* assign initial values */
 	ret->head = ret->tail = NULL;
-	ret->tot_sz = sizeof(struct mem_posting);
+	ret->tot_sz = sizeof(struct postlist);
 	ret->n_blk  = 0;
 	skippy_init(&ret->skippy, skippy_spans);
 
 	ret->buf = NULL;
+	ret->buf_sz = buf_sz;
 	ret->buf_end = 0;
+	ret->buf_arg = buf_arg;
 
-	ret->on_flush = calls.on_flush;
-	ret->on_rebuf = calls.on_rebuf;
-	ret->get_pos_arr = calls.get_pos_arr;
+	ret->on_flush    = calls.on_flush;
+	ret->on_rebuf    = calls.on_rebuf;
+	ret->on_free     = calls.on_free;
 
-	/* leave iterator-related initializations to mem_posting_start() */
+	/* leave iterator-related initializations to postlist_start() */
+	ret->item_sz = item_sz;
 
 	return ret;
 }
 
-static struct mem_posting_node *create_node(uint32_t key, size_t size)
+static struct postlist_node *create_node(uint32_t key, size_t size)
 {
-	struct mem_posting_node *ret;
-	ret = malloc(sizeof(struct mem_posting_node));
+	struct postlist_node *ret;
+	ret = malloc(sizeof(struct postlist_node));
 
 	/* assign initial values */
 	skippy_node_init(&ret->sn, key);
@@ -111,7 +77,7 @@ static struct mem_posting_node *create_node(uint32_t key, size_t size)
 }
 
 static void
-append_node(struct mem_posting *po, struct mem_posting_node *node)
+append_node(struct postlist *po, struct postlist_node *node)
 {
 	if (po->head == NULL)
 		po->head = node;
@@ -126,13 +92,13 @@ append_node(struct mem_posting *po, struct mem_posting_node *node)
 	skippy_append(&po->skippy, &node->sn);
 }
 
-static uint32_t mem_posting_flush(struct mem_posting *po)
+static uint32_t postlist_flush(struct postlist *po)
 {
 	uint32_t flush_key, flush_sz;
-	struct mem_posting_node *node;
+	struct postlist_node *node;
 
 	/* invoke flush callback and get flush size */
-	flush_key = po->on_flush(po->buf, &po->buf_end);
+	flush_key = po->on_flush(po->buf, &po->buf_end, po->buf_arg);
 	flush_sz = po->buf_end;
 
 	/* append new node with copy of current buffer */
@@ -149,7 +115,7 @@ static uint32_t mem_posting_flush(struct mem_posting *po)
 }
 
 size_t
-mem_posting_write(struct mem_posting *po, const void *in, size_t size)
+postlist_write(struct postlist *po, const void *in, size_t size)
 {
 	size_t flush_sz = 0;
 
@@ -157,52 +123,53 @@ mem_posting_write(struct mem_posting *po, const void *in, size_t size)
 	SETUP_BUFFER(po);
 
 	/* flush buffer under inefficient buffer space */
-	if (po->buf_end + size > MEM_POSTING_BUF_SZ)
-		flush_sz = mem_posting_flush(po);
+	if (po->buf_end + size > po->buf_sz)
+		flush_sz = postlist_flush(po);
 
 	/* write into buffer */
-	assert(po->buf_end + size <= MEM_POSTING_BUF_SZ);
+	assert(po->buf_end + size <= po->buf_sz);
 	memcpy(po->buf + po->buf_end, in, size);
 	po->buf_end += size;
 
 #ifdef DEBUG_MEM_POSTING
 	printf("buffer after writting: [%u/%u]\n",
-	       po->buf_end, MEM_POSTING_BUF_SZ);
+	       po->buf_end, po->buf_sz);
 #endif
 
 	return flush_sz;
 }
 
-size_t mem_posting_write_complete(struct mem_posting *po)
+size_t postlist_write_complete(struct postlist *po)
 {
 	size_t flush_sz;
 
 	if (po->buf)
-		flush_sz = mem_posting_flush(po);
+		flush_sz = postlist_flush(po);
 
 	FREE_BUFFER(po);
 	return flush_sz;
 }
 
-void mem_posting_free(struct mem_posting *po)
+void postlist_free(struct postlist *po)
 {
-	skippy_free(&po->skippy, struct mem_posting_node, sn,
+	po->on_free(po->buf_arg);
+	skippy_free(&po->skippy, struct postlist_node, sn,
 	            free(p->blk); free(p));
 	free(po->buf);
 	free(po);
 }
 
-static void forward_cur(struct mem_posting_node **cur)
+static void forward_cur(struct postlist_node **cur)
 {
 	struct skippy_node *next = (*cur)->sn.next[0];
 
 	/* forward one step */
-	*cur = MEMBER_2_STRUCT(next, struct mem_posting_node, sn);
+	*cur = MEMBER_2_STRUCT(next, struct postlist_node, sn);
 }
 
-static void rebuf_cur(struct mem_posting *po)
+static void rebuf_cur(struct postlist *po)
 {
-	struct mem_posting_node *cur = po->cur;
+	struct postlist_node *cur = po->cur;
 
 	if (cur) {
 		/* refill buffer */
@@ -210,7 +177,7 @@ static void rebuf_cur(struct mem_posting *po)
 		po->buf_end = cur->blk_sz;
 
 		/* invoke rebuf callback */
-		po->on_rebuf(po->buf, &po->buf_end);
+		po->on_rebuf(po->buf, &po->buf_end, po->buf_arg);
 
 	} else {
 		/* reset buffer variables anyway */
@@ -220,9 +187,9 @@ static void rebuf_cur(struct mem_posting *po)
 	po->buf_idx = 0;
 }
 
-bool mem_posting_start(void *po_)
+bool postlist_start(void *po_)
 {
-	struct mem_posting *po = (struct mem_posting*)po_;
+	struct postlist *po = (struct postlist*)po_;
 
 	if (po->head == NULL)
 		return 0;
@@ -237,13 +204,10 @@ bool mem_posting_start(void *po_)
 	return (po->buf_end != 0);
 }
 
-bool mem_posting_next(void *po_)
+bool postlist_next(void *po_)
 {
-	struct mem_posting *po = (struct mem_posting*)po_;
-	size_t  pos_arr_sz;
-	char   *pos_arr;
-	pos_arr = po->get_pos_arr(po->buf + po->buf_idx, &pos_arr_sz);
-	po->buf_idx = (uint32_t)(pos_arr - po->buf) + pos_arr_sz;
+	struct postlist *po = (struct postlist*)po_;
+	po->buf_idx += po->item_sz;
 
 	do {
 		if (po->buf_idx < po->buf_end) {
@@ -258,21 +222,21 @@ bool mem_posting_next(void *po_)
 	return 0;
 }
 
-void* mem_posting_cur_item(void *po_)
+void* postlist_cur_item(void *po_)
 {
-	struct mem_posting *po = (struct mem_posting*)po_;
+	struct postlist *po = (struct postlist*)po_;
 	return po->buf + po->buf_idx;
 }
 
-uint64_t mem_posting_cur_item_id(void *item)
+uint64_t postlist_cur_item_id(void *item)
 {
 	uint32_t *curID = (uint32_t*)item;
 	return (uint64_t)(*curID);
 }
 
-bool mem_posting_jump(void *po_, uint64_t target_)
+bool postlist_jump(void *po_, uint64_t target_)
 {
-	struct mem_posting *po = (struct mem_posting*)po_;
+	struct postlist *po = (struct postlist*)po_;
 	uint32_t            target = (uint32_t)target_;
 	struct skippy_node *jump_to;
 	uint32_t           *curID;
@@ -285,7 +249,7 @@ bool mem_posting_jump(void *po_, uint64_t target_)
 #ifdef DEBUG_MEM_POSTING
 		printf("jump to a different node.\n");
 #endif
-		po->cur = MEMBER_2_STRUCT(jump_to, struct mem_posting_node, sn);
+		po->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
 		rebuf_cur(po);
 	}
 #ifdef DEBUG_MEM_POSTING
@@ -304,35 +268,19 @@ bool mem_posting_jump(void *po_, uint64_t target_)
 	 * equal to target ID. */
 	do {
 		/* docID must be the first member of structure */
-		curID = (uint32_t*)mem_posting_cur_item(po);
+		curID = (uint32_t*)postlist_cur_item(po);
 
 		if (*curID >= target) {
 			return 1;
 		}
 
-	} while (mem_posting_next(po));
+	} while (postlist_next(po));
 
 	return 0;
 }
 
-void mem_posting_finish(void *po_)
+void postlist_finish(void *po_)
 {
-	struct mem_posting *po = (struct mem_posting*)po_;
+	struct postlist *po = (struct postlist*)po_;
 	FREE_BUFFER(po);
-}
-
-position_t *mem_posting_cur_pos_arr(void *po_)
-{
-	struct mem_posting *po = (struct mem_posting*)po_;
-
-	size_t      pos_arr_sz;
-	char       *pos_arr;
-	position_t *copy;
-
-	pos_arr = po->get_pos_arr(po->buf + po->buf_idx, &pos_arr_sz);
-
-	copy = malloc(pos_arr_sz);
-	memcpy(copy, pos_arr, pos_arr_sz);
-
-	return copy;
 }

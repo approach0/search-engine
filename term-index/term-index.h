@@ -42,6 +42,7 @@ void *term_index_get_posting(void *, term_id_t);
 struct term_posting_item {
 	doc_id_t doc_id;
 	uint32_t tf;
+	uint32_t pos_arr[];
 };
 
 bool term_posting_start(void *);
