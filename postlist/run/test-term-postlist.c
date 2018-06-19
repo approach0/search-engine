@@ -60,7 +60,7 @@ static void test_gen_data(struct postlist *po, enum test_option opt)
 	for (i = 1; i < 20; i++) {
 		pi = test_gen_item(i);
 
-		printf("writing %lu bytes...\n", TERM_POSTLIST_ITEM_SZ);
+		// printf("writing %lu bytes...\n", TERM_POSTLIST_ITEM_SZ);
 		fl_sz = postlist_write(po, pi, TERM_POSTLIST_ITEM_SZ);
 
 		if (fl_sz)

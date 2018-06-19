@@ -27,13 +27,13 @@ onrebuf_for_plain_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 static uint32_t
 onflush_for_compressed_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 {
-	doc_id_t *docID = (doc_id_t *)buf;
+	doc_id_t docID = *(doc_id_t *)buf;
 	PTR_CAST(codec, struct postlist_codec, buf_arg);
 
 	u32 len = (*buf_sz) / TERM_POSTLIST_ITEM_SZ;
 	*buf_sz = postlist_compress(buf, buf, len, codec);
 	
-	return *docID;
+	return docID;
 }
 
 static void
