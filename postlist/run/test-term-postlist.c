@@ -17,6 +17,8 @@
 #include "postlist.h"
 #include "term-postlist.h"
 
+#define N 2000
+
 enum test_option {
 	TEST_PLAIN_POSTING,
 	TEST_CODEC_POSTING,
@@ -61,7 +63,7 @@ static void test_gen_data(struct postlist *po)
 	size_t   fl_sz;
 	doc_id_t i;
 
-	for (i = 1; i < 20; i++) {
+	for (i = 1; i < N; i++) {
 		pi = test_gen_item(i);
 
 		// printf("writing %lu bytes...\n", TERM_POSTLIST_ITEM_SZ);
@@ -152,6 +154,9 @@ int main()
 
 	printf("{{{ TEST_CODEC_POSTING }}}\n");
 	run_testcase(TEST_CODEC_POSTING);
+
+	printf("Theoretical compact list size: %.2f KB\n",
+	       (N * sizeof(int) * (2 + 5)) / 1024.f);
 
 	mhook_print_unfree();
 	return 0;
