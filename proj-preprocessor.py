@@ -23,7 +23,7 @@ def parse_deptok(fpath):
 		tokens = content.split()
 	extract_next = False
 	for tok in tokens:
-		if tok == '#require' or tok == '#include':
+		if tok == '#include':
 			extract_next = True
 		elif extract_next:
 			toks.append(tok)
@@ -186,7 +186,7 @@ def parse_blk(begin, end, stack, iterator, ignores, prev):
 					base = ['', emit]
 			else:
 				base = ['['] + core + [']']
-		elif tok == "#require" or tok == "#include":
+		elif tok == "#require":
 			after = parse_blk('', '', 0, iterator, '', prev)
 			for i in range(len(after)):
 				if after[i] != ' ':
@@ -221,6 +221,7 @@ def help(arg0):
 	      'SYNOPSIS:\n' \
 	      '%s [-h | --help] ' \
 	      '[-I <search directory>] ' \
+	      '[--dry-run] ' \
 	      '<input file> ' \
 	      '\n' \
 	      % (arg0))
