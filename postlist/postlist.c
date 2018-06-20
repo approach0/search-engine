@@ -276,3 +276,20 @@ void postlist_finish(void *po_)
 	struct postlist *po = (struct postlist*)po_;
 	FREE_BUFFER(po);
 }
+
+#include "postlist-codec/postlist-codec.h"
+
+void print_postlist(struct postlist *po)
+{
+	struct math_postlist_item *pi;
+	postlist_start(po);
+	PTR_CAST(codec, struct postlist_codec, po->buf_arg);
+
+	do {
+		pi = postlist_cur_item(po);
+		postlist_print(pi, 1, codec->fields);
+
+	} while (postlist_next(po));
+
+	postlist_finish(po);
+}

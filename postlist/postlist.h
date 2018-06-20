@@ -62,3 +62,5 @@ void* postlist_cur_item(void*);
 uint64_t postlist_cur_item_id(void*);
 bool  postlist_jump(void*, uint64_t);
 void  postlist_finish(void*);
+
+void print_postlist(struct postlist *);
