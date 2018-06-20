@@ -142,3 +142,10 @@ math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 
 	return (postlist_sz == cache->postlist_sz);
 }
+
+void*
+math_postlist_cache_find(struct math_postlist_cache cache, char* path)
+{
+	strmap_t d = cache.path_dict;
+	return d[[path]];
+}

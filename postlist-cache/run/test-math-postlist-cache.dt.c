@@ -13,8 +13,10 @@ int main()
 
 	foreach (iter, strmap, cache.path_dict) {
 		char *key = iter.cur->keystr;
+		struct postlist *po = math_postlist_cache_find(cache, key);
+		
 		printf("cached[%s]:\n", key);
-		print_postlist(cache.path_dict[[key]]);
+		print_postlist(po);
 	}
 
 	math_postlist_cache_free(cache);

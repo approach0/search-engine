@@ -1,7 +1,6 @@
 #include "mhook/mhook.h"
 #include "tex-parser/vt100-color.h"
 #include "indexer/config.h" // for MAX_CORPUS_FILE_SZ
-#include "codec/codec.h"
 #include "indices.h"
 #include "config.h"
 
