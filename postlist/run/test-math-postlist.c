@@ -14,7 +14,7 @@ static void test_iterator(struct postlist *po, struct postlist_codec_fields fiel
 
 	do {
 		pi = postlist_cur_item(po);
-		postlist_print(pi, 1, fields);
+	//	postlist_print(pi, 1, fields);
 
 	} while (postlist_next(po));
 
@@ -30,7 +30,10 @@ static void test(struct postlist *po, int test_n)
 	/* generate random items */
 	PTR_CAST(codec, struct postlist_codec, po->buf_arg);
 	items = postlist_random(test_n, codec->fields);
-	postlist_print(items, test_n, codec->fields);
+
+	/* print fields and items */
+	postlist_print_fields(codec->fields);
+	//postlist_print(items, test_n, codec->fields);
 
 	/* append items to posting list */
 	for (int i = 0; i < test_n; i++) {
@@ -57,7 +60,7 @@ static void test(struct postlist *po, int test_n)
 int main()
 {
 	struct postlist *po;
-	const int test_n = 200;
+	const int test_n = 2000;
 
 	printf("[[[ math_postlist_create_plain ]]]\n");
 	po = math_postlist_create_plain();
@@ -68,6 +71,9 @@ int main()
 	po = math_postlist_create_compressed();
 	test(po, test_n);
 	postlist_free(po);
+
+	printf("Theoretical compact list size: %.2f KB\n",
+	       (test_n * sizeof(int) * (4 + 5*3)) / 1024.f);
 
 	mhook_print_unfree();
 	return 0;
