@@ -130,7 +130,8 @@ math_postlist_cache_free(struct math_postlist_cache cache)
 {
 	foreach (iter, strmap, cache.path_dict) {
 		char *key = iter.cur->keystr;
-		postlist_free(cache.path_dict[[key]]);
+		struct postlist *po = cache.path_dict[[key]];
+		if (po) postlist_free(po);
 	}
 
 	strmap_free(cache.path_dict);

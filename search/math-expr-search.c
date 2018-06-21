@@ -117,29 +117,6 @@ static int prepare_math_qry(struct subpaths *subpaths)
 	return 0;
 }
 
-static void* math_posting_current_wrap(math_posting_t po_)
-{
-	return (void*)math_posting_current(po_);
-}
-
-static uint64_t math_posting_current_id_wrap(void *po_item_)
-{
-	/* this casting requires `struct math_posting_item' has
-	 * docID and expID as first two structure members. */
-	uint64_t *id64 = (uint64_t *)po_item_;
-
-	return *id64;
-};
-
-static uint64_t math_posting_current_id_v2_wrap(void *po_item_)
-{
-	/* this casting requires `struct math_posting_item' has
-	 * docID and expID as first two structure members. */
-	uint64_t *id64 = (uint64_t *)po_item_;
-
-	return (*id64) & 0xffffffff000fffff;
-};
-
 struct on_dir_merge_args {
 	uint32_t                    n_qry_lr_paths;
 	struct postmerge           *pm;

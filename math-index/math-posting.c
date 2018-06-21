@@ -66,6 +66,28 @@ math_posting_new_reader(struct subpath_ele *ele, const char *fullpath)
 	return po;
 }
 
+int math_posting_exits(const char *fullpath)
+{
+	char file_path[MAX_DIR_PATH_NAME_LEN];
+	FILE *fh_post = NULL, *fh_info = NULL;
+	int exists = 1;
+
+	sprintf(file_path, "%s/" MATH_POSTING_FNAME, fullpath);
+	fh_post = fopen(file_path, "r");
+
+	sprintf(file_path, "%s/" PATH_INFO_FNAME, fullpath);
+	fh_info = fopen(file_path, "r");
+
+	if (NULL == fh_post || NULL == fh_info)
+		exists = 0;
+	
+	if (fh_post) fclose(fh_post);
+	if (fh_info) fclose(fh_info);
+
+	return exists;
+}
+
+
 struct subpath_ele *math_posting_get_ele(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;

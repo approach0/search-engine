@@ -72,3 +72,5 @@ int math_posting_pathinfo_v2(math_posting_t, uint32_t, uint32_t, struct math_pat
 
 /* print math posting path and its subpath set duplicate elements */
 void math_posting_print_info(math_posting_t);
+
+int math_posting_exits(const char*);

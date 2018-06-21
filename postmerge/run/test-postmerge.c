@@ -8,9 +8,29 @@
 #include "postmerge.h"
 #include "mergecalls.h"
 
-static int on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
+static int text_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
 {
-	printf("cur_min: %lu\n", cur_min);
+	for (int i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			struct term_posting_item *po_item;
+			po_item = pm->cur_pos_item[i];
+			printf("docID: %u, tf: %u\n", po_item->doc_id, po_item->tf);
+			break;
+		}
+	}
+	return 0;
+}
+
+static int math_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
+{
+	for (int i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			struct math_posting_item_v2 *po_item;
+			po_item = pm->cur_pos_item[i];
+			printf("expID: %u, docID: %u\n", po_item->exp_id, po_item->doc_id);
+			break;
+		}
+	}
 	return 0;
 }
 
@@ -23,6 +43,12 @@ int main()
 		"rickmorty",
 		"absolute"
 	};
+	
+	char query_path[][128] = {
+		"./NUM/TIMES",
+		"./NO/SUCH/PATH",
+		"./PI/ADD"
+	};
 
 	struct indices indices;
 	if(indices_open(&indices, "../indexer/tmp", INDICES_OPEN_RD)) {
@@ -34,10 +60,13 @@ int main()
 
 	printf("Caching begins ...\n");
 	indices_cache(&indices);
-
+	// postlist_cache_printinfo(indices.ci);
 
 	(void)math_postlist_cache_list(indices.ci.math_cache, 1);
 	(void)term_postlist_cache_list(indices.ci.term_cache, 1);
+
+	/* Test term posting list merge */
+	prinfo("Test term posting list merge");
 
 	postmerge_posts_clear(&pm);
 
@@ -54,7 +83,7 @@ int main()
 			term_id_t term_id;
 			term_id = term_lookup(indices.ti, q);
 			if (term_id == 0) {
-				prinfo("term not indexed, get empty posting list.")
+				prinfo("term not indexed, an empty posting list.")
 				pm_calls = NULL_POSTMERGE_CALLS;
 			} else {
 				prinfo("term not cached, get on-disk posting list.")
@@ -66,7 +95,49 @@ int main()
 		postmerge_posts_add(&pm, po, pm_calls, NULL);
 	}
 	
-	posting_merge(&pm, POSTMERGE_OP_OR, &on_merge, NULL);
+	posting_merge(&pm, POSTMERGE_OP_OR, &text_on_merge, NULL);
+	
+	/* Test math posting list merge */
+	prinfo("Test math posting list merge");
+
+	postmerge_posts_clear(&pm);
+
+	for (int i = 0; i < sizeof(query_path) / 128; i++) {
+		char *q = query_path[i];
+		struct postmerge_callbks pm_calls;
+		void *po = math_postlist_cache_find(indices.ci.math_cache, q);
+		void *po_arg = NULL;
+		printf("query path: %s\n", q);
+		
+		if (po) {
+			prinfo("path is cached, get in-memory posting list.")
+			pm_calls = mergecalls_mem_math_postlist();
+		} else {
+			char full_path[MAX_DIR_PATH_NAME_LEN];
+			sprintf(full_path, "../indexer/tmp/prefix/%s", q);
+			printf("%s\n", full_path);
+			if (math_posting_exits(full_path)) {
+				prinfo("path not cached, get on-disk posting list.")
+				po = math_posting_new_reader(indices.ti, full_path);
+				po_arg = &main; /* indicate it is a math on-disk posting, free it later. */
+				pm_calls = mergecalls_disk_math_postlist_v2();
+			} else {
+				prinfo("path not indexed, an empty posting list.")
+				pm_calls = NULL_POSTMERGE_CALLS;
+			}
+		}
+	
+		postmerge_posts_add(&pm, po, pm_calls, po_arg);
+	}
+	
+	posting_merge(&pm, POSTMERGE_OP_OR, &math_on_merge, NULL);
+
+	for (int i = 0; i < pm.n_postings; i++) {
+		if (pm.posting_args[i]) {
+			/* meaning it is a math on-disk posting, free it. */
+			math_posting_free_reader(pm.postings[i]);
+		}
+	}
 
 close:
 	indices_close(&indices);
