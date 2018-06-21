@@ -13,7 +13,7 @@ void postmerge_posts_clear(struct postmerge *pm)
 }
 
 void postmerge_posts_add(struct postmerge *pm, void *post,
-                         struct postmerge_callbks *calls, void *arg)
+                         struct postmerge_callbks calls, void *arg)
 {
 	pm->postings[pm->n_postings] = post;
 	pm->posting_args[pm->n_postings] = arg;
@@ -21,14 +21,12 @@ void postmerge_posts_add(struct postmerge *pm, void *post,
 	pm->cur_pos_item[pm->n_postings] = NULL;
 
 	/* callback functions */
-	if (calls != NULL) {
-		pm->start[pm->n_postings]  = calls->start;
-		pm->next[pm->n_postings]   = calls->next;
-		pm->jump[pm->n_postings]   = calls->jump;
-		pm->now[pm->n_postings]    = calls->now;
-		pm->now_id[pm->n_postings] = calls->now_id;
-		pm->finish[pm->n_postings] = calls->finish;
-	}
+	pm->start[pm->n_postings]  = calls.start;
+	pm->next[pm->n_postings]   = calls.next;
+	pm->jump[pm->n_postings]   = calls.jump;
+	pm->now[pm->n_postings]    = calls.now;
+	pm->now_id[pm->n_postings] = calls.now_id;
+	pm->finish[pm->n_postings] = calls.finish;
 
 	pm->n_postings ++;
 }

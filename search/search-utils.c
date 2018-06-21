@@ -14,63 +14,6 @@
 #include <assert.h>
 
 /*
- * get postmerge callback functions
- * (including term posting iteration function wrappers)
- */
-static void *term_posting_cur_item_wrap(void *posting)
-{
-	return (void*)term_posting_cur_item_with_pos(posting);
-}
-
-static uint64_t term_posting_cur_item_id_wrap(void *item)
-{
-	doc_id_t doc_id;
-	doc_id = ((struct term_posting_item*)item)->doc_id;
-	return (uint64_t)doc_id;
-}
-
-static bool term_posting_jump_wrap(void *posting, uint64_t to_id)
-{
-	bool succ;
-
-	/* because uint64_t value can be greater than doc_id_t,
-	 * we need a wrapper function to safe-guard from
-	 * calling term_posting_jump with illegal argument. */
-	if (to_id >= UINT_MAX)
-		succ = 0;
-	else
-		succ = term_posting_jump(posting, (doc_id_t)to_id);
-
-	return succ;
-}
-
-struct postmerge_callbks *get_memory_postmerge_callbks(void)
-{
-	static struct postmerge_callbks ret;
-	ret.start  = &mem_posting_start;
-	ret.finish = &mem_posting_finish;
-	ret.jump   = &mem_posting_jump;
-	ret.next   = &mem_posting_next;
-	ret.now    = &mem_posting_cur_item;
-	ret.now_id = &mem_posting_cur_item_id;
-
-	return &ret;
-}
-
-struct postmerge_callbks *get_disk_postmerge_callbks(void)
-{
-	static struct postmerge_callbks ret;
-	ret.start  = &term_posting_start;
-	ret.finish = &term_posting_finish;
-	ret.jump   = &term_posting_jump_wrap;
-	ret.next   = &term_posting_next;
-	ret.now    = &term_posting_cur_item_wrap;
-	ret.now_id = &term_posting_cur_item_id_wrap;
-
-	return &ret;
-}
-
-/*
  * new rank hit
  */
 #define CUR_POS(_in, _i) \
@@ -371,27 +314,6 @@ static LIST_IT_CALLBK(set_kw_values)
 void set_keywords_val(struct query *qry, struct indices *indices)
 {
 	list_foreach((list*)&qry->keywords, &set_kw_values, indices);
-}
-
-/*
- * math related functions
- */
-static char *getposarr_for_mathpost(char *buf, size_t *size)
-{
-	P_CAST(mip, math_score_posting_item_t, buf);
-	*size = sizeof(position_t) * mip->n_match;
-	return (char *)(mip->pos_arr);
-}
-
-struct mem_posting_callbks math_score_posting_plain_calls()
-{
-	struct mem_posting_callbks ret = {
-		onflush_for_plainpost,
-		onrebuf_for_plainpost,
-		getposarr_for_mathpost
-	};
-
-	return ret;
 }
 
 /* Below are debug functions */

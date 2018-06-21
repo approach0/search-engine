@@ -90,6 +90,7 @@ struct postmerge_callbks {
 	post_finish_callbk finish;
 };
 
+#define NULL_POSTMERGE_CALLS ((struct postmerge_callbks) {0})
 
 void postmerge_posts_clear(struct postmerge*);
 
@@ -99,7 +100,7 @@ void postmerge_posts_clear(struct postmerge*);
  * indicate posting list is empty such that no results is going to be
  * returned. */
 void postmerge_posts_add(struct postmerge*, void*,
-                         struct postmerge_callbks*, void*);
+                         struct postmerge_callbks, void*);
 
 /* posting list IDs must be incremental and *unique* for each item */
 bool posting_merge(struct postmerge*, enum postmerge_op,

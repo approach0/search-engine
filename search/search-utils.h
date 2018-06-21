@@ -9,10 +9,6 @@ struct posting_merge_extra_args {
 	prox_input_t            *prox_in;
 };
 
-/* get postmerge callback functions */
-struct postmerge_callbks *get_memory_postmerge_callbks();
-struct postmerge_callbks *get_disk_postmerge_callbks();
-
 /* new rank hit */
 struct rank_hit *new_hit(doc_id_t, float,
                          prox_input_t*, uint32_t);
@@ -43,7 +39,5 @@ typedef struct {
 	position_t  pos_arr[];
 } math_score_posting_item_t;
 #pragma pack(pop)
-
-struct mem_posting_callbks math_score_posting_plain_calls();
 
 void print_math_expr_at(struct indices*, doc_id_t, exp_id_t);

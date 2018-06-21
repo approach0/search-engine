@@ -217,11 +217,9 @@ void term_posting_finish(void *posting)
 	delete po;
 }
 
-#include "search/config.h" /* for MAX_MERGE_POSTINGS */
-
 struct term_posting_item *term_posting_cur_item(void *posting)
 {
-	static struct term_posting_item *ret, q[MAX_MERGE_POSTINGS];
+	static struct term_posting_item *ret, q[MAX_TERM_MERGE_POSTINGS];
 	static int i = 0;
 
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
@@ -230,12 +228,12 @@ struct term_posting_item *term_posting_cur_item(void *posting)
 
 	if (doc) {
 		/* a hacky way to return term_posting_item pointers. This array is
-		 * made of MAX_MERGE_POSTINGS objects to avoid different posting
+		 * made of MAX_TERM_MERGE_POSTINGS objects to avoid different posting
 		 * lists referring to the same object at merge time, which leads to
 		 * all query terms sharing an identical term-frequency, and a wrong
 		 * score as a result. */
 		ret = &q[i];
-		i = (i + 1) % MAX_MERGE_POSTINGS;
+		i = (i + 1) % MAX_TERM_MERGE_POSTINGS;
 		ret->doc_id = doc->document;
 		ret->tf = doc->positions.size();
 
@@ -254,7 +252,7 @@ struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 		doc_id_t   doc_id;
 		uint32_t   tf;
 		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
-	} q[MAX_MERGE_POSTINGS];
+	} q[MAX_TERM_MERGE_POSTINGS];
 #pragma pack(pop)
 
 	unsigned int k;
@@ -267,7 +265,7 @@ struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 
 	if (doc) {
 		ret = &q[i];
-		i = (i + 1) % MAX_MERGE_POSTINGS;
+		i = (i + 1) % MAX_TERM_MERGE_POSTINGS;
 
 		ret->doc_id = doc->document;
 		ret->tf = doc->positions.size();
