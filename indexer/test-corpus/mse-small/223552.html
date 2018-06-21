@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/223552/special-differential-equation-continued-2">http://math.stackexchange.com/questions/223552/special-differential-equation-continued-2</a></h2>
+Special Differential Equation (continued-2)</br></br>May you help me out in solving inhomogeneous differential equation looking like[this is radial part of Schrodinger equation]:</br>[imath]R^{\prime\prime}+\frac{1}{r}R^{\prime}-\frac{a^{2}}{r^{2}}R+b^{2}R-\frac{c^{2}}{r}\delta(r-\rho)R-d^{2}R=F\exp(ikr)[/imath]</br></br>I added LaTeX formatting; please check whether it is what you meant.</br>Is [imath]\delta(r-\rho)[/imath] a dirac delta, or a step function or what?</br>It's a dirac delta function.</br>Where does [imath]r[/imath] lie?</br>r goes like 0<r<infinity.</br></br>First of all, let's write the equation in a cleaner way:</br>[imath]</br>R'' + \frac{1}{r}R' +\left(b^2 - d^2 - \tfrac{a^2}{r^2}\right)R = F e^{ikr} + \tfrac{c^2}{r} \delta(r-\rho) R \quad \Longrightarrow</br>[/imath]</br>[imath]</br>\frac{d}{dr}\left\{r\frac{d R}{dr}\right\} + r \left(b^2 - d^2 - \tfrac{a^2}{r^2}\right)R = r F e^{ikr} + c^2 \delta(r-\rho)R</br>[/imath]</br>Now, supposing [imath]F[/imath] is a constant, integrating both sides of the equality</br>\begin{multline}</br>\int_{\rho-\epsilon}^{\rho+\epsilon} \frac{d}{dr}\left\{r\frac{d R}{dr}\right\} dr + \int_{\rho-\epsilon}^{\rho+\epsilon} r \left(b^2 - d^2 - \tfrac{a^2}{r^2}\right)R = \\</br>\int_{\rho-\epsilon}^{\rho+\epsilon}\left\{r F e^{ikr} + c^2 \delta(r-\rho) R\right\}dr. </br>\end{multline}</br>Supposing [imath]R[/imath] continous a.e., the second term on the LHS and the exponential term in the RHS will vanish as [imath]\epsilon \to 0[/imath], leaving</br>[imath]</br>\int_{\rho-\epsilon}^{\rho+\epsilon} \frac{d}{dr}\left\{r\frac{d R}{dr}\right\} dr= c^2 R(\rho),</br>[/imath]</br>and then you have the jump comdition</br>[imath]</br>\lim_{r \to \rho^+} \left(r\frac{d R}{dr}\right) - \lim_{r \to \rho^-} \left(r\frac{d R}{dr}\right) = c^2 R(\rho).</br>[/imath]</br>Now (where is [imath]r[/imath]?), for [imath]0 \le r < \rho[/imath]</br>[imath]</br>R'' + \frac{1}{r}R' + \left(b^2 - d^2 - \tfrac{a^2}{r^2}\right)R = F e^{ikr},</br>[/imath]</br>and the same equation applies for [imath]\rho < r < \infty[/imath].</br>Note: I'm only going to solve the case [imath]|d| \le |b|[/imath], and [imath]\textbf{F = 0}[/imath]. The inhomogeneous case can be solved the same way using variation of parameters (the case [imath]|b| < |d|[/imath] is analogous).</br>In this case, assuming that [imath]r \in \mathbb{R}^+[/imath], then</br>[imath]</br>R(r) = \begin{cases}k_1 J_a\big(\sqrt{b^2 - d^2}r\big), & 0\le r < \rho \\ \\</br>k_2 J_{a}\big(\sqrt{b^2 - d^2}r\big) + k_3 J_{-a}\big(\sqrt{b^2 - d^2}r\big), & \rho < r < \infty\end{cases}</br>[/imath]</br>where [imath]J_{\pm a}[/imath] are the Bessel functions of order [imath]\pm a[/imath]. To determine the values of [imath]k_1[/imath], [imath]k_2[/imath] and [imath]k_3[/imath] you have, for example</br>\begin{align}</br>R_0&=k_1 J_a(0)\\</br>0 &= k_2 J_a\big(\sqrt{b^2 - d^2}\rho\big) + k_3 J_{-a}\big(\sqrt{b^2 - d^2}\rho\big) - k_1 J_a\big(\sqrt{b^2 - d^2}\rho\big)</br>\end{align}</br>and</br>\begin{multline}</br>\frac{k_1}{\rho} J_a\big(\sqrt{b^2 - d^2}\rho\big) = \\</br>k_2 J_a'\big(\sqrt{b^2 - d^2}\rho\big) + k_3 J_{-a}'\big(\sqrt{b^2 - d^2}\rho\big) -  k_1 J_a'\big(\sqrt{b^2 - d^2}\rho\big),</br>\end{multline}</br>where the first equation is the boundary condition, the second is the continuity condition, and the third is the jump condition.</br>Lastly, I've noted that you haven't included neither the domain nor initial/boundary conditions in any of your questions. This very problematic, as the I/B conds. are part of the differential operator, and strongly determine the solution.</br></br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2221052/calculating-percentage-change-from-loss-and-gain">http://math.stackexchange.com/questions/2221052/calculating-percentage-change-from-loss-and-gain</a></h2>
+Calculating percentage change from loss and gain</br></br>A bank makes a loss of [imath]1,000,000[/imath] in [imath]2016[/imath]. In [imath]2017[/imath] it makes a profit of [imath]1,000,000.[/imath] Is it possible to calculate the increase in percentage profit from [imath]2016[/imath] to [imath]2017[/imath]</br></br>It is not possible if you don't know the capital of the bank in 2016.</br></br>The 1,000,000 gain in 2017 cancels the 1,000,000 loss in 2016, putting the total amount of money in the bank back to where it started.  So the percent increase in profit is zero.</br></br>Not really..there is actual profit in 2017. However it is not possible to calculate increase in profit as there was no profit in the previous year...</br></br>We need capital of bank in [imath]2016[/imath] to find profit percentage. For example -</br>Case [imath]1 -[/imath] Suppose capital in 2016 is 4,000,000.</br>Profit [imath]= 1,000,000[/imath]</br>Profit percentage [imath]= 25\%[/imath]</br>Case [imath]2 -[/imath] Suppose capital in [imath]2016[/imath] is [imath]5,000,000.[/imath]</br>Profit [imath]= 1,000,000[/imath]</br>Profit percentage [imath]= 20\%[/imath]</br></br>I dont think you need the capital just to calculate the year on year increase in percentage profit.</br>I am also thinking the same.</br></br>
+</body>
+</html>

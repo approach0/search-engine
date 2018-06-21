@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2238552/proof-of-f-in-the-domain-of-a-frechet-type-cdfs">http://math.stackexchange.com/questions/2238552/proof-of-f-in-the-domain-of-a-frechet-type-cdfs</a></h2>
+Proof of F in the domain of a Frechet Type cdfs?</br></br>I'm studying order statistics and I came across this exercise.</br>I want to verify that:  </br>[imath] F_{m,n} \in D(G_{1}) [/imath]  </br>([imath]F[/imath] is in the max-domain of atraction of [imath]G_{1}[/imath]).</br>By definition,  </br>[imath]G_{1}(x) = </br>\begin{cases} e^{-x^{-\alpha}} && x>0, & \alpha>0 \\</br>               0 & & x \le 0</br>\end{cases} [/imath]</br>And by theorem I know that [imath] F \in D(G_{1}) \iff x^{*} = \infty [/imath] and there exits an [imath]x>0[/imath] such that:  </br>[imath] \frac{1-F(tx)}{1-F(t)} \longrightarrow x^{-\alpha}[/imath]\mbox{ as } t \longrightarrow \infty, \ \  \forall x >0 .[imath]  </br>With [/imath]x^{*}[imath] being the right end point of [/imath]F_{x}[imath], [/imath]\ x^{*}= \sup\{x:F_{x}(x)<1 \}[imath]</br>My approach is trying to set [/imath]F(x)[imath] in that to the explicit form of [/imath]F_{m,n}(x)[imath] in the following way:</br>[/imath]\frac{m!}{(n-m)!(m-1)!}F(x)^{n-m}(1-F(x))^{m-1} [imath]</br>But I'm not really sure how to get a function of [/imath]x
+</body>
+</html>

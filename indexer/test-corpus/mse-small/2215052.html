@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2215052/how-to-solve-lim-x-y-to-1-1-frac4x-y512xy2">http://math.stackexchange.com/questions/2215052/how-to-solve-lim-x-y-to-1-1-frac4x-y512xy2</a></h2>
+How to solve [imath]\lim_{(x,y)\to(-1,1)}\frac{4x-y+5}{(1+2x+y)^2}[/imath]?</br></br>I have a limit:</br>[imath]\lim_{(x,y)\to(-1,1)}\frac{4x-y+5}{(1+2x+y)^2}[/imath]</br>Is my solution correct? If not, what is step by step solution for this limit? Thank you.</br>My solution:</br>I replaced [imath]y[/imath] with [imath]k(x^2+1)+1[/imath].</br>[imath]\lim_{x\to-1\\y=k(x^2+1)+1}\frac{4x-(k(x^2+1)+1)+5}{(1+2x+(k(x^2+1)+1))^2}=\lim_{x\to-1}\frac{4x-kx^2-k+4}{(2x+kx^2+k+2)^2}=\frac{-4-k-k+4}{(-2+k+k+2)^2}=\frac{-2k}{4k^2}[/imath]</br>Limit depends on [imath]k[/imath] so limit does not exist.</br></br>If we plug in [imath]x=-1[/imath] in [imath]k(x^2+1)+1[/imath], we get [imath]2k+1[/imath] ... Try [imath]y=k(x+1)+1[/imath]</br>Then I've got 0/0. Is that means I should use different aproach?</br>When you choose the path [imath]\;y=k(x^2+1)+1\;[/imath], you get that if [imath]\;x\to-1\;[/imath] then [imath]\;y\to2k+1\;[/imath] , which isn't [imath]\;1\;[/imath] unless [imath]\;k=0\;[/imath] ...</br></br>To calculate variables with substitution it must be that on that particular pat you approach the wanted point... For example, take [imath]\;y=k(x+1)+1\;[/imath] (observe that [imath]\;x\to-1\;\implies\;y\to1\;[/imath], as required), so the limit is</br>[imath]\lim_{x\to-1}\frac{4x-kx-k-1+5}{(1+2x+kx+k+1)^2}=\lim_{x\to-1}\frac{(4-k)(x+1)}{(2+k)^2(x+1)^2}=\lim_{x\to-1}\frac{4-k}{(2+k)^2(x+1)}[/imath]</br>and the last limit doesn't even exist finitely, so the original one neither does.</br></br>Isn't [imath](2x+kx+k+2)^2[/imath] equals to [imath](2+k)^2(x+1)^2[/imath] instead of [imath](2+k)(x+1)[/imath]?</br>@user428015 Indeed so, and I'm going to correct that now, thanks...yet thart makes it even clearer the limit cannot exist! :)</br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2283052/solve-x247-equiv-y-pmod-2016">http://math.stackexchange.com/questions/2283052/solve-x247-equiv-y-pmod-2016</a></h2>
+Solve [imath]x^{247} \equiv y \pmod {2016}[/imath]</br></br>I asked a question like this earlier but I'm looking for a more general answer. </br>Solve:</br>[imath]x^{247} \equiv y \pmod {2016}[/imath]</br>I know you have to use the Euclidean algorithm but I'm not sure how.</br>I know the prime factorization of 2016 is [imath]2^5 \times 3^2 \times7[/imath].</br>Additionally, I know that [imath]\phi (2016)[/imath]=576. </br></br>For the case [imath]\gcd(y,2016)=1[/imath]  we have [imath]\gcd(x,2016)=1,[/imath]  so [imath]\gcd(x,2^5(=\gcd (x,3^2)=\gcd(x,7)=1.[/imath]...... (1). Modulo [imath]2^5[/imath], we have  [imath]x^8\equiv 1[/imath] so [imath]x^{247}\equiv y  \iff x^7\equiv y\iff 1\equiv x^8\equiv xy.[/imath] ..... (2). Modulo [imath]3^2[/imath]  we have  [imath]x^6\equiv 1[/imath] so [imath]x^{247}\equiv y\iff x\equiv y.[/imath] .... (3). Modulo [imath]7[/imath] we have [imath]x^6\equiv 1[/imath] so [imath]x^{247}\equiv y\iff x\equiv y[/imath]... The method of proof of the Chinese Remainder Theorem provides an algorithm for finding all [imath]x[/imath]  that satisfy these three conditions.</br>we can use mathworld.wolfram.com/CarmichaelFunction.html [imath]\lambda(2016)=24[/imath] See also : math.stackexchange.com/questions/2281562/…</br></br>First, some introduction : </br>Tonelli-shanks algorithm can solve this problem [imath]x^2 = b \mod p[/imath] for [imath]p[/imath] prime number, also can be generalized for [imath]n[/imath] composite.</br>For the general case [imath]x^a = b \mod p[/imath]  its easy solve-able if [imath]gcd(a,p-1)=1[/imath] and [imath](b,p)=1[/imath] and it becomes very complicated when the condition fails (yet there are many papers dealing with this situation on arXiv), and this can be generalized to [imath]n[/imath] composite by using [imath]\phi(n)[/imath] where [imath]\phi(n)[/imath] is the Euler function.</br>In your case [imath]gcd(247,\phi(2016)=576)=1[/imath], so its easily solve-able if [imath]gcd(y,2016)=1[/imath] which means that [imath]2\not| y[/imath] and [imath]3\not|y[/imath] and [imath]7\not|y[/imath].</br>Its simply by this equation [imath]x=y^{7} \mod 2016[/imath], the reason for this is that [imath]247^{-1} = 7 \mod \phi(2016)=576[/imath].(Read about why this works given the above conditions in the internet).</br>For Example : [imath]x^{247} = 131\mod 2016[/imath] and since [imath]gcd(131,2016)=1[/imath], the solution is [imath]x = 131^{7} = 1643 \mod 2016[/imath] so [imath]x=1643[/imath].</br>Note there is more than one solution [imath]-x \mod 2016[/imath] is also a solution and there might be more solutions.</br></br>That's incorrect. [imath]1643^{247} mod 2016 \equiv 131[/imath] not [imath]5[/imath]</br>@shrindle [imath]5^{7} \mod 2016 = 1517 \not= 1643[/imath], so were is the problem ?</br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2251552/transformation-of-parameter">http://math.stackexchange.com/questions/2251552/transformation-of-parameter</a></h2>
+Transformation of Parameter</br></br>Let [imath]S=\mathbb{S}^2[/imath] and let [imath]F_1(x_1,x_2)=\left(x_1,x_2,\sqrt{1-(x_1^2+x_2^2)}\right)[/imath] and [imath]F_2(x_1,x_3)=\left(x_1,\sqrt{1-x_1^2-x_3^2},x_3\right)[/imath] two parametrizations. Furthermore, [imath](u_1,u_2)\in U_1=\{u:\|u\|<1\}[/imath] and [imath]H=F_2^{-1}\circ F_1[/imath]. Find explicitly [imath]H[/imath] and show that [imath]H[/imath] is differentiable in [imath]U_1[/imath].</br>Hello, my problem is how define [imath]H(x_1,x_2)[/imath]?</br></br>What did you try?</br>Does the below help?</br></br>You need to compute the inverse of [imath]F_2[/imath]. First write,</br>[imath]F_2(x_1,x_3) = \left(x_1, \sqrt{1-x_1^2-x_3^2},x_3\right) = \begin{pmatrix} u \\ v \\ w \end{pmatrix}[/imath]</br>So we need [imath]g(u,v,w) = (x_1,x_3)[/imath]. Recalling that [imath](u,v,w) \in \textbf{Im}(F_2)[/imath], take [imath]g(u,v,w) = (u,w)[/imath]. I will show that [imath]g[/imath] is the right-inverse of [imath]F_2[/imath], and I'll leave you to show the left inverse portion. Here we have that, </br>\begin{align*}(F_2 \circ g)(u,v,w) &= F_2(g(u,v,w)) \\&= F_2(u,v) \\&= F_2(x_1,x_3) \\&= (u,v,w) \end{align*}</br>Now that we have [imath]F_2^{-1}:=g[/imath], we can compute [imath]H[/imath]. I will leave you to show that [imath]H[/imath] is differentiable over the set [imath]U_1[/imath]. </br>\begin{align*} H(x_1,x_2) &= (F_2^{-1} \circ F_1)(x_1,x_2) \\ & = F_2^{-1}\left(x_1, x_2, \sqrt{1-(x_1^2+x_2^2)}\right) \\ &= \left(x_1, \sqrt{1-(x_1^2+x_2^2)}\right) \end{align*}</br></br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2265552/tensors-with-conventional-names">http://math.stackexchange.com/questions/2265552/tensors-with-conventional-names</a></h2>
+Tensors with conventional names?</br></br>I was wondering, what kinds of tensors (in the sense of "multi-index arrays of numbers") exist that have conventional names, which can help describing results of tensor calculations.</br>I can only think of two examples:</br>The 2nd-rank Kronecker delta defined as </br>[imath] \delta_{a,b} = \begin{cases}</br>1 & \mathrm{if}~a=b \\</br>0 & \mathrm{otherwise}</br>\end{cases} [/imath]</br>The arbitrary-rank Levi-Civita symbol defined as [imath]</br>  \epsilon_{a_1,...,a_r} = \begin{cases}</br>+1&\text{if }(a_1,...,a_r)\text{ an even permutation of }(1,...,r)\\</br>-1&\text{if }(a_1,...,a_r)\text{ an odd permutation of }(1,...,r)\\</br>0&\text{otherwise}</br>\end{cases}</br>[/imath]</br>I am trying to find conventional names to express tensors I encountered in group theory. An example was a [imath]3\times3\times3[/imath] tensor [imath]A_{abc}[/imath] with 6 equal elements at the positions where [imath]a,b,c[/imath] are mutually different, which can be expressed as [imath]A_{abc} \propto |\epsilon_{abc}|[/imath], and a [imath]3\times3\times3\times3[/imath] tensor which had 9 equal non-zero elements at positions matching an index pattern [imath]aabb[/imath] (6 elements) or [imath]aaaa[/imath] (3 elemets) (assuming [imath]a\neq b[/imath]), which can be written as [imath]A_{abcd} \propto \delta_{ab} \delta_{cd}[/imath]. </br>However, I also came across a tensor which had 21 equal non-zero elements for the patterns [imath]aaaa[/imath] (3), [imath]aabb[/imath] (6), (as above) but additionally also for [imath]abab[/imath] (6) and [imath]abba[/imath] (6). I couldn't figure out any convenient way to express this tensor, that didn't require introducing a new "tensor of ones". The closest I got was [imath]\delta_{ab}\delta_{cd}+\delta_{ac}\delta_{bd}+\delta_{ad}\delta_{bc} - 2\delta_{ab}\delta_{bc}\delta_{cd}[/imath], but that is hardly concise nor is it obvious from looking at the equation that all non-zero components are the same.</br>This question may be related to asking for tensors which are invariant under orthonormal basis transformations.</br></br>I haven't seen the notation [imath]\delta_{abcd}[/imath] for the quantity that is [imath]1[/imath] for [imath]a = b = c = d[/imath] and zero otherwise, but one can just write [imath]\delta_{abcd}[/imath] as [imath]\delta_{ab} \delta_{ac} \delta_{ad}.[/imath]</br>IIRC the only tensors which are invariant under orthogonal transformations (i.e., elements of [imath]SO(n)[/imath]) in a general linear vector space are [imath]\delta_{ab}[/imath], [imath]\epsilon_{abc\cdots}[/imath], and tensor products thereof.</br>If you're looking for a good exposition of invariant subspaces of tensor spaces under [imath]SO(3)[/imath] transformations, I would suggest looking in Hamermesh's Group Theory and its Applications to Physical Problems.  Unfortunately I lent out my copy and don't have the time to reconstruct all of the results necessary, or I'd summarize it as an answer.</br>@Travis Good point, I'll update that part.</br>You could replace the expression in question with [imath]\delta_{ab} \delta_{ac} \delta_{ad} \delta_{bc} \delta_{bd} \delta_{bc}[/imath]. It's ugly and not very parsimonious, but at least it makes it more or less apparently that the resulting expression is symmetric in [imath]a, b, c, d[/imath].</br></br>
+</body>
+</html>

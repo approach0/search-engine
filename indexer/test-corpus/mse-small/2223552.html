@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2223552/is-the-kronecker-or-hadamard-product-of-many-positive-semi-definite-hermitian-ma">http://math.stackexchange.com/questions/2223552/is-the-kronecker-or-hadamard-product-of-many-positive-semi-definite-hermitian-ma</a></h2>
+Is the Kronecker or Hadamard product of many Positive Semi-Definite Hermitian matrices also PSD Hermitian? [closed]</br></br>If I have [imath]n[/imath] Hermitian Positive Semi-Definite matrices [imath]A_1, A_2 ... A_n[/imath], does there exist any type of product (viz. Kronecker, Hadamard, Tracy-Singh, etc.) that gives back a  Hermitian Positive Semi-Definite matrix.</br>This question appears to be off-topic. The users who voted to close gave this specific reason:"This question is missing context or other details: Please improve the question by providing additional context, which ideally includes your thoughts on the problem and any attempts you have made to solve it. This information helps others identify where you have difficulties and helps them write answers appropriate to your experience level." – user26857, Claude Leibovici, Henrik, user91500 If this question can be reworded to fit the rules in the help center, please edit the question.</br></br></br>The Kronecker product always works, because the eigenvalues of the product are necessarily non-negative. The Schur product (aka Hadamard) works, by a theorem of Schur.</br></br>Thank you! I wrote a small code to generate a 100 random PSDH matrices, and do the product and check. It worked but I was looking to make sure it was mathematically sound :)</br></br>
+</body>
+</html>

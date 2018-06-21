@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2213552/given-symmetric-n-times-n-matrices-sum-k-a-k-i-sum-k-rank-a-k-n-the">http://math.stackexchange.com/questions/2213552/given-symmetric-n-times-n-matrices-sum-k-a-k-i-sum-k-rank-a-k-n-the</a></h2>
+Given symmetric [imath]n\times n[/imath] matrices [imath]\sum_k A_k= I, \sum_k rank( A_k) = n[/imath], then [imath]A_i A_j = 0[/imath]</br></br>Given  symmetric [imath]n\times n[/imath] matrices [imath]\sum_k A_k=  I, \sum_k rank( A_k) = n[/imath], then [imath]A_i A_j = 0[/imath]</br>I know the condition implies [imath]Rank(A_i + A_j) = Rank(A_i) + Rank (A_j)[/imath] which implies [imath]Col(A_i) \cap Col (A_j) = \{0\}[/imath]. How could I continue this?</br>From the additional link in the comment, I know that [imath]Col(A_i)[/imath] is orthogonal to [imath]Nul(A_i)[/imath] also the same for [imath]A_j[/imath] since they are real symmetric. </br>To show [imath]A_i A_j = 0[/imath], we want [imath]Col(A_j) \subset Nul(A_i) \Leftrightarrow Col(A_j) \subset Col(A_i)^\perp[/imath], but how can i get this from the fact that [imath]Col(A_i) \cap Col (A_j) = \{0\}[/imath]  </br></br>You probably want to require [imath]i \neq j[/imath]. (No idea on how to solve this.)</br>Yes, [imath]i\neq j[/imath].</br>Related: For a set of symmetric matrices [imath]A_i[/imath] of order p, show that if the sum of their ranks is p, [imath]A_iA_j=0[/imath]</br></br>
+</body>
+</html>

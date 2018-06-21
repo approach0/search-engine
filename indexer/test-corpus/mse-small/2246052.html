@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2246052/when-is-a-linear-operator-the-gradient-of-a-function-f-mathbbrn-to-mathbb">http://math.stackexchange.com/questions/2246052/when-is-a-linear-operator-the-gradient-of-a-function-f-mathbbrn-to-mathbb</a></h2>
+When is a linear operator the gradient of a function [imath]f:\mathbb{R}^n \to \mathbb{R}[/imath]?</br></br>Let [imath]F(x) = Ax[/imath], where [imath]A \in \mathbb{R}^{n \times n}[/imath] and [imath]x \in \mathbb{R}^n[/imath]</br>Under what condition does there exist a [imath]f[/imath], such that [imath]\nabla f = F[/imath]?</br>It is clear to me this happens when [imath]A[/imath] is diagonal matrix. Is there any other conditions on the matrix [imath]A[/imath] such that [imath]f[/imath] exists?</br></br></br>Claim: If [imath]A[/imath] is symmetric, then such an [imath]f[/imath] exists.</br>Proof: Let [imath]A[/imath] be symmetric. Take [imath]f(x) = \frac{1}{2}x^TAx[/imath]. Then</br>[imath]</br>(\nabla f(x))_k = \frac{\partial}{\partial x_k} \frac{1}{2}\sum_i \sum_j A_{ij}x_ix_j = \sum_i \sum_j \frac{1}{2}\frac{\partial}{\partial x_k}(x_ix_j) A_{ij}</br>[/imath]</br>We have [imath]\frac{\partial}{\partial x_k}(x_ix_j) = 2x_i[/imath] if [imath]i=j=k[/imath] and [imath]\frac{\partial}{\partial x_k}(x_ix_j) = x_j[/imath] if [imath]i = k[/imath] and [imath]j \ne k[/imath] and [imath]\frac{\partial}{\partial x_k}(x_ix_j) = x_i[/imath] if [imath]i \ne k[/imath] and [imath]j = k[/imath]. If [imath]i \ne k[/imath] and [imath]j \ne k[/imath] then [imath]\frac{\partial}{\partial x_k}(x_ix_j) = 0[/imath].</br>We're good when [imath]i=k[/imath] since we have a factor of 2 to cancel out the [imath]1/2[/imath]. Notice that for each [imath]i \ne k[/imath], the term [imath]A_{ik}x_ix_k[/imath] and [imath]A_{ki}x_kx_i[/imath] both appear in the sum. Under assumption of symmetry, these terms are equal, which gives us the factor of 2 needed to cancel out the [imath]1/2[/imath].</br>Thus through the computations yields</br>[imath]</br>(\nabla f(x))_k = \sum_i A_{ki} x_i = (Ax)_k</br>[/imath]</br>In other words, [imath]\nabla f = F[/imath].</br></br></br>
+</body>
+</html>

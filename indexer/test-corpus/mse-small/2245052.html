@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2245052/find-vector-pointing-left">http://math.stackexchange.com/questions/2245052/find-vector-pointing-left</a></h2>
+Find vector pointing left</br></br>Lets say I have two vectors</br>I want to find the vector which is pointing from right to left of the object.</br>Obviously, the vector is either [imath]cross(bottomToTop, footToHead)[/imath] or [imath](-1)* cross(bottomToTop, footToHead)[/imath] but I have not figured out to distinguish between the two. How would you do that?</br>As an illustration of the situation, please have a look at this picture:</br></br></br>I don't really understand your application, but if you want to determine the orientation of the vector resulting from the cross product, you can search up the well known "right-hand rule". When doing the right-hand rule, your thumb should point in the direction of [imath](bottomToTop \times footToHead)[/imath], so you can determine if that is the correct direction, or if you need to multiply by [imath](-1)[/imath] to correct it.</br>hi! yes, handedness actually came to my mind, but I have not figured out how to test the handedness programmatically.</br>What’s the difference between bottom-to-top and foot-to-head? They’re synonymous to me. An illustration of the situation might get you a usable answer.</br>@amd I have added an illustration, hope that clarifies things</br></br>You'd obviously want to scale such a vector, but if 'up' is positive [imath]x[/imath], 'forward' is positive [imath]y[/imath], and 'right' is positive 'z', then your vector should be [imath]- ( bottomToTop \times footToHead)[/imath].</br></br>OP's diagram (and the label "rightToLeft") suggest that left is "positive [imath]z[/imath]". ;)</br>It would seem that way, but I suspect that OP is working in some sort of graphics framework, in which case right is probably defined as 'positive z'.</br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2242052/about-mathbbq-sqrt5-sqrt37">http://math.stackexchange.com/questions/2242052/about-mathbbq-sqrt5-sqrt37</a></h2>
+About [imath]\mathbb{Q}(\sqrt{5},\sqrt[3]{7})[/imath]</br></br>Let [imath]K=\mathbb{Q}(\sqrt{5},\sqrt[3]{7})\subset \mathbb{C}[/imath]. To compute [imath][K:\mathbb{Q}][/imath], I know that </br>\begin{align*}</br>[\mathbb{Q}(\sqrt{5}):\mathbb{Q}]&=2\\</br>[\mathbb{Q}(\sqrt[3]{7}):\mathbb{Q}]&=3.</br>\end{align*}</br>Can I say that [imath]2<[K:\mathbb{Q}]\leq 6[/imath] and because [imath]2\not |[/imath] [imath]3,5[/imath] and [imath]3\not | [/imath] [imath]4[/imath], then [imath][K:\mathbb{Q}]=6[/imath]?</br>And, if [imath]\gamma=\sqrt{5}\sqrt[3]{7}[/imath], the minimal polynomial of [imath]\gamma[/imath] over [imath]\mathbb{Q}(\gamma)[/imath] would be [imath]p(x)=x^6-5^37^2?[/imath]</br>I'm a bit insecure about this.</br>Thanks in advance.</br></br></br>If [imath]K=\Bbb Q(\sqrt5,\sqrt[3]7)[/imath] then [imath]|K:\Bbb Q|=|K:\Bbb Q(\sqrt5)|</br>|\Bbb Q(\sqrt5):\Bbb Q|[/imath] so [imath]|K:\Bbb Q|[/imath] is divisible by [imath]2[/imath].</br>Similarly [imath]|K:\Bbb Q|[/imath] is divisible by [imath]3[/imath] (why?). So</br>it is divisible by [imath]6[/imath] (as [imath]2[/imath] and [imath]3[/imath] are coprime). But [imath]|K:\Bbb Q|\le 6[/imath]</br>(why?).</br></br>If [imath]|K:Q|>6[/imath], then the minimal polynomial can't have degree 6?</br>@Nico that's one way to see it.</br></br>
+</body>
+</html>

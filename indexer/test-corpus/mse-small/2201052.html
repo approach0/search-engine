@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2201052/a-variation-on-square-freeness-of-euclid-numbers">http://math.stackexchange.com/questions/2201052/a-variation-on-square-freeness-of-euclid-numbers</a></h2>
+A variation on square-freeness of Euclid numbers</br></br>As pointed out by Jeppe Stig Nielsen, my previous question A question about numbers from Euclid's proof of infinitude of primes actually can be viewed as a duplicate of Are Euclid numbers squarefree?</br>I then thought - maybe a simplified version could be more accessible. Let us modify Euclid's argument for infinitude of primes like this. Having discovered some primes [imath]p_1,...,p_n[/imath], we look at [imath]p_1\cdot...\cdot p_n+1[/imath]; all of its prime factors are new, [imath]p_{n+1},...,p_{n+m}[/imath]; we then look at [imath]p_1\cdot...\cdot p_{n+m}+1[/imath], etc.</br>The point is that this procedure is equivalent to something simpler: define recurrently [imath]N_1=2[/imath] and [imath]N_{n+1}=N_n(N_n-1)+1[/imath]. We obtain</br>[imath]</br>\begin{aligned}</br>N_1&=2\\</br>N_2&=3\\</br>N_3&=7\\</br>N_4&=43\\</br>N_5&=1807=13\cdot139\\</br>N_6&=3263443\\</br>N_7&=10650056950807=547\cdot607\cdot1033\cdot31051\\</br>N_8&=113423713055421844361000443=29881\cdot67003\cdot9119521\cdot6212157481</br>\end{aligned}</br>[/imath]</br>(by construction, every next number only contains new primes, not previously occurring on the list).</br>The question now is similar to that in the linked questions: are all these numbers squarefree? Are there any more primes in this list?</br>And an additional question: will all primes eventually occur as factors somewhere on the list?</br></br>Not all primes are in the list. [imath]N_6 \mod 17 = 4, N_7 \mod 17 = 13[/imath]. From there on the modulus cycles through 4 and 13</br>@MichaelStocker Great idea! I checked other primes up to 71, the same applies to all of them - they generate quite short periods, the longest has 31 (length 9). Seems like if a prime [imath]p[/imath] does not appear until [imath]p[/imath]th step it does not have any chance.</br></br>
+</body>
+</html>

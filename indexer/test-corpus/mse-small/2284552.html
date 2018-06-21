@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2284552/why-we-can-replace-ab-ab-1">http://math.stackexchange.com/questions/2284552/why-we-can-replace-ab-ab-1</a></h2>
+Why we can replace ab=(ab)^-1</br></br>Why we can replace [imath]ab=(ab)^{-1}[/imath]</br>I saw prove of if every element is its own inverse then the group is abelian.</br>And there is equality like this:</br>[imath]a·b = (a·b)^{−1} =b^{−1}·a^{−1} = b·a[/imath]</br>I dont understand that first equality what is the reason why we can write this?</br></br>It is simply because [imath]ab[/imath] is an element of the group and this element has the property to be its own inverse.</br>Yes, what you've written seems to utilize the premise three times.</br>@Tucker could u explain what u mean because im new in abstract algebra and i dont get it</br></br>If every element [imath]g[/imath] of a group [imath]\mathcal{G}[/imath], is its own inverse then if [imath]g\in\mathcal{G}[/imath], we can immediately conclude [imath]g=g^{-1}[/imath]. One of the properties of a group is that it is closed under the binary group operation. Given [imath]a,b\in\mathcal{G}[/imath], we know [imath]ab\in\mathcal{G}[/imath]. Also, we know that [imath]ab[/imath] is its own inverse, which explicitly means that [imath]ab[/imath] and [imath](ab)^{-1}[/imath] are equal.</br>[imath]</br>ab=(ab)^{-1}</br>[/imath]</br></br></br>Since [imath]ab[/imath] is an element of the group, it is its own inverse, thus [imath]ab=(ab)^{-1}[/imath].</br></br></br>It is given that every element is its own inverse, i.e if [imath]a[/imath] is an element in [imath]G[/imath] then its inverse (say [imath]a^{-1}[/imath] ) is  [imath]a[/imath]. Since G is a group [imath] ab \in G~~ \text{for a,b } \in G.[/imath]</br>Hence by hypothesis its inverse should be equal to [imath]ab[/imath].</br></br></br>
+</body>
+</html>

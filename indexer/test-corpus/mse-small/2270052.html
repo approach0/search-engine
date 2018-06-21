@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2270052/if-3x2-equiv1-bmod-p-then-3-is-a-quadratic-residue">http://math.stackexchange.com/questions/2270052/if-3x2-equiv1-bmod-p-then-3-is-a-quadratic-residue</a></h2>
+If [imath]3x^2\equiv1\bmod p[/imath] then 3 is a quadratic residue</br></br>Unsure of how this implication has occurred. I know that if 3 is a QR then there exists [imath]x^2\equiv3\bmod p[/imath]. However, how does this become [imath]3x^2\equiv1\bmod p[/imath]?</br></br>Well,  [imath]x^2\equiv 3^{-1}\pmod p\implies x^{-2}\equiv 3 \pmod  p[/imath]</br>Multiplication by [imath]3[/imath].</br>@franzlemmermeyer Right, that's about it...</br></br>Since [imath]\gcd(3,p) = 1[/imath], 3 has a unique multiplicative inverse modulo [imath]p[/imath], say, it is [imath]3^{-1}[/imath]. Then original congruence becomes</br>[imath] 3^{-1} \cdot 3 x^2 \equiv 3^{-1} \bmod p.[/imath]</br>So [imath]3^{-1}[/imath] is a quadratic residue. Then apply</br>[imath] 1 = \left( \frac{1}p\right) = \left( \frac{3}p\right) \left( \frac{3^{-1}}p\right) [/imath]</br>to get [imath]\left( \frac{3}p\right) = 1[/imath], i.e., 3 is a qudratic residue modulo [imath]p[/imath].</br></br></br>(Franz Lemmermeyer gave this away in the comments)</br>[imath]3x^2\equiv1\bmod p[/imath]</br>[imath](3x)^2\equiv3\bmod p[/imath]</br></br></br>
+</body>
+</html>

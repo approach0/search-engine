@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2279052/continuous-function-from-subspace-mathbbq-to-mathbbr">http://math.stackexchange.com/questions/2279052/continuous-function-from-subspace-mathbbq-to-mathbbr</a></h2>
+continuous function from subspace [imath]\mathbb{Q}[/imath] to [imath]\mathbb{R}[/imath]</br></br>f:[imath]\mathbb{R} \rightarrow \mathbb{R}[/imath] such that f(x)=a, for all x[imath]\in\mathbb{R}[/imath] is continuous function.</br>[imath]\mathbb{Q}[/imath]  is a subspace of [imath]\mathbb{R}[/imath] and hence  f:[imath]\mathbb{Q} \rightarrow \mathbb{R}[/imath] such that f(x)=a, for all x[imath]\in\mathbb{Q}[/imath] is also continuous function with respect to subspace topology.</br>Using sequential continuity i can see that the function f:[imath]\mathbb{Q} \rightarrow \mathbb{R}[/imath] such that f(x)=a, for all x[imath]\in\mathbb{Q}[/imath] is continuous.</br>But if  i will think in this way , {a} is closed in  [imath]\mathbb{R}[/imath] and under continuous function  inverse image of closed set is closed   that is [imath]f^{-1}[/imath](a)=[imath]\mathbb{Q}[/imath] is closed. which is not possible because </br> [imath]\mathbb{Q}[/imath] is not closed subspace of  [imath]\mathbb{R}[/imath].   hence f:[imath]\mathbb{Q} \rightarrow \mathbb{R}[/imath] such that f(x)=a, for all x[imath]\in\mathbb{Q}[/imath] is not continuous.</br>where i am going wrong.</br></br>Possible duplicate of continuous function from [imath]\mathbb{Q}[/imath] to [imath]\mathbb{R}[/imath]</br></br>However, [imath]\Bbb Q[/imath] is closed in [imath]\Bbb Q[/imath].</br>When analysing the continuity of a function [imath]g:A\to B[/imath], then you need to analyse, for any open / closed [imath]U\subseteq B[/imath], whether [imath]f^{-1}(U)[/imath] is open / closed in [imath]A[/imath]. It doesn't matter whether [imath]A[/imath] is thought of as a subspace of some larger space; in this context that larger space does not exist for our intents and purposes.</br>So in our case, when we have a function [imath]f:\Bbb Q\to \Bbb R[/imath], you must forget that [imath]\Bbb Q[/imath] is a part of [imath]\Bbb R[/imath], and just look at [imath]\Bbb Q[/imath] as a topological space in its own right.</br></br></br>
+</body>
+</html>

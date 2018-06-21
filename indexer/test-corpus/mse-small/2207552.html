@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2207552/does-the-distributional-derivative-of-the-dirac-comb-have-the-same-properties-as">http://math.stackexchange.com/questions/2207552/does-the-distributional-derivative-of-the-dirac-comb-have-the-same-properties-as</a></h2>
+Does the distributional derivative of the Dirac Comb have the same properties as a single Dirac Delta?</br></br>A single Dirac delta has a distributional derivative [imath]\delta'[/imath] defined in the sense that</br>[imath]</br>\int_{-\infty}^{\infty} \textrm{d}x \, \delta'(x) \, \phi(x) = -\int_{-\infty}^{\infty} \textrm{d}x \, \delta(x) \, \phi'(x) \, .</br>[/imath]</br>I understand this comes from the integral of the total derivative of [imath]\delta(x) \, \phi(x)[/imath] vanishing,</br>[imath]</br>\int_{-\infty}^{\infty} \textrm{d}x \, \frac{\textrm{d}}{\textrm{d} x} \big( \delta(x) \, \phi(x) \big) = \delta(x) \, \phi(x) \, \big|_{-\infty}^{\infty} = 0 \, ,</br>[/imath]</br>which means the product rule for differentation gives the above expression defining [imath]\delta'[/imath]. If we instead consider the Dirac comb</br>[imath]</br>\mathrm{III}(t) = \sum_{k=-\infty}^{\infty} \, \delta(x - kT) \, ,</br>[/imath]</br>which is periodic with period [imath]T[/imath], is the same total derivative trick valid -</br>[imath]</br>\int_{-\infty}^{\infty} \textrm{d}x \, \frac{\textrm{d}}{\textrm{d} x} \big( \textrm{III}(x) \, \phi(x) \big) = 0 \, ?</br>[/imath]</br>Allowing us to define the distributional derivative of the Dirac comb analogously to the Dirac delta</br>[imath]</br>\int_{-\infty}^{\infty} \textrm{d}x \, \textrm{III}'(x) \, \phi(x) = -\int_{-\infty}^{\infty} \textrm{d}x \, \textrm{III}(x) \, \phi'(x) \, .</br>[/imath]</br></br></br>In fact, if stop reasoning in terms of integrals ans start reasoning in terms of distributions and distributional derivatives, then this result is quite easy to show. Let us note [imath]\phi [/imath] - am arbitrary test function (i.e. compactly supported and [imath]C^\infty[/imath])</br>We start with a delta-distribution [imath]\delta_p[/imath] given by </br>[imath]\langle \delta_p,\phi\rangle = \phi(p)[/imath]</br> and its derivative [imath]\delta_p'[/imath], for which the definition of distributional derivative (yes, it has common roots with integration by parts) gives</br>[imath]\langle \delta_p' ,\phi\rangle=-\langle \delta_p,\phi'\rangle = -\phi'(p).[/imath]</br>Now the Dirac comb [imath]B = \sum_{k\in\Bbb Z} \delta_{kT}[/imath] is a well-defined distribution, because [imath]\langle B,\phi\rangle = \sum_{k\in\Bbb Z} \phi(kT),[/imath] and the latter series converges because [imath]\phi[/imath] is compactly supported. I will omit the continuity part of the definition, it is an easy exercise.</br>Since [imath]B[/imath] is a distribution, it has a distributional derivative - it is one of the major resons to use distributions. Moreover, we have an explicit definition:</br>[imath]\langle B',\phi\rangle=-\langle B,\phi'\rangle = -\sum_{k\in\Bbb Z} \phi'(kT),[/imath]</br>and the latter series converges for the exact same reasons as we mentioned earlier.</br>Finally, by testing against all possible test functions [imath]\phi[/imath] you can conclude that [imath]B'[/imath] has the form [imath] \sum_{k\in\Bbb Z} \delta'_{kT}[/imath].</br>===</br>Another approach would be to show that the distributions [imath]B_n= \sum_{k\in\Bbb Z,\,|k|\le n} \delta_{kT}[/imath] converge to [imath]B[/imath] in the distributional sense (easy to show by definition of this convergence). It implies - another great property of distributional derivatives - that [imath]B'_n[/imath] converges to [imath]B'[/imath], and the explicit formula for [imath]B'_n[/imath] is quite obvious.</br></br>Well done.  And it is good to see one dispel the notion that the Dirac Delta is a distribution and not a function, and that the linear functional [imath]\langle \phi,\delta\rangle[/imath] is not an integral.  (+1)</br>@Dr.MV thank you!=)</br></br>
+</body>
+</html>

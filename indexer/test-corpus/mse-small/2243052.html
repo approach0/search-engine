@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2243052/value-of-b-for-which-trabc-18">http://math.stackexchange.com/questions/2243052/value-of-b-for-which-trabc-18</a></h2>
+Value of b for which Tr(ABC)<-18</br></br></br>After multiplying I am getting</br>5xb+1<-18</br>after that I am confused how to proceed</br></br>Please take the time to type in important parts of your question instead of including them as images. Images aren’t searchable and are inaccessible to people using screen readers. If you aren’t willing to spend a bit of your own time to do this, why do you expect others to spend their time to help you with your questions?</br></br>You made a mistake somewhere in your calculation. I calculated [imath]Tr(ABC) = -x^2+5bx-43[/imath]</br>so for this to be less or equal to [imath]-18[/imath] is equivalent to [imath]x^2-5bx+25\ge 0 \ \ \ \ \ \ \text{for all [/imath] \in \mathbb{R}[imath]}[/imath][imath] </br>Hence [/imath][imath]\triangle = 25b^2-100\leq 0\implies b\in[-2,2][/imath][imath]</br>Note: the matrix multiplication [/imath]AB[imath] gives [/imath][imath]AB = \left[</br> \begin{matrix}</br>  -8  \\</br>  -3+bx  \\</br>  -4-x^2 </br> \end{matrix} \right]</br>[/imath][imath]</br>Then, multiplying by [/imath]C[imath] gives [/imath][imath]ABC=\left[\begin{matrix}</br>  -24 &. &.  \\</br>  .  &-15+5bx &.\\</br>  . &. &-4-x^2</br> \end{matrix} \right][/imath][imath]</br>where I omitted the other terms because our goal is the trace, which is the sum of the three terms above: [/imath]Tr(ABC)=-x^2+5bx-43
+</body>
+</html>

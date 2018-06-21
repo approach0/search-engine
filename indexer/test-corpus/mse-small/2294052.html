@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2294052/prove-convergence-of-random-variables">http://math.stackexchange.com/questions/2294052/prove-convergence-of-random-variables</a></h2>
+Prove convergence of random variables</br></br>I have a problem with following task:</br>We have [imath]X_1,X_2,...[/imath] independent random variables, that almost surely [imath]X_1\ge X_2\ge...\ge 0[/imath]. Prove that if [imath]X_n\rightarrow0[/imath] converges in probability then [imath]X_n\rightarrow0[/imath] converges almost surely. I am hitting a wall with this one. I will be very glad for as simple as possible explanation. </br></br>As [imath]X_n[/imath] is decreasing a.s., it converges a.s. to the limit inferior. Convergence a.s. implies convergence in probability and limits are unique a.s.</br></br>Let [imath]u_i[/imath] be the essential supremum of [imath]X_i[/imath], i.e. the least constant [imath]c[/imath] such that [imath]X_i \le c[/imath] a.s.  If [imath]X_{i-1}[/imath] and [imath]X_i[/imath] are independent but [imath]X_{i-1} \ge X_i[/imath] a.s., then [imath]c_i[/imath] must exist and [imath]X_{i-1} \ge c_i \ge X_i[/imath] a.s.  Show that </br>if [imath]X_i \to 0[/imath] in probability, [imath]c_i \to 0[/imath]. </br></br></br>
+</body>
+</html>

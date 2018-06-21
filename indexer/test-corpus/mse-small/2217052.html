@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2217052/finding-linear-map">http://math.stackexchange.com/questions/2217052/finding-linear-map</a></h2>
+Finding Linear Map?</br></br>The temperature distribution on a metal plate is given by [imath]T:[0,1] \times [0,1] \to \mathbb{R}[/imath] where [imath]T(x,y)=x^2+y^3[/imath].</br>Write down the temperature gradient field, that is, the matrix of the linear map [imath]DT[/imath] at a general point [imath](x,y) \in [0,1] \times [0,1][/imath].</br></br>Hint:  For a mapping [imath]f:U\subseteq\mathbb{R}^n\to\mathbb{R}^m[/imath] the differential of [imath]f[/imath] is given by [imath]Df=\begin{bmatrix}\tfrac{\partial f_1}{\partial x_1}&\tfrac{\partial f_1}{\partial x_2}&\ldots&\tfrac{\partial f_1}{\partial x_n}\\\tfrac{\partial f_2}{\partial x_1}&\tfrac{\partial f_2}{\partial x_2}&\ldots&\tfrac{\partial f_2}{\partial x_n}\\\vdots&\vdots&\ddots&\vdots\\\tfrac{\partial f_m}{\partial x_1}&\tfrac{\partial f_m}{\partial x_2}&\ldots&\tfrac{\partial f_m}{\partial x_n}\end{bmatrix}[/imath] Where [imath]f_1,f_2,\ldots,f_m[/imath] are the component functions.</br>What would I do after I calculate all the required derivatives? @ÁngelMarioGallegos</br>After that you can find the matrix corresponding to the linear mapping [imath]Df[/imath] in the point [imath]\mathbf{x}_0=(x_0^1,x_0^2,\ldots,x_0^2)[/imath].</br></br>
+</body>
+</html>

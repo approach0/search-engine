@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2222052/prove-that-f-is-a-polynomial">http://math.stackexchange.com/questions/2222052/prove-that-f-is-a-polynomial</a></h2>
+Show that this entire function is polynomial.</br></br>Let [imath]f[/imath] be an entire function such that [imath] |f(z)| \to \infty[/imath] as [imath]|z| \to \infty[/imath]. Prove that [imath]f[/imath] is a polynomial.</br></br></br>Consider the holomorphic function on [imath]\mathbb{C}^*[/imath]</br>[imath]</br>g(z)=f\left(\frac{1}{z}\right).</br>[/imath]</br>So </br>[imath]</br>\lim_{z\rightarrow 0}\;|g(z)|=+\infty.</br>[/imath]</br>Obviously, [imath]0[/imath] is not a removable singularity.</br>Now by the Casorati-Weierstrass theorem, [imath]0[/imath] is not an essential singularity either. Indeed, take [imath]r>0[/imath] such that [imath]|g(z)|\geq 1[/imath] for all [imath]0<|z|<r[/imath]. Then [imath]g(z\;;\;0<|z|<r\})[/imath] is certainly not dense in [imath]\mathbb{C}[/imath].</br>Edit: As pointed out by @mrf, it is actually easy to see that this implies [imath]0[/imath] is a pole for [imath]g[/imath]. It suffices to use Riemann's theorem on removable singularities adequately. Indeed [imath]h(z)=1/g(z)[/imath] is holomorphic and bounded in some [imath]\{z\;;\;0<|z|<r\}[/imath] with limit [imath]0[/imath] at [imath]0[/imath], so [imath]0[/imath] is a removable singularity of [imath]h[/imath] and a zero of the holomorphic extension of [imath]h[/imath]. Factor [imath]h(z)=z^nk(z)[/imath] with [imath]k[/imath] holomorphic and [imath]k(0)\neq 0[/imath]. The result follows. And this is indeed more elementary than Casorati-Weierstrass.</br>So keep the Casorati-Weierstrass argument for weaker assumptions such as the ones I mention below.</br>So [imath]0[/imath] must be a pole. Hence the Laurent series of [imath]g[/imath] at [imath]0[/imath] is of the form</br>[imath]</br>g(z)=\frac{a_n}{z^n}+\ldots+\frac{a_1}{z}+a_0.</br>[/imath]</br>Note that there are no positive powers of [imath]z[/imath] because this comes from the power series of [imath]f[/imath].</br>The result follows clearly by going back to [imath]f[/imath]. </br>Edit: Note the same proof works if we simply assume that [imath]f[/imath] is entire and there exist [imath]\alpha>0[/imath] and [imath]M>0[/imath] such that</br>[imath]</br>|f(z)|\geq \alpha\qquad \forall |z|\geq M.</br>[/imath]</br>Of course, there could be even weaker assumptions like there exists [imath]M>0[/imath] such that [imath]f(\{z\;;\; |z|>M\})[/imath] is not dense in [imath]\mathbb{C}[/imath] and the proof would still work.</br></br>This is a good answer +1, but is it possible to do with more elementary tools than Casorati-Weierstrass?</br>@user58512 Thanks. Maybe, since the assumption is much stronger than what is really needed to apply Casorati-Weierstrass. Let's wait and see.</br>Since [imath]|g|\to \infty[/imath] as [imath]z\to 0[/imath], we see that [imath]0[/imath] is a pole directly (without Weierstrass-Casorati).</br>@Seirios Thanks for the edit, you made me understand that it was possible to do this. After six months...it was high time.</br>Often this property is used as the very definition of pole, but even with other plausible definitions, it's straight-forward to see that an isolated singularity is a pole iff [imath]|f| \to\infty[/imath] at the point in question.</br></br>Hint: The set of zeroes of [imath]f[/imath] is bounded and discrete, hence finite and this allows us to find a polynomial [imath]p[/imath] such that [imath]f(z)=p(z)g(z)[/imath] for some entire function [imath]g\colon \mathbb C\to\mathbb C^\times[/imath]. What scenarios can happen with [imath]g(z)[/imath] as [imath]z\to\infty[/imath]?</br></br>If a set of points is bounded and discrete, can you then conclude is finite? Any sequence that converges is bounded and discrete, and infinite, like [imath]\sum_0^\infty \frac{1}{2^k}[/imath]</br>@GitGud Yes thanks.</br>@MyUserIsThis: Some people take discrete to mean closed and discrete for which the statement that boundedness implies finiteness is true. The set of zeroes of [imath]f[/imath] is clearly closed.</br>Hm, upon rereading I think that whoever upvoted me here should be ashamed :9</br></br>
+</body>
+</html>

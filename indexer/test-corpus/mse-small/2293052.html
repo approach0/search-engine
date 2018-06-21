@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2293052/rational-points-on-circles-centered-at-the-origin">http://math.stackexchange.com/questions/2293052/rational-points-on-circles-centered-at-the-origin</a></h2>
+Which rationals can be written as the sum of two rational squares?</br></br>Which rational numbers can be written as the sum of two rational squares?</br>That is, for which rational numbers [imath]a[/imath], are there rational numbers [imath]x[/imath] and [imath]y[/imath] such that [imath]a = x^2 + y^2[/imath].</br>It is a famous theorem that if an integer can be written as the sum of two rational squares then it can be written as the sum of two integral squares, and then the solution is the famous one by Fermat, but I didn't find anything about the general case.</br></br>math.stackexchange.com/questions/1200794/… mentions a solution but gives no references.</br>the last part of that question states the result asked for here.</br>What about [imath]x=\frac35,y=\frac45[/imath]?</br>Basically an Pythagorean triple?</br>can you not clear the denominators and apply the standard results?</br></br>Let [imath]r=\frac{p}{q}[/imath], where [imath]p[/imath] and [imath]q[/imath] are integers. We will show that [imath]r[/imath] can be written as the sum of two rational squares if and only if [imath]pq[/imath] can be written as the sum of the squares of two integers. </br>Equivalently, if [imath]p\ne 0[/imath], then [imath]\frac{p}{q}[/imath] is a sum of the squares of two rationals if and only if every prime divisor of [imath]pq[/imath] of the form [imath]4k+3[/imath] occurs to an even power.</br>Proof:  If [imath]pq[/imath] is the sum of the squares of two integers, it is clear that [imath]r[/imath] is the sum of the squares of two rationals.</br>For the other direction, suppose that [imath]r[/imath] can be written as the sum of the squares of two rationals. Without loss of generality we may assume that the rationals are [imath]\frac{a}{c}[/imath] and [imath]\frac{b}{c}[/imath] for some integers [imath]a,b,c[/imath]. Then</br>[imath]\frac{a^2+b^2}{c^2}=\frac{pq}{q^2}.[/imath]</br>So [imath]c^2pq[/imath] is a sum of two squares. It follows that every prime of the form [imath]4k+3[/imath] occurs to an even degree in the prime power factorization of [imath]c^2pq[/imath], and hence of [imath]pq[/imath]. It follows that [imath]pq[/imath] is a sum of two squares.</br></br>The first observation is the clever trick!</br></br>This can be translated in a question about Hilbert symbols (or quaternion algebras). In fact you can check easily that a rational [imath]a[/imath] can be written as a sum of two squares if and only if the Hilbert symbol [imath](a,-1)_{\mathbb Q}[/imath] is trivial. Now write [imath]a=p/q[/imath] and notice that [imath](p/q,-1)=(pq,-1)[/imath]. You can forget about all squares in the factorization of [imath]pq[/imath], so you can assume that [imath]p[/imath] and [imath]q[/imath] are both squarefree. Now look at the prime factorization of [imath]p[/imath] and [imath]q[/imath] and use the fact that [imath](x,-1)(y,-1)=(xy,-1)[/imath] for all [imath]x,y\in\mathbb Q[/imath], toghether with the fact that for a prime [imath]l[/imath] you have that [imath](l,-1)[/imath] is trivial iff [imath]l\equiv 1,2\bmod 4[/imath] while if [imath]l\equiv 3\bmod 4[/imath] then [imath](l,-1)[/imath] ramifies at [imath]2[/imath] and [imath]l[/imath] to get your answer: [imath]a[/imath] can be written as a sum of two squares iff it is non-negative and is of the form [imath]b^2\frac{p}{q}[/imath] where [imath]b\in\mathbb Q[/imath] and [imath]p,q[/imath] are coprime integers divided only by primes [imath]\equiv 1,2\bmod 4[/imath].</br></br></br>
+</body>
+</html>

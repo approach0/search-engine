@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2251052/probability-of-having-three-grandchildren">http://math.stackexchange.com/questions/2251052/probability-of-having-three-grandchildren</a></h2>
+Probability of having three grandchildren</br></br>Supose families alwyas have one , two or three children , with probabilities 1/4 ,1/2 ,1/4  respectively . Assume everyone eventually gets married and has children , the probability of couple having foir grandchildren is . </br>My try (1/2)(1/2)(1/2)+(1/2)(1/4)(1/4)+(1/2)(1/4)(1/4)(1/4) .</br>but the answer is given as 27/128</br></br></br>If the couple has one child, the probability of getting four grandchildren equals 0. If the couple has two children, either the first child must have one child and the second child must have three, or the first child must have three children and the second child must have one, or they both must have two children. If the couple has three children, either the first and second child have one child and the third child has two, or the first and third child have one child and the second has two, or the second and the third child have one child and the first has two. All in all, the total probability of having four grandchildren equals:</br>[imath] \frac{1}{4} \cdot 0 + \frac{1}{2} \bigg(\frac{1}{4} \cdot \frac{1}{4} + \frac{1}{4} \cdot \frac{1}{4} + \frac{1}{2} \cdot \frac{1}{2}\bigg) + \frac{1}{4} \bigg(\frac{1}{4} \cdot \frac{1}{4} \cdot \frac{1}{2} + \frac{1}{4} \cdot \frac{1}{2} \cdot \frac{1}{4} + \frac{1}{2} \cdot \frac{1}{4} \cdot \frac{1}{4}\bigg) = \frac{27}{128} [/imath]</br></br></br>
+</body>
+</html>

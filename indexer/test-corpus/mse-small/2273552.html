@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2273552/prove-that-the-following-expression-is-always-less-than-x-for-all-values-of-x-an">http://math.stackexchange.com/questions/2273552/prove-that-the-following-expression-is-always-less-than-x-for-all-values-of-x-an</a></h2>
+Prove that the following expression is always less than x for all values of x and k.</br></br>Prove that  </br>[imath]\frac{x^2+kx}{2x+k}[/imath]</br>is less than x for all values of x and k where x>0,  k>0 and k is a constant.</br>How would I prove this? I have differentiated it with respect to x and noticed that the derivative is always less than 1 for all values of x and k, this means that if the value of x increases the value out always increases less than the increase in x.  </br></br>+1, but please try and be careful to get things right when writing questions as editing after having gotten answers had can sometimes be interpreted as disrespectful.</br></br>Multiplying by [imath]2x+k[/imath] positive, [imath]x^2+kx<x(2x+k)[/imath]</br>then</br>[imath]x^2>0.[/imath]</br>Alternatively,</br>[imath]\frac{x^2+kx}{2x+k}-x=-\frac{x^2}{2x+k}<0.[/imath]</br></br>Sorry I wrote down the expression wrong. Edited.</br>I made mistakes myself. Everything fixed now.</br></br>
+</body>
+</html>

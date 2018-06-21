@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2259552/continuity-w-r-t-a-norm-question-about-terms">http://math.stackexchange.com/questions/2259552/continuity-w-r-t-a-norm-question-about-terms</a></h2>
+Continuity w.r.t a norm — question about terms</br></br>Given a set of all continuous functions from the interval [imath][a,b][/imath] to the real numbers [imath]\mathbb{R}[/imath], i.e. [imath]C([a,b],\mathbb{R}).[/imath]</br>Let [imath]G :C([a,b],\mathbb{R}) \rightarrow \mathbb{R} , f \mapsto \max_{s \in [a,b]}(f(s))[/imath]</br>and</br>Let [imath] \lVert \cdot \rVert_{\infty} :C([a,b],\mathbb{R}) \rightarrow \mathbb{R}, f \mapsto \lVert f \rVert_{\infty}:= \max_{s \in [a,b]}(|f(s)|)[/imath]</br>Show that [imath]G[/imath] is continuous with respect to the norm [imath] \lVert \cdot \rVert_{\infty} [/imath].</br>My question hereto is: how should I understand the last sentence, specifically the part "with respect to"? Is it possible to apply the norm [imath] \lVert \cdot \rVert_{\infty} [/imath] to [imath]G[/imath], and if so, what would the mapping look like? </br>Both [imath]G[/imath] and  [imath] \lVert \cdot \rVert_{\infty} [/imath] are maps from [imath]C([a,b],\mathbb{R}) \rightarrow \mathbb{R}[/imath], hence I am unsure of how to use [imath]G[/imath] and  [imath] \lVert \cdot \rVert_{\infty} [/imath] together. To do it as "[imath] \lVert G\rVert_{\infty} [/imath]" is not intuitive to me. </br>Any help is appreciated. Oh, and thanks for your considerations, smart mathematicians!</br></br></br>We are to take the distance between two functions [imath]f,g[/imath] to be [imath]\|f-g\|_\infty.[/imath] That is implied by the mention of continuity "with respect to" that norm.</br>The distance between two real numbers [imath]a,b[/imath] is [imath]|a-b|.[/imath]</br>"Continuity" of [imath]G[/imath] means:</br>\begin{align}</br>& \text{For every member } f \text{ of the domain } C([a,b],\mathbb{R}), \\[5pt]</br>& \text{for every number } \varepsilon>0 \text{ (no matter how small)}, \\[5pt]</br>& \text{there is some number } \delta>0 \text{ so small that whenever} \\[5pt]</br>& g \text{ is any member of the domain } C([a,b], \mathbb R) \text{ for which} \\[5pt]</br>& \text{the distance between } f \text{ and } g \text{ is less than } \delta, \\[5pt]</br>& \text{the distance between } G(f) \text{ and } G(g) \text{ is less than } \varepsilon.</br>\end{align}</br>More tersely,</br>\begin{align}</br>\forall f\in C([a,b],\mathbb R)\ \forall \varepsilon > 0\  \exists\delta > 0 & \  \forall g\in C([a,b],\mathbb R)\\[10pt]</br>& \Big( \text{if } \underbrace{\|f-g\|_\infty} < \delta \text{ then } \underbrace{|G(f) - G(g)|}<\varepsilon \Big).</br>\end{align}</br>The two [imath]\underbrace{\text{underbraces}}[/imath] correspond to the metric on the domain and the metric on the codomain.</br>To prove this, you will of course need the definition of [imath]G[/imath]. And some basic inequalities.</br></br>I have switched [imath]\delta[/imath] with [imath]\varepsilon[/imath] to the correct form.</br>Hi Michael. This answered my question, aswell as gave me some extra intuition on norms and what they actually are. Thanks a lot!</br></br>In a domain of [imath]G[/imath] we have the [imath]\|\cdot\|_{\infty}[/imath] norm, so continuity wrt. this norm means that if [imath]\|f_n-f\|_{\infty}\to 0[/imath] (as [imath]n\to\infty[/imath]) then [imath]|G(f_n)-G(f)|\to 0[/imath]. Unfortunately our functional [imath]G[/imath] is not linear because the maximum property loses after multiplying by negative scalars. So, it is not enough to check continuity at [imath]0[/imath]-function.</br></br>Hi szw1710. Thank you for your answer. Michael gave me the explanation that I needed to understand the subject. Nevertheless, you deserve a thumbs up for taking your time. Cheers</br></br>
+</body>
+</html>

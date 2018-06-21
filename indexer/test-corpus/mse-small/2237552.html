@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2237552/is-there-a-generalized-function-such-that-fz-1-z-2-for-xy-z-1-and-y">http://math.stackexchange.com/questions/2237552/is-there-a-generalized-function-such-that-fz-1-z-2-for-xy-z-1-and-y</a></h2>
+Is there a generalized function such that [imath]f(z_1) = z_2[/imath] for [imath]x^y = z_1[/imath] and [imath]y^x = z_2[/imath]?</br></br>Given: </br>[imath]x^y = z_1[/imath]</br>[imath]y^x = z_2[/imath]</br>What, if one exists, is the generalized function such that:</br>[imath]f(z_1) = z_2[/imath]</br>To give a more concrete example, and perhaps a foothold to start from for the generalization:</br>[imath]x^2 = z_1[/imath]</br>[imath]2^x = z_2[/imath]</br>[imath]f(z_1) = z_2[/imath]</br>What is the function that for all squares the function [imath]f(z_1)[/imath] will yield the corresponding power of 2?</br>My real question is the generalized case, [imath]x^y = z_1[/imath] into [imath]y^x = z_2[/imath], but if someone can give me some kind of idea how to approach the [imath]y=2[/imath] case, I think I should be able to come to some kind of generalized solution.</br>I have been working on this problem for quite some time, and just don't seem to be making any progress, and I feel like the solution simply lies outside of my current knowledge.</br>If anyone can direct me to material that might help with this problem even if you don't have any direct suggestions that would still be greatly appreciated.</br>Edit:</br>I forgot to mention part of the impetus for asking this question.</br>Consider:</br>[imath]log_x(z) = y[/imath] and so</br>[imath]log_z(x) = \frac{1}{y}[/imath]</br>This led me to try to find the similar case, if one existed, for [imath]x^y = z_1[/imath] into [imath]y^x = z_2[/imath], as well as (though not the subject of this post) [imath]\sqrt[y]{z} = x_1[/imath] into [imath]\sqrt[z]{y} = x_2[/imath].</br>The heart of the question essentially being, what must I do to the output of a given power-relationship, such that I am able to swap the two pieces that made it without making reference to those two pieces in the transformation applied to the output. </br>That transformation for the case of [imath]log_x{z}[/imath] into [imath]log_z{x}[/imath] is to reciprocate your output; [imath]y[/imath] into [imath]\frac{1}{y}[/imath].</br></br>I'm not sure about the function itself, but I think that it will involve a mixture of logs and W-Lambert branches.</br>Consider [imath]x^6\to 6^x[/imath] but also [imath](x^3)^2\to 2^{x^3}[/imath] but [imath]6^x=2^{x^3}[/imath] doesn't hold in general.So your relation maps same element to at least [imath]2[/imath] different outputs hence it's not a function.</br>To solve [imath]f(x^n)=n^x[/imath], substitute [imath]x→x^{\frac{1}{n}}[/imath] to get [imath]f(x)=n^{x^{\frac{1}{n}}}[/imath]</br>@kingW3 so would that suggest that at minimum you would have to have a multi-variable equation? I.e. [imath]f(x, z_1) = z_2[/imath]</br>@Displayname in my comment to kingW3 I mentioned that it seems you might need two variables, one of them being one of the pieces that is required to construct your output in the first place. Your solution for n=2 seems to suggest the same thing, you need to already know n.</br></br>We can certainly define [imath]g(x,y)=x^y[/imath] and [imath]h(x,y)=y^x[/imath], though you don't say what kind of numbers [imath]x,y[/imath] are.  You are essentially asking to define [imath]f(z)=h(g^{-1}(x,y))[/imath]  The problem is that [imath]g(x,y)[/imath] does not have an inverse.  There are many cases of different [imath]x,y[/imath] that give the same value for [imath]x^y[/imath] so you don't know what to plug into [imath]h[/imath].  Your example with squares shows this.  For [imath]x=16, y=2[/imath] you want [imath]f(16^2)=f(256)=2^{16},[/imath] but for [imath]x=2,y=8[/imath] you want [imath]f(2^8)=f(256)=8^2=64[/imath]  Of course there are many more real [imath]x,y[/imath] with [imath]x^y=256[/imath] which would give other desired results for [imath]f(256)[/imath].  The property you cite of the [imath]\log[/imath] function is quite special.</br></br></br>
+</body>
+</html>

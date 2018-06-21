@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2285552/why-is-this-map-in-relative-homology-given-by-multiplication-by-squaring-the-gen">http://math.stackexchange.com/questions/2285552/why-is-this-map-in-relative-homology-given-by-multiplication-by-squaring-the-gen</a></h2>
+Why is this map in relative homology given by multiplication by squaring the generator?</br></br>Let [imath]N[/imath] denote a four manifold that is exact filling of [imath]Y[/imath], the unit cotangent bundle of a surface of genus [imath]g>1[/imath] (I suspect not all of these details will be relevant). Then one can show that [imath]H_2(N) = \langle S \rangle \cong \mathbb{Z}[/imath] (where all homologies in this question are assumed to have integer coefficients). My question is, why is the induced map on the LES of a pair [imath]H_2(N) \to H_2(N,Y)[/imath] multiplication by [imath][S]^2[/imath]? I know it's determined by where it sends the generator. Could this be some kind of application of Poincaré Duality?</br>Background: I'm reading Calabi Yau Caps, Uniruled Caps, and Symplectic Fillings and I'm referencing the end of the proof on page 20. </br></br></br>
+</body>
+</html>

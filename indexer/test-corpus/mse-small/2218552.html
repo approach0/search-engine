@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2218552/question-regarding-modules">http://math.stackexchange.com/questions/2218552/question-regarding-modules</a></h2>
+Question regarding Modules</br></br>Let [imath] A [/imath] be the ring [imath] \mathbb C[X,Y]/(XY) [/imath].</br>(a) Let [imath] S [/imath] be an invertible [imath] d \times d [/imath] matrix. Suppose we make [imath] V = \mathbb C^d [/imath] and [imath] A [/imath] module by having [imath] X [/imath] act via the matrix [imath] S [/imath]. Find all possible matrices T via which [imath] Y [/imath] can act in such a way that [imath] V [/imath] becomes and [imath] A- [/imath] module.</br>(b) Suppose [imath] S=\begin{pmatrix} 1 & 2 & 3  \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{pmatrix}[/imath]. Find all possible matrices [imath] T [/imath] via which [imath] Y [/imath] can act on [imath] V = \mathbb C^3 [/imath] so that [imath] V [/imath] becomes an [imath] A- [/imath] module.</br>Not sure how to get started. Any help is much appreciated. Thanks in advance for any replies.</br></br></br>Welcome to Math.StackExchange! </br>(And thanks for taking the time to properly format and typeset your question right from the beginning).</br>I'll give a hint on (a), maybe that'll also help to solve (b): Suppose [imath]V[/imath] carries an [imath]A[/imath]-module structure. Then, by the very definition, [imath]X,Y\in A[/imath] act on [imath]V[/imath] as [imath]{\mathbb C}[/imath]-linear endomorphisms, say [imath]\alpha,\beta[/imath]. Moreover, again following the definition, the relation [imath]XY=0[/imath] in [imath]A[/imath] between [imath]X,Y[/imath] must hold between their actions on [imath]V[/imath] as well, so [imath]\alpha\circ\beta=0[/imath] as endomorphisms of [imath]V[/imath]. Now suppose that [imath]\alpha[/imath] is invertible on [imath]V[/imath]; what does [imath]\alpha\circ\beta=0[/imath] then imply on [imath]\beta[/imath]? </br>For (b), the strategy is the same, but the choice of possible [imath]\beta[/imath] is less restrictive. Note also that [imath]\alpha[/imath] and [imath]\beta[/imath] must commute, [imath]\alpha\circ\beta = \beta\circ\alpha[/imath], since the same holds in [imath]A[/imath].</br></br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2269052/expected-value-of-random-variable-for-two-dice">http://math.stackexchange.com/questions/2269052/expected-value-of-random-variable-for-two-dice</a></h2>
+Expected value of random variable for two dice</br></br>We have a fair four-sided dice with faces labeled 0, 1, 2, 3. We roll the dice n times; each roll is independent. Let [imath]X_{i}[/imath] be the face that comes up on the [imath]i[/imath]th die</br>Let [imath] Y = \sum_{i=1}^n \sum_{j=1}^n X_{i}X_{j}[/imath]  </br>Determine [imath]E[Y][/imath]  </br>I've already determined that the [imath]E[X_{i}] = 1.5[/imath] and that the [imath]Var[X_{i}] = 1.25[/imath].</br>However, I'm not sure how to calculate the expected value of [imath]E[Y][/imath]. Could I break it up into [imath]E[X_{i}]E[X_{j}][/imath]? If I can, would the answer be 3.0? Thanks.</br></br>The question doesn't specify that they can't, so I'm assuming that they can.</br></br>If [imath]i \ne j[/imath] then independence allows you to write [imath]E[X_i X_j] = E[X_i] E[X_j][/imath]. If [imath]i=j[/imath] then [imath]E[X_i X_j]=E[X_i^2][/imath]. So you need to handle the terms in the double sum differently, depending on the two cases above.</br></br></br>Hint:</br>[imath] Y = \sum_{i=1}^n \sum_{j=1}^n X_{i}X_{j}=(X_1+ \dots+ X_n)^2[/imath] </br></br>Thank you. So the answer would be 3.5?</br>The answer will depend on n</br></br>
+</body>
+</html>

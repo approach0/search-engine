@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2220052/find-the-bbbr-textalg-bbbq">http://math.stackexchange.com/questions/2220052/find-the-bbbr-textalg-bbbq</a></h2>
+Find the [imath][\Bbb{R} ^{\text{alg}}:\Bbb{Q}][/imath]</br></br>If we have the field extension [imath]\Bbb{R}:\Bbb{Q}[/imath], we define the set </br>[imath]\Bbb{R} ^{\text{alg}}:=\{a\in \Bbb{R}: a \text{ is algebraic over }\Bbb{Q}  \}[/imath]</br>We want to show that [imath]\Bbb{R}^{\text{alg}}[/imath] is a subfield of [imath]\Bbb{R}[/imath] and find the [imath][\Bbb{R} ^{\text{alg}}:\Bbb{Q}][/imath].</br>Answer: </br>If we consider that [imath]a,b\in \Bbb{R} ^{\text{alg}} \iff a,b[/imath] are algebraic over [imath]\Bbb{Q} [/imath], we have that the extension [imath]\Bbb{Q}(a,b):\Bbb{Q}[/imath] is algebraic over [imath]\Bbb{Q}[/imath]. We know that [imath]\Bbb{Q}(a,b)[/imath] is a field, so [imath]a-b\in \Bbb{Q}(a,b)[/imath] and if [imath]b\neq 0,\ ab^{-1} \in \Bbb{Q}(a,b)[/imath], and from the previous observation are algebraic. So, [imath]a-b,\ ab^{-1} \in \Bbb{R}^{\text{alg}}[/imath]. And this means [imath]\Bbb{R}^{\text{alg}} \leq\mathbb{R}[/imath]. </br>Right? </br>And how can we find the [imath][\Bbb{R} ^{\text{alg}}:\Bbb{Q}][/imath]?</br>Thank you in advance.</br></br>Do you have any guesses about what [imath][\Bbb R^{\rm alg}:\Bbb Q][/imath] might be?</br>@arctictern Thank you for your comment. Maybe [imath]\infty[/imath]? But I can't find a way to determine a basis!</br>Who said anything about determining a basis?</br>See this question: math.stackexchange.com/questions/552220/…</br>Find a lower bound on the degree of the extension by finding appropriate subfields. Show that you can take this lower bound to be as large as you want.</br></br>
+</body>
+</html>

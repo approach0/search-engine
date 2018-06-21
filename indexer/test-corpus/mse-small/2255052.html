@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2255052/existence-of-a-certain-diffeomorphism-f-of-mathbb-rn-s-t-f-omega-0">http://math.stackexchange.com/questions/2255052/existence-of-a-certain-diffeomorphism-f-of-mathbb-rn-s-t-f-omega-0</a></h2>
+Existence of a certain diffeomorphism [imath]f[/imath] of [imath]\mathbb R^n[/imath] s.t. [imath]f^{*}\omega_0=\omega_0[/imath], [imath]\omega_{0}[/imath] is the standard volume form on [imath]\mathbb R^n[/imath]</br></br>Consider [imath]\mathbb{R}^n[/imath] with the standard volume form [imath]\omega_{0}:=dx_1\wedge ...\wedge dx_n[/imath] .  Let [imath]r[/imath] and [imath]R[/imath] be two positive real numbers, with [imath]R > r[/imath] .  Show that for every [imath]a, b \in B (0, r )[/imath], there exists a diffeomorphism [imath]f[/imath] of [imath]\mathbb{R}^n[/imath] such that [imath]f(a) = b , f(x)= x[/imath] for [imath]|| x || > R[/imath] and [imath]f ^{*}\omega_{0} = \omega_{0}[/imath].</br>One-dimensional case is fine. I have tried to extend that idea to the higher dimensional case. I have an exam. I don't understand how to construct [imath]f[/imath]. Hints are welcomed. Can anyone please help me?</br></br>When you write, "I have an exam", do you mean this question is an exam question?</br>It's a potential problem for the exam.</br></br>[imath]\newcommand{\Reals}{\mathbf{R}}[/imath]Hint: Let [imath](r, \theta)[/imath] denote polar coordinates on [imath]\Reals^{2}[/imath]. If [imath]\phi:(0, \infty) \to \Reals[/imath] is an arbitrary smooth function, the formula</br>[imath]</br>f(r, \theta) = \bigl(r, \theta + \phi(r)\bigr)</br>[/imath]</br>defines a "rotational shear" mapping that is smooth and area-preserving.</br></br>If [imath]b=(r_1,\phi), a=(r,\phi_1)[/imath], then [imath]f(a) \neq b[/imath],as [imath]f[/imath] preserves the distance from origin.Then how should I use this function?</br>You might put the origin of your polar coordinate system at the midpoint [imath]O = \frac{1}{2}(a + b)[/imath], for example.</br></br>
+</body>
+</html>

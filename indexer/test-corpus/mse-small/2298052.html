@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2298052/on-0s-in-repeating-decimals">http://math.stackexchange.com/questions/2298052/on-0s-in-repeating-decimals</a></h2>
+On [imath]0[/imath]'s in repeating decimals.</br></br>Given [imath]a\in\Bbb N[/imath] then [imath]\frac1a[/imath] is of form [imath]0.0\dots0r_1\dots r_k0\dots0r_1\dots r_k\dots[/imath].</br>What determines the length of [imath]0[/imath] runs?</br></br>Suppose the run of [imath]0[/imath]s has length [imath]n\,[/imath], then [imath]a = \overline{r_1r_2\dots r_k} / (10^{n+k} - 1)\,[/imath]. Not clear on how you want to translate that into What determines n.</br></br>If your number starts with precisely [imath]m[/imath] zeroes, it is between [imath]0.\underbrace{0\ldots0}_m1=10^{-m-1}[/imath] (inclusive) and [imath]0.\underbrace{0\ldots0}_{m-1}1=10^{-m}[/imath] (exclusive). In other words, [imath]10^{m}<a\le10^{m+1}[/imath].</br></br>I think this completely shortcuts what I was in the process of composing.</br></br>One way to think about it would be the following: </br>The zero runs tell you when you approximate this real number using positive decimal steps, how small each subsequent approximation step gets.</br></br></br>
+</body>
+</html>

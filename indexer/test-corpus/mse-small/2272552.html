@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2272552/uniform-convergence-puntual-convergence">http://math.stackexchange.com/questions/2272552/uniform-convergence-puntual-convergence</a></h2>
+uniform convergence & puntual convergence</br></br>Which are all the differences between uniform convergence and puntual convergence of a sequence of functions {[imath]f_n[/imath]} in a compact space?</br>I know one difference between them, the uniform converge of [imath]f_n[/imath] to [imath]f[/imath] doesn't depend of the point x, whereas puntual convergence does.</br>Does anyone know about other differences between the convergences?</br></br>uniform convergence preserves properties like continuity and also interchanging of differentiation/integration operators with limit operator is possible</br>Also I think there's no big difference with their definitions. Confuses me</br>There is actually. Because puntual convergence just gives u the behaviour of the functions at one point but not on the whole. For example take [imath]f_n:[0,1]\rightarrow [0,1] [/imath] where [imath]f_n(x)=x^n[/imath] then work out the puntual limit of [imath]f_n[/imath] and u'll see the limit function suddenly becomes discontinuous. Uniform convergence implies the graphs of the functions will get closer and closer.</br>"puntual"? Is that a thing? "pointwise" is what I've always heard it called.</br>@Nick I think it's the same..it's just my bad translation</br></br>I guess you were to understand the difference in the requirements of the two modes of convergence of a sequence of functions. Let [imath]X \neq \varnothing[/imath]; let [imath](M,d)[/imath] be a metric space; let [imath]f_{n}: X \to M[/imath] for all integers [imath]n \geq 1[/imath]; let [imath]f: X \to M[/imath]. Then the sequence [imath](f_{n})[/imath] is said to converge pointwisely to [imath]f[/imath] iff for every [imath]x \in X[/imath] and every [imath]\varepsilon > 0[/imath] there is some integer [imath]N \geq 1[/imath] such that [imath]n \geq N[/imath] implies [imath]d(f_{n}(x),f(x)) < \varepsilon[/imath]. Clearly, pointwise convergence of [imath]f_{n}[/imath] to [imath]f[/imath] requires simply that at every point [imath]x[/imath] of [imath]X[/imath] the sequence [imath](f_{n}(x))[/imath] of real numbers converges to the real number [imath]f(x)[/imath]. From this you can also tell why mathematicians use a word such as "pointwise" or "punctual" to modify such a mode of convergence. On the other hand, the sequence [imath](f_{n})[/imath] is said to converge to [imath]f[/imath] uniformly iff for every [imath]\varepsilon > 0[/imath] there is some integer [imath]N \geq 1[/imath] such that [imath]n \geq N[/imath] implies [imath]d(f_{n}(x),f(x)) < \varepsilon[/imath] for all [imath]x \in X[/imath]. Now uniform convergence of [imath](f_{n})[/imath] to [imath]f[/imath] instead requires that [imath]f_{n}[/imath] should be arbitrarily close to [imath]f[/imath] if [imath]n[/imath] is large enough. </br>If [imath]X, M := \mathbb{R}[/imath], then intuitively graphically you can see that uniform convergence of [imath](f_{n})[/imath] to [imath]f[/imath] requires that the graph of each [imath]f_{n}[/imath] with [imath]n[/imath] large enough should be arbitrarily close to the graph of [imath]f[/imath]. However, pointwise convergence of [imath](f_{n})[/imath] to [imath]f[/imath] does not require that much. </br></br></br>
+</body>
+</html>

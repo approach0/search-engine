@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2228552/math-physics-circuit-problem-from-cap-contest-involving-resistance">http://math.stackexchange.com/questions/2228552/math-physics-circuit-problem-from-cap-contest-involving-resistance</a></h2>
+Math/Physics Circuit Problem from CAP contest involving Resistance</br></br>Consider a circuit made of a wire with uniform resistance</br>in a shape of a circle as shown in the picture. The</br>circle is connected diagonally from point A to point B</br>with the same type of wire. If the current passing</br>through the circuit is i0, what is the current passing</br>through the wire AB as a function of angle θ?</br></br></br>Did you try applying Kirchoff laws? Should be pretty straight forward.</br>Why will it even depend on [imath]\theta[/imath]?</br>@UddeshyaSingh Consider [imath]\theta=\frac{\pi}{2}[/imath]. The wire is as good as nonexistent (there is no current through it). Now consider [imath]\theta=0[/imath].</br>You can adapt the solution to the problem from here. Tell us whether or not you succeed.</br>If an answer addresses your question in a satisfactory manner, it is customary to accept the answer.</br></br>Excuse the clumsy 'artwork':</br>Without loss of generality we can take the resistance per unit length to be one and we can take the radius to be one.</br>One approach is to use  Norton's theorem. (a) shows the general</br>circuit and (b) shows how the current splits between two resistors.</br>(c) Shows how the Norton equivalent resistance is computed and (d)</br>shows how the Norton short circuit current is computed (with the aid of</br>(b)).</br>(e) Shows the Norton equivalent circuit and from this (again with the aid of</br>(b)) shows that</br>[imath]i_D = {1 \over 1 + {4 \over \pi}}(1-{2 \theta \over \pi}) i_0[/imath].</br></br>Another approach would be to perform a [imath]\Delta-Y[/imath] conversion on the three rightmost resistors in (a).</br></br></br>
+</body>
+</html>

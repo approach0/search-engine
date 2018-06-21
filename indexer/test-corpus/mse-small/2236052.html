@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2236052/partial-sums-and-lesbegue-integral">http://math.stackexchange.com/questions/2236052/partial-sums-and-lesbegue-integral</a></h2>
+Partial sums and Lesbegue integral</br></br>Let [imath]D = [-1/2,1/2]^n[/imath] be the unit cube. Let [imath]f:\mathbb{R}^n[/imath] be a function such that the Riemman integral</br>[imath]\int_{\rho D} f(x)\, \text{d}x[/imath]</br>exists for all [imath]\rho > 0.[/imath]</br>Under what conditions can we say that</br>(i)</br>[imath]\lim_{\rho \to \infty} \int_{\rho D} f(x) \,\text{d}x =  \int_{\mathbb{R}^n} f(x) \,\text{d}x,[/imath]</br>passing to the Lesbegue integral on the right-hand side and</br>(ii) [imath]\int_{\mathbb{R}^n} f(x)\, \text{d}x = \lim_{k\to\infty} \sum_{x \in \mathbb{Z}^n} f(x/k)k^{-n} \ ?[/imath]</br>For instance, for the Riemman integral it is not hard to see that:</br>[imath] \int_{\rho D} f(x) \,\text{d}x = \lim_{k\to\infty} \sum_{x \in \mathbb{Z}^n} f(x/k)k^{-n}\mathbb{1}_{\rho(D)}(x)  [/imath]</br></br></br>Part (i)</br>If [imath]f[/imath] is Lebesgue integrable over [imath]\mathbb{R}^n[/imath] (which requires absolute integrability) then </br>[imath]-\infty < \int_{\mathbb{R}^n}f  = \int_{\mathbb{R}^n}f^+ -  \int_{\mathbb{R}^n}f^-  < +\infty.[/imath]</br>where the positive and negative parts are [imath]f^+(x) = \max(f(x),0)[/imath] and [imath]f^-(x) = -\min(f(x), 0),[/imath] and individually</br>[imath]0 \leqslant \int_{\mathbb{R}^n}f^+  < +\infty, \\ 0 \leqslant \int_{\mathbb{R}^n}f^-  < +\infty.[/imath]</br>The Riemann and Lebesgue integrals coincide on bounded rectangles.  Hence, by the monotone convergence theorem</br>[imath]\lim_{\rho \to \infty} \int_{\rho D} f^+(x) \, dx = \lim_{\rho \to \infty} \int_{\rho D} f^+  = \lim_{\rho \to \infty} \int_{\mathbb{R^n}} f^+ \chi_{\rho D} =  \int_{\mathbb{R^n}} f^+ .[/imath]</br>A similar result holds for [imath]f^-[/imath] and, consequently</br>[imath]\lim_{\rho \to \infty} \int_{\rho D} f(x) \, dx = \int_{\mathbb{R^n}} f. [/imath]</br>If [imath]f[/imath] is not Lebesgue integrable over [imath]\mathbb{R}^n[/imath], but Riemann integrable over bounded rectangles, then the limit on the left might converge to an improper Riemann  integral, despite the non-existence of a finite Lebesgue integral.  For [imath]n=1[/imath], the typical example is [imath]f(x) = \sin x / x[/imath].</br>Part (ii)</br>It seems you are asking if the limit of Riemann sums over an expanding region can be evaluated as a double limit with the order switched and converge to the integral over the infinite domain.  </br>For [imath]n = 1[/imath] and integration over [imath][0,\infty)[/imath] this would translate to </br>[imath]\lim_{k \to \infty} \lim_{m \to \infty} k^{-1} \sum_{j=1}^{mk} f(j/k) = \lim_{m \to \infty} \lim_{k \to \infty} k^{-1} \sum_{j=1}^{mk} f(j/k) = \lim_{m \to \infty} \int_0^m f(x) \, dx\\ = \int_0^\infty f(x) \, dx[/imath]</br>I surmise this can be justified by some form of monotone or dominated convergence.</br></br>Thank you for the simple explanation. I am also interested in the sum (ii) of the question (I have added some further explanation)..</br>I'm not clear on that sum.  What is [imath]k[/imath]?</br>Yes, I have just modified to correct the mistakes.</br>Again Lebesgue integrable means absolutely integrable and I'm sure it works for the nonnegative parts [imath]f^+[/imath] and [imath]f^-[/imath].</br>I think its safe to say it works under those conditions.  I'll work on a rigorous justification when I get a chance.  I've done this before in 2D but have to think about it.</br></br>
+</body>
+</html>

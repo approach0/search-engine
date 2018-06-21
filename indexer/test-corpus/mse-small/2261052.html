@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2261052/differential-equation-periodic-solution-eigenvalues">http://math.stackexchange.com/questions/2261052/differential-equation-periodic-solution-eigenvalues</a></h2>
+Differential equation, periodic solution, eigenvalues</br></br>Sorry for my bad english.</br>Let [imath]u : \mathbb{R} \rightarrow \mathbb{R}^n[/imath] a solution of a linear differential equation [imath] x'(t) = Ax(t)[/imath] [imath](1)[/imath] with [imath] A \in M_{nn}(\mathbb{R})[/imath]. We suppose A is a diagonalizable matrix.</br>We want to prove that if this equation has a periodic solution (non-zero) with period [imath]T > 0[/imath], then the matrix [imath]e^{TA}[/imath] has the eigenvalue [imath]1[/imath] ; and to deduce that if all the eigenvalues of A are real, then [imath](1)[/imath] hasn't periodic solution non constant.</br>I don't see how to make explicit it. Someone could help me ? Thank you in advance...</br></br>Hint: in the Eigenvector basis, the equations simplify to [imath]x'_i(t)=\lambda_i x_i(t)[/imath] for which the solutions are obvious.</br></br>If [imath]A[/imath] is diagonalizable then, there is a frame of reference in which the solved system is decoupled:</br>[imath]y_i'(t) = \lambda_i\, y_i(t)[/imath]</br>Being [imath]A=P\Lambda P^{-1}[/imath] and [imath]\Lambda = diag{(\lambda_i)}[/imath]</br>This system of equations leads to the following solution:</br>[imath]y(t) = \exp{(\Lambda t)} c[/imath]</br>For any constant vector [imath]c[/imath]</br>If the eigenvalues of [imath]A[/imath] (the same as the eigenvalues of the diagonalized matrix [imath]\Lambda[/imath]) [imath]\textit{i.e.}[/imath] the numbers [imath]\lambda_i[/imath] are all complex the solutions are periodic, with period [imath]T[/imath]:</br>[imath]y(t) = \exp{(\Lambda t)} c= \exp{(i\,\mathcal{Im}\left\{\Lambda\right\} t)} c[/imath]</br> (note that [imath]\exp{it}=\cos{t}+i\sin{t}[/imath])</br>On the contrary they are not periodic, leading to exponentials that increase or decrease with time</br>[imath]y(t) = \exp{(\Lambda t)} c[/imath]</br>Recovering the original variable [imath]x(t)[/imath] one has</br>[imath]x(t) = P\exp{(\Lambda t)} c[/imath]</br></br></br>
+</body>
+</html>

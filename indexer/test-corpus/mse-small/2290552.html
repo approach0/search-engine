@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2290552/problem-with-eigenvalues-and-eigenvectors-2">http://math.stackexchange.com/questions/2290552/problem-with-eigenvalues-and-eigenvectors-2</a></h2>
+problem with eigenvalues and eigenvectors_2</br></br>I have an endomorphism [imath]F:R^3 \rightarrow R^3 [/imath] such that [imath]ker F= 	\left \{ (x,y,z)| x-y+2z=0 \right \}[/imath] and [imath]v=(1,0,1)[/imath] is an eigenvector for [imath] \lambda_1 =	\frac{1}{2}[/imath]</br>It is asked to find the matrix of the endomorphism in the base [imath]e_1=(1,0,0)[/imath], [imath]e_2=(0,1,0)[/imath] and [imath]e_3=(0,0,1)[/imath]</br>I can find a basis of [imath]ker F=<(1,1,0),(-2,0,1)>[/imath]</br>I know that ker F is the eigenspace relating to the eigenvalue [imath] \lambda _0=0[/imath].</br>Then I can take the eigenvector [imath]v=(1,0,1)[/imath] related to the eigenvalue [imath] \lambda_1 =	\frac{1}{2}[/imath].</br>So a base of [imath]R^3[/imath] is [imath]B=\left \{ (1,0,1),(1,1,0),(-2,0,1) \right \}[/imath]</br>[imath]F(1,0,1)=\frac{1}{2}(1,0,1)=(\frac{1}{2},0,\frac{1}{2})[/imath]</br>[imath]F(1,1,0)=(0,0,0)[/imath]</br>[imath]F(-2,0,1)=(0,0,0)[/imath]</br>Now I can all the elements for the matrix [imath]A_B=\begin{Bmatrix} \frac{1}{2} & 0 & 0 \\ 0 & 0 & 0 \\\frac{1}{2} & 0 & 0  \end{Bmatrix}[/imath]</br>Now I have to find the matrices to change the coordinate from the base [imath]e[/imath] to [imath] B[/imath] and from [imath]B[/imath] to [imath]e[/imath]</br>[imath](1,0,0)=	\frac{1}{3}*(1,0,1)+ 0*(1,1,0)+\frac{1}{3}*(-2,0,1)[/imath]</br>[imath](0,1,0)=	-\frac{1}{3}*(1,0,1)+ 1*(1,1,0)+\frac{1}{3}*(-2,0,1)[/imath]</br>[imath](0,0,1)=	\frac{2}{3}*(1,0,1)+ 0*(1,1,0)+\frac{1}{3}*(-2,0,1)[/imath]</br>[imath]M_{Be}=\begin{Bmatrix} \frac{1}{3} & -\frac{1}{3} & \frac{2}{3} \\ 0 & 1 & 0 \\-\frac{1}{3} & \frac{1}{3} & \frac{1}{3}   \end{Bmatrix}[/imath]</br>And the inverse</br>[imath]M_{eB}=\begin{Bmatrix} 1 & 1 & -2 \\ 0 & 1 & 0 \\1 & 0 & 1   \end{Bmatrix}[/imath]</br>[imath]M_{eB}*A_B*M_{Be}=\begin{Bmatrix} 1 & 1 & -2 \\ 0 & 1 & 0 \\1 & 0 & 1   \end{Bmatrix}*\begin{Bmatrix} \frac{1}{2} & 0 & 0 \\ 0 & 0 & 0 \\\frac{1}{2} & 0 & 0  \end{Bmatrix}*\begin{Bmatrix} \frac{1}{3} & -\frac{1}{3} & \frac{2}{3} \\ 0 & 1 & 0 \\-\frac{1}{3} & \frac{1}{3} & \frac{1}{3}   \end{Bmatrix}=\begin{Bmatrix} -\frac{1}{6} & \frac{1}{6} & -\frac{1}{3} \\ 0 & 0 & 0 \\\frac{1}{3} & -\frac{1}{3} & \frac{2}{3}   \end{Bmatrix}[/imath] </br>is it right or am i making mistakes?</br></br>What is an autospace?</br>@Bernard Does eigenspace make sense?</br>@Anne: Yes. I've never heard of ‘autospace’.</br>Bug in the title...</br>If I understand well, [imath]A_{\mathcal B}[/imath]  is the matrix of [imath]F[/imath] in the basis of eigenvectors. So it should be the diagonal matrix with (in this order) [imath]1/2, 0,0[/imath] on the diagonal.</br></br>Let's try a shortcut. The equation of the kernel tells you that [imath]A \begin{pmatrix} x \\ x+2z \\ z \end{pmatrix} = 0[/imath]. The eigenvalue equation tells you that [imath]A \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} = \dfrac 1 2 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}[/imath].</br>Taking [imath]x = z = 1[/imath] gives you [imath]0 = A \begin{pmatrix} 1 \\ 3 \\ 1 \end{pmatrix} = A \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} + A \begin{pmatrix} 0 \\ 3 \\ 0 \end{pmatrix} = \dfrac 1 2 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} + 3 A e_2[/imath], whence [imath]A e_2 = - \dfrac 1 6 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} = - \dfrac 1 6 e_1 - \dfrac 1 6 e_3[/imath].</br>Taking now [imath]x=0[/imath] and [imath]z=1[/imath] gives [imath]0 = A \begin{pmatrix} 0 \\ 2 \\ 1 \end{pmatrix} = 2 A e_2 + A e_3 = - \dfrac 1 3 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} + A e_3[/imath], whence [imath]A e_3 = \dfrac 1 3 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} = \dfrac 1 3 e_1 + \dfrac 1 3 e_3[/imath].</br>Taking [imath]x=1[/imath] and [imath]z=0[/imath] gives [imath]0 = A \begin{pmatrix} 1 \\ 1 \\ 0 \end{pmatrix} = A e_1 + A e_2[/imath], whence [imath]A e_1 = \dfrac 1 6 \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} = \dfrac 1 6 e_1 + \dfrac 1 6 e_3[/imath].</br>It follows that [imath]A = \begin{pmatrix} \dfrac 1 6 & - \dfrac 1 6 & \dfrac 1 3 \\ 0 & 0 & 0 \\ \dfrac 1 6 & - \dfrac 1 6 & \dfrac 1 3 \end{pmatrix} = \dfrac 1 6 \begin{pmatrix} 1 & -1 & 2 \\ 0 & 0 & 0 \\ 1 & -1 & 2 \end{pmatrix}[/imath].</br></br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2281052/action-of-frobenius-maps-on-root-systems">http://math.stackexchange.com/questions/2281052/action-of-frobenius-maps-on-root-systems</a></h2>
+Action of Frobenius maps on root systems</br></br>Let [imath]G[/imath] be a connected reductive group defined over a finite field [imath]F_q[/imath] of characteristic [imath]p >0[/imath] with</br>[imath]q[/imath] elements and corresponding Frobenius map [imath]F : G → G[/imath]. Let [imath]T[/imath] be an [imath]F[/imath]-</br>stable maximal torus of [imath]G[/imath] contained in an [imath]F[/imath]-stable Borel subgroup [imath]B[/imath] of [imath]G[/imath], and let [imath]Φ[/imath] be the root system of [imath]G[/imath] relative to [imath]T[/imath].</br>For [imath]α ∈ Φ[/imath], we write [imath]X_α[/imath] for the unipotent subgroup of [imath]G[/imath] corresponding to [imath]α[/imath]. That is, [imath]X_α[/imath] is the</br>minimal non-trivial closed unipotent subgroup of [imath]G[/imath] normalized by [imath]T[/imath], such that [imath]T[/imath] acts on [imath]X_α[/imath] by [imath]α[/imath],</br>where [imath]α[/imath] is viewed as a character of [imath]T[/imath]. Recall that [imath]X_α[/imath] and [imath](\overline{F_p},+)[/imath] are isomorphic as algebraic groups.</br>Fix an automorphism [imath]x_α : F_p →X_α[/imath] for every [imath]α ∈ Φ[/imath].</br>Assume that [imath]F' : G→G[/imath] be a Frobenius map of [imath]G[/imath] commuting with [imath]F[/imath] such that [imath]T[/imath] and [imath]B[/imath] are [imath]F'[/imath]-stable.</br>We say that [imath]F'[/imath] has property (*) if for every [imath]α ∈ Φ[/imath], there is a</br>  non-negative integer [imath]m > 0[/imath] such that for all [imath]t ∈ \overline{F_p}[/imath] we have [imath]F'(x_α(t)) = x_{F' (α)}(t^{p^m}) [/imath].</br>My Question Let's consider [imath]G=SL_n(q)[/imath], and [imath]F': G \rightarrow G[/imath] be a field automorphism i.e., [imath]F'((a_{ij}))=(a_{ij}^{p^k})[/imath] for some [imath]k\in N[/imath]. Does [imath]F'[/imath] satisfy the property (*)?My Thoughts: By a result of Steinberg [Endomorphisms of linear algebraic groups, Section 11.2], [imath]F'[/imath] permutes the roots; in fact, [imath]F'[/imath] permutes the root subgroups by [imath]F'(X_{\alpha})=X_{{\alpha}'}[/imath] and this gives rise to a permutation [imath]b:\Phi \rightarrow \Phi[/imath], in which [imath]b(\alpha):={\alpha}'[/imath]. Moreover, for each [imath]\alpha \in \Phi[/imath], we have [imath]F'(x_{α}(t)) = x_{b(α)}(d_{\alpha} t^{q_{\alpha}})[/imath] for some [imath]d_\alpha \in \overline{F_p}^*[/imath] and [imath]t\in \overline{F_p}^+[/imath]. On the other hand, for groups of type [imath]A_n[/imath], the root subgroups  [imath]X_{\alpha}[/imath]'s are all of the form [imath]\lbrace I+ kE_{ij} : k \in \overline{F_p}^+ \rbrace[/imath] for [imath]1\leq i, j \leq n[/imath] (where [imath]I[/imath] is identity matrix and [imath]E_{ij}[/imath] is a matrix which is zero everywhere except for the entry [imath]ij[/imath]th). Therefore, according to the definition of [imath]F'[/imath], we have [imath]F'(X_{\alpha})=X_{{\alpha}}[/imath] for all [imath]\alpha[/imath], and this means that the permutation [imath]b[/imath] acts trivially on roots. Hence [imath]F'(x_{α}(t)) = x_{α}(d_{\alpha} t^{q_{\alpha}})[/imath]. So I am done if I could show that [imath]d_{\alpha}=1[/imath] for all [imath]\alpha[/imath]. Is there any way to finish this argument?</br></br></br>An isomorphism [imath]x_\alpha: \overline{\mathbb{F}}_p \to X_\alpha[/imath] can always be composed  with an automorphism of [imath]\overline{\mathbb{F}_p}[/imath] to give another such isomorphism. Note that [imath]F'(x_\alpha(d t)) = x_\alpha(d_\alpha d^{q_\alpha} t^{q_\alpha})[/imath], so you can just choose [imath]d \in \overline{\mathbb{F}_p}^*[/imath] such that [imath]d_\alpha d^{q_\alpha} = d[/imath] and replace [imath]x_\alpha[/imath] by [imath]t \mapsto x_\alpha(d t)[/imath] to obtain an [imath]x_\alpha[/imath] for which [imath]F'[/imath] satisfies property (*).</br>However, [imath]F'[/imath] will not have property (*) for arbitrary choices of [imath]x_\alpha[/imath].</br></br>I think you meant [imath]d_{\alpha} d^{q_{\alpha}}=1[/imath]...Anyway, thank you so much for the answer.</br>@user97635 : Actually, no, I mean [imath]d_\alpha d^{q_\alpha} = d[/imath]. You want to have [imath]F(x_\alpha(d t)) = x_\alpha(d t^{q_\alpha})[/imath] and since [imath]F(x_\alpha(d t)) = x_\alpha(d_\alpha d^{q_\alpha} t^{q_\alpha})[/imath], you need to have [imath]d_\alpha d^{q_\alpha} t^{q_\alpha} = d t^{q_\alpha}[/imath] for all [imath]t[/imath], hence  [imath]d_\alpha d^{q_\alpha} = d[/imath].</br></br>
+</body>
+</html>

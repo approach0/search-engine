@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2264052/transforming-bivariate-continous-variables-to-uniform-distribution">http://math.stackexchange.com/questions/2264052/transforming-bivariate-continous-variables-to-uniform-distribution</a></h2>
+transforming bivariate continous variables to uniform distribution</br></br>I read a bivariate [imath](X,Y)[/imath]  normally distributed data can be transformed to a bivariate standard uniform distribution by the following steps: </br>My question is that can we generally say that for any bivariate data (regardless the distribution) after standardize and removing the correlation of the two variables  their cdf, [imath]F(X)[/imath] and [imath]F(Y)[/imath], have a joint uniform distribution? If not, can you please explain why?</br></br></br>
+</body>
+</html>

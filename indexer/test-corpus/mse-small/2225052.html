@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2225052/solving-trigonometric-equation">http://math.stackexchange.com/questions/2225052/solving-trigonometric-equation</a></h2>
+Solving Trigonometric Equation</br></br>How to get [imath] \left(5+\sqrt{6}\right)[/imath] from the expression </br>[imath]6\sqrt { 3 } \sin { \left( \frac { 2\pi  }{ 3 } -\arcsin { \left( \frac { 5\sqrt { 3 }  }{ 9 }  \right)  }  \right)  } [/imath] </br>without using calculator for examination purpose?</br></br></br>by using  identity [imath]\sin { \left( \alpha -\beta  \right) =\sin { \alpha \cos { \beta -\sin { \beta \cos { \alpha  }  }  }  }  } [/imath] we get [imath]6\sqrt { 3 } \sin { \left( \frac { 2\pi  }{ 3 } -\arcsin { \left( \frac { 5\sqrt { 3 }  }{ 9 }  \right)  }  \right)  } =6\sqrt { 3 } \left[ \sin { \frac { 2\pi  }{ 3 } \cos { \left( \arcsin { \left( \frac { 5\sqrt { 3 }  }{ 9 }  \right)  }  \right) -\cos { \frac { 2\pi  }{ 3 } \sin { \left( \arcsin { \left( \frac { 5\sqrt { 3 }  }{ 9 }  \right)  }  \right)  }  }  }  }  \right] =\\ =6\sqrt { 3 } \left[ \frac { \sqrt { 3 }  }{ 2 } \sqrt { 1-{ \left( \frac { 5\sqrt { 3 }  }{ 9 }  \right)  }^{ 2 } } +\frac { 1 }{ 2 } \left( \frac { 5\sqrt { 3 }  }{ 9 }  \right)  \right] =6\sqrt { 3 } \left[ \frac { \sqrt { 2 }  }{ 6 } +\frac { 5\sqrt { 3 }  }{ 18 }  \right] =\color{blue}{\sqrt { 6 } +5}[/imath]</br></br></br>
+</body>
+</html>

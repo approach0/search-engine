@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2279552/what-are-the-extremas-of-the-function-x-yxy-1">http://math.stackexchange.com/questions/2279552/what-are-the-extremas-of-the-function-x-yxy-1</a></h2>
+What are the extremas of the function [imath](x-y)(xy-1)[/imath]?</br></br>Well, [imath]f'_{x}=-y^2+2xy-1[/imath], [imath]f'_{y}=x^2-2xy+1[/imath],</br>if I add the first equation to the second, I get, that [imath]x^2-y^2=0 \implies x^2=y^2[/imath] </br>I think that this surface is the solution of [imath]x^2-y^2=0[/imath]</br>[imath]f''_{x}=2x-2y[/imath],[imath]f''_{y}=2x-2y[/imath], is my solution til this point correct? How can I continue it?</br></br>Isn't [imath](0.3, 0.3)[/imath] also a solution of [imath]x^2 = y^2[/imath], and [imath](57, 57)[/imath] as well?</br>really, so Will I have infinite solutions?</br>The single equation [imath]x^2=y^2[/imath] has infinitely many solutions. However, the two simultaneous equations [imath]x^2-2xy+1=0, -y^2+2xy-1=0[/imath] has fewer.</br>and how can I now continue it?</br>[imath]x^2 = y^2 \Rightarrow x = \pm y[/imath]. Substitute these two cases into the original equations and solve. Make sure that what you find is still a solution of the original equations.  BTW, you never state so explicitly but you do realize that you have to set the derivatives to 0, in order to calculate the extrema, yes? That's what I mean by the "original equations".</br></br>First, the notations [imath]f_x', f_y', f_x''[/imath], and [imath]f_y''[/imath] aren't correct.  You're mixing derivative notations.  The prime notation ([imath]'[/imath], [imath]''[/imath], etc.) is used for functions of one variable.  The subscript notation is (typically) used for functions of multiple variables.  So just say [imath]f_x[/imath] and [imath]f_y[/imath] for first partials with respect to [imath]x[/imath] and [imath]y[/imath], respectively.  The second partial with respect to [imath]x[/imath] is [imath]f_{xx}[/imath], with a similar meaning for [imath]f_{yy}[/imath].</br>You correctly found that [imath]x^2 = y^2[/imath] must be true in order to have critical points.  Now you want to substitute that back into each of your original equations.  Note that it may be more useful to use the equivalent forms [imath]x = \pm y[/imath] or [imath]y = \pm x[/imath] instead of [imath]x^2 = y^2[/imath].</br>Let's substitute [imath]x = y[/imath] into both equations.  Then we get:</br>\begin{align*}</br>  f_x &= -y^2 + 2y^2 - 1 = 0\\</br>  f_y &= y^2 -2y^2 + 1 = 0</br>\end{align*}</br>From both we get [imath]y^2 = 1[/imath], and so [imath]y = \pm 1[/imath].  Recall that this is the case of [imath]x^2=y^2[/imath] where [imath]x=y[/imath].  This means [imath]x = 1[/imath] when [imath]y=1[/imath] and [imath]x=-1[/imath] when [imath]y=-1[/imath].  So from this case we get the two points [imath](1,1)[/imath] and [imath](-1,-1)[/imath].</br>Now let's substitute [imath]x=-y[/imath] into both equations.  Then we get</br>\begin{align*}</br>  f_x &= -y^2 - 2y^2 - 1 = 0\\</br>  f_y &= y^2 +2y^2 + 1 = 0</br>\end{align*}</br>From both we get [imath]3y^2 = -1[/imath], which means there are no solutions from this case.</br>Note also that [imath](0,0)[/imath] is not a solution because [imath]f_x(0,0) = -1 \ne 0[/imath] and [imath]f_y(0,0) = 1 \ne 0[/imath].</br>Anyway, now that you have your only two critical points [imath](1,1)[/imath] and [imath](-1,-1)[/imath], you want to do the second derivative test for functions of two variables.  To do this you'll just need to analyze basic properties of a [imath]2 \times 2[/imath] matrix.  That link should have all the info you need.  Can you take it from here?</br></br></br>The two curves [imath]\partial_i f = 0[/imath] are 2D, I believe:</br></br></br></br>so will I get [imath](-1,-1)(1,1)[/imath] as critical points?</br>That seems to be where the gradient vanishes.</br></br>
+</body>
+</html>

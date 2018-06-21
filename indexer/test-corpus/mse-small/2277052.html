@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2277052/check-equilibrium-point-for-stability">http://math.stackexchange.com/questions/2277052/check-equilibrium-point-for-stability</a></h2>
+Check equilibrium point for stability</br></br>[imath]\dot x = -y^2[/imath] </br>[imath]\dot y = x^3y[/imath]</br>The task is to draw global phase portrait (I guess I understand how to manage this using isoclines) and to check equilibrium point for stability. I found out that equilibrium points are (x; 0)  and using Jacobian matrix found out, that if x > 0 one of eigenvalues is always positive so points (x, 0) where x > 0 are not stable at all. (Correct me, if I am wrong, please). And I don't know how to check the solutions where x <= 0.</br></br></br>Note that [imath]x^4 + 2 y^2[/imath] is constant on trajectories of this system.  The curves [imath]x^4 + 2 y^2 = c[/imath] are shaped like distorted ellipses.  Any solution in the left half plane will approach the negative [imath]x[/imath] axis along one of these curves.  In particular, the equilibrium points [imath](x,0)[/imath] for [imath]x \le 0[/imath] are stable (but not asymptotically stable).</br>EDIT: </br></br></br>Is it always so that if the solution approaches the equilibrium point then it is stable? And why is it not asymptotically stable?</br>Stable: for all [imath]\epsilon > 0[/imath] there is [imath]\delta > 0[/imath] such that a solution that starts within distance [imath]\delta[/imath] of the equilibrium point stays within [imath]\epsilon[/imath] of it.  That's the case here.</br>Asymptotically stable: in addition to being stable, a solution that starts within distance [imath]\delta[/imath] of the equilibrium point goes to that equilibrium point in the limit as [imath]t \to +\infty[/imath].  That is not the case here: it could go instead to some other nearby equilibrium point.</br>And what about x > 0? It should also be stable then? The picture of solutions is the same there.</br>No.  Look at the phase portrait.  If [imath]x > 0[/imath] the solutions move away from the axis along the curve [imath]x^4 + 2 y^2 = c[/imath], because [imath]\dot{y}[/imath] has the same sign as [imath]y[/imath].</br></br>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<html>
+<head>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG" type="text/javascript" charset="utf-8"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {
+		inlineMath: [['[imath]','[/imath]']],
+		displayMath: [['[dmath]','[/dmath]']]
+	},
+
+	showMathMenu: false, /* do not show menu */
+	menuSettings: {CHTMLpreview: false}
+});
+
+/* use SVG to avoid chrome trailing space vertical line bug */
+MathJax.Hub.Register.StartupHook("End Jax",function () {
+	var jax = "SVG";
+	return MathJax.Hub.setRenderer(jax);
+});
+</script>
+</head>
+<body>
+<h2>This is a math-content preview for <a href="http://math.stackexchange.com/questions/2202552/rounding-percents-how-far-from-100">http://math.stackexchange.com/questions/2202552/rounding-percents-how-far-from-100</a></h2>
+Rounding Percents: how far from 100?</br></br>Given n positive, rational numbers [imath]a_1, a_2...a_n[/imath] where [imath]\sum_{i=1}^{n} a_i = 100[/imath], what is the tightest limit we can put on the difference of (the sum of each number rounded to the nearest integer) and (100)?</br>In other words, what is the tightest bound, in terms of n, for:</br>[imath]|(\sum_{i=1}^{n} ||a_i||) - 100|[/imath]</br>What happens when you take the floor of each term instead?</br>[imath]| (\sum_{i=1}^{n} \lfloor a_i \rfloor ) - 100 |[/imath]</br>I stumbled across this problem while trying to round percents. You could say that the bound differs from 100 by at most n, since at most there are n numbers with decimals, each decimal can be at most arbitrarily close to 1. But is there a tighter limit?</br>In the rounded case, you can construct numbers that all end in 0.5 for an even n and show that, since they all round in the same direction, they will differ from 100 by at most n/2. (Is that correct?)</br>But I'm at a loss for the floor case. I'm not sure if the requirement that rational numbers add to an integer reduces the bound.</br></br>I see a problem here with rounding half-integers. How do you round [imath]1.5[/imath] for example ? Do you round it to [imath]1[/imath] or [imath]2[/imath] ?</br></br>For floors, the optimal bound is [imath]n-1[/imath].</br>To see why it is a bound, notice that [imath]a_i \leq 1+\lfloor a_i \rfloor[/imath] for every</br>[imath]i[/imath], so that [imath]\sum_{i=1}^{n-1} a_i \leq n-1+\sum_{i=1}^{n-1}\lfloor a_i \rfloor[/imath], and hence [imath]a_n=100-\bigg(\sum_{i=1}^{n-1} a_i\bigg) \geq B[/imath] where [imath]B=100-(n-1+\sum_{i=1}^{n-1}\lfloor a_i \rfloor)[/imath]. Now [imath]B[/imath] is an integer, so [imath]a_n\geq B[/imath]</br>implies [imath]\lfloor a_n \rfloor \geq B[/imath], which means that [imath]\sum_{i=1}^{n-1}\lfloor a_i \rfloor \geq 100-(n-1)[/imath]. On the other side, we clearly have</br>[imath]\sum_{i=1}^{n}\lfloor a_i \rfloor \leq \sum_{i=1}^{n} a_i=100[/imath]. This proves the bound.</br>To see why the bound is optimal, let [imath]\varepsilon\in(0,\frac{1}{n-1})[/imath] and </br>[imath]a_i=1-\varepsilon[/imath] for [imath]i<n[/imath], and [imath]a_n=(100-(n-1))+(n-1)\varepsilon[/imath].</br></br>I think there is a slight error in your last line - it should be [imath]a_n=100-(n-1)+(n-1)\varepsilon[/imath].</br>@Jason Corrected, thanks.</br></br>For the nearest integer variation, the optimal bound is [imath]\lfloor\frac{n}2\rfloor\wedge100:=\min\{\lfloor\frac{n}2\rfloor,100\}[/imath]. First note that [imath]|x-[x]|\le\frac12[/imath] (here [imath][x][/imath] is what you refer to as [imath]||x||[/imath]) for any [imath]x\in\mathbb R[/imath]. Thus</br>[imath]\left|\sum_{i=1}^n[a_i]-100\right|\le\sum_{i=1}^n|[a_i]-a_i|\le\frac{n}2,[/imath]</br>and then since [imath]\sum_{i=1}^n[a_i]-100[/imath] is an integer we can replace [imath]\frac{n}2[/imath] with [imath]\lfloor\frac{n}2\rfloor[/imath].</br>For [imath]0<x<\frac12[/imath], we have [imath][x]=0\le2x[/imath], and for [imath]x\ge\frac12[/imath] we have [imath]0<[x]\le x+\frac12\le2x[/imath], so we always have [imath]0\le[x]\le2x[/imath] for [imath]x>0[/imath]. This implies [imath]0\le\sum_{i=1}^n[a_i]\le200[/imath]. Combining this with the above yields</br>[imath]\left|\sum_{i=1}^n[a_i]-100\right|\le\left\lfloor\frac{n}2\right\rfloor\wedge100[/imath]</br>as claimed. We show now this is optimal. If [imath]n\le200[/imath], set [imath]a_i=\frac12[/imath] for [imath]i<n[/imath] and [imath]a_n=100-\frac{n-1}2[/imath]. Clearly [imath][a_i]=1[/imath] for [imath]i<n[/imath], and</br>[imath][a_n]=\begin{cases}100-\frac{n-1}2&\text{if [/imath][imath] is odd,}\\</br>100-\frac{n}2+1&\text{if [/imath]n[imath] is even.}</br>\end{cases}[/imath][imath]</br>Hence [/imath]\sum_{i=1}^n[a_i]=100+\frac{n-1}2[imath] if [/imath]n[imath] is even, [/imath]100+\frac{n}2[imath] if [/imath]n[imath] is odd, and in either case we have [/imath]\left|\sum_{i=1}^n[a_i]-100\right|=\lfloor\frac{n}2\rfloor[imath]. If [/imath]n>200[imath] then put [/imath]a_i=\frac{100}n[imath] for all [/imath]i[imath], so [/imath][a_i]=0[imath] and [/imath]\left|\sum_{i=1}^n[a_i]-100\right|=100[imath]. This completes the proof.</br>For the floors, follow Ewan Delanoy's answer, but note that through the same kind of tricks you should end up with [/imath](n-1)\wedge100
+</body>
+</html>
