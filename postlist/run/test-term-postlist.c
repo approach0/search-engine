@@ -6,18 +6,13 @@
 
 #include "mhook/mhook.h"
 
-#include "term-index/term-index.h"
-#include "term-index/config.h" /* for MAX_TERM_INDEX_ITEM_POSITIONS */
-
-#define TERM_POSTLIST_ITEM_SZ \
-	(sizeof(struct term_posting_item) + \
-	 sizeof(uint32_t) * MAX_TERM_INDEX_ITEM_POSITIONS)
+#include "term-index/term-index.h" /* for position_t */
 
 #include "config.h"
 #include "postlist.h"
 #include "term-postlist.h"
 
-#define N 2000
+#define N 20
 
 enum test_option {
 	TEST_PLAIN_POSTING,
@@ -141,6 +136,7 @@ static void run_testcase(enum test_option opt)
 
 	postlist_print_info(po);
 
+	//print_postlist(po);
 	test_iterator(po);
 
 	postlist_free(po);

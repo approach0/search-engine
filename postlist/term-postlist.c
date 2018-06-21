@@ -13,7 +13,6 @@
 #include <assert.h>
 
 #include "term-index/term-index.h" /* for position_t */
-#include "term-index/config.h" /* for MAX_TERM_INDEX_ITEM_POSITIONS */
 
 #include "common/common.h"
 #include "codec/codec.h"
@@ -21,13 +20,7 @@
 #include "postlist.h"
 #include "term-postlist.h"
 
-#define TERM_POSTLIST_ITEM_SZ \
-	(sizeof(struct term_posting_item) + \
-	 sizeof(uint32_t) * MAX_TERM_INDEX_ITEM_POSITIONS)
-
-#define MIN_TERM_POSTING_BUF_SZ \
-	(sizeof(doc_id_t) + sizeof(uint32_t) + \
-	MAX_TERM_INDEX_ITEM_POSITIONS * sizeof(position_t))
+#define MIN_TERM_POSTING_BUF_SZ       TERM_POSTLIST_ITEM_SZ
 
 #ifdef DEBUG_POSTLIST
 #define TERM_POSTLIST_SKIP_SPAN       2
@@ -127,7 +120,7 @@ static uint field_size(uint j)
 	case 1:
 		return sizeof(a.tf);
 	case 2:
-		return MAX_TERM_INDEX_ITEM_POSITIONS;
+		return sizeof(uint32_t) * MAX_TERM_INDEX_ITEM_POSITIONS;
 	default:
 		prerr("Unexpected field number");
 		abort();

@@ -4,13 +4,13 @@
 int main()
 {
 	/* simple test */
-//	const char *test[] = {
-//		"ab",             // expID = 0
-//		"a+k(b+c)",       // expID = 1
-//		"a+bc+xy",        // expID = 2
-//		"a(b+cd)",        // expID = 3
-//		"\\sqrt{pq + m}", // expID = 4
-//	};
+	const char *test[] = {
+		"ab",             // expID = 0
+		"a+k(b+c)",       // expID = 1
+		"a+bc+xy",        // expID = 2
+		"a(b+cd)",        // expID = 3
+		"\\sqrt{pq + m}", // expID = 4
+	};
 
 	/* prefix match test */
 //	const char *test[] = {
@@ -18,11 +18,11 @@ int main()
 //	};
 
 	/* joint node constraints test */
-	const char *test[] = {
-		"abcd + 1",
-		"a+bc+xy",
-		"ab + cd"
-	};
+//	const char *test[] = {
+//		"abcd + 1",
+//		"a+bc+xy",
+//		"ab + cd"
+//	};
 
 //	/* extreme-condition test */
 //	const char *test[] = {

@@ -12,6 +12,7 @@ struct term_postlist_cache_item {
 
 struct term_postlist_cache {
 	struct treap_node *trp_root;
+	void              *term_index;
 	size_t limit_sz;
 	size_t postlist_sz;
 };

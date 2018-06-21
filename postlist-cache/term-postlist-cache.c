@@ -21,6 +21,7 @@ term_postlist_cache_new(size_t limit)
 {
 	struct term_postlist_cache cache;
 	cache.trp_root = NULL;
+	cache.term_index = NULL;
 	cache.limit_sz = limit;
 	cache.postlist_sz = 0;
 
@@ -63,14 +64,8 @@ static struct postlist *fork_term_postlist(void *disk_po)
 	term_posting_start(disk_po);
 
 	do {
-		size_t wr_sz;
-
 		/* get docID, TF and position array */
 		pip = term_posting_cur_item_with_pos(disk_po);
-
-		/* calculate size of term posting item with positions */
-		wr_sz = sizeof(doc_id_t) + sizeof(uint32_t);
-		wr_sz += pip->tf * sizeof(position_t);
 
 #ifdef DEBUG_TERM_POSTLIST_CACHE
 		printf("[%u, tf=%u], pos = [", pip->doc_id, pip->tf);
@@ -80,7 +75,7 @@ static struct postlist *fork_term_postlist(void *disk_po)
 #endif
 
 		/* pass combined posting item to a single write() */
-		fl_sz = postlist_write(mem_po, pip, wr_sz);
+		fl_sz = postlist_write(mem_po, pip, TERM_POSTLIST_ITEM_SZ);
 #ifdef DEBUG_TERM_POSTLIST_CACHE
 		if (fl_sz)
 			printf("flush %lu bytes.\n", fl_sz);
@@ -118,6 +113,7 @@ term_postlist_cache_add(struct term_postlist_cache* cache, void *ti)
 
 	size_t new_postlist_sz = cache->postlist_sz;
 
+	cache->term_index = ti;
 	termN = term_index_get_termN(ti);
 
 	for (term_id = 1; term_id <= termN; term_id++) {
@@ -129,7 +125,7 @@ term_postlist_cache_add(struct term_postlist_cache* cache, void *ti)
 			term = term_lookup_r(ti, term_id);
 
 			if (term_id < MAX_PRINT_CACHE_TERMS) {
-				printf("`%s'(df=%u) ", term, df);
+				printf("`%s' (termID=%u, df=%u) ", term, term_id, df);
 
 			} else if (!ellp_lock) {
 				printf(" ...... ");
@@ -140,6 +136,8 @@ term_postlist_cache_add(struct term_postlist_cache* cache, void *ti)
 			printf("\n");
 #endif
 			mem_po = fork_term_postlist(disk_po);
+			//printf("postlist[%u]: %p\n", term_id, mem_po);
+			//if (mem_po) print_postlist(mem_po);
 
 			if (cache->postlist_sz + mem_po->tot_sz > cache->limit_sz) {
 				prinfo("term postlist cache reaches size limit.");
@@ -171,19 +169,30 @@ term_postlist_cache_add(struct term_postlist_cache* cache, void *ti)
 	return (new_postlist_sz == cache->postlist_sz);
 }
 
-///////////////////////////////////////////////////////////
-//
-//
-//struct postcache_item*
-//postcache_find(struct postcache_pool *pool, bintr_key_t key)
-//{
-//	struct bintr_ref ref;
-//
-//	ref = bintr_find((struct bintr_node**)&pool->trp_root, key);
-//
-//	if (ref.this_ == NULL)
-//		return NULL;
-//	else
-//		return MEMBER_2_STRUCT(ref.this_, struct postcache_item,
-//		                       trp_nd.bintr_nd);
-//}
+void*
+term_postlist_cache_find(struct term_postlist_cache cache, char* utf8_term)
+{
+	term_id_t        term_id;
+	struct bintr_ref ref;
+	bintr_key_t      key;
+	struct term_postlist_cache_item *item; 
+
+	if (NULL == cache.term_index)
+		return NULL;
+
+	key = term_id = term_lookup(cache.term_index, utf8_term);
+	if (term_id == 0) {
+		/* not indexed term */
+		return NULL;
+	}
+
+	ref = bintr_find((struct bintr_node**)&cache.trp_root, key);
+	if (ref.this_ == NULL) {
+		/* no doc associated to the term */
+		return NULL;
+	}
+
+	item = container_of(ref.this_, struct term_postlist_cache_item,
+	                    trp_nd.bintr_nd);
+	return item->posting;
+}

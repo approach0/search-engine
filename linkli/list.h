@@ -101,13 +101,7 @@ list_iter_next(list_t li, struct list_iterator *iter)
 		return 1;
 }
 
-#undef offsetof
-#define offsetof(_type, _member) ((uintptr_t)&((_type*)0)->_member)
-
-#include <stdint.h>
-#define container_of(_member_addr, _type, _member_name) \
-	(_member_addr == NULL) ? NULL : \
-	(_type*)((uintptr_t)(_member_addr) - offsetof(_type, _member_name))
+#include "common/util-macro.h"
 
 #define list_entry(_entry, _node_addr) \
 	container_of(_node_addr, __typeof__(*_entry), ln)

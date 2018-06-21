@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "mhook/mhook.h"
 #include "term-index/term-index.h"
-//#include "postlist/postlist.h" /* for print_postlist() */
+#include "postlist/postlist.h" /* for print_postlist() */
 #include "postlist-cache.h"
 
 int main()
@@ -20,9 +20,13 @@ int main()
 	term_postlist_cache_add(&cache, term_index);
 	printf("total size: %lu \n", cache.postlist_sz);
 
-//		struct postlist *po = term_postlist_cache_find(cache, key);
-//		printf("cached[%s]:\n", key);
-//		print_postlist(po);
+	{
+		char key[] = "dog";
+		struct postlist *po = term_postlist_cache_find(cache, key);
+		printf("cached[%s]:\n", key);
+		printf("%p\n", po);
+		if (po) print_postlist(po);
+	}
 
 	term_postlist_cache_free(cache);
 	term_index_close(term_index);

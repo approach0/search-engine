@@ -14,7 +14,7 @@ static void test_iterator(struct postlist *po, struct postlist_codec_fields fiel
 
 	do {
 		pi = postlist_cur_item(po);
-	//	postlist_print(pi, 1, fields);
+		postlist_print(pi, 1, fields);
 
 	} while (postlist_next(po));
 
@@ -51,6 +51,7 @@ static void test(struct postlist *po, int test_n)
 
 	/* test posting list iterator */
 	test_iterator(po, codec->fields);
+	//print_postlist(po);
 
 	/* free random items */
 	free(items);
@@ -60,7 +61,7 @@ static void test(struct postlist *po, int test_n)
 int main()
 {
 	struct postlist *po;
-	const int test_n = 2000;
+	const int test_n = 20;
 
 	printf("[[[ math_postlist_create_plain ]]]\n");
 	po = math_postlist_create_plain();

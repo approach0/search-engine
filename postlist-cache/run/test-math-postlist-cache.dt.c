@@ -8,7 +8,7 @@ int main()
 	struct math_postlist_cache cache;
 	cache = math_postlist_cache_new(500);
 	
-	math_postlist_cache_add(&cache, "./tmp/prefix");
+	math_postlist_cache_add(&cache, "../math-index/tmp/prefix");
 	printf("total size: %lu \n", cache.postlist_sz);
 
 	foreach (iter, strmap, cache.path_dict) {
