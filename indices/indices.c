@@ -26,6 +26,12 @@ bool indices_open(struct indices* indices, const char* index_path,
 	math_index_t          math_index = NULL;
 	blob_index_t          blob_index_url = NULL;
 	blob_index_t          blob_index_txt = NULL;
+	struct postlist_cache cached_index;
+
+	/*
+	 * open cache index
+	 */
+	cached_index = postlist_cache_new();
 
 	/*
 	 * open term index.
@@ -87,12 +93,15 @@ skip:
 	indices->mi = math_index;
 	indices->url_bi = blob_index_url;
 	indices->txt_bi = blob_index_txt;
+	indices->ci = cached_index;
 
 	return open_err;
 }
 
 void indices_close(struct indices* indices)
 {
+	postlist_cache_free(indices->ci);
+
 	if (indices->ti) {
 		term_index_close(indices->ti);
 		indices->ti = NULL;
@@ -114,3 +123,11 @@ void indices_close(struct indices* indices)
 	}
 }
 
+
+int indices_cache(struct indices* indices)
+{
+	int res = postlist_cache_fork(&indices->ci, indices->ti, indices->mi);
+	postlist_cache_printinfo(indices->ci);
+
+	return res;
+}
