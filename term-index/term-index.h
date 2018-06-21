@@ -11,6 +11,8 @@ typedef uint32_t term_id_t;
 typedef uint32_t doc_id_t;
 typedef uint32_t position_t;
 
+typedef void* term_index_t;
+
 #define MAX_DOC_ID UINT_MAX
 
 enum term_index_open_flag {

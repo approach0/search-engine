@@ -12,10 +12,10 @@ enum indices_open_mode {
 };
 
 struct indices {
-	void                 *ti;
-	math_index_t          mi;
-	blob_index_t          url_bi;
-	blob_index_t          txt_bi;
+	term_index_t  ti;
+	math_index_t  mi;
+	blob_index_t  url_bi;
+	blob_index_t  txt_bi;
 };
 
 void indices_init(struct indices*);

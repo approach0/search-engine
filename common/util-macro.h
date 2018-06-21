@@ -12,3 +12,18 @@
 #define container_of(_member_addr, _type, _member_name) \
 	(_member_addr == NULL) ? NULL : \
 	(_type*)((uintptr_t)(_member_addr) - offsetof(_type, _member_name))
+
+#include <stddef.h> /* for size_t */
+#include <stdio.h>  /* for printf */
+static inline void print_size(size_t _sz)
+{
+	float sz = (float)_sz;
+	if (_sz >= (1024 << 20))
+		printf("%.3f GB", sz / (1024.f * 1024.f * 1024.f));
+	else if (_sz >= (1024 << 10))
+		printf("%.3f MB", sz / (1024.f * 1024.f));
+	else if (_sz > 1024)
+		printf("%.3f KB", sz / 1024.f);
+	else
+		printf("%lu Byte(s)", _sz);
+}

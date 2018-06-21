@@ -83,7 +83,7 @@ struct strmap_iterator strmap_iterator(strmap_t m)
 
 int strmap_empty(strmap_t m)
 {
-	return (m == NULL);
+	return (m == NULL || m->length == 0);
 }
 
 int strmap_iter_next(strmap_t m, struct strmap_iterator *iter)
