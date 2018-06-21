@@ -27,3 +27,9 @@ static inline void print_size(size_t _sz)
 	else
 		printf("%lu Byte(s)", _sz);
 }
+
+#define __1MB__ (1024 << 10)
+#define MB * __1MB__
+
+#define __1KB__ 1024
+#define KB * __1KB__

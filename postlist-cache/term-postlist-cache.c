@@ -17,12 +17,12 @@
 #include "term-postlist-cache.h"
 
 struct term_postlist_cache
-term_postlist_cache_new(size_t limit)
+term_postlist_cache_new()
 {
 	struct term_postlist_cache cache;
 	cache.trp_root = NULL;
 	cache.term_index = NULL;
-	cache.limit_sz = limit;
+	cache.limit_sz = DEFAULT_TERM_CACHE_SZ;
 	cache.postlist_sz = 0;
 
 	return cache;
@@ -195,4 +195,45 @@ term_postlist_cache_find(struct term_postlist_cache cache, char* utf8_term)
 	item = container_of(ref.this_, struct term_postlist_cache_item,
 	                    trp_nd.bintr_nd);
 	return item->posting;
+}
+
+static int if_print_item;
+static void *print_ti;
+
+static enum bintr_it_ret
+print_term(struct bintr_ref *ref, uint32_t level, void *arg)
+{
+	struct term_postlist_cache_item *item;
+	item = container_of(ref->this_, __typeof__(*item), trp_nd.bintr_nd);
+
+	/* count the total items */
+	PTR_CAST(cnt, size_t, arg);
+	(*cnt) ++;
+	
+	/* print if asked to */
+	if (if_print_item) {
+		uint32_t  df;
+		char     *term;
+		struct treap_node *trp = &item->trp_nd;
+		struct bintr_node *btr = &trp->bintr_nd;
+		term_id_t term_id = btr->key;
+
+		df = term_index_get_df(print_ti, term_id);
+		term = term_lookup_r(print_ti, term_id);
+
+		printf("cached term item#%u: %s (df=%u)\n", btr->key, term, df);
+		free(term);
+	}
+
+	return BINTR_IT_CONTINUE;
+}
+
+size_t term_postlist_cache_list(struct term_postlist_cache c, int print)
+{
+	size_t cnt = 0;
+	if_print_item = print;
+	print_ti = c.term_index;
+	bintr_foreach((struct bintr_node**)&c.trp_root, &bintr_preorder,
+	              &print_term, &cnt);
+	return cnt;
 }

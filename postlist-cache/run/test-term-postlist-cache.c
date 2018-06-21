@@ -15,15 +15,17 @@ int main()
 		return 1;
 	}
 
-	cache = term_postlist_cache_new(3 MB);
+	cache = term_postlist_cache_new();
 	
 	term_postlist_cache_add(&cache, term_index);
-	printf("total size: %lu \n", cache.postlist_sz);
+
+	size_t cnt = term_postlist_cache_list(cache, 1);
+	printf("cached items: %lu, total size: %lu.\n", cnt, cache.postlist_sz);
 
 	{
 		char key[] = "dog";
 		struct postlist *po = term_postlist_cache_find(cache, key);
-		printf("cached[%s]:\n", key);
+		printf("in-memory posting list [%s]:\n", key);
 		printf("%p\n", po);
 		if (po) print_postlist(po);
 	}

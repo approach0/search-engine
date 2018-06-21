@@ -6,8 +6,8 @@
 struct postlist_cache postlist_cache_new()
 {
 	struct postlist_cache c;
-	c.math_cache = math_postlist_cache_new(DEFAULT_MATH_CACHE_SZ);
-	c.term_cache = term_postlist_cache_new(DEFAULT_TERM_CACHE_SZ);
+	c.math_cache = math_postlist_cache_new();
+	c.term_cache = term_postlist_cache_new();
 	c.tot_used = 0;
 	c.tot_limit = DEFAULT_MATH_CACHE_SZ + DEFAULT_TERM_CACHE_SZ;
 
@@ -44,4 +44,13 @@ void postlist_cache_free(struct postlist_cache cache)
 {
 	math_postlist_cache_free(cache.math_cache);
 	term_postlist_cache_free(cache.term_cache);
+}
+
+void postlist_cache_set_limit(
+	struct postlist_cache *cache,
+	size_t math_cache_limit,
+	size_t term_cache_limit)
+{
+	cache->math_cache.limit_sz = math_cache_limit;
+	cache->term_cache.limit_sz = term_cache_limit;
 }

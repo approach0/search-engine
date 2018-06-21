@@ -6,6 +6,8 @@
 #include "postlist-codec/postlist-codec.h"
 #include "postlist/postlist.h"
 #include "postlist/math-postlist.h"
+
+#include "config.h"
 #include "math-postlist-cache.h"
 
 #ifdef DEBUG_MATH_POSTLIST_CACHE
@@ -115,11 +117,11 @@ next:
 
 
 struct math_postlist_cache
-math_postlist_cache_new(size_t limit_sz)
+math_postlist_cache_new()
 {
 	struct math_postlist_cache cache = {NULL, 0, 0};
 	cache.path_dict = strmap_new();
-	cache.limit_sz = limit_sz;
+	cache.limit_sz = DEFAULT_MATH_CACHE_SZ;
 	return cache;
 }
 	
@@ -148,4 +150,16 @@ math_postlist_cache_find(struct math_postlist_cache cache, char* path)
 {
 	strmap_t d = cache.path_dict;
 	return d[[path]];
+}
+
+size_t
+math_postlist_cache_list(struct math_postlist_cache c, int print)
+{
+	size_t cnt = 0;
+	foreach (iter, strmap, c.path_dict) {
+		char *key = iter.cur->keystr;
+		if (print) printf("cached math path: %s\n", key);
+		cnt ++;
+	}
+	return cnt;
 }

@@ -19,8 +19,9 @@ int main()
 	struct postmerge pm;
 
 	char query_term[][128] = {
-		"dog",
-		"primes"
+		"prime",
+		"rickmorty",
+		"absolute"
 	};
 
 	struct indices indices;
@@ -28,9 +29,15 @@ int main()
 		prerr("cannot open index.");
 		goto close;
 	}
+	
+	postlist_cache_set_limit(&indices.ci, 7 KB, 8 KB);
 
 	printf("Caching begins ...\n");
 	indices_cache(&indices);
+
+
+	(void)math_postlist_cache_list(indices.ci.math_cache, 1);
+	(void)term_postlist_cache_list(indices.ci.term_cache, 1);
 
 	postmerge_posts_clear(&pm);
 

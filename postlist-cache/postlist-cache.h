@@ -1,6 +1,3 @@
-#define __1MB__ (1024 << 10)
-#define MB * __1MB__
-
 #include "math-postlist-cache.h"
 #include "term-postlist-cache.h"
 
@@ -21,3 +18,5 @@ int postlist_cache_fork(struct postlist_cache*,
 void postlist_cache_free(struct postlist_cache);
 
 void postlist_cache_printinfo(struct postlist_cache);
+
+void postlist_cache_set_limit(struct postlist_cache*, size_t, size_t);
