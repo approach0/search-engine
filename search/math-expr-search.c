@@ -124,6 +124,7 @@ struct on_dir_merge_args {
 	struct indices             *indices;
 	uint32_t                    n_qry_lr_paths;
 	struct postmerge           *pm;
+	struct subpath_ele        **eles;
 	post_merge_callbk           post_on_merge;
 	uint32_t                    n_dir_visits;
 	void                       *expr_srch_arg;
@@ -132,10 +133,11 @@ struct on_dir_merge_args {
 	uint32_t                    n_max_qry_node_id;
 };
 
-static enum dir_merge_ret
-on_dir_merge(math_posting_t *postings, uint32_t n_postings,
-             uint32_t level, void *args)
+enum dir_merge_ret
+on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
+	struct subpath_ele **eles, uint32_t n_postings, uint32_t level, void *args)
 {
+#if 0
 	P_CAST(on_dm_args, struct on_dir_merge_args, args);
 	struct postmerge *pm = on_dm_args->pm;
 	struct math_extra_score_arg mes_arg;
@@ -145,6 +147,13 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 	struct subpath_ele *ele;
 
 	postmerge_posts_clear(pm);
+
+//		/* map a full path to math posting list */
+//		postings[i] = math_posting_new_reader(dm_args->eles[i],
+//		                               dm_args->full_paths[i]);
+
+//	for (j = 0; j < i; j++)
+//		math_posting_free_reader(postings[j]);
 
 	for (i = 0; i < n_postings; i++) {
 		po = postings[i];
@@ -209,6 +218,7 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 		return DIR_MERGE_RET_STOP;
 	}
 
+#endif
 	return DIR_MERGE_RET_CONTINUE;
 }
 

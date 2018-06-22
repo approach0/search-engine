@@ -21,6 +21,7 @@ typedef enum dir_merge_ret
 (*dir_merge_callbk)(
 	char (*full_paths)[MAX_MERGE_DIRS],
 	char (*base_paths)[MAX_MERGE_DIRS],
+	struct subpath_ele          **eles,
 	uint32_t /* number of postings list */,
 	uint32_t /* level */, void *args);
 

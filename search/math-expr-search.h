@@ -2,6 +2,7 @@
 #include "math-index/math-index.h"
 #include "math-index/subpath-set.h"
 #include "postmerge/postmerge.h"
+#include "indices/indices.h"
 
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
@@ -23,5 +24,6 @@ enum math_expr_search_policy {
 
 /* perform math expression search. Upon math posting list merge,
  * call the callback function specified in the argument. */
-int64_t math_expr_search(math_index_t, char*, enum math_expr_search_policy,
-                         post_merge_callbk, void*);
+int64_t math_expr_search(struct indices *indices, char *tex,
+                         enum math_expr_search_policy search_policy,
+                         post_merge_callbk fun, void *args);

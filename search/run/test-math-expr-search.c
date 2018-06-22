@@ -99,9 +99,8 @@ int main(int argc, char *argv[])
 	printf("caching math index...\n");
 	indices_cache(&indices);
 
-	/* for now only single (query[0]) is searched */
 	printf("searching query...\n");
-	math_expr_search(&indices, query[0], srch_policy, &on_merge, NULL);
+	math_expr_search(&indices, query, srch_policy, &on_merge, NULL);
 
 close:
 	indices_close(&indices);

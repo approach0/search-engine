@@ -78,10 +78,6 @@ dir_search_callbk(const char* path, const char *srchpath,
 		sprintf(dm_args->base_paths[i], "%s/%s",
 		        dm_args->base_paths[i], srchpath + 2);
 		}
-
-//		/* map a full path to math posting list */
-//		postings[i] = math_posting_new_reader(dm_args->eles[i],
-//		                               dm_args->full_paths[i]);
 	}
 
 #ifdef DEBUG_DIR_MERGE
@@ -92,14 +88,12 @@ dir_search_callbk(const char* path, const char *srchpath,
 	if (DIR_MERGE_RET_STOP == dm_args->fun(
 			dm_args->full_paths,
 			dm_args->base_paths,
+			dm_args->eles,
 			dm_args->set_sz,
 			level, dm_args->args)
 	   ) {
 		ret = DS_RET_STOP_ALLDIR;
 	}
-
-//	for (j = 0; j < i; j++)
-//		math_posting_free_reader(postings[j]);
 
 #ifdef DEBUG_DIR_MERGE
 	printf("ret = %d.\n", ret);

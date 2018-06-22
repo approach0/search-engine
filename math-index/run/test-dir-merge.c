@@ -7,7 +7,7 @@
 
 enum dir_merge_ret
 on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
-             uint32_t n_postings, uint32_t level, void *args)
+	struct subpath_ele **eles, uint32_t n_postings, uint32_t level, void *args)
 {
 	for (int i = 0; i < n_postings; i++) {
 		printf("full: %s\n", full_paths[i]);
