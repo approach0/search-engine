@@ -87,7 +87,7 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	PTR_CAST(cache, struct math_postlist_cache, arg);
 	strmap_t path_dict = cache->path_dict;
 
-	disk_po = math_posting_new_reader(NULL, path);
+	disk_po = math_posting_new_reader(path);
 
 	if (!math_posting_start(disk_po)) {
 		/* this directory does not have index file */

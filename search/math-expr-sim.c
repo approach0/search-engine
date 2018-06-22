@@ -170,7 +170,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 				continue;
 			}
 
-			subpath_ele = math_posting_get_ele(posting);
+			subpath_ele = NULL;//math_posting_get_ele(posting);
 			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = subpath_ele->rid[j];
@@ -271,7 +271,7 @@ prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
 				continue;
 			}
 
-			subpath_ele = math_posting_get_ele(posting);
+			subpath_ele = NULL;//math_posting_get_ele(posting);
 			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
 				uint32_t qn = subpath_ele->dup[j]->node_id;
 				enum symbol_id qs = subpath_ele->dup[j]->lf_symbol_id;
@@ -313,7 +313,7 @@ symbolseq_similarity(struct postmerge* pm)
 	for (i = 0; i < pm->n_postings; i++) {
 		posting = pm->postings[i];
 		po_item = pm->cur_pos_item[i];
-		subpath_ele = math_posting_get_ele(posting);
+		subpath_ele = NULL;//math_posting_get_ele(posting);
 
 		pathinfo_pos = po_item->pathinfo_pos;
 		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
@@ -395,7 +395,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 		/* for each merged posting item from posting lists */
 		posting = pm->postings[i];
 		po_item = pm->cur_pos_item[i];
-		subpath_ele = math_posting_get_ele(posting);
+		subpath_ele = NULL;//math_posting_get_ele(posting);
 
 		/* get pathinfo position of corresponding merged item */
 		pathinfo_pos = po_item->pathinfo_pos;
@@ -520,7 +520,7 @@ math_expr_prefix_score_on_merge(
 			       po_item->doc_id, po_item->exp_id, n_doc_lr_paths);
 #endif
 
-			subpath_ele = math_posting_get_ele(posting);
+			subpath_ele = NULL;//math_posting_get_ele(posting);
 			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = subpath_ele->rid[j];

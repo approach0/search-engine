@@ -50,12 +50,12 @@ struct math_pathinfo_v2 {
 struct subpath_ele;
 
 math_posting_t
-math_posting_new_reader(struct subpath_ele*, const char*);
+math_posting_new_reader(const char*);
 
 void math_posting_free_reader(math_posting_t);
 
-struct subpath_ele *math_posting_get_ele(math_posting_t);
 const char *math_posting_get_pathstr(math_posting_t);
+int math_posting_signature(math_posting_t);
 
 bool math_posting_start(math_posting_t);
 bool math_posting_jump(math_posting_t, uint64_t);
@@ -69,8 +69,5 @@ struct math_pathinfo_pack*
 math_posting_pathinfo(math_posting_t, uint32_t);
 
 int math_posting_pathinfo_v2(math_posting_t, uint32_t, uint32_t, struct math_pathinfo_v2*);
-
-/* print math posting path and its subpath set duplicate elements */
-void math_posting_print_info(math_posting_t);
 
 int math_posting_exits(const char*);

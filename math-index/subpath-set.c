@@ -155,6 +155,17 @@ void subpath_set_print(list *set, FILE *fh)
 	list_foreach(set, &print_subpath, fh);
 }
 
+void subpath_set_print_ele(struct subpath_ele *ele)
+{
+	struct subpath *sp;
+	printf("(duplicates: ");
+	for (uint32_t i = 0; i <= ele->dup_cnt; i++) {
+		sp = ele->dup[i];
+		printf("path#%u ", sp->path_id);
+	}
+	printf(")");
+}
+
 struct _cmp_subpath_nodes_arg {
 	struct list_it    path_node2;
 	struct list_node *path_node2_end;

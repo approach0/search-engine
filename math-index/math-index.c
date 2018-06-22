@@ -513,7 +513,7 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 	struct math_pathinfo *pathinfo;
 
 	/* allocate memory for posting reader */
-	po = math_posting_new_reader(NULL, path);
+	po = math_posting_new_reader(path);
 
 	/* start reading posting list (try to open file) */
 	if (!math_posting_start(po)) {
@@ -579,7 +579,7 @@ int math_inex_probe_v2(const char* path, bool trans, FILE *fh)
 	struct math_posting_item_v2 *po_item;
 
 	/* allocate memory for posting reader */
-	po = math_posting_new_reader(NULL, path);
+	po = math_posting_new_reader(path);
 
 	/* start reading posting list (try to open file) */
 	if (!math_posting_start(po)) {

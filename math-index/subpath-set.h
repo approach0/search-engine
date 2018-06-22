@@ -21,6 +21,7 @@ struct subpath_ele_added
 subpath_set_add(list*, struct subpath*, int);
 
 void subpath_set_print(list*, FILE*);
+void subpath_set_print_ele(struct subpath_ele*);
 
 struct subpath_ele_added
 lr_subpath_set_from_subpaths(struct subpaths*, list* /* set output */);

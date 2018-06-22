@@ -135,48 +135,29 @@ struct on_dir_merge_args {
 
 enum dir_merge_ret
 on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
-	struct subpath_ele **eles, uint32_t n_postings, uint32_t level, void *args)
+	struct subpath_ele **eles, uint32_t n_eles, uint32_t level, void *args)
 {
-#if 0
 	P_CAST(on_dm_args, struct on_dir_merge_args, args);
 	struct postmerge *pm = on_dm_args->pm;
+	struct postlist_cache ci = on_dm_args->indices->ci;
 	struct math_extra_score_arg mes_arg;
-	bool res;
-	uint32_t i;
-	math_posting_t po;
-	struct subpath_ele *ele;
 
 	postmerge_posts_clear(pm);
 
-//		/* map a full path to math posting list */
-//		postings[i] = math_posting_new_reader(dm_args->eles[i],
-//		                               dm_args->full_paths[i]);
+	for (uint32_t i = 0; i < n_eles; i++) {
+		struct postmerge_callbks pm_calls;
+		char *path_key = base_paths[i];
+		void *po = math_postlist_cache_find(ci.math_cache, path_key);
 
-//	for (j = 0; j < i; j++)
-//		math_posting_free_reader(postings[j]);
+		if (po) {
+			pm_calls = mergecalls_mem_math_postlist();
+		} else if (math_posting_exits(full_paths[i])) {
+			po = math_posting_new_reader(full_paths[i]);
+		} else {
+			pm_calls = NULL_POSTMERGE_CALLS;
+		}
 
-	for (i = 0; i < n_postings; i++) {
-		po = postings[i];
-		ele = math_posting_get_ele(po);
-
-			sprintf(full_path, "../indexer/tmp/prefix/%s", q);
-			printf("%s\n", full_path);
-			if (math_posting_exits(full_path)) {
-				prinfo("path not cached, get on-disk posting list.")
-				po = math_posting_new_reader(indices.ti, full_path);
-				po_arg = &main; /* indicate it is a math on-disk posting, free it later. */
-				pm_calls = mergecalls_disk_math_postlist_v2();
-			} else {
-				prinfo("path not indexed, an empty posting list.")
-				pm_calls = NULL_POSTMERGE_CALLS;
-			}
-
-#ifdef DEBUG_MATH_EXPR_SEARCH
-		printf("adding posting[%d]", i);
-		math_posting_print_info(po);
-		printf("\n");
-#endif
-		postmerge_posts_add(pm, po, , ele);
+		postmerge_posts_add(pm, po, pm_calls, eles[i]);
 	}
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
@@ -188,13 +169,18 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 	mes_arg.n_dir_visits    = on_dm_args->n_dir_visits;
 	mes_arg.stop_dir_search = 0;
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
-	// printf("allocating prefix-query structure ...\n");
 	mes_arg.pq = pq_allocate(on_dm_args->n_max_qry_node_id);
 
-	res = posting_merge(pm, on_dm_args->posmerge_op,
-	                    on_dm_args->post_on_merge, &mes_arg);
+	bool res = posting_merge(pm, on_dm_args->posmerge_op,
+	                         on_dm_args->post_on_merge, &mes_arg);
 
+	/* free prefix query */
 	pq_free(mes_arg.pq);
+
+	/* free on-disk math posting-list readers */
+	for (int i = 0; i < pm->n_postings; i++)
+		if (math_posting_signature(pm->postings[i]))
+			math_posting_free_reader(pm->postings[i]);
 
 	/* increment total read item counter */
 	on_dm_args->n_tot_rd_items += pm->n_rd_items;
@@ -218,7 +204,6 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 		return DIR_MERGE_RET_STOP;
 	}
 
-#endif
 	return DIR_MERGE_RET_CONTINUE;
 }
 
@@ -229,7 +214,6 @@ int64_t math_expr_search(struct indices *indices, char *tex,
 	struct tex_parse_ret     parse_ret;
 	struct postmerge         pm;
 	struct on_dir_merge_args on_dm_args;
-	struct postmerge_callbks calls;
 
 	enum dir_merge_type dir_merge_type = DIR_MERGE_DIRECT;
 	enum dir_merge_pathset_type path_type = DIR_PATHSET_LEAFROOT_PATH;

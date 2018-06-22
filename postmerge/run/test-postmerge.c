@@ -106,7 +106,6 @@ int main()
 		char *q = query_path[i];
 		struct postmerge_callbks pm_calls;
 		void *po = math_postlist_cache_find(indices.ci.math_cache, q);
-		void *po_arg = NULL;
 		printf("query path: %s\n", q);
 		
 		if (po) {
@@ -118,8 +117,7 @@ int main()
 			printf("%s\n", full_path);
 			if (math_posting_exits(full_path)) {
 				prinfo("path not cached, get on-disk posting list.")
-				po = math_posting_new_reader(indices.ti, full_path);
-				po_arg = &main; /* indicate it is a math on-disk posting, free it later. */
+				po = math_posting_new_reader(full_path);
 				pm_calls = mergecalls_disk_math_postlist_v2();
 			} else {
 				prinfo("path not indexed, an empty posting list.")
@@ -127,17 +125,14 @@ int main()
 			}
 		}
 	
-		postmerge_posts_add(&pm, po, pm_calls, po_arg);
+		postmerge_posts_add(&pm, po, pm_calls, NULL);
 	}
 	
 	posting_merge(&pm, POSTMERGE_OP_OR, &math_on_merge, NULL);
 
-	for (int i = 0; i < pm.n_postings; i++) {
-		if (pm.posting_args[i]) {
-			/* meaning it is a math on-disk posting, free it. */
+	for (int i = 0; i < pm.n_postings; i++)
+		if (math_posting_signature(pm.postings[i]))
 			math_posting_free_reader(pm.postings[i]);
-		}
-	}
 
 close:
 	indices_close(&indices);

@@ -1,7 +1,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "head.h"
+
+#define MATH_ONDISK_SIGNATURE "mtdskpst"
 
 #define DISK_RD_BUF_BYTES (DISK_BLCK_SIZE * DISK_RD_BLOCKS)
 
@@ -12,7 +15,7 @@
 	(DISK_RD_BUF_BYTES % sizeof(struct math_posting_item))
 
 struct _math_posting {
-	struct subpath_ele *ele;
+	uint64_t   signature;
 	const char *fullpath;
 	FILE  *fh_posting;
 	FILE  *fh_pathinfo;
@@ -39,12 +42,12 @@ static void print_cur_post_buf(struct _math_posting *po)
 }
 
 math_posting_t
-math_posting_new_reader(struct subpath_ele *ele, const char *fullpath)
+math_posting_new_reader(const char *fullpath)
 {
 	struct _math_posting *po =
 		malloc(sizeof(struct _math_posting));
 
-	po->ele = ele;
+	memcpy(&po->signature, MATH_ONDISK_SIGNATURE, 8);
 	po->fullpath = fullpath;
 	po->fh_posting = NULL;
 	po->fh_pathinfo = NULL;
@@ -87,17 +90,18 @@ int math_posting_exits(const char *fullpath)
 	return exists;
 }
 
-
-struct subpath_ele *math_posting_get_ele(math_posting_t po_)
-{
-	struct _math_posting *po = (struct _math_posting*)po_;
-	return po->ele;
-}
-
 const char *math_posting_get_pathstr(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
 	return po->fullpath;
+}
+
+int math_posting_signature(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	if (po == NULL) return 0;
+	const char signature[] = MATH_ONDISK_SIGNATURE;
+	return (memcmp(&po->signature, signature, 8) == 0);
 }
 
 void math_posting_free_reader(math_posting_t po_)
@@ -263,23 +267,4 @@ int math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_p
 	} else {
 		return 1;
 	}
-}
-
-void math_posting_print_info(math_posting_t po_)
-{
-	uint32_t i;
-	struct subpath *sp;
-	const char *fullpath;
-	struct subpath_ele *ele;
-
-	fullpath = math_posting_get_pathstr(po_);
-	ele = math_posting_get_ele(po_);
-
-	printf("@%s ", fullpath);
-	printf("(duplicates: ");
-	for (i = 0; i <= ele->dup_cnt; i++) {
-		sp = ele->dup[i];
-		printf("path#%u ", sp->path_id);
-	}
-	printf(")");
 }

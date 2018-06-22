@@ -45,7 +45,7 @@ static void math_posting_find_expr(char* path, char *url)
 	size_t                     doc_url_sz;
 
 	/* allocate memory for posting reader */
-	po = math_posting_new_reader(NULL, path);
+	po = math_posting_new_reader(path);
 
 	/* start reading posting list (try to open file) */
 	if (!math_posting_start(po)) {
