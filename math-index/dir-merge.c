@@ -66,18 +66,22 @@ static enum ds_ret
 dir_search_callbk(const char* path, const char *srchpath,
                   uint32_t level, void *arg)
 {
-	uint32_t i, j;
+	uint32_t i;
 	enum ds_ret ret = DS_RET_CONTINUE;
 	P_CAST(dm_args, struct dir_merge_args, arg);
-	math_posting_t postings[MAX_PREFIX_QUERY_MATH_PATHS];
 
 	for (i = 0; i < dm_args->set_sz; i++) {
+		// printf("[%s]\n", srchpath);
+		if (srchpath[1] != '\0') {
 		sprintf(dm_args->full_paths[i], "%s/%s",
-		        dm_args->base_paths[i], srchpath);
+		        dm_args->full_paths[i], srchpath);
+		sprintf(dm_args->base_paths[i], "%s/%s",
+		        dm_args->base_paths[i], srchpath + 2);
+		}
 
-		/* map a full path to math posting list */
-		postings[i] = math_posting_new_reader(dm_args->eles[i],
-		                               dm_args->full_paths[i]);
+//		/* map a full path to math posting list */
+//		postings[i] = math_posting_new_reader(dm_args->eles[i],
+//		                               dm_args->full_paths[i]);
 	}
 
 #ifdef DEBUG_DIR_MERGE
@@ -85,12 +89,17 @@ dir_search_callbk(const char* path, const char *srchpath,
 	print_all_dir_strings(dm_args);
 	printf("\n");
 #endif
-	if (DIR_MERGE_RET_STOP == dm_args->fun(postings, dm_args->set_sz,
-	                                       level, dm_args->args))
+	if (DIR_MERGE_RET_STOP == dm_args->fun(
+			dm_args->full_paths,
+			dm_args->base_paths,
+			dm_args->set_sz,
+			level, dm_args->args)
+	   ) {
 		ret = DS_RET_STOP_ALLDIR;
+	}
 
-	for (j = 0; j < i; j++)
-		math_posting_free_reader(postings[j]);
+//	for (j = 0; j < i; j++)
+//		math_posting_free_reader(postings[j]);
 
 #ifdef DEBUG_DIR_MERGE
 	printf("ret = %d.\n", ret);
@@ -106,7 +115,8 @@ struct assoc_ele_and_pathstr_args {
 	math_index_t                 index;
 	uint32_t                     longpath;
 	size_t                       max_strlen;
-	char                         (*paths)[MAX_DIR_PATH_NAME_LEN];
+	char                         (*base_paths)[MAX_DIR_PATH_NAME_LEN];
+	char                         (*full_paths)[MAX_DIR_PATH_NAME_LEN];
 	struct subpath_ele           **eles;
 	enum dir_merge_pathset_type  pathset_type;
 };
@@ -115,12 +125,19 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(args, struct assoc_ele_and_pathstr_args, pa_extra);
-	char *append = args->paths[args->i];
+	char *append = args->full_paths[args->i];
+	char *append_base = args->base_paths[args->i];
 	size_t len;
 
-	/* make path string */
-	append += sprintf(append, "%s/", args->index->dir);
+	/* initialize */
+	append += sprintf(args->full_paths[args->i], "%s/", args->index->dir);
+	append_base[0] = '.';
+	append_base += 1;
 
+	/* make base path string */
+	math_index_mk_base_path_str(ele->dup[0], append_base);
+
+	/* make path string */
 	if (args->pathset_type == DIR_PATHSET_PREFIX_PATH) {
 	    if (math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append)) {
 			args->i = 0; /* indicates error */
@@ -137,7 +154,7 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 	args->eles[args->i] = ele;
 
 	/* compare and update max string length */
-	len = strlen(args->paths[args->i]);
+	len = strlen(args->base_paths[args->i]);
 	if (len > args->max_strlen) {
 		args->max_strlen = len;
 		args->longpath = args->i;
@@ -154,7 +171,7 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 	malloc(_n_paths * MAX_DIR_PATH_NAME_LEN);
 
 int
-math_index_dir_merge( math_index_t index,
+math_index_dir_merge(math_index_t index,
 	enum dir_merge_type dir_merge_type,
 	enum dir_merge_pathset_type pathset_type,
 	struct subpaths *subpaths, dir_merge_callbk fun, void *args)
@@ -194,7 +211,8 @@ math_index_dir_merge( math_index_t index,
 	assoc_args.index = index;
 	assoc_args.longpath = 0;
 	assoc_args.max_strlen = 0;
-	assoc_args.paths = dm_args.base_paths;
+	assoc_args.full_paths = dm_args.full_paths;
+	assoc_args.base_paths = dm_args.base_paths;
 	assoc_args.eles = dm_args.eles;
 	assoc_args.pathset_type = pathset_type;
 
@@ -211,7 +229,7 @@ math_index_dir_merge( math_index_t index,
 		int i;
 		printf("base path strings:\n");
 		for (i = 0; i < n_uniq_paths; i++)
-			printf("path string [%u]: %s\n", i, dm_args.base_paths[i]);
+			printf("path string [%u]: %s\n", i, dm_args.full_paths[i]);
 	}
 #endif
 
@@ -220,7 +238,7 @@ math_index_dir_merge( math_index_t index,
 
 #ifdef DEBUG_DIR_MERGE
 	printf("longest path : [%u] %s (length=%lu)\n", dm_args.longpath,
-	       dm_args.base_paths[dm_args.longpath], assoc_args.max_strlen);
+	       dm_args.full_paths[dm_args.longpath], assoc_args.max_strlen);
 	printf("\n");
 
 	printf("subpath set (size=%u):\n", dm_args.set_sz);
@@ -230,10 +248,10 @@ math_index_dir_merge( math_index_t index,
 
 	/* now we can start merge path directories */
 	if (dir_merge_type == DIR_MERGE_BREADTH_FIRST) {
-		dir_search_bfs(dm_args.base_paths[dm_args.longpath],
+		dir_search_bfs(dm_args.full_paths[dm_args.longpath],
 		               &dir_search_callbk, &dm_args);
 	} else if (dir_merge_type == DIR_MERGE_DEPTH_FIRST) {
-		dir_search_podfs(dm_args.base_paths[dm_args.longpath],
+		dir_search_podfs(dm_args.full_paths[dm_args.longpath],
 		               &dir_search_callbk, &dm_args);
 	} else if (dir_merge_type == DIR_MERGE_DIRECT) {
 		dir_search_callbk("", "", 0, &dm_args);

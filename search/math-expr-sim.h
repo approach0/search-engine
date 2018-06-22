@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "postmerge.h"
+#include "postmerge/postmerge.h"
 #include "mnc-score.h"
 
 #pragma pack(push, 1)

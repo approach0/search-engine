@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "minheap.h"
+#include "minheap/minheap.h"
 
 struct rank_hit {
 	doc_id_t    docID;

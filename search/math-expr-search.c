@@ -2,6 +2,9 @@
 #include <stdio.h>
 
 #include "tex-parser/head.h"
+#include "postmerge/mergecalls.h"
+#include "indices/indices.h"
+
 #include "config.h"
 #include "math-expr-search.h"
 #include "mnc-score.h"
@@ -118,10 +121,10 @@ static int prepare_math_qry(struct subpaths *subpaths)
 }
 
 struct on_dir_merge_args {
+	struct indices             *indices;
 	uint32_t                    n_qry_lr_paths;
 	struct postmerge           *pm;
 	post_merge_callbk           post_on_merge;
-	struct postmerge_callbks   *calls;
 	uint32_t                    n_dir_visits;
 	void                       *expr_srch_arg;
 	int64_t                     n_tot_rd_items;
@@ -147,12 +150,24 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 		po = postings[i];
 		ele = math_posting_get_ele(po);
 
+			sprintf(full_path, "../indexer/tmp/prefix/%s", q);
+			printf("%s\n", full_path);
+			if (math_posting_exits(full_path)) {
+				prinfo("path not cached, get on-disk posting list.")
+				po = math_posting_new_reader(indices.ti, full_path);
+				po_arg = &main; /* indicate it is a math on-disk posting, free it later. */
+				pm_calls = mergecalls_disk_math_postlist_v2();
+			} else {
+				prinfo("path not indexed, an empty posting list.")
+				pm_calls = NULL_POSTMERGE_CALLS;
+			}
+
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("adding posting[%d]", i);
 		math_posting_print_info(po);
 		printf("\n");
 #endif
-		postmerge_posts_add(pm, po, on_dm_args->calls, ele);
+		postmerge_posts_add(pm, po, , ele);
 	}
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
@@ -197,7 +212,7 @@ on_dir_merge(math_posting_t *postings, uint32_t n_postings,
 	return DIR_MERGE_RET_CONTINUE;
 }
 
-int64_t math_expr_search(math_index_t mi, char *tex,
+int64_t math_expr_search(struct indices *indices, char *tex,
                          enum math_expr_search_policy search_policy,
                          post_merge_callbk fun, void *args)
 {
@@ -207,14 +222,7 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 	struct postmerge_callbks calls;
 
 	enum dir_merge_type dir_merge_type = DIR_MERGE_DIRECT;
-	enum dir_merge_pathset_type dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
-
-	calls.start = &math_posting_start;
-	calls.finish = &math_posting_finish;
-	calls.jump = &math_posting_jump;
-	calls.next = &math_posting_next;
-	calls.now = &math_posting_current_wrap;
-	calls.now_id = &math_posting_current_id_wrap;
+	enum dir_merge_pathset_type path_type = DIR_PATHSET_LEAFROOT_PATH;
 
 	/* parse TeX */
 	parse_ret = tex_parse(tex, 0, true);
@@ -246,38 +254,35 @@ int64_t math_expr_search(math_index_t mi, char *tex,
 #endif
 
 		/* prepare directory merge extra arguments */
+		on_dm_args.indices = indices;
 		on_dm_args.pm = &pm;
 		on_dm_args.n_qry_lr_paths = parse_ret.subpaths.n_lr_paths;
 		on_dm_args.post_on_merge = fun;
-		on_dm_args.calls = &calls;
 		on_dm_args.n_dir_visits = 0;
 		on_dm_args.expr_srch_arg = args;
 		on_dm_args.n_tot_rd_items = 0;
 
 		switch (search_policy) {
 		case MATH_SRCH_FUZZY_STRUCT:
-			calls.now_id           = &math_posting_current_id_v2_wrap;
 			on_dm_args.posmerge_op = POSTMERGE_OP_OR;
 			dir_merge_type         = DIR_MERGE_DIRECT;
-			dir_merge_pathset_type = DIR_PATHSET_PREFIX_PATH;
+			path_type              = DIR_PATHSET_PREFIX_PATH;
 			break;
 		case MATH_SRCH_EXACT_STRUCT:
-			calls.now_id = &math_posting_current_id_wrap;
 			on_dm_args.posmerge_op = POSTMERGE_OP_AND;
 			dir_merge_type         = DIR_MERGE_DIRECT;
-			dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
+			path_type              = DIR_PATHSET_LEAFROOT_PATH;
 			break;
 		case MATH_SRCH_SUBEXPRESSION:
-			calls.now_id = &math_posting_current_id_wrap;
 			on_dm_args.posmerge_op = POSTMERGE_OP_AND;
 			dir_merge_type         = DIR_MERGE_BREADTH_FIRST;
-			dir_merge_pathset_type = DIR_PATHSET_LEAFROOT_PATH;
+			path_type              = DIR_PATHSET_LEAFROOT_PATH;
 			break;
 		default:
 			fprintf(stderr, "Unknown search policy: %u\n", search_policy);
 		}
 
-		math_index_dir_merge(mi, dir_merge_type, dir_merge_pathset_type,
+		math_index_dir_merge(indices->mi, dir_merge_type, path_type,
 		                     &parse_ret.subpaths, &on_dir_merge, &on_dm_args);
 
 		subpaths_release(&parse_ret.subpaths);

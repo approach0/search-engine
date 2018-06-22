@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "postmerge/config.h" /* for MAX_MERGE_POSTINGS */
 #include "config.h"
 
 #define BM25_DEFAULT_B  0.75

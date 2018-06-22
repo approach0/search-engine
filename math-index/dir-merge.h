@@ -16,10 +16,13 @@ enum dir_merge_pathset_type {
 	DIR_PATHSET_LEAFROOT_PATH
 };
 
+#include "config.h" /* for MAX_MERGE_DIRS */
 typedef enum dir_merge_ret
-(*dir_merge_callbk)(math_posting_t [MAX_MATH_PATHS],
-                    uint32_t /* number of postings list */,
-                    uint32_t /* level */, void *args);
+(*dir_merge_callbk)(
+	char (*full_paths)[MAX_MERGE_DIRS],
+	char (*base_paths)[MAX_MERGE_DIRS],
+	uint32_t /* number of postings list */,
+	uint32_t /* level */, void *args);
 
 int math_index_dir_merge(
 	math_index_t,

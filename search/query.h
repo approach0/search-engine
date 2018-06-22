@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include "list/list.h"
 
+#include "config.h"
+
 /*
  * query structures
  */

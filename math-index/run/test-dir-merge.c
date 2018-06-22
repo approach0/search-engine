@@ -6,30 +6,14 @@
 #include "subpath-set.h"
 
 enum dir_merge_ret
-on_dir_merge(math_posting_t postings[MAX_MATH_PATHS], uint32_t n_postings,
-             uint32_t level, void *args)
+on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
+             uint32_t n_postings, uint32_t level, void *args)
 {
-	uint32_t i, j;
-	math_posting_t po;
-	struct subpath_ele *ele;
-	struct subpath *sp;
-	const char *fullpath;
-
-	for (i = 0; i < n_postings; i++) {
-		po = postings[i];
-		ele = math_posting_get_ele(po);
-		fullpath = math_posting_get_pathstr(po);
-
-		printf("posting[%u]: %s ", i, fullpath);
-
-		printf("(duplicates: ");
-		for (j = 0; j <= ele->dup_cnt; j++) {
-			sp = ele->dup[j];
-			printf("path#%u ", sp->path_id);
-		}
-		printf(")\n");
+	for (int i = 0; i < n_postings; i++) {
+		printf("full: %s\n", full_paths[i]);
+		printf("base: %s\n", base_paths[i]);
 	}
-	printf("======\n");
+	printf("\n");
 
 	return DIR_MERGE_RET_CONTINUE;
 }
@@ -38,7 +22,7 @@ int main(int argc, char *argv[])
 {
 	//const char tex[] = "\\qvar\\alpha+xy";
 	//const char tex[] = "\\alpha + \\sqrt b +xy";
-	const char tex[] = "\\alpha+xy";
+	const char tex[] = "a+xy";
 	struct tex_parse_ret parse_ret;
 
 	math_index_t index = math_index_open("./tmp", MATH_INDEX_READ_ONLY);

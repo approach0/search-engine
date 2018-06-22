@@ -1,3 +1,5 @@
+#pragma once
+
 #define GENER_PATH_NAME "gener"
 #define TOKEN_PATH_NAME "token"
 
@@ -18,3 +20,6 @@
 //#define DEBUG_MATH_POSTING
 
 //#define DEBUG_MATH_INDEX
+
+#include "postmerge/postmerge.h" /* for MAX_MERGE_POSTINGS */
+#define MAX_MERGE_DIRS MAX_MERGE_POSTINGS

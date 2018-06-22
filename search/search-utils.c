@@ -1,10 +1,8 @@
 #include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indexer/index.h" /* for text_lexer and indices */
-#include "mem-index/mem-posting.h"
 #include "wstring/wstring.h" /* for wstr2mbstr() */
 
 #include "config.h"
-#include "postmerge.h"
 #include "proximity.h"
 #include "rank.h"
 #include "snippet.h"

@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include "math-index/math-index.h"
 #include "math-index/subpath-set.h"
+#include "postmerge/postmerge.h"
 
-#include "postmerge.h"
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 

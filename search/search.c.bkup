@@ -8,12 +8,13 @@
 #include <assert.h>
 
 #include "term-index/config.h"
+#include "term-index/term-index.h"
 #include "wstring/wstring.h" /* for wstr2mbstr() */
-#include "mem-index/mem-posting.h"
+#include "postlist/postlist.h"
+#include "postmerge/postmerge.h"
 #include "timer/timer.h"
 
 #include "config.h"
-#include "postmerge.h"
 #include "bm25-score.h"
 #include "proximity.h"
 #include "search.h"
@@ -33,7 +34,7 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
                      char *kw_utf8, enum query_kw_type *kw_type)
 {
 	void *post;
-	struct postmerge_callbks *pm_calls;
+	struct postmerge_callbks pm_calls;
 
 	bool ret;
 	void *ti;
@@ -53,7 +54,7 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
 	if (term_id == 0) {
 		/* if term is not found in our dictionary */
 		post = NULL;
-		pm_calls = NULL;
+		pm_calls = NULL_POSTMERGE_CALLS;
 
 #ifdef VERBOSE_SEARCH
 		printf("`%s' has empty posting list.\n", kw_utf8);
@@ -61,25 +62,25 @@ add_term_postinglist(struct postmerge *pm, struct indices *indices,
 		ret = 0;
 	} else {
 		/* otherwise, get on-disk or cached posting list */
-		struct postcache_item *cache_item =
-			postcache_find(&indices->postcache, term_id);
-
-		if (NULL != cache_item) {
-			/* if this term is already cached */
-			post = cache_item->posting;
-			pm_calls = get_memory_postmerge_callbks();
-
-#ifdef VERBOSE_SEARCH
-		printf("`%s' uses cached posting list.\n", kw_utf8);
-#endif
-		} else {
-			/* otherwise read posting from disk */
-			post = term_index_get_posting(ti, term_id);
-			pm_calls = get_disk_postmerge_callbks();
-#ifdef VERBOSE_SEARCH
-		printf("`%s' uses on-disk posting list.\n", kw_utf8);
-#endif
-		}
+//		struct postcache_item *cache_item =
+//			postcache_find(&indices->postcache, term_id);
+//
+//		if (NULL != cache_item) {
+//			/* if this term is already cached */
+//			post = cache_item->posting;
+//			pm_calls = get_memory_postmerge_callbks();
+//
+//#ifdef VERBOSE_SEARCH
+//		printf("`%s' uses cached posting list.\n", kw_utf8);
+//#endif
+//		} else {
+//			/* otherwise read posting from disk */
+//			post = term_index_get_posting(ti, term_id);
+//			pm_calls = get_disk_postmerge_callbks();
+//#ifdef VERBOSE_SEARCH
+//		printf("`%s' uses on-disk posting list.\n", kw_utf8);
+//#endif
+//		}
 
 		ret = 1;
 	}
@@ -296,16 +297,16 @@ static void free_math_postinglists(struct postmerge *pm)
 {
 	uint32_t i;
 	enum query_kw_type *type;
-	struct mem_posting *mem_po;
+	struct postlist *mem_po;
 
 	for (i = 0; i < pm->n_postings; i++) {
-		mem_po = (struct mem_posting*)pm->postings[i];
+		mem_po = (struct postlist*)pm->postings[i];
 		type = (enum query_kw_type *)pm->posting_args[i];
 
 		if (*type == QUERY_KEYWORD_TEX && mem_po != NULL) {
 			//printf("releasing math in-memory posting[%u]...\n", i);
 
-			mem_posting_free(mem_po);
+			postlist_free(mem_po);
 		}
 	}
 }

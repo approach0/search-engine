@@ -3,10 +3,12 @@
 
 #include "timer/timer.h"
 #include "tex-parser/vt100-color.h"
-#include "mem-index/mem-posting.h"
+#include "postlist/postlist.h"
+#include "postlist/math-postlist.h"
+#include "postmerge/postmerge.h"
+#include "postmerge/mergecalls.h"
 
 #include "config.h"
-#include "postmerge.h"
 #include "search.h"
 #include "search-utils.h"
 #include "math-expr-search.h"
@@ -19,7 +21,7 @@ typedef struct {
 	enum query_kw_type *kw_type;
 
 	/* writing posting list */
-	struct mem_posting *wr_mem_po;
+	struct postlist    *wr_mem_po;
 	uint32_t            last_visits;
 
 	/* statical variables */
@@ -62,9 +64,6 @@ msca_set(math_score_combine_args_t *msca, doc_id_t docID)
 	msca->last.n_match = 0;
 }
 
-/* debug print function */
-static void print_math_score_posting(struct mem_posting*);
-
 static void
 write_math_score_posting(math_score_combine_args_t *msca)
 {
@@ -73,31 +72,24 @@ write_math_score_posting(math_score_combine_args_t *msca)
 
 	if (mip->score > 0) {
 		wr_sz += mip->n_match * sizeof(position_t);
-		mem_posting_write(msca->wr_mem_po, mip, wr_sz);
+		postlist_write(msca->wr_mem_po, mip, wr_sz);
 	}
 }
 
 static void
 add_math_score_posting(math_score_combine_args_t *msca)
 {
-	struct postmerge_callbks *pm_calls;
+	struct postmerge_callbks pm_calls;
 
 	/* flush write */
 	write_math_score_posting(msca);
-	mem_posting_write_complete(msca->wr_mem_po);
-
-#ifdef DEBUG_MATH_SCORE_POSTING
-	printf("\n");
-	printf("adding math-score posting list:\n");
-	print_math_score_posting(msca->wr_mem_po);
-	printf("\n");
-#endif
+	postlist_write_complete(msca->wr_mem_po);
 
 	/* record memory cost increase */
 	msca->mem_cost += (float)msca->wr_mem_po->tot_sz;
 
 	/* add this posting list to top level postmerge */
-	pm_calls = get_memory_postmerge_callbks();
+	pm_calls = mergecalls_mem_math_postlist();
 	postmerge_posts_add(msca->top_pm, msca->wr_mem_po,
 	                    pm_calls, msca->kw_type);
 
@@ -167,10 +159,7 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 
 			/* switch to a new posting list */
 			msca_set(msca, 0);
-			msca->wr_mem_po = mem_posting_create(
-				DEFAULT_SKIPPY_SPANS,
-				math_score_posting_plain_calls()
-			);
+			msca->wr_mem_po = math_postlist_create_plain();
 			msca->n_mem_po ++;
 
 			/* update last_visits */
@@ -257,7 +246,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 		add_math_score_posting(&msca);
 	else
 		/* add a NULL posting to indicate empty result */
-		postmerge_posts_add(msca.top_pm, NULL, NULL, kw_type);
+		postmerge_posts_add(msca.top_pm, NULL, NULL_POSTMERGE_CALLS, kw_type);
 
 #ifdef VERBOSE_SEARCH
 	/* report number of adding math posting lists. */
@@ -281,30 +270,4 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 #endif
 
 	return msca.n_mem_po;
-}
-
-static void print_math_score_posting(struct mem_posting *po)
-{
-	math_score_posting_item_t *mip;
-	if (!mem_posting_start(po)) {
-		printf("(empty)");
-		return;
-	}
-
-	do {
-		mip = mem_posting_cur_item(po);
-		printf("[docID=%u, score=%u, n_match=%u", mip->docID,
-			   mip->score, mip->n_match);
-
-		if (mip->n_match != 0) {
-			uint32_t i;
-			printf(": ");
-			for (i = 0; i < mip->n_match; i++)
-				printf("%u ", mip->pos_arr[i]);
-		}
-
-		printf("]");
-	} while (mem_posting_next(po));
-
-	mem_posting_finish(po);
 }

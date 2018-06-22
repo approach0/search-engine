@@ -78,6 +78,14 @@ next:
 	LIST_GO_OVER;
 }
 
+void
+math_index_mk_base_path_str(struct subpath *sp, char *dest_path)
+{
+	char *p = dest_path;
+	struct _mk_path_str_arg arg = {&p, 0, 0, 0};
+	list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+}
+
 bool
 math_index_mk_path_str(struct subpath *sp, char *dest_path)
 {
