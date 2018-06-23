@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 
+#include "common/common.h"
 #include "mhook/mhook.h"
 
 #include "tex-parser/tex-parser.h"
@@ -97,7 +98,12 @@ int main(int argc, char *argv[])
 	}
 
 	printf("caching math index...\n");
+	postlist_cache_set_limit(&indices.ci, 7 KB, 8 KB);
 	indices_cache(&indices);
+
+	size_t n = math_postlist_cache_list(indices.ci.math_cache, 1);
+	printf("cached items: %lu, total size: %lu \n", n,
+	       indices.ci.math_cache.postlist_sz);
 
 	printf("searching query...\n");
 	math_expr_search(&indices, query, srch_policy, &on_merge, NULL);

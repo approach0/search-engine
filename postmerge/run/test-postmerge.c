@@ -45,9 +45,9 @@ int main()
 	};
 	
 	char query_path[][128] = {
-		"./NUM/TIMES",
-		"./NO/SUCH/PATH",
-		"./PI/ADD"
+		"./prefix/NUM/TIMES",
+		"./prefix/NO/SUCH/PATH",
+		"./prefix/VAR/ADD"
 	};
 
 	struct indices indices;
@@ -113,8 +113,8 @@ int main()
 			pm_calls = mergecalls_mem_math_postlist();
 		} else {
 			char full_path[MAX_DIR_PATH_NAME_LEN];
-			sprintf(full_path, "../indexer/tmp/prefix/%s", q);
-			printf("%s\n", full_path);
+			sprintf(full_path, "../indexer/tmp/%s", q + 2);
+			printf("FULL PATH: %s\n", full_path);
 			if (math_posting_exits(full_path)) {
 				prinfo("path not cached, get on-disk posting list.")
 				po = math_posting_new_reader(full_path);

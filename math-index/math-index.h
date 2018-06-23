@@ -40,7 +40,6 @@ math_index_open(const char *, enum math_index_open_opt);
 int math_index_add_tex(math_index_t, doc_id_t, exp_id_t,
                        struct subpaths, enum math_index_wr_opt);
 
-void math_index_mk_base_path_str(struct subpath*, char*);
 bool math_index_mk_path_str(struct subpath*, char*);
 bool math_index_mk_prefix_path_str(struct subpath*, int, char*);
 

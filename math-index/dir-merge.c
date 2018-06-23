@@ -128,16 +128,17 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 	append_base[0] = '.';
 	append_base += 1;
 
-	/* make base path string */
-	math_index_mk_base_path_str(ele->dup[0], append_base);
-
 	/* make path string */
 	if (args->pathset_type == DIR_PATHSET_PREFIX_PATH) {
+		math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append_base);
+
 	    if (math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len, append)) {
 			args->i = 0; /* indicates error */
 			return LIST_RET_BREAK;
 		}
 	} else {
+		math_index_mk_path_str(ele->dup[0], append_base);
+
 		if (math_index_mk_path_str(ele->dup[0], append)) {
 			args->i = 0; /* indicates error */
 			return LIST_RET_BREAK;

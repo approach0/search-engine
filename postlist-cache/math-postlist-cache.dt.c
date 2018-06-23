@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "common/common.h"
+#include "sds/sds.h"
 #include "dir-util/dir-util.h"
 #include "math-index/math-index.h"
 #include "postlist-codec/postlist-codec.h"
@@ -75,6 +76,11 @@ fork_math_postlist(math_posting_t *disk_po)
 	return mem_po;
 }
 
+struct math_postlist_cache_arg {
+	struct math_postlist_cache *cache;
+	char *prefix_dir;
+};
+
 static enum ds_ret
 dir_srch_callbk(const char* path, const char *srchpath,
                 uint32_t level, void *arg)
@@ -82,9 +88,10 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	enum ds_ret ret = DS_RET_CONTINUE;
 	struct postlist *mem_po;
 	math_posting_t *disk_po;
-	PTR_CAST(key, char, srchpath);
 
-	PTR_CAST(cache, struct math_postlist_cache, arg);
+	PTR_CAST(mpca, struct math_postlist_cache_arg, arg);
+	sds key = sdsnew(mpca->prefix_dir);
+	struct math_postlist_cache *cache = mpca->cache;
 	strmap_t path_dict = cache->path_dict;
 
 	disk_po = math_posting_new_reader(path);
@@ -104,11 +111,13 @@ dir_srch_callbk(const char* path, const char *srchpath,
 		postlist_free(mem_po);
 		ret = DS_RET_STOP_ALLDIR;
 	} else {
+		key = sdscat(key, srchpath + 1);
 		path_dict[[key]] = mem_po;
 		cache->postlist_sz += mem_po->tot_sz;
 	}
 
 next:
+	sdsfree(key);
 	math_posting_finish(disk_po);
 	math_posting_free_reader(disk_po);
 
@@ -141,7 +150,8 @@ int
 math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 {
 	size_t postlist_sz = cache->postlist_sz;
-	dir_search_bfs(dir, &dir_srch_callbk, cache);
+	struct math_postlist_cache_arg args = {cache, (char *)"./prefix"};
+	dir_search_bfs(dir, &dir_srch_callbk, &args);
 
 	return (postlist_sz == cache->postlist_sz);
 }
