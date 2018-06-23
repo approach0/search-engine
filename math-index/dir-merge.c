@@ -125,8 +125,7 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 
 	/* initialize */
 	append += sprintf(args->full_paths[args->i], "%s/", args->index->dir);
-	append_base[0] = '.';
-	append_base += 1;
+	append_base += sprintf(args->base_paths[args->i], "./");
 
 	/* make path string */
 	if (args->pathset_type == DIR_PATHSET_PREFIX_PATH) {
@@ -249,7 +248,8 @@ math_index_dir_merge(math_index_t index,
 		dir_search_podfs(dm_args.full_paths[dm_args.longpath],
 		               &dir_search_callbk, &dm_args);
 	} else if (dir_merge_type == DIR_MERGE_DIRECT) {
-		dir_search_callbk("", "", 0, &dm_args);
+
+		dir_search_callbk(".", ".", 0, &dm_args);
 	} else {
 		fprintf(stderr, "DIR_MERGE type %u not implemented.\n", dir_merge_type);
 		abort();

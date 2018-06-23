@@ -22,6 +22,7 @@
 static int
 on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
 {
+	printf("hello!\n");
 //	struct math_expr_score_res res;
 //	P_CAST(mesa, struct math_extra_score_arg, extra_args);
 
