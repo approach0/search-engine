@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 		printf("Probing prefix paths \n");
 		math_inex_probe_v2(path, trans, stdout);
 	} else {
-		math_inex_probe(path, trans, stdout);
+		math_inex_probe_v1(path, trans, stdout);
 	}
 	free(path);
 exit:

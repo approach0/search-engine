@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "common/common.h"
 #include "list/list.h"
 #include "tex-parser/tex-parser.h"
 
@@ -493,19 +494,10 @@ skip_prefix:
  * probe math index posting list
  * =============================== */
 
-int math_inex_probe(const char* path, bool trans, FILE *fh)
+int math_inex_probe_v1(const char* path, bool trans, FILE *fh)
 {
 	int ret = 0;
-	uint32_t i;
-	uint32_t pos;
-	math_posting_t *po;
-
-	struct math_posting_item *po_item;
-	struct math_pathinfo_pack *pathinfo_pack;
-	struct math_pathinfo *pathinfo;
-
-	/* allocate memory for posting reader */
-	po = math_posting_new_reader(path);
+	math_posting_t *po = math_posting_new_reader(path);
 
 	/* start reading posting list (try to open file) */
 	if (!math_posting_start(po)) {
@@ -516,36 +508,25 @@ int math_inex_probe(const char* path, bool trans, FILE *fh)
 
 	/* assume first item must exists, which is actually true. */
 	do {
-		/* read posting list item */
-		po_item = math_posting_current(po);
-		pos = po_item->pathinfo_pos;
-		fprintf(fh, "doc#%u, exp#%u pathinfo@%u;",
-		        po_item->doc_id, po_item->exp_id, pos);
-
-		/* then read path info items */
-		if (NULL == (pathinfo_pack = math_posting_pathinfo(po, pos))) {
-			ret = 1;
-			fprintf(stderr, "\n");
-			fprintf(stderr, "fails to read math posting pathinfo.\n");
-			goto free;
-		}
-
-		/* upon success, print path info items */
-		fprintf(fh, " %u lr_paths, {", pathinfo_pack->n_lr_paths);
-		for (i = 0; i < pathinfo_pack->n_paths; i++) {
-			pathinfo = pathinfo_pack->pathinfo + i;
+		PTR_CAST(po_item, struct math_posting_compound_item_v1,
+		         math_posting_cur_item_v1(po));
+		fprintf(fh, "doc#%u, exp#%u ", po_item->doc_id, po_item->exp_id);
+		fprintf(fh, " %u lr_paths, {", po_item->n_lr_paths);
+		for (uint32_t i = 0; i < po_item->n_paths; i++) {
+			struct math_pathinfo *pathinfo;
+			pathinfo = po_item->pathinfo + i;
 			if (!trans) {
-				fprintf(fh, "[%u %x %x]",
+				fprintf(fh, "[%u %x hash=%x]",
 				        pathinfo->path_id, pathinfo->lf_symb,
 				        pathinfo->fr_hash);
 			} else {
-				fprintf(fh, "[%u %s %x]",
+				fprintf(fh, "[%u %s hash=%x]",
 				        pathinfo->path_id,
 				        trans_symbol(pathinfo->lf_symb),
 				        pathinfo->fr_hash);
 			}
 
-			if (i + 1 != pathinfo_pack->n_paths)
+			if (i + 1 != po_item->n_paths)
 				fprintf(fh, ", ");
 		}
 		fprintf(fh, "}");
@@ -564,14 +545,7 @@ free:
 int math_inex_probe_v2(const char* path, bool trans, FILE *fh)
 {
 	int ret = 0;
-	uint32_t i;
-	uint32_t pos;
-	math_posting_t *po;
-
-	struct math_posting_item_v2 *po_item;
-
-	/* allocate memory for posting reader */
-	po = math_posting_new_reader(path);
+	math_posting_t *po = math_posting_new_reader(path);
 
 	/* start reading posting list (try to open file) */
 	if (!math_posting_start(po)) {
@@ -582,32 +556,14 @@ int math_inex_probe_v2(const char* path, bool trans, FILE *fh)
 
 	do {
 		/* read posting list item */
-		po_item = (struct math_posting_item_v2*)math_posting_current(po);
-		pos = po_item->pathinfo_pos;
-		fprintf(fh, "doc#%u, exp#%u pathinfo@%u;" " %u lr_paths, %u paths {",
-		        po_item->doc_id, po_item->exp_id, pos, po_item->n_lr_paths,
+		PTR_CAST(po_item, struct math_posting_compound_item_v2,
+		         math_posting_cur_item_v2(po));
+		fprintf(fh, "doc#%u, exp#%u. %u lr_paths, %u paths {",
+		        po_item->doc_id, po_item->exp_id, po_item->n_lr_paths,
 		        po_item->n_paths);
 
-		/* then read path info items */
-		struct math_pathinfo_v2 pathinfo[MAX_MATH_PATHS];
-		if (math_posting_pathinfo_v2(po, pos, po_item->n_paths, pathinfo)) {
-			ret = 1;
-			fprintf(stderr, "\n");
-			fprintf(stderr, "fails to read math posting pathinfo.\n");
-			goto free;
-		}
-
-		#ifdef DEBUG_MATH_INDEX
-		printf("\nreading pathinfo @ %s:pos%u: %u, %u, %u \n", path, pos,
-			pathinfo[0].leaf_id,
-			pathinfo[0].subr_id,
-			pathinfo[0].lf_symb
-		);
-		#endif
-
-		/* upon success, print path info items */
-		for (i = 0; i < po_item->n_paths; i++) {
-			struct math_pathinfo_v2 *p = pathinfo + i;
+		for (uint32_t i = 0; i < po_item->n_paths; i++) {
+			struct math_pathinfo_v2 *p = po_item->pathinfo + i;
 			if (!trans) {
 				fprintf(fh, "[%u ~ %u, %x]", p->subr_id, p->leaf_id,
 				                             p->lf_symb);

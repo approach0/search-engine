@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "common/common.h"
 #include "head.h"
 
 #define MATH_ONDISK_SIGNATURE "mtdskpst"
@@ -208,15 +210,7 @@ bool math_posting_jump(math_posting_t po_, uint64_t target)
 	return 1;
 }
 
-struct math_posting_item* math_posting_current(math_posting_t po_)
-{
-	struct _math_posting *po = (struct _math_posting*)po_;
-	struct math_posting_item *item = po->buf + po->buf_idx;
-	// printf("math disk-item docID: %u\n", item->doc_id);
-	return item;
-}
-
-struct math_pathinfo_pack*
+static struct math_pathinfo_pack*
 math_posting_pathinfo(math_posting_t po_, uint32_t position)
 {
 	pathinfo_num_t i;
@@ -252,8 +246,9 @@ math_posting_pathinfo(math_posting_t po_, uint32_t position)
 	return (struct math_pathinfo_pack*)&ret;
 }
 
-int math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_paths,
-                             struct math_pathinfo_v2 *pathinfo)
+static int
+math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_paths,
+                         struct math_pathinfo_v2 *pathinfo)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
 
@@ -267,4 +262,46 @@ int math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_p
 	} else {
 		return 1;
 	}
+}
+
+void *math_posting_cur_item_v1(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	struct math_posting_item *item = po->buf + po->buf_idx;
+	static struct math_posting_compound_item_v1 ret;
+
+	ret.exp_id     = item->exp_id;
+	ret.doc_id     = item->doc_id;
+
+	struct math_pathinfo_pack *pathinfo_pack;
+	pathinfo_pack = math_posting_pathinfo(po, item->pathinfo_pos);
+
+	if (pathinfo_pack == NULL)
+		goto ret;
+	
+	ret.n_paths    = pathinfo_pack->n_paths;
+	ret.n_lr_paths = pathinfo_pack->n_lr_paths;
+
+	memcpy(ret.pathinfo, pathinfo_pack->pathinfo,
+	       sizeof(struct math_pathinfo) * ret.n_paths);
+ret:
+	return (struct math_posting_item *)&ret;
+}
+
+void *math_posting_cur_item_v2(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	PTR_CAST(item, struct math_posting_item_v2, po->buf + po->buf_idx);
+	static struct math_posting_compound_item_v2 ret;
+
+	ret.exp_id     = item->exp_id;
+	ret.doc_id     = item->doc_id;
+	ret.n_paths    = item->n_paths;
+	ret.n_lr_paths = item->n_lr_paths;
+
+	if (math_posting_pathinfo_v2(po, item->pathinfo_pos, item->n_paths,
+	    ret.pathinfo))
+		goto ret;
+ret:
+	return &ret;
 }

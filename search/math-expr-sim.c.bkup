@@ -512,7 +512,7 @@ math_expr_prefix_score_on_merge(
 			if (po_item->n_lr_paths)
 				n_doc_lr_paths = po_item->n_lr_paths;
 			else
-				n_doc_lr_paths = MAX_MATH_PATHS; /* handle overflow */
+				n_doc_lr_paths = MAX_MATH_PATHS; /* handle divided-by-zero */
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 			printf("from posting[%u]: ", i);

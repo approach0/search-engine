@@ -47,6 +47,22 @@ struct math_pathinfo_v2 {
 };
 #pragma pack(pop)
 
+struct math_posting_compound_item_v1 {
+	exp_id_t              exp_id;
+	doc_id_t              doc_id;
+	uint32_t              n_paths;
+	uint32_t              n_lr_paths;
+	struct math_pathinfo  pathinfo[MAX_MATH_PATHS];
+};
+
+struct math_posting_compound_item_v2 {
+	exp_id_t                 exp_id;
+	doc_id_t                 doc_id;
+	uint32_t                 n_paths;
+	uint32_t                 n_lr_paths;
+	struct math_pathinfo_v2  pathinfo[MAX_MATH_PATHS];
+};
+
 struct subpath_ele;
 
 math_posting_t
@@ -62,12 +78,7 @@ bool math_posting_jump(math_posting_t, uint64_t);
 bool math_posting_next(math_posting_t);
 void math_posting_finish(math_posting_t);
 
-struct math_posting_item*
-math_posting_current(math_posting_t);
-
-struct math_pathinfo_pack*
-math_posting_pathinfo(math_posting_t, uint32_t);
-
-int math_posting_pathinfo_v2(math_posting_t, uint32_t, uint32_t, struct math_pathinfo_v2*);
+void *math_posting_cur_item_v1(math_posting_t);
+void *math_posting_cur_item_v2(math_posting_t);
 
 int math_posting_exits(const char*);

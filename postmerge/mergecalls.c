@@ -83,11 +83,6 @@ struct postmerge_callbks mergecalls_mem_math_postlist()
 	return ret;
 }
 
-static void* wrap_disk_math_postlist_cur_item(math_posting_t po_)
-{
-	return (void*)math_posting_current(po_);
-}
-
 static uint64_t wrap_disk_math_postlist_cur_id_v1(void *po_item_)
 {
 	/* this casting requires `struct math_posting_item' has
@@ -113,7 +108,7 @@ struct postmerge_callbks mergecalls_disk_math_postlist_v1()
 	ret.finish = &math_posting_finish;
 	ret.jump   = &math_posting_jump;
 	ret.next   = &math_posting_next;
-	ret.now    = &wrap_disk_math_postlist_cur_item;
+	ret.now    = &math_posting_cur_item_v1;
 	ret.now_id = &wrap_disk_math_postlist_cur_id_v1;
 
 	return ret;
@@ -126,7 +121,7 @@ struct postmerge_callbks mergecalls_disk_math_postlist_v2()
 	ret.finish = &math_posting_finish;
 	ret.jump   = &math_posting_jump;
 	ret.next   = &math_posting_next;
-	ret.now    = &wrap_disk_math_postlist_cur_item;
+	ret.now    = &math_posting_cur_item_v2;
 	ret.now_id = &wrap_disk_math_postlist_cur_id_v2;
 
 	return ret;

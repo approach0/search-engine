@@ -13,36 +13,11 @@
 
 static struct indices indices;
 
-static void
-print_pathinfo(math_posting_t *po, uint32_t pathinfo_pos)
+static void math_posting_find_expr_v1(char* path, char *url)
 {
-	uint32_t i;
-	struct math_pathinfo_pack *pathinfo_pack;
-	struct math_pathinfo      *pathinfo;
-
-	pathinfo_pack = math_posting_pathinfo(po, pathinfo_pos);
-	if (NULL == pathinfo_pack) {
-		printf("fails to read math posting pathinfo.\n");
-		return;
-	}
-
-	/* upon success, print path info items */
-	for (i = 0; i < pathinfo_pack->n_paths; i++) {
-		pathinfo = pathinfo_pack->pathinfo + i;
-		printf("[%u %s %x]",
-		        pathinfo->path_id,
-		        trans_symbol(pathinfo->lf_symb),
-		        pathinfo->fr_hash);
-	}
-}
-
-static void math_posting_find_expr(char* path, char *url)
-{
-	math_posting_t            *po;
-	struct math_posting_item  *po_item;
-	uint32_t                   pathinfo_pos;
-	char                      *doc_url;
-	size_t                     doc_url_sz;
+	math_posting_t *po;
+	char           *doc_url;
+	size_t          doc_url_sz;
 
 	/* allocate memory for posting reader */
 	po = math_posting_new_reader(path);
@@ -54,16 +29,14 @@ static void math_posting_find_expr(char* path, char *url)
 	}
 
 	do {
-		/* read posting list item */
-		po_item = math_posting_current(po);
-		pathinfo_pos = po_item->pathinfo_pos;
+		P_CAST(po_item, struct math_posting_compound_item_v1,
+		       math_posting_cur_item_v1(po));
 		doc_url = get_blob_string(indices.url_bi, po_item->doc_id,
 		                          false, &doc_url_sz);
 
 		if (0 == strcmp(doc_url, url) || url[0] == '*') {
 			printf("doc#%u, exp#%u;",
 					po_item->doc_id, po_item->exp_id);
-			print_pathinfo(po, pathinfo_pos);
 			printf("\n");
 		}
 
@@ -85,7 +58,7 @@ static LIST_IT_CALLBK(find_url)
 	math_index_mk_path_str(ele->dup[0], append);
 
 	printf("searching path: %s\n", path);
-	math_posting_find_expr(path, url);
+	math_posting_find_expr_v1(path, url);
 
 	LIST_GO_OVER;
 }

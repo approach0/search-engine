@@ -20,15 +20,21 @@
 #include "math-prefix-qry.h"
 
 static int
-on_merge(uint64_t cur_min, struct postmerge* pm, void* extra_args)
+on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 {
-	printf("hello!\n");
+	for (u32 i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			PTR_CAST(item, struct math_posting_compound_item_v2,
+			         pm->cur_pos_item[i]);
+			printf("doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
+			       item->doc_id, item->exp_id,
+			       item->n_paths, item->n_lr_paths);
+		}
+	}
+	
 //	struct math_expr_score_res res;
-//	P_CAST(mesa, struct math_extra_score_arg, extra_args);
-
 //	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
 //	                                      &mesa->pq, mesa->dir_merge_level, NULL);
-//	printf("doc#%u, exp#%u score: %u \n", res.doc_id, res.exp_id, res.score);
 	return 0;
 }
 
@@ -36,7 +42,7 @@ int main(int argc, char *argv[])
 {
 	int            opt;
 	struct indices indices;
-	enum math_expr_search_policy srch_policy = MATH_SRCH_SUBEXPRESSION;
+	enum math_expr_search_policy srch_policy = MATH_SRCH_FUZZY_STRUCT;
 
 	static char query[MAX_QUERY_BYTES] = {0};
 

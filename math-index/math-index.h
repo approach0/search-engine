@@ -43,7 +43,8 @@ int math_index_add_tex(math_index_t, doc_id_t, exp_id_t,
 bool math_index_mk_path_str(struct subpath*, char*);
 bool math_index_mk_prefix_path_str(struct subpath*, int, char*);
 
-int math_inex_probe(const char*, bool, FILE*); /* mainly for debug */
+/* two debug functions */
+int math_inex_probe_v1(const char*, bool, FILE*);
 int math_inex_probe_v2(const char*, bool, FILE*);
 
 void math_index_close(math_index_t);

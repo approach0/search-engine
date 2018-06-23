@@ -19,37 +19,27 @@ static struct postlist *
 fork_math_postlist(math_posting_t *disk_po)
 {
 	struct postlist *mem_po;
-	struct math_posting_item_v2 *disk_item;
-	struct math_pathinfo_v2      pathinfo[MAX_MATH_PATHS];
-	struct math_postlist_item    mem_item;
+	struct math_postlist_item mem_item;
 	size_t fl_sz;
 
 	mem_po = math_postlist_create_compressed();
 	
 	do {
-		/* read posting list item */
-		disk_item = (struct math_posting_item_v2*)math_posting_current(disk_po);
+		PTR_CAST(disk_item, struct math_posting_compound_item_v2,
+		         math_posting_cur_item_v2(disk_po));
 
 #ifdef DEBUG_MATH_POSTLIST_CACHE
 		prinfo("[%u, %u, %u, %u]", disk_item->exp_id, disk_item->doc_id,
 		                           disk_item->n_lr_paths, disk_item->n_paths);
 #endif
-
 		mem_item.doc_id     = disk_item->doc_id;
 		mem_item.exp_id     = disk_item->exp_id;
 		mem_item.n_lr_paths = disk_item->n_lr_paths;
 		mem_item.n_paths    = disk_item->n_paths;
 
-		/* then read pathinfo items */
-		if (math_posting_pathinfo_v2(disk_po, disk_item->pathinfo_pos,
-		                             disk_item->n_paths, pathinfo)) {
-			prerr("cannot retrieve pathinfo_v2.");
-			break;
-		}
-
 		/* copy pathinfo items */
 		for (int i = 0; i < disk_item->n_paths; i++) {
-			struct math_pathinfo_v2 *p = pathinfo + i;
+			struct math_pathinfo_v2 *p = disk_item->pathinfo + i;
 			mem_item.subr_id[i] = p->subr_id;
 			mem_item.leaf_id[i] = p->leaf_id;
 			mem_item.lf_symb[i] = p->lf_symb;
