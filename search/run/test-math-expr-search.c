@@ -23,28 +23,31 @@ static int
 on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 {
 	PTR_CAST(mesa, struct math_extra_score_arg, args);
-	(void)mesa;
+	struct indices *indices = mesa->expr_srch_arg;
 
-	for (u32 i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-		printf("%s ", mepa->base_path);
-		subpath_set_print_ele(mepa->ele);
-		if (mepa->type == MATH_POSTLIST_TYPE_MEMORY)
-			printf(" (in-memory)");
-		printf("\n");
-
-		if (pm->curIDs[i] == cur_min) {
-			PTR_CAST(item, struct math_posting_compound_item_v2,
-			         pm->cur_pos_item[i]);
-			printf("doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
-			       item->doc_id, item->exp_id,
-			       item->n_paths, item->n_lr_paths);
-		}
-	}
+	/* printing */
+//	for (u32 i = 0; i < pm->n_postings; i++) {
+//		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+//		printf("%s ", mepa->base_path);
+//		subpath_set_print_ele(mepa->ele);
+//		if (mepa->type == MATH_POSTLIST_TYPE_MEMORY)
+//			printf(" (in-memory)");
+//		printf("\n");
+//
+//		if (pm->curIDs[i] == cur_min) {
+//			PTR_CAST(item, struct math_posting_compound_item_v2,
+//			         pm->cur_pos_item[i]);
+//			printf("doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
+//			       item->doc_id, item->exp_id,
+//			       item->n_paths, item->n_lr_paths);
+//		}
+//	}
 	
-//	struct math_expr_score_res res;
-//	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
-//	                                      &mesa->pq, mesa->dir_merge_level, NULL);
+	/* score calculation */
+	struct math_expr_score_res res = {0};
+	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, indices);
+	printf("doc#%u, exp#%u, score: %u\n",
+	       res.doc_id, res.exp_id, res.score);
 	return 0;
 }
 
@@ -123,7 +126,7 @@ int main(int argc, char *argv[])
 	       indices.ci.math_cache.postlist_sz);
 
 	printf("searching query...\n");
-	math_expr_search(&indices, query, srch_policy, &on_merge, NULL);
+	math_expr_search(&indices, query, srch_policy, &on_merge, &indices);
 
 close:
 	indices_close(&indices);

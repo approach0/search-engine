@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdbool.h>
 #include "math-index/math-index.h"
 #include "math-index/subpath-set.h"
