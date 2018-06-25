@@ -19,42 +19,126 @@
 #include "math-expr-search.h"
 #include "math-prefix-qry.h"
 
+#include "indexer/index.h" /* for text_lexer and indices */
+#include "proximity.h"
+#include "rank.h"
+#include "snippet.h"
+#include "search-utils.h"
+
+struct math_expr_search_arg {
+	ranked_results_t *rk_res;
+	struct indices   *indices;
+
+	doc_id_t          cur_docID;
+	uint32_t          n_occurs;
+	uint32_t          max_score;
+	position_t        pos_arr[MAX_HIGHLIGHT_OCCURS];
+	prox_input_t      prox_in[MAX_MERGE_POSTINGS];
+};
+
 static int
 on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 {
+	struct math_expr_score_res res = {0};
 	PTR_CAST(mesa, struct math_extra_score_arg, args);
-	struct indices *indices = mesa->expr_srch_arg;
+	PTR_CAST(esa, struct math_expr_search_arg, mesa->expr_srch_arg);
 
-	/* printing */
-//	for (u32 i = 0; i < pm->n_postings; i++) {
-//		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-//		printf("%s ", mepa->base_path);
-//		subpath_set_print_ele(mepa->ele);
-//		if (mepa->type == MATH_POSTLIST_TYPE_MEMORY)
-//			printf(" (in-memory)");
-//		printf("\n");
-//
-//		if (pm->curIDs[i] == cur_min) {
-//			PTR_CAST(item, struct math_posting_compound_item_v2,
-//			         pm->cur_pos_item[i]);
-//			printf("doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
-//			       item->doc_id, item->exp_id,
-//			       item->n_paths, item->n_lr_paths);
-//		}
-//	}
+	if (cur_min == 0)
+		goto add_hit;
 	
 	/* score calculation */
-	struct math_expr_score_res res = {0};
-	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, indices);
-	printf("doc#%u, exp#%u, score: %u\n",
-	       res.doc_id, res.exp_id, res.score);
+	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, esa->indices);
+
+	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
+add_hit:
+		prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
+		consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
+		               esa->prox_in, 1);
+//		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
+//		printf("pos: ");
+//		for (uint32_t i = 0; i < esa->n_occurs; i++) {
+//			printf("%u ", esa->pos_arr[i]);
+//		}
+//		printf("\n");
+
+		esa->n_occurs  = 0;
+		esa->max_score = 0;
+	}
+
+//	printf("doc#%u, exp#%u, score: %u\n",
+//	       res.doc_id, res.exp_id, res.score);
+
+	if (esa->n_occurs < MAX_HIGHLIGHT_OCCURS)
+		esa->pos_arr[esa->n_occurs ++] = res.exp_id;
+	esa->max_score = (esa->max_score > res.score) ? esa->max_score : res.score;
+
+	esa->cur_docID = res.doc_id;
 	return 0;
+}
+
+#define LEXER_FUN lex_eng_file
+void print_res_item(struct rank_hit* hit, uint32_t cnt, void *arg)
+{
+	char  *str;
+	size_t str_sz;
+	list   highlight_list;
+	PTR_CAST(indices, struct indices, arg);
+	printf("page result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
+
+	/* get URL */
+	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
+	printf("URL: %s" "\n", str);
+	free(str);
+
+//	{
+//		int i;
+//		printf("occurs: ");
+//		for (i = 0; i < hit->n_occurs; i++)
+//			printf("%u ", hit->occurs[i]);
+//		printf("\n");
+//	}
+	printf("\n");
+
+	/* get document text */
+	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
+
+	/* prepare highlighter arguments */
+	highlight_list = prepare_snippet(hit, str, str_sz, LEXER_FUN);
+	free(str);
+
+	/* print snippet */
+	snippet_hi_print(&highlight_list);
+	printf("--------\n\n");
+
+	/* free highlight list */
+	snippet_free_highlight_list(&highlight_list);
+}
+
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+void
+print_res(ranked_results_t *rk_res, uint32_t page, struct indices *indices)
+{
+	struct rank_window wind;
+	uint32_t i, from_page = page, to_page = page, tot_pages = 1;
+	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
+
+	if (page == 0) {
+		from_page = 1;
+		to_page = tot_pages;
+	}
+
+	for (i = from_page - 1; i < MIN(to_page, tot_pages); i++) {
+		printf("page %u/%u\n", i + 1, tot_pages);
+		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
+		rank_window_foreach(&wind, &print_res_item, indices);
+	}
 }
 
 int main(int argc, char *argv[])
 {
 	int            opt;
 	struct indices indices;
+	ranked_results_t rk_res;
 	enum math_expr_search_policy srch_policy = MATH_SRCH_FUZZY_STRUCT;
 
 	static char query[MAX_QUERY_BYTES] = {0};
@@ -126,7 +210,21 @@ int main(int argc, char *argv[])
 	       indices.ci.math_cache.postlist_sz);
 
 	printf("searching query...\n");
-	math_expr_search(&indices, query, srch_policy, &on_merge, &indices);
+
+	struct math_expr_search_arg args;
+	args.rk_res    = &rk_res;
+	args.indices   = &indices;
+	args.cur_docID = 0;
+	args.n_occurs  = 0;
+	args.max_score = 0;
+
+	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
+	math_expr_search(&indices, query, srch_policy, &on_merge, &args);
+	priority_Q_sort(&rk_res);
+
+	print_res(&rk_res, 1, &indices); /* print page 1 only */
+
+	free_ranked_results(&rk_res);
 
 close:
 	indices_close(&indices);

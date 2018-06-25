@@ -167,6 +167,9 @@ posting_merge_OR(struct postmerge *pm, void *extra_args)
 		printf("calling next_id_OR()\n");
 #endif
 	} while (next_id_OR(pm, &cur_min_idx));
+
+	/* final call with a cur_min equal to zero */
+	pm->post_on_merge(0, pm, extra_args);
 }
 
 static void
@@ -204,6 +207,9 @@ posting_merge_AND(struct postmerge *pm, void *extra_args)
 		printf("calling next_id_AND()\n");
 #endif
 	} while (next_id_AND(pm, &cur_min_idx, &cur_max_idx));
+	
+	/* final call with a cur_min equal to zero */
+	pm->post_on_merge(0, pm, extra_args);
 }
 
 bool

@@ -88,7 +88,7 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	fflush(log_fh);
 #endif
 
-	srch_res = indices_run_query(args->indices, &qry);
+	//srch_res = indices_run_query(args->indices, &qry);
 
 	/* generate response JSON */
 #ifdef SEARCHD_LOG_ENABLE
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 
 	/* setup cache */
 	printf("setup cache size: %hu MB\n", cache_sz);
-	indices_cache(&indices, cache_sz MB);
+	indices_cache(&indices);
 
 	/* run httpd */
 	printf("listen on port %hu\n", port);

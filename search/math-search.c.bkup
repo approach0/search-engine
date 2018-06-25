@@ -118,15 +118,14 @@ math_posting_on_merge(uint64_t cur_min, struct postmerge* pm,
 	P_CAST(msca, math_score_combine_args_t, mesa->expr_srch_arg);
 
 	/* calculate expression similarity on merge */
-#ifdef MATH_PREFIX_SEARCH_ONLY
-	/* formula subforest matching */
-	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa->n_qry_lr_paths,
-	                       &mesa->pq, mesa->dir_merge_level, msca->indices);
-#else
-	/* Mark-and-Cross scoring */
-	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
-	                               mesa->n_qry_lr_paths);
-#endif
+//#ifdef MATH_PREFIX_SEARCH_ONLY
+//	/* formula subforest matching */
+	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, msca->indices);
+//#else
+//	/* Mark-and-Cross scoring */
+//	res = math_expr_score_on_merge(pm, mesa->dir_merge_level,
+//	                               mesa->n_qry_lr_paths);
+//#endif
 
 	/* math expression with zero score is filtered. */
 	if (res.score == 0)
@@ -238,7 +237,7 @@ add_math_postinglist(struct postmerge *pm, struct indices *indices,
 #else
 	msca.policy = MATH_SRCH_SUBEXPRESSION;
 #endif
-	n_tot_rd_items = math_expr_search(indices->mi, kw_utf8, msca.policy,
+	n_tot_rd_items = math_expr_search(indices, kw_utf8, msca.policy,
 	                                  &math_posting_on_merge,
 	                                  &msca);
 	if (msca.wr_mem_po)
