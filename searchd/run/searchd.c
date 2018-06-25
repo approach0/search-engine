@@ -94,6 +94,7 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	wchar_t *kw = query_keyword(qry, 0);
 	char *kw_utf8 = wstr2mbstr(kw);
 	srch_res = math_expr_search(args->indices, kw_utf8, MATH_SRCH_FUZZY_STRUCT);
+	printf("time cost: %ld msec.\n", timer_tot_msec(&timer));
 
 	/* generate response JSON */
 #ifdef SEARCHD_LOG_ENABLE

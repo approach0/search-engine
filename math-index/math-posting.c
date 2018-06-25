@@ -285,7 +285,7 @@ void *math_posting_cur_item_v1(math_posting_t po_)
 	memcpy(ret.pathinfo, pathinfo_pack->pathinfo,
 	       sizeof(struct math_pathinfo) * ret.n_paths);
 ret:
-	return (struct math_posting_item *)&ret;
+	return &ret;
 }
 
 void *math_posting_cur_item_v2(math_posting_t po_)

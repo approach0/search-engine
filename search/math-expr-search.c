@@ -326,10 +326,12 @@ int64_t math_postmerge(struct indices *indices, char *tex,
 #include "common/common.h"
 #include "proximity.h"     /* proximity */
 #include "search-utils.h"  /* consider_top_K() */
+#include "postlist/math-postlist.h"
 
 struct math_expr_search_arg {
 	ranked_results_t *rk_res;
 	struct indices   *indices;
+	uint64_t          cnt;
 
 	doc_id_t          cur_docID;
 	uint32_t          n_occurs;
@@ -345,6 +347,37 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	PTR_CAST(mesa, struct math_extra_score_arg, args);
 	PTR_CAST(esa, struct math_expr_search_arg, mesa->expr_srch_arg);
 
+//#define DEBUG_MATH_EXPR_SEARCH_MERGE
+#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
+	if (esa->cnt > 100)
+		return 0;
+#endif
+
+#if 0
+	for (u32 i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+				PTR_CAST(item, struct math_postlist_item,
+						pm->cur_pos_item[i]);
+				if (item->doc_id == 221900) {
+					printf("@@ doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
+							item->doc_id, item->exp_id,
+							item->n_paths, item->n_lr_paths);
+					for (u32 j = 0; j < item->n_paths; j ++) {
+						printf("\t doc prefix path [%u ~ %u, %s]\n",
+							   item->leaf_id[j], item->subr_id[j],
+							   trans_symbol(item->lf_symb[j]));
+					}
+				}
+		}
+	}
+#endif
+
+//#define MERGE_ONLY
+#ifdef MERGE_ONLY
+	esa->cnt ++;
+	return 0;
+#endif
+
 	if (cur_min == 0)
 		goto add_hit;
 	
@@ -356,7 +389,6 @@ add_hit:
 		prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
 		consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
 		               esa->prox_in, 1);
-//#define DEBUG_MATH_EXPR_SEARCH_MERGE
 #ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
 		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
 		printf("pos: ");
@@ -379,6 +411,7 @@ add_hit:
 	esa->max_score = (esa->max_score > res.score) ? esa->max_score : res.score;
 
 	esa->cur_docID = res.doc_id;
+	esa->cnt ++;
 	return 0;
 }
 
@@ -391,6 +424,7 @@ math_expr_search(struct indices *indices, char *tex,
 
 	args.rk_res    = &rk_res;
 	args.indices   = indices;
+	args.cnt       = 0;
 	args.cur_docID = 0;
 	args.n_occurs  = 0;
 	args.max_score = 0;
@@ -398,6 +432,9 @@ math_expr_search(struct indices *indices, char *tex,
 	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
 	math_postmerge(indices, tex, search_policy,
 	               &math_search_on_merge, &args);
+//#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
+	printf("%lu items merged.\n", args.cnt);
+//#endif
 	priority_Q_sort(&rk_res);
 
 	return rk_res;

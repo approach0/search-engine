@@ -7,7 +7,8 @@
 #include "tex-parser/head.h"
 #include "indexer/config.h"
 #include "indexer/index.h"
-#include "math-index/math-index.h"
+//#include "math-index/math-index.h"
+#include "postlist/math-postlist.h"
 
 #include "config.h"
 #include "search-utils.h"
@@ -17,16 +18,16 @@
 
 void math_expr_set_score(struct math_expr_sim_factors*, struct math_expr_score_res*); 
 
+//#define DEBUG_MATH_SCORE_INSPECT
+
 static int
 score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
 {
 	size_t url_sz;
 	char *url = get_blob_string(indices->url_bi, hit.doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, hit.doc_id, 1, &url_sz);
-	//if (0 == strcmp(url, "Correlation_and_dependence:1")) {
-	if (0 == strcmp(url, "Models_of_DNA_evolution:80") ||
-	    0 == strcmp(url, "Conjectural_variation:15")) {
-	//if (hit.doc_id == 227659 || hit.doc_id == 274896) {
+	//if (0 == strcmp(url, "Mixing_(mathematics):8")) {
+	if (hit.doc_id == 221900) {
 
 		printf("%s: doc %u, expr %u, url: %s\n", __func__,
 		        hit.doc_id, hit.exp_id, url);
@@ -98,6 +99,12 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 	float st = st0;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
+	printf("st0 = %f \n", st0);
+	printf("fmeasure = %f, score = %f \n", fmeasure, score);
+#endif
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
 }
@@ -148,7 +155,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 	mnc_reset_docs();
 
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_posting_compound_item_v2, pm->cur_pos_item[i]);
+		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
 		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
 
 		if (pm->curIDs[i] == cur_min) {
@@ -161,13 +168,12 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 					if (qr == rmap[m].qr) {
 						for (uint32_t k = 0; k < item->n_paths; k++) {
 							uint32_t dr, dl;
-							struct math_pathinfo_v2 *p = item->pathinfo + k;
-							dr = p->subr_id;
-							dl = p->leaf_id;
+							dr = item->subr_id[k];
+							dl = item->leaf_id[k];
 							if (dr == rmap[m].dr) {
 								uint32_t slot;
 								struct mnc_ref mnc_ref;
-								mnc_ref.sym = p->lf_symb;
+								mnc_ref.sym = item->lf_symb[k];
 								slot = mnc_map_slot(mnc_ref);
 								mnc_doc_add_rele(slot, dl - 1, ql - 1);
 
@@ -435,7 +441,7 @@ math_expr_prefix_score_on_merge(
 )
 {
 	struct math_expr_score_res     ret = {0};
-	struct math_posting_compound_item_v2 *po_item = NULL;
+	struct math_postlist_item *po_item = NULL;
 
 	struct math_prefix_qry  *pq = &mesa->pq;
 	uint32_t n_joint_nodes, topk_cnt[3] = {0};
@@ -444,7 +450,7 @@ math_expr_prefix_score_on_merge(
 	int                     lcs = 0;
 
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_posting_compound_item_v2, pm->cur_pos_item[i]);
+		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
 		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
 
 		if (pm->curIDs[i] == cur_min) {
@@ -460,15 +466,14 @@ math_expr_prefix_score_on_merge(
 #endif
 				for (uint32_t k = 0; k < item->n_paths; k++) {
 					uint32_t dr, dl;
-					struct math_pathinfo_v2 *p = item->pathinfo + k;
-					dr = p->subr_id;
-					dl = p->leaf_id;
+					dr = item->subr_id[k];
+					dl = item->leaf_id[k];
 #ifdef DEBUG_MATH_EXPR_SEARCH
 					{
 						uint64_t res = 0;
 						res = pq_hit(pq, qr, ql, dr, dl);
 						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
-						       trans_symbol(p->lf_symb));
+						       trans_symbol(item->lf_symb[k]));
 						printf("\t\t hit returns 0x%lu \n", res);
 						//pq_print(*pq, 16);
 						printf("\n");
