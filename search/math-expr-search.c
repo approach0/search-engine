@@ -145,6 +145,10 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 
 	postmerge_posts_clear(pm);
 
+#define PRINT_MATH_POST_TYPE
+#ifdef PRINT_MATH_POST_TYPE
+	printf("\n");
+#endif
 	for (uint32_t i = 0; i < n_eles; i++) {
 		struct postmerge_callbks pm_calls;
 		char *path_key = base_paths[i];
@@ -153,20 +157,31 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 		if (po) {
 			pm_calls = mergecalls_mem_math_postlist();
 			mep_arg[i].type = MATH_POSTLIST_TYPE_MEMORY;
-
+#ifdef PRINT_MATH_POST_TYPE
+			printf("path %s [in-memory]\n", base_paths[i]);
+#endif
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
 
 			if (on_dm_args->path_type == DIR_PATHSET_LEAFROOT_PATH) {
 				pm_calls = mergecalls_disk_math_postlist_v1();
 				mep_arg[i].type = MATH_POSTLIST_TYPE_DISK_V1;
+#ifdef PRINT_MATH_POST_TYPE
+			printf("path %s [on-disk (v1)]\n", base_paths[i]);
+#endif
 			} else {
 				pm_calls = mergecalls_disk_math_postlist_v2();
 				mep_arg[i].type = MATH_POSTLIST_TYPE_DISK_V2;
+#ifdef PRINT_MATH_POST_TYPE
+			printf("path %s [on-disk (v2)]\n", base_paths[i]);
+#endif
 			}
 		} else {
 			pm_calls = NULL_POSTMERGE_CALLS;
 			mep_arg[i].type = MATH_POSTLIST_TYPE_EMPTY;
+#ifdef PRINT_MATH_POST_TYPE
+			printf("path %s [empty]\n", base_paths[i]);
+#endif
 		}
 
 		mep_arg[i].full_path = full_paths[i];
