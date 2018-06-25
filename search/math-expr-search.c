@@ -341,20 +341,24 @@ add_hit:
 		prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
 		consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
 		               esa->prox_in, 1);
-//		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
-//		printf("pos: ");
-//		for (uint32_t i = 0; i < esa->n_occurs; i++) {
-//			printf("%u ", esa->pos_arr[i]);
-//		}
-//		printf("\n");
+//#define DEBUG_MATH_EXPR_SEARCH_MERGE
+#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
+		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
+		printf("pos: ");
+		for (uint32_t i = 0; i < esa->n_occurs; i++) {
+			printf("%u ", esa->pos_arr[i]);
+		}
+		printf("\n");
+#endif
 
 		esa->n_occurs  = 0;
 		esa->max_score = 0;
 	}
 
-//	printf("doc#%u, exp#%u, score: %u\n",
-//	       res.doc_id, res.exp_id, res.score);
-
+#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
+	printf("doc#%u, exp#%u, score: %u\n",
+	       res.doc_id, res.exp_id, res.score);
+#endif
 	if (esa->n_occurs < MAX_HIGHLIGHT_OCCURS)
 		esa->pos_arr[esa->n_occurs ++] = res.exp_id;
 	esa->max_score = (esa->max_score > res.score) ? esa->max_score : res.score;

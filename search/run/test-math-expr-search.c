@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 	printf("cached items: %lu, total size: %lu \n", n,
 	       indices.ci.math_cache.postlist_sz);
 
-	printf("searching query...\n");
+	printf("searching query: `%s'\n", query);
 	rk_res = math_expr_search(&indices, query, srch_policy);
 	print_search_results(&rk_res, 1, &indices); /* print page 1 only */
 	free_ranked_results(&rk_res);

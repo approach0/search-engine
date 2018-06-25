@@ -1,3 +1,5 @@
+#pragma once
+
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 /* ROUND_UP(12, 5) should be 5 * (12/5 + 1) = 15 */
 /* ROUND_UP(10, 5) should be 10 * (10/5 + 0) = 10 */
