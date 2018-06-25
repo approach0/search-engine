@@ -54,6 +54,34 @@ void query_print_to(struct query qry, FILE* fh)
 	        qry.n_math, qry.n_term, qry.len);
 }
 
+struct query_keyword_arg {
+	wchar_t *wstr;
+	int      target;
+	int      cur;
+};
+
+static LIST_IT_CALLBK(get_query_keyword)
+{
+	LIST_OBJ(struct query_keyword, kw, ln);
+	P_CAST(arg, struct query_keyword_arg, pa_extra);
+
+	if (arg->cur == arg->target) {
+		arg->wstr = kw->wstr;
+		return LIST_RET_BREAK;
+	}
+
+	arg->cur += 1;
+	LIST_GO_OVER;
+}
+
+wchar_t *query_keyword(struct query qry, int idx)
+{
+	struct query_keyword_arg arg = {NULL, idx, 0};
+	list_foreach(&qry.keywords, &get_query_keyword, &arg);
+
+	return arg.wstr;
+}
+
 void query_push_keyword(struct query *qry, const struct query_keyword* kw)
 {
 	struct query_keyword *copy;

@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include "common/common.h"
 #include "mhook/mhook.h"
 #include "timer/timer.h"
 
 #include "search/config.h"
+#include "search/math-expr-search.h" /////////////////
 #include "search/search.h"
 #include "httpd/httpd.h"
 
@@ -89,6 +91,9 @@ const char *httpd_on_recv(const char* req, void* arg_)
 #endif
 
 	//srch_res = indices_run_query(args->indices, &qry);
+	wchar_t *kw = query_keyword(qry, 0);
+	char *kw_utf8 = wstr2mbstr(kw);
+	srch_res = math_expr_search(args->indices, kw_utf8, MATH_SRCH_FUZZY_STRUCT);
 
 	/* generate response JSON */
 #ifdef SEARCHD_LOG_ENABLE
@@ -200,6 +205,7 @@ int main(int argc, char *argv[])
 
 	/* setup cache */
 	printf("setup cache size: %hu MB\n", cache_sz);
+	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0);
 	indices_cache(&indices);
 
 	/* run httpd */

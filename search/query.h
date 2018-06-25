@@ -41,3 +41,5 @@ void query_print_to(struct query, FILE*);
 void query_delete(struct query);
 void query_sort_by_df(const struct query*);
 void query_uniq_by_post_id(struct query*);
+
+wchar_t *query_keyword(struct query, int);
