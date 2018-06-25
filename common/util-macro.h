@@ -38,3 +38,6 @@ static inline void print_size(size_t _sz)
 
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+
+#define print_var(_fmt, _var) \
+	printf("%s = " _fmt "\n", # _var, _var)

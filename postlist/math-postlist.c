@@ -29,7 +29,7 @@
 #ifdef DEBUG_POSTLIST
 #define MATH_POSTLIST_BUF_SZ          (MIN_MATH_POSTING_BUF_SZ * 2)
 #else
-#define MATH_POSTLIST_BUF_SZ          ROUND_UP(MIN_MATH_POSTING_BUF_SZ, 65536)
+#define MATH_POSTLIST_BUF_SZ          ROUND_UP(MIN_MATH_POSTING_BUF_SZ, 65536 * 2)
 #endif
 
 #define MATH_POSTLIST_BUF_MAX_ITEMS   \
@@ -57,6 +57,7 @@ onflush_for_compressed_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 	u32 len = (*buf_sz) / sizeof(struct math_postlist_item);
 	*buf_sz = postlist_compress(buf, buf, len, codec);
 	
+	//print_var("%u", *buf_sz);
 	return compound_id;
 }
 
@@ -69,6 +70,7 @@ onrebuf_for_compressed_post(char *buf, uint32_t *buf_sz, void *buf_arg)
 	(void)postlist_decompress(buf, buf, len, codec);
 	*buf_sz = len * sizeof(struct math_postlist_item);
 
+	//print_var("%u", *buf_sz);
 	return;
 }
 

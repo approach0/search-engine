@@ -57,7 +57,6 @@ static void test(struct postlist *po, int test_n)
 	free(items);
 }
 
-
 int main()
 {
 	struct postlist *po;
