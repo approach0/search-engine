@@ -22,7 +22,17 @@
 static int
 on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 {
+	PTR_CAST(mesa, struct math_extra_score_arg, args);
+	(void)mesa;
+
 	for (u32 i = 0; i < pm->n_postings; i++) {
+		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+		printf("%s ", mepa->base_path);
+		subpath_set_print_ele(mepa->ele);
+		if (mepa->type == MATH_POSTLIST_TYPE_MEMORY)
+			printf(" (in-memory)");
+		printf("\n");
+
 		if (pm->curIDs[i] == cur_min) {
 			PTR_CAST(item, struct math_posting_compound_item_v2,
 			         pm->cur_pos_item[i]);

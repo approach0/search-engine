@@ -125,7 +125,6 @@ struct on_dir_merge_args {
 	uint32_t                    n_qry_lr_paths;
 	struct postmerge           *pm;
 	enum dir_merge_pathset_type path_type;
-	struct subpath_ele        **eles;
 	post_merge_callbk           post_on_merge;
 	uint32_t                    n_dir_visits;
 	void                       *expr_srch_arg;
@@ -142,6 +141,7 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 	struct postmerge *pm = on_dm_args->pm;
 	struct postlist_cache ci = on_dm_args->indices->ci;
 	struct math_extra_score_arg mes_arg;
+	struct math_extra_posting_arg mep_arg[MAX_MERGE_DIRS];
 
 	postmerge_posts_clear(pm);
 
@@ -152,25 +152,34 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 
 		if (po) {
 			pm_calls = mergecalls_mem_math_postlist();
+			mep_arg[i].type = MATH_POSTLIST_TYPE_MEMORY;
 
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
 
-			if (on_dm_args->path_type == DIR_PATHSET_LEAFROOT_PATH)
+			if (on_dm_args->path_type == DIR_PATHSET_LEAFROOT_PATH) {
 				pm_calls = mergecalls_disk_math_postlist_v1();
-			else
+				mep_arg[i].type = MATH_POSTLIST_TYPE_DISK_V1;
+			} else {
 				pm_calls = mergecalls_disk_math_postlist_v2();
+				mep_arg[i].type = MATH_POSTLIST_TYPE_DISK_V2;
+			}
 		} else {
 			pm_calls = NULL_POSTMERGE_CALLS;
+			mep_arg[i].type = MATH_POSTLIST_TYPE_EMPTY;
 		}
 
-		postmerge_posts_add(pm, po, pm_calls, eles[i]);
+		mep_arg[i].full_path = full_paths[i];
+		mep_arg[i].base_path = base_paths[i];
+		mep_arg[i].ele       = eles[i];
+		postmerge_posts_add(pm, po, pm_calls, mep_arg + i);
 	}
 
 #ifdef DEBUG_MATH_EXPR_SEARCH
 	printf("start merging math posting lists...\n");
 #endif
 
+	/* set MESA arguments */
 	mes_arg.n_qry_lr_paths  = on_dm_args->n_qry_lr_paths;
 	mes_arg.dir_merge_level = level;
 	mes_arg.n_dir_visits    = on_dm_args->n_dir_visits;
@@ -178,6 +187,7 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
 	mes_arg.pq = pq_allocate(on_dm_args->n_max_qry_node_id);
 
+	/* invoke merger */
 	bool res = posting_merge(pm, on_dm_args->posmerge_op,
 	                         on_dm_args->post_on_merge, &mes_arg);
 
@@ -255,13 +265,14 @@ int64_t math_expr_search(struct indices *indices, char *tex,
 
 		/* prepare directory merge extra arguments */
 		on_dm_args.indices = indices;
-		on_dm_args.pm = &pm;
 		on_dm_args.n_qry_lr_paths = parse_ret.subpaths.n_lr_paths;
+		on_dm_args.pm = &pm;
+		on_dm_args.path_type = DIR_PATHSET_LEAFROOT_PATH;
 		on_dm_args.post_on_merge = fun;
 		on_dm_args.n_dir_visits = 0;
 		on_dm_args.expr_srch_arg = args;
 		on_dm_args.n_tot_rd_items = 0;
-		on_dm_args.path_type = DIR_PATHSET_LEAFROOT_PATH;
+		on_dm_args.posmerge_op = POSTMERGE_OP_OR;
 
 		switch (search_policy) {
 		case MATH_SRCH_FUZZY_STRUCT:

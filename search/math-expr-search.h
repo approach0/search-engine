@@ -7,6 +7,20 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
+enum math_postlist_type {
+	MATH_POSTLIST_TYPE_EMPTY,
+	MATH_POSTLIST_TYPE_MEMORY,
+	MATH_POSTLIST_TYPE_DISK_V1,
+	MATH_POSTLIST_TYPE_DISK_V2
+};
+
+struct math_extra_posting_arg {
+	char                   *full_path;
+	char                   *base_path;
+	struct subpath_ele     *ele;
+	enum math_postlist_type type;
+};
+
 struct math_extra_score_arg {
 	uint32_t n_qry_lr_paths;
 	uint32_t dir_merge_level;
