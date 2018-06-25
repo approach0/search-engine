@@ -79,6 +79,9 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	struct postlist *mem_po;
 	math_posting_t *disk_po;
 
+	if (level > MAX_MATH_CACHE_DIR_LEVEL)
+		return ret;
+
 	PTR_CAST(mpca, struct math_postlist_cache_arg, arg);
 	sds key = sdsnew(mpca->prefix_dir);
 	struct math_postlist_cache *cache = mpca->cache;
