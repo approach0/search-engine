@@ -224,9 +224,9 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 	return DIR_MERGE_RET_CONTINUE;
 }
 
-int64_t math_expr_search(struct indices *indices, char *tex,
-                         enum math_expr_search_policy search_policy,
-                         post_merge_callbk fun, void *args)
+int64_t math_postmerge(struct indices *indices, char *tex,
+                       enum math_expr_search_policy search_policy,
+                       post_merge_callbk fun, void *args)
 {
 	struct tex_parse_ret     parse_ret;
 	struct postmerge         pm;
@@ -306,4 +306,80 @@ int64_t math_expr_search(struct indices *indices, char *tex,
 #endif
 		return -1;
 	}
+}
+
+#include "common/common.h"
+#include "proximity.h"     /* proximity */
+#include "search-utils.h"  /* consider_top_K() */
+
+struct math_expr_search_arg {
+	ranked_results_t *rk_res;
+	struct indices   *indices;
+
+	doc_id_t          cur_docID;
+	uint32_t          n_occurs;
+	uint32_t          max_score;
+	position_t        pos_arr[MAX_HIGHLIGHT_OCCURS];
+	prox_input_t      prox_in[MAX_MERGE_POSTINGS];
+};
+
+static int
+math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
+{
+	struct math_expr_score_res res = {0};
+	PTR_CAST(mesa, struct math_extra_score_arg, args);
+	PTR_CAST(esa, struct math_expr_search_arg, mesa->expr_srch_arg);
+
+	if (cur_min == 0)
+		goto add_hit;
+	
+	/* score calculation */
+	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, esa->indices);
+
+	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
+add_hit:
+		prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
+		consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
+		               esa->prox_in, 1);
+//		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
+//		printf("pos: ");
+//		for (uint32_t i = 0; i < esa->n_occurs; i++) {
+//			printf("%u ", esa->pos_arr[i]);
+//		}
+//		printf("\n");
+
+		esa->n_occurs  = 0;
+		esa->max_score = 0;
+	}
+
+//	printf("doc#%u, exp#%u, score: %u\n",
+//	       res.doc_id, res.exp_id, res.score);
+
+	if (esa->n_occurs < MAX_HIGHLIGHT_OCCURS)
+		esa->pos_arr[esa->n_occurs ++] = res.exp_id;
+	esa->max_score = (esa->max_score > res.score) ? esa->max_score : res.score;
+
+	esa->cur_docID = res.doc_id;
+	return 0;
+}
+
+ranked_results_t
+math_expr_search(struct indices *indices, char *tex,
+                 enum math_expr_search_policy search_policy)
+{
+	ranked_results_t rk_res;
+	struct math_expr_search_arg args;
+
+	args.rk_res    = &rk_res;
+	args.indices   = indices;
+	args.cur_docID = 0;
+	args.n_occurs  = 0;
+	args.max_score = 0;
+
+	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
+	math_postmerge(indices, tex, search_policy,
+	               &math_search_on_merge, &args);
+	priority_Q_sort(&rk_res);
+
+	return rk_res;
 }

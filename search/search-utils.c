@@ -1,3 +1,4 @@
+#include "common/common.h"
 #include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indexer/index.h" /* for text_lexer and indices */
 #include "wstring/wstring.h" /* for wstr2mbstr() */
@@ -258,8 +259,6 @@ list prepare_snippet(struct rank_hit* hit, const char *text,
 /*
  * consider_top_K() function
  */
-#define MIN(A, B) ((A) < (B) ? (A) : (B))
-
 void
 consider_top_K(ranked_results_t *rk_res,
                doc_id_t docID, float score,
@@ -335,4 +334,57 @@ print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
 
 	snippet_hi_print(&highlight_list);
 	snippet_free_highlight_list(&highlight_list);
+}
+
+#include "txt-seg/lex.h"
+#define LEXER_FUN lex_eng_file
+
+static void print_res_item(struct rank_hit* hit, uint32_t cnt, void *arg)
+{
+	char  *str;
+	size_t str_sz;
+	list   highlight_list;
+	PTR_CAST(indices, struct indices, arg);
+	printf("page result#%u: doc#%u score=%.3f\n", cnt, hit->docID, hit->score);
+
+	/* get URL */
+	str = get_blob_string(indices->url_bi, hit->docID, 0, &str_sz);
+	printf("URL: %s" "\n", str);
+	free(str);
+
+	printf("\n");
+
+	/* get document text */
+	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
+
+	/* prepare highlighter arguments */
+	highlight_list = prepare_snippet(hit, str, str_sz, LEXER_FUN);
+	free(str);
+
+	/* print snippet */
+	snippet_hi_print(&highlight_list);
+	printf("--------\n\n");
+
+	/* free highlight list */
+	snippet_free_highlight_list(&highlight_list);
+}
+
+void
+print_search_results(ranked_results_t *rk_res, uint32_t page,
+                     struct indices *indices)
+{
+	struct rank_window wind;
+	uint32_t i, from_page = page, to_page = page, tot_pages = 1;
+	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
+
+	if (page == 0) {
+		from_page = 1;
+		to_page = tot_pages;
+	}
+
+	for (i = from_page - 1; i < MIN(to_page, tot_pages); i++) {
+		printf("page %u/%u\n", i + 1, tot_pages);
+		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
+		rank_window_foreach(&wind, &print_res_item, indices);
+	}
 }

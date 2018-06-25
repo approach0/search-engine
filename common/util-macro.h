@@ -33,3 +33,6 @@ static inline void print_size(size_t _sz)
 
 #define __1KB__ 1024
 #define KB * __1KB__
+
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))

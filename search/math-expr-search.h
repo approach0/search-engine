@@ -38,8 +38,10 @@ enum math_expr_search_policy {
 	MATH_SRCH_SUBEXPRESSION
 };
 
-/* perform math expression search. Upon math posting list merge,
- * call the callback function specified in the argument. */
-int64_t math_expr_search(struct indices *indices, char *tex,
-                         enum math_expr_search_policy search_policy,
-                         post_merge_callbk fun, void *args);
+int64_t math_postmerge(struct indices *indices, char *tex,
+                       enum math_expr_search_policy search_policy,
+                       post_merge_callbk fun, void *args);
+
+#include "rank.h"
+ranked_results_t
+math_expr_search(struct indices*, char*, enum math_expr_search_policy);
