@@ -203,11 +203,11 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 
 int string_longest_common_substring(enum symbol_id *str1, enum symbol_id *str2)
 {
-	int (*DP)[64] = calloc(64, 64 * sizeof(int));
+	int (*DP)[MAX_LEAVES] = calloc(MAX_LEAVES, MAX_LEAVES * sizeof(int));
 	int lcs = 0;
 	int i, j;
-	for (i = 0; i < 64; i++) {
-		for (j = 0; j < 64; j++) {
+	for (i = 0; i < MAX_LEAVES; i++) {
+		for (j = 0; j < MAX_LEAVES; j++) {
 			if (i == 0 || j == 0) {
 				DP[i][j] = 0;
 			} else if (str1[i-1] == str2[j-1] &&
@@ -229,7 +229,7 @@ static int
 substring_filter(enum symbol_id *str1, enum symbol_id *str2)
 {
 	int i;
-	for (i = 0; i < 64; i++) {
+	for (i = 0; i < MAX_LEAVES; i++) {
 		if (str1[i] == 0)
 			return 1;
 		if (str1[i] != str2[i])
@@ -249,8 +249,8 @@ prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
 //	struct subpath_ele            *subpath_ele;
 //	int i, j, k;
 //
-//	enum symbol_id querystr[64] = {0};
-//	enum symbol_id candistr[64] = {0};
+//	enum symbol_id querystr[MAX_LEAVES] = {0};
+//	enum symbol_id candistr[MAX_LEAVES] = {0};
 //
 //	for (i = 0; i < pm->n_postings; i++) {
 //		if (pm->curIDs[i] == cur_min) {
@@ -280,10 +280,10 @@ prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
 //	} /* end for */
 //
 //	return string_longest_common_substring(querystr, candistr);
-////	for (i = 0; i < 64; i++) {
+////	for (i = 0; i < MAX_LEAVES; i++) {
 ////		printf("%s ", trans_symbol(querystr[i]));
 ////	} printf("\n");
-////	for (i = 0; i < 64; i++) {
+////	for (i = 0; i < MAX_LEAVES; i++) {
 ////		printf("%s ", trans_symbol(candistr[i]));
 ////	} printf("\n");
 ////	printf("lcs = %u\n", lcs);
@@ -302,8 +302,8 @@ symbolseq_similarity(struct postmerge* pm)
 //	struct subpath_ele         *subpath_ele;
 //	int ret = 0;
 //
-//	enum symbol_id querystr[64] = {0};
-//	enum symbol_id candistr[64] = {0};
+//	enum symbol_id querystr[MAX_LEAVES] = {0};
+//	enum symbol_id candistr[MAX_LEAVES] = {0};
 //
 //	for (i = 0; i < pm->n_postings; i++) {
 //		posting = pm->postings[i];
@@ -319,7 +319,7 @@ symbolseq_similarity(struct postmerge* pm)
 //
 //		for (j = 0; j < pathinfo_pack->n_paths; j++) {
 //			pathinfo = pathinfo_pack->pathinfo + j;
-//			assert(pathinfo->path_id <= 64);
+//			assert(pathinfo->path_id <= MAX_LEAVES);
 //			candistr[pathinfo->path_id - 1] = pathinfo->lf_symb;
 //
 //			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
@@ -335,13 +335,13 @@ symbolseq_similarity(struct postmerge* pm)
 ////		if (0) {
 ////		//if (8325 == po_item->exp_id) {
 ////			printf("Query: ");
-////			for (i = 0; i < 64; i++) {
+////			for (i = 0; i < MAX_LEAVES; i++) {
 ////				if (querystr[i] == 0)
 ////					break;
 ////				printf("%s ", trans_symbol(querystr[i]));
 ////			} printf("\n");
 ////			printf("expr#%d, Candi: ", po_item->exp_id);
-////			for (i = 0; i < 64; i++) {
+////			for (i = 0; i < MAX_LEAVES; i++) {
 ////				printf("%s ", trans_symbol(candistr[i]));
 ////			} printf("\n");
 ////			printf("Return: %d\n", ret);
@@ -415,7 +415,7 @@ math_expr_score_on_merge(struct postmerge* pm,
 //			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
 //				/*
 //				 * add this document subpath for scoring.
-//				 * (path_id [1, 64] is mapped to [0, 63])
+//				 * (path_id [1, MAX_LEAVES] is mapped to [0, 63])
 //				 */
 //				mnc_doc_add_rele(slot, pathinfo->path_id - 1,
 //				                 subpath_ele->dup[k]->path_id - 1);
