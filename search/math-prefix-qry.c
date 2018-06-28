@@ -194,8 +194,8 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 	uint32_t n_joint_nodes = 0;
 
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
-	uint64_t cur_max_qmask = 0;
-	uint64_t cur_max_dmask = 0;
+	uint64_t matched_qmask[MAX_LEAVES];
+	uint64_t matched_dmask[MAX_LEAVES];
 	uint32_t qmap[MAX_NODE_IDS] = {0};
 	uint32_t dmap[MAX_NODE_IDS] = {0};
 #endif
@@ -215,23 +215,26 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 		cell = &pq->cell[loc.qr][loc.dr];
 
 #ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
-		uint64_t overlap_qmask = cur_max_qmask & cell->qmask;
-		uint64_t overlap_dmask = cur_max_dmask & cell->dmask;
-		if (overlap_qmask && overlap_dmask) {
-			if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
-				qmap[loc.qr] = loc.dr;
-				dmap[loc.dr] = loc.qr;
-				n_joint_nodes ++;
+		for (uint32_t t = 0; t < j; t++) {
+			uint64_t overlap_qmask = matched_qmask[t] & cell->qmask;
+			uint64_t overlap_dmask = matched_dmask[t] & cell->dmask;
+			if (overlap_qmask && overlap_dmask) {
+				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
+					qmap[loc.qr] = loc.dr;
+					dmap[loc.dr] = loc.qr;
+					n_joint_nodes ++;
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-				printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+					printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
-			}
+				}
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-			else if (qmap[loc.qr] != loc.dr ||
-				     dmap[loc.dr] != loc.qr) {
-				printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
-			}
+				else if (qmap[loc.qr] != loc.dr ||
+						 dmap[loc.dr] != loc.qr) {
+					printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+				}
 #endif
+				break;
+			}
 		}
 #endif
 
@@ -244,20 +247,19 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 			printf("max_cell[%u](qr%u, dr%u) = %u\n", j, loc.qr, loc.dr, cell->cnt);
 			printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
+#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
+			qmap[loc.qr] = loc.dr;
+			dmap[loc.dr] = loc.qr;
+			matched_qmask[j] = cell->qmask;
+			matched_dmask[j] = cell->dmask;
+			n_joint_nodes ++;
+#endif
 			topk[j] = cell->cnt;
 			rmap[j].qr = loc.qr;
 			rmap[j].dr = loc.dr;
 			j++;
 			exclude_qmask |= cell->qmask;
 			exclude_dmask |= cell->dmask;
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
-			qmap[loc.qr] = loc.dr;
-			dmap[loc.dr] = loc.qr;
-			n_joint_nodes ++;
-
-			cur_max_qmask = cell->qmask;
-			cur_max_dmask = cell->dmask;
-#endif
 		}
 	}
 

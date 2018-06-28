@@ -16,7 +16,7 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-//#define DEBUG_MATH_SCORE_INSPECT
+#define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -116,7 +116,7 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 void math_expr_set_score_2(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
+	uint32_t *t = factor->topk_cnt; //, jo = factor->joint_nodes;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -139,6 +139,33 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 	hit->score = (uint32_t)(score);
 }
 
+/* joint nodes experiment */
+void math_expr_set_score_3(struct math_expr_sim_factors* factor,
+                           struct math_expr_score_res* hit)
+{
+	uint32_t *t = factor->topk_cnt, jo = factor->joint_nodes;
+	uint32_t qn = factor->qry_lr_paths;
+	uint32_t dn = factor->doc_lr_paths;
+	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
+	                (qn * MNC_MARK_FULL_SCORE);
+	float alpha = 0.05f;
+	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
+	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
+	float st0 = (float)t[0]/(float)(qn);
+	float st1 = (float)t[1]/(float)(qn);
+	float st2 = (float)t[2]/(float)(qn);
+	float st = 0.65f * st0 + 0.3 * st1 + 0.05f * st2 + 0.01f * jo;
+	float fmeasure = st*sy / (st + sy);
+	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
+	printf("st = %f, %f, %f, jo = %u \n", st0, st1, st2, jo);
+	printf("fmeasure = %f, score = %f \n", fmeasure, score);
+#endif
+	score = score * 100000.f;
+	hit->score = (uint32_t)(score);
+}
+
 void
 math_expr_set_score(struct math_expr_sim_factors* factor,
                     struct math_expr_score_res* hit)
@@ -148,8 +175,10 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	//math_expr_set_score_7(factor, hit);
 	//math_expr_set_score_10(factor, hit);
 	
-	math_expr_set_score_1(factor, hit);
+	//math_expr_set_score_1(factor, hit);
 	//math_expr_set_score_2(factor, hit);
+
+	math_expr_set_score_3(factor, hit);
 }
 
 static mnc_score_t
@@ -466,10 +495,10 @@ math_expr_prefix_score_on_merge(
 			po_item = item;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		inspect = score_inspect_filter(po_item->doc_id, indices);
+//		inspect = score_inspect_filter(po_item->doc_id, indices);
 
 //		if (po_item && po_item->doc_id == 1)
-//			inspect = 1;
+			inspect = 1;
 #endif
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
