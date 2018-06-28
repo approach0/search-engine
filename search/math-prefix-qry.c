@@ -108,7 +108,7 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 	}
 }
 
-void counting_sort(struct math_prefix_qry *pq)
+static void counting_sort(struct math_prefix_qry *pq)
 {
 	uint32_t i, count[MAX_CELL_CNT] = {0};
 	struct math_prefix_loc dirty[pq->n_dirty];
@@ -132,7 +132,21 @@ void counting_sort(struct math_prefix_qry *pq)
 	memcpy(pq->dirty, dirty, sizeof(struct math_prefix_loc) * pq->n_dirty);
 }
 
-void print_dirty_array(struct math_prefix_qry *pq)
+static void max_pop(struct math_prefix_qry *pq)
+{
+	uint32_t max_cnt = 0;
+
+	for (uint32_t i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc   loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+		if (cell->cnt > max_cnt) {
+			max_cnt = cell->cnt;
+			pq->dirty[pq->n_dirty - 1] = loc;
+		}
+	}
+}
+
+static void print_dirty_array(struct math_prefix_qry *pq)
 {
 	uint32_t i;
 	for (i = 0; i < pq->n_dirty; i++) {
@@ -165,8 +179,12 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 	uint32_t dmap[MAX_NODE_IDS] = {0};
 #endif
 
-	//print_dirty_array(pq);
+	/* sort dirty array in ascending order */
+#ifdef MATH_SLOW_SEARCH
 	counting_sort(pq);
+#else
+	max_pop(pq);
+#endif
 	//print_dirty_array(pq);
 
 	i = pq->n_dirty;

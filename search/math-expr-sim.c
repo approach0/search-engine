@@ -16,8 +16,6 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-void math_expr_set_score(struct math_expr_sim_factors*, struct math_expr_score_res*); 
-
 //#define DEBUG_MATH_SCORE_INSPECT
 
 static int
@@ -41,6 +39,11 @@ score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
 	return 0;
 }
 
+void math_expr_set_score_0(struct math_expr_sim_factors* factor,
+                           struct math_expr_score_res* hit)
+{
+	hit->score = (uint32_t)100;
+}
 
 void math_expr_set_score_7(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
@@ -140,6 +143,8 @@ void
 math_expr_set_score(struct math_expr_sim_factors* factor,
                     struct math_expr_score_res* hit)
 {
+	//math_expr_set_score_0(factor, hit);
+
 	//math_expr_set_score_7(factor, hit);
 	//math_expr_set_score_10(factor, hit);
 	
@@ -489,13 +494,23 @@ math_expr_prefix_score_on_merge(
 		}
 	}
 
-	n_joint_nodes = pq_align(pq, topk_cnt, rmap, 3);
+#ifdef MATH_SLOW_SEARCH
+	const int K = 1;
+#else
+	const int K = 1;
+#endif
+
+	n_joint_nodes = pq_align(pq, topk_cnt, rmap, K);
 	pq_reset(pq);
 
-//	printf("rmap: <%u-%u>, <%u-%u>, <%u-%u>\n",
-//	       rmap[0].qr, rmap[0].dr,
-//	       rmap[1].qr, rmap[1].dr,
-//	       rmap[2].qr, rmap[2].dr);
+//#define DEBUG_PRINT_RMAP
+#ifdef DEBUG_PRINT_RMAP
+	printf("rmap: <%u-%u>, <%u-%u>, <%u-%u>\n",
+	       rmap[0].qr, rmap[0].dr,
+	       rmap[1].qr, rmap[1].dr,
+	       rmap[2].qr, rmap[2].dr);
+#endif
+	
 	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, 3);
 
 	//lcs = prefix_symbolseq_similarity(cur_min, pm);
@@ -505,7 +520,7 @@ math_expr_prefix_score_on_merge(
 		struct math_expr_sim_factors factors = {
 			symbol_sim, 0 /* search depth */,
 			mesa->n_qry_lr_paths, po_item->n_lr_paths,
-			topk_cnt, 3, n_joint_nodes, 0
+			topk_cnt, K, n_joint_nodes, 0
 		};
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;

@@ -133,7 +133,7 @@ struct on_dir_merge_args {
 	uint32_t                    n_max_qry_node_id;
 };
 
-enum dir_merge_ret
+static enum dir_merge_ret
 on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
 	struct subpath_ele **eles, uint32_t n_eles, uint32_t level, void *args)
 {
@@ -158,7 +158,7 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 			pm_calls = mergecalls_mem_math_postlist();
 			mep_arg[i].type = MATH_POSTLIST_TYPE_MEMORY;
 #ifdef PRINT_MATH_POST_TYPE
-			printf("path %s [in-memory]\n", base_paths[i]);
+			printf("%s [in-memory]\n", base_paths[i]);
 #endif
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
@@ -167,20 +167,20 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 				pm_calls = mergecalls_disk_math_postlist_v1();
 				mep_arg[i].type = MATH_POSTLIST_TYPE_DISK_V1;
 #ifdef PRINT_MATH_POST_TYPE
-			printf("path %s [on-disk (v1)]\n", base_paths[i]);
+			printf("%s [on-disk (v1)]\n", base_paths[i]);
 #endif
 			} else {
 				pm_calls = mergecalls_disk_math_postlist_v2();
 				mep_arg[i].type = MATH_POSTLIST_TYPE_DISK_V2;
 #ifdef PRINT_MATH_POST_TYPE
-			printf("path %s [on-disk (v2)]\n", base_paths[i]);
+			printf("%s [on-disk (v2)]\n", base_paths[i]);
 #endif
 			}
 		} else {
 			pm_calls = NULL_POSTMERGE_CALLS;
 			mep_arg[i].type = MATH_POSTLIST_TYPE_EMPTY;
 #ifdef PRINT_MATH_POST_TYPE
-			printf("path %s [empty]\n", base_paths[i]);
+			printf("%s [empty]\n", base_paths[i]);
 #endif
 		}
 
@@ -348,10 +348,10 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	PTR_CAST(esa, struct math_expr_search_arg, mesa->expr_srch_arg);
 
 //#define DEBUG_MATH_EXPR_SEARCH_MERGE
-#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
-	if (esa->cnt > 100)
-		return 0;
-#endif
+//#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
+//	if (esa->cnt > 100)
+//		return 0;
+//#endif
 
 #if 0
 	for (u32 i = 0; i < pm->n_postings; i++) {
@@ -384,6 +384,7 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	/* score calculation */
 	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, esa->indices);
 
+	/* add hit for a group of item with same docID */
 	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
 add_hit:
 		prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
