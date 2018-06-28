@@ -31,6 +31,22 @@ void pq_free(struct math_prefix_qry pq)
 	free(pq.dirty);
 }
 
+int pq_mask_is_clean(struct math_prefix_qry *pq)
+{
+	uint64_t res = 0;
+	for (uint32_t i = 0; i < pq->n; i++) {
+		for (uint32_t j = 0; j < MAX_NODE_IDS; j++) {
+			res |= pq->cell[i][j].qmask;
+			res |= pq->cell[i][j].dmask;
+			if (res != 0) {
+				printf("cell[%u][%u] mask is not clear\n", i, j);
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
 void pq_reset(struct math_prefix_qry *pq)
 {
 	for (uint32_t i = 0; i < pq->n_dirty; i++) {
@@ -39,6 +55,24 @@ void pq_reset(struct math_prefix_qry *pq)
 	}
 
 	pq->n_dirty = 0;
+	// assert(pq_mask_is_clean(pq))
+}
+
+void pq_print_dirty_array(struct math_prefix_qry *pq)
+{
+	uint32_t i;
+	printf("dirty array: ");
+	for (i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc   loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+		printf("[%u @ (%u, %u)]", cell->cnt, loc.qr, loc.dr);
+		// printf("%u == %u == %u \n",
+		// 	__builtin_popcountll(cell->qmask),
+		// 	__builtin_popcountll(cell->dmask),
+		// 	cell->cnt
+		// );
+	}
+	printf("\n");
 }
 
 #define C_GRAY    "\033[1m\033[30m"
@@ -47,7 +81,8 @@ void pq_reset(struct math_prefix_qry *pq)
 void pq_print(struct math_prefix_qry pq, uint32_t d_maxid)
 {
 	uint32_t i, j, k;
-	//printf("n_dirty = %u\n", pq.n_dirty);
+	printf("n_dirty = %u\n", pq.n_dirty);
+	pq_print_dirty_array(&pq);
 
 	printf("%3s | ", "qr");
 	for (j = 0; j < d_maxid; j++) {
@@ -132,7 +167,7 @@ static void counting_sort(struct math_prefix_qry *pq)
 	memcpy(pq->dirty, dirty, sizeof(struct math_prefix_loc) * pq->n_dirty);
 }
 
-static void max_pop(struct math_prefix_qry *pq)
+static void popmax_sort(struct math_prefix_qry *pq)
 {
 	uint32_t max_cnt = 0;
 
@@ -141,25 +176,11 @@ static void max_pop(struct math_prefix_qry *pq)
 		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
 		if (cell->cnt > max_cnt) {
 			max_cnt = cell->cnt;
+			/* swap */
+			pq->dirty[i] = pq->dirty[pq->n_dirty - 1];
 			pq->dirty[pq->n_dirty - 1] = loc;
 		}
 	}
-}
-
-static void print_dirty_array(struct math_prefix_qry *pq)
-{
-	uint32_t i;
-	for (i = 0; i < pq->n_dirty; i++) {
-		struct math_prefix_loc   loc = pq->dirty[i];
-		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-		printf("[%u]", cell->cnt);
-		// printf("%u == %u == %u \n",
-		// 	__builtin_popcountll(cell->qmask),
-		// 	__builtin_popcountll(cell->dmask),
-		// 	cell->cnt
-		// );
-	}
-	printf("\n");
 }
 
 uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
@@ -179,13 +200,13 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 	uint32_t dmap[MAX_NODE_IDS] = {0};
 #endif
 
-	/* sort dirty array in ascending order */
 #ifdef MATH_SLOW_SEARCH
+	/* sort dirty array in ascending order */
 	counting_sort(pq);
 #else
-	max_pop(pq);
+	/* sort dirty array s.t. right-most is the max */
+	popmax_sort(pq);
 #endif
-	//print_dirty_array(pq);
 
 	i = pq->n_dirty;
 	while (i && j < k) {

@@ -19,16 +19,16 @@
 //#define DEBUG_MATH_SCORE_INSPECT
 
 static int
-score_inspect_filter(struct math_expr_score_res hit, struct indices *indices)
+score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 {
 	size_t url_sz;
-	char *url = get_blob_string(indices->url_bi, hit.doc_id, 0, &url_sz);
-	char *txt = get_blob_string(indices->txt_bi, hit.doc_id, 1, &url_sz);
-	//if (0 == strcmp(url, "Mixing_(mathematics):8")) {
-	if (hit.doc_id == 221900) {
+	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
+	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
+	if (0 == strcmp(url, "Abel–Ruffini_theorem:3") ||
+	    0 == strcmp(url, "Quadratic_equation:144")) {
+	//if (doc_id == 59736) {
 
-		printf("%s: doc %u, expr %u, url: %s\n", __func__,
-		        hit.doc_id, hit.exp_id, url);
+		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
 		return 1;
 	}
@@ -154,7 +154,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 
 static mnc_score_t
 prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
-                            struct math_prefix_loc *rmap, uint32_t n)
+                            struct math_prefix_loc *rmap, uint32_t k)
 {
 	/* reset mnc for scoring new document */
 	mnc_reset_docs();
@@ -169,7 +169,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 				qr = mepa->ele->rid[j];
 				ql = mepa->ele->dup[j]->path_id;
 
-				for (uint32_t m = 0; m < n; m++) {
+				for (uint32_t m = 0; m < k; m++) {
 					if (qr == rmap[m].qr) {
 						for (uint32_t k = 0; k < item->n_paths; k++) {
 							uint32_t dr, dl;
@@ -454,6 +454,10 @@ math_expr_prefix_score_on_merge(
 	mnc_score_t             symbol_sim = 0;
 	int                     lcs = 0;
 
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	int inspect = 0;
+#endif
+
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
 		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
 		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
@@ -461,58 +465,64 @@ math_expr_prefix_score_on_merge(
 		if (pm->curIDs[i] == cur_min) {
 			po_item = item;
 
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		inspect = score_inspect_filter(po_item->doc_id, indices);
+
+//		if (po_item && po_item->doc_id == 1)
+//			inspect = 1;
+#endif
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
 				ql = mepa->ele->dup[j]->path_id;
-#ifdef DEBUG_MATH_EXPR_SEARCH
-				printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
-				       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+#ifdef DEBUG_MATH_SCORE_INSPECT
+				if (inspect) {
+					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+				}
 #endif
 				for (uint32_t k = 0; k < item->n_paths; k++) {
 					uint32_t dr, dl;
 					dr = item->subr_id[k];
 					dl = item->leaf_id[k];
-#ifdef DEBUG_MATH_EXPR_SEARCH
-					{
-						uint64_t res = 0;
-						res = pq_hit(pq, qr, ql, dr, dl);
+
+					uint64_t res = 0;
+					res = pq_hit(pq, qr, ql, dr, dl);
+#ifdef DEBUG_MATH_SCORE_INSPECT
+					if (inspect) {
 						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
 						       trans_symbol(item->lf_symb[k]));
-						printf("\t\t hit returns 0x%lu \n", res);
-						//pq_print(*pq, 16);
+						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
+						// pq_print(*pq, 16);
 						printf("\n");
 					}
 #else
-					pq_hit(pq, qr, ql, dr, dl);
+					(void)res;
 #endif
 				}
 			}
-#ifdef DEBUG_MATH_EXPR_SEARCH
-			printf("}\n");
+#ifdef DEBUG_MATH_SCORE_INSPECT
+			if (inspect) {
+				printf("}\n");
+			}
 #endif
 		}
 	}
 
 #ifdef MATH_SLOW_SEARCH
-	const int K = 1;
+	const int K = 3;
 #else
 	const int K = 1;
 #endif
 
+	/* sub-structure align */
 	n_joint_nodes = pq_align(pq, topk_cnt, rmap, K);
 	pq_reset(pq);
 
-//#define DEBUG_PRINT_RMAP
-#ifdef DEBUG_PRINT_RMAP
-	printf("rmap: <%u-%u>, <%u-%u>, <%u-%u>\n",
-	       rmap[0].qr, rmap[0].dr,
-	       rmap[1].qr, rmap[1].dr,
-	       rmap[2].qr, rmap[2].dr);
-#endif
-	
-	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, 3);
+	/* symbol set similarity */
+	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, K);
 
+	/* symbol sequence similarity */
 	//lcs = prefix_symbolseq_similarity(cur_min, pm);
 	(void)lcs;
 
@@ -526,9 +536,12 @@ math_expr_prefix_score_on_merge(
 		ret.exp_id = po_item->exp_id;
 		
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		if (score_inspect_filter(ret, indices))
-#endif
+		if (inspect) {
 			math_expr_set_score(&factors, &ret);
+		}
+#else
+		math_expr_set_score(&factors, &ret);
+#endif
 	}
 
 	return ret;
