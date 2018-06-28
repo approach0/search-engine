@@ -16,7 +16,7 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-#define DEBUG_MATH_SCORE_INSPECT
+//#define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -144,6 +144,7 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
 	uint32_t *t = factor->topk_cnt, jo = factor->joint_nodes;
+	uint32_t lcs = factor->lcs;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -160,7 +161,7 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
 	printf("st = %f, %f, %f, jo = %u \n", st0, st1, st2, jo);
-	printf("fmeasure = %f, score = %f \n", fmeasure, score);
+	printf("fmeasure = %f, lcs = %u, score = %f \n", fmeasure, lcs, score);
 #endif
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
@@ -271,44 +272,29 @@ substring_filter(enum symbol_id *str1, enum symbol_id *str2)
 static int
 prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
 {
-	return 0;
-//	struct math_posting_item_v2   *po_item;
-//	math_posting_t                 posting;
-//	struct math_pathinfo_v2        pathinfo[MAX_MATH_PATHS];
-//	struct subpath_ele            *subpath_ele;
-//	int i, j, k;
-//
-//	enum symbol_id querystr[MAX_LEAVES] = {0};
-//	enum symbol_id candistr[MAX_LEAVES] = {0};
-//
-//	for (i = 0; i < pm->n_postings; i++) {
-//		if (pm->curIDs[i] == cur_min) {
-//			posting = pm->postings[i];
-//			po_item = pm->cur_pos_item[i];
-//			if (math_posting_pathinfo_v2(
-//				posting,
-//				po_item->pathinfo_pos,
-//				po_item->n_paths,
-//				pathinfo
-//			)) {
-//				continue;
-//			}
-//
-//			subpath_ele = NULL;//math_posting_get_ele(posting);
-//			for (j = 0; j <= subpath_ele->dup_cnt; j++) {
-//				uint32_t qn = subpath_ele->dup[j]->node_id;
-//				enum symbol_id qs = subpath_ele->dup[j]->lf_symbol_id;
-//				querystr[qn - 1] = qs;
-//
-//				for (k = 0; k < po_item->n_paths; k++) {
-//					struct math_pathinfo_v2 *p = pathinfo + k;
-//					candistr[p->leaf_id - 1] = p->lf_symb;
-//				}
-//			}
-//		} /* end if */
-//	} /* end for */
-//
-//	return string_longest_common_substring(querystr, candistr);
+	int i, j, k;
+
+	enum symbol_id querystr[MAX_LEAVES] = {0};
+	enum symbol_id candistr[MAX_LEAVES] = {0};
+
+	for (i = 0; i < pm->n_postings; i++) {
+		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
+		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+
+		if (pm->curIDs[i] == cur_min) {
+			for (j = 0; j <= mepa->ele->dup_cnt; j++) {
+				uint32_t qn = mepa->ele->dup[j]->node_id;
+				enum symbol_id qs = mepa->ele->dup[j]->lf_symbol_id;
+				querystr[qn - 1] = qs;
+
+				for (k = 0; k < item->n_paths; k++) {
+					candistr[item->leaf_id[k] - 1] = item->lf_symb[k];
+				}
+			}
+		} /* end if */
+	} /* end for */
+
+	return string_longest_common_substring(querystr, candistr);
 ////	for (i = 0; i < MAX_LEAVES; i++) {
 ////		printf("%s ", trans_symbol(querystr[i]));
 ////	} printf("\n");
@@ -498,7 +484,7 @@ math_expr_prefix_score_on_merge(
 //		inspect = score_inspect_filter(po_item->doc_id, indices);
 
 //		if (po_item && po_item->doc_id == 1)
-			inspect = 1;
+//			inspect = 1;
 #endif
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
@@ -552,14 +538,14 @@ math_expr_prefix_score_on_merge(
 	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, K);
 
 	/* symbol sequence similarity */
-	//lcs = prefix_symbolseq_similarity(cur_min, pm);
+	lcs = prefix_symbolseq_similarity(cur_min, pm);
 	(void)lcs;
 
 	if (po_item) {
 		struct math_expr_sim_factors factors = {
 			symbol_sim, 0 /* search depth */,
 			mesa->n_qry_lr_paths, po_item->n_lr_paths,
-			topk_cnt, K, n_joint_nodes, 0
+			topk_cnt, K, n_joint_nodes, lcs
 		};
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
