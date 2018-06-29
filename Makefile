@@ -5,7 +5,7 @@ SRC_LIST_FILE := srclist.txt
 
 include rules.mk
 
-all: all_modules tags
+all: all_modules
 
 ##################################
 # general rules are listed below
