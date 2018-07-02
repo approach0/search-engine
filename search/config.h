@@ -56,7 +56,7 @@
 
 /* prefix search */
 #define MAX_NODE_IDS 4096
-#define MAX_CELL_CNT 4096
+#define MAX_CELL_CNT 512
 
 //#define MATH_PREFIX_QRY_DEBUG_PRINT
 
