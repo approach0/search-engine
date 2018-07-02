@@ -39,3 +39,6 @@ const char
 
 /* get response JSON to indicate an error */
 const char *search_errcode_json(enum searchd_ret_code);
+
+/* generate TREC-formated results log */
+int search_results_trec_log(ranked_results_t*, struct searcher_args*);

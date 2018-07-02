@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 import os
+import sys
 
-fname = "trec-format-results.tmp"
+if len(sys.argv) <= 1:
+    print('error args')
+    quit()
+
+fname = sys.argv[1]
 run_name = 'a0-ntcir-tmp'
 
 d = dict()
@@ -17,6 +22,7 @@ with open(fname) as f:
         run = run_name
         key = query + docid;
         if key in d:
+            print('duplicate:', key)
             continue
         else:
             d[key] = True
@@ -29,6 +35,7 @@ with open(fname) as f:
         hit = [query, "1", docid, str(rank), score, run]
         out_d[query].append(hit)
 
+quit()
 order_key = list(out_d.keys())
 order_key = sorted(order_key, key=lambda x: int(x.split('-MathWiki-')[1]))
 for k in order_key:

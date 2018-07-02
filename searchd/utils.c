@@ -387,3 +387,51 @@ const char
 
 	return response;
 }
+
+static FILE *fh_trec_output = NULL;
+
+static void
+log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
+{
+	P_CAST(app_args, struct append_result_args, args);
+	struct indices *indices = app_args->indices;
+
+	size_t      url_sz;
+	char *url = get_blob_string(indices->url_bi, hit->docID, 0, &url_sz);
+	
+	fprintf(fh_trec_output, "_QRY_ID_ 1 %s %u %f APPROACH0\n", url,
+	        ++ app_args->n_results, hit->score);
+	free(url);
+}
+
+int search_results_trec_log(ranked_results_t *rk_res, struct searcher_args *args)
+{
+	struct rank_window wind;
+	uint32_t tot_pages;
+	
+	fh_trec_output = fopen("trec-format-results.tmp", "w");
+	if (fh_trec_output == NULL)
+		return 1;
+
+	/* calculate total pages */
+	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE,
+	                        &tot_pages);
+	if (wind.to <= 0) {
+		/* not valid calculation, return error */
+		fclose(fh_trec_output);
+		return 1;
+	}
+
+	for (uint32_t i = 0; i < tot_pages; i++) {
+		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
+
+		struct append_result_args app_args = {
+			args->indices, args->lex, 0
+		};
+
+		rank_window_foreach(&wind, &log_trec_res, &app_args);
+	}
+
+	fclose(fh_trec_output);
+	return 0;
+}

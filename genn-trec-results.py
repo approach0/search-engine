@@ -7,25 +7,25 @@ import sys
 
 fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
 index = "/home/tk/Desktop/approach0/indexer/tmp"
-output = 'trec-format-results.tmp'
-
-rmcmf = 'rm -f {}'.format(output)
-os.system(rmcmf);
+output = 'searchd/trec-format-results.tmp'
 
 with open(fname) as f:
     for line in f:
-        print(line)
         line = line.strip('\n')
+        # parse and prepare command arguments
         fields = line.split()
         qry_id = fields[0]
         latex = ' '.join(fields[1:])
-        #exestr = "./search/run/test-search.out -p 0 -n -i {} -m '{}' -q {}".format(index, latex, qry_id)
         exestr = "./searchd/scripts/mathonly-qry.py '{}' {}".format(latex, qry_id)
-        print(exestr)
+        # execute
         t0 = time.time()
         os.system(exestr);
         t1 = time.time()
+        # report query process time
         sys.stderr.write('%s %f seconds \n' % (qry_id, t1 - t0))
         sys.stderr.flush()
-
-print('output file: %s' % output)
+        # print TREC output
+        with open(output) as ff:
+            trec_output = ff.read()
+            trec_output = trec_output.replace("_QRY_ID_", qry_id)
+            print(trec_output, end='')

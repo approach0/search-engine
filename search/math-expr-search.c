@@ -434,6 +434,7 @@ math_expr_search(struct indices *indices, char *tex,
 	math_postmerge(indices, tex, search_policy,
 	               &math_search_on_merge, &args);
 //#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
+	//printf("Slow search: %d\n", MATH_SLOW_SEARCH);
 	printf("%lu items merged.\n", args.cnt);
 //#endif
 	priority_Q_sort(&rk_res);

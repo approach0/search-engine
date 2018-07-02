@@ -12,8 +12,7 @@ def send_json(obj):
 	headers = {'content-type': 'application/json'}
 	r = requests.post(url, json=obj, headers=headers)
 	j = json.loads(r.content.decode('utf-8'))
-	print(j)
-
+	# print(j)
 
 json_query = {
 	"page": 1,

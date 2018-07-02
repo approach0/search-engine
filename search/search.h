@@ -6,7 +6,6 @@
 struct searcher_args {
 	struct indices *indices;
 	text_lexer      lex;
-	unsigned int    _rank;
 };
 
 ranked_results_t
