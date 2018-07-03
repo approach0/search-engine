@@ -16,12 +16,13 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-#define DEBUG_MATH_SCORE_INSPECT
+//#define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 {
 	size_t url_sz;
+	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
 //	if (0 == strcmp(url, "Abel–Ruffini_theorem:3") ||
@@ -30,13 +31,12 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
-		return 1;
+		ret = 1;
 	}
 
 	free(url);
 	free(txt);
-
-	return 0;
+	return ret;
 }
 
 void math_expr_set_score_0(struct math_expr_sim_factors* factor,
@@ -178,10 +178,10 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	//math_expr_set_score_7(factor, hit);
 	//math_expr_set_score_10(factor, hit);
 	
-	//math_expr_set_score_1(factor, hit);
+	math_expr_set_score_1(factor, hit);
 	//math_expr_set_score_2(factor, hit);
 
-	math_expr_set_score_3(factor, hit);
+	//math_expr_set_score_3(factor, hit);
 }
 
 static mnc_score_t

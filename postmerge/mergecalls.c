@@ -65,10 +65,9 @@ struct postmerge_callbks mergecalls_disk_term_postlist()
  * Math posting list merge calls.
  */
 
-static uint64_t wrap_mem_math_postlist_cur_id(void *item)
+static uint64_t wrap_mem_math_postlist_cur_id(void *po)
 {
-	uint64_t *id64 = (uint64_t *)item;
-	return *id64;
+	return *(uint64_t*)postlist_cur_item(po);
 }
 
 struct postmerge_callbks mergecalls_mem_math_postlist()
