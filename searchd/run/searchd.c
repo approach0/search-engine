@@ -95,8 +95,12 @@ const char *httpd_on_recv(const char* req, void* arg_)
 	char *kw_utf8 = wstr2mbstr(kw);
 	srch_res = math_expr_search(args->indices, kw_utf8, MATH_SRCH_FUZZY_STRUCT);
 	printf("time cost: %ld msec.\n", timer_tot_msec(&timer));
+
 	//////// TREC LOG ////////
-	search_results_trec_log(&srch_res, args);
+	if (args->trec_log) {
+		printf("generating TREC log ...\n");
+		search_results_trec_log(&srch_res, args);
+	}
 
 	/* generate response JSON */
 #ifdef SEARCHD_LOG_ENABLE
@@ -143,9 +147,10 @@ int main(int argc, char *argv[])
 	text_lexer            lex = lex_eng_file;
 	char                 *dict_path = NULL;
 	struct searcher_args  searcher_args;
+	int                   trec_log = 0;
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hi:t:p:c:d:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:t:p:c:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -153,6 +158,7 @@ int main(int argc, char *argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h |"
+			       " -T (TREC log) |"
 			       " -i <index path> |"
 			       " -p <port> | "
 			       " -c <cache size (MB)> | "
@@ -160,6 +166,10 @@ int main(int argc, char *argv[])
 			       "\n", argv[0]);
 			printf("\n");
 			goto exit;
+		
+		case 'T':
+			trec_log = 1;
+			break;
 
 		case 'i':
 			index_path = strdup(optarg);
@@ -214,8 +224,9 @@ int main(int argc, char *argv[])
 	/* run httpd */
 	printf("listen on port %hu\n", port);
 
-	searcher_args.indices = &indices;
-	searcher_args.lex     = lex;
+	searcher_args.indices  = &indices;
+	searcher_args.lex      = lex;
+	searcher_args.trec_log = trec_log;
 	struct uri_handler uri_handlers[] = {{"/search" , &httpd_on_recv}};
 	httpd_run(port, uri_handlers, 1, &searcher_args);
 

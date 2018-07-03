@@ -6,6 +6,7 @@
 struct searcher_args {
 	struct indices *indices;
 	text_lexer      lex;
+	int             trec_log;
 };
 
 ranked_results_t
