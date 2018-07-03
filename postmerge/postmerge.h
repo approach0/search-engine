@@ -14,8 +14,8 @@ typedef void           (*post_finish_callbk)(void *);
 typedef bool           (*post_start_callbk)(void *);
 typedef bool           (*post_jump_callbk)(void *, uint64_t);
 typedef bool           (*post_next_callbk)(void *);
-typedef post_item_t    (*post_now_callbk)(void *);
-typedef uint64_t       (*post_now_id_callbk)(post_item_t);
+typedef post_item_t    (*post_cur_callbk)(void *);
+typedef uint64_t       (*post_cur_id_callbk)(post_item_t);
 typedef int            (*post_merge_callbk)(uint64_t, struct postmerge*, void*);
 
 enum postmerge_op {
@@ -28,15 +28,14 @@ struct postmerge {
 	void               *postings[MAX_MERGE_POSTINGS];
 	void               *posting_args[MAX_MERGE_POSTINGS];
 	uint64_t            curIDs[MAX_MERGE_POSTINGS];
-	void               *cur_pos_item[MAX_MERGE_POSTINGS];
 	uint32_t            n_postings;
 	int64_t             n_rd_items;
 
 	post_start_callbk   start[MAX_MERGE_POSTINGS];
 	post_next_callbk    next[MAX_MERGE_POSTINGS];
 	post_jump_callbk    jump[MAX_MERGE_POSTINGS];
-	post_now_callbk     now[MAX_MERGE_POSTINGS];
-	post_now_id_callbk  now_id[MAX_MERGE_POSTINGS];
+	post_cur_callbk     cur[MAX_MERGE_POSTINGS];
+	post_cur_id_callbk  cur_id[MAX_MERGE_POSTINGS];
 	post_finish_callbk  finish[MAX_MERGE_POSTINGS];
 
 	post_merge_callbk   post_on_merge;
@@ -71,18 +70,18 @@ struct postmerge_callbks {
 	 */
 
 	/* get current posting item */
-	post_now_callbk now;
+	post_cur_callbk cur;
 
 	/* get docID of a posting item */
-	post_now_id_callbk now_id;
+	post_cur_id_callbk cur_id;
 
 	/*
 	 * Note: after iterator goes out of scope, postmerge.c module
-	 * guarantees now() and now_id() will not be
+	 * guarantees cur() and cur_id() will not be
 	 * called.
 	 * Thus, never try to use things like:
 	 *   while ((pi = term_posting_current(posting)) != NULL)
-	 * because now() callback is not supposed to implement
+	 * because cur() callback is not supposed to implement
 	 * any NULL indicator as a flag of "end of posting list".
 	 */
 
@@ -91,6 +90,7 @@ struct postmerge_callbks {
 };
 
 #define NULL_POSTMERGE_CALLS ((struct postmerge_callbks) {0})
+#define POSTMERGE_CUR(_pm, _i) ((_pm)->cur[_i]((_pm)->postings[_i]))
 
 void postmerge_posts_clear(struct postmerge*);
 

@@ -18,14 +18,13 @@ void postmerge_posts_add(struct postmerge *pm, void *post,
 	pm->postings[pm->n_postings] = post;
 	pm->posting_args[pm->n_postings] = arg;
 	pm->curIDs[pm->n_postings] = MAX_POST_ITEM_ID;
-	pm->cur_pos_item[pm->n_postings] = NULL;
 
 	/* callback functions */
 	pm->start[pm->n_postings]  = calls.start;
 	pm->next[pm->n_postings]   = calls.next;
 	pm->jump[pm->n_postings]   = calls.jump;
-	pm->now[pm->n_postings]    = calls.now;
-	pm->now_id[pm->n_postings] = calls.now_id;
+	pm->cur[pm->n_postings]    = calls.cur;
+	pm->cur_id[pm->n_postings] = calls.cur_id;
 	pm->finish[pm->n_postings] = calls.finish;
 
 	pm->n_postings ++;
@@ -82,14 +81,12 @@ next_id_OR(struct postmerge *pm, uint32_t *cur_min_idx)
 
 			if (pm->next[i](pm->postings[i])) {
 				/* update current pointer and ID for posting[i] */
-				pm->cur_pos_item[i] = pm->now[i](pm->postings[i]);
-				pm->curIDs[i] = pm->now_id[i](pm->cur_pos_item[i]);
+				pm->curIDs[i] = pm->cur_id[i](pm->postings[i]);
 			} else {
 				/* for OR, we cannot just simply leave curIDs[i] unchanged,
 				 * because in posting_merge_OR() will continue to evaluate
 				 * min value.
 				 */
-				pm->cur_pos_item[i] = NULL;
 				pm->curIDs[i] = MAX_POST_ITEM_ID;
 			}
 		}
@@ -129,8 +126,7 @@ next_id_AND(struct postmerge *pm,
 			}
 
 			/* update current pointer and ID for posting[i] */
-			pm->cur_pos_item[i] = pm->now[i](pm->postings[i]);
-			pm->curIDs[i] = pm->now_id[i](pm->cur_pos_item[i]);
+			pm->curIDs[i] = pm->cur_id[i](pm->postings[i]);
 		}
 	}
 
@@ -169,7 +165,7 @@ posting_merge_OR(struct postmerge *pm, void *extra_args)
 	} while (next_id_OR(pm, &cur_min_idx));
 
 	/* final call with a cur_min equal to zero */
-	pm->post_on_merge(0, pm, extra_args);
+	pm->post_on_merge(MAX_POST_ITEM_ID, pm, extra_args);
 }
 
 static void
@@ -209,7 +205,7 @@ posting_merge_AND(struct postmerge *pm, void *extra_args)
 	} while (next_id_AND(pm, &cur_min_idx, &cur_max_idx));
 	
 	/* final call with a cur_min equal to zero */
-	pm->post_on_merge(0, pm, extra_args);
+	pm->post_on_merge(MAX_POST_ITEM_ID, pm, extra_args);
 }
 
 bool
@@ -229,15 +225,13 @@ posting_merge(struct postmerge *pm, enum postmerge_op op,
 #ifdef DEBUG_POST_MERGE
 			printf("calling start(post[%u])\n", i);
 #endif
-			pm->cur_pos_item[i] = pm->now[i](pm->postings[i]);
-			pm->curIDs[i] = pm->now_id[i](pm->cur_pos_item[i]);
+			pm->curIDs[i] = pm->cur_id[i](pm->postings[i]);
 		} else {
 			/* indicate this is an empty posting list (in case query
 			 * term is not found)*/
 #ifdef DEBUG_POST_MERGE
 			printf("post[%u] := NULL\n", i);
 #endif
-			pm->cur_pos_item[i] = NULL;
 			pm->curIDs[i] = MAX_POST_ITEM_ID;
 		}
 	}

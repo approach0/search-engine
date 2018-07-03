@@ -16,7 +16,7 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-//#define DEBUG_MATH_SCORE_INSPECT
+#define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -24,9 +24,9 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	size_t url_sz;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-	if (0 == strcmp(url, "Abel–Ruffini_theorem:3") ||
-	    0 == strcmp(url, "Quadratic_equation:144")) {
-	//if (doc_id == 59736) {
+//	if (0 == strcmp(url, "Abel–Ruffini_theorem:3") ||
+//	    0 == strcmp(url, "Quadratic_equation:144")) {
+	if (doc_id == 91316) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -158,6 +158,8 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float st = 0.65f * st0 + 0.3 * st1 + 0.05f * st2 + 0.01f * jo;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+	(void)lcs;
+
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
 	printf("st = %f, %f, %f, jo = %u \n", st0, st1, st2, jo);
@@ -190,7 +192,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 	mnc_reset_docs();
 
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
+		PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
 		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
 
 		if (pm->curIDs[i] == cur_min) {
@@ -278,7 +280,7 @@ prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
 	enum symbol_id candistr[MAX_LEAVES] = {0};
 
 	for (i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
+		PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
 		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
 
 		if (pm->curIDs[i] == cur_min) {
@@ -322,7 +324,6 @@ symbolseq_similarity(struct postmerge* pm)
 //
 //	for (i = 0; i < pm->n_postings; i++) {
 //		posting = pm->postings[i];
-//		po_item = pm->cur_pos_item[i];
 //		subpath_ele = NULL;//math_posting_get_ele(posting);
 //
 //		pathinfo_pos = po_item->pathinfo_pos;
@@ -390,7 +391,6 @@ math_expr_score_on_merge(struct postmerge* pm,
 //	for (i = 0; i < pm->n_postings; i++) {
 //		/* for each merged posting item from posting lists */
 //		posting = pm->postings[i];
-//		po_item = pm->cur_pos_item[i];
 //		subpath_ele = NULL;//math_posting_get_ele(posting);
 //
 //		/* get pathinfo position of corresponding merged item */
@@ -474,14 +474,14 @@ math_expr_prefix_score_on_merge(
 #endif
 
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_postlist_item, pm->cur_pos_item[i]);
+		PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
 		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
 
 		if (pm->curIDs[i] == cur_min) {
 			po_item = item;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-//		inspect = score_inspect_filter(po_item->doc_id, indices);
+		inspect = score_inspect_filter(po_item->doc_id, indices);
 
 //		if (po_item && po_item->doc_id == 1)
 //			inspect = 1;
@@ -553,6 +553,8 @@ math_expr_prefix_score_on_merge(
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		if (inspect) {
 			math_expr_set_score(&factors, &ret);
+			printf("doc#%u, exp#%u, final score: %u\n",
+			       ret.doc_id, ret.exp_id, ret.score);
 		}
 #else
 		math_expr_set_score(&factors, &ret);

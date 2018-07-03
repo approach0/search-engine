@@ -10,10 +10,15 @@
 
 static int text_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
 {
+	if (cur_min == MAX_POST_ITEM_ID) {
+		printf("End of posting list.\n");
+		return 0;
+	}
+
 	for (int i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {
 			struct term_posting_item *po_item;
-			po_item = pm->cur_pos_item[i];
+			po_item = pm->cur[i](pm->postings[i]);
 			printf("docID: %u, tf: %u\n", po_item->doc_id, po_item->tf);
 			break;
 		}
@@ -23,10 +28,15 @@ static int text_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
 
 static int math_on_merge(uint64_t cur_min, struct postmerge *pm, void *args)
 {
+	if (cur_min == MAX_POST_ITEM_ID) {
+		printf("End of posting list.\n");
+		return 0;
+	}
+
 	for (int i = 0; i < pm->n_postings; i++) {
 		if (pm->curIDs[i] == cur_min) {
 			struct math_posting_item_v2 *po_item;
-			po_item = pm->cur_pos_item[i];
+			po_item = pm->cur[i](pm->postings[i]);
 			printf("expID: %u, docID: %u\n", po_item->exp_id, po_item->doc_id);
 			break;
 		}

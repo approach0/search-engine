@@ -8,10 +8,10 @@
  * Text posting list merge calls.
  */
 
-static uint64_t wrap_mem_term_postlist_cur_id(void *item)
+static uint64_t wrap_mem_term_postlist_cur_id(void *po)
 {
 	/* return docID */
-	return (uint64_t)(*(uint32_t*)item);
+	return (uint64_t)(*(uint32_t*)postlist_cur_item(po));
 }
 
 struct postmerge_callbks mergecalls_mem_term_postlist()
@@ -21,8 +21,8 @@ struct postmerge_callbks mergecalls_mem_term_postlist()
 	ret.finish = &postlist_finish;
 	ret.jump   = &postlist_jump;
 	ret.next   = &postlist_next;
-	ret.now    = &postlist_cur_item;
-	ret.now_id = &wrap_mem_term_postlist_cur_id;
+	ret.cur    = &postlist_cur_item;
+	ret.cur_id = &wrap_mem_term_postlist_cur_id;
 
 	return ret;
 }
@@ -43,9 +43,9 @@ static void *wrap_disk_term_postlist_cur_item(void *po)
 	return (void*)term_posting_cur_item_with_pos(po);
 }
 
-static uint64_t wrap_disk_term_postlist_cur_id(void *item)
+static uint64_t wrap_disk_term_postlist_cur_id(void *po)
 {
-	return (uint64_t)(*(uint32_t*)item);
+	return (uint64_t)(*(uint32_t*)term_posting_cur_item_with_pos(po));
 }
 
 struct postmerge_callbks mergecalls_disk_term_postlist()
@@ -55,8 +55,8 @@ struct postmerge_callbks mergecalls_disk_term_postlist()
 	ret.finish = &term_posting_finish;
 	ret.jump   = &wrap_disk_term_postlist_jump;
 	ret.next   = &term_posting_next;
-	ret.now    = &wrap_disk_term_postlist_cur_item;
-	ret.now_id = &wrap_disk_term_postlist_cur_id;
+	ret.cur    = &wrap_disk_term_postlist_cur_item;
+	ret.cur_id = &wrap_disk_term_postlist_cur_id;
 
 	return ret;
 }
@@ -78,36 +78,18 @@ struct postmerge_callbks mergecalls_mem_math_postlist()
 	ret.finish = &postlist_finish;
 	ret.jump   = &postlist_jump;
 	ret.next   = &postlist_next;
-	ret.now    = &postlist_cur_item;
-	ret.now_id = &wrap_mem_math_postlist_cur_id;
+	ret.cur    = &postlist_cur_item;
+	ret.cur_id = &wrap_mem_math_postlist_cur_id;
 
 	return ret;
 }
-
-static uint64_t wrap_disk_math_postlist_cur_id_v1(void *po_item_)
-{
-	/* this casting requires `struct math_posting_item' has
-	 * docID and expID as first two structure members. */
-	uint64_t *id64 = (uint64_t *)po_item_;
-
-	return *id64;
-};
-
-static uint64_t wrap_disk_math_postlist_cur_id_v2(void *po_item_)
-{
-	/* this casting requires `struct math_posting_item' has
-	 * docID and expID as first two structure members. */
-	uint64_t *id64 = (uint64_t *)po_item_;
-
-	return (*id64) & 0xffffffff000fffff;
-};
 
 #include "postlist/math-postlist.h"
 #include "postlist-cache/math-postlist-cache.h"
 #include "postmerge/config.h"
 char *trans_symbol(int symbol_id);
 
-void* wrap_disk_math_postlist_cur_item(void *po)
+void* wrap_disk_math_postlist_cur_item_v2(void *po)
 {
 	PTR_CAST(disk_item, struct math_posting_compound_item_v2,
 	         math_posting_cur_item_v2(po));
@@ -141,8 +123,8 @@ struct postmerge_callbks mergecalls_disk_math_postlist_v1()
 	ret.finish = &math_posting_finish;
 	ret.jump   = &math_posting_jump;
 	ret.next   = &math_posting_next;
-	ret.now    = &math_posting_cur_item_v1;
-	ret.now_id = &wrap_disk_math_postlist_cur_id_v1;
+	ret.cur    = &math_posting_cur_item_v1;
+	ret.cur_id = &math_posting_cur_id_v1;
 
 	return ret;
 }
@@ -154,8 +136,8 @@ struct postmerge_callbks mergecalls_disk_math_postlist_v2()
 	ret.finish = &math_posting_finish;
 	ret.jump   = &math_posting_jump;
 	ret.next   = &math_posting_next;
-	ret.now    = &wrap_disk_math_postlist_cur_item;
-	ret.now_id = &wrap_disk_math_postlist_cur_id_v2;
+	ret.cur    = &wrap_disk_math_postlist_cur_item_v2;
+	ret.cur_id = &math_posting_cur_id_v2;
 
 	return ret;
 }

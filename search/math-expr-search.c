@@ -347,28 +347,19 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	PTR_CAST(mesa, struct math_extra_score_arg, args);
 	PTR_CAST(esa, struct math_expr_search_arg, mesa->expr_srch_arg);
 
-//#define DEBUG_MATH_EXPR_SEARCH_MERGE
-//#ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
-//	if (esa->cnt > 100)
-//		return 0;
-//#endif
+#if 0
+	if (esa->cnt > 100)
+		return 0;
+#endif
 
 #if 0
-	for (u32 i = 0; i < pm->n_postings; i++) {
-		if (pm->curIDs[i] == cur_min) {
-				PTR_CAST(item, struct math_postlist_item,
-						pm->cur_pos_item[i]);
-				if (item->doc_id == 221900) {
-					printf("@@ doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
-							item->doc_id, item->exp_id,
-							item->n_paths, item->n_lr_paths);
-					for (u32 j = 0; j < item->n_paths; j ++) {
-						printf("\t doc prefix path [%u ~ %u, %s]\n",
-							   item->leaf_id[j], item->subr_id[j],
-							   trans_symbol(item->lf_symb[j]));
-					}
-				}
+	if ((cur_min >> 32) == 91316) { 
+		for (u32 i = 0; i < pm->n_postings; i++) {
+			PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
+			printf("[%u] = doc#%u, exp#%u (%lu)\n", i,
+			       item->doc_id, item->exp_id, pm->curIDs[i]);
 		}
+		printf("===\n");
 	}
 #endif
 
@@ -378,7 +369,7 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	return 0;
 #endif
 
-	if (cur_min == 0)
+	if (cur_min == MAX_POST_ITEM_ID)
 		goto add_hit;
 	
 	/* score calculation */

@@ -264,6 +264,22 @@ math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_paths
 	}
 }
 
+uint64_t math_posting_cur_id_v1(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	struct math_posting_item *item = po->buf + po->buf_idx;
+	return *(uint64_t *)item;
+}
+
+uint64_t math_posting_cur_id_v2(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	struct math_posting_item *item = po->buf + po->buf_idx;
+	uint64_t id64 = *(uint64_t *)item;
+
+	return id64 & 0xffffffff000fffff;
+}
+
 void *math_posting_cur_item_v1(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
