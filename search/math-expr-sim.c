@@ -186,16 +186,17 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 
 static mnc_score_t
 prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
+                            struct math_postlist_item *items[],
                             struct math_prefix_loc *rmap, uint32_t k)
 {
 	/* reset mnc for scoring new document */
 	mnc_reset_docs();
 
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
-		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-
 		if (pm->curIDs[i] == cur_min) {
+			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+			struct math_postlist_item *item = items[i];
+
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
@@ -463,21 +464,23 @@ math_expr_prefix_score_on_merge(
 	struct math_expr_score_res     ret = {0};
 	struct math_postlist_item *po_item = NULL;
 
-	struct math_prefix_qry  *pq = &mesa->pq;
-	uint32_t n_joint_nodes, topk_cnt[3] = {0};
-	struct math_prefix_loc  rmap[3] = {0};
-	mnc_score_t             symbol_sim = 0;
-	int                     lcs = 0;
+	struct math_prefix_qry    *pq = &mesa->pq;
+	uint32_t n_joint_nodes,   topk_cnt[3] = {0};
+	struct math_prefix_loc    rmap[3] = {0};
+	mnc_score_t               symbol_sim = 0;
+	int                       lcs = 0;
+	struct math_postlist_item *items[pm->n_postings];
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	int inspect = 0;
 #endif
 
 	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
-		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-
 		if (pm->curIDs[i] == cur_min) {
+			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+			items[i] = (struct math_postlist_item*)POSTMERGE_CUR(pm, i);
+			struct math_postlist_item *item = items[i];
+
 			po_item = item;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
@@ -535,10 +538,10 @@ math_expr_prefix_score_on_merge(
 	pq_reset(pq);
 
 	/* symbol set similarity */
-	symbol_sim = prefix_symbolset_similarity(cur_min, pm, rmap, K);
+	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, rmap, K);
 
 	/* symbol sequence similarity */
-	lcs = prefix_symbolseq_similarity(cur_min, pm);
+	//lcs = prefix_symbolseq_similarity(cur_min, pm);
 	(void)lcs;
 
 	if (po_item) {
