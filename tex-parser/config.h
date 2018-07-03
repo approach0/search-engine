@@ -8,4 +8,4 @@
 #define TYPE_MAP_STR_MAX             128
 //#define OPTR_HASH_DEBUG
 
-// #define TEX_PARSER_USE_LATEXML
+#define TEX_PARSER_USE_LATEXML

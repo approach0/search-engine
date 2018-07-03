@@ -378,9 +378,11 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	/* add hit for a group of item with same docID */
 	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
 add_hit:
-		prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
-		consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
-		               esa->prox_in, 1);
+		if (esa->max_score > 0) {
+			prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
+			consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
+			               esa->prox_in, 1);
+		}
 #ifdef DEBUG_MATH_EXPR_SEARCH_MERGE
 		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
 		printf("pos: ");

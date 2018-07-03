@@ -25,9 +25,16 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-//	if (0 == strcmp(url, "Abel–Ruffini_theorem:3") ||
-//	    0 == strcmp(url, "Quadratic_equation:144")) {
-	if (doc_id == 91316) {
+	if (0 == strcmp(url, "Opening_(morphology):7") ||
+	    0 == strcmp(url, "De_Morgan's_laws:60") ||
+	    0 == strcmp(url, "De_Morgan's_laws:57") ||
+	    0 == strcmp(url, "De_Morgan's_laws:56") ||
+	    0 == strcmp(url, "De_Morgan's_laws:26") ||
+	    0 == strcmp(url, "Complement_(set_theory):10") ||
+	    0 == strcmp(url, "Cartesian_product:13") ||
+	    0 == strcmp(url, "Union_(set_theory):14")) {
+
+//	if (doc_id == 15497 || doc_id == 485333) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -511,7 +518,7 @@ math_expr_prefix_score_on_merge(
 						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
 						       trans_symbol(item->lf_symb[k]));
 						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-						// pq_print(*pq, 16);
+						pq_print(*pq, 20);
 						printf("\n");
 					}
 #else
