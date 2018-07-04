@@ -170,16 +170,22 @@ static void counting_sort(struct math_prefix_qry *pq)
 static void popmax_sort(struct math_prefix_qry *pq)
 {
 	uint32_t max_cnt = 0;
+	uint32_t max_idx = 0;
 
 	for (uint32_t i = 0; i < pq->n_dirty; i++) {
 		struct math_prefix_loc   loc = pq->dirty[i];
 		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
 		if (cell->cnt > max_cnt) {
 			max_cnt = cell->cnt;
-			/* swap */
-			pq->dirty[i] = pq->dirty[pq->n_dirty - 1];
-			pq->dirty[pq->n_dirty - 1] = loc;
+			max_idx = i;
 		}
+	}
+
+	if (max_cnt > 0) {
+		/* swap */
+		struct math_prefix_loc save = pq->dirty[max_idx];
+		pq->dirty[max_idx] = pq->dirty[pq->n_dirty - 1];
+		pq->dirty[pq->n_dirty - 1] = save;
 	}
 }
 

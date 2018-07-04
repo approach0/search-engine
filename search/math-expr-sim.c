@@ -16,7 +16,7 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-//#define DEBUG_MATH_SCORE_INSPECT
+// #define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -25,14 +25,8 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-	if (0 == strcmp(url, "Opening_(morphology):7") ||
-	    0 == strcmp(url, "De_Morgan's_laws:60") ||
-	    0 == strcmp(url, "De_Morgan's_laws:57") ||
-	    0 == strcmp(url, "De_Morgan's_laws:56") ||
-	    0 == strcmp(url, "De_Morgan's_laws:26") ||
-	    0 == strcmp(url, "Complement_(set_theory):10") ||
-	    0 == strcmp(url, "Cartesian_product:13") ||
-	    0 == strcmp(url, "Union_(set_theory):14")) {
+	if (0 == strcmp(url, "Attenuation:3") ||
+	    0 == strcmp(url, "AB_magnitude:1")) {
 
 //	if (doc_id == 15497 || doc_id == 485333) {
 
@@ -518,7 +512,7 @@ math_expr_prefix_score_on_merge(
 						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
 						       trans_symbol(item->lf_symb[k]));
 						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-						//pq_print(*pq, 20);
+						//pq_print(*pq, 26);
 						printf("\n");
 					}
 #else
@@ -542,6 +536,10 @@ math_expr_prefix_score_on_merge(
 
 	/* sub-structure align */
 	n_joint_nodes = pq_align(pq, topk_cnt, rmap, K);
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect)
+		pq_print_dirty_array(pq);
+#endif
 	pq_reset(pq);
 
 	/* symbol set similarity */
