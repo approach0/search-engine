@@ -92,7 +92,7 @@ function mathjax_init() {
 				qvar: ['{\\color{blue}{#1}}',1]
 			}
 		},
-		showMathMenu: false,
+		showMathMenu: true /* false */,
 		menuSettings: {CHTMLpreview: false}
 	});
 
