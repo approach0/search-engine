@@ -422,13 +422,10 @@ int search_results_trec_log(ranked_results_t *rk_res, struct searcher_args *args
 		return 1;
 	}
 
+	struct append_result_args app_args = {args->indices, args->lex, 0};
+
 	for (uint32_t i = 0; i < tot_pages; i++) {
 		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
-
-		struct append_result_args app_args = {
-			args->indices, args->lex, 0
-		};
-
 		rank_window_foreach(&wind, &log_trec_res, &app_args);
 	}
 

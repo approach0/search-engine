@@ -518,7 +518,7 @@ math_expr_prefix_score_on_merge(
 						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
 						       trans_symbol(item->lf_symb[k]));
 						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-						pq_print(*pq, 20);
+						//pq_print(*pq, 20);
 						printf("\n");
 					}
 #else
