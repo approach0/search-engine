@@ -61,7 +61,7 @@ void pq_reset(struct math_prefix_qry *pq)
 void pq_print_dirty_array(struct math_prefix_qry *pq)
 {
 	uint32_t i;
-	printf("dirty array: ");
+	printf("dirty array (len = %u): ", pq->n_dirty);
 	for (i = 0; i < pq->n_dirty; i++) {
 		struct math_prefix_loc   loc = pq->dirty[i];
 		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
@@ -275,5 +275,40 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 	}
 	printf("joint nodes = %u \n", n_joint_nodes);
 #endif
+	return n_joint_nodes;
+}
+
+uint32_t pq_align_old(struct math_prefix_qry *pq, uint32_t *topk,
+                      struct math_prefix_loc *rmap, uint32_t k)
+{
+	uint32_t i, j = 0;
+	uint64_t exclude_qmask = 0;
+	uint64_t exclude_dmask = 0;
+	struct math_prefix_loc loc;
+	struct math_prefix_cell *cell;
+	uint32_t n_joint_nodes = 0;
+
+	counting_sort(pq);
+
+	i = pq->n_dirty;
+	while (i && j < k) {
+		i = i - 1;
+		loc = pq->dirty[i];
+		cell = &pq->cell[loc.qr][loc.dr];
+
+		if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
+			/* intersect */
+			continue;
+		} else {
+			/* greedily assume the two max-subtrees match */
+			topk[j] = cell->cnt;
+			rmap[j].qr = loc.qr;
+			rmap[j].dr = loc.dr;
+			j++;
+			exclude_qmask |= cell->qmask;
+			exclude_dmask |= cell->dmask;
+		}
+	}
+
 	return n_joint_nodes;
 }

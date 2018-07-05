@@ -16,7 +16,7 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-// #define DEBUG_MATH_SCORE_INSPECT
+//#define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -25,8 +25,8 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-	if (0 == strcmp(url, "Attenuation:3") ||
-	    0 == strcmp(url, "AB_magnitude:1")) {
+	if (0 == strcmp(url, "Anisotropic_Network_Model:4") ||
+	    0 == strcmp(url, "- nothing")) {
 
 //	if (doc_id == 15497 || doc_id == 485333) {
 
@@ -105,8 +105,8 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
-	printf("st0 = %f \n", st0);
+	printf("t = %u, %u, %u, qn=%u, dn=%u \n", t[0],t[1],t[2], qn, dn);
+	printf("st0 = %f, sy0 = %f \n", st0, sy0);
 	printf("fmeasure = %f, score = %f \n", fmeasure, score);
 #endif
 	score = score * 100000.f;
@@ -486,9 +486,6 @@ math_expr_prefix_score_on_merge(
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		inspect = score_inspect_filter(po_item->doc_id, indices);
-
-//		if (po_item && po_item->doc_id == 1)
-//			inspect = 1;
 #endif
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
@@ -531,11 +528,12 @@ math_expr_prefix_score_on_merge(
 #ifdef MATH_SLOW_SEARCH
 	const int K = 3;
 #else
-	const int K = 1;
+	const int K = 3; // 1;
 #endif
 
 	/* sub-structure align */
-	n_joint_nodes = pq_align(pq, topk_cnt, rmap, K);
+	//n_joint_nodes = pq_align(pq, topk_cnt, rmap, K);
+	n_joint_nodes = pq_align_old(pq, topk_cnt, rmap, K);
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 		pq_print_dirty_array(pq);
@@ -550,9 +548,10 @@ math_expr_prefix_score_on_merge(
 	(void)lcs;
 
 	if (po_item) {
+		uint32_t dn = (po_item->n_lr_paths) ? po_item->n_lr_paths : MAX_MATH_PATHS;
 		struct math_expr_sim_factors factors = {
 			symbol_sim, 0 /* search depth */,
-			mesa->n_qry_lr_paths, po_item->n_lr_paths,
+			mesa->n_qry_lr_paths, dn,
 			topk_cnt, K, n_joint_nodes, lcs
 		};
 		ret.doc_id = po_item->doc_id;

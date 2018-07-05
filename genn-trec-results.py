@@ -17,6 +17,9 @@ with open(fname) as f:
         qry_id = fields[0]
         latex = ' '.join(fields[1:])
         exestr = "./searchd/scripts/mathonly-qry.py '{}' {}".format(latex, qry_id)
+        if len(sys.argv) > 1 and sys.argv[1] == '--dry-run':
+            print(exestr)
+            continue
         # execute
         t0 = time.time()
         os.system(exestr);
