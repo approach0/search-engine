@@ -189,8 +189,8 @@ static void popmax_sort(struct math_prefix_qry *pq)
 	}
 }
 
-uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
-                  struct math_prefix_loc *rmap, uint32_t k)
+uint32_t pq_align_v2(struct math_prefix_qry *pq, uint32_t *topk,
+                     struct math_prefix_loc *rmap, uint32_t k)
 {
 	uint32_t i, j = 0;
 	uint64_t exclude_qmask = 0;
@@ -199,7 +199,7 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 	struct math_prefix_cell *cell;
 	uint32_t n_joint_nodes = 0;
 
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
+#ifdef MATH_COMPUTE_R_CNT
 	uint64_t matched_qmask[MAX_LEAVES];
 	uint64_t matched_dmask[MAX_LEAVES];
 	uint32_t qmap[MAX_NODE_IDS] = {0};
@@ -220,7 +220,7 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 		loc = pq->dirty[i];
 		cell = &pq->cell[loc.qr][loc.dr];
 
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
+#ifdef MATH_COMPUTE_R_CNT
 		for (uint32_t t = 0; t < j; t++) {
 			uint64_t overlap_qmask = matched_qmask[t] & cell->qmask;
 			uint64_t overlap_dmask = matched_dmask[t] & cell->dmask;
@@ -253,7 +253,7 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 			printf("max_cell[%u](qr%u, dr%u) = %u\n", j, loc.qr, loc.dr, cell->cnt);
 			printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
-#ifdef MATH_PREFIX_QRY_JOINT_NODE_METRICS
+#ifdef MATH_COMPUTE_R_CNT
 			qmap[loc.qr] = loc.dr;
 			dmap[loc.dr] = loc.qr;
 			matched_qmask[j] = cell->qmask;
@@ -269,17 +269,11 @@ uint32_t pq_align(struct math_prefix_qry *pq, uint32_t *topk,
 		}
 	}
 
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-	for (i = 0; i < k; i++) {
-		printf("top[%u] = %u \n", i, topk[i]);
-	}
-	printf("joint nodes = %u \n", n_joint_nodes);
-#endif
 	return n_joint_nodes;
 }
 
-uint32_t pq_align_old(struct math_prefix_qry *pq, uint32_t *topk,
-                      struct math_prefix_loc *rmap, uint32_t k)
+uint32_t pq_align_v1(struct math_prefix_qry *pq, uint32_t *topk,
+                     struct math_prefix_loc *rmap, uint32_t k)
 {
 	uint32_t i, j = 0;
 	uint64_t exclude_qmask = 0;
@@ -311,4 +305,95 @@ uint32_t pq_align_old(struct math_prefix_qry *pq, uint32_t *topk,
 	}
 
 	return n_joint_nodes;
+}
+
+uint32_t pq_align_v3(struct math_prefix_qry *pq, uint32_t *topk,
+                     struct math_prefix_loc *rmap, uint32_t k)
+{
+	uint64_t exclude_qmask = 0;
+	uint64_t exclude_dmask = 0;
+	uint32_t r_cnt = 0;
+
+#ifdef MATH_COMPUTE_R_CNT
+	uint64_t matched_qmask[k];
+	uint64_t matched_dmask[k];
+	uint32_t qmap[MAX_NODE_IDS] = {0};
+	uint32_t dmap[MAX_NODE_IDS] = {0};
+#endif
+
+	/* find the top-K disjoint cell (i.e. common subtrees) */
+	for (uint32_t j = 0; j < k; j++) {
+		uint32_t max = 0;
+		uint32_t max_qr, max_dr;
+		uint64_t max_qmask, max_dmask;
+
+		/* for all the dirty cells, find the maximum disjoint cell */
+		for (uint32_t i = 0; i < pq->n_dirty; i++) {
+			struct math_prefix_loc loc = pq->dirty[i];
+			struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+
+			if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
+				/* intersect */
+				continue;
+			} else if (cell->cnt > max) {
+				/* disjoint */
+				max = cell->cnt;
+				max_qr = loc.qr;
+				max_dr = loc.dr;
+				max_qmask = cell->qmask;
+				max_dmask = cell->dmask;
+			}
+		}
+
+		if (max) {
+			/* found the next maximum disjoint cell */
+			topk[j] = max;
+			rmap[j].qr = max_qr;
+			rmap[j].dr = max_dr;
+			exclude_qmask |= max_qmask;
+			exclude_dmask |= max_dmask;
+
+#ifdef MATH_COMPUTE_R_CNT
+			matched_qmask[j] = max_qmask;
+			matched_dmask[j] = max_dmask;
+#endif
+		} else {
+			/* exhuasted all possibility */
+			break;
+		}
+	}
+
+#ifdef MATH_COMPUTE_R_CNT
+	/* go through all the dirty cells again, find internal nodes mapping. */
+	for (uint32_t i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+
+		for (uint32_t j = 0; j < k; j++) {
+			uint64_t overlap_qmask = matched_qmask[j] & cell->qmask;
+			uint64_t overlap_dmask = matched_dmask[j] & cell->dmask;
+
+			if (overlap_qmask && overlap_dmask) {
+				/* internal pair of nodes */
+				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
+					qmap[loc.qr] = loc.dr;
+					dmap[loc.dr] = loc.qr;
+					r_cnt ++;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+					printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+#endif
+				}
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+				else if (qmap[loc.qr] != loc.dr ||
+						 dmap[loc.dr] != loc.qr) {
+					printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
+				}
+#endif
+				break;
+			}
+		}
+	}
+#endif
+
+	return r_cnt;
 }

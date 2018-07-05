@@ -65,7 +65,7 @@
 // #define MATH_SLOW_SEARCH
 
 #ifdef MATH_SLOW_SEARCH
-#define MATH_PREFIX_QRY_JOINT_NODE_METRICS
+#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
 #endif
 
 #define MAX_LEAVES  64

@@ -179,8 +179,11 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	//math_expr_set_score_7(factor, hit);
 	//math_expr_set_score_10(factor, hit);
 	
+#ifdef MATH_SLOW_SEARCH
+	math_expr_set_score_2(factor, hit);
+#else
 	math_expr_set_score_1(factor, hit);
-	//math_expr_set_score_2(factor, hit);
+#endif
 
 	//math_expr_set_score_3(factor, hit);
 }
@@ -532,8 +535,9 @@ math_expr_prefix_score_on_merge(
 #endif
 
 	/* sub-structure align */
-	//n_joint_nodes = pq_align(pq, topk_cnt, rmap, K);
-	n_joint_nodes = pq_align_old(pq, topk_cnt, rmap, K);
+	//n_joint_nodes = pq_align_v1(pq, topk_cnt, rmap, K);
+	//n_joint_nodes = pq_align_v2(pq, topk_cnt, rmap, K);
+	n_joint_nodes = pq_align_v3(pq, topk_cnt, rmap, K);
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 		pq_print_dirty_array(pq);
