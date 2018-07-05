@@ -28,7 +28,10 @@ with open(fname) as f:
         sys.stderr.write('%s %f seconds \n' % (qry_id, t1 - t0))
         sys.stderr.flush()
         # print TREC output
-        with open(output) as ff:
-            trec_output = ff.read()
-            trec_output = trec_output.replace("_QRY_ID_", qry_id)
-            print(trec_output, end='')
+        try:
+            with open(output) as ff:
+                trec_output = ff.read()
+                trec_output = trec_output.replace("_QRY_ID_", qry_id)
+                print(trec_output, end='')
+        except:
+            pass
