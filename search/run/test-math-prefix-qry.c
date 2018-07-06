@@ -10,7 +10,7 @@
 	printf("\n");
 
 #define PRINT_TOP() \
-	pq_align(&pq, topk_cnt, rmap, 3); \
+	pq_align_v1(&pq, topk_cnt, rmap, 3); \
 	for (i = 0; i < 3; i++) { \
 		printf("top%u: %u\n", i, topk_cnt[i]); \
 	} \
