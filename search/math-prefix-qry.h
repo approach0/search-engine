@@ -31,14 +31,23 @@ uint64_t pq_hit(struct math_prefix_qry*,
                 uint32_t, uint32_t,
                 uint32_t, uint32_t);
 
-uint32_t pq_align_v1(struct math_prefix_qry*, uint32_t*,
-                     struct math_prefix_loc*, uint32_t); 
+struct pq_align_res {
+	uint64_t qmask;
+	uint64_t dmask;
+	uint32_t r_cnt;
+};
 
-uint32_t pq_align_v2(struct math_prefix_qry*, uint32_t*,
-                     struct math_prefix_loc*, uint32_t);
+struct pq_align_res
+pq_align_v1(struct math_prefix_qry*, uint32_t*,
+            struct math_prefix_loc*, uint32_t); 
 
-uint32_t pq_align_v3(struct math_prefix_qry*, uint32_t*,
-                     struct math_prefix_loc*, uint32_t);
+struct pq_align_res
+pq_align_v2(struct math_prefix_qry*, uint32_t*,
+            struct math_prefix_loc*, uint32_t); 
+
+struct pq_align_res
+pq_align_v3(struct math_prefix_qry*, uint32_t*,
+            struct math_prefix_loc*, uint32_t); 
 
 void pq_print_dirty_array(struct math_prefix_qry*);
 

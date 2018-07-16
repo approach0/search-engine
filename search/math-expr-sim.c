@@ -25,10 +25,10 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-	if (0 == strcmp(url, "Anisotropic_Network_Model:4") ||
-	    0 == strcmp(url, "- nothing")) {
+//	if (0 == strcmp(url, "Quantum_finance:1") ||
+//	    0 == strcmp(url, "Order_statistic:46")) {
 
-//	if (doc_id == 15497 || doc_id == 485333) {
+	if (doc_id == 96281 || doc_id == 503653) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -46,52 +46,11 @@ void math_expr_set_score_0(struct math_expr_sim_factors* factor,
 	hit->score = (uint32_t)100;
 }
 
-void math_expr_set_score_7(struct math_expr_sim_factors* factor,
-                           struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.05f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st = st0;
-	float fmeasure = st*sy / (st + sy);
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
-}
-
-void
-math_expr_set_score_10(struct math_expr_sim_factors* factor,
-                    struct math_expr_score_res* hit)
-{
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
-	uint32_t qn = factor->qry_lr_paths;
-	uint32_t dn = factor->doc_lr_paths;
-	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
-	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.05f;
-	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
-	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = fmaxf(0, (float)t[0]/(float)(qn) - 0.1f);
-	float st1 = (float)t[1]/(float)(qn);
-	float st2 = (float)t[2]/(float)(qn);
-	float st = st0 + st1 + st2 / 10.f;
-	float fmeasure = st*sy / (st + sy);
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
-}
-
 /* CIKM-2018 run-1 */
 void math_expr_set_score_1(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	uint32_t *t = factor->topk_cnt;//, jo = factor->joint_nodes;
+	uint32_t *t = factor->topk_cnt;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -117,7 +76,7 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 void math_expr_set_score_2(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	uint32_t *t = factor->topk_cnt; //, jo = factor->joint_nodes;
+	uint32_t *t = factor->topk_cnt;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -146,6 +105,7 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 {
 	uint32_t *t = factor->topk_cnt, jo = factor->joint_nodes;
 	uint32_t lcs = factor->lcs;
+	uint32_t qnn = factor->qry_nodes;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -153,17 +113,19 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)t[0]/(float)(qn);
-	float st1 = (float)t[1]/(float)(qn);
-	float st2 = (float)t[2]/(float)(qn);
-	float st = 0.65f * st0 + 0.3 * st1 + 0.05f * st2 + 0.01f * jo;
+	float st0 = (float)t[0];
+	float st1 = (float)t[1];
+	float st2 = (float)t[2];
+	float stj = (float)jo;
+	float st = (st0 + st1 + st2 + stj) / (float)qnn;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 	(void)lcs;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
+	printf("qmask = %lx, dmask = %lx \n", factor->qmask, factor->dmask);
 	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
-	printf("st = %f, %f, %f, jo = %u \n", st0, st1, st2, jo);
+	printf("st = %f, %f, %f, jo = %u, stj = %f \n", st0, st1, st2, jo, stj);
 	printf("fmeasure = %f, lcs = %u, score = %f \n", fmeasure, lcs, score);
 #endif
 	score = score * 100000.f;
@@ -180,12 +142,11 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	//math_expr_set_score_10(factor, hit);
 	
 #ifdef MATH_SLOW_SEARCH
-	math_expr_set_score_2(factor, hit);
+	//math_expr_set_score_2(factor, hit);
+	math_expr_set_score_3(factor, hit);
 #else
 	math_expr_set_score_1(factor, hit);
 #endif
-
-	//math_expr_set_score_3(factor, hit);
 }
 
 static mnc_score_t
@@ -469,11 +430,12 @@ math_expr_prefix_score_on_merge(
 	struct math_postlist_item *po_item = NULL;
 
 	struct math_prefix_qry    *pq = &mesa->pq;
-	uint32_t n_joint_nodes,   topk_cnt[3] = {0};
+	uint32_t                  topk_cnt[3] = {0};
 	struct math_prefix_loc    rmap[3] = {0};
 	mnc_score_t               symbol_sim = 0;
 	int                       lcs = 0;
 	struct math_postlist_item *items[pm->n_postings];
+	struct pq_align_res       align_res;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	int inspect = 0;
@@ -495,10 +457,10 @@ math_expr_prefix_score_on_merge(
 				qr = mepa->ele->rid[j];
 				ql = mepa->ele->dup[j]->path_id;
 #ifdef DEBUG_MATH_SCORE_INSPECT
-				if (inspect) {
-					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
-					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
-				}
+//				if (inspect) {
+//					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+//					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+//				}
 #endif
 				for (uint32_t k = 0; k < item->n_paths; k++) {
 					uint32_t dr, dl;
@@ -508,22 +470,22 @@ math_expr_prefix_score_on_merge(
 					uint64_t res = 0;
 					res = pq_hit(pq, qr, ql, dr, dl);
 #ifdef DEBUG_MATH_SCORE_INSPECT
-					if (inspect) {
-						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
-						       trans_symbol(item->lf_symb[k]));
-						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-						//pq_print(*pq, 26);
-						printf("\n");
-					}
+//					if (inspect) {
+//						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
+//						       trans_symbol(item->lf_symb[k]));
+//						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
+//						//pq_print(*pq, 26);
+//						printf("\n");
+//					}
 #else
 					(void)res;
 #endif
 				}
 			}
 #ifdef DEBUG_MATH_SCORE_INSPECT
-			if (inspect) {
-				printf("}\n");
-			}
+//			if (inspect) {
+//				printf("}\n");
+//			}
 #endif
 		}
 	}
@@ -535,9 +497,9 @@ math_expr_prefix_score_on_merge(
 #endif
 
 	/* sub-structure align */
-	//n_joint_nodes = pq_align_v1(pq, topk_cnt, rmap, K);
-	//n_joint_nodes = pq_align_v2(pq, topk_cnt, rmap, K);
-	n_joint_nodes = pq_align_v3(pq, topk_cnt, rmap, K);
+	// align_res = pq_align_v1(pq, topk_cnt, rmap, K);
+	// align_res = pq_align_v2(pq, topk_cnt, rmap, K);
+	align_res = pq_align_v3(pq, topk_cnt, rmap, K);
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 		pq_print_dirty_array(pq);
@@ -554,9 +516,9 @@ math_expr_prefix_score_on_merge(
 	if (po_item) {
 		uint32_t dn = (po_item->n_lr_paths) ? po_item->n_lr_paths : MAX_MATH_PATHS;
 		struct math_expr_sim_factors factors = {
-			symbol_sim, 0 /* search depth */,
-			mesa->n_qry_lr_paths, dn,
-			topk_cnt, K, n_joint_nodes, lcs
+			symbol_sim, 0 /* search depth */, mesa->n_qry_lr_paths, dn,
+			topk_cnt, K, align_res.r_cnt, lcs, mesa->n_qry_max_node,
+			align_res.qmask, align_res.dmask
 		};
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;

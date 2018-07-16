@@ -172,6 +172,8 @@ void optr_print(struct optr_node *optr, FILE *fh)
 	if (optr == NULL)
 		return;
 
+//	uint32_t max_node_id = optr_max_node_id(optr);
+//	printf("max node ID: %u\n", max_node_id);
 	tree_foreach(&optr->tnd, &tree_pre_order_DFS,
 	             &print, 0, fh);
 }

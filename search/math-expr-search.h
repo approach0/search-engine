@@ -30,6 +30,7 @@ struct math_extra_score_arg {
 	bool     stop_dir_search;
 	void    *expr_srch_arg;
 	struct math_prefix_qry pq;
+	uint32_t n_qry_max_node;
 };
 
 enum math_expr_search_policy {

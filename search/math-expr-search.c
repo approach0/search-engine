@@ -201,6 +201,7 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 	mes_arg.stop_dir_search = 0;
 	mes_arg.expr_srch_arg   = on_dm_args->expr_srch_arg;
 	mes_arg.pq = pq_allocate(on_dm_args->n_max_qry_node_id);
+	mes_arg.n_qry_max_node  = on_dm_args->n_max_qry_node_id;
 
 	/* invoke merger */
 	bool res = posting_merge(pm, on_dm_args->posmerge_op,

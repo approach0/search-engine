@@ -21,6 +21,9 @@ struct math_expr_sim_factors {
 	uint32_t qry_lr_paths, doc_lr_paths;
 	uint32_t *topk_cnt, k, joint_nodes;
 	int lcs;
+	uint32_t qry_nodes;
+	uint64_t qmask;
+	uint64_t dmask;
 };
 
 void math_expr_set_score(struct math_expr_sim_factors*,

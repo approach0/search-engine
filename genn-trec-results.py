@@ -6,7 +6,7 @@ import sys
 # ./search/run/test-search.out -n -i ./tmp/ -m 'a+b' -q 'NTCIR12-MathWiki-123'
 
 fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
-index = "/home/tk/Desktop/approach0/indexer/tmp"
+#index = "/home/tk/Desktop/approach0/indexer/tmp"
 output = 'searchd/trec-format-results.tmp'
 
 with open(fname) as f:
