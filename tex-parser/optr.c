@@ -27,6 +27,8 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->ge_hash = 0;
 	n->path_id = 0;
 	n->node_id = 0;
+	n->pos_begin = 0;
+	n->pos_end   = 0;
 	TREE_NODE_CONS(n->tnd);
 	return n;
 }
@@ -121,7 +123,8 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
 	//fprintf(fh, "path_id=%u, ", p->path_id);
-	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->ge_hash));
+	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->ge_hash));
+	fprintf(fh, "pos=[%u, %u].", p->pos_begin, p->pos_end);
 	//fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->fr_hash));
 	fprintf(fh, "\n");
 }

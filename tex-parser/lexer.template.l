@@ -2,8 +2,13 @@
 #include "head.h"
 #include "y.tab.h"
 
+#define SET_TOK_POS(_nd) \
+	(_nd)->pos_begin = lex_cur_bytes - yyleng; \
+	(_nd)->pos_end = lex_cur_bytes;
+
 #define RET_TOK(_symbol, _token, _wc, _gram_token) \
 	yylval.nd = optr_alloc(S_ ## _symbol, T_ ## _token, _wc); \
+	SET_TOK_POS(yylval.nd); \
 	return _gram_token;
 
 #define LVAL (&yylval.nd)
@@ -11,6 +16,10 @@
 #define RET_HACK(_symbol, _token, _wc, _gram_token) \
 	return hack_attach(optr_alloc(S_ ## _symbol, T_ ## _token, _wc), \
 	                              yytext, LVAL, _gram_token);
+
+extern size_t lex_cur_bytes;
+#define YY_USER_ACTION { lex_cur_bytes += yyleng; }
+#define YY_USER_INIT   { lex_cur_bytes = 0; }
 
 int ret_var(char*, struct optr_node **, char);
 int ret_num(char*, struct optr_node **);
@@ -914,6 +923,9 @@ unsigned int ign_stack = 0;
 unsigned int mat_stack = 0;
 int lexer_warning_flag = 0;
 
+/* current positional pointer */
+size_t lex_cur_bytes;
+
 /* =======================================================
  * Symbol ID Space:
  *  0 ... S_N - 1:                         enum symbols
@@ -924,6 +936,7 @@ int ret_var(char *text, struct optr_node **tr, char offset)
 {
 	int c = (int)(text[0] - offset);
 	*tr = optr_alloc(S_N + c, T_VAR, WC_NORMAL_LEAF);
+	SET_TOK_POS(*tr);
 
 	return VAR;
 }
@@ -944,6 +957,8 @@ int ret_qvar_num(char *text, struct optr_node **tr)
 
 	n = num2symbol_id(n);
 	*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF);
+	SET_TOK_POS(*tr);
+
 	return NUM;
 }
 
@@ -962,6 +977,7 @@ int ret_num(char *text, struct optr_node **tr)
 		*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF);
 	}
 
+	SET_TOK_POS(*tr);
 	return NUM;
 }
 
@@ -975,6 +991,7 @@ int ret_float_num(char *text, struct optr_node **tr)
 		sscanf(text, "%u.%u", &integer, &decimal);
 
 		*tr = optr_alloc(S_float, T_FLOAT, WC_NONCOM_OPERATOR);
+		SET_TOK_POS(*tr);
 
 		if (0 == integer) {
 			inttok = T_ZERO;
@@ -986,6 +1003,8 @@ int ret_float_num(char *text, struct optr_node **tr)
 
 		tr_integer = optr_alloc(num2symbol_id(integer), inttok, WC_NORMAL_LEAF);
 		tr_decimal = optr_alloc(num2symbol_id(decimal), T_NUM, WC_NORMAL_LEAF);
+		SET_TOK_POS(tr_integer);
+		SET_TOK_POS(tr_decimal);
 
 		optr_attach(tr_integer, *tr);
 		optr_attach(tr_decimal, *tr);
@@ -996,6 +1015,7 @@ int ret_float_num(char *text, struct optr_node **tr)
 		        text, strlen(text));
 
 		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF);
+		SET_TOK_POS(*tr);
 		return NUM;
 	}
 }
@@ -1010,6 +1030,8 @@ int hack_attach(struct optr_node *tr, char *text, struct optr_node **ret_tr, int
 
 	tr_a = optr_alloc(num2symbol_id(a), T_NUM, WC_NORMAL_LEAF);
 	tr_b = optr_alloc(num2symbol_id(b), T_NUM, WC_NORMAL_LEAF);
+	SET_TOK_POS(tr_a);
+	SET_TOK_POS(tr_a);
 
 	optr_attach(tr_a, tr);
 	optr_attach(tr_b, tr);

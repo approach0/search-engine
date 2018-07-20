@@ -12,6 +12,7 @@ struct optr_node {
 	symbol_id_t      fr_hash, ge_hash;
 	uint32_t         path_id;
 	uint32_t         node_id;
+	uint32_t         pos_begin, pos_end;
 	struct tree_node tnd;
 };
 
