@@ -50,7 +50,7 @@ void math_expr_set_score_0(struct math_expr_sim_factors* factor,
 void math_expr_set_score_1(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	uint32_t *t = factor->topk_cnt;
+	struct pq_align_res *ar = factor->align_res;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -58,16 +58,11 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)t[0]/(float)(qn);
+	float st0 = (float)ar[0].width /(float)(qn);
 	float st = st0;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("t = %u, %u, %u, qn=%u, dn=%u \n", t[0],t[1],t[2], qn, dn);
-	printf("st0 = %f, sy0 = %f \n", st0, sy0);
-	printf("fmeasure = %f, score = %f \n", fmeasure, score);
-#endif
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
 }
@@ -76,7 +71,7 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 void math_expr_set_score_2(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	uint32_t *t = factor->topk_cnt;
+	struct pq_align_res *ar = factor->align_res;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -84,17 +79,13 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)t[0]/(float)(qn);
-	float st1 = (float)t[1]/(float)(qn);
-	float st2 = (float)t[2]/(float)(qn);
+	float st0 = (float)ar[0].width / (float)(qn);
+	float st1 = (float)ar[1].width / (float)(qn);
+	float st2 = (float)ar[2].width / (float)(qn);
 	float st = 0.65f * st0 + 0.3 * st1 + 0.05f * st2;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
-	printf("st = %f, %f, %f \n", st0, st1, st2);
-	printf("fmeasure = %f, score = %f \n", fmeasure, score);
-#endif
+
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
 }
@@ -103,7 +94,8 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 void math_expr_set_score_3(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	uint32_t *t = factor->topk_cnt, jo = factor->joint_nodes;
+	struct pq_align_res *ar = factor->align_res;
+	uint32_t jo = factor->joint_nodes;
 	uint32_t lcs = factor->lcs;
 	uint32_t qnn = factor->qry_nodes;
 	uint32_t qn = factor->qry_lr_paths;
@@ -113,21 +105,15 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)t[0];
-	float st1 = (float)t[1];
-	float st2 = (float)t[2];
+	float st0 = (float)ar[0].width / (float)(qn);
+	float st1 = (float)ar[1].width / (float)(qn);
+	float st2 = (float)ar[2].width / (float)(qn);
 	float stj = (float)jo;
 	float st = (st0 + st1 + st2 + stj) / (float)qnn;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 	(void)lcs;
 
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	printf("qmask = %lx, dmask = %lx \n", factor->qmask, factor->dmask);
-	printf("t = %u, %u, %u, len=%u \n", t[0],t[1],t[2], qn);
-	printf("st = %f, %f, %f, jo = %u, stj = %f \n", st0, st1, st2, jo, stj);
-	printf("fmeasure = %f, lcs = %u, score = %f \n", fmeasure, lcs, score);
-#endif
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
 }
@@ -142,8 +128,8 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	//math_expr_set_score_10(factor, hit);
 	
 #ifdef MATH_SLOW_SEARCH
-	//math_expr_set_score_2(factor, hit);
-	math_expr_set_score_3(factor, hit);
+	math_expr_set_score_2(factor, hit);
+	//math_expr_set_score_3(factor, hit);
 #else
 	math_expr_set_score_1(factor, hit);
 #endif
@@ -152,7 +138,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 static mnc_score_t
 prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
                             struct math_postlist_item *items[],
-                            struct math_prefix_loc *rmap, uint32_t k)
+                            struct pq_align_res *align_res, uint32_t k)
 {
 	/* reset mnc for scoring new document */
 	mnc_reset_docs();
@@ -168,12 +154,12 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 				ql = mepa->ele->dup[j]->path_id;
 
 				for (uint32_t m = 0; m < k; m++) {
-					if (qr == rmap[m].qr) {
+					if (qr == align_res[m].qr) {
 						for (uint32_t k = 0; k < item->n_paths; k++) {
 							uint32_t dr, dl;
 							dr = item->subr_id[k];
 							dl = item->leaf_id[k];
-							if (dr == rmap[m].dr) {
+							if (dr == align_res[m].dr) {
 								uint32_t slot;
 								struct mnc_ref mnc_ref;
 								mnc_ref.sym = item->lf_symb[k];
@@ -430,12 +416,9 @@ math_expr_prefix_score_on_merge(
 	struct math_postlist_item *po_item = NULL;
 
 	struct math_prefix_qry    *pq = &mesa->pq;
-	uint32_t                  topk_cnt[3] = {0};
-	struct math_prefix_loc    rmap[3] = {0};
 	mnc_score_t               symbol_sim = 0;
 	int                       lcs = 0;
 	struct math_postlist_item *items[pm->n_postings];
-	struct pq_align_res       align_res;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	int inspect = 0;
@@ -491,15 +474,14 @@ math_expr_prefix_score_on_merge(
 	}
 
 #ifdef MATH_SLOW_SEARCH
-	const int K = 3;
+	#define K 3
 #else
-	const int K = 3; // 1;
+	#define K 3 /* 1 */
 #endif
-
 	/* sub-structure align */
-	// align_res = pq_align_v1(pq, topk_cnt, rmap, K);
-	// align_res = pq_align_v2(pq, topk_cnt, rmap, K);
-	align_res = pq_align_v3(pq, topk_cnt, rmap, K);
+	struct pq_align_res align_res[K] = {0};
+	uint32_t r_cnt = pq_align(pq, align_res, K);
+
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 		pq_print_dirty_array(pq);
@@ -507,7 +489,7 @@ math_expr_prefix_score_on_merge(
 	pq_reset(pq);
 
 	/* symbol set similarity */
-	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, rmap, K);
+	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, align_res, K);
 
 	/* symbol sequence similarity */
 	//lcs = prefix_symbolseq_similarity(cur_min, pm);
@@ -517,8 +499,7 @@ math_expr_prefix_score_on_merge(
 		uint32_t dn = (po_item->n_lr_paths) ? po_item->n_lr_paths : MAX_MATH_PATHS;
 		struct math_expr_sim_factors factors = {
 			symbol_sim, 0 /* search depth */, mesa->n_qry_lr_paths, dn,
-			topk_cnt, K, align_res.r_cnt, lcs, mesa->n_qry_max_node,
-			align_res.qmask, align_res.dmask
+			align_res, K, r_cnt, lcs, mesa->n_qry_max_node
 		};
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;

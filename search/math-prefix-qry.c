@@ -31,6 +31,7 @@ void pq_free(struct math_prefix_qry pq)
 	free(pq.dirty);
 }
 
+/* for debug */
 int pq_mask_is_clean(struct math_prefix_qry *pq)
 {
 	uint64_t res = 0;
@@ -143,174 +144,8 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 	}
 }
 
-static void counting_sort(struct math_prefix_qry *pq)
-{
-	uint32_t i, count[MAX_CELL_CNT] = {0};
-	struct math_prefix_loc dirty[pq->n_dirty];
-
-	for (i = 0; i < pq->n_dirty; i++) {
-		struct math_prefix_loc   loc = pq->dirty[i];
-		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-		count[cell->cnt] ++;
-	}
-
-	for (i = 1; i < MAX_CELL_CNT; ++i)
-		count[i] += count[i - 1];
-	
-	for (i = 0; i < pq->n_dirty; i++) {
-		struct math_prefix_loc   loc = pq->dirty[i];
-		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-		dirty[count[cell->cnt] - 1] = pq->dirty[i];
-		count[cell->cnt] -= 1;
-	}
-
-	memcpy(pq->dirty, dirty, sizeof(struct math_prefix_loc) * pq->n_dirty);
-}
-
-static void popmax_sort(struct math_prefix_qry *pq)
-{
-	uint32_t max_cnt = 0;
-	uint32_t max_idx = 0;
-
-	for (uint32_t i = 0; i < pq->n_dirty; i++) {
-		struct math_prefix_loc   loc = pq->dirty[i];
-		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
-		if (cell->cnt > max_cnt) {
-			max_cnt = cell->cnt;
-			max_idx = i;
-		}
-	}
-
-	if (max_cnt > 0) {
-		/* swap */
-		struct math_prefix_loc save = pq->dirty[max_idx];
-		pq->dirty[max_idx] = pq->dirty[pq->n_dirty - 1];
-		pq->dirty[pq->n_dirty - 1] = save;
-	}
-}
-
-struct pq_align_res
-pq_align_v1(struct math_prefix_qry *pq, uint32_t *topk,
-            struct math_prefix_loc *rmap, uint32_t k)
-{
-	uint32_t i, j = 0;
-	uint64_t exclude_qmask = 0;
-	uint64_t exclude_dmask = 0;
-	struct math_prefix_loc loc;
-	struct math_prefix_cell *cell;
-
-	counting_sort(pq);
-
-	i = pq->n_dirty;
-	while (i && j < k) {
-		i = i - 1;
-		loc = pq->dirty[i];
-		cell = &pq->cell[loc.qr][loc.dr];
-
-		if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
-			/* intersect */
-			continue;
-		} else {
-			/* greedily assume the two max-subtrees match */
-			topk[j] = cell->cnt;
-			rmap[j].qr = loc.qr;
-			rmap[j].dr = loc.dr;
-			j++;
-			exclude_qmask |= cell->qmask;
-			exclude_dmask |= cell->dmask;
-		}
-	}
-
-	return ((struct pq_align_res) {exclude_qmask, exclude_dmask, 0});
-}
-
-struct pq_align_res
-pq_align_v2(struct math_prefix_qry *pq, uint32_t *topk,
-            struct math_prefix_loc *rmap, uint32_t k)
-{
-	uint32_t i, j = 0;
-	uint64_t exclude_qmask = 0;
-	uint64_t exclude_dmask = 0;
-	struct math_prefix_loc loc;
-	struct math_prefix_cell *cell;
-	uint32_t n_joint_nodes = 0;
-
-#ifdef MATH_COMPUTE_R_CNT
-	uint64_t matched_qmask[MAX_LEAVES];
-	uint64_t matched_dmask[MAX_LEAVES];
-	uint32_t qmap[MAX_NODE_IDS] = {0};
-	uint32_t dmap[MAX_NODE_IDS] = {0};
-#endif
-
-#ifdef MATH_SLOW_SEARCH
-	/* sort dirty array in ascending order */
-	counting_sort(pq);
-#else
-	/* sort dirty array s.t. right-most is the max */
-	popmax_sort(pq);
-#endif
-
-	i = pq->n_dirty;
-	while (i && j < k) {
-		i = i - 1;
-		loc = pq->dirty[i];
-		cell = &pq->cell[loc.qr][loc.dr];
-
-#ifdef MATH_COMPUTE_R_CNT
-		for (uint32_t t = 0; t < j; t++) {
-			uint64_t overlap_qmask = matched_qmask[t] & cell->qmask;
-			uint64_t overlap_dmask = matched_dmask[t] & cell->dmask;
-			if (overlap_qmask && overlap_dmask) {
-				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
-					qmap[loc.qr] = loc.dr;
-					dmap[loc.dr] = loc.qr;
-					n_joint_nodes ++;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-					printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
-#endif
-				}
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-				else if (qmap[loc.qr] != loc.dr ||
-						 dmap[loc.dr] != loc.qr) {
-					printf("qr%u >-< dr%u \n", loc.qr, loc.dr);
-				}
-#endif
-				break;
-			}
-		}
-#endif
-
-		if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
-			/* intersect */
-			continue;
-		} else {
-			/* greedily assume the two max-subtrees match */
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-			printf("max_cell[%u](qr%u, dr%u) = %u\n", j, loc.qr, loc.dr, cell->cnt);
-			printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
-#endif
-#ifdef MATH_COMPUTE_R_CNT
-			qmap[loc.qr] = loc.dr;
-			dmap[loc.dr] = loc.qr;
-			matched_qmask[j] = cell->qmask;
-			matched_dmask[j] = cell->dmask;
-			n_joint_nodes ++;
-#endif
-			topk[j] = cell->cnt;
-			rmap[j].qr = loc.qr;
-			rmap[j].dr = loc.dr;
-			j++;
-			exclude_qmask |= cell->qmask;
-			exclude_dmask |= cell->dmask;
-		}
-	}
-
-	return ((struct pq_align_res) {exclude_qmask, exclude_dmask, n_joint_nodes});
-}
-
-struct pq_align_res
-pq_align_v3(struct math_prefix_qry *pq, uint32_t *topk,
-            struct math_prefix_loc *rmap, uint32_t k)
+uint32_t
+pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
 {
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
@@ -349,9 +184,12 @@ pq_align_v3(struct math_prefix_qry *pq, uint32_t *topk,
 
 		if (max) {
 			/* found the next maximum disjoint cell */
-			topk[j] = max;
-			rmap[j].qr = max_qr;
-			rmap[j].dr = max_dr;
+			res[j].width = max;
+			res[j].qr = max_qr;
+			res[j].dr = max_dr;
+			res[j].qmask = max_qmask;
+			res[j].dmask = max_dmask;
+
 			exclude_qmask |= max_qmask;
 			exclude_dmask |= max_dmask;
 
@@ -397,5 +235,5 @@ pq_align_v3(struct math_prefix_qry *pq, uint32_t *topk,
 	}
 #endif
 
-	return ((struct pq_align_res) {exclude_qmask, exclude_dmask, r_cnt});
+	return r_cnt;
 }

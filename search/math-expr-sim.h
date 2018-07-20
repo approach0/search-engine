@@ -4,6 +4,7 @@
 #include "postmerge/postmerge.h"
 #include "indices/indices.h"
 #include "mnc-score.h"
+#include "math-prefix-qry.h"
 
 struct math_extra_score_arg;
 
@@ -19,11 +20,10 @@ struct math_expr_sim_factors {
 	mnc_score_t mnc_score;
 	uint32_t srch_depth;
 	uint32_t qry_lr_paths, doc_lr_paths;
-	uint32_t *topk_cnt, k, joint_nodes;
+	struct pq_align_res *align_res;
+	uint32_t k, joint_nodes;
 	int lcs;
 	uint32_t qry_nodes;
-	uint64_t qmask;
-	uint64_t dmask;
 };
 
 void math_expr_set_score(struct math_expr_sim_factors*,
