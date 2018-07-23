@@ -10,9 +10,9 @@
 	printf("\n");
 
 #define PRINT_TOP() \
-	pq_align_v1(&pq, topk_cnt, rmap, 3); \
+	pq_align(&pq, align_res, 3); \
 	for (i = 0; i < 3; i++) { \
-		printf("top%u: %u\n", i, topk_cnt[i]); \
+		printf("top%u: %u\n", i, align_res[i].width); \
 	} \
 	printf("\n\n");
 
@@ -20,8 +20,8 @@
 int main()
 {
 	struct math_prefix_qry pq = pq_allocate(16);
-	uint32_t i, topk_cnt[3];
-	struct math_prefix_loc rmap[3];
+	uint32_t i;
+	struct pq_align_res align_res[3];
 	uint64_t ret;
 
 	HIT(5,6, 4,7);
