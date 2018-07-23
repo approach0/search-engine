@@ -8,6 +8,7 @@
 #include "rank.h"
 #include "snippet.h"
 #include "search-utils.h"
+#include "math-expr-highlight.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -150,7 +151,16 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 	} else if (ha->cur_lex_pos == ha->positions[ha->positions_cur].pos) {
 		/* this is the segment of current highlight position,
 		 * push it into snippet with offset information. */
-		snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
+		//snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
+		char *kw_str = mb_str;
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
+		if (ha->positions[ha->positions_cur].qmask[0]) {
+			uint64_t *qmask = ha->positions[ha->positions_cur].qmask;
+			uint64_t *dmask = ha->positions[ha->positions_cur].dmask;
+			kw_str = math_expr_highlight(kw_str, qmask, dmask, MAX_MTREE);
+		}
+#endif
+		snippet_push_highlight(&ha->hi_list, kw_str, offset, sz);
 		/* next highlight position */
 		ha->positions_cur ++;
 	}

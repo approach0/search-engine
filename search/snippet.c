@@ -60,7 +60,7 @@ void snippet_push_highlight(list* hi_li, char* kw_str,
 
 	h->left_str[0]  = '\0';
 	h->right_str[0] = '\0';
-	h->kw_str[0]    = '\0';
+	strcpy(h->kw_str, kw_str);
 
 	LIST_NODE_CONS(h->ln);
 	list_insert_one_at_tail(&h->ln, hi_li, NULL, NULL);
@@ -217,9 +217,9 @@ static LIST_IT_CALLBK(read_file)
 		h->pad_left = newlen;
 	}
 
-	/* read into keyword buffer */
-	nread = fread(h->kw_str, 1, h->kw_end - h->kw_pos, fh);
-	h->kw_str[nread] = '\0';
+	/* skip keyword buffer,
+	 * because it has been filled at snippet_push_highlight() */
+	fseek(fh, h->kw_end - h->kw_pos, SEEK_CUR);
 
 	/* read into right_str buffer */
 	nread = fread(h->right_str, 1, h->pad_right, fh);

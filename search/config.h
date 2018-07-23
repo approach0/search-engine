@@ -72,3 +72,5 @@
 #endif
 
 #define MAX_LEAVES  64
+
+#define HIGHLIGHT_MATH_ALIGNMENT
