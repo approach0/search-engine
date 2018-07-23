@@ -5,16 +5,18 @@
 #include "indices/indices.h"
 #include "mnc-score.h"
 #include "math-prefix-qry.h"
+#include "config.h"
 
 struct math_extra_score_arg;
 
-#pragma pack(push, 1)
 struct math_expr_score_res {
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
 	uint32_t  score;
+	/* postiional info */
+	uint64_t  qmask[MAX_MTREE];
+	uint64_t  dmask[MAX_MTREE];
 };
-#pragma pack(pop)
 
 struct math_expr_sim_factors {
 	mnc_score_t mnc_score;

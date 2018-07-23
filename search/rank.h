@@ -1,12 +1,19 @@
 #pragma once
 #include <stdint.h>
 #include "minheap/minheap.h"
+#include "config.h"
+
+typedef struct hit_occur {
+	position_t  pos;
+	uint64_t    qmask[MAX_MTREE];
+	uint64_t    dmask[MAX_MTREE];
+} hit_occur_t;
 
 struct rank_hit {
-	doc_id_t    docID;
-	float       score;
-	uint32_t    n_occurs;
-	position_t *occurs; /* occur positions */
+	doc_id_t     docID;
+	float        score;
+	uint32_t     n_occurs;
+	hit_occur_t *occurs; /* occur positions */
 };
 
 typedef struct priority_Q {

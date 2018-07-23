@@ -473,14 +473,9 @@ math_expr_prefix_score_on_merge(
 		}
 	}
 
-#ifdef MATH_SLOW_SEARCH
-	#define K 3
-#else
-	#define K 3 /* 1 */
-#endif
 	/* sub-structure align */
-	struct pq_align_res align_res[K] = {0};
-	uint32_t r_cnt = pq_align(pq, align_res, K);
+	struct pq_align_res align_res[MAX_MTREE] = {0};
+	uint32_t r_cnt = pq_align(pq, align_res, MAX_MTREE);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
@@ -489,7 +484,7 @@ math_expr_prefix_score_on_merge(
 	pq_reset(pq);
 
 	/* symbol set similarity */
-	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, align_res, K);
+	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, align_res, MAX_MTREE);
 
 	/* symbol sequence similarity */
 	//lcs = prefix_symbolseq_similarity(cur_min, pm);
@@ -499,10 +494,18 @@ math_expr_prefix_score_on_merge(
 		uint32_t dn = (po_item->n_lr_paths) ? po_item->n_lr_paths : MAX_MATH_PATHS;
 		struct math_expr_sim_factors factors = {
 			symbol_sim, 0 /* search depth */, mesa->n_qry_lr_paths, dn,
-			align_res, K, r_cnt, lcs, mesa->n_qry_max_node
+			align_res, MAX_MTREE, r_cnt, lcs, mesa->n_qry_max_node
 		};
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
+
+		/* set postional information */
+		for (int i = 0; i < MAX_MTREE; i++) {
+			if (align_res[i].width) {
+				ret.qmask[i] = align_res[i].qmask;
+				ret.dmask[i] = align_res[i].dmask;
+			}
+		}
 		
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		if (inspect) {

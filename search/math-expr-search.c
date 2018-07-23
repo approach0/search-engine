@@ -337,7 +337,7 @@ struct math_expr_search_arg {
 	doc_id_t          cur_docID;
 	uint32_t          n_occurs;
 	uint32_t          max_score;
-	position_t        pos_arr[MAX_HIGHLIGHT_OCCURS];
+	hit_occur_t       occurs[MAX_HIGHLIGHT_OCCURS];
 	prox_input_t      prox_in[MAX_MERGE_POSTINGS];
 };
 
@@ -380,7 +380,8 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
 add_hit:
 		if (esa->max_score > 0) {
-			prox_set_input(esa->prox_in + 0, esa->pos_arr, esa->n_occurs);
+			/* always term[0] here */
+			prox_set_input(esa->prox_in + 0, esa->occurs, esa->n_occurs);
 			consider_top_K(esa->rk_res, esa->cur_docID, esa->max_score,
 			               esa->prox_in, 1);
 		}
@@ -388,7 +389,7 @@ add_hit:
 		printf("Final doc#%u score: %u, ", esa->cur_docID, esa->max_score);
 		printf("pos: ");
 		for (uint32_t i = 0; i < esa->n_occurs; i++) {
-			printf("%u ", esa->pos_arr[i]);
+			printf("%u ", esa->occurs[i].pos);
 		}
 		printf("\n");
 #endif
@@ -401,10 +402,16 @@ add_hit:
 	printf("doc#%u, exp#%u, score: %u\n",
 	       res.doc_id, res.exp_id, res.score);
 #endif
-	if (esa->n_occurs < MAX_HIGHLIGHT_OCCURS)
-		esa->pos_arr[esa->n_occurs ++] = res.exp_id;
-	esa->max_score = (esa->max_score > res.score) ? esa->max_score : res.score;
+	if (esa->n_occurs < MAX_HIGHLIGHT_OCCURS) {
+		esa->occurs[esa->n_occurs].pos = res.exp_id;
 
+		hit_occur_t *ho = esa->occurs + esa->n_occurs;
+		memcpy(ho->qmask, res.qmask, MAX_MTREE * sizeof(uint64_t));
+		memcpy(ho->dmask, res.dmask, MAX_MTREE * sizeof(uint64_t));
+		esa->n_occurs ++;
+	}
+
+	esa->max_score = (esa->max_score > res.score) ? esa->max_score : res.score;
 	esa->cur_docID = res.doc_id;
 	esa->cnt ++;
 	return 0;

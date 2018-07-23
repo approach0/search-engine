@@ -3,13 +3,14 @@
 #include "proximity.h"
 
 #define INIT_ARR(_name) \
-	{sizeof(_name) / sizeof(position_t), _name, 0}
+	{sizeof(_name) / sizeof(hit_occur_t), _name, 0}
 
-position_t test1()
+uint32_t test1()
 {
-	position_t arr1[] = {5, 8, 10, 19};
-	position_t arr2[] = {1, 4, 9};
-	position_t arr3[] = {2, 3, 6, 7, 11, 15};
+	hit_occur_t arr1[] = {{5,{0},{0}}, {8,{0},{0}}, {10,{0},{0}}, {19,{0},{0}}};
+	hit_occur_t arr2[] = {{1,{0},{0}}, {4,{0},{0}}, {9,{0},{0}}};
+	hit_occur_t arr3[] = {{2,{0},{0}}, {3,{0},{0}}, {6,{0},{0}}, {7,{0},{0}},
+	                      {11,{0},{0}}, {15,{0},{0}}};
 
 	prox_input_t input[3] = {
 		INIT_ARR(arr1),
@@ -20,11 +21,11 @@ position_t test1()
 	return prox_min_dist(input, 3);
 }
 
-position_t test2()
+uint32_t test2()
 {
-	position_t arr1[] = {8, 9, 11, 12, 13};
-	position_t arr2[] = {1, 2, 3, 4};
-	position_t arr3[] = {16, 17};
+	hit_occur_t arr1[] = {{8,{0},{0}}, {9,{0},{0}}, {11,{0},{0}}, {12,{0},{0}}, {13,{0},{0}}};
+	hit_occur_t arr2[] = {{1,{0},{0}}, {2,{0},{0}}, {3,{0},{0}}, {4,{0},{0}}};
+	hit_occur_t arr3[] = {{16,{0},{0}}, {17,{0},{0}}};
 
 	prox_input_t input[3] = {
 		INIT_ARR(arr1),
@@ -35,9 +36,9 @@ position_t test2()
 	return prox_min_dist(input, 3);
 }
 
-position_t test3()
+uint32_t test3()
 {
-	position_t arr1[] = {500, 512};
+	hit_occur_t arr1[] = {{500,{0},{0}}, {512,{0},{0}}};
 
 	prox_input_t input[1] = {
 		INIT_ARR(arr1)

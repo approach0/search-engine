@@ -10,17 +10,17 @@ void prox_print(prox_input_t *in, uint32_t n)
 		printf("position_array[%d] (len=%u): ", i, in[i].n_pos);
 		for (j = 0; j < in[i].n_pos; j++)
 			if (j == in[i].cur)
-				printf("[%d] ", in[i].pos_arr[j]);
+				printf("[%d] ", in[i].pos[j].pos);
 			else
-				printf("%d ", in[i].pos_arr[j]);
+				printf("%d ", in[i].pos[j].pos);
 		printf("\n");
 	}
 }
 
 #define CUR_POS(_in, _i) \
-	_in[_i].pos_arr[_in[_i].cur]
+	_in[_i].pos[_in[_i].cur].pos
 
-position_t prox_min_dist(prox_input_t* in, uint32_t n)
+uint32_t prox_min_dist(prox_input_t* in, uint32_t n)
 {
 	uint32_t last_idx, last = MAX_N_POSITIONS;
 	uint32_t min_dist = MAX_N_POSITIONS;
@@ -72,7 +72,7 @@ position_t prox_min_dist(prox_input_t* in, uint32_t n)
 
 #include <math.h>
 
-float prox_calc_score(position_t min_dist)
+float prox_calc_score(uint32_t min_dist)
 {
 	float dis = (float)min_dist;
 

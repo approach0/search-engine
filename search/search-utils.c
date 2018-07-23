@@ -16,21 +16,22 @@
  * new rank hit
  */
 #define CUR_POS(_in, _i) \
-	_in[_i].pos_arr[_in[_i].cur]
+	_in[_i].pos[_in[_i].cur].pos
 
 static uint32_t
-mergesort(position_t *dest, prox_input_t* in, uint32_t n)
+mergesort(hit_occur_t *dest, prox_input_t* in, uint32_t n)
 {
 	uint32_t dest_end = 0;
 
 	while (dest_end < MAX_HIGHLIGHT_OCCURS) {
-		uint32_t i, min_idx, min = MAX_N_POSITIONS;
+		uint32_t i, min_idx, min_cur, min = MAX_N_POSITIONS;
 
 		for (i = 0; i < n; i++)
 			if (in[i].cur < in[i].n_pos)
 				if (CUR_POS(in, i) < min) {
 					min = CUR_POS(in, i);
 					min_idx = i;
+					min_cur = in[i].cur;
 				}
 
 		if (min == MAX_N_POSITIONS)
@@ -41,8 +42,8 @@ mergesort(position_t *dest, prox_input_t* in, uint32_t n)
 			in[min_idx].cur ++;
 
 		if (dest_end == 0 || /* first put */
-		    dest[dest_end - 1] != min /* unique */)
-			dest[dest_end++] = min;
+		    dest[dest_end - 1].pos != min /* unique */)
+			dest[dest_end++] = in[min_idx].pos[min_cur];
 	}
 
 	return dest_end;
@@ -57,7 +58,7 @@ struct rank_hit *new_hit(doc_id_t hitID, float score,
 	hit->docID = hitID;
 	hit->score = score;
 
-	hit->occurs = malloc(sizeof(position_t) * MAX_HIGHLIGHT_OCCURS);
+	hit->occurs = malloc(sizeof(hit_occur_t) * MAX_HIGHLIGHT_OCCURS);
 	hit->n_occurs = mergesort(hit->occurs, prox_in, n);
 
 	return hit;
@@ -222,7 +223,7 @@ static int highlighter_arg_lex_setter(struct lex_slice *slice)
 #ifdef DEBUG_HILIGHT_SEG
 	foreach_seg(slice, &debug_print_highlight_seg, &hi_arg);
 #else
-	foreach_seg(slice, &add_highlight_seg, &hi_arg);
+	foreach_seg(slice, &add_highlight_seg, &hi_arg); /* add highlight */
 #endif
 
 	return 0;
@@ -234,7 +235,7 @@ list prepare_snippet(struct rank_hit* hit, const char *text,
 	FILE *text_fh;
 
 	/* prepare highlighter arguments */
-	hi_arg.pos_arr = hit->occurs;
+	/////////// hi_arg.pos_arr = hit->occurs;
 	hi_arg.pos_arr_now = 0;
 	hi_arg.pos_arr_sz = hit->n_occurs;
 	hi_arg.cur_lex_pos = 0;
@@ -320,7 +321,7 @@ print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
 	char  *str;
 	size_t str_sz;
 	list   highlight_list;
-	position_t pos[1] = {expID};
+	hit_occur_t pos[1] = {{expID,{0},{0}}};
 	struct rank_hit mock_hit = {docID, 0, 1, pos};
 
 	printf("expr#%u @ doc#%u:\n", expID, docID);
