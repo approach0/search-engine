@@ -592,3 +592,42 @@ uint32_t get_subpath_nodeid_at(struct subpath *sp, uint32_t height)
 
 	return args.ret_node_id;
 }
+
+static TREE_IT_CALLBK(gen_idpos_map)
+{
+	P_CAST(map, uint32_t, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+
+	if (p->tnd.sons.now == NULL /* is leaf */) {
+		if (p->path_id < MAX_SUBPATH_ID) {
+			map[p->path_id] |= (p->pos_begin << 16);
+			map[p->path_id] |= (p->pos_end   << 0 );
+		}
+	}
+
+	LIST_GO_OVER;
+}
+
+int optr_gen_idpos_map(uint32_t *map, struct optr_node* optr)
+{
+	/* clear bitmap */
+	memset(map, 0, sizeof(uint32_t) * MAX_SUBPATH_ID);
+
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_idpos_map,
+	             0 /* including root */, map);
+	return 0;
+}
+
+int optr_print_idpos_map(uint32_t* map)
+{
+	for (int i = 0; i < MAX_SUBPATH_ID; i++) {
+		if (map[i]) {
+			uint32_t begin, end;
+			begin = map[i] >> 16;
+			end = map[i] & 0xffff;
+			printf("pathID#%u: [%u, %u]\n", i, begin, end);
+		}
+	}
+
+	return 0;
+}

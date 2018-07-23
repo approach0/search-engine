@@ -35,3 +35,7 @@ struct subpaths optr_subpaths(struct optr_node*);
 void optr_leafroot_path(struct optr_node*);
 
 uint32_t optr_max_node_id(struct optr_node*);
+
+int optr_gen_idpos_map(uint32_t*, struct optr_node*);
+
+int optr_print_idpos_map(uint32_t*);

@@ -50,6 +50,7 @@ struct tex_parse_ret {
 	uint32_t         code;
 	char             msg[MAX_PARSER_ERR_STR];
 	struct subpaths  subpaths;
+	uint32_t         idposmap[MAX_SUBPATH_ID];
 	void            *operator_tree;
 };
 
