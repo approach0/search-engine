@@ -2,6 +2,7 @@
 #include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indexer/index.h" /* for text_lexer and indices */
 #include "wstring/wstring.h" /* for wstr2mbstr() */
+#include "txt-seg/config.h" /* for MAX_TXT_SEG_LEN */
 
 #include "config.h"
 #include "proximity.h"
@@ -151,16 +152,27 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 	} else if (ha->cur_lex_pos == ha->positions[ha->positions_cur].pos) {
 		/* this is the segment of current highlight position,
 		 * push it into snippet with offset information. */
-		//snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
-		char *kw_str = mb_str;
-#ifdef HIGHLIGHT_MATH_ALIGNMENT
 		if (ha->positions[ha->positions_cur].qmask[0]) {
-			uint64_t *qmask = ha->positions[ha->positions_cur].qmask;
+			/* this is math keyword */
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
+			char hi_kw[MAX_TXT_SEG_LEN];
 			uint64_t *dmask = ha->positions[ha->positions_cur].dmask;
-			kw_str = math_expr_highlight(kw_str, qmask, dmask, MAX_MTREE);
-		}
+			uint64_t *qmask = ha->positions[ha->positions_cur].dmask;
+			strip_math_tag(mb_str, sz); // strip [imath] tags
+			char *hi_tex = math_oprand_highlight(mb_str, dmask, MAX_MTREE);
+			snprintf(hi_kw, sizeof(hi_kw),
+				"<qmask>%lx,%lx,%lx</qmask>[imath]%s[/imath]",
+				qmask[0], qmask[1], qmask[2], hi_tex
+			);
+			snippet_push_highlight(&ha->hi_list, hi_kw, offset, sz);
+#else
+			snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
 #endif
-		snippet_push_highlight(&ha->hi_list, kw_str, offset, sz);
+		} else {
+			/* this is text keyword */
+			snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
+		}
+
 		/* next highlight position */
 		ha->positions_cur ++;
 	}
