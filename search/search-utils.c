@@ -110,10 +110,10 @@ struct seg_it_args {
 };
 
 struct highlighter_arg {
-	position_t *pos_arr;
-	uint32_t    pos_arr_now, pos_arr_sz;
-	uint32_t    cur_lex_pos;
-	list        hi_list; /* highlight list */
+	hit_occur_t *positions;
+	uint32_t     positions_cur, positions_len;
+	uint32_t     cur_lex_pos;
+	list         hi_list; /* highlight list */
 };
 
 static void
@@ -127,11 +127,11 @@ debug_print_highlight_seg(char *mb_str, uint32_t offset,
                           size_t sz, void *arg)
 {
 	P_CAST(ha, struct highlighter_arg, arg);
-	uint32_t i, n = ha->pos_arr_sz;
+	uint32_t i, n = ha->positions_len;
 
 	printf("%u: `%s' ", ha->cur_lex_pos, mb_str);
 	for (i = 0; i < n; i++) {
-		printf("%u-", ha->pos_arr[i]);
+		printf("%u-", ha->positions[i].pos);
 	}
 
 	printf("\n");
@@ -143,16 +143,16 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 {
 	P_CAST(ha, struct highlighter_arg, arg);
 
-	if (ha->pos_arr_now == ha->pos_arr_sz) {
+	if (ha->positions_cur == ha->positions_len) {
 		/* all the highlight word is iterated */
 		return;
 
-	} else if (ha->cur_lex_pos == ha->pos_arr[ha->pos_arr_now]) {
+	} else if (ha->cur_lex_pos == ha->positions[ha->positions_cur].pos) {
 		/* this is the segment of current highlight position,
 		 * push it into snippet with offset information. */
 		snippet_push_highlight(&ha->hi_list, mb_str, offset, sz);
 		/* next highlight position */
-		ha->pos_arr_now ++;
+		ha->positions_cur ++;
 	}
 
 	/* next position */
@@ -235,9 +235,9 @@ list prepare_snippet(struct rank_hit* hit, const char *text,
 	FILE *text_fh;
 
 	/* prepare highlighter arguments */
-	/////////// hi_arg.pos_arr = hit->occurs;
-	hi_arg.pos_arr_now = 0;
-	hi_arg.pos_arr_sz = hit->n_occurs;
+	hi_arg.positions = hit->occurs;
+	hi_arg.positions_cur = 0;
+	hi_arg.positions_len = hit->n_occurs;
 	hi_arg.cur_lex_pos = 0;
 	LIST_CONS(hi_arg.hi_list);
 
