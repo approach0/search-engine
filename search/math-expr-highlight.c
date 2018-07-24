@@ -33,6 +33,14 @@ gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
 	return 0;
 }
 
+void rm_limits(char *str)
+{
+	char *p;
+	while ((p = strstr(str, "\\limits"))) {
+		memset(p, ' ', strlen("\\limits"));
+	}
+}
+
 char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 {
 	static char output[MAX_TEX_STRLEN] = "";
@@ -66,5 +74,12 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 		}
 	}
 	output[cur] = '\0';
+
+	/*
+	 * If lim gets highlighted, then the following `limits' will complain
+	 * about "limits is allowed only on operators" in MathJaX, because the
+	 * lim surrounded by \color{} is not considered operator anymore.
+	 */
+	rm_limits(output);
 	return output;
 }
