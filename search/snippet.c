@@ -11,7 +11,7 @@
 
 /* even a short query can get a long hilighted string, e.g.
  * in the case of math search */
-#define MAX_HIGHLIGHTED_BYTES (MAX_TXT_SEG_BYTES * 1024)
+#define MAX_HIGHLIGHTED_BYTES (MAX_TXT_SEG_BYTES * 64)
 
 /* for terminal colors */
 #include "tex-parser/vt100-color.h"
