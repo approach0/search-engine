@@ -2,6 +2,10 @@ em.hl {
 	background-color: #FF9;
 }
 
+span.qmask {
+	visibility: hidden;
+}
+
 span.imath-err {
 	/* set important to overwrite
 	 * MathJax .noError colors. */

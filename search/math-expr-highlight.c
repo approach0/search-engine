@@ -1,7 +1,7 @@
 #include <string.h>
 #include "tex-parser/tex-parser.h"
-#include "txt-seg/config.h"
 #include "math-expr-highlight.h"
+#include "config.h"
 
 #define MAX_COLOR_STRLEN 32
 
@@ -11,7 +11,7 @@ static char color_map[][MAX_COLOR_STRLEN] = {
 	"Orange"
 };
 
-static void
+static int
 gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
         uint32_t *begin_end_map, uint32_t *begin_color_map)
 {
@@ -21,30 +21,35 @@ gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
 				uint32_t pathID = i + 1;
 				uint32_t begin = ret->idposmap[pathID] >> 16;
 				uint32_t end   = ret->idposmap[pathID] & 0xffff;
+				if (end > MAX_TXT_SEG_BYTES)
+					return 1;
+				// printf("path#%u: %u, %u\n", i + 1, begin, end);
 				begin_end_map[begin] = end;
 				begin_color_map[begin] = t + 1;
-				// printf("path#%u: %u, %u\n", i + 1, begin, end);
 			}
 		}
 	}
 
+	return 0;
 }
 
 char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 {
-	uint32_t begin_end_map[MAX_TXT_SEG_BYTES] = {0};
-	uint32_t begin_color_map[MAX_TXT_SEG_BYTES];
+	static char output[MAX_TEX_STRLEN] = "";
+	uint32_t begin_end_map[MAX_TEX_STRLEN] = {0};
+	uint32_t begin_color_map[MAX_TEX_STRLEN];
 
 	struct tex_parse_ret ret;
 	ret = tex_parse(kw, strlen(kw), 0);
 
-	gen_map(&ret, mask, k, begin_end_map, begin_color_map);
+	if (gen_map(&ret, mask, k, begin_end_map, begin_color_map)) {
+		fprintf(stderr, "Error in gen_map() \n");
+		return kw;
+	}
 
 	/* generate highlighted math TeX string */
-	static char output[MAX_TXT_SEG_BYTES];
-	int cur = 0;
-	output[0] = '\0';
-	char operand[MAX_TXT_SEG_BYTES];
+	int cur = 0; /* current position in output buffer */
+	char operand[MAX_TXT_SEG_BYTES]; /* operand TeX buffer */
 	for (size_t begin = 0; begin < strlen(kw); begin++) {
 		uint32_t end = begin_end_map[begin];
 		if (end) {
