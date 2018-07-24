@@ -1,6 +1,6 @@
 /*
- * MathQuill v0.10.1               http://mathquill.com
- * by Han, Jeanine, and Mary  maintainers@mathquill.com
+ * MathQuill v0.10.1, by Han, Jeanine, and Mary
+ * http://mathquill.com | maintainers@mathquill.com
  *
  * This Source Code Form is subject to the terms of the
  * Mozilla Public License, v. 2.0. If a copy of the MPL
@@ -9,8 +9,8 @@
  */
 @font-face {
   font-family: Symbola;
-  src: url(font/Symbola.eot);
-  src: local("Symbola Regular"), local("Symbola"), url(font/Symbola.woff2) format("woff2"), url(font/Symbola.woff) format("woff"), url(font/Symbola.ttf) format("truetype"), url(font/Symbola.otf) format("opentype"), url(font/Symbola.svg#Symbola) format("svg");
+  src: url(fonts/Symbola.eot);
+  src: local("Symbola Regular"), local("Symbola"), url(fonts/Symbola.woff2) format("woff2"), url(fonts/Symbola.woff) format("woff"), url(fonts/Symbola.ttf) format("truetype"), url(fonts/Symbola.svg#Symbola) format("svg");
 }
 .mq-editable-field {
   display: -moz-inline-box;
@@ -106,7 +106,7 @@
 .mq-math-mode .mq-text-mode,
 .mq-math-mode .mq-nonSymbola {
   font-family: "Times New Roman", Symbola, serif;
-  line-height: .9;
+  line-height: 0.9;
 }
 .mq-math-mode * {
   font-size: inherit;
@@ -129,7 +129,14 @@
   background: transparent;
 }
 .mq-math-mode .mq-text-mode {
-  font-size: 87%;
+  display: inline-block;
+  white-space: pre;
+}
+.mq-math-mode .mq-text-mode.mq-hasCursor {
+  box-shadow: inset darkgray 0 0.1em 0.2em;
+  padding: 0 0.1em;
+  margin: 0 -0.1em;
+  min-width: 1ex;
 }
 .mq-math-mode .mq-font {
   font: 1em "Times New Roman", Symbola, serif;
@@ -155,7 +162,27 @@
   margin: 0;
 }
 .mq-math-mode big {
-  font-size: 125%;
+  font-size: 200%;
+}
+.mq-math-mode .mq-int > big {
+  display: inline-block;
+  -webkit-transform: scaleX(0.7);
+  -moz-transform: scaleX(0.7);
+  -ms-transform: scaleX(0.7);
+  -o-transform: scaleX(0.7);
+  transform: scaleX(0.7);
+  vertical-align: -0.16em;
+}
+.mq-math-mode .mq-int > .mq-supsub {
+  font-size: 80%;
+  vertical-align: -1.1em;
+  padding-right: 0.2em;
+}
+.mq-math-mode .mq-int > .mq-supsub > .mq-sup > .mq-sup-inner {
+  vertical-align: 1.3em;
+}
+.mq-math-mode .mq-int > .mq-supsub > .mq-sub {
+  margin-left: -0.35em;
 }
 .mq-math-mode .mq-roman {
   font-style: normal;
@@ -180,15 +207,12 @@
   display: inline-block;
 }
 .mq-math-mode .mq-supsub {
+  text-align: left;
   font-size: 90%;
   vertical-align: -0.5em;
 }
-.mq-math-mode .mq-supsub.mq-limit {
-  font-size: 80%;
-  vertical-align: -0.4em;
-}
 .mq-math-mode .mq-supsub.mq-sup-only {
-  vertical-align: .5em;
+  vertical-align: 0.5em;
 }
 .mq-math-mode .mq-supsub.mq-sup-only .mq-sup {
   display: inline-block;
@@ -201,11 +225,8 @@
   display: block;
   float: left;
 }
-.mq-math-mode .mq-supsub.mq-limit .mq-sub {
-  margin-left: -0.25em;
-}
 .mq-math-mode .mq-supsub .mq-binary-operator {
-  padding: 0 .1em;
+  padding: 0 0.1em;
 }
 .mq-math-mode .mq-supsub .mq-fraction {
   font-size: 70%;
@@ -214,24 +235,24 @@
   font-size: 80%;
   vertical-align: 0.8em;
   margin-right: -0.6em;
-  margin-left: .2em;
-  min-width: .5em;
+  margin-left: 0.2em;
+  min-width: 0.5em;
 }
 .mq-math-mode .mq-paren {
-  padding: 0 .1em;
+  padding: 0 0.1em;
   vertical-align: top;
-  -webkit-transform-origin: center .06em;
-  -moz-transform-origin: center .06em;
-  -ms-transform-origin: center .06em;
-  -o-transform-origin: center .06em;
-  transform-origin: center .06em;
+  -webkit-transform-origin: center 0.06em;
+  -moz-transform-origin: center 0.06em;
+  -ms-transform-origin: center 0.06em;
+  -o-transform-origin: center 0.06em;
+  transform-origin: center 0.06em;
 }
 .mq-math-mode .mq-paren.mq-ghost {
   color: silver;
 }
 .mq-math-mode .mq-paren + span {
-  margin-top: .1em;
-  margin-bottom: .1em;
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
 }
 .mq-math-mode .mq-array {
   vertical-align: middle;
@@ -242,20 +263,21 @@
 }
 .mq-math-mode .mq-operator-name {
   font-family: Symbola, "Times New Roman", serif;
-  line-height: .9;
+  line-height: 0.9;
   font-style: normal;
 }
 .mq-math-mode var.mq-operator-name.mq-first {
-  padding-left: .2em;
+  padding-left: 0.2em;
 }
-.mq-math-mode var.mq-operator-name.mq-last {
-  padding-right: .2em;
+.mq-math-mode var.mq-operator-name.mq-last,
+.mq-math-mode .mq-supsub.mq-after-operator-name {
+  padding-right: 0.2em;
 }
 .mq-math-mode .mq-fraction {
   font-size: 90%;
   text-align: center;
   vertical-align: -0.4em;
-  padding: 0 .2em;
+  padding: 0 0.2em;
 }
 .mq-math-mode .mq-fraction,
 .mq-math-mode .mq-large-operator,
@@ -269,7 +291,8 @@
   display: inline-block;
 }
 .mq-math-mode .mq-numerator,
-.mq-math-mode .mq-denominator {
+.mq-math-mode .mq-denominator,
+.mq-math-mode .mq-dot-recurring {
   display: block;
 }
 .mq-math-mode .mq-numerator {
@@ -280,6 +303,10 @@
   float: right;
   width: 100%;
   padding: 0.1em;
+}
+.mq-math-mode .mq-dot-recurring {
+  text-align: center;
+  height: 0.3em;
 }
 .mq-math-mode .mq-sqrt-prefix {
   padding-top: 0;
@@ -295,22 +322,36 @@
 .mq-math-mode .mq-sqrt-stem {
   border-top: 1px solid;
   margin-top: 1px;
-  padding-left: .15em;
-  padding-right: .2em;
-  margin-right: .1em;
+  padding-left: 0.15em;
+  padding-right: 0.2em;
+  margin-right: 0.1em;
   padding-top: 1px;
 }
-.mq-math-mode .mq-vector-prefix {
+.mq-math-mode .mq-diacritic-above {
   display: block;
   text-align: center;
-  line-height: .25em;
-  margin-bottom: -0.1em;
-  font-size: 0.75em;
+  line-height: 0.4em;
 }
-.mq-math-mode .mq-vector-stem {
+.mq-math-mode .mq-diacritic-stem {
+  display: block;
+  text-align: center;
+}
+.mq-math-mode .mq-hat-prefix {
+  display: block;
+  text-align: center;
+  line-height: 0.95em;
+  margin-bottom: -0.7em;
+  transform: scaleX(1.5);
+  -moz-transform: scaleX(1.5);
+  -o-transform: scaleX(1.5);
+  -webkit-transform: scaleX(1.5);
+}
+.mq-math-mode .mq-hat-stem {
   display: block;
 }
 .mq-math-mode .mq-large-operator {
+  vertical-align: -0.2em;
+  padding: 0.2em;
   text-align: center;
 }
 .mq-math-mode .mq-large-operator .mq-from,
@@ -332,10 +373,23 @@
   cursor: text;
   font-family: Symbola, "Times New Roman", serif;
 }
+.mq-math-mode .mq-overarc {
+  border-top: 1px solid black;
+  -webkit-border-top-right-radius: 50% 0.3em;
+  -moz-border-radius-topright: 50% 0.3em;
+  border-top-right-radius: 50% 0.3em;
+  -webkit-border-top-left-radius: 50% 0.3em;
+  -moz-border-radius-topleft: 50% 0.3em;
+  border-top-left-radius: 50% 0.3em;
+  margin-top: 1px;
+  padding-top: 0.15em;
+}
 .mq-math-mode .mq-overarrow {
+  min-width: 0.5em;
   border-top: 1px solid black;
   margin-top: 1px;
   padding-top: 0.2em;
+  text-align: center;
 }
 .mq-math-mode .mq-overarrow:before {
   display: block;
@@ -353,6 +407,33 @@
   transform: scaleX(-1);
   filter: FlipH;
   -ms-filter: "FlipH";
+}
+.mq-math-mode .mq-overarrow.mq-arrow-both {
+  vertical-align: text-bottom;
+}
+.mq-math-mode .mq-overarrow.mq-arrow-both.mq-empty {
+  min-height: 1.23em;
+}
+.mq-math-mode .mq-overarrow.mq-arrow-both.mq-empty:after {
+  top: -0.34em;
+}
+.mq-math-mode .mq-overarrow.mq-arrow-both:before {
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+  filter: FlipH;
+  -ms-filter: "FlipH";
+}
+.mq-math-mode .mq-overarrow.mq-arrow-both:after {
+  display: block;
+  position: relative;
+  top: -2.3em;
+  font-size: 0.5em;
+  line-height: 0em;
+  content: '\27A4';
+  visibility: visible;
+  text-align: right;
 }
 .mq-math-mode .mq-selection,
 .mq-editable-field .mq-selection,
@@ -413,6 +494,7 @@
   resize: none;
   width: 1px;
   height: 1px;
+  box-sizing: content-box;
 }
 .mq-math-mode .mq-matrixed {
   background: white;
