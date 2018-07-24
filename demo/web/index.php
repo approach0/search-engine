@@ -234,7 +234,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		{{hit.title}}</a><br/>
 		<span style="color:#006d21">{{hit.url}}</span>
 		<div style="overflow-x: hidden;">
-		<p class="snippet">{{{ hit.snippet }}}</p>
+		<p class="snippet">{{{ surround_special_html(hit.snippet) }}}</p>
 		</div>
 	</li>
 	</ol>

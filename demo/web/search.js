@@ -104,7 +104,19 @@ function srch_qry(qry, page, is_pushState) {
 $(document).ready(function() {
 	vm = new Vue({
 		el: '#search-vue-app',
-		data: response
+		data: response,
+		methods: {
+			surround_special_html: function(text) {
+				/*
+				 * This function makes sure $a<b$ is converted into $a < b$, otherwise
+				 * the search snippet can be rendered incorrectly by browser.
+				 */
+				var replace_regex = /\[imath\]([\s\S]+?)\[\/imath\]/g;
+				return text.replace(replace_regex, function (a, b) {
+					return '[imath]' + b.split('<').join(' < ') + '[/imath]';
+				});
+			}
+		}
 	});
 
 	/* push a initial history state (clear forward states) */
