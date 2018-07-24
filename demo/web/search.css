@@ -3,7 +3,7 @@ em.hl {
 }
 
 span.qmask {
-	visibility: hidden;
+	display: none;
 }
 
 span.imath-err {
