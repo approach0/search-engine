@@ -384,6 +384,77 @@
   margin-top: 1px;
   padding-top: 0.15em;
 }
+.mq-math-mode .mq-strikethrough {
+  position: relative;
+}
+.mq-math-mode .mq-strikethrough:before {
+  position: absolute;
+  content: "";
+  left: 0;
+  top: 50%;
+  right: 0;
+  border-top: 1px solid;
+  border-color: inherit;
+  -webkit-transform: rotate(-5deg);
+  -moz-transform: rotate(-5deg);
+  -ms-transform: rotate(-5deg);
+  -o-transform: rotate(-5deg);
+  transform: rotate(-5deg);
+}
+.mq-math-mode .mq-boxed {
+  border: 1px solid black ;
+}
+.mq-math-mode .mq-underarrow {
+  min-width: 0.5em;
+  border-bottom: 1px solid black;
+  margin-bottom: 1px;
+  padding-bottom: 0.2em;
+  text-align: center;
+}
+.mq-math-mode .mq-underarrow:before {
+  display: block;
+  position: relative;
+  bottom: -2.5em;
+  font-size: 0.5em;
+  line-height: 0em;
+  content: '\27A4';
+  text-align: right;
+}
+.mq-math-mode .mq-underarrow.mq-arrow-left:before {
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+  filter: FlipH;
+  -ms-filter: "FlipH";
+}
+.mq-math-mode .mq-underarrow.mq-arrow-both {
+  vertical-align: text-bottom;
+}
+.mq-math-mode .mq-underarrow.mq-arrow-both.mq-empty {
+  min-height: 1.23em;
+}
+.mq-math-mode .mq-underarrow.mq-arrow-both.mq-empty:after {
+  top: -0.34em;
+}
+.mq-math-mode .mq-underarrow.mq-arrow-both:before {
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+  filter: FlipH;
+  -ms-filter: "FlipH";
+}
+.mq-math-mode .mq-underarrow.mq-arrow-both:after {
+  display: block;
+  position: relative;
+  bottom: -0.5em;
+  font-size: 0.5em;
+  line-height: 0em;
+  content: '\27A4';
+  visibility: visible;
+  text-align: right;
+}
 .mq-math-mode .mq-overarrow {
   min-width: 0.5em;
   border-top: 1px solid black;
