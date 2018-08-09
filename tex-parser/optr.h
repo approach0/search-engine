@@ -39,3 +39,5 @@ uint32_t optr_max_node_id(struct optr_node*);
 int optr_gen_idpos_map(uint32_t*, struct optr_node*);
 
 int optr_print_idpos_map(uint32_t*);
+
+int optr_graph_print(struct optr_node*, char **, FILE*);

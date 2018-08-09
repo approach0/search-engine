@@ -3,13 +3,8 @@
 
 #include "mhook/mhook.h"
 
-#include "tex-parser.h"
-#include "vt100-color.h"
+#include "head.h"
 #include "completion.h"
-
-struct optr_node;
-void optr_print(struct optr_node*, FILE*);
-void optr_release(struct optr_node*);
 
 int main()
 {
@@ -36,6 +31,21 @@ int main()
 			printf("Operator tree:\n");
 			if (ret.operator_tree) {
 				optr_print((struct optr_node*)ret.operator_tree, stdout);
+
+				/* output graph file */
+				{
+					const char graph_output_file[] = "./graph.tmp";
+					FILE *fh = fopen(graph_output_file, "w");
+					printf("Outputing graph in mermaid.js ...\n");
+					fprintf(fh, "%%%% Render at %s\n",
+					        "https://mermaidjs.github.io/mermaid-live-editor");
+					char *color[1024] = {0};
+					color[1] = "blue";
+					color[3] = "red";
+					optr_graph_print(ret.operator_tree, color, fh);
+					fclose(fh);
+				}
+
 				optr_release((struct optr_node*)ret.operator_tree);
 			}
 			printf("\n");
@@ -43,6 +53,7 @@ int main()
 			printf("Subpaths (leaf-root paths/total subpaths = %u/%u):\n", 
 				   ret.subpaths.n_lr_paths, ret.subpaths.n_subpaths);
 			subpaths_print(&ret.subpaths, stdout);
+
 			subpaths_release(&ret.subpaths);
 		} else {
 			printf("error message:%s\n", ret.msg);
