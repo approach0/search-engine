@@ -237,3 +237,77 @@ pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
 
 	return r_cnt;
 }
+
+void
+pq_align_map(struct math_prefix_qry *pq,
+             uint32_t *qmap, uint32_t *dmap, uint32_t k)
+{
+	uint64_t exclude_qmask = 0;
+	uint64_t exclude_dmask = 0;
+
+	uint64_t matched_qmask[k];
+	uint64_t matched_dmask[k];
+
+	/* find the top-K disjoint cell (i.e. common subtrees) */
+	for (uint32_t j = 0; j < k; j++) {
+		uint32_t max = 0;
+		uint64_t max_qmask, max_dmask;
+
+		/* for all the dirty cells, find the maximum disjoint cell */
+		for (uint32_t i = 0; i < pq->n_dirty; i++) {
+			struct math_prefix_loc loc = pq->dirty[i];
+			struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+
+			if (exclude_qmask & cell->qmask || exclude_dmask & cell->dmask) {
+				/* intersect */
+				continue;
+			} else if (cell->cnt > max) {
+				/* disjoint */
+				max = cell->cnt;
+				max_qmask = cell->qmask;
+				max_dmask = cell->dmask;
+			}
+		}
+
+		if (max) {
+			exclude_qmask |= max_qmask;
+			exclude_dmask |= max_dmask;
+
+			matched_qmask[j] = max_qmask;
+			matched_dmask[j] = max_dmask;
+		} else {
+			/* exhuasted all possibility */
+			break;
+		}
+	}
+
+	/* go through all the dirty cells again, find internal nodes mapping. */
+	for (uint32_t i = 0; i < pq->n_dirty; i++) {
+		struct math_prefix_loc loc = pq->dirty[i];
+		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
+
+		for (uint32_t j = 0; j < k; j++) {
+			uint64_t overlap_qmask = matched_qmask[j] & cell->qmask;
+			uint64_t overlap_dmask = matched_dmask[j] & cell->dmask;
+
+			if (overlap_qmask && overlap_dmask) {
+				/* internal pair of nodes */
+				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
+					qmap[loc.qr] = 1 + j; /* assign matched subtree ID */
+					dmap[loc.dr] = 1 + j; /* assign matched subtree ID */
+				}
+				break;
+			}
+		}
+	}
+
+	/* go through matched leaves, find leaves mapping. */
+	for (uint32_t j = 0; j < k; j++) {
+		for (uint32_t bit = 0; bit < MAX_LEAVES; bit++) {
+			if ((0x1 << bit) || matched_qmask[j])
+				qmap[bit] = 1 + j;
+			if ((0x1 << bit) || matched_dmask[j])
+				dmap[bit] = 1 + j;
+		}
+	}
+}

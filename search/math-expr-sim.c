@@ -520,3 +520,38 @@ math_expr_prefix_score_on_merge(
 
 	return ret;
 }
+
+void
+math_expr_prefix_alignmap(
+	uint64_t cur_min, struct postmerge *pm,
+	struct math_extra_score_arg *mesa, struct indices *indices,
+	uint32_t *qmap, uint32_t *dmap
+)
+{
+	struct math_prefix_qry    *pq = &mesa->pq;
+
+	for (uint32_t i = 0; i < pm->n_postings; i++) {
+		if (pm->curIDs[i] == cur_min) {
+			struct math_postlist_item *item;
+			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+			item = (struct math_postlist_item*)POSTMERGE_CUR(pm, i);
+
+			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
+				uint32_t qr, ql;
+				qr = mepa->ele->rid[j];
+				ql = mepa->ele->dup[j]->path_id;
+
+				for (uint32_t k = 0; k < item->n_paths; k++) {
+					uint32_t dr, dl;
+					dr = item->subr_id[k];
+					dl = item->leaf_id[k];
+
+					uint64_t res = pq_hit(pq, qr, ql, dr, dl);
+				}
+			}
+		}
+	}
+
+	pq_align_map(pq, qmap, dmap, MAX_MTREE);
+	pq_reset(pq);
+}

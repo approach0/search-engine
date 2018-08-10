@@ -45,3 +45,10 @@ math_expr_prefix_score_on_merge(
 	struct math_extra_score_arg*,
 	struct indices*
 );
+
+void
+math_expr_prefix_alignmap(
+	uint64_t, struct postmerge*,
+	struct math_extra_score_arg*, struct indices*,
+	uint32_t*, uint32_t*
+);

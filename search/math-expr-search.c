@@ -376,6 +376,13 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	/* score calculation */
 	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, esa->indices);
 
+	/* graph node mapping */
+	{
+		uint32_t qmap[MAX_NODE_IDS] = {0};
+		uint32_t dmap[MAX_NODE_IDS] = {0};
+		math_expr_prefix_alignmap(cur_min, pm, mesa, esa->indices, qmap, dmap);
+	}
+
 	/* add hit for a group of item with same docID */
 	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
 add_hit:

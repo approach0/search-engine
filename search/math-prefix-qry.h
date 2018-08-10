@@ -39,7 +39,10 @@ struct pq_align_res {
 };
 
 uint32_t
-pq_align(struct math_prefix_qry*, struct pq_align_res*, uint32_t k);
+pq_align(struct math_prefix_qry*, struct pq_align_res*, uint32_t);
+
+void
+pq_align_map(struct math_prefix_qry*, uint32_t*, uint32_t*, uint32_t);
 
 void pq_print_dirty_array(struct math_prefix_qry*);
 
