@@ -411,3 +411,34 @@ print_search_results(ranked_results_t *rk_res, uint32_t page,
 		rank_window_foreach(&wind, &print_res_item, indices);
 	}
 }
+
+/* math tex extraction function */
+static char _expr_lex_str[MAX_CORPUS_FILE_SZ + 1];
+static uint32_t _expr_lex_cur = 0;
+static uint32_t _expr_lex_pos = 0;
+
+static int _expr_lex_getter(struct lex_slice *slice)
+{
+	if (_expr_lex_pos == _expr_lex_cur) {
+		strcpy(_expr_lex_str, slice->mb_str);
+		strip_math_tag(_expr_lex_str, strlen(_expr_lex_str));
+		_expr_lex_pos = 0; /* touch flag */
+	}
+	_expr_lex_cur ++;
+	return 0;
+}
+
+char *get_expr_by_pos(char *text, size_t text_sz, uint32_t pos)
+{
+	_expr_lex_cur = 0;
+	_expr_lex_pos = pos;
+	g_lex_handler = _expr_lex_getter;
+	FILE *text_fh = fmemopen((void *)text, text_sz, "r");
+	LEXER_FUN(text_fh);
+	fclose(text_fh);
+
+	if (_expr_lex_pos == 0)
+		return _expr_lex_str;
+	else
+		return NULL;
+}

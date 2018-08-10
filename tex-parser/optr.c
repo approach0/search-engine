@@ -633,7 +633,9 @@ int optr_print_idpos_map(uint32_t* map)
 }
 
 struct _graph_pr_args {
-	char **color_map;
+	char **color;
+	uint32_t *node_map;
+	int   K;
 	FILE *fh;
 };
 
@@ -648,8 +650,9 @@ static TREE_IT_CALLBK(graph_print)
 	fprintf(args->fh, "%u(#%u<br/>%s) \n", p->node_id, p->node_id,
 	        trans_symbol(p->symbol_id));
 
-	char *color = args->color_map[p->node_id];
-	if (color) {
+	uint32_t n = args->node_map[p->node_id];
+	if (n) {
+		char *color = args->color[(n - 1) % args->K];
 		fprintf(args->fh, "class %u " OPTR_TREE_NODE_COLOR_CSS_PREFIX "%s;\n",
 		        p->node_id, color);
 		fprintf(args->fh, "%%%% classDef %s%s fill:#f9f;\n",
@@ -664,9 +667,10 @@ static TREE_IT_CALLBK(graph_print)
 	LIST_GO_OVER;
 }
 
-int optr_graph_print(struct optr_node* optr, char **colors, FILE *fh)
+int optr_graph_print(struct optr_node* optr, char **colors,
+                     uint32_t *node_map, int K, FILE *fh)
 {
-	struct _graph_pr_args args = {colors, fh};
+	struct _graph_pr_args args = {colors, node_map, K, fh};
 	fprintf(fh, "graph TD\n");
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &graph_print,
 	             0 /* including root */, &args);

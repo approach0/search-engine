@@ -1,6 +1,7 @@
 *.swp
 *.swo
 *.tmp
+*.tmp.txt
 *.img
 *.dat
 *.gch

@@ -19,31 +19,40 @@ int main()
 	 * we may leave this issue along. */
 
 	while ((line = linenoise("edit: ")) != NULL) {
+		/* overwrite output file ... */
+		const char graph_output_file[] = "./graph.tmp";
+		FILE *fh = fopen(graph_output_file, "w");
+		fprintf(fh, "%%%% Render at %s\n",
+		        "https://mermaidjs.github.io/mermaid-live-editor");
+
 		/* Add to the history. */
 		linenoiseHistoryAdd(line);
 
 		ret = tex_parse(line, 0, true);
 
-		printf("return string: %s\n", ret.msg);
-		printf("return code: %d\n", ret.code);
-
 		if (ret.code != PARSER_RETCODE_ERR) {
-			printf("Operator tree:\n");
 			if (ret.operator_tree) {
-				optr_print((struct optr_node*)ret.operator_tree, stdout);
+				printf("Outputing graph in %s ...\n", graph_output_file);
+
+				char *color[] = {"blue", "red", "green"};
+				uint32_t node_map[1024] = {0};
+				node_map[1] = 1;
+				node_map[2] = 3;
+				node_map[3] = 2;
+				node_map[4] = 3;
+				node_map[5] = 2;
+				node_map[6] = 3;
+				optr_graph_print(ret.operator_tree, color, node_map, 3, fh);
+
 				optr_release((struct optr_node*)ret.operator_tree);
 			}
-			printf("\n");
-
-			printf("Subpaths (leaf-root paths/total subpaths = %u/%u):\n", 
-				   ret.subpaths.n_lr_paths, ret.subpaths.n_subpaths);
-			subpaths_print(&ret.subpaths, stdout);
 
 			subpaths_release(&ret.subpaths);
 		} else {
 			printf("error message:%s\n", ret.msg);
 		}
 
+		fclose(fh);
 		free(line);
 	}
 

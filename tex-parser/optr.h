@@ -40,4 +40,5 @@ int optr_gen_idpos_map(uint32_t*, struct optr_node*);
 
 int optr_print_idpos_map(uint32_t*);
 
-int optr_graph_print(struct optr_node*, char **, FILE*);
+int
+optr_graph_print(struct optr_node*, char **, uint32_t*, int, FILE*);

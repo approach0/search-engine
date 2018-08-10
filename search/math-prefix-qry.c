@@ -199,6 +199,12 @@ pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
 #endif
 		} else {
 			/* exhuasted all possibility */
+#ifdef MATH_COMPUTE_R_CNT
+			for (; j < k; j++) {
+				matched_qmask[j] = 0x0;
+				matched_dmask[j] = 0x0;
+			}
+#endif
 			break;
 		}
 	}
@@ -277,6 +283,10 @@ pq_align_map(struct math_prefix_qry *pq,
 			matched_dmask[j] = max_dmask;
 		} else {
 			/* exhuasted all possibility */
+			for (; j < k; j++) {
+				matched_qmask[j] = 0x0;
+				matched_dmask[j] = 0x0;
+			}
 			break;
 		}
 	}
@@ -293,8 +303,8 @@ pq_align_map(struct math_prefix_qry *pq,
 			if (overlap_qmask && overlap_dmask) {
 				/* internal pair of nodes */
 				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
-					qmap[loc.qr] = 1 + j; /* assign matched subtree ID */
-					dmap[loc.dr] = 1 + j; /* assign matched subtree ID */
+					qmap[loc.qr] = j + 1; /* assign matched subtree ID */
+					dmap[loc.dr] = j + 1; /* assign matched subtree ID */
 				}
 				break;
 			}
@@ -304,10 +314,10 @@ pq_align_map(struct math_prefix_qry *pq,
 	/* go through matched leaves, find leaves mapping. */
 	for (uint32_t j = 0; j < k; j++) {
 		for (uint32_t bit = 0; bit < MAX_LEAVES; bit++) {
-			if ((0x1 << bit) || matched_qmask[j])
-				qmap[bit] = 1 + j;
-			if ((0x1 << bit) || matched_dmask[j])
-				dmap[bit] = 1 + j;
+			if ((0x1 << bit) & matched_qmask[j])
+				qmap[bit + 1] = j + 1;
+			if ((0x1 << bit) & matched_dmask[j])
+				dmap[bit + 1] = j + 1;
 		}
 	}
 }

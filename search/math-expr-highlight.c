@@ -1,15 +1,9 @@
 #include <string.h>
-#include "tex-parser/tex-parser.h"
+#include "tex-parser/head.h"
 #include "math-expr-highlight.h"
 #include "config.h"
 
-#define MAX_COLOR_STRLEN 32
-
-static char color_map[][MAX_COLOR_STRLEN] = {
-	"Magenta",
-	"Cyan",
-	"Orange"
-};
+static char *colors[] = {"Magenta", "Cyan", "Orange"};
 
 static int
 gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
@@ -49,6 +43,14 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 
 	struct tex_parse_ret ret;
 	ret = tex_parse(kw, strlen(kw), 0);
+	
+	if (ret.code == PARSER_RETCODE_ERR) {
+		fprintf(stderr, "parse error in math_oprand_highlight()\n");
+		return kw;
+	}
+
+	/* no need to keep subpaths here */
+	subpaths_release(&ret.subpaths);
 
 	if (gen_map(&ret, mask, k, begin_end_map, begin_color_map)) {
 		fprintf(stderr, "Error in gen_map() \n");
@@ -62,8 +64,8 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 		uint32_t end = begin_end_map[begin];
 		if (end) {
 			/* an operand that needs to be highlighted */
-			size_t l = sizeof(color_map) / MAX_COLOR_STRLEN;
-			char *color = color_map[begin_color_map[begin] % l];
+			size_t l = sizeof(colors) / sizeof(char*);
+			char *color = colors[begin_color_map[begin] % l];
 			snprintf(operand, end - begin + 1, "%s", kw + begin);
 			cur += sprintf(output + cur, "{\\color{%s}%s}", color, operand);
 			begin = end - 1;
@@ -82,4 +84,20 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 	 */
 	rm_limits(output);
 	return output;
+}
+
+int math_tree_highlight(char *tex, uint32_t *map, int k, FILE *fh)
+{
+	struct tex_parse_ret ret;
+	ret = tex_parse(tex, strlen(tex), 1);
+	
+	if (ret.code != PARSER_RETCODE_ERR && ret.operator_tree) {
+		optr_graph_print(ret.operator_tree, colors, map, k, fh);
+
+		optr_release(ret.operator_tree);
+		subpaths_release(&ret.subpaths);
+		return 0;
+	}
+
+	return 1;
 }
