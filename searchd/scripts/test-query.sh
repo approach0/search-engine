@@ -15,3 +15,4 @@ url="$1"
 file="$2"
 cat $file
 curl -v -H "Content-Type: application/json" -d @"${file}" "${url}"
+echo ""
