@@ -14,7 +14,8 @@
 #include "config.h"
 #include "utils.h"
 
-const char *httpd_on_recv(const char* req, void* arg_)
+static const char *
+httpd_on_recv(const char* req, void* arg_)
 {
 	P_CAST(args, struct searcher_args, arg_);
 	const char      *ret = NULL;
@@ -227,7 +228,7 @@ int main(int argc, char *argv[])
 	searcher_args.indices  = &indices;
 	searcher_args.lex      = lex;
 	searcher_args.trec_log = trec_log;
-	struct uri_handler uri_handlers[] = {{"/search" , &httpd_on_recv}};
+	struct uri_handler uri_handlers[] = {{SEARCHD_DEFAULT_URI, &httpd_on_recv}};
 	httpd_run(port, uri_handlers, 1, &searcher_args);
 
 close:

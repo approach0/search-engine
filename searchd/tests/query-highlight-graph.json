@@ -1,0 +1,6 @@
+{
+	"query_type": "graph",
+	"query": "a(y^2 + 1)",
+	"doc_id": 33,
+	"exp_id": 72
+}

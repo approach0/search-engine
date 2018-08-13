@@ -2,7 +2,11 @@ em.hl {
 	background-color: #FF9;
 }
 
-span.qmask {
+span.docid,
+span.score,
+span.qmask,
+span.dmask,
+span.expid {
 	display: none;
 }
 

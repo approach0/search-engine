@@ -45,10 +45,3 @@ math_expr_prefix_score_on_merge(
 	struct math_extra_score_arg*,
 	struct indices*
 );
-
-int
-math_expr_prefix_highlight_on_merge(
-	uint64_t, struct postmerge*,
-	struct math_extra_score_arg*,
-	struct indices*, FILE*
-);

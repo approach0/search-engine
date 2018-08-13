@@ -2,13 +2,13 @@
 #include "indexer/config.h" /* for MAX_CORPUS_FILE_SZ */
 #include "indexer/index.h" /* for text_lexer and indices */
 #include "wstring/wstring.h" /* for wstr2mbstr() */
+#include "highlight/math-expr-highlight.h"
 
 #include "config.h"
 #include "proximity.h"
 #include "rank.h"
 #include "snippet.h"
 #include "search-utils.h"
-#include "math-expr-highlight.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -154,14 +154,18 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 		if (ha->positions[ha->positions_cur].qmask[0]) {
 			/* this is math keyword */
+			uint64_t *qmask = ha->positions[ha->positions_cur].qmask;
 			uint64_t *dmask = ha->positions[ha->positions_cur].dmask;
-			uint64_t *qmask = ha->positions[ha->positions_cur].dmask;
 			strip_math_tag(mb_str, sz); // strip [imath] tags
 			char *hi_tex = math_oprand_highlight(mb_str, dmask, MAX_MTREE);
 			char hi_kw[strlen(hi_tex) + 512 /* additional chars below */];
 			snprintf(hi_kw, sizeof(hi_kw),
-				"<span class=\"qmask\">%lx,%lx,%lx</span>[imath]%s[/imath]",
-				qmask[0], qmask[1], qmask[2], hi_tex
+				"<span class=\"qmask\">%lx,%lx,%lx</span>"
+				"<span class=\"dmask\">%lx,%lx,%lx</span>"
+				"<span class=\"expid\">%u</span>[imath]%s[/imath]",
+				qmask[0], qmask[1], qmask[2],
+				dmask[0], dmask[1], dmask[2],
+				ha->cur_lex_pos, hi_tex
 			);
 			snippet_push_highlight(&ha->hi_list, hi_kw, offset, sz);
 		} else {

@@ -1,7 +1,7 @@
 #include <string.h>
 #include "tex-parser/head.h"
+#include "search/config.h"
 #include "math-expr-highlight.h"
-#include "config.h"
 
 static char *colors[] = {"Magenta", "Cyan", "Orange"};
 
@@ -86,13 +86,13 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 	return output;
 }
 
-int math_tree_highlight(char *tex, uint32_t *map, int k, FILE *fh)
+int math_tree_highlight(char *tex, uint32_t *map, int k, sds *o)
 {
 	struct tex_parse_ret ret;
 	ret = tex_parse(tex, strlen(tex), 1);
 	
 	if (ret.code != PARSER_RETCODE_ERR && ret.operator_tree) {
-		optr_graph_print(ret.operator_tree, colors, map, k, fh);
+		optr_graph_print(ret.operator_tree, colors, map, k, o);
 
 		optr_release(ret.operator_tree);
 		subpaths_release(&ret.subpaths);

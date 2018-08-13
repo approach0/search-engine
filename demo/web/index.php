@@ -227,8 +227,8 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <div v-if="ret_code == 0">
 	<ol>
 	<li v-for="hit in hits">
-		<div style="display:none">docid: {{hit.docid}}</div>
-		<div style="display:none">score: {{hit.score}}</div>
+		<span class="docid">{{hit.docid}}</span>
+		<span class="score">{{hit.score}}</span>
 		<a class="title" target="_blank" v-bind:href="hit.url"
 		style="text-decoration: none; font-size: 120%;">
 		{{hit.title}}</a><br/>

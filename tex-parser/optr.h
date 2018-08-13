@@ -40,5 +40,6 @@ int optr_gen_idpos_map(uint32_t*, struct optr_node*);
 
 int optr_print_idpos_map(uint32_t*);
 
+#include "sds/sds.h"
 int
-optr_graph_print(struct optr_node*, char **, uint32_t*, int, FILE*);
+optr_graph_print(struct optr_node*, char **, uint32_t*, int, sds*);

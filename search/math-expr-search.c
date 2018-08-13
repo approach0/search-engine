@@ -376,12 +376,6 @@ math_search_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	/* score calculation */
 	res = math_expr_prefix_score_on_merge(cur_min, pm, mesa, esa->indices);
 
-	if (res.doc_id == 46) {
-		printf("exp%u \n", res.exp_id);
-		if (res.exp_id == 5)
-			math_expr_prefix_highlight_on_merge(cur_min, pm, mesa, esa->indices, stdout);
-	}
-
 	/* add hit for a group of item with same docID */
 	if (esa->cur_docID != 0 && esa->cur_docID != res.doc_id) {
 add_hit:

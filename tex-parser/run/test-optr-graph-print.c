@@ -42,7 +42,11 @@ int main()
 				node_map[4] = 3;
 				node_map[5] = 2;
 				node_map[6] = 3;
-				optr_graph_print(ret.operator_tree, color, node_map, 3, fh);
+
+				sds out = sdsempty();
+				optr_graph_print(ret.operator_tree, color, node_map, 3, &out);
+				fprintf(fh, "%s", out);
+				sdsfree(out);
 
 				optr_release((struct optr_node*)ret.operator_tree);
 			}

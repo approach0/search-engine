@@ -1,15 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 if [ "$1" == "-h" ]; then
 cat << USAGE
 Description:
 Query searchd using curl, for test purpose.
 Examples:
-$0 ./tests/query-valid.json
+$0 "http://localhost:8921/search" ./tests/query-valid.json 
 USAGE
 exit
 fi
 
-[ $# -ne 1 ] && echo 'bad arg.' && exit
+[ $# -ne 2 ] && echo 'bad arg.' && exit
 
-file="$1"
-curl -v -H "Content-Type: application/json" -d @"${file}" "http://localhost:8921/search"
+url="$1"
+file="$2"
+cat $file
+curl -v -H "Content-Type: application/json" -d @"${file}" "${url}"
