@@ -3,10 +3,12 @@ import sys
 import json
 import requests
 
-output = 'highlight-results.tmp'
-topics = './topics.tmp'
+topics = '/home/tk/Desktop/approach-trec/trecfiles/topics.txt'
 corpus = '/home/tk/Desktop/approach-trec/trecfiles/corpus.txt'
 hi_url = "http://localhost:8961/highlight"
+limit_line = -1
+out_hi_operands = 'highlight-operands.dat'
+out_hi_trees = 'highlight-trees.dat'
 
 if len(sys.argv) != 2:
     print('bad args')
@@ -83,18 +85,30 @@ with open(topics) as f:
         query[fields[0]] = ' '.join(fields[1:])
 
 trecfile = sys.argv[1]
+tot_lines = 0
 with open(trecfile) as f:
-    for line in f:
+    tot_lines = sum(1 for _ in f)
+
+out_o = open(out_hi_operands, "w")
+out_t = open(out_hi_trees, "w")
+with open(trecfile) as f:
+    for c, line in enumerate(f):
+        print('%u / %u' % (c, tot_lines))
+        if limit_line == c:
+            break
         line = line.strip('\n')
         # parse line fields
         fields = line.split()
         qry_id = fields[0]
         qry_tex = query[qry_id]
-        doc_id, qmasks, dmasks = parse_annotat(fields[1])
+        doc_id, qm, dm = parse_annotat(fields[1])
         doc_nm = fields[2]
         doc_tex = doc[doc_nm]
         # print highlight info to stderr/stdout
         key = qry_id + ',' + doc_nm
-        print_graph_highlight(key, qry_tex, doc_id, sys.stderr)
-        print_operands_highlight(key, qry_tex, doc_tex,
-                                 qmasks, dmasks, sys.stdout)
+        print_graph_highlight(key, qry_tex, doc_id, out_t)
+        print_operands_highlight(key, qry_tex, doc_tex, qm, dm, out_o)
+
+print('closing output files', [out_hi_operands, out_hi_trees])
+out_o.close()
+out_t.close()
