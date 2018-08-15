@@ -399,8 +399,21 @@ log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
 	size_t      url_sz;
 	char *url = get_blob_string(indices->url_bi, hit->docID, 0, &url_sz);
 	
-	fprintf(fh_trec_output, "_QRY_ID_ 1 %s %u %f APPROACH0\n", url,
-	        ++ app_args->n_results, hit->score);
+	/* format: NTCIR12-MathWiki-3 1 Attenuation:3 2 58583.000000 runID */
+	uint64_t qmask[MAX_MTREE] = {0};
+	uint64_t dmask[MAX_MTREE] = {0};
+	if (hit->n_occurs == 1){
+		hit_occur_t o = hit->occurs[0];
+		for (int i = 0; i < MAX_MTREE; i++) {
+			qmask[i] = o.qmask[i];
+			dmask[i] = o.dmask[i];
+		}
+	}
+
+	fprintf(fh_trec_output, "_QRY_ID_ "
+			"%u|%lx,%lx,%lx|%lx,%lx,%lx %s %u %f APPROACH0\n", hit->docID,
+			qmask[0], qmask[1], qmask[2], dmask[0], dmask[1], dmask[2],
+			url, ++ app_args->n_results, hit->score);
 	free(url);
 }
 

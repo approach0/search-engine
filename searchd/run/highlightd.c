@@ -80,7 +80,6 @@ math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	item = math_expr_prefix_alignmap(cur_min, pm, mesa, qmap, dmap);
 
  	if (item && item->doc_id == hila->doc_id && item->exp_id == hila->exp_id) {
-	printf("a\n");
  		size_t txt_sz;
  		char *txt = get_blob_string(hila->indices->txt_bi, item->doc_id, 1, &txt_sz);
  		char *doc_tex = get_expr_by_pos(txt, txt_sz, item->exp_id);
@@ -118,6 +117,19 @@ graph_query_response(struct indices *indices,
 	return (const char*)ret;
 }
 
+static const char*
+operands_query_response(const char *tex, uint64_t *masks, int k)
+{
+	static char ret[MAX_SNIPPET_SZ];
+	const char *hi_tex = math_oprand_highlight((char*)tex, masks, k);
+
+	char *esc_hi_tex = json_encode_string(hi_tex);
+	sprintf(ret, "{\"hi_tex\": %s}", esc_hi_tex);
+	free(esc_hi_tex);
+
+	return (const char*)ret;
+}
+
 static const char *
 httpd_on_recv(const char* req, void* arg_)
 {
@@ -147,6 +159,14 @@ httpd_on_recv(const char* req, void* arg_)
 		uint32_t doc_id = json_object_get_number(parson_obj, "doc_id");
 		uint32_t exp_id = json_object_get_number(parson_obj, "exp_id");
 		ret = graph_query_response(indices, q, doc_id, exp_id);
+	} else if (0 == strcmp(query_type, "operands")) {
+		const char* tex = json_object_get_string(parson_obj, "tex");
+		uint64_t masks[MAX_MTREE];
+#define json_getstr(_prop) json_object_get_string(parson_obj, _prop)
+		sscanf(json_getstr("mask0"), "%lx", masks + 0);
+		sscanf(json_getstr("mask1"), "%lx", masks + 1);
+		sscanf(json_getstr("mask2"), "%lx", masks + 2);
+		ret = operands_query_response(tex, masks, MAX_MTREE);
 	}
 
 retjson:
