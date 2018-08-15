@@ -7,15 +7,14 @@ topics = '/home/tk/Desktop/approach-trec/trecfiles/topics.txt'
 corpus = '/home/tk/Desktop/approach-trec/trecfiles/corpus.txt'
 hi_url = "http://localhost:8961/highlight"
 limit_line = -1
-out_hi_operands = 'highlight-operands.dat'
-out_hi_trees = 'highlight-trees.dat'
+suffix_operands = 'hi-operands.dat'
+suffix_trees = 'hi-trees.dat'
 
 if len(sys.argv) != 2:
     print('bad args')
     quit()
 
 def send_json(obj, url):
-    # print(obj)
     headers = {'content-type': 'application/json'}
     r = requests.post(url, json=obj, headers=headers)
     j = json.loads(r.content.decode("utf-8"))
@@ -39,11 +38,11 @@ def print_graph_highlight(key, qry_tex, doc_id, fh):
         "exp_id": 0
     }
     j = send_json(hi_req, hi_url)
-    print({
+    print(json.dumps({
         "key": key,
         "qry": j['qry'],
         "doc": j['doc'],
-    }, file=fh)
+    }), file=fh)
 
 def print_operands_highlight(key, qry_tex, doc_tex, qmasks, dmasks, fh):
     hi_req = {
@@ -62,11 +61,11 @@ def print_operands_highlight(key, qry_tex, doc_tex, qmasks, dmasks, fh):
         "tex": doc_tex
     }
     j_doc = send_json(hi_req, hi_url)
-    print({
+    print(json.dumps({
         "key": key,
         "qry": j_qry['hi_tex'],
         "doc": j_doc['hi_tex'],
-    }, file=fh)
+    }), file=fh)
 
 doc = {}
 print('reading corpus ...')
@@ -89,6 +88,8 @@ tot_lines = 0
 with open(trecfile) as f:
     tot_lines = sum(1 for _ in f)
 
+out_hi_operands = trecfile + '.' + suffix_operands
+out_hi_trees    = trecfile + '.' + suffix_trees
 out_o = open(out_hi_operands, "w")
 out_t = open(out_hi_trees, "w")
 with open(trecfile) as f:
@@ -104,8 +105,9 @@ with open(trecfile) as f:
         doc_id, qm, dm = parse_annotat(fields[1])
         doc_nm = fields[2]
         doc_tex = doc[doc_nm]
+        run_id = fields[5]
         # print highlight info to stderr/stdout
-        key = qry_id + ',' + doc_nm
+        key = run_id + '.' + qry_id + '.' + doc_nm
         print_graph_highlight(key, qry_tex, doc_id, out_t)
         print_operands_highlight(key, qry_tex, doc_tex, qm, dm, out_o)
 
