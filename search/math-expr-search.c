@@ -145,7 +145,6 @@ on_dir_merge(char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DI
 
 	postmerge_posts_clear(pm);
 
-#define PRINT_MATH_POST_TYPE
 #ifdef PRINT_MATH_POST_TYPE
 	printf("\n");
 #endif
@@ -256,6 +255,7 @@ int64_t math_postmerge(struct indices *indices, char *tex,
 	if (parse_ret.operator_tree) {
 		on_dm_args.n_max_qry_node_id = optr_max_node_id((struct optr_node *)
 		                                                parse_ret.operator_tree);
+		// optr_print(parse_ret.operator_tree, stdout);
 		optr_release((struct optr_node*)parse_ret.operator_tree);
 #ifdef DEBUG_MATH_EXPR_SEARCH
 		printf("max query node id: %u\n", on_dm_args.n_max_qry_node_id);

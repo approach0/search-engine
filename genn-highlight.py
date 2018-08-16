@@ -6,6 +6,7 @@ import requests
 topics = '/home/tk/Desktop/approach-trec/trecfiles/topics.txt'
 corpus = '/home/tk/Desktop/approach-trec/trecfiles/corpus.txt'
 hi_url = "http://localhost:8961/highlight"
+specify_line = 7
 limit_line = -1
 suffix_operands = 'hi-operands.dat'
 suffix_trees = 'hi-trees.dat'
@@ -94,10 +95,17 @@ out_o = open(out_hi_operands, "w")
 out_t = open(out_hi_trees, "w")
 with open(trecfile) as f:
     for c, line in enumerate(f):
-        print('%u / %u' % (c, tot_lines))
+        line = line.strip('\n')
         if limit_line == c:
             break
-        line = line.strip('\n')
+        elif specify_line > 0:
+            if specify_line > c + 1:
+                continue
+            elif specify_line == c + 1:
+                print(line)
+            else:
+                break
+        print('%u / %u' % (c + 1, tot_lines))
         # parse line fields
         fields = line.split()
         qry_id = fields[0]
