@@ -87,6 +87,8 @@ math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 
  		math_tree_highlight((char*)hila->query_tex, qmap, MAX_MTREE, hila->qout);
  		math_tree_highlight(doc_tex, dmap, MAX_MTREE, hila->dout);
+
+		return 1;
  	}
 	
 	return 0;
