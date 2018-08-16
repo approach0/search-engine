@@ -3,7 +3,7 @@
 #include "search/config.h"
 #include "math-expr-highlight.h"
 
-static char *colors[] = {"Magenta", "Cyan", "Orange"};
+static char *colors[] = {"Maroon", "Green", "Orange"};
 
 static int
 gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
@@ -17,9 +17,8 @@ gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
 				uint32_t end   = ret->idposmap[pathID] & 0xffff;
 				if (end > MAX_TXT_SEG_BYTES)
 					return 1;
-				// printf("path#%u: %u, %u\n", i + 1, begin, end);
 				begin_end_map[begin] = end;
-				begin_color_map[begin] = t + 1;
+				begin_color_map[begin] = t;
 			}
 		}
 	}

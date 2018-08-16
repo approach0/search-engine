@@ -655,8 +655,8 @@ static TREE_IT_CALLBK(graph_print)
 		char *color = args->color[(n - 1) % args->K];
 		*args->o = sdscatprintf(*args->o, "class %u "
 			OPTR_TREE_NODE_COLOR_CSS_PREFIX "%s;\n", p->node_id, color);
-		*args->o = sdscatprintf(*args->o, "%%%% classDef %s%s fill:#f9f;\n",
-			OPTR_TREE_NODE_COLOR_CSS_PREFIX, color);
+		// *args->o = sdscatprintf(*args->o, "%%%% classDef %s%s fill:#f9f;\n",
+		// 	OPTR_TREE_NODE_COLOR_CSS_PREFIX, color);
 	}
 
 	if (f) {
