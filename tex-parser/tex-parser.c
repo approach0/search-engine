@@ -79,7 +79,8 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			max_path_id = optr_assign_values(grammar_optr_root);
 
 			optr_gen_idpos_map(ret.idposmap, grammar_optr_root);
-			//optr_print_idpos_map(ret.idposmap);
+			// optr_print(grammar_optr_root, stdout);
+			// optr_print_idpos_map(ret.idposmap);
 
 			/*
 			 * Inside optr_subpaths(), it uses a bitmap data

@@ -151,7 +151,8 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->path_id; /* use path_id for scoring */
+				ql = mepa->ele->dup[j]->path_id; /* use path_id for mnc_score */
+				/* (so that the ql is the index of query array in MNC scoring */
 
 				for (uint32_t m = 0; m < k; m++) {
 					if (qr == align_res[m].qr) {
@@ -304,7 +305,8 @@ math_expr_prefix_score_on_merge(
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->path_id; /* use path_id for scoring */
+				ql = mepa->ele->dup[j]->leaf_id; /* use leaf_id for aligning */
+				/* (to generate correct leaf mask to be highlighted in tree) */
 #ifdef DEBUG_MATH_SCORE_INSPECT
 //				if (inspect) {
 //					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,

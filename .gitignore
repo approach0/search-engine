@@ -5,6 +5,7 @@
 *.img
 *.dat
 *.gch
+*.bkup
 *.o
 *.a
 *.d

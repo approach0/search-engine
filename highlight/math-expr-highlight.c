@@ -11,10 +11,9 @@ gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
 {
 	for (int t = 0; t < k; t++) {
 		for (uint32_t i = 0; i < MAX_SUBPATH_ID; i++) {
-			if ((mask[t] >> i) & 0x1) {
-				uint32_t pathID = i + 1;
-				uint32_t begin = ret->idposmap[pathID] >> 16;
-				uint32_t end   = ret->idposmap[pathID] & 0xffff;
+			if ((mask[t] >> i) & 0x1L) {
+				uint32_t begin = ret->idposmap[i] >> 16;
+				uint32_t end   = ret->idposmap[i] & 0xffff;
 				if (end > MAX_TXT_SEG_BYTES)
 					return 1;
 				begin_end_map[begin] = end;

@@ -87,7 +87,7 @@ math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	struct math_postlist_item *item = NULL;
 	uint32_t qmap[MAX_NODE_IDS] = {0};
 	uint32_t dmap[MAX_NODE_IDS] = {0};
-	
+
 	item = math_expr_prefix_alignmap(cur_min, pm, mesa, qmap, dmap);
 
 //	if (item && item->doc_id == 219890) {
@@ -106,7 +106,7 @@ math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 
 		return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -120,8 +120,6 @@ graph_query_response(struct indices *indices,
 	struct highlight_args args = {
 		indices, doc_id, exp_id, q, &q_out, &d_out
 	};
-
-	printf("request tree highlight for doc#%u, exp#%u\n", doc_id, exp_id);
 
 	math_postmerge(indices, (char*)q, MATH_SRCH_FUZZY_STRUCT,
 	               &math_highlight_on_merge, &args);
@@ -178,7 +176,10 @@ httpd_on_recv(const char* req, void* arg_)
 		const char* q = json_object_get_string(parson_obj, "query");
 		uint32_t doc_id = json_object_get_number(parson_obj, "doc_id");
 		uint32_t exp_id = json_object_get_number(parson_obj, "exp_id");
+
+		printf("request: tree highlight for doc#%u, exp#%u\n", doc_id, exp_id);
 		ret = graph_query_response(indices, q, doc_id, exp_id);
+
 	} else if (0 == strcmp(query_type, "operands")) {
 		const char* tex = json_object_get_string(parson_obj, "tex");
 		uint64_t masks[MAX_MTREE];
@@ -186,6 +187,9 @@ httpd_on_recv(const char* req, void* arg_)
 		sscanf(json_getstr("mask0"), "%lx", masks + 0);
 		sscanf(json_getstr("mask1"), "%lx", masks + 1);
 		sscanf(json_getstr("mask2"), "%lx", masks + 2);
+
+		printf("request: operands highlight for '%s' (mask: %lx,%lx,%lx)\n",
+		       tex, masks[0], masks[1], masks[2]);
 		ret = operands_query_response(tex, masks, MAX_MTREE);
 	}
 
@@ -214,7 +218,7 @@ int main(int argc, char *argv[])
 			       "\n", argv[0]);
 			printf("\n");
 			goto exit;
-		
+
 		case 'i':
 			index_path = strdup(optarg);
 			break;

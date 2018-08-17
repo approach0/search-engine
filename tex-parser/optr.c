@@ -600,8 +600,8 @@ static TREE_IT_CALLBK(gen_idpos_map)
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
 		if (p->path_id < MAX_SUBPATH_ID) {
-			map[p->path_id] |= (p->pos_begin << 16);
-			map[p->path_id] |= (p->pos_end   << 0 );
+			map[p->path_id - 1] |= (p->pos_begin << 16);
+			map[p->path_id - 1] |= (p->pos_end   << 0 );
 		}
 	}
 
@@ -625,7 +625,7 @@ int optr_print_idpos_map(uint32_t* map)
 			uint32_t begin, end;
 			begin = map[i] >> 16;
 			end = map[i] & 0xffff;
-			printf("pathID#%u: [%u, %u]\n", i, begin, end);
+			printf("pathID#%u: [%u, %u]\n", i + 1, begin, end);
 		}
 	}
 
