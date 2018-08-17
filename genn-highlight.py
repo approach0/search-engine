@@ -6,7 +6,7 @@ import requests
 topics = '/home/tk/Desktop/approach-trec/trecfiles/topics.txt'
 corpus = '/home/tk/Desktop/approach-trec/trecfiles/corpus.txt'
 hi_url = "http://localhost:8961/highlight"
-specify_line = 7
+specify_line = -1
 limit_line = -1
 suffix_operands = 'hi-operands.dat'
 suffix_trees = 'hi-trees.dat'
