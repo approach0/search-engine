@@ -41,20 +41,24 @@ math_expr_prefix_alignmap(
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->path_id;
+				ql = mepa->ele->dup[j]->leaf_id;
 
 				for (uint32_t k = 0; k < item->n_paths; k++) {
 					uint32_t dr, dl;
 					dr = item->subr_id[k];
 					dl = item->leaf_id[k];
 
-					(void)pq_hit(pq, qr, ql, dr, dl);
+					uint64_t res = pq_hit(pq, qr, ql, dr, dl);
+					(void)res;
+//					if (0 == res && item->doc_id == 219890) {
+//						printf("r%u~l%u hit r%u~l%u\n", qr, ql, dr, dl);
+//					}
 				}
 			}
 		}
 	}
 
-	pq_align_map(pq, qmap, dmap, MAX_MTREE);
+	pq_align_map(pq, qmap, dmap);
 	pq_reset(pq);
 
 	return item;
@@ -67,6 +71,13 @@ struct highlight_args {
 	sds *qout, *dout;
 };
 
+static void _debug_print_map(uint32_t *map, int n, int color)
+{
+	for (int i = 0; i < n; i++)
+		if (color == map[i])
+			printf("node#%d --> color%u\n", i, color);
+}
+
 static int
 math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 {
@@ -76,20 +87,25 @@ math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 	struct math_postlist_item *item = NULL;
 	uint32_t qmap[MAX_NODE_IDS] = {0};
 	uint32_t dmap[MAX_NODE_IDS] = {0};
-
+	
 	item = math_expr_prefix_alignmap(cur_min, pm, mesa, qmap, dmap);
 
- 	if (item && item->doc_id == hila->doc_id && item->exp_id == hila->exp_id) {
- 		size_t txt_sz;
- 		char *txt = get_blob_string(hila->indices->txt_bi, item->doc_id, 1, &txt_sz);
- 		char *doc_tex = get_expr_by_pos(txt, txt_sz, item->exp_id);
- 		free(txt);
+//	if (item && item->doc_id == 219890) {
+//		_debug_print_map(qmap, MAX_NODE_IDS, 2);
+//		_debug_print_map(dmap, MAX_NODE_IDS, 2);
+//	}
 
- 		math_tree_highlight((char*)hila->query_tex, qmap, MAX_MTREE, hila->qout);
- 		math_tree_highlight(doc_tex, dmap, MAX_MTREE, hila->dout);
+	if (item && item->doc_id == hila->doc_id && item->exp_id == hila->exp_id) {
+		size_t txt_sz;
+		char *txt = get_blob_string(hila->indices->txt_bi, item->doc_id, 1, &txt_sz);
+		char *doc_tex = get_expr_by_pos(txt, txt_sz, item->exp_id);
+		free(txt);
+
+		math_tree_highlight((char*)hila->query_tex, qmap, MAX_MTREE, hila->qout);
+		math_tree_highlight(doc_tex, dmap, MAX_MTREE, hila->dout);
 
 		return 1;
- 	}
+	}
 	
 	return 0;
 }
@@ -104,6 +120,8 @@ graph_query_response(struct indices *indices,
 	struct highlight_args args = {
 		indices, doc_id, exp_id, q, &q_out, &d_out
 	};
+
+	printf("request tree highlight for doc#%u, exp#%u\n", doc_id, exp_id);
 
 	math_postmerge(indices, (char*)q, MATH_SRCH_FUZZY_STRUCT,
 	               &math_highlight_on_merge, &args);

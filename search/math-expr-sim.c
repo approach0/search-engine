@@ -151,7 +151,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->path_id;
+				ql = mepa->ele->dup[j]->path_id; /* use path_id for scoring */
 
 				for (uint32_t m = 0; m < k; m++) {
 					if (qr == align_res[m].qr) {
@@ -237,7 +237,7 @@ prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
 
 		if (pm->curIDs[i] == cur_min) {
 			for (j = 0; j <= mepa->ele->dup_cnt; j++) {
-				uint32_t qn = mepa->ele->dup[j]->node_id;
+				uint32_t qn = mepa->ele->dup[j]->leaf_id; /* use leaf_id for order ID */
 				enum symbol_id qs = mepa->ele->dup[j]->lf_symbol_id;
 				querystr[qn - 1] = qs;
 
@@ -262,61 +262,6 @@ static int
 symbolseq_similarity(struct postmerge* pm)
 {
 	return 0;
-//	uint32_t                    i, j, k;
-//	math_posting_t              posting;
-//	uint32_t                    pathinfo_pos;
-//	struct math_posting_item   *po_item;
-//	struct math_pathinfo_pack  *pathinfo_pack;
-//	struct math_pathinfo       *pathinfo;
-//	struct subpath_ele         *subpath_ele;
-//	int ret = 0;
-//
-//	enum symbol_id querystr[MAX_LEAVES] = {0};
-//	enum symbol_id candistr[MAX_LEAVES] = {0};
-//
-//	for (i = 0; i < pm->n_postings; i++) {
-//		posting = pm->postings[i];
-//		subpath_ele = NULL;//math_posting_get_ele(posting);
-//
-//		pathinfo_pos = po_item->pathinfo_pos;
-//		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
-//
-//		if (NULL == pathinfo_pack || NULL == subpath_ele) {
-//			return 0;
-//		}
-//
-//		for (j = 0; j < pathinfo_pack->n_paths; j++) {
-//			pathinfo = pathinfo_pack->pathinfo + j;
-//			assert(pathinfo->path_id <= MAX_LEAVES);
-//			candistr[pathinfo->path_id - 1] = pathinfo->lf_symb;
-//
-//			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
-//				enum symbol_id qs = subpath_ele->dup[k]->lf_symbol_id;
-//				uint32_t qn = subpath_ele->dup[k]->node_id;
-//				querystr[qn - 1] = qs;
-//			}
-//		}
-//	}
-//
-//	if (pm->n_postings != 0) {
-//		ret = substring_filter(querystr, candistr);
-////		if (0) {
-////		//if (8325 == po_item->exp_id) {
-////			printf("Query: ");
-////			for (i = 0; i < MAX_LEAVES; i++) {
-////				if (querystr[i] == 0)
-////					break;
-////				printf("%s ", trans_symbol(querystr[i]));
-////			} printf("\n");
-////			printf("expr#%d, Candi: ", po_item->exp_id);
-////			for (i = 0; i < MAX_LEAVES; i++) {
-////				printf("%s ", trans_symbol(candistr[i]));
-////			} printf("\n");
-////			printf("Return: %d\n", ret);
-////		}
-//	}
-//
-//	return ret;
 }
 
 struct math_expr_score_res
@@ -325,85 +270,6 @@ math_expr_score_on_merge(struct postmerge* pm,
 {
 	struct math_expr_score_res  ret = {0};
 	return ret;
-
-//	uint32_t                    i, j, k;
-//	math_posting_t              posting;
-//	uint32_t                    pathinfo_pos;
-//	struct math_posting_item   *po_item;
-//	struct math_pathinfo_pack  *pathinfo_pack;
-//	struct math_pathinfo       *pathinfo;
-//	struct subpath_ele         *subpath_ele;
-//	bool                        skipped = 0;
-//
-//	/* reset mnc for scoring new document */
-//	uint32_t slot;
-//	struct mnc_ref mnc_ref;
-//	mnc_reset_docs();
-//
-//	for (i = 0; i < pm->n_postings; i++) {
-//		/* for each merged posting item from posting lists */
-//		posting = pm->postings[i];
-//		subpath_ele = NULL;//math_posting_get_ele(posting);
-//
-//		/* get pathinfo position of corresponding merged item */
-//		pathinfo_pos = po_item->pathinfo_pos;
-//
-//		/* use pathinfo position to get pathinfo packet */
-//		pathinfo_pack = math_posting_pathinfo(posting, pathinfo_pos);
-//
-//		if (NULL == pathinfo_pack || NULL == subpath_ele) {
-//			/* unexpected read error, e.g. file is corrupted */
-//#ifdef DEBUG_MATH_EXPR_SEARCH
-//			fprintf(stderr, "pathinfo_pack or subpath_ele is NULL.\n");
-//#endif
-//			skipped = 1;
-//			break;
-//		}
-//
-//		if (n_qry_lr_paths > pathinfo_pack->n_lr_paths) {
-//			/* impossible to match, skip this math expression */
-//#ifdef DEBUG_MATH_EXPR_SEARCH
-//			printf("query leaf-root paths (%u) is greater than "
-//			       "document leaf-root paths (%u), skip this expression."
-//			       "\n", n_qry_lr_paths, pathinfo_pack->n_lr_paths);
-//#endif
-//			skipped = 1;
-//			break;
-//		}
-//
-//		for (j = 0; j < pathinfo_pack->n_paths; j++) {
-//			/* for each pathinfo from this pathinfo packet */
-//			pathinfo = pathinfo_pack->pathinfo + j;
-//
-//			/* preparing to score corresponding document subpaths */
-//			mnc_ref.sym = pathinfo->lf_symb;
-//			slot = mnc_map_slot(mnc_ref);
-//
-//			for (k = 0; k <= subpath_ele->dup_cnt; k++) {
-//				/*
-//				 * add this document subpath for scoring.
-//				 * (path_id [1, MAX_LEAVES] is mapped to [0, 63])
-//				 */
-//				mnc_doc_add_rele(slot, pathinfo->path_id - 1,
-//				                 subpath_ele->dup[k]->path_id - 1);
-//			}
-//		}
-//	}
-//
-//#ifdef DEBUG_MATH_EXPR_SEARCH
-//	printf("query leaf-root paths: %u\n", n_qry_lr_paths);
-//	printf("document leaf-root paths: %u\n", pathinfo_pack->n_lr_paths);
-//	printf("posting merge level: %u\n", level);
-//#endif
-//
-//	/* finally calculate expression similarity score */
-//	if (!skipped && pm->n_postings != 0) {
-//		ret.score = mnc_score(true);
-//		ret.doc_id = po_item->doc_id;
-//		ret.exp_id = po_item->exp_id;
-//	}
-//
-//	return ret;
 }
 
 struct math_expr_score_res
@@ -438,7 +304,7 @@ math_expr_prefix_score_on_merge(
 			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
 				uint32_t qr, ql;
 				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->path_id;
+				ql = mepa->ele->dup[j]->path_id; /* use path_id for scoring */
 #ifdef DEBUG_MATH_SCORE_INSPECT
 //				if (inspect) {
 //					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
@@ -475,7 +341,7 @@ math_expr_prefix_score_on_merge(
 
 	/* sub-structure align */
 	struct pq_align_res align_res[MAX_MTREE] = {0};
-	uint32_t r_cnt = pq_align(pq, align_res, MAX_MTREE);
+	uint32_t r_cnt = pq_align(pq, align_res);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)

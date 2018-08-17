@@ -28,7 +28,8 @@ struct subpath_node {
 };
 
 struct subpath {
-	uint32_t              path_id, node_id;
+	uint32_t              path_id; /* nodeID reordered in prepare_math_qry() */
+	uint32_t              leaf_id; /* original nodeID for the path leaf */
 	uint32_t              n_nodes;
 	list                  path_nodes;
 	enum subpath_type     type;

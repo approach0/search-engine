@@ -78,14 +78,17 @@ static LIST_IT_CALLBK(add_subpaths)
 	args->new_dups += added.new_dups;
 
 #ifdef DEBUG_SUBPATH_SET
-	fprintf(stdout, "after adding subpath: \n");
-	_print_subpath(sp, args->prefix_len);
-	printf("\n");
-#endif
-#ifdef DEBUG_SUBPATH_SET
-	fprintf(stdout, "subpath set becomes: \n");
-	subpath_set_print(args->set, stdout);
-	printf("\n");
+	if (args->prefix_len <= sp->n_nodes) {
+		fprintf(stdout, "adding subpath (prefix_len=%u):\n", args->prefix_len);
+		printf("r#%u~l#%u,p#%u: ", get_subpath_nodeid_at(sp, args->prefix_len),
+		       sp->leaf_id, sp->path_id);
+		_print_subpath(sp, args->prefix_len);
+		printf("\n");
+
+		fprintf(stdout, "subpath set becomes: \n");
+		subpath_set_print(args->set, stdout);
+		printf("\n");
+	}
 #endif
 
 	LIST_GO_OVER;
@@ -144,7 +147,8 @@ static LIST_IT_CALLBK(print_subpath)
 
 	printf("(duplicates: ");
 	for (i = 0; i <= ele->dup_cnt; i++)
-		fprintf(fh, "%u~path#%u ", ele->rid[i], ele->dup[i]->path_id);
+		fprintf(fh, "r#%u~l#%u,p#%u", ele->rid[i],
+		ele->dup[i]->leaf_id, ele->dup[i]->path_id);
 	printf(")\n");
 
 	LIST_GO_OVER;

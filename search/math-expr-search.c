@@ -114,7 +114,7 @@ static int prepare_math_qry(struct subpaths *subpaths)
 	/* assign new path_id for each subpaths, in its list node order. */
 	list_foreach(&subpaths->li, &assign_path_id_in_order, &new_path_id);
 
-	/* prepare score structure for query subpaths */
+	/* prepare scoring data structure for query symbols */
 	prepare_score_struct(subpaths);
 
 	return 0;

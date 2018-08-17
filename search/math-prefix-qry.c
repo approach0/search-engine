@@ -145,21 +145,21 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 }
 
 uint32_t
-pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
+pq_align(struct math_prefix_qry *pq, struct pq_align_res *res)
 {
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
 	uint32_t r_cnt = 0;
 
 #ifdef MATH_COMPUTE_R_CNT
-	uint64_t matched_qmask[k];
-	uint64_t matched_dmask[k];
+	uint64_t matched_qmask[MAX_MTREE] = {0};
+	uint64_t matched_dmask[MAX_MTREE] = {0};
 	uint32_t qmap[MAX_NODE_IDS] = {0};
 	uint32_t dmap[MAX_NODE_IDS] = {0};
 #endif
 
 	/* find the top-K disjoint cell (i.e. common subtrees) */
-	for (uint32_t j = 0; j < k; j++) {
+	for (uint32_t j = 0; j < MAX_MTREE; j++) {
 		uint32_t max = 0;
 		uint32_t max_qr, max_dr;
 		uint64_t max_qmask, max_dmask;
@@ -199,12 +199,6 @@ pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
 #endif
 		} else {
 			/* exhuasted all possibility */
-#ifdef MATH_COMPUTE_R_CNT
-			for (; j < k; j++) {
-				matched_qmask[j] = 0x0;
-				matched_dmask[j] = 0x0;
-			}
-#endif
 			break;
 		}
 	}
@@ -215,7 +209,7 @@ pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
 		struct math_prefix_loc loc = pq->dirty[i];
 		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
 
-		for (uint32_t j = 0; j < k; j++) {
+		for (uint32_t j = 0; j < MAX_MTREE; j++) {
 			uint64_t overlap_qmask = matched_qmask[j] & cell->qmask;
 			uint64_t overlap_dmask = matched_dmask[j] & cell->dmask;
 
@@ -245,17 +239,16 @@ pq_align(struct math_prefix_qry *pq, struct pq_align_res *res, uint32_t k)
 }
 
 void
-pq_align_map(struct math_prefix_qry *pq,
-             uint32_t *qmap, uint32_t *dmap, uint32_t k)
+pq_align_map(struct math_prefix_qry *pq, uint32_t *qmap, uint32_t *dmap)
 {
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
 
-	uint64_t matched_qmask[k];
-	uint64_t matched_dmask[k];
+	uint64_t matched_qmask[MAX_MTREE] = {0};
+	uint64_t matched_dmask[MAX_MTREE] = {0};
 
 	/* find the top-K disjoint cell (i.e. common subtrees) */
-	for (uint32_t j = 0; j < k; j++) {
+	for (uint32_t j = 0; j < MAX_MTREE; j++) {
 		uint32_t max = 0;
 		uint64_t max_qmask, max_dmask;
 
@@ -283,10 +276,6 @@ pq_align_map(struct math_prefix_qry *pq,
 			matched_dmask[j] = max_dmask;
 		} else {
 			/* exhuasted all possibility */
-			for (; j < k; j++) {
-				matched_qmask[j] = 0x0;
-				matched_dmask[j] = 0x0;
-			}
 			break;
 		}
 	}
@@ -296,7 +285,7 @@ pq_align_map(struct math_prefix_qry *pq,
 		struct math_prefix_loc loc = pq->dirty[i];
 		struct math_prefix_cell *cell = &pq->cell[loc.qr][loc.dr];
 
-		for (uint32_t j = 0; j < k; j++) {
+		for (uint32_t j = 0; j < MAX_MTREE; j++) {
 			uint64_t overlap_qmask = matched_qmask[j] & cell->qmask;
 			uint64_t overlap_dmask = matched_dmask[j] & cell->dmask;
 
@@ -312,11 +301,11 @@ pq_align_map(struct math_prefix_qry *pq,
 	}
 
 	/* go through matched leaves, find leaves mapping. */
-	for (uint32_t j = 0; j < k; j++) {
+	for (uint32_t j = 0; j < MAX_MTREE; j++) {
 		for (uint32_t bit = 0; bit < MAX_LEAVES; bit++) {
-			if ((0x1 << bit) & matched_qmask[j])
+			if ((0x1L << bit) & matched_qmask[j])
 				qmap[bit + 1] = j + 1;
-			if ((0x1 << bit) & matched_dmask[j])
+			if ((0x1L << bit) & matched_dmask[j])
 				dmap[bit + 1] = j + 1;
 		}
 	}
