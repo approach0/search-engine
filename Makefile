@@ -53,12 +53,7 @@ all_modules: $(MODULE_BINS)
 clean: tags-clean $(MODULE_CLEAN)
 	rm -f linenoise-history.txt
 
-# ctag related files
-# (ctag is used for source code view using text editor like Vim)
-SRC_LIST := $(shell test -e ${SRC_LIST_FILE} && \
-         cat ${SRC_LIST_FILE})
-
-tags: $(SRC_LIST)
+tags:
 	$(HIGHLIGHT_BEGIN) 5
 	@ echo '[create source list file]'
 	$(HIGHLIGHT_END)
