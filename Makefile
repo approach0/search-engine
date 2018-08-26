@@ -1,7 +1,7 @@
 PROJ_DEP_MK := proj-dep.mk
 SRC_LIST_FILE := srclist.txt
 
-.PHONY: all_modules test
+.PHONY: all_modules test tags
 
 include rules.mk
 
