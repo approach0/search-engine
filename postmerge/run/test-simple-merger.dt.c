@@ -12,9 +12,9 @@ int simple_postlist_next(void *po_)
 	PTR_CAST(po, struct simple_postlist, po_);
 	if (po->idx < po->len) {
 		po->idx += 1;
-		return 0;
-	} else {
 		return 1;
+	} else {
+		return 0;
 	}
 }
 
