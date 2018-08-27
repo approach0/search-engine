@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "mhook/mhook.h"
+#include "common/common.h"
 
 #include "indexer/index.h" /* required by query.h */
 #include "query.h"
@@ -18,7 +19,7 @@ int main(int argc, char *argv[])
 
 	qry = query_new();
 
-	while ((opt = getopt(argc, argv, "hq:i:p:t:m:x:d:n")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:m:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -28,7 +29,6 @@ int main(int argc, char *argv[])
 			printf("%s -h |"
 			       " -i <index path> |"
 			       " -m <tex> |"
-			       " -q <TREC topic ID> |"
 			       "\n", argv[0]);
 			printf("\n");
 			goto exit;
@@ -58,6 +58,8 @@ int main(int argc, char *argv[])
 		goto close;
 	}
 
+	printf("caching math index...\n");
+	postlist_cache_set_limit(&indices.ci, 7 KB, 8 KB);
 	indices_cache(&indices);
 
 	/* search query */
