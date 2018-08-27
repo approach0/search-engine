@@ -43,6 +43,8 @@ postmerger_path_postlist(struct path_postlist *po)
 		po,
 		&path_postlist_cur,
 		&path_postlist_next,
+		NULL,
+		NULL
 	};
 	return ret;
 }
