@@ -1,13 +1,18 @@
 #include <stdint.h>
+#include <stddef.h> /* for size_t */
 #include "config.h"
 
 typedef uint64_t (*postmerger_callbk_cur)(void *);
 typedef int      (*postmerger_callbk_next)(void *);
+typedef int      (*postmerger_callbk_jump)(void *, uint64_t);
+typedef size_t   (*postmerger_callbk_read)(void *po, void *dest);
 
 struct postmerger_postlist {
 	void                   *po;
 	postmerger_callbk_cur   cur;
 	postmerger_callbk_next  next;
+	postmerger_callbk_jump  jump;
+	postmerger_callbk_read  read;
 };
 
 struct postmerger {

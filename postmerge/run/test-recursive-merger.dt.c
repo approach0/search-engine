@@ -98,6 +98,8 @@ postmerger_recur_postlist(struct recur_postlist *po)
 		po,
 		&recur_postlist_cur,
 		&recur_postlist_next,
+		NULL,
+		NULL
 	};
 	return ret;
 }
