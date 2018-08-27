@@ -10,14 +10,20 @@
 #include "search/math-expr-search.h" /////////////////
 #include "search/search.h"
 #include "httpd/httpd.h"
+#include "wstring/wstring.h"
 
 #include "config.h"
 #include "utils.h"
 
+struct searchd_args {
+	struct indices *indices;
+	int trec_log;
+};
+
 static const char *
 httpd_on_recv(const char* req, void* arg_)
 {
-	P_CAST(args, struct searcher_args, arg_);
+	P_CAST(args, struct searchd_args, arg_);
 	const char      *ret = NULL;
 	struct query     qry;
 	uint32_t         page;
@@ -46,7 +52,7 @@ httpd_on_recv(const char* req, void* arg_)
 
 	/* parse JSON query into local query structure */
 	qry = query_new();
-	page = parse_json_qry(req, args->lex, &qry);
+	page = parse_json_qry(req, &qry);
 
 	if (page == 0) {
 #ifdef SEARCHD_LOG_ENABLE
@@ -100,7 +106,7 @@ httpd_on_recv(const char* req, void* arg_)
 	//////// TREC LOG ////////
 	if (args->trec_log) {
 		printf("generating TREC log ...\n");
-		search_results_trec_log(&srch_res, args);
+		search_results_trec_log(&srch_res, args->indices);
 	}
 
 	/* generate response JSON */
@@ -108,7 +114,7 @@ httpd_on_recv(const char* req, void* arg_)
 	fprintf(log_fh, "return results...\n");
 	fflush(log_fh);
 #endif
-	ret = search_results_json(&srch_res, page - 1, args);
+	ret = search_results_json(&srch_res, page - 1, args->indices);
 
 	/* free ranked results */
 #ifdef SEARCHD_LOG_ENABLE
@@ -145,13 +151,12 @@ int main(int argc, char *argv[])
 	struct indices        indices;
 	unsigned short        cache_sz = SEARCHD_DEFAULT_CACHE_MB;
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
-	text_lexer            lex = lex_eng_file;
 	char                 *dict_path = NULL;
-	struct searcher_args  searcher_args;
+	struct searchd_args   searchd_args;
 	int                   trec_log = 0;
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:t:p:c:d:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:t:p:c:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -184,11 +189,6 @@ int main(int argc, char *argv[])
 			sscanf(optarg, "%hu", &cache_sz);
 			break;
 
-		case 'd':
-			dict_path = strdup(optarg);
-			lex = lex_mix_file;
-			break;
-
 		default:
 			printf("bad argument(s). \n");
 			goto exit;
@@ -199,15 +199,6 @@ int main(int argc, char *argv[])
 	if (index_path == NULL) {
 		fprintf(stderr, "indices path not specified.\n");
 		goto exit;
-	}
-
-	/* open text-segment dictionary if needed */
-	if (lex == lex_mix_file) {
-		printf("opening dictionary...\n");
-		if (text_segment_init(dict_path)) {
-			fprintf(stderr, "cannot open dict.\n");
-			goto exit;
-		}
 	}
 
 	/* open indices */
@@ -225,22 +216,15 @@ int main(int argc, char *argv[])
 	/* run httpd */
 	printf("listen on port %hu\n", port);
 
-	searcher_args.indices  = &indices;
-	searcher_args.lex      = lex;
-	searcher_args.trec_log = trec_log;
+	searchd_args.indices  = &indices;
+	searchd_args.trec_log = trec_log;
 	struct uri_handler uri_handlers[] = {{SEARCHD_DEFAULT_URI, &httpd_on_recv}};
-	httpd_run(port, uri_handlers, 1, &searcher_args);
+	httpd_run(port, uri_handlers, 1, &searchd_args);
 
 close:
 	/* close indices */
 	printf("closing index...\n");
 	indices_close(&indices);
-
-	/* close text-segment dictionary if opened */
-	if (lex == lex_mix_file) {
-		printf("closing dictionary...\n");
-		text_segment_free();
-	}
 
 exit:
 	/*

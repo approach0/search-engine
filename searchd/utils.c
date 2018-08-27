@@ -31,7 +31,6 @@ enum parse_json_kw_res {
 /* append_result() callback function arguments */
 struct append_result_args {
 	struct indices *indices;
-	text_lexer      lex;
 	uint32_t        n_results;
 };
 
@@ -64,7 +63,7 @@ free:
 
 static enum parse_json_kw_res
 parse_json_kw_ele(JSON_Object *obj, size_t idx,
-                  struct query *qry, text_lexer lex)
+                  struct query *qry)
 {
 	struct query_keyword kw;
 	const char *type, *str;
@@ -93,7 +92,7 @@ parse_json_kw_ele(JSON_Object *obj, size_t idx,
 
 	if (kw.type == QUERY_KEYWORD_TERM) {
 		/* term */
-		query_digest_utf8txt(qry, lex, str);
+		query_digest_utf8txt(qry, str);
 	} else {
 		/* tex */
 		wstr_copy(kw.wstr, mbstr2wstr(str));
@@ -104,7 +103,7 @@ parse_json_kw_ele(JSON_Object *obj, size_t idx,
 }
 
 uint32_t
-parse_json_qry(const char* req, text_lexer lex, struct query *qry)
+parse_json_qry(const char* req, struct query *qry)
 {
 	JSON_Object *parson_obj;
 	JSON_Array *parson_arr;
@@ -152,7 +151,7 @@ parse_json_qry(const char* req, text_lexer lex, struct query *qry)
 		parson_arr_obj = json_array_get_object(parson_arr, i);
 
 		/* parse this array element */
-		res = parse_json_kw_ele(parson_arr_obj, i, qry, lex);
+		res = parse_json_kw_ele(parson_arr_obj, i, qry);
 
 		if (PARSE_JSON_KW_SUCC != res) {
 			fprintf(stderr, "keywords JSON array "
@@ -304,12 +303,11 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 		free(hit->occurs);
 		hit->occurs = malloc(sizeof(position_t));
 		hit->occurs[0] = 0;
-		hl_list = prepare_snippet(hit, esc,
-		                          doc_sz, app_args->lex);
+		hl_list = prepare_snippet(hit, esc, doc_sz);
 		free(esc);
 	}
 #else
-	hl_list = prepare_snippet(hit, doc, doc_sz, app_args->lex);
+	hl_list = prepare_snippet(hit, doc, doc_sz);
 #endif
 
 	/* get snippet */
@@ -347,7 +345,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 
 const char
 *search_results_json(ranked_results_t *rk_res, uint32_t i,
-                     struct searcher_args *se_args)
+                     struct indices *indices)
 {
 	struct rank_window wind;
 	uint32_t tot_pages;
@@ -367,8 +365,7 @@ const char
 		/* valid window, append search results in response */
 		uint32_t n_results = wind.to - wind.from;
 		struct append_result_args app_args = {
-			se_args->indices,
-			se_args->lex,
+			indices,
 			n_results
 		};
 
@@ -417,7 +414,7 @@ log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
 	free(url);
 }
 
-int search_results_trec_log(ranked_results_t *rk_res, struct searcher_args *args)
+int search_results_trec_log(ranked_results_t *rk_res, struct indices *indices)
 {
 	struct rank_window wind;
 	uint32_t tot_pages;
@@ -435,7 +432,7 @@ int search_results_trec_log(ranked_results_t *rk_res, struct searcher_args *args
 		return 1;
 	}
 
-	struct append_result_args app_args = {args->indices, args->lex, 0};
+	struct append_result_args app_args = {indices, 0};
 
 	for (uint32_t i = 0; i < tot_pages; i++) {
 		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);

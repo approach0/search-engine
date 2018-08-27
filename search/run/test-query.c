@@ -35,7 +35,7 @@ int main()
 	PUSH_TERM("the", 9999999, 1234);
 	PUSH_TEX("2x^3 + x");
 
-	query_digest_utf8txt(&qry, lex_eng_file, "hello world");
+	query_digest_utf8txt(&qry, "hello world");
 
 	printf("before sorting: \n");
 	query_print_to(qry, stdout);

@@ -18,7 +18,7 @@ char *get_blob_string(blob_index_t, doc_id_t, bool, size_t*);
 /* prepare snippet */
 typedef int (*text_lexer)(FILE*);
 list
-prepare_snippet(struct rank_hit*, const char*, size_t, text_lexer);
+prepare_snippet(struct rank_hit*, const char*, size_t);
 
 /* consider_top_K() */
 void consider_top_K(ranked_results_t*, doc_id_t, float,

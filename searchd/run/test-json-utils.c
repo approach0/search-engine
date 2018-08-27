@@ -45,8 +45,7 @@ static void test_json_file(const char *path)
 	printf("%s\n", test_req);
 	printf("EOF\n");
 
-	page = parse_json_qry((const char *)test_req,
-	                      lex_eng_file, &qry);
+	page = parse_json_qry((const char *)test_req, &qry);
 
 	if (page != 0) {
 		printf("page number = %u.\n", page);

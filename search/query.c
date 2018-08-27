@@ -7,7 +7,7 @@
 
 #include "config.h"
 #include "proximity.h"
-#include "search.h"
+#include "query.h"
 
 LIST_DEF_FREE_FUN(query_list_free, struct query_keyword, ln, free(p));
 
@@ -106,6 +106,16 @@ void query_push_keyword(struct query *qry, const struct query_keyword* kw)
 	copy->pos = (qry->len ++);
 }
 
+void
+query_push_keyword_str(struct query *qry,
+	const char *utf8_kw, enum query_kw_type type)
+{
+	struct query_keyword keyword;
+	keyword.type = type;
+	wstr_copy(keyword.wstr, mbstr2wstr(utf8_kw));
+	query_push_keyword(qry, &keyword);
+}
+
 static struct query *adding_qry = NULL;
 static int add_into_qry(struct lex_slice *slice)
 {
@@ -121,8 +131,8 @@ static int add_into_qry(struct lex_slice *slice)
 	return 0;
 }
 
-void query_digest_utf8txt(struct query *qry, text_lexer lex,
-                          const char* txt)
+void
+query_digest_utf8txt(struct query *qry, const char* txt)
 {
 	FILE *text_fh;
 
@@ -134,7 +144,7 @@ void query_digest_utf8txt(struct query *qry, text_lexer lex,
 
 	/* invoke lexer */
 	text_fh = fmemopen((void *)txt, strlen(txt), "r");
-	lex(text_fh);
+	lex_eng_file(text_fh);
 
 	/* close file handler */
 	fclose(text_fh);

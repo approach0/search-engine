@@ -19,6 +19,9 @@
 #define CUR_POS(_in, _i) \
 	_in[_i].pos[_in[_i].cur].pos
 
+#include "txt-seg/lex.h"
+#define LEXER_FUN lex_eng_file
+
 static uint32_t
 mergesort(hit_occur_t *dest, prox_input_t* in, uint32_t n)
 {
@@ -255,8 +258,8 @@ static int highlighter_arg_lex_setter(struct lex_slice *slice)
 	return 0;
 }
 
-list prepare_snippet(struct rank_hit* hit, const char *text,
-                     size_t text_sz, text_lexer lex)
+list
+prepare_snippet(struct rank_hit* hit, const char *text, size_t text_sz)
 {
 	FILE *text_fh;
 
@@ -272,7 +275,7 @@ list prepare_snippet(struct rank_hit* hit, const char *text,
 
 	/* invoke lexer */
 	text_fh = fmemopen((void *)text, text_sz, "r");
-	lex(text_fh);
+	LEXER_FUN(text_fh);
 
 	/* print snippet */
 	snippet_read_file(text_fh, &hi_arg.hi_list);
@@ -355,16 +358,12 @@ print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
 	g_lex_handler = highlighter_arg_lex_setter;
 
 	str = get_blob_string(indices->txt_bi, docID, 1, &str_sz);
-	highlight_list = prepare_snippet(&mock_hit, str, str_sz,
-	                                 lex_eng_file);
+	highlight_list = prepare_snippet(&mock_hit, str, str_sz);
 	free(str);
 
 	snippet_hi_print(&highlight_list);
 	snippet_free_highlight_list(&highlight_list);
 }
-
-#include "txt-seg/lex.h"
-#define LEXER_FUN lex_eng_file
 
 static void print_res_item(struct rank_hit* hit, uint32_t cnt, void *arg)
 {
@@ -385,7 +384,7 @@ static void print_res_item(struct rank_hit* hit, uint32_t cnt, void *arg)
 	str = get_blob_string(indices->txt_bi, hit->docID, 1, &str_sz);
 
 	/* prepare highlighter arguments */
-	highlight_list = prepare_snippet(hit, str, str_sz, LEXER_FUN);
+	highlight_list = prepare_snippet(hit, str, str_sz);
 	free(str);
 
 	/* print snippet */
