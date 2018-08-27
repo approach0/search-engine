@@ -44,3 +44,4 @@ void query_uniq_by_post_id(struct query*);
 void query_push_keyword_str(struct query*, const char*, enum query_kw_type);
 
 wchar_t *query_keyword(struct query, int);
+char *query_get_keyword(struct query *, int); /* return utf-8 string */

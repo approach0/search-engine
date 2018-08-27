@@ -82,6 +82,14 @@ wchar_t *query_keyword(struct query qry, int idx)
 	return arg.wstr;
 }
 
+char *query_get_keyword(struct query *qry, int idx)
+{
+	struct query_keyword_arg arg = {NULL, idx, 0};
+	list_foreach(&qry->keywords, &get_query_keyword, &arg);
+
+	return wstr2mbstr(arg.wstr);
+}
+
 void query_push_keyword(struct query *qry, const struct query_keyword* kw)
 {
 	struct query_keyword *copy;
