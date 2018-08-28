@@ -99,9 +99,7 @@ postmerger_recur_postlist(struct recur_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		&recur_postlist_cur,
-		&recur_postlist_next,
-		NULL,
-		NULL
+		&recur_postlist_next
 	};
 	return ret;
 }

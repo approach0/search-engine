@@ -34,9 +34,7 @@ postmerger_simple_postlist(struct simple_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		&simple_postlist_cur,
-		&simple_postlist_next,
-		NULL,
-		NULL
+		&simple_postlist_next
 	};
 	return ret;
 }
