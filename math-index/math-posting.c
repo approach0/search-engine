@@ -85,7 +85,7 @@ int math_posting_exits(const char *fullpath)
 
 	if (NULL == fh_post || NULL == fh_info)
 		exists = 0;
-	
+
 	if (fh_post) fclose(fh_post);
 	if (fh_info) fclose(fh_info);
 
@@ -157,17 +157,14 @@ bool math_posting_next(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
 
-	po->buf_idx ++; /* one step forward */
-
-	do {
-		if (po->buf_idx < po->buf_end)
-			/* still in the buffer */
+	while (po->buf_end != 0) {
+		if (po->buf_idx + 1 < po->buf_end) {
+			po->buf_idx += 1;
 			return 1;
-		else
-			/* need one read to tell whether or not I can go further */
+		} else {
 			rebuf(po->buf, po->fh_posting, &po->buf_idx, &po->buf_end);
-
-	} while (po->buf_end != 0);
+		}
+	}
 
 	/* buf_end equals zero: reached the end. */
 	return 0;
@@ -280,6 +277,15 @@ uint64_t math_posting_cur_id_v2(math_posting_t po_)
 	return id64 & 0xffffffff000fffff;
 }
 
+uint64_t math_posting_cur_id_v2_2(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	if (po->buf_end == 0)
+		return UINT64_MAX;
+	else
+		return math_posting_cur_id_v2(po_);
+}
+
 void *math_posting_cur_item_v1(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
@@ -294,7 +300,7 @@ void *math_posting_cur_item_v1(math_posting_t po_)
 
 	if (pathinfo_pack == NULL)
 		goto ret;
-	
+
 	ret.n_paths    = pathinfo_pack->n_paths;
 	ret.n_lr_paths = pathinfo_pack->n_lr_paths;
 

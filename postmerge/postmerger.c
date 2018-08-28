@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "postmerger.h"
 
 void postmerger_init(struct postmerger *pm)

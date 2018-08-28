@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	}
 
 	printf("caching math index...\n");
-	postlist_cache_set_limit(&indices.ci, 7 KB, 8 KB);
+	postlist_cache_set_limit(&indices.ci, 100 KB, 100 KB);
 	indices_cache(&indices);
 
 	/* search query */

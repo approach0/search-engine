@@ -10,7 +10,10 @@
 
 static uint64_t math_memo_postlist_cur(void *po)
 {
-	return *(uint64_t*)postlist_cur_item(po);
+	if (postlist_terminates(po))
+		return UINT64_MAX;
+	else
+		return *(uint64_t*)postlist_cur_item(po);
 }
 
 static int math_memo_postlist_next(void *po)
@@ -56,7 +59,7 @@ math_memo_postlist(void *po)
 
 static uint64_t math_disk_postlist_cur(void *po)
 {
-	return math_posting_cur_id_v2(po);
+	return math_posting_cur_id_v2_2(po);
 }
 
 static int math_disk_postlist_next(void *po)
@@ -85,6 +88,7 @@ static int math_disk_postlist_init(void *po)
 static void math_disk_postlist_uninit(void *po)
 {
 	math_posting_finish(po);
+	math_posting_free_reader(po);
 }
 
 struct postmerger_postlist

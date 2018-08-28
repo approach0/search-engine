@@ -205,17 +205,18 @@ bool postlist_start(void *po_)
 bool postlist_next(void *po_)
 {
 	struct postlist *po = (struct postlist*)po_;
-	po->buf_idx += po->item_sz;
 
-	do {
-		if (po->buf_idx < po->buf_end) {
+	while (po->buf_end != 0) {
+		if (po->buf_idx + po->item_sz < po->buf_end) {
+			po->buf_idx += po->item_sz;
 			return 1;
 		} else {
+			/* next block */
 			forward_cur(&po->cur);
+			/* reset buffer */
 			rebuf_cur(po);
 		}
-
-	} while (po->buf_end != 0);
+	}
 
 	return 0;
 }
@@ -224,6 +225,12 @@ void* postlist_cur_item(void *po_)
 {
 	struct postlist *po = (struct postlist*)po_;
 	return po->buf + po->buf_idx;
+}
+
+int postlist_terminates(void *po_)
+{
+	struct postlist *po = (struct postlist*)po_;
+	return (po->buf_end == 0);
 }
 
 bool postlist_jump(void *po_, uint64_t target_)

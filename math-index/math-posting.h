@@ -80,6 +80,7 @@ void math_posting_finish(math_posting_t);
 
 uint64_t math_posting_cur_id_v1(math_posting_t);
 uint64_t math_posting_cur_id_v2(math_posting_t);
+uint64_t math_posting_cur_id_v2_2(math_posting_t);
 
 void *math_posting_cur_item_v1(math_posting_t);
 void *math_posting_cur_item_v2(math_posting_t);
