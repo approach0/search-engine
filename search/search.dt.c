@@ -2,10 +2,12 @@
 #include "search.h"
 #include "math-qry-struct.h"
 #include "postmerge/postcalls.h"
+#include "postlist/math-postlist.h" /* for math_postlist_item */
 
 struct math_l2_postlist {
 	struct postmerger pm;
 	struct postmerger_iterator iter;
+	char type[MAX_MERGE_POSTINGS][128];
 };
 
 struct on_math_paths_args {
@@ -25,14 +27,17 @@ on_math_paths(
 	for (uint32_t i = 0; i < n_eles; i++) {
 		void *po = math_postlist_cache_find(ci.math_cache, base_paths[i]);
 		if (po) {
-			printf("[memo] %s\n", base_paths[i]);
+			sprintf(args->po->type[l2po->pm.n_po], "memo");
+			printf("[memo] [%u] %s\n", i, base_paths[i]);
 			l2po->pm.po[l2po->pm.n_po ++] = math_memo_postlist(po);
 		} else if (math_posting_exits(full_paths[i])) {
-			printf("[disk] %s\n", base_paths[i]);
+			sprintf(args->po->type[l2po->pm.n_po], "disk");
+			printf("[disk] [%u] %s\n", i, base_paths[i]);
 			po = math_posting_new_reader(full_paths[i]);
 			l2po->pm.po[l2po->pm.n_po ++] = math_disk_postlist(po);
 		} else {
-			printf("[empty] %s\n", base_paths[i]);
+			sprintf(args->po->type[l2po->pm.n_po], "empty");
+			printf("[empty] [%u] %s\n", i, base_paths[i]);
 			; // empty posting list?
 		}
 	}
@@ -68,14 +73,23 @@ int math_l2_postlist_next(void *po_)
 			uint32_t docID = (uint32_t)(cur >> 32);
 			uint32_t expID = (uint32_t)(cur >> 0);
 
-			printf("[%u] -> [%u]: %u,%u \n", i, po->iter.map[i], docID, expID);
+			uint32_t orig = po->iter.map[i];
+			printf("[%s] [%u] -> [%u]: %u,%u ", po->type[orig], orig, i,
+				docID, expID);
 
 			if (cur == UINT64_MAX) {
 				postmerger_iter_remove(&po->iter, i);
 				i -= 1;
 			} else if (cur == po->iter.min) {
+				struct math_postlist_item item;
+				postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
+				printf("Advance %u,%u %u/%u paths", item.doc_id, item.exp_id,
+					item.n_paths, item.n_lr_paths);
+
 				postmerger_iter_call(&po->pm, &po->iter, next, i);
 			}
+
+			printf("\n");
 		}
 		printf("\n");
 
@@ -140,6 +154,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	struct math_qry_struct  mqs[qry->len];
 	struct math_l2_postlist mpo[qry->len];
 
+	// Create merger objects
 	for (int i = 0; i < qry->len; i++) {
 		const char *kw = query_get_keyword(qry, i);
 		printf("%s\n", kw);
@@ -156,6 +171,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 	}
 
+	// Initialize merger objects
 	for (int j = 0; j < root_pm.n_po; j++) {
 		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
 	}
@@ -171,11 +187,13 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 	}
 
+	// Uninitialize merger objects
 	for (int j = 0; j < root_pm.n_po; j++) {
 		POSTMERGER_POSTLIST_CALL(&root_pm, uninit, j);
 		math_qry_free(&mqs[j]);
 	}
 
+	// Sort min-heap
 	priority_Q_sort(&rk_res);
 	return rk_res;
 }
