@@ -6,7 +6,6 @@
 struct math_l2_postlist {
 	struct postmerger pm;
 	struct postmerger_iterator iter;
-	uint32_t docID;
 };
 
 struct on_math_paths_args {
@@ -57,8 +56,12 @@ create_math_l2_postlist(struct indices *indices, struct subpaths *subpaths)
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
+	uint32_t prev_min_docID = (uint32_t)(po->iter.min >> 32);
 	do {
-		//uint32_t min_docID = (uint32_t)po->iter.min;
+		uint32_t cur_min_docID = (uint32_t)(po->iter.min >> 32);
+		if (cur_min_docID != prev_min_docID) {
+			return 1;
+		}
 
 		for (int i = 0; i < po->iter.size; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
@@ -87,7 +90,7 @@ uint64_t math_l2_postlist_cur(void *po_)
 	if (po->iter.min == UINT64_MAX) {
 		return UINT64_MAX;
 	} else {
-		uint32_t min_docID = (uint32_t)po->iter.min;
+		uint32_t min_docID = (uint32_t)(po->iter.min >> 32);
 		return min_docID;
 	}
 }
@@ -162,7 +165,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		for (int i = 0; i < iter.size; i++) {
 			uint64_t cur = postmerger_iter_call(&root_pm, &iter, cur, i);
 
-			printf("root[%u]: %u \n", iter.map[i], (uint32_t)cur);
+			printf("root[%u]: %lu \n", iter.map[i], cur);
 			if (cur == iter.min)
 				postmerger_iter_call(&root_pm, &iter, next, i);
 		}
