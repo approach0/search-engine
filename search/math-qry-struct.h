@@ -1,3 +1,4 @@
+#pragma once
 #include "indices/indices.h"
 #include "math-prefix-qry.h"
 

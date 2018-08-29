@@ -1,28 +1,19 @@
 #include "common/common.h"
-#include "search.h"
-#include "math-qry-struct.h"
 #include "postmerge/postcalls.h"
-#include "postlist/math-postlist.h" /* for math_postlist_item */
+#include "search.h"
+#include "math-expr-sim.h"
 
-struct math_l2_postlist {
-	struct postmerger pm;
-	struct postmerger_iterator iter;
-
-	char type[MAX_MERGE_POSTINGS][128];
-	int  weight[MAX_MERGE_POSTINGS];
-};
-
-struct on_math_paths_args {
+struct add_path_postings_args {
 	struct indices *indices;
 	struct math_l2_postlist *po;
 };
 
 static enum dir_merge_ret
-on_math_paths(
+add_path_postings( /* add (l1) path posting lists into l2 posting list */
 	char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
 	struct subpath_ele **eles, uint32_t n_eles, uint32_t level, void *_args)
 {
-	PTR_CAST(args, struct on_math_paths_args, _args);
+	PTR_CAST(args, struct add_path_postings_args, _args);
 	struct postlist_cache ci = args->indices->ci;
 	struct math_l2_postlist *l2po = args->po;
 
@@ -59,15 +50,17 @@ on_math_paths(
 }
 
 struct math_l2_postlist
-create_math_l2_postlist(struct indices *indices, struct subpaths *subpaths)
+math_l2_postlist(struct indices *indices, struct math_qry_struct* mqs)
 {
 	struct math_l2_postlist po;
-	struct on_math_paths_args args = {indices, &po};
+	struct add_path_postings_args args = {indices, &po};
 	postmerger_init(&po.pm);
 	math_index_dir_merge(
 		indices->mi, DIR_MERGE_DIRECT, DIR_PATHSET_PREFIX_PATH,
-		subpaths, on_math_paths, &args
+		&mqs->subpaths, add_path_postings, &args
 	);
+	po.mqs = mqs;
+	po.indices = indices;
 	return po;
 }
 
@@ -81,30 +74,24 @@ int math_l2_postlist_next(void *po_)
 			return 1;
 		}
 
+		path_postlist_cur_print(po);
+
+		struct math_expr_score_res expr_score;
+		expr_score = path_postlist_cur_score(po);
+		(void)(expr_score);
+
+		printf("\n");
+
 		for (int i = 0; i < po->iter.size; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
-			uint32_t docID = (uint32_t)(cur >> 32);
-			uint32_t expID = (uint32_t)(cur >> 0);
-
-			uint32_t orig = po->iter.map[i];
-			printf("[%s] [%u] -> [%u]: %u,%u ", po->type[orig], orig, i,
-				docID, expID);
-
 			if (cur == UINT64_MAX) {
 				postmerger_iter_remove(&po->iter, i);
 				i -= 1;
 			} else if (cur == po->iter.min) {
-				struct math_postlist_item item;
-				postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
-				printf("Advance %u,%u %u/%u paths", item.doc_id, item.exp_id,
-					item.n_paths, item.n_lr_paths);
-
+				/* forward */
 				postmerger_iter_call(&po->pm, &po->iter, next, i);
 			}
-
-			printf("\n");
 		}
-		printf("\n");
 
 	} while (postmerger_iter_next(&po->pm, &po->iter));
 
@@ -174,8 +161,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		int j = root_pm.n_po;
 		if (0 == math_qry_prepare(indices, (char*)kw, &mqs[j])) {
 			/* construct level-2 postlist */
-			struct subpaths *sp = &(mqs[j].subpaths);
-			mpo[j] = create_math_l2_postlist(indices, sp);
+			mpo[j] = math_l2_postlist(indices, mqs + j);
 			root_pm.po[j] = postmerger_math_l2_postlist(mpo + j);
 		} else {
 			root_pm.po[j] = empty_postlist(NULL);

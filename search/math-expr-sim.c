@@ -388,3 +388,33 @@ math_expr_prefix_score_on_merge(
 
 	return ret;
 }
+
+void path_postlist_cur_print(struct math_l2_postlist *po)
+{
+	for (int i = 0; i < po->iter.size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
+		uint32_t docID = (uint32_t)(cur >> 32);
+		uint32_t expID = (uint32_t)(cur >> 0);
+
+		uint32_t orig = po->iter.map[i];
+		printf("[%s] [%u] -> [%u]: %u,%u \n", po->type[orig], orig, i,
+				docID, expID);
+	}
+}
+
+struct math_expr_score_res
+path_postlist_cur_score(struct math_l2_postlist *po)
+{
+	struct math_expr_score_res ret;
+	struct math_postlist_item item;
+	for (int i = 0; i < po->iter.size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
+		if (cur != UINT64_MAX && cur == po->iter.min) {
+			postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
+			printf("%u,%u: %u/%u paths \n", item.doc_id, item.exp_id,
+				item.n_paths, item.n_lr_paths);
+		}
+	}
+
+	return ret;
+}
