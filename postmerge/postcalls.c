@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "common/common.h"
 #include "postlist/postlist.h"
 #include "postlist/math-postlist.h" /* for math_postlist_item */
@@ -102,6 +103,51 @@ math_disk_postlist(void *po)
 		&math_disk_postlist_read,
 		&math_disk_postlist_init,
 		&math_disk_postlist_uninit
+	};
+	return ret;
+}
+
+static uint64_t empty_postlist_cur(void *po)
+{
+	return UINT64_MAX;
+}
+
+static int empty_postlist_next(void *po)
+{
+	return 0;
+}
+
+static int empty_postlist_jump(void *po, uint64_t target)
+{
+	return 0;
+}
+
+static size_t empty_postlist_read(void *po, void *dest, size_t sz)
+{
+	assert(0);
+}
+
+static int empty_postlist_init(void *po)
+{
+	return 1;
+}
+
+static void empty_postlist_uninit(void *po)
+{
+	return;
+}
+
+struct postmerger_postlist
+empty_postlist(void *po)
+{
+	struct postmerger_postlist ret = {
+		po,
+		&empty_postlist_cur,
+		&empty_postlist_next,
+		&empty_postlist_jump,
+		&empty_postlist_read,
+		&empty_postlist_init,
+		&empty_postlist_uninit
 	};
 	return ret;
 }

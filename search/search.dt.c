@@ -7,7 +7,9 @@
 struct math_l2_postlist {
 	struct postmerger pm;
 	struct postmerger_iterator iter;
+
 	char type[MAX_MERGE_POSTINGS][128];
+	int  weight[MAX_MERGE_POSTINGS];
 };
 
 struct on_math_paths_args {
@@ -26,20 +28,31 @@ on_math_paths(
 
 	for (uint32_t i = 0; i < n_eles; i++) {
 		void *po = math_postlist_cache_find(ci.math_cache, base_paths[i]);
+		int n = l2po->pm.n_po;
 		if (po) {
-			sprintf(args->po->type[l2po->pm.n_po], "memo");
 			printf("[memo] [%u] %s\n", i, base_paths[i]);
-			l2po->pm.po[l2po->pm.n_po ++] = math_memo_postlist(po);
+			l2po->pm.po[n] = math_memo_postlist(po);
+
+			sprintf(args->po->type[n], "memo");
+			args->po->weight[n] = 1;
+
 		} else if (math_posting_exits(full_paths[i])) {
-			sprintf(args->po->type[l2po->pm.n_po], "disk");
 			printf("[disk] [%u] %s\n", i, base_paths[i]);
 			po = math_posting_new_reader(full_paths[i]);
-			l2po->pm.po[l2po->pm.n_po ++] = math_disk_postlist(po);
+			l2po->pm.po[n] = math_disk_postlist(po);
+
+			sprintf(args->po->type[n], "disk");
+			args->po->weight[n] = 1;
+
 		} else {
-			sprintf(args->po->type[l2po->pm.n_po], "empty");
 			printf("[empty] [%u] %s\n", i, base_paths[i]);
-			; // empty posting list?
+			l2po->pm.po[n] = empty_postlist(NULL);
+
+			sprintf(args->po->type[n], "empty");
+			args->po->weight[n] = 0;
+
 		}
+		l2po->pm.n_po += 1;
 	}
 	printf("\n");
 	return DIR_MERGE_RET_CONTINUE;
@@ -159,16 +172,15 @@ indices_run_query(struct indices* indices, struct query* qry)
 		const char *kw = query_get_keyword(qry, i);
 		printf("%s\n", kw);
 		int j = root_pm.n_po;
-
 		if (0 == math_qry_prepare(indices, (char*)kw, &mqs[j])) {
 			/* construct level-2 postlist */
 			struct subpaths *sp = &(mqs[j].subpaths);
 			mpo[j] = create_math_l2_postlist(indices, sp);
 			root_pm.po[j] = postmerger_math_l2_postlist(mpo + j);
-			root_pm.n_po += 1;
 		} else {
-			; // empty posting list?
+			root_pm.po[j] = empty_postlist(NULL);
 		}
+		root_pm.n_po += 1;
 	}
 
 	// Initialize merger objects
