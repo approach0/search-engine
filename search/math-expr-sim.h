@@ -47,7 +47,7 @@ math_expr_prefix_score_on_merge(
 );
 
 #include "search.h"
-void path_postlist_cur_print(struct math_l2_postlist*);
+void math_l2_postlist_print_cur(struct math_l2_postlist*);
 
 struct math_expr_score_res
-path_postlist_cur_score(struct math_l2_postlist*);
+math_l2_postlist_cur_score(struct math_l2_postlist*);

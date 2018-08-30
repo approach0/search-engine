@@ -126,7 +126,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 
 	//math_expr_set_score_7(factor, hit);
 	//math_expr_set_score_10(factor, hit);
-	
+
 #ifdef MATH_SLOW_SEARCH
 	math_expr_set_score_2(factor, hit);
 	//math_expr_set_score_3(factor, hit);
@@ -374,7 +374,7 @@ math_expr_prefix_score_on_merge(
 				ret.dmask[i] = align_res[i].dmask;
 			}
 		}
-		
+
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		if (inspect) {
 			math_expr_set_score(&factors, &ret);
@@ -389,7 +389,7 @@ math_expr_prefix_score_on_merge(
 	return ret;
 }
 
-void path_postlist_cur_print(struct math_l2_postlist *po)
+void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 {
 	for (int i = 0; i < po->iter.size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
@@ -403,17 +403,46 @@ void path_postlist_cur_print(struct math_l2_postlist *po)
 }
 
 struct math_expr_score_res
-path_postlist_cur_score(struct math_l2_postlist *po)
+math_l2_postlist_cur_score(struct math_l2_postlist *po)
 {
-	struct math_expr_score_res ret;
-	struct math_postlist_item item;
+	struct math_expr_score_res ret = {0};
+	struct math_postlist_item item = {0};
+	struct math_prefix_qry *pq = &po->mqs->pq;
+
 	for (int i = 0; i < po->iter.size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
+		uint32_t orig = po->iter.map[i];
+		struct subpath_ele *ele = po->ele[orig];
+
 		if (cur != UINT64_MAX && cur == po->iter.min) {
 			postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
-			printf("%u,%u: %u/%u paths \n", item.doc_id, item.exp_id,
-				item.n_paths, item.n_lr_paths);
+
+			for (uint32_t j = 0; j < ele->dup_cnt; j++) {
+				uint32_t qr = ele->rid[j];
+				uint32_t ql = ele->dup[j]->leaf_id;
+				for (uint32_t k = 0; k < item.n_paths; k++) {
+					uint32_t dr = item.subr_id[k];
+					uint32_t dl = item.leaf_id[k];
+
+					uint64_t res = 0;
+					res = pq_hit(pq, qr, ql, dr, dl);
+					(void)res;
+				}
+			}
+//			printf("%u,%u: %u/%u paths \n", item.doc_id, item.exp_id,
+//				item.n_paths, item.n_lr_paths);
 		}
+	}
+
+	struct pq_align_res align_res[MAX_MTREE] = {0};
+	uint32_t r_cnt = pq_align(pq, align_res);
+	(void)r_cnt;
+	pq_reset(pq);
+
+	if (item.doc_id) {
+		ret.doc_id = item.doc_id;
+		ret.exp_id = item.exp_id;
+		ret.score = align_res[0].width + align_res[1].width + align_res[2].width;
 	}
 
 	return ret;

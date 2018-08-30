@@ -26,6 +26,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 
 			sprintf(args->po->type[n], "memo");
 			args->po->weight[n] = 1;
+			args->po->ele[n] = eles[i];
 
 		} else if (math_posting_exits(full_paths[i])) {
 			printf("[disk] [%u] %s\n", i, base_paths[i]);
@@ -34,6 +35,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 
 			sprintf(args->po->type[n], "disk");
 			args->po->weight[n] = 1;
+			args->po->ele[n] = eles[i];
 
 		} else {
 			printf("[empty] [%u] %s\n", i, base_paths[i]);
@@ -41,7 +43,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 
 			sprintf(args->po->type[n], "empty");
 			args->po->weight[n] = 0;
-
+			args->po->ele[n] = NULL;
 		}
 		l2po->pm.n_po += 1;
 	}
@@ -74,13 +76,13 @@ int math_l2_postlist_next(void *po_)
 			return 1;
 		}
 
-		path_postlist_cur_print(po);
+		math_l2_postlist_print_cur(po);
 
-		struct math_expr_score_res expr_score;
-		expr_score = path_postlist_cur_score(po);
-		(void)(expr_score);
+		struct math_expr_score_res expr_res;
+		expr_res = math_l2_postlist_cur_score(po);
+		(void)(expr_res);
 
-		printf("\n");
+		printf("score = %u \n\n", expr_res.score);
 
 		for (int i = 0; i < po->iter.size; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);

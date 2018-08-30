@@ -13,6 +13,8 @@ struct math_l2_postlist {
 
 	char type[MAX_MERGE_POSTINGS][128];
 	int  weight[MAX_MERGE_POSTINGS];
+	struct subpath_ele *ele[MAX_MERGE_POSTINGS];
+
 	struct math_qry_struct *mqs;
 	struct indices *indices /* for debug */;
 };
