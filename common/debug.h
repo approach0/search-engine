@@ -9,6 +9,8 @@
 #define strvar_pair(_var) \
 	#_var, _var
 
+#include <stddef.h>
+#include <stdio.h>
 static __inline__ void prbuff(void *_buf, size_t sz)
 {
 	unsigned char *buf = (unsigned char*)(_buf);

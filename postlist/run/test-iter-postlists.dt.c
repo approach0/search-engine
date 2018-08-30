@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "common/common.h"
 #include "mhook/mhook.h"
@@ -14,7 +15,11 @@ static void gen_random(struct postlist *po, int test_n)
 	/* generate random array of items */
 	PTR_CAST(codec, struct postlist_codec, po->buf_arg);
 	items = postlist_random(test_n, codec->fields);
-	//postlist_print_fields(codec->fields);
+
+	{ /* print truth */
+		PTR_CAST(codec, struct postlist_codec, po->buf_arg);
+		postlist_print(items, test_n, codec->fields);
+	}
 
 	/* append items to posting list */
 	for (int i = 0; i < test_n; i++) {
@@ -31,14 +36,31 @@ static void gen_random(struct postlist *po, int test_n)
 static void test_iters(struct postlist *po)
 {
 	if (!postlist_empty(po)) {
-		struct postlist_iterator iter = postlist_iterator(po);
+		struct postlist_iterator iter1 = postlist_iterator(po);
+		struct postlist_iterator iter2 = postlist_iterator(po);
+		int cnt = 0;
 		do {
 			struct math_postlist_item *item;
-			item = postlist_iter_cur_item(&iter);
-			printf("%u, %u\n", item->doc_id, item->exp_id);
 
-		} while (postlist_iter_next(po, &iter));
-		postlist_iter_free(&iter);
+			item = postlist_iter_cur_item(&iter1);
+			printf("iter1: %u, %u\n", item->doc_id, item->exp_id);
+
+			item = postlist_iter_cur_item(&iter2);
+			printf("iter2: %u, %u\n", item->doc_id, item->exp_id);
+			printf("\n");
+
+			if (random() % 2) {
+				printf("iter1 advances\n");
+				postlist_iter_next(po, &iter1);
+			} else {
+				printf("iter2 advances\n");
+				postlist_iter_next(po, &iter2);
+			}
+			cnt ++;
+		} while (cnt < 20);
+
+		postlist_iter_free(&iter1);
+		postlist_iter_free(&iter2);
 	}
 }
 
