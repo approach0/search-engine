@@ -104,6 +104,27 @@ dir_search_callbk(const char* path, const char *srchpath,
 /*
  * dir-merge initialization related functions.
  */
+list
+dir_merge_subpath_set(enum dir_merge_pathset_type pathset_type,
+	            struct subpaths *subpaths, int *n_uniq_paths)
+{
+	list subpath_set = LIST_NULL;
+	struct subpath_ele_added added;
+	
+	switch (pathset_type) {
+	case DIR_PATHSET_PREFIX_PATH:
+		added = prefix_subpath_set_from_subpaths(subpaths, &subpath_set);
+		break;
+	case DIR_PATHSET_LEAFROOT_PATH:
+	default:
+		added = lr_subpath_set_from_subpaths(subpaths, &subpath_set);
+	}
+
+	*n_uniq_paths = added.new_uniq;
+
+	return subpath_set;
+}
+
 struct assoc_ele_and_pathstr_args {
 	uint32_t                     i;
 	math_index_t                 index;
@@ -164,14 +185,12 @@ static LIST_IT_CALLBK(assoc_ele_and_pathstr)
 #define NEW_SUBPATHS_DIR_BUF(_n_paths) \
 	malloc(_n_paths * MAX_DIR_PATH_NAME_LEN);
 
-int
-math_index_dir_merge(math_index_t index,
+int math_index_dir_merge(math_index_t index,
 	enum dir_merge_type dir_merge_type,
 	enum dir_merge_pathset_type pathset_type,
-	struct subpaths *subpaths, dir_merge_callbk fun, void *args)
+	list subpath_set, int n, dir_merge_callbk fun, void *args)
 {
-	int  n_uniq_paths, ret = 0;
-	list subpath_set = LIST_NULL;
+	int ret = 0;
 	struct assoc_ele_and_pathstr_args assoc_args;
 
 	struct dir_merge_args dm_args = {index, fun, args, 0 /* set size */,
@@ -179,26 +198,13 @@ math_index_dir_merge(math_index_t index,
 	                                 0 /* longpath index */,
 	                                 NULL /* base paths */,
 	                                 NULL /* full paths */};
-	/* generate subpath set */
-	struct subpath_ele_added added;
-	
-	switch (pathset_type) {
-	case DIR_PATHSET_PREFIX_PATH:
-		added = prefix_subpath_set_from_subpaths(subpaths, &subpath_set);
-		break;
-	case DIR_PATHSET_LEAFROOT_PATH:
-	default:
-		added = lr_subpath_set_from_subpaths(subpaths, &subpath_set);
-	}
-
-	n_uniq_paths = added.new_uniq;
 
 	/* allocate unique subpath string buffers */
-	dm_args.set_sz = n_uniq_paths;
-	dm_args.eles = malloc(sizeof(struct subpath_ele*) * n_uniq_paths);
+	dm_args.set_sz = n;
+	dm_args.eles = malloc(sizeof(struct subpath_ele*) * n);
 	dm_args.longpath = 0 /* assign real number later */;
-	dm_args.base_paths = NEW_SUBPATHS_DIR_BUF(n_uniq_paths);
-	dm_args.full_paths = NEW_SUBPATHS_DIR_BUF(n_uniq_paths);
+	dm_args.base_paths = NEW_SUBPATHS_DIR_BUF(n);
+	dm_args.full_paths = NEW_SUBPATHS_DIR_BUF(n);
 
 	/* make unique subpath strings and return longest path index (longpath) */
 	assoc_args.i = 0;
@@ -215,14 +221,15 @@ math_index_dir_merge(math_index_t index,
 	if (assoc_args.i == 0) {
 		/* last function fails for some reason */
 		fprintf(stderr, "path strings are not fully generated.\n");
-		ret = 1; goto exit;
+		ret = 1;
+		goto exit;
 	}
 
 #ifdef DEBUG_DIR_MERGE
 	{
 		int i;
 		printf("base path strings:\n");
-		for (i = 0; i < n_uniq_paths; i++)
+		for (i = 0; i < n; i++)
 			printf("path string [%u]: %s\n", i, dm_args.full_paths[i]);
 	}
 #endif
@@ -260,6 +267,5 @@ exit:
 	free(dm_args.base_paths);
 	free(dm_args.full_paths);
 
-	subpath_set_free(&subpath_set);
 	return ret;
 }

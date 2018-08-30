@@ -417,7 +417,7 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 		if (cur != UINT64_MAX && cur == po->iter.min) {
 			postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
 
-			for (uint32_t j = 0; j < ele->dup_cnt; j++) {
+			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
 				uint32_t qr = ele->rid[j];
 				uint32_t ql = ele->dup[j]->leaf_id;
 				for (uint32_t k = 0; k < item.n_paths; k++) {

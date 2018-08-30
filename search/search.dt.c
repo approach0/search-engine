@@ -56,11 +56,15 @@ math_l2_postlist(struct indices *indices, struct math_qry_struct* mqs)
 {
 	struct math_l2_postlist po;
 	struct add_path_postings_args args = {indices, &po};
+
+	/* add path postings */
 	postmerger_init(&po.pm);
 	math_index_dir_merge(
-		indices->mi, DIR_MERGE_DIRECT, DIR_PATHSET_PREFIX_PATH,
-		&mqs->subpaths, add_path_postings, &args
+		indices->mi, DIR_MERGE_DIRECT,
+		DIR_PATHSET_PREFIX_PATH, mqs->subpath_set, mqs->n_uniq_paths,
+		&add_path_postings, &args
 	);
+
 	po.mqs = mqs;
 	po.indices = indices;
 	return po;
@@ -80,7 +84,6 @@ int math_l2_postlist_next(void *po_)
 
 		struct math_expr_score_res expr_res;
 		expr_res = math_l2_postlist_cur_score(po);
-		(void)(expr_res);
 
 		printf("score = %u \n\n", expr_res.score);
 

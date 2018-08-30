@@ -1,10 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* for subpath_set_free() */
+#include "math-index/math-index.h"
+#include "math-index/subpath-set.h"
+
 #include "tex-parser/head.h"
+
 #include "config.h"
 #include "mnc-score.h"
-
 #include "math-qry-struct.h"
 
 static LIST_CMP_CALLBK(compare_qry_path)
@@ -91,6 +95,8 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 
 	s->pq.n = 0;
 	s->subpaths.n_lr_paths = 0;
+	LIST_CONS(s->subpath_set);
+	s->n_uniq_paths = 0;
 
 	if (parse_ret.code == PARSER_RETCODE_ERR ||
 	    parse_ret.operator_tree == NULL) {
@@ -121,6 +127,12 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	/* prepare structure scoring structure */
 	uint32_t max_node_id = optr_max_node_id(parse_ret.operator_tree);
 	s->pq = pq_allocate(max_node_id);
+	
+	/* create subpath set (unique paths for merging) */
+	s->subpath_set = dir_merge_subpath_set(
+		DIR_PATHSET_PREFIX_PATH, subpaths, &s->n_uniq_paths
+	);
+	//subpath_set_print(&s->subpath_set, stdout);
 
 release:
 	if (parse_ret.operator_tree)
@@ -131,6 +143,11 @@ release:
 
 void math_qry_free(struct math_qry_struct* s)
 {
+	if (s->subpath_set.now) {
+		// subpath_set_print(&s->subpath_set, stdout);
+		subpath_set_free(&s->subpath_set);
+	}
+
 	if (s->subpaths.n_lr_paths)
 		subpaths_release(&s->subpaths);
 

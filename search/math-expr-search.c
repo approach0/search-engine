@@ -310,9 +310,17 @@ int64_t math_postmerge(struct indices *indices, char *tex,
 			fprintf(stderr, "Unknown search policy: %u\n", search_policy);
 		}
 
-		math_index_dir_merge(indices->mi, dir_merge_type, on_dm_args.path_type,
-		                     &parse_ret.subpaths, &on_dir_merge, &on_dm_args);
+		int n;
+		list subpath_set = dir_merge_subpath_set(
+			on_dm_args.path_type, &parse_ret.subpaths, &n
+		);
+		math_index_dir_merge(
+			indices->mi, dir_merge_type,
+			on_dm_args.path_type, subpath_set, n,
+			&on_dir_merge, &on_dm_args
+		);
 
+		subpath_set_free(&subpath_set);
 		subpaths_release(&parse_ret.subpaths);
 
 		return on_dm_args.n_tot_rd_items;

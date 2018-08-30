@@ -25,10 +25,14 @@ typedef enum dir_merge_ret
 	uint32_t /* number of postings list */,
 	uint32_t /* level */, void *args);
 
+list
+dir_merge_subpath_set(enum dir_merge_pathset_type, struct subpaths*, int*);
+
+#include "list/list.h"
 int math_index_dir_merge(
 	math_index_t,
 	enum dir_merge_type,
 	enum dir_merge_pathset_type,
-	struct subpaths*,
-	dir_merge_callbk, void *args
+	list subpath_set, int,
+	dir_merge_callbk, void*
 );

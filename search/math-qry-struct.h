@@ -5,6 +5,8 @@
 struct math_qry_struct {
 	struct math_prefix_qry pq;
 	struct subpaths subpaths;
+	list subpath_set;
+	int n_uniq_paths;
 };
 
 int math_qry_prepare(struct indices*, char*, struct math_qry_struct*);

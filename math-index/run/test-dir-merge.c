@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mhook/mhook.h"
 #include "math-index.h"
 #include "subpath-set.h"
 
@@ -40,14 +41,24 @@ int main(int argc, char *argv[])
 
 		printf("calling math_index_dir_merge()...\n");
 
-		math_index_dir_merge(index, DIR_MERGE_BREADTH_FIRST, DIR_PATHSET_PREFIX_PATH,
-		                     &parse_ret.subpaths, &on_dir_merge, NULL);
-		
+		int n;
+		list subpath_set = dir_merge_subpath_set(
+			DIR_PATHSET_PREFIX_PATH, &parse_ret.subpaths, &n
+		);
+		math_index_dir_merge(
+			index, DIR_MERGE_BREADTH_FIRST,
+			DIR_PATHSET_PREFIX_PATH, subpath_set, n,
+			&on_dir_merge, NULL
+		);
+
+		subpath_set_free(&subpath_set);
 		subpaths_release(&parse_ret.subpaths);
 	} else {
 		printf("parser error: %s\n", parse_ret.msg);
 	}
 
 	math_index_close(index);
+
+	mhook_print_unfree();
 	return 0;
 }

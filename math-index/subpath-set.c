@@ -145,7 +145,7 @@ static LIST_IT_CALLBK(print_subpath)
 	_print_subpath(ele->dup[0], ele->prefix_len);
 	printf(" prefix_len=%u ", ele->prefix_len);
 
-	printf("(duplicates: ");
+	printf("(%u duplicates: ", ele->dup_cnt);
 	for (i = 0; i <= ele->dup_cnt; i++)
 		fprintf(fh, "r#%u~l#%u,p#%u", ele->rid[i],
 		ele->dup[i]->leaf_id, ele->dup[i]->path_id);
@@ -162,7 +162,7 @@ void subpath_set_print(list *set, FILE *fh)
 void subpath_set_print_ele(struct subpath_ele *ele)
 {
 	struct subpath *sp;
-	printf("(duplicates: ");
+	printf("(%u duplicates: ", ele->dup_cnt);
 	for (uint32_t i = 0; i <= ele->dup_cnt; i++) {
 		sp = ele->dup[i];
 		printf("path#%u ", sp->path_id);
