@@ -5,6 +5,7 @@
 #include "config.h"
 #include <assert.h>
 
+#include "common/common.h"
 #include "postlist.h"
 
 /* buffer setup/free macro */
@@ -176,7 +177,6 @@ static void rebuf_cur(struct postlist *po)
 
 		/* invoke rebuf callback */
 		po->on_rebuf(po->buf, &po->buf_end, po->buf_arg);
-
 	} else {
 		/* reset buffer variables anyway */
 		po->buf_end = 0;
@@ -299,4 +299,93 @@ void print_postlist(struct postlist *po)
 	} while (postlist_next(po));
 
 	postlist_finish(po);
+}
+
+//////////////////////////////////////
+
+static void
+postlist_iter_rebuf(struct postlist_iterator *iter)
+{
+	struct postlist_node *cur = iter->cur;
+	struct postlist *po = iter->po;
+	if (cur) { /* when forward_cur hits NULL */
+		memcpy(iter->buf, cur->blk, cur->blk_sz);
+		iter->buf_end = cur->blk_sz;
+
+		po->on_rebuf(iter->buf, &iter->buf_end, po->buf_arg);
+	} else {
+		iter->buf_end = 0;
+	}
+
+	iter->buf_idx = 0;
+}
+
+struct postlist_iterator postlist_iterator(struct postlist *po)
+{
+	struct postlist_iterator iter;
+	iter.po = po;
+	iter.cur = po->head;
+
+	iter.buf = malloc(po->buf_sz);
+	iter.buf_idx = 0;
+	iter.buf_end = 0;
+
+	postlist_iter_rebuf(&iter);
+	return iter;
+}
+
+int postlist_empty(struct postlist* po)
+{
+	return (po->head == NULL);
+}
+
+int postlist_iter_next(struct postlist* _, struct postlist_iterator* iter)
+{
+	struct postlist *po = iter->po;
+	while (iter->buf_end != 0) {
+		if (iter->buf_idx + po->item_sz < iter->buf_end) {
+			iter->buf_idx += po->item_sz;
+			return 1;
+		} else {
+			/* next block */
+			forward_cur(&iter->cur);
+			/* reset buffer */
+			postlist_iter_rebuf(iter);
+		}
+	}
+
+	return 0;
+}
+
+void* postlist_iter_cur_item(struct postlist_iterator* iter)
+{
+	return iter->buf + iter->buf_idx;
+}
+
+int
+postlist_iter_jump(struct postlist_iterator* iter, uint64_t target)
+{
+	struct skippy_node *jump_to;
+	/* jump */
+	jump_to = skippy_node_jump(&iter->cur->sn, target);
+
+	/* update iterator after jumping */
+	if (jump_to != &iter->cur->sn) {
+		iter->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
+		postlist_iter_rebuf(iter);
+	}
+
+	/* walk the rest of items within the block */
+	do {
+		uint64_t id = *(uint32_t*)postlist_iter_cur_item(iter);
+		if (id >= target) return 1;
+
+	} while (postlist_iter_next(NULL, iter));
+
+	return 0;
+}
+
+void postlist_iter_free(struct postlist_iterator* iter)
+{
+	free(iter->buf);
 }

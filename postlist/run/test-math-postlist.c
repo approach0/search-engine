@@ -50,6 +50,7 @@ static void test(struct postlist *po, int test_n)
 	postlist_print_info(po);
 
 	/* test posting list iterator */
+	printf("=== test iterator ===\n");
 	test_iterator(po, codec->fields);
 	//print_postlist(po);
 
