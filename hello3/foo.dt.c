@@ -16,12 +16,12 @@ void list_demo()
 	list_append_array(li, a);
 
 	foreach (iter, list, li) {
-		struct person *a = list_element(a, iter.cur);
+		struct person *a = list_element(a, iter->cur);
 		printf("name: %s, age: %d, salary: %d\n", a->name, a->age, a->salary);
 	}
 
 	foreach (iter, list, li) {
-		struct person *a = list_element(a, iter.cur);
+		struct person *a = list_element(a, iter->cur);
 		printf("free %s\n", a->name);
 		list_free_entry(struct person, iter);
 	}
@@ -44,7 +44,7 @@ void dict_demo()
 	printf("d[%s] = %s\n", "hot", (char*)d["hot"]);
 
 	foreach (iter, strmap, d) {
-		char *key = iter.cur->keystr;
+		char *key = iter->cur->keystr;
 		printf("d[%s] = %s\n", key, (char*)d[[key]]);
 	}
 

@@ -77,25 +77,36 @@ list_insert_front(list_t *li, struct list_node *_new)
 	*li = _new;
 }
 
-struct list_iterator {
+typedef struct list_iterator {
 	struct list_node *cur;
-};
+	list_t            li;
+} *list_iter_t;
 
-static inline struct list_iterator
+static inline list_iter_t
 list_iterator(list_t li)
 {
-	return ((struct list_iterator) {li});
+	struct list_iterator *iter;
+	iter = malloc(sizeof(struct list_iterator));
+	iter->cur = li;
+	iter->li  = li;
+	return iter;
+}
+
+static inline void
+list_iter_free(list_iter_t iter)
+{
+	free(iter);
 }
 
 static inline int
-list_iter_next(list_t li, struct list_iterator *iter)
+list_iter_next(list_iter_t iter)
 {
 	if (iter->cur == NULL)
 		return 0;
 
 	iter->cur = iter->cur->next;
 
-	if (iter->cur == li)
+	if (iter->cur == iter->li)
 		return 0;
 	else
 		return 1;
@@ -123,9 +134,9 @@ list_iter_next(list_t li, struct list_iterator *iter)
 
 #define list_free_entry(_type, _iter) \
 	{ \
-		int sz = list_size((_iter).cur); \
-		list_detach((_iter).cur->prev, (_iter).cur->next); \
-		_type *obj = list_element(obj, (_iter).cur); \
+		int sz = list_size((_iter)->cur); \
+		list_detach((_iter)->cur->prev, (_iter)->cur->next); \
+		_type *obj = list_element(obj, (_iter)->cur); \
 		free(obj); \
 		if (sz - 1 == 0) { \
 			li = NULL; \

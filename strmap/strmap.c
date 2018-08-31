@@ -76,9 +76,19 @@ struct strmap *strmap_va_list(int n, ...)
 	return m;
 }
 
-struct strmap_iterator strmap_iterator(strmap_t m)
+strmap_iter_t strmap_iterator(strmap_t m)
 {
-	return (struct strmap_iterator) {0, m->entries};
+	struct strmap_iterator *iter;
+	iter = malloc(sizeof(struct strmap_iterator));
+	iter->idx = 0;
+	iter->cur = m->entries;
+	iter->strmap = m;
+	return iter;
+}
+
+void strmap_iter_free(strmap_iter_t iter)
+{
+	free(iter);
 }
 
 int strmap_empty(strmap_t m)
@@ -86,11 +96,11 @@ int strmap_empty(strmap_t m)
 	return (m == NULL || m->length == 0);
 }
 
-int strmap_iter_next(strmap_t m, struct strmap_iterator *iter)
+int strmap_iter_next(strmap_iter_t iter)
 {
 	iter->cur += 1;
 	iter->idx += 1;
-	if (iter->idx > m->length - 1)
+	if (iter->idx > iter->strmap->length - 1)
 		return 0;
 	else
 		return 1;

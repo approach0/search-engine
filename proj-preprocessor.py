@@ -164,12 +164,12 @@ def parse_blk(begin, end, stack, iterator, ignores, prev):
 			block = parse_blk('{', '}', 0, iterator, None, prev)
 			emit = (
 				"if (!%s_empty(%s)) "
-				"{ struct %s_iterator %s = %s_iterator(%s); do { "
-				"%s } while (%s_iter_next(%s, & %s)); }"
+				"{ %s_iter_t %s = %s_iterator(%s); do { "
+				"%s } while (%s_iter_next(%s)); %s_iter_free(%s); }"
 				) % (
 					args[1], args[2],
 					args[1], args[0], args[1], args[2],
-					hacky_join(block), args[1], args[2], args[0]
+					hacky_join(block), args[1], args[0], args[1], args[0]
 				)
 			base = [emit]
 		elif tok == "[":

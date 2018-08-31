@@ -26,11 +26,13 @@ struct strmap *strmap_va_list(int, ...);
 #define strmap(...) \
 	strmap_va_list(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 
-struct strmap_iterator {
+typedef struct strmap_iterator {
 	int idx;
 	struct strmap_entry *cur;
-};
+	struct strmap *strmap;
+} *strmap_iter_t;
 
-struct strmap_iterator strmap_iterator(strmap_t);
-int strmap_empty(strmap_t);
-int strmap_iter_next(strmap_t, struct strmap_iterator*);
+strmap_iter_t strmap_iterator(strmap_t);
+int  strmap_empty(strmap_t);
+void strmap_iter_free(strmap_iter_t);
+int  strmap_iter_next(strmap_iter_t);
