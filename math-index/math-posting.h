@@ -86,3 +86,11 @@ void *math_posting_cur_item_v1(math_posting_t);
 void *math_posting_cur_item_v2(math_posting_t);
 
 int math_posting_exits(const char*);
+
+/* 2nd generation iterator */
+math_posting_t math_posting_iterator(const char*);
+math_posting_t math_posting_copy(math_posting_t);
+uint64_t math_posting_iter_cur(math_posting_t);
+int math_posting_iter_next(math_posting_t);
+int math_posting_iter_jump(math_posting_t, uint64_t);
+void math_posting_iter_free(math_posting_t);

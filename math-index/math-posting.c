@@ -106,9 +106,10 @@ int math_posting_signature(math_posting_t po_)
 	return (memcmp(&po->signature, signature, 8) == 0);
 }
 
-void math_posting_free_reader(math_posting_t po)
+void math_posting_free_reader(math_posting_t po_)
 {
-	free(po->fullpath);
+	struct _math_posting *po = (struct _math_posting*)po_;
+	free((void*)po->fullpath);
 	free(po);
 }
 
@@ -327,4 +328,55 @@ void *math_posting_cur_item_v2(math_posting_t po_)
 		goto ret;
 ret:
 	return &ret;
+}
+
+#include <unistd.h>
+static FILE *duplicate(FILE *fh)
+{
+	return fdopen(dup(fileno(fh)), "r");
+}
+
+math_posting_t math_posting_copy(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	struct _math_posting *copy = malloc(sizeof(struct _math_posting));
+	memcpy(copy, po, sizeof(struct _math_posting));
+
+	copy->fullpath = strdup(po->fullpath);
+	copy->fh_posting = duplicate(po->fh_posting);
+	copy->fh_pathinfo = duplicate(po->fh_pathinfo);
+
+	return copy;
+}
+
+math_posting_t math_posting_iterator(const char *fullpath)
+{
+	math_posting_t po = math_posting_new_reader(fullpath);
+	if (math_posting_start(po))
+		return po;
+
+	math_posting_finish(po);
+	math_posting_free_reader(po);
+	return NULL;
+}
+
+void math_posting_iter_free(math_posting_t po)
+{
+	math_posting_finish(po);
+	math_posting_free_reader(po);
+}
+
+uint64_t math_posting_iter_cur(math_posting_t po_)
+{
+	return math_posting_cur_id_v2_2(po_);
+}
+
+int math_posting_iter_next(math_posting_t po_)
+{
+	return (int)math_posting_next(po_);
+}
+
+int math_posting_iter_jump(math_posting_t po_, uint64_t target)
+{
+	return (int)math_posting_jump(po_, target);
 }
