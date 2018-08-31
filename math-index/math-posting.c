@@ -50,7 +50,7 @@ math_posting_new_reader(const char *fullpath)
 		malloc(sizeof(struct _math_posting));
 
 	memcpy(&po->signature, MATH_ONDISK_SIGNATURE, 8);
-	po->fullpath = fullpath;
+	po->fullpath = strdup(fullpath);
 	po->fh_posting = NULL;
 	po->fh_pathinfo = NULL;
 	po->buf_idx = 0;
@@ -106,9 +106,10 @@ int math_posting_signature(math_posting_t po_)
 	return (memcmp(&po->signature, signature, 8) == 0);
 }
 
-void math_posting_free_reader(math_posting_t po_)
+void math_posting_free_reader(math_posting_t po)
 {
-	free(po_);
+	free(po->fullpath);
+	free(po);
 }
 
 void math_posting_finish(math_posting_t po_)
