@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "postmerger.h"
 
 void postmerger_init(struct postmerger *pm)
@@ -24,24 +25,31 @@ postmerger_iter_min(struct postmerger *pm,
 	return min;
 }
 
-struct postmerger_iterator
+postmerger_iter_t
 postmerger_iterator(struct postmerger *pm)
 {
-	struct postmerger_iterator iter;
-	iter.size = pm->n_po;
-	for (int i = 0; i < iter.size; i++) {
-		iter.map[i] = i;
+	struct postmerger_iterator *iter;
+	iter = malloc(sizeof(struct postmerger_iterator));
+	iter->size = pm->n_po;
+	for (int i = 0; i < iter->size; i++) {
+		iter->map[i] = i;
 	}
-	iter.min = postmerger_iter_min(pm, &iter);
+	iter->pm  = pm;
+	/* iter->min should be the last one after other
+	 * members of `postmerger_iterator' are ready. */
+	iter->min = postmerger_iter_min(iter->pm, iter);
 	return iter;
 }
 
-int
-postmerger_iter_next(struct postmerger *pm,
-                     struct postmerger_iterator *iter)
+void postmerger_iter_free(postmerger_iter_t iter)
+{
+	free(iter);
+}
+
+int postmerger_iter_next(postmerger_iter_t iter)
 {
 	int last_round = (iter->min == UINT64_MAX);
-	iter->min = postmerger_iter_min(pm, iter);
+	iter->min = postmerger_iter_min(iter->pm, iter);
 	return !last_round;
 }
 

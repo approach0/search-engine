@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "mhook/mhook.h"
 #include "common/common.h"
 #include "postmerger.h"
 
@@ -50,24 +51,25 @@ int main()
 	pm.po[pm.n_po ++] = postmerger_simple_postlist(&a);
 	pm.po[pm.n_po ++] = postmerger_simple_postlist(&b);
 	pm.po[pm.n_po ++] = postmerger_simple_postlist(&c);
-
+	
 	foreach (iter, postmerger, &pm) {
-		for (int i = 0; i < iter.size; i++) {
-			uint64_t cur = postmerger_iter_call(&pm, &iter, cur, i);
+		for (int i = 0; i < iter->size; i++) {
+			uint64_t cur = postmerger_iter_call(&pm, iter, cur, i);
 
 			if (cur == UINT64_MAX) {
-				printf("removing [%d]\n", iter.map[i]);
-				postmerger_iter_remove(&iter, i);
+				printf("removing [%d]\n", iter->map[i]);
+				postmerger_iter_remove(iter, i);
 				i -= 1; /* repeat position[i] next loop */
 				continue;
 			} else {
-				printf("%u: %lu \n", iter.map[i], cur);
-				if (cur == iter.min)
-					postmerger_iter_call(&pm, &iter, next, i);
+				printf("%u: %lu \n", iter->map[i], cur);
+				if (cur == iter->min)
+					postmerger_iter_call(&pm, iter, next, i);
 			}
 		}
 		printf("\n");
 	}
 
+	mhook_print_unfree();
 	return 0;
 }

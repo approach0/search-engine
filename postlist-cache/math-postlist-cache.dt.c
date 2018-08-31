@@ -139,7 +139,7 @@ void
 math_postlist_cache_free(struct math_postlist_cache cache)
 {
 	foreach (iter, strmap, cache.path_dict) {
-		char *key = iter.cur->keystr;
+		char *key = iter->cur->keystr;
 		struct postlist *po = cache.path_dict[[key]];
 		if (po) postlist_free(po);
 	}
@@ -169,7 +169,7 @@ math_postlist_cache_list(struct math_postlist_cache c, int print)
 {
 	size_t cnt = 0;
 	foreach (iter, strmap, c.path_dict) {
-		char *key = iter.cur->keystr;
+		char *key = iter->cur->keystr;
 		if (print) printf("cached math path: %s\n", key);
 		cnt ++;
 	}

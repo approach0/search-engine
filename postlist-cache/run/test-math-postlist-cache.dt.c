@@ -14,7 +14,7 @@ int main()
 	printf("items: %lu, total size: %lu \n", n, cache.postlist_sz);
 
 	foreach (iter, strmap, cache.path_dict) {
-		char *key = iter.cur->keystr;
+		char *key = iter->cur->keystr;
 		struct postlist *po = math_postlist_cache_find(cache, key);
 		
 		printf("in-memory posting list [%s]:\n", key);

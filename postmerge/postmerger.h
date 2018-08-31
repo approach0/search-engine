@@ -31,20 +31,24 @@ void postmerger_init(struct postmerger*);
 	(*((_pm)->po[_i]._fun)) ((_pm)->po[_i].po, ##__VA_ARGS__)
 
 /* iterator-related */
-struct postmerger_iterator {
+typedef struct postmerger_iterator {
 	uint64_t min;
 	int size, map[MAX_MERGE_POSTINGS];
-};
+	struct postmerger *pm;
+} *postmerger_iter_t;
+
+postmerger_iter_t
+postmerger_iterator(struct postmerger*);
 
 int postmerger_empty(struct postmerger*);
 
-struct postmerger_iterator
-postmerger_iterator(struct postmerger*);
+void
+postmerger_iter_free(postmerger_iter_t);
 
 int
-postmerger_iter_next(struct postmerger*, struct postmerger_iterator*);
+postmerger_iter_next(postmerger_iter_t);
 
 #define postmerger_iter_call(_pm, _iter, _fun, _i, ...) \
 	POSTMERGER_POSTLIST_CALL(_pm, _fun, (_iter)->map[_i], ##__VA_ARGS__)
 
-void postmerger_iter_remove(struct postmerger_iterator*, int);
+void postmerger_iter_remove(postmerger_iter_t, int);
