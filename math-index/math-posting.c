@@ -380,3 +380,8 @@ int math_posting_iter_jump(math_posting_t po_, uint64_t target)
 {
 	return (int)math_posting_jump(po_, target);
 }
+
+int math_posting_empty(const char *fullpath)
+{
+	return !math_posting_exits(fullpath);
+}

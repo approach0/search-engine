@@ -76,7 +76,14 @@ int main(int argc, char *argv[])
 		goto exit;
 	}
 
-	math_inex_probe_v2(path, 1, stdout);
+	// math_inex_probe_v2(path, 1, stdout);
+	foreach (iter, math_posting, path) {
+		uint64_t cur = math_posting_iter_cur(iter);
+		uint32_t docID = (uint32_t)(cur >> 32);
+		uint32_t expID = (uint32_t)(cur >> 0);
+		printf("%u, %u \n", docID, expID);
+	}
+
 	math_posting_iter_test(path);
 	free((void*)path);
 
