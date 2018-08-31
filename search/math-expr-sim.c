@@ -391,12 +391,12 @@ math_expr_prefix_score_on_merge(
 
 void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 {
-	for (int i = 0; i < po->iter.size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		uint32_t docID = (uint32_t)(cur >> 32);
 		uint32_t expID = (uint32_t)(cur >> 0);
 
-		uint32_t orig = po->iter.map[i];
+		uint32_t orig = po->iter->map[i];
 		printf("[%s] [%u] -> [%u]: %u,%u \n", po->type[orig], orig, i,
 				docID, expID);
 	}
@@ -410,13 +410,13 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 	uint32_t n_doc_lr_paths = 0;
 	struct math_prefix_qry *pq = &po->mqs->pq;
 
-	for (int i = 0; i < po->iter.size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
-		uint32_t orig = po->iter.map[i];
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint32_t orig = po->iter->map[i];
 		struct subpath_ele *ele = po->ele[orig];
 
-		if (cur != UINT64_MAX && cur == po->iter.min) {
-			postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
+		if (cur != UINT64_MAX && cur == po->iter->min) {
+			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 			n_doc_lr_paths = item.n_lr_paths;
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
@@ -446,13 +446,13 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 	struct math_postlist_item item = {0};
 	mnc_reset_docs();
 
-	for (int i = 0; i < po->iter.size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
-		uint32_t orig = po->iter.map[i];
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint32_t orig = po->iter->map[i];
 		struct subpath_ele *ele = po->ele[orig];
 
-		if (cur != UINT64_MAX && cur == po->iter.min) {
-			postmerger_iter_call(&po->pm, &po->iter, read, i, &item, sizeof(item));
+		if (cur != UINT64_MAX && cur == po->iter->min) {
+			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
 				uint32_t qr = ele->rid[j];
@@ -495,7 +495,7 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 		uint32_t qn = po->mqs->subpaths.n_lr_paths;
 		uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
 		/* get docID and exprID */
-		uint64_t cur = po->iter.min;
+		uint64_t cur = po->iter->min;
 		P_CAST(item, struct math_postlist_item, &cur);
 		ret.doc_id = item->doc_id;
 		ret.exp_id = item->exp_id;

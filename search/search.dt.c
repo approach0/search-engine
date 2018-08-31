@@ -73,9 +73,9 @@ math_l2_postlist(struct indices *indices, struct math_qry_struct* mqs)
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	uint32_t prev_min_docID = (uint32_t)(po->iter.min >> 32);
+	uint32_t prev_min_docID = (uint32_t)(po->iter->min >> 32);
 	do {
-		uint32_t cur_min_docID = (uint32_t)(po->iter.min >> 32);
+		uint32_t cur_min_docID = (uint32_t)(po->iter->min >> 32);
 		if (cur_min_docID != prev_min_docID) {
 			return 1;
 		}
@@ -87,18 +87,18 @@ int math_l2_postlist_next(void *po_)
 
 		printf("score = %u \n\n", expr_res.score);
 
-		for (int i = 0; i < po->iter.size; i++) {
-			uint64_t cur = postmerger_iter_call(&po->pm, &po->iter, cur, i);
+		for (int i = 0; i < po->iter->size; i++) {
+			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			if (cur == UINT64_MAX) {
-				postmerger_iter_remove(&po->iter, i);
+				postmerger_iter_remove(po->iter, i);
 				i -= 1;
-			} else if (cur == po->iter.min) {
+			} else if (cur == po->iter->min) {
 				/* forward */
-				postmerger_iter_call(&po->pm, &po->iter, next, i);
+				postmerger_iter_call(&po->pm, po->iter, next, i);
 			}
 		}
 
-	} while (postmerger_iter_next(&po->pm, &po->iter));
+	} while (postmerger_iter_next(po->iter));
 
 	return 0;
 }
@@ -106,10 +106,10 @@ int math_l2_postlist_next(void *po_)
 uint64_t math_l2_postlist_cur(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	if (po->iter.min == UINT64_MAX) {
+	if (po->iter->min == UINT64_MAX) {
 		return UINT64_MAX;
 	} else {
-		uint32_t min_docID = (uint32_t)(po->iter.min >> 32);
+		uint32_t min_docID = (uint32_t)(po->iter->min >> 32);
 		return min_docID;
 	}
 }
@@ -130,6 +130,7 @@ void math_l2_postlist_uninit(void *po_)
 	for (int i = 0; i < po->pm.n_po; i++) {
 		POSTMERGER_POSTLIST_CALL(&po->pm, uninit, i);
 	}
+	postmerger_iter_free(po->iter);
 }
 
 struct postmerger_postlist
@@ -181,12 +182,12 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 	// MERGE here
 	foreach (iter, postmerger, &root_pm) {
-		for (int i = 0; i < iter.size; i++) {
-			uint64_t cur = postmerger_iter_call(&root_pm, &iter, cur, i);
+		for (int i = 0; i < iter->size; i++) {
+			uint64_t cur = postmerger_iter_call(&root_pm, iter, cur, i);
 
-			printf("root[%u]: %lu \n", iter.map[i], cur);
-			if (cur == iter.min)
-				postmerger_iter_call(&root_pm, &iter, next, i);
+			printf("root[%u]: %lu \n", iter->map[i], cur);
+			if (cur == iter->min)
+				postmerger_iter_call(&root_pm, iter, next, i);
 		}
 	}
 

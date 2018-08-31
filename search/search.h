@@ -9,7 +9,7 @@
 
 struct math_l2_postlist {
 	struct postmerger pm;
-	struct postmerger_iterator iter;
+	postmerger_iter_t iter;
 
 	char type[MAX_MERGE_POSTINGS][128];
 	int  weight[MAX_MERGE_POSTINGS];
