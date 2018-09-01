@@ -6,7 +6,7 @@
 
 #define WHERE fprintf(stderr,"[WHERE]%s: %d\n", __FILE__, __LINE__);
 
-#define strvar_pair(_var) \
+#define STRVAR_PAIR(_var) \
 	#_var, _var
 
 #include <stddef.h>

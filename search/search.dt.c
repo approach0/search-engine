@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include "common/common.h"
 #include "postmerge/postcalls.h"
 #include "search.h"
@@ -70,22 +72,63 @@ math_l2_postlist(struct indices *indices, struct math_qry_struct* mqs)
 	return po;
 }
 
+uint64_t math_l2_postlist_cur(void *po_)
+{
+	PTR_CAST(po, struct math_l2_postlist, po_);
+	if (po->iter->min == UINT64_MAX) {
+		return UINT64_MAX;
+	} else {
+		uint32_t min_docID = (uint32_t)(po->iter->min >> 32);
+		return min_docID;
+	}
+}
+
+size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
+{
+	PTR_CAST(item, struct l2_postlist_item, dest);
+	PTR_CAST(po, struct math_l2_postlist, po_);
+
+	item->doc_id = po->prev_doc_id;
+	item->part_score = po->max_exp_score;
+	item->n_occurs = po->n_occurs;
+
+	memcpy(item->occurs, po->occurs, po->n_occurs * sizeof(hit_occur_t));
+
+	po->max_exp_score = 0;
+	po->n_occurs = 0;
+	return sizeof(struct l2_postlist_item);
+}
+
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	uint32_t prev_min_docID = (uint32_t)(po->iter->min >> 32);
-	do {
-		uint32_t cur_min_docID = (uint32_t)(po->iter->min >> 32);
-		if (cur_min_docID != prev_min_docID) {
-			return 1;
-		}
+	po->prev_doc_id = (uint32_t)(po->iter->min >> 32);
 
-		math_l2_postlist_print_cur(po);
+	do {
+		uint32_t cur_doc_id = (uint32_t)(po->iter->min >> 32);
+		if (cur_doc_id != po->prev_doc_id) { return 1; }
 
 		struct math_expr_score_res expr_res;
 		expr_res = math_l2_postlist_cur_score(po);
 
-		printf("score = %u \n\n", expr_res.score);
+#ifdef PRINT_RECUR_MERGING_ITEMS
+		math_l2_postlist_print_cur(po);
+		printf("formula score = %u \n\n", expr_res.score);
+#endif
+		if (expr_res.score) {
+			/* save best expression score */
+			if (expr_res.score > po->max_exp_score)
+				po->max_exp_score = expr_res.score;
+
+			/* save occurs  */
+			if (po->n_occurs < MAX_HIGHLIGHT_OCCURS) {
+				hit_occur_t *ho = po->occurs + po->n_occurs;
+				po->n_occurs += 1;
+				ho->pos = expr_res.exp_id;
+				memcpy(ho->qmask, expr_res.qmask, MAX_MTREE * sizeof(uint64_t));
+				memcpy(ho->dmask, expr_res.dmask, MAX_MTREE * sizeof(uint64_t));
+			}
+		}
 
 		for (int i = 0; i < po->iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
@@ -103,17 +146,6 @@ int math_l2_postlist_next(void *po_)
 	return 0;
 }
 
-uint64_t math_l2_postlist_cur(void *po_)
-{
-	PTR_CAST(po, struct math_l2_postlist, po_);
-	if (po->iter->min == UINT64_MAX) {
-		return UINT64_MAX;
-	} else {
-		uint32_t min_docID = (uint32_t)(po->iter->min >> 32);
-		return min_docID;
-	}
-}
-
 int math_l2_postlist_init(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -121,6 +153,12 @@ int math_l2_postlist_init(void *po_)
 		POSTMERGER_POSTLIST_CALL(&po->pm, init, i);
 	}
 	po->iter = postmerger_iterator(&po->pm);
+	po->n_occurs = 0;
+	po->max_exp_score = 0;
+	po->prev_doc_id = 0;
+
+	/* next() will read the first item. */
+	math_l2_postlist_next(po_);
 	return 0;
 }
 
@@ -141,7 +179,7 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 		math_l2_postlist_cur,
 		math_l2_postlist_next,
 		NULL /* jump */,
-		NULL /* read */,
+		math_l2_postlist_read,
 		math_l2_postlist_init,
 		math_l2_postlist_uninit
 	};
@@ -163,7 +201,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	// Create merger objects
 	for (int i = 0; i < qry->len; i++) {
 		const char *kw = query_get_keyword(qry, i);
-		printf("%s\n", kw);
+		printf("processing query keyword `%s' ...\n", kw);
 		int j = root_pm.n_po;
 		if (0 == math_qry_prepare(indices, (char*)kw, &mqs[j])) {
 			/* construct level-2 postlist */
@@ -180,13 +218,25 @@ indices_run_query(struct indices* indices, struct query* qry)
 		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
 	}
 
-	// MERGE here
+	// MERGE l2 posting lists here
 	foreach (iter, postmerger, &root_pm) {
 		for (int i = 0; i < iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(&root_pm, iter, cur, i);
+			struct l2_postlist_item item;
+			postmerger_iter_call(&root_pm, iter, read, i, &item, 0);
 
-			printf("root[%u]: %lu \n", iter->map[i], cur);
-			if (cur == iter->min)
+#ifdef PRINT_RECUR_MERGING_ITEMS
+			printf("root[%u]: ", iter->map[i]);
+			printf("%s=%u, ", STRVAR_PAIR(item.doc_id));
+			printf("%s=%u, ", STRVAR_PAIR(item.part_score));
+			printf("%s=%u: ", STRVAR_PAIR(item.n_occurs));
+			for (int j = 0; j < item.n_occurs; j++) {
+				printf("%u ", item.occurs[j].pos);
+			}
+			if (item.n_occurs == MAX_HIGHLIGHT_OCCURS) printf("(maximum)");
+			printf("\n\n");
+#endif
+			if (cur != UINT64_MAX && cur == iter->min)
 				postmerger_iter_call(&root_pm, iter, next, i);
 		}
 	}

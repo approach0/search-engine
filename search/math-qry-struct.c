@@ -148,9 +148,11 @@ void math_qry_free(struct math_qry_struct* s)
 		subpath_set_free(&s->subpath_set);
 	}
 
-	if (s->subpaths.n_lr_paths)
+	if (s->subpaths.n_lr_paths) {
 		subpaths_release(&s->subpaths);
+	}
 
-	if (s->pq.n)
+	if (s->pq.n) {
 		pq_free(s->pq);
+	}
 }
