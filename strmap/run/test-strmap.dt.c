@@ -74,9 +74,9 @@ void test_iterator()
 	);
 	printf("strmap empty? %d\n", strmap_empty(m));
 	
-	if (!strmap_empty(m)) { struct strmap_iterator iter = strmap_iterator(m); do {
-		printf( "%s -> %s\n", iter.cur->keystr,( char*) iter.cur->value) ;
-	} while (strmap_iter_next(m, & iter)); }
+	foreach (iter, strmap, m) {
+		printf( "%s -> %s\n", iter->cur->keystr, (char*)iter->cur->value);
+	}
 	
 	strmap_free(m);
 }
