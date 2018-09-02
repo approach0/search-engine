@@ -4,6 +4,7 @@
 #include "postmerge/postcalls.h"
 #include "search.h"
 #include "math-expr-sim.h"
+#include "proximity.h"
 
 struct add_path_postings_args {
 	struct indices *indices;
@@ -186,6 +187,58 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	return ret;
 }
 
+static uint32_t
+sort_occurs(hit_occur_t *dest, prox_input_t* in, int n)
+{
+#define CUR_POS(_in, _i) \
+	_in[_i].pos[_in[_i].cur].pos
+	uint32_t dest_end = 0;
+	while (dest_end < MAX_HIGHLIGHT_OCCURS) {
+		uint32_t i, min_idx, min_cur, min = MAX_N_POSITIONS;
+		for (i = 0; i < n; i++)
+			if (in[i].cur < in[i].n_pos)
+				if (CUR_POS(in, i) < min) {
+					min = CUR_POS(in, i);
+					min_idx = i;
+					min_cur = in[i].cur;
+				}
+		if (min == MAX_N_POSITIONS)
+			/* input exhausted */
+			break;
+		else
+			/* consume input */
+			in[min_idx].cur ++;
+		if (dest_end == 0 || /* first put */
+		    dest[dest_end - 1].pos != min /* unique */)
+			dest[dest_end++] = in[min_idx].pos[min_cur];
+	}
+	return dest_end;
+}
+
+static struct rank_hit
+*new_hit(doc_id_t hitID, float score, prox_input_t *prox, int n)
+{
+	struct rank_hit *hit;
+	hit = malloc(sizeof(struct rank_hit));
+	hit->docID = hitID;
+	hit->score = score;
+	hit->occurs = malloc(sizeof(hit_occur_t) * MAX_HIGHLIGHT_OCCURS);
+	hit->n_occurs = sort_occurs(hit->occurs, prox, n);
+	return hit;
+}
+
+static void
+topk_candidate(ranked_results_t *rk_res,
+               doc_id_t docID, float score,
+               prox_input_t *prox, uint32_t n)
+{
+	if (!priority_Q_full(rk_res) ||
+	    score > priority_Q_min_score(rk_res)) {
+		struct rank_hit *hit = new_hit(docID, score, prox, n);
+		priority_Q_add_or_replace(rk_res, hit);
+	}
+}
+
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry)
 {
@@ -218,26 +271,44 @@ indices_run_query(struct indices* indices, struct query* qry)
 		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
 	}
 
+	/* proximity score data structure */
+	prox_input_t prox[qry->len];
+
 	// MERGE l2 posting lists here
 	foreach (iter, postmerger, &root_pm) {
+		float math_score = 0.f;
+		uint32_t doc_id  = 0;
+
 		for (int i = 0; i < iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(&root_pm, iter, cur, i);
-			struct l2_postlist_item item;
-			postmerger_iter_call(&root_pm, iter, read, i, &item, 0);
+
+			if (cur != UINT64_MAX && cur == iter->min) {
+				struct l2_postlist_item item;
+				postmerger_iter_call(&root_pm, iter, read, i, &item, 0);
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
-			printf("root[%u]: ", iter->map[i]);
-			printf("%s=%u, ", STRVAR_PAIR(item.doc_id));
-			printf("%s=%u, ", STRVAR_PAIR(item.part_score));
-			printf("%s=%u: ", STRVAR_PAIR(item.n_occurs));
-			for (int j = 0; j < item.n_occurs; j++) {
-				printf("%u ", item.occurs[j].pos);
-			}
-			if (item.n_occurs == MAX_HIGHLIGHT_OCCURS) printf("(maximum)");
-			printf("\n\n");
+				printf("root[%u]: ", iter->map[i]);
+				printf("%s=%u, ", STRVAR_PAIR(item.doc_id));
+				printf("%s=%u, ", STRVAR_PAIR(item.part_score));
+				printf("%s=%u: ", STRVAR_PAIR(item.n_occurs));
+				for (int j = 0; j < item.n_occurs; j++)
+					printf("%u ", item.occurs[j].pos);
+				if (item.n_occurs == MAX_HIGHLIGHT_OCCURS) printf("(maximum)");
+				printf("\n\n");
 #endif
-			if (cur != UINT64_MAX && cur == iter->min)
+				doc_id     = item.doc_id;
+				math_score = (float)item.part_score;
+				prox_set_input(prox + i, item.occurs, item.n_occurs);
+
+				/* advance posting iterators */
 				postmerger_iter_call(&root_pm, iter, next, i);
+			}
+		}
+
+		float prox_score = proximity_score(prox, iter->size);
+		float doc_score = prox_score + math_score;
+		if (doc_score) {
+			topk_candidate(&rk_res, doc_id, doc_score, prox, iter->size);
 		}
 	}
 
