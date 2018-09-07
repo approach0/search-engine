@@ -77,10 +77,17 @@ int main(int argc, char *argv[])
 	}
 
 	// math_inex_probe_v2(path, 1, stdout);
+
+//	int flag = 0;
 	foreach (iter, math_posting, path) {
 		uint64_t cur = math_posting_iter_cur(iter);
 		uint32_t docID = (uint32_t)(cur >> 32);
 		uint32_t expID = (uint32_t)(cur >> 0);
+//		if (docID >= 296820)
+//			flag = 0;
+//		else if (docID >= 296800)
+//			flag = 1;
+//		if (flag)
 		printf("%u, %u \n", docID, expID);
 	}
 

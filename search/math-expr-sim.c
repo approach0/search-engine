@@ -16,7 +16,7 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-//#define DEBUG_MATH_SCORE_INSPECT
+// #define DEBUG_MATH_SCORE_INSPECT
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -28,7 +28,9 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //	if (0 == strcmp(url, "Quantum_finance:1") ||
 //	    0 == strcmp(url, "Order_statistic:46")) {
 
-	if (doc_id == 96281 || doc_id == 503653) {
+	if (doc_id == 296807) {
+
+	//if (0 == strcmp(url, "Lorentz–Heaviside_units:68")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -308,10 +310,10 @@ math_expr_prefix_score_on_merge(
 				ql = mepa->ele->dup[j]->leaf_id; /* use leaf_id for aligning */
 				/* (to generate correct leaf mask to be highlighted in tree) */
 #ifdef DEBUG_MATH_SCORE_INSPECT
-//				if (inspect) {
-//					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
-//					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
-//				}
+				if (inspect) {
+					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+				}
 #endif
 				for (uint32_t k = 0; k < item->n_paths; k++) {
 					uint32_t dr, dl;
@@ -321,22 +323,22 @@ math_expr_prefix_score_on_merge(
 					uint64_t res = 0;
 					res = pq_hit(pq, qr, ql, dr, dl);
 #ifdef DEBUG_MATH_SCORE_INSPECT
-//					if (inspect) {
-//						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
-//						       trans_symbol(item->lf_symb[k]));
-//						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-//						//pq_print(*pq, 26);
-//						printf("\n");
-//					}
+					if (inspect) {
+						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
+						       trans_symbol(item->lf_symb[k]));
+						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
+						//pq_print(*pq, 26);
+						printf("\n");
+					}
 #else
 					(void)res;
 #endif
 				}
 			}
 #ifdef DEBUG_MATH_SCORE_INSPECT
-//			if (inspect) {
-//				printf("}\n");
-//			}
+			if (inspect) {
+				printf("}\n");
+			}
 #endif
 		}
 	}
@@ -402,6 +404,10 @@ void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 	}
 }
 
+#ifdef DEBUG_MATH_SCORE_INSPECT
+static int debug = 0;
+#endif
+
 uint32_t
 math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 	struct pq_align_res *ar, uint32_t *r_cnt)
@@ -426,6 +432,11 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 					uint32_t dr = item.subr_id[k];
 					uint32_t dl = item.leaf_id[k];
 
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+//	if (debug)
+//		printf("qr~ql %u~%u, dr~dl %u~%u. \n", qr, ql, dr, dl);
+#endif
 					uint64_t res = 0;
 					res = pq_hit(pq, qr, ql, dr, dl);
 					(void)res;
@@ -488,8 +499,39 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 	uint32_t r_cnt, n_doc_lr_paths, lcs = 0;
 	struct pq_align_res align_res[MAX_MTREE] = {0};
 
+	/* get docID and exprID */
+	uint64_t cur = po->iter->min;
+	P_CAST(item, struct math_postlist_item, &cur);
+	ret.doc_id = item->doc_id;
+	ret.exp_id = item->exp_id;
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	debug = 0; if (score_inspect_filter(ret.doc_id, po->indices)) debug = 1;
+	if (debug)
+		math_l2_postlist_print_cur(po);
+#endif
+
 	/* structure scores */
 	n_doc_lr_paths = math_l2_postlist_cur_struct_sim(po, align_res, &r_cnt);
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (debug) {
+		printf("doc#%u, exp#%u\n", ret.doc_id, ret.exp_id);
+		for (int i = 0; i < MAX_MTREE; i++) {
+			printf("tree#%d: width=%u, qr=%u, dr=%u, qmask=0x%lx, dmask=0x%lx\n",
+				i, align_res[i].width, align_res[i].qr, align_res[i].dr,
+				align_res[i].qmask, align_res[i].dmask);
+			for (uint32_t bit = 0; bit < MAX_LEAVES; bit++) {
+				if ((0x1L << bit) & align_res[i].qmask)
+					printf("q%u ", bit + 1);
+				if ((0x1L << bit) & align_res[i].dmask)
+					printf("d%u ", bit + 1);
+			}
+			printf("\n");
+		}
+		printf("align r_cnt = %u\n", r_cnt);
+	}
+#endif
 
 	/* symbolic scores */
 	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, align_res);
@@ -497,12 +539,6 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 	/* get doc/qry number of leaf-root paths */
 	uint32_t qn = po->mqs->subpaths.n_lr_paths;
 	uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
-
-	/* get docID and exprID */
-	uint64_t cur = po->iter->min;
-	P_CAST(item, struct math_postlist_item, &cur);
-	ret.doc_id = item->doc_id;
-	ret.exp_id = item->exp_id;
 
 	/* similarity factors */
 	struct math_expr_sim_factors factors = {
