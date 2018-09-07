@@ -97,11 +97,14 @@ httpd_on_recv(const char* req, void* arg_)
 	fflush(log_fh);
 #endif
 
-	//srch_res = indices_run_query(args->indices, &qry);
+#if 1
+	srch_res = indices_run_query(args->indices, &qry);
+#else
 	wchar_t *kw = query_keyword(qry, 0);
 	char *kw_utf8 = wstr2mbstr(kw);
 	srch_res = math_expr_search(args->indices, kw_utf8, MATH_SRCH_FUZZY_STRUCT);
 	printf("time cost: %ld msec.\n", timer_tot_msec(&timer));
+#endif
 
 	//////// TREC LOG ////////
 	if (args->trec_log) {
@@ -151,7 +154,6 @@ int main(int argc, char *argv[])
 	struct indices        indices;
 	unsigned short        cache_sz = SEARCHD_DEFAULT_CACHE_MB;
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
-	char                 *dict_path = NULL;
 	struct searchd_args   searchd_args;
 	int                   trec_log = 0;
 
@@ -164,11 +166,10 @@ int main(int argc, char *argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h |"
-			       " -T (TREC log) |"
-			       " -i <index path> |"
 			       " -p <port> | "
+			       " -i <index path> |"
 			       " -c <cache size (MB)> | "
-			       " -d <dict> "
+			       " -T (TREC log) |"
 			       "\n", argv[0]);
 			printf("\n");
 			goto exit;
@@ -231,7 +232,6 @@ exit:
 	 * free program arguments
 	 */
 	free(index_path);
-	free(dict_path);
 
 	mhook_print_unfree();
 	return 0;
