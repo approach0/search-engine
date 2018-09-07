@@ -26,6 +26,7 @@ enum math_index_open_opt {
 
 enum math_index_wr_opt {
 	MATH_INDEX_WO_PREFIX,
+	MATH_INDEX_WO_CLASSIC,
 	MATH_INDEX_ALL
 };
 

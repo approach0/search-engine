@@ -116,7 +116,7 @@ int httpd_run(unsigned short port,
 	for (int i = 0; i < n_handlers; i++) {
 		copy_args[i].on_recv = handlers[i].handler;
 		copy_args[i].arg = arg;
-		printf("setup URI handler for %s ...\n", handlers[i].uri);
+		// printf("setup URI handler for %s ...\n", handlers[i].uri);
 		evhttp_set_cb(httpd, handlers[i].uri, httpd_callbk, copy_args + i);
 	}
 

@@ -440,6 +440,9 @@ math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
 		return 1;
 	}
 
+	if (opt == MATH_INDEX_WO_CLASSIC)
+		goto skip_classic;
+
 #ifdef DEBUG_MATH_INDEX
 	printf("path index step 1 (adding into subpath set):\n");
 #endif
@@ -463,6 +466,8 @@ math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
 	printf("deleting subpath set...\n");
 #endif
 	subpath_set_free(&arg.subpath_set);
+
+skip_classic:
 
 	if (opt == MATH_INDEX_WO_PREFIX)
 		goto skip_prefix;
