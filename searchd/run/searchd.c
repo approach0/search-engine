@@ -100,6 +100,7 @@ httpd_on_recv(const char* req, void* arg_)
 #if 1
 	srch_res = indices_run_query(args->indices, &qry);
 #else
+	/* temporary backup */
 	wchar_t *kw = query_keyword(qry, 0);
 	char *kw_utf8 = wstr2mbstr(kw);
 	srch_res = math_expr_search(args->indices, kw_utf8, MATH_SRCH_FUZZY_STRUCT);

@@ -487,30 +487,37 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 
 	uint32_t r_cnt, n_doc_lr_paths, lcs = 0;
 	struct pq_align_res align_res[MAX_MTREE] = {0};
+
+	/* structure scores */
 	n_doc_lr_paths = math_l2_postlist_cur_struct_sim(po, align_res, &r_cnt);
+
+	/* symbolic scores */
 	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, align_res);
 
-	if (n_doc_lr_paths) {
-		/* get doc/qry number of leaf-root paths */
-		uint32_t qn = po->mqs->subpaths.n_lr_paths;
-		uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
-		/* get docID and exprID */
-		uint64_t cur = po->iter->min;
-		P_CAST(item, struct math_postlist_item, &cur);
-		ret.doc_id = item->doc_id;
-		ret.exp_id = item->exp_id;
-		/* get overall similarity factors */
-		struct math_expr_sim_factors factors = {
-			sym_sim, 0 /* search depth */, qn, dn,
-			align_res, MAX_MTREE, r_cnt, lcs, 1 /* not used */
-		};
-		math_expr_set_score(&factors, &ret);
-		/* set postional information */
-		for (int i = 0; i < MAX_MTREE; i++) {
-			if (align_res[i].width) {
-				ret.qmask[i] = align_res[i].qmask;
-				ret.dmask[i] = align_res[i].dmask;
-			}
+	/* get doc/qry number of leaf-root paths */
+	uint32_t qn = po->mqs->subpaths.n_lr_paths;
+	uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
+
+	/* get docID and exprID */
+	uint64_t cur = po->iter->min;
+	P_CAST(item, struct math_postlist_item, &cur);
+	ret.doc_id = item->doc_id;
+	ret.exp_id = item->exp_id;
+
+	/* similarity factors */
+	struct math_expr_sim_factors factors = {
+		sym_sim, 0 /* search depth */, qn, dn,
+		align_res, MAX_MTREE, r_cnt, lcs, 1 /* not used */
+	};
+
+	/* calculate similarity score */
+	math_expr_set_score(&factors, &ret);
+
+	/* set postional information */
+	for (int i = 0; i < MAX_MTREE; i++) {
+		if (align_res[i].width) {
+			ret.qmask[i] = align_res[i].qmask;
+			ret.dmask[i] = align_res[i].dmask;
 		}
 	}
 

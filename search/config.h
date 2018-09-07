@@ -68,10 +68,10 @@
 #define MATH_SLOW_SEARCH
 
 #ifdef MATH_SLOW_SEARCH
-#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
-#define MAX_MTREE 3
+	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
+	#define MAX_MTREE 3
 #else
-#define MAX_MTREE 3 /* 1 */
+	#define MAX_MTREE 3 /* 1 */
 #endif
 
 #define MAX_LEAVES  64
