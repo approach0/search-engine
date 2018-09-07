@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 			printf("%s -h |"
 			       " -p <path contains .bin files> |"
 			       " -2 (v2 for prefix) |"
-			       " -t", argv[0]);
+			       " -t (translate)", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -p ./tmp/%s/VAR/TIMES/ADD\n",
