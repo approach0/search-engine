@@ -7,8 +7,7 @@ import sys
 url= 'http://localhost:8934/index'
 #url= 'http://localhost:8998/parser'
 
-fname = "ntcir12.tmp"
-#fname = "small.tmp"
+fname = "ntcir12-full.tmp"
 
 def file_len(fname):
 	with open(fname) as f:

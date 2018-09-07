@@ -1,1 +1,0 @@
-../../../eval-trec-results.sh
