@@ -50,12 +50,14 @@ int math_posting_iter_test(const char* path)
 int main(int argc, char *argv[])
 {
 	int opt;
+	uint32_t find_docID = 0;
 	const char *path = NULL;
-	while ((opt = getopt(argc, argv, "htp:2")) != -1) {
+	while ((opt = getopt(argc, argv, "htp:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("USAGE:\n");
 			printf("%s -h |"
+			       " -d (docID to lookup) |"
 			       " -p <path contains .bin files>"
 			       , argv[0]);
 			printf("\n");
@@ -63,6 +65,10 @@ int main(int argc, char *argv[])
 
 		case 'p':
 			path = strdup(optarg);
+			break;
+
+		case 'd':
+			sscanf(optarg, "%u", &find_docID);
 			break;
 
 		default:
@@ -78,22 +84,24 @@ int main(int argc, char *argv[])
 
 	// math_inex_probe_v2(path, 1, stdout);
 
-//	int flag = 0;
-	foreach (iter, math_posting, path) {
-		uint64_t cur = math_posting_iter_cur(iter);
-		uint32_t docID = (uint32_t)(cur >> 32);
-		uint32_t expID = (uint32_t)(cur >> 0);
-//		if (docID >= 296820)
-//			flag = 0;
-//		else if (docID >= 296800)
-//			flag = 1;
-//		if (flag)
-		printf("%u, %u \n", docID, expID);
+	if (find_docID) {
+		printf("finding doc#%u ...\n", find_docID);
+		foreach (iter, math_posting, path) {
+			uint64_t cur = math_posting_iter_cur(iter);
+			uint32_t docID = (uint32_t)(cur >> 32);
+			uint32_t expID = (uint32_t)(cur >> 0);
+
+			if (docID >= find_docID + 10)
+				break;
+			//if (docID == find_docID)
+				printf("%u, %u \n", docID, expID);
+		}
+	} else {
+		printf("iterator test ...\n");
+		math_posting_iter_test(path);
 	}
 
-	math_posting_iter_test(path);
 	free((void*)path);
-
 exit:
 	mhook_print_unfree();
 	return 0;
