@@ -319,17 +319,18 @@ postlist_iter_rebuf(struct postlist_iterator *iter)
 	iter->buf_idx = 0;
 }
 
-struct postlist_iterator postlist_iterator(struct postlist *po)
+postlist_iter_t postlist_iterator(struct postlist *po)
 {
-	struct postlist_iterator iter;
-	iter.po = po;
-	iter.cur = po->head;
+	struct postlist_iterator *iter;
+	iter = malloc(sizeof(struct postlist_iterator));
+	iter->po = po;
+	iter->cur = po->head;
 
-	iter.buf = malloc(po->buf_sz);
-	iter.buf_idx = 0;
-	iter.buf_end = 0;
+	iter->buf = malloc(po->buf_sz);
+	iter->buf_idx = 0;
+	iter->buf_end = 0;
 
-	postlist_iter_rebuf(&iter);
+	postlist_iter_rebuf(iter);
 	return iter;
 }
 
@@ -338,7 +339,7 @@ int postlist_empty(struct postlist* po)
 	return (po->head == NULL);
 }
 
-int postlist_iter_next(struct postlist* _, struct postlist_iterator* iter)
+int postlist_iter_next(struct postlist_iterator* iter)
 {
 	struct postlist *po = iter->po;
 	if (iter->buf_idx + po->item_sz < iter->buf_end) {
@@ -377,7 +378,7 @@ postlist_iter_jump(struct postlist_iterator* iter, uint64_t target)
 		uint64_t id = *(uint32_t*)postlist_iter_cur_item(iter);
 		if (id >= target) return 1;
 
-	} while (postlist_iter_next(NULL, iter));
+	} while (postlist_iter_next(iter));
 
 	return 0;
 }
@@ -385,4 +386,5 @@ postlist_iter_jump(struct postlist_iterator* iter, uint64_t target)
 void postlist_iter_free(struct postlist_iterator* iter)
 {
 	free(iter->buf);
+	free(iter);
 }

@@ -36,31 +36,31 @@ static void gen_random(struct postlist *po, int test_n)
 static void test_iters(struct postlist *po)
 {
 	if (!postlist_empty(po)) {
-		struct postlist_iterator iter1 = postlist_iterator(po);
-		struct postlist_iterator iter2 = postlist_iterator(po);
+		struct postlist_iterator *iter1 = postlist_iterator(po);
+		struct postlist_iterator *iter2 = postlist_iterator(po);
 		int cnt = 0;
 		do {
 			struct math_postlist_item *item;
 
-			item = postlist_iter_cur_item(&iter1);
+			item = postlist_iter_cur_item(iter1);
 			printf("iter1: %u, %u\n", item->doc_id, item->exp_id);
 
-			item = postlist_iter_cur_item(&iter2);
+			item = postlist_iter_cur_item(iter2);
 			printf("iter2: %u, %u\n", item->doc_id, item->exp_id);
 			printf("\n");
 
 			if (random() % 2) {
 				printf("iter1 advances\n");
-				postlist_iter_next(po, &iter1);
+				postlist_iter_next(iter1);
 			} else {
 				printf("iter2 advances\n");
-				postlist_iter_next(po, &iter2);
+				postlist_iter_next(iter2);
 			}
 			cnt ++;
 		} while (cnt < 20);
 
-		postlist_iter_free(&iter1);
-		postlist_iter_free(&iter2);
+		postlist_iter_free(iter1);
+		postlist_iter_free(iter2);
 	}
 }
 
