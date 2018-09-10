@@ -341,18 +341,16 @@ int postlist_empty(struct postlist* po)
 int postlist_iter_next(struct postlist* _, struct postlist_iterator* iter)
 {
 	struct postlist *po = iter->po;
-	while (iter->buf_end != 0) {
-		if (iter->buf_idx + po->item_sz < iter->buf_end) {
-			iter->buf_idx += po->item_sz;
-			return 1;
-		} else {
-			/* next block */
-			forward_cur(&iter->cur);
-			/* reset buffer */
-			postlist_iter_rebuf(iter);
-		}
+	if (iter->buf_idx + po->item_sz < iter->buf_end) {
+		iter->buf_idx += po->item_sz;
+		return 1;
+	} else if (iter->buf_end != 0) {
+		/* next block */
+		forward_cur(&iter->cur);
+		/* reset buffer */
+		postlist_iter_rebuf(iter);
+		return 1;
 	}
-
 	return 0;
 }
 
