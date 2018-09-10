@@ -112,6 +112,7 @@ static void index_term(char *term, uint32_t offset, size_t n_bytes)
 	       offset, n_bytes);
 #endif
 
+
 	/* add term into inverted-index */
 	term_index_doc_add(term_index, term);
 

@@ -5,12 +5,11 @@ import sys
 
 # ./search/run/test-search.out -n -i ./tmp/ -m 'a+b' -q 'NTCIR12-MathWiki-123'
 
-fname = "indexer/test-corpus/ntcir12/topics-concrete.txt"
-#index = "/home/tk/Desktop/approach0/indexer/tmp"
+fname = "/home/tk/rotate-disk/ext4/ntcir-12/topics-concrete.txt"
 output = 'searchd/trec-format-results.tmp'
 
 only_qry_id = None
-# only_qry_id = 'NTCIR12-MathWiki-4'
+#only_qry_id = 'NTCIR12-MathWiki-4'
 
 with open(fname) as f:
     for line in f:
