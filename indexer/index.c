@@ -6,6 +6,7 @@
 #include "parson/parson.h"
 #include "tex-parser/vt100-color.h"
 #include "index.h"
+#include "term-index/config.h" /* for IGNORE_TERM_INDEX */
 #include "config.h"
 
 #undef NDEBUG
@@ -150,9 +151,12 @@ int indexer_handle_slice(struct lex_slice *slice)
 		printf("[index math tag] %s <%u, %lu>\n", slice->mb_str,
 		       slice->offset, str_sz);
 #endif
+
+#ifndef IGNORE_TERM_INDEX
 		/* term_index_doc_add() is invoked here to make position numbers
 		 * synchronous in both math-index and Indri. */
 		term_index_doc_add(term_index, "math_exp");
+#endif
 
 		/* extract tex from math tag and add it into math-index */
 		strip_math_tag(slice->mb_str, str_sz);
@@ -197,8 +201,10 @@ int index_maintain()
 {
 	printf("\r[index maintaining...]");
 	fflush(stdout);
+#ifndef IGNORE_TERM_INDEX
 	term_index_maintain(term_index);
 	sleep(10);
+#endif
 
 	return 0;
 }
