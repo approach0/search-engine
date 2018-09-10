@@ -159,13 +159,12 @@ bool math_posting_next(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
 
-	while (po->buf_end != 0) {
-		if (po->buf_idx + 1 < po->buf_end) {
-			po->buf_idx += 1;
-			return 1;
-		} else {
-			rebuf(po->buf, po->fh_posting, &po->buf_idx, &po->buf_end);
-		}
+	if (po->buf_idx + 1 < po->buf_end) {
+		po->buf_idx += 1;
+		return 1;
+	} else if (po->buf_end != 0) {
+		rebuf(po->buf, po->fh_posting, &po->buf_idx, &po->buf_end);
+		return 1;
 	}
 
 	/* buf_end equals zero: reached the end. */

@@ -206,16 +206,15 @@ bool postlist_next(void *po_)
 {
 	struct postlist *po = (struct postlist*)po_;
 
-	while (po->buf_end != 0) {
-		if (po->buf_idx + po->item_sz < po->buf_end) {
-			po->buf_idx += po->item_sz;
-			return 1;
-		} else {
-			/* next block */
-			forward_cur(&po->cur);
-			/* reset buffer */
-			rebuf_cur(po);
-		}
+	if (po->buf_idx + po->item_sz < po->buf_end) {
+		po->buf_idx += po->item_sz;
+		return 1;
+	} else if (po->buf_end != 0) {
+		/* next block */
+		forward_cur(&po->cur);
+		/* reset buffer */
+		rebuf_cur(po);
+		return 1;
 	}
 
 	return 0;
