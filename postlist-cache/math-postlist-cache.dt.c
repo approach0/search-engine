@@ -49,7 +49,7 @@ fork_math_postlist(math_posting_t *disk_po)
 	size_t fl_sz;
 
 	mem_po = math_postlist_create_compressed();
-	
+
 	do {
 		PTR_CAST(disk_item, struct math_posting_compound_item_v2,
 		         math_posting_cur_item_v2(disk_po));
@@ -101,10 +101,16 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	}
 
 	mem_po = fork_math_postlist(disk_po);
+
+	/* print progress */
 	printf(ES_RESET_LINE);
 	printf("[Cached %.3f/%.3f MB] %s",
 		(float)cache->postlist_sz / __1MB__,
 		(float)cache->limit_sz / __1MB__, srchpath);
+
+//	if (0 == strcmp(srchpath, "./ZERO/ARROW")) {
+//		print_postlist(mem_po);
+//	}
 
 	if (cache->postlist_sz + mem_po->tot_sz > cache->limit_sz) {
 		// prinfo("math postlist cache reaches size limit.");
@@ -133,7 +139,7 @@ math_postlist_cache_new()
 	cache.limit_sz = DEFAULT_MATH_CACHE_SZ;
 	return cache;
 }
-	
+
 void
 math_postlist_cache_free(struct math_postlist_cache cache)
 {

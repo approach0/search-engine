@@ -28,9 +28,9 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //	if (0 == strcmp(url, "Quantum_finance:1") ||
 //	    0 == strcmp(url, "Order_statistic:46")) {
 
-	if (doc_id == 296807) {
+	if (doc_id == 411289) {
 
-	//if (0 == strcmp(url, "Lorentz–Heaviside_units:68")) {
+	// if (0 == strcmp(url, "Dimension_theory_(algebra):45")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);

@@ -86,14 +86,13 @@ int main(int argc, char *argv[])
 
 	if (find_docID) {
 		printf("finding doc#%u ...\n", find_docID);
+
 		foreach (iter, math_posting, path) {
 			uint64_t cur = math_posting_iter_cur(iter);
 			uint32_t docID = (uint32_t)(cur >> 32);
 			uint32_t expID = (uint32_t)(cur >> 0);
 
-			if (docID >= find_docID + 10)
-				break;
-			//if (docID == find_docID)
+			if (docID == find_docID)
 				printf("%u, %u \n", docID, expID);
 		}
 	} else {
