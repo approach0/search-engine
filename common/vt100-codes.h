@@ -7,3 +7,5 @@
 #define C_CYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define C_GRAY    "\033[1m\033[30m"      /* Bold Gray */
 #define C_BROWN   "\033[1m\033[0;33m"    /* brown */
+
+#define ES_RESET_LINE "\33[2K\r"         /* erase line and reset cursor */
