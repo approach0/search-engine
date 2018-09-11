@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# example: ./gen-plot.sh ./tmp/cikm-3.dat ./tmp/STD-MC-0.3.dat
+# example: $0 ./tmp/cikm-3.dat ./tmp/STD-MC-0.3.dat
 
 data1=$1
 data2=$2
