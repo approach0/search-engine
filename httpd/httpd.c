@@ -3,6 +3,7 @@
 #include <evhttp.h>
 #include <signal.h>
 
+#include "common/common.h"
 #include "httpd.h"
 
 struct http_cb_arg {
@@ -105,7 +106,7 @@ int httpd_run(unsigned short port,
 
 	/* check if port is already binded */
 	if (httpd == NULL) {
-		fprintf(stderr, "Failed to listen on port %d.\n", port);
+		prerr("Failed to listen on port %d.", port);
 		return 1;
 	}
 
