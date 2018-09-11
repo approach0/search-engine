@@ -542,8 +542,8 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 
 	/* similarity factors */
 	struct math_expr_sim_factors factors = {
-		sym_sim, 0 /* search depth */, qn, dn,
-		align_res, MAX_MTREE, r_cnt, lcs, 1 /* not used */
+		sym_sim, 0 /* search depth, not used */, qn, dn,
+		align_res, MAX_MTREE, r_cnt, lcs, po->mqs->n_qry_nodes
 	};
 
 	/* calculate similarity score */

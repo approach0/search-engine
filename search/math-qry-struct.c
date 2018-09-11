@@ -125,8 +125,8 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	list_foreach(&subpaths->li, &push_query_path, NULL);
 
 	/* prepare structure scoring structure */
-	uint32_t max_node_id = optr_max_node_id(parse_ret.operator_tree);
-	s->pq = pq_allocate(max_node_id);
+	s->n_qry_nodes = optr_max_node_id(parse_ret.operator_tree);
+	s->pq = pq_allocate(s->n_qry_nodes);
 	
 	/* create subpath set (unique paths for merging) */
 	s->subpath_set = dir_merge_subpath_set(
