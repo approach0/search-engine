@@ -144,6 +144,42 @@ uint64_t pq_hit(struct math_prefix_qry *pq,
 	}
 }
 
+#ifdef PQ_CELL_NUMERIC_WEIGHT
+uint64_t pq_hit_numeric(struct math_prefix_qry *pq,
+	uint32_t qr, uint32_t ql, uint32_t dr, uint32_t dl,
+	uint32_t w)
+{
+	struct math_prefix_cell *cell;
+	uint64_t ql_bit, dl_bit;
+
+	if (dr >= MAX_NODE_IDS)
+		return dr;
+
+	cell = pq->cell[qr] + dr;
+	if (cell->cnt == 0) {
+		pq->dirty[pq->n_dirty].qr = qr;
+		pq->dirty[pq->n_dirty].dr = dr;
+		pq->n_dirty++;
+	}
+
+	ql_bit = 1ULL << (ql - 1);
+	dl_bit = 1ULL << (dl - 1);
+
+	if (ql_bit & cell->qmask) {
+		cell->dmiss ++;
+		return cell->qmask;
+	} else if (dl_bit & cell->dmask) {
+		cell->qmiss ++;
+		return cell->dmask;
+	} else {
+		cell->cnt += w;
+		cell->qmask |= ql_bit;
+		cell->dmask |= dl_bit;
+		return 0;
+	}
+}
+#endif
+
 uint32_t
 pq_align(struct math_prefix_qry *pq, struct pq_align_res *res)
 {

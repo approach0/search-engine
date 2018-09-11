@@ -121,6 +121,32 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	hit->score = (uint32_t)(score);
 }
 
+#ifdef PQ_CELL_NUMERIC_WEIGHT
+/* CIKM-2018 run-2 with path length weight */
+void math_expr_set_score_4(struct math_expr_sim_factors* factor,
+                           struct math_expr_score_res* hit)
+{
+	uint32_t qnn = factor->qry_nodes;
+	struct pq_align_res *ar = factor->align_res;
+	uint32_t qn = factor->qry_lr_paths;
+	uint32_t dn = factor->doc_lr_paths;
+	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
+	                (qn * MNC_MARK_FULL_SCORE);
+	float alpha = 0.05f;
+	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
+	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
+	float st0 = (float)ar[0].width / (float)(qnn);
+	float st1 = (float)ar[1].width / (float)(qnn);
+	float st2 = (float)ar[2].width / (float)(qnn);
+	float st = 0.65f * st0 + 0.3 * st1 + 0.05f * st2;
+	float fmeasure = st*sy / (st + sy);
+	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+
+	score = score * 100000.f;
+	hit->score = (uint32_t)(score);
+}
+#endif
+
 void
 math_expr_set_score(struct math_expr_sim_factors* factor,
                     struct math_expr_score_res* hit)
@@ -133,6 +159,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 #ifdef MATH_SLOW_SEARCH
 	math_expr_set_score_2(factor, hit);
 	// math_expr_set_score_3(factor, hit);
+	// math_expr_set_score_4(factor, hit);
 #else
 	math_expr_set_score_1(factor, hit);
 #endif
@@ -439,7 +466,12 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 //		printf("qr~ql %u~%u, dr~dl %u~%u. \n", qr, ql, dr, dl);
 #endif
 					uint64_t res = 0;
+#ifdef PQ_CELL_NUMERIC_WEIGHT
+					uint32_t w = ele->prefix_len;
+					res = pq_hit_numeric(pq, qr, ql, dr, dl, w);
+#else
 					res = pq_hit(pq, qr, ql, dr, dl);
+#endif
 					(void)res;
 				}
 			}

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+// #define PQ_CELL_NUMERIC_WEIGHT
 
 struct math_prefix_loc {
 	uint32_t qr, dr;
@@ -30,6 +31,12 @@ void pq_reset(struct math_prefix_qry*);
 uint64_t pq_hit(struct math_prefix_qry*,
                 uint32_t, uint32_t,
                 uint32_t, uint32_t);
+
+#ifdef PQ_CELL_NUMERIC_WEIGHT
+uint64_t pq_hit_numeric(struct math_prefix_qry*,
+                uint32_t, uint32_t, uint32_t,
+                uint32_t, uint32_t);
+#endif
 
 struct pq_align_res {
 	uint32_t width;
