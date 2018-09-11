@@ -112,10 +112,13 @@ int math_l2_postlist_next(void *po_)
 		struct math_expr_score_res expr_res;
 		expr_res = math_l2_postlist_cur_score(po);
 
-#ifdef PRINT_RECUR_MERGING_ITEMS
-		math_l2_postlist_print_cur(po);
-		printf("formula score = %u \n\n", expr_res.score);
-#endif
+//#ifdef PRINT_RECUR_MERGING_ITEMS
+//		if (cur_doc_id > 411280 && cur_doc_id < 411295) {
+//			math_l2_postlist_print_cur(po);
+//			printf("%u, %u score = %u \n\n",
+//				cur_doc_id, expr_res.exp_id, expr_res.score);
+//		}
+//#endif
 		if (expr_res.score) {
 			/* save best expression score */
 			if (expr_res.score > po->max_exp_score)
