@@ -164,7 +164,7 @@ bool math_posting_next(math_posting_t po_)
 		return 1;
 	} else if (po->buf_end != 0) {
 		rebuf(po->buf, po->fh_posting, &po->buf_idx, &po->buf_end);
-		return 1;
+		return (po->buf_end != 0);
 	}
 
 	/* buf_end equals zero: reached the end. */

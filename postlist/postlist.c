@@ -214,7 +214,7 @@ bool postlist_next(void *po_)
 		forward_cur(&po->cur);
 		/* reset buffer */
 		rebuf_cur(po);
-		return 1;
+		return (po->buf_end != 0);
 	}
 
 	return 0;
@@ -350,7 +350,7 @@ int postlist_iter_next(struct postlist_iterator* iter)
 		forward_cur(&iter->cur);
 		/* reset buffer */
 		postlist_iter_rebuf(iter);
-		return 1;
+		return (po->buf_end != 0);
 	}
 	return 0;
 }
