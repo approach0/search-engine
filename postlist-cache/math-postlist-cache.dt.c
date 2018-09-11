@@ -102,7 +102,9 @@ dir_srch_callbk(const char* path, const char *srchpath,
 
 	mem_po = fork_math_postlist(disk_po);
 	printf(ES_RESET_LINE);
-	printf("[Cached %lu/%lu] %s", mem_po->tot_sz, cache->limit_sz, srchpath);
+	printf("[Cached %.3f/%.3f MB] %s",
+		(float)cache->postlist_sz / __1MB__,
+		(float)cache->limit_sz / __1MB__, srchpath);
 
 	if (cache->postlist_sz + mem_po->tot_sz > cache->limit_sz) {
 		// prinfo("math postlist cache reaches size limit.");
