@@ -5,6 +5,7 @@
 #include "search.h"
 #include "math-expr-sim.h"
 #include "proximity.h"
+// #include "math-index/head.h" /* for definition of subpath_ele */
 
 struct add_path_postings_args {
 	struct indices *indices;
@@ -24,15 +25,15 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		void *po = math_postlist_cache_find(ci.math_cache, base_paths[i]);
 		int n = l2po->pm.n_po;
 		if (po) {
-			printf("[memo] [%u] %s\n", i, base_paths[i]);
 			l2po->pm.po[n] = math_memo_postlist(po);
 
 			sprintf(args->po->type[n], "memo");
 			args->po->weight[n] = 1;
 			args->po->ele[n] = eles[i];
 
+			printf("[%u] (in memo) %s\n", i, base_paths[i]);
+
 		} else if (math_posting_exits(full_paths[i])) {
-			printf("[disk] [%u] %s\n", i, base_paths[i]);
 			po = math_posting_new_reader(full_paths[i]);
 			l2po->pm.po[n] = math_disk_postlist(po);
 
@@ -40,8 +41,9 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			args->po->weight[n] = 1;
 			args->po->ele[n] = eles[i];
 
+			printf("[%u] (on disk) %s\n", i, base_paths[i]);
 		} else {
-			printf("[empty] [%u] %s\n", i, base_paths[i]);
+			printf("[%u] (empty) %s\n", i, base_paths[i]);
 			l2po->pm.po[n] = empty_postlist(NULL);
 
 			sprintf(args->po->type[n], "empty");
