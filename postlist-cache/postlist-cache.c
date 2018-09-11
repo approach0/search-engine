@@ -2,6 +2,7 @@
 #include "sds/sds.h"
 #include "postlist-cache.h"
 #include "config.h"
+#include "term-index/config.h"
 
 struct postlist_cache postlist_cache_new()
 {
@@ -22,7 +23,9 @@ int postlist_cache_fork(struct postlist_cache *cache,
 	math_cache_path = sdscat(math_cache_path, "/prefix");
 
 	res |= math_postlist_cache_add(&cache->math_cache, math_cache_path);
+#ifndef IGNORE_TERM_INDEX
 	res |= term_postlist_cache_add(&cache->term_cache, ti);
+#endif
 
 	cache->tot_used = cache->math_cache.postlist_sz +
 	                  cache->term_cache.postlist_sz;
