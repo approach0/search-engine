@@ -92,14 +92,15 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 	hit->score = (uint32_t)(score);
 }
 
-/* joint nodes experiment */
+/* experimental scoring function  */
 void math_expr_set_score_3(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
 	struct pq_align_res *ar = factor->align_res;
 	uint32_t jo = factor->joint_nodes;
-	uint32_t lcs = factor->lcs;
-	uint32_t qnn = factor->qry_nodes;
+	uint32_t lcs = factor->lcs; (void)lcs;
+	float stj = (float)jo; (void)stj;
+	uint32_t qnn = factor->qry_nodes; (void)qnn;
 	uint32_t qn = factor->qry_lr_paths;
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
@@ -107,14 +108,14 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)ar[0].width / (float)(qn);
-	float st1 = (float)ar[1].width / (float)(qn);
-	float st2 = (float)ar[2].width / (float)(qn);
-	float stj = (float)jo;
-	float st = (st0 + st1 + st2 + stj) / (float)qnn;
+	float st0 = (float)ar[0].width / (float)qn;
+	float st1 = (float)ar[1].width / (float)qn;
+	float st2 = (float)ar[2].width / (float)qn;
+	float st3 = (float)ar[3].width / (float)qn;
+	float st4 = (float)ar[4].width / (float)qn;
+	float st = (st0 + st1 + st2 + st3 + st4 /* stj */); /* / (float)qnn */;
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
-	(void)lcs;
 
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
@@ -131,7 +132,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 
 #ifdef MATH_SLOW_SEARCH
 	math_expr_set_score_2(factor, hit);
-	//math_expr_set_score_3(factor, hit);
+	// math_expr_set_score_3(factor, hit);
 #else
 	math_expr_set_score_1(factor, hit);
 #endif
@@ -140,7 +141,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 static mnc_score_t
 prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
                             struct math_postlist_item *items[],
-                            struct pq_align_res *align_res, uint32_t k)
+                            struct pq_align_res *align_res, uint32_t n_mtrees)
 {
 	/* reset mnc for scoring new document */
 	mnc_reset_docs();
@@ -156,7 +157,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 				ql = mepa->ele->dup[j]->path_id; /* use path_id for mnc_score */
 				/* (so that the ql is the index of query array in MNC scoring */
 
-				for (uint32_t m = 0; m < k; m++) {
+				for (uint32_t m = 0; m < n_mtrees; m++) {
 					if (qr == align_res[m].qr) {
 						for (uint32_t k = 0; k < item->n_paths; k++) {
 							uint32_t dr, dl;
