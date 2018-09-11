@@ -11,8 +11,6 @@
 #include "config.h"
 #include "math-postlist-cache.h"
 
-//#define DEBUG_MATH_POSTLIST_CACHE
-
 #ifdef DEBUG_MATH_POSTLIST_CACHE
 char *trans_symbol(int);
 #endif
@@ -102,13 +100,12 @@ dir_srch_callbk(const char* path, const char *srchpath,
 		goto next;
 	}
 
-#ifdef DEBUG_MATH_POSTLIST_CACHE
-	printf("Caching %s\n", srchpath);
-#endif
 	mem_po = fork_math_postlist(disk_po);
+	printf(ES_RESET_LINE);
+	printf("[Cached %lu/%lu] %s", mem_po->tot_sz, cache->limit_sz, srchpath);
 
 	if (cache->postlist_sz + mem_po->tot_sz > cache->limit_sz) {
-		prinfo("math postlist cache reaches size limit.");
+		// prinfo("math postlist cache reaches size limit.");
 		postlist_free(mem_po);
 		ret = DS_RET_STOP_ALLDIR;
 	} else {
@@ -153,6 +150,7 @@ math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 	size_t postlist_sz = cache->postlist_sz;
 	struct math_postlist_cache_arg args = {cache, (char *)"./prefix"};
 	dir_search_bfs(dir, &dir_srch_callbk, &args);
+	printf("\n");
 
 	return (postlist_sz == cache->postlist_sz);
 }
