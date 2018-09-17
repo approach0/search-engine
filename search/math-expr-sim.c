@@ -115,7 +115,8 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float st4 = (float)ar[4].width; (void)st4;
 #if 1
 	/* consider nodes */
-	float st = (st0 + st1 + st2 /* + st3 + st4 */ + stj) / (float)qnn;
+	//float st = (st0 + st1 + st2 /* + st3 + st4 */ + stj) / (float)qnn;
+	float st = (0.60f * st0 + 0.15f * st1 + 0.05f * st2 + 0.20 * stj) / (float)qnn;
 #else
 	/* leaves only */
 	float st = (st0 + st1 + st2 /* + st3 + st4 */) / (float)qn;
