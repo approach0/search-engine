@@ -104,7 +104,10 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 		goto release;
 	}
 
-	/* return subpaths */
+	/* generate query node visibility map */
+	optr_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
+
+	/* copy subpaths */
 	struct subpaths *subpaths = &parse_ret.subpaths;
 	s->subpaths = *subpaths;
 

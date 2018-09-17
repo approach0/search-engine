@@ -8,6 +8,7 @@ struct math_qry_struct {
 	list subpath_set;
 	int n_uniq_paths;
 	int n_qry_nodes;
+	uint32_t visibimap[MAX_SUBPATH_ID];
 };
 
 int math_qry_prepare(struct indices*, char*, struct math_qry_struct*);

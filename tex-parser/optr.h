@@ -38,7 +38,11 @@ uint32_t optr_max_node_id(struct optr_node*);
 
 int optr_gen_idpos_map(uint32_t*, struct optr_node*);
 
+int optr_gen_visibi_map(uint32_t*, struct optr_node*);
+
 int optr_print_idpos_map(uint32_t*);
+
+int optr_print_visibi_map(uint32_t*);
 
 #include "sds/sds.h"
 int

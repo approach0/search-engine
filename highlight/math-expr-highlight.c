@@ -6,14 +6,14 @@
 static char *colors[] = {"Maroon", "Green", "Orange"};
 
 static int
-gen_map(struct tex_parse_ret *ret, uint64_t *mask, int k,
+gen_map(uint32_t *idposmap, uint64_t *mask, int k,
         uint32_t *begin_end_map, uint32_t *begin_color_map)
 {
 	for (int t = 0; t < k; t++) {
 		for (uint32_t i = 0; i < MAX_SUBPATH_ID; i++) {
 			if ((mask[t] >> i) & 0x1L) {
-				uint32_t begin = ret->idposmap[i] >> 16;
-				uint32_t end   = ret->idposmap[i] & 0xffff;
+				uint32_t begin = idposmap[i] >> 16;
+				uint32_t end   = idposmap[i] & 0xffff;
 				if (end > MAX_TXT_SEG_BYTES)
 					return 1;
 				begin_end_map[begin] = end;
@@ -40,17 +40,22 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 	uint32_t begin_color_map[MAX_TEX_STRLEN];
 
 	struct tex_parse_ret ret;
-	ret = tex_parse(kw, strlen(kw), 0);
-	
-	if (ret.code == PARSER_RETCODE_ERR) {
+	uint32_t idposmap[MAX_SUBPATH_ID];
+	ret = tex_parse(kw, strlen(kw), true);
+
+	if (ret.code == PARSER_RETCODE_ERR ||
+	    ret.operator_tree == NULL) {
 		fprintf(stderr, "parse error in math_oprand_highlight()\n");
 		return kw;
 	}
 
+	optr_gen_idpos_map(idposmap, ret.operator_tree);
+	optr_release((struct optr_node*)ret.operator_tree);
+
 	/* no need to keep subpaths here */
 	subpaths_release(&ret.subpaths);
 
-	if (gen_map(&ret, mask, k, begin_end_map, begin_color_map)) {
+	if (gen_map(idposmap, mask, k, begin_end_map, begin_color_map)) {
 		fprintf(stderr, "Error in gen_map() \n");
 		return kw;
 	}
@@ -88,7 +93,7 @@ int math_tree_highlight(char *tex, uint32_t *map, int k, sds *o)
 {
 	struct tex_parse_ret ret;
 	ret = tex_parse(tex, strlen(tex), 1);
-	
+
 	if (ret.code != PARSER_RETCODE_ERR && ret.operator_tree) {
 		optr_graph_print(ret.operator_tree, colors, map, k, o);
 
