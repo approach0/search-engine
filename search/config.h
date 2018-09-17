@@ -65,6 +65,7 @@
 
 #define MAX_MATH_EXPR_SIM_SCALE 1000
 
+/* switch between SLOW/FAST search */
 #define MATH_SLOW_SEARCH
 
 #ifdef MATH_SLOW_SEARCH

@@ -25,10 +25,10 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-//	if (0 == strcmp(url, "Quantum_finance:1") ||
-//	    0 == strcmp(url, "Order_statistic:46")) {
+//	if (0 == strcmp(url, "Scattering_parameters:115") ||
+//	    0 == strcmp(url, "Port_(circuit_theory):0")) {
 
-	if (doc_id == 411289) {
+	if (doc_id == 230891 || doc_id == 568493) {
 
 	// if (0 == strcmp(url, "Dimension_theory_(algebra):45")) {
 
@@ -108,12 +108,18 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)ar[0].width / (float)qn;
-	float st1 = (float)ar[1].width / (float)qn;
-	float st2 = (float)ar[2].width / (float)qn;
-	float st3 = (float)ar[3].width / (float)qn;
-	float st4 = (float)ar[4].width / (float)qn;
-	float st = (st0 + st1 + st2 + st3 + st4 /* stj */); /* / (float)qnn */;
+	float st0 = (float)ar[0].width; (void)st0;
+	float st1 = (float)ar[1].width; (void)st1;
+	float st2 = (float)ar[2].width; (void)st2;
+	float st3 = (float)ar[3].width; (void)st3;
+	float st4 = (float)ar[4].width; (void)st4;
+#if 1
+	/* consider nodes */
+	float st = (st0 + st1 + st2 /* + st3 + st4 */ + stj) / (float)qnn;
+#else
+	/* leaves only */
+	float st = (st0 + st1 + st2 /* + st3 + st4 */) / (float)qn;
+#endif
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 
@@ -157,8 +163,8 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	//math_expr_set_score_10(factor, hit);
 
 #ifdef MATH_SLOW_SEARCH
-	math_expr_set_score_2(factor, hit);
-	// math_expr_set_score_3(factor, hit);
+	// math_expr_set_score_2(factor, hit);
+	math_expr_set_score_3(factor, hit);
 	// math_expr_set_score_4(factor, hit);
 #else
 	math_expr_set_score_1(factor, hit);
@@ -338,10 +344,10 @@ math_expr_prefix_score_on_merge(
 				ql = mepa->ele->dup[j]->leaf_id; /* use leaf_id for aligning */
 				/* (to generate correct leaf mask to be highlighted in tree) */
 #ifdef DEBUG_MATH_SCORE_INSPECT
-				if (inspect) {
-					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
-					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
-				}
+//				if (inspect) {
+//					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+//					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+//				}
 #endif
 				for (uint32_t k = 0; k < item->n_paths; k++) {
 					uint32_t dr, dl;
@@ -350,23 +356,22 @@ math_expr_prefix_score_on_merge(
 
 					uint64_t res = 0;
 					res = pq_hit(pq, qr, ql, dr, dl);
-#ifdef DEBUG_MATH_SCORE_INSPECT
-					if (inspect) {
-						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
-						       trans_symbol(item->lf_symb[k]));
-						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-						//pq_print(*pq, 26);
-						printf("\n");
-					}
-#else
 					(void)res;
+#ifdef DEBUG_MATH_SCORE_INSPECT
+//					if (inspect) {
+//						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
+//						       trans_symbol(item->lf_symb[k]));
+//						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
+//						//pq_print(*pq, 26);
+//						printf("\n");
+//					}
 #endif
 				}
 			}
 #ifdef DEBUG_MATH_SCORE_INSPECT
-			if (inspect) {
-				printf("}\n");
-			}
+//			if (inspect) {
+//				printf("}\n");
+//			}
 #endif
 		}
 	}
@@ -376,8 +381,8 @@ math_expr_prefix_score_on_merge(
 	uint32_t r_cnt = pq_align(pq, align_res, NULL);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-	if (inspect)
-		pq_print_dirty_array(pq);
+//	if (inspect)
+//		pq_print_dirty_array(pq);
 #endif
 	pq_reset(pq);
 
@@ -540,12 +545,13 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	debug = 0; if (score_inspect_filter(ret.doc_id, po->indices)) debug = 1;
-	if (debug)
-		math_l2_postlist_print_cur(po);
+//	if (debug)
+//		math_l2_postlist_print_cur(po);
 #endif
 
 	/* structure scores */
 	n_doc_lr_paths = math_l2_postlist_cur_struct_sim(po, align_res, &r_cnt);
+
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (debug) {
