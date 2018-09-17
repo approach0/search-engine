@@ -373,7 +373,7 @@ math_expr_prefix_score_on_merge(
 
 	/* sub-structure align */
 	struct pq_align_res align_res[MAX_MTREE] = {0};
-	uint32_t r_cnt = pq_align(pq, align_res);
+	uint32_t r_cnt = pq_align(pq, align_res, NULL);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
@@ -478,7 +478,7 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 		}
 	}
 
-	*r_cnt = pq_align(pq, ar);
+	*r_cnt = pq_align(pq, ar, po->mqs->visibimap);
 	pq_reset(pq);
 
 	return n_doc_lr_paths;

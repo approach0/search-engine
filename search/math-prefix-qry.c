@@ -181,7 +181,8 @@ uint64_t pq_hit_numeric(struct math_prefix_qry *pq,
 #endif
 
 uint32_t
-pq_align(struct math_prefix_qry *pq, struct pq_align_res *res)
+pq_align(struct math_prefix_qry *pq,
+         struct pq_align_res *res, uint32_t *visibimap)
 {
 	uint64_t exclude_qmask = 0;
 	uint64_t exclude_dmask = 0;
@@ -254,10 +255,16 @@ pq_align(struct math_prefix_qry *pq, struct pq_align_res *res)
 				if (qmap[loc.qr] == 0 && dmap[loc.dr] == 0) {
 					qmap[loc.qr] = loc.dr;
 					dmap[loc.dr] = loc.qr;
-					r_cnt ++;
-#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
-					printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+
+#ifdef CNT_VISIBLE_NODES_ONLY
+					if (visibimap && visibimap[loc.qr])
 #endif
+					{
+						r_cnt ++;
+#ifdef MATH_PREFIX_QRY_DEBUG_PRINT
+						printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
+#endif
+					}
 				}
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
 				else if (qmap[loc.qr] != loc.dr ||

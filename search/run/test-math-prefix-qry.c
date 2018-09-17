@@ -10,7 +10,7 @@
 	printf("\n");
 
 #define PRINT_TOP() \
-	pq_align(&pq, align_res); \
+	pq_align(&pq, align_res, NULL); \
 	for (i = 0; i < 3; i++) { \
 		printf("top%u: %u\n", i, align_res[i].width); \
 	} \
