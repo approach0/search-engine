@@ -4,9 +4,6 @@ import signal
 import time
 import sys
 
-proj_dir  = "/home/tk/Desktop/approach0"
-index_dir = "/home/tk/index-fix-decimal-and-use-latexml/"
-
 # setup python script signal handler
 def signal_handler(sig, _):
     global daemon
@@ -15,7 +12,10 @@ def signal_handler(sig, _):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-def evaluation(run_file)
+proj_dir  = "/home/tk/Desktop/approach0"
+index_dir = "/home/tk/index-fix-decimal-and-use-latexml/"
+
+def do_evaluation(run_file):
     # Run make
     res = subprocess.run(['make'])
     if 0 != res.returncode:
@@ -51,3 +51,66 @@ def evaluation(run_file)
 
     # close daemon
     daemon.send_signal(signal.SIGINT)
+
+templates = [
+    {
+        "path": "./template/config.h",
+        "output": "./search/config.h"
+    },
+    {
+        "path": "./template/math-expr-sim.c",
+        "output": "./search/math-expr-sim.c"
+    },
+]
+
+def replace_source_code(replaces):
+    global templates
+    for t in templates:
+        fh_t = open(t["path"], 'r')
+        t['txt'] = fh_t.read()
+        fh_t.close()
+    for k, v in replaces.items():
+        print(k, v)
+        for t in templates:
+            t['txt'] = t['txt'].replace('{{' + k + '}}', v)
+    with open(t['output'], 'w') as f:
+        f.write(t['txt'])
+
+import math
+def float_str(string):
+    v = float(string)
+    if math.floor(v) == v:
+        return string + '.f'
+    else:
+        return string + 'f'
+
+##
+## Main procedure
+##
+import csv
+
+input_tsv = "test.tsv"
+with open(input_tsv) as fd:
+    tot_rows = sum(1 for _ in open(input_tsv))
+    rd = csv.reader(fd, delimiter="\t")
+    replaces = dict()
+    for idx, row in enumerate(rd):
+        run_name = row[0]
+        replaces["theta"]  = float_str(row[1])
+        replaces["mc"]     = row[2]
+        replaces["alpha"]  = float_str(row[3])
+        replaces["beta_1"] = float_str(row[4])
+        replaces["beta_2"] = float_str(row[5])
+        replaces["beta_3"] = float_str(row[6])
+        replaces["beta_4"] = float_str(row[7])
+        replaces["beta_5"] = float_str(row[8])
+        k = 1;
+        for i in range(1, 6):
+            if float(row[i + 3]) == 0:
+                k = i - 1
+                break
+        replaces["K"] = str(k)
+        replace_source_code(replaces)
+        do_evaluation('./tmp/' + run_name):
+        print('row %u / %u finished' % (idx + 1, tot_rows))
+        time.sleep(2)
