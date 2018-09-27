@@ -54,11 +54,11 @@ def do_evaluation(run_file):
 
 templates = [
     {
-        "path": "./template/config.h",
+        "path": "./tmp/template/config.h",
         "output": "./search/config.h"
     },
     {
-        "path": "./template/math-expr-sim.c",
+        "path": "./tmp/template/math-expr-sim.c",
         "output": "./search/math-expr-sim.c"
     },
 ]
