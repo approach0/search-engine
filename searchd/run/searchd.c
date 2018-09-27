@@ -216,12 +216,15 @@ int main(int argc, char *argv[])
 	indices_cache(&indices);
 
 	/* run httpd */
-	printf("listen on port %hu\n", port);
-
 	searchd_args.indices  = &indices;
 	searchd_args.trec_log = trec_log;
 	struct uri_handler uri_handlers[] = {{SEARCHD_DEFAULT_URI, &httpd_on_recv}};
-	httpd_run(port, uri_handlers, 1, &searchd_args);
+
+	printf("listening on port %hu ...\n", port);
+	fflush(stdout); /* notify others (expect script) */
+
+	if (0 != httpd_run(port, uri_handlers, 1, &searchd_args))
+		printf("port %hu is occupied\n", port);
 
 close:
 	/* close indices */
@@ -235,5 +238,6 @@ exit:
 	free(index_path);
 
 	mhook_print_unfree();
+	fflush(stdout);
 	return 0;
 }

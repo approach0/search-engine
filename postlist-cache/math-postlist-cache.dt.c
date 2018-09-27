@@ -107,6 +107,7 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	printf("[Cached %.3f/%.3f MB] %s",
 		(float)cache->postlist_sz / __1MB__,
 		(float)cache->limit_sz / __1MB__, srchpath);
+	fflush(stdout);
 
 //	if (0 == strcmp(srchpath, "./ZERO/ARROW")) {
 //		print_postlist(mem_po);
