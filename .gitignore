@@ -18,6 +18,7 @@ y.output
 y.*.h
 y.*.c
 lex.*.c
+*.tsv
 tags
 srclist.txt
 tmp/
