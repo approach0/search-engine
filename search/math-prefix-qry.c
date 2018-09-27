@@ -261,6 +261,7 @@ pq_align(struct math_prefix_qry *pq,
 #endif
 					{
 						r_cnt ++;
+						res[j].height += 1;
 #ifdef MATH_PREFIX_QRY_DEBUG_PRINT
 						printf("qr%u <-> dr%u \n", loc.qr, loc.dr);
 #endif
