@@ -105,43 +105,28 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	uint32_t dn = factor->doc_lr_paths;
 	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
 	                (qn * MNC_MARK_FULL_SCORE);
-	float alpha = 0.05f;
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
-	float st0 = (float)ar[0].width; (void)st0;
-	float st1 = (float)ar[1].width; (void)st1;
-	float st2 = (float)ar[2].width; (void)st2;
-	float st3 = (float)ar[3].width; (void)st3;
-	float st4 = (float)ar[4].width; (void)st4;
 
-	const int k = MAX_MTREE;
-//	float st = ((1.f / k) * st0 + (1.f / k) * st1 + (1.f / k) * st2) / (float)qn; /* uni-1, diff K */
-	float w  = 1.f / (k + 1.f);
-	float st = (w * stj + w * st0 + w * st1 + w * st2) / (float)qnn; /* uni-2, diff K */
+	const float theta = 0.05f;
 
-//	float st = (0.00f * stj + 0.65f * st0 + 0.30f * st1 + 0.05f * st2) / (float)qn; /* CIKM-3 */
-//	float st = (0.60f * st0 + 0.15f * st1 + 0.05f * st2 + 0.20 * stj) / (float)qnn;
-//	float st = (0.00f * stj + 0.34f * st0 + 0.33f * st1 + 0.33f * st2) / (float)qn; /* uni-1 */
-//	float st = (0.25f * stj + 0.25f * st0 + 0.25f * st1 + 0.25f * st2) / (float)qnn; /* uni-2 */
+	const float alpha = 0.7f;
+	const float beta[5] = {1.f, 0, 0, 0, 0};
 
-//	float st = (1.00f * stj + 0.00f * st0 + 0.00f * st1 + 0.00f * st2) / (float)qnn; /* opt-1 */
-//	float st = (0.75f * stj + 0.09f * st0 + 0.08f * st1 + 0.08f * st2) / (float)qnn; /* opt-2 */
-//	float st = (0.50f * stj + 0.17f * st0 + 0.17f * st1 + 0.16f * st2) / (float)qnn; /* opt-3 */
+	float st = 0;
+	for (int i = 0; i < MAX_MTREE; i++) {
+		float l = (float)ar[i].width;
+		float o = (float)ar[i].height;
+		if (alpha == 0.f)
+			st += (beta[i] * (alpha * o + (1.f - alpha) * l)) / (float)qn;
+		else
+			st += (beta[i] * (alpha * o + (1.f - alpha) * l)) / (float)qnn;
+	}
 
-//	float st = (0.00f * stj + 1.00f * st0 + 0.00f * st1 + 0.00f * st2) / (float)qn; /* opd-1a */
-//	float st = (0.00f * stj + 0.75f * st0 + 0.20f * st1 + 0.05f * st2) / (float)qn; /* opd-1b */
+//	float st = (0.75f * st0 + 0.20f * st1 + 0.05f * st2) / (float)qnn; /* experiment */
 
-//	float st = (0.10f * stj + 0.90f * st0 + 0.00f * st1 + 0.00f * st2) / (float)qnn; /* opd-2a */
-//	float st = (0.10f * stj + 0.67f * st0 + 0.18f * st1 + 0.05f * st2) / (float)qnn; /* opd-2b */
-
-//	float st = (0.20f * stj + 0.80f * st0 + 0.00f * st1 + 0.00f * st2) / (float)qnn; /* opd-3a */
-//	float st = (0.20f * stj + 0.60f * st0 + 0.15f * st1 + 0.05f * st2) / (float)qnn; /* opd-3b */
-
-//	float st = (0.30f * stj + 0.70f * st0 + 0.00f * st1 + 0.00f * st2) / (float)qnn; /* opd-4a */
-//	float st = (0.30f * stj + 0.53f * st0 + 0.14f * st1 + 0.03f * st2) / (float)qnn; /* opd-4b */
-
-	float fmeasure = st*sy / (st + sy);
-	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
+	float fmeasure = (st * sy) / (st + sy);
+	float score = fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dn)));
 
 	score = score * 100000.f;
 	hit->score = (uint32_t)(score);
