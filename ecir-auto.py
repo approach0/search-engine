@@ -111,6 +111,6 @@ with open(input_tsv) as fd:
                 break
         replaces["K"] = str(k)
         replace_source_code(replaces)
-        do_evaluation('./tmp/' + run_name):
+        do_evaluation('./tmp/' + run_name)
         print('row %u / %u finished' % (idx + 1, tot_rows))
         time.sleep(2)
