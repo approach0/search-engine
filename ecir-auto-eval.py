@@ -88,6 +88,7 @@ def float_str(string):
 ## Main procedure
 ##
 import csv
+import os
 
 input_tsv = "test.tsv"
 with open(input_tsv) as fd:
@@ -96,6 +97,11 @@ with open(input_tsv) as fd:
     replaces = dict()
     for idx, row in enumerate(rd):
         run_name = row[0]
+        print('row %u / %u ...' % (idx + 1, tot_rows))
+        if os.path.exists('./tmp/' + run_name + '.eval'):
+            print('skip this row')
+            time.sleep(0.5)
+            continue
         replaces["theta"]  = float_str(row[1])
         replaces["mc"]     = row[2]
         replaces["alpha"]  = float_str(row[3])
@@ -112,5 +118,3 @@ with open(input_tsv) as fd:
         replaces["K"] = str(k)
         replace_source_code(replaces)
         do_evaluation('./tmp/' + run_name)
-        print('row %u / %u finished' % (idx + 1, tot_rows))
-        time.sleep(2)
