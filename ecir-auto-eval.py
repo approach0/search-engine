@@ -98,10 +98,10 @@ with open(input_tsv) as fd:
     replaces = dict()
     for idx, row in enumerate(rd):
         run_name = row[0]
-        print('row %u / %u ...' % (idx + 1, tot_rows))
+        print('[row %u / %u] %s' % (idx + 1, tot_rows, run_name))
         if os.path.exists('./tmp/' + run_name + '.eval'):
             print('skip this row')
-            time.sleep(0.5)
+            time.sleep(0.1)
             continue
         replaces["theta"]  = float_str(row[1])
         replaces["mc"]     = row[2]
@@ -111,11 +111,12 @@ with open(input_tsv) as fd:
         replaces["beta_3"] = float_str(row[6])
         replaces["beta_4"] = float_str(row[7])
         replaces["beta_5"] = float_str(row[8])
-        k = 1;
-        for i in range(1, 6):
+        i = 1;
+        while i <= 5:
             if float(row[i + 3]) == 0:
-                k = i - 1
                 break
+            i += 1
+        k = i - 1
         replaces["K"] = str(k)
         replace_source_code(replaces)
         do_evaluation('./tmp/' + run_name)
