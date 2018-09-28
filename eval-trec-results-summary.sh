@@ -8,4 +8,4 @@ $cmd -l1 NTCIR12_MathWiki-qrels_judge.dat $1 | grep -v "docno" | grep -E "(^P|bp
 part=`$cmd -l1 NTCIR12_MathWiki-qrels_judge.dat $1 | grep -v "docno" | grep 'bpref' | awk '{print $3}'`
 
 # copy to clipboard and make it easy to paste on spreadsheet.
-echo "${part} \t ${full}" | xclip -selection c
+# echo "${part} \t ${full}" | xclip -selection c
