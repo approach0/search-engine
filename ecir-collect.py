@@ -27,8 +27,8 @@ with open(input_tsv) as fd:
         run_name = row[0]
         run_eval = './tmp/' + run_name + '.eval'
         if not os.path.exists(run_eval):
-            print("%s does not exist" % run_eval)
-            break
+            # print("%s does not exist" % run_eval)
+            continue
         eval_fh = open(run_eval)
         res = parse_evaluation_results(eval_fh.readlines())
         print('\t'.join(row[0: 9]), '\t', '\t'.join(res))
