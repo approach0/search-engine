@@ -73,8 +73,9 @@ def replace_source_code(replaces):
         print(k, v)
         for t in templates:
             t['txt'] = t['txt'].replace('{{' + k + '}}', v)
-    with open(t['output'], 'w') as f:
-        f.write(t['txt'])
+    for t in templates:
+        with open(t['output'], 'w') as f:
+            f.write(t['txt'])
 
 import math
 def float_str(string):
