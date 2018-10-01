@@ -411,10 +411,11 @@ add_hit:
 	       res.doc_id, res.exp_id, res.score);
 #endif
 	if (esa->n_occurs < MAX_HIGHLIGHT_OCCURS) {
+		/* save exp_id */
 		esa->occurs[esa->n_occurs].pos = res.exp_id;
 
-		hit_occur_t *ho = esa->occurs + esa->n_occurs;
 #ifdef MATH_SLOW_SEARCH
+		hit_occur_t *ho = esa->occurs + esa->n_occurs;
 		memcpy(ho->qmask, res.qmask, MAX_MTREE * sizeof(uint64_t));
 		memcpy(ho->dmask, res.dmask, MAX_MTREE * sizeof(uint64_t));
 #endif
