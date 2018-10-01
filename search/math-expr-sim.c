@@ -92,6 +92,7 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 	hit->score = (uint32_t)(score);
 }
 
+#ifdef MATH_SLOW_SEARCH
 /* experimental scoring function  */
 void math_expr_set_score_3(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
@@ -110,8 +111,14 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 
 	const float theta = 0.05f;
 
-	const float alpha = 0.7f;
-	const float beta[5] = {1.f, 0, 0, 0, 0};
+	const float alpha = 0.4f;
+	const float beta[5] = {
+		0.7f,
+		0.25f,
+		0.05f,
+		0.f,
+		0.f
+	};
 
 	float st = 0;
 	for (int i = 0; i < MAX_MTREE; i++) {
@@ -124,6 +131,28 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	}
 
 //	float st = (0.75f * st0 + 0.20f * st1 + 0.05f * st2) / (float)qnn; /* experiment */
+
+	float fmeasure = (st * sy) / (st + sy);
+	float score = fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dn)));
+
+	score = score * 100000.f;
+	hit->score = (uint32_t)(score);
+}
+#endif
+
+void math_expr_set_score_fast(struct math_expr_sim_factors* factor,
+                              struct math_expr_score_res* hit)
+{
+	struct pq_align_res *ar = factor->align_res;
+	uint32_t qn = factor->qry_lr_paths;
+	uint32_t dn = factor->doc_lr_paths;
+	uint32_t nsim = (factor->mnc_score * MAX_MATH_EXPR_SIM_SCALE) /
+	                (qn * MNC_MARK_FULL_SCORE);
+	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
+	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
+
+	const float theta = 0.05f;
+	float st = (float)ar[0].width / (float)qn;
 
 	float fmeasure = (st * sy) / (st + sy);
 	float score = fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dn)));
@@ -172,7 +201,7 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	math_expr_set_score_3(factor, hit);
 	// math_expr_set_score_4(factor, hit);
 #else
-	math_expr_set_score_1(factor, hit);
+	math_expr_set_score_fast(factor, hit);
 #endif
 }
 
@@ -407,6 +436,7 @@ math_expr_prefix_score_on_merge(
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
 
+#ifdef MATH_SLOW_SEARCH
 		/* set postional information */
 		for (int i = 0; i < MAX_MTREE; i++) {
 			if (align_res[i].width) {
@@ -414,6 +444,7 @@ math_expr_prefix_score_on_merge(
 				ret.dmask[i] = align_res[i].dmask;
 			}
 		}
+#endif
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		if (inspect) {
@@ -593,6 +624,7 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 	/* calculate similarity score */
 	math_expr_set_score(&factors, &ret);
 
+#ifdef MATH_SLOW_SEARCH
 	/* set postional information */
 	for (int i = 0; i < MAX_MTREE; i++) {
 		if (align_res[i].width) {
@@ -600,6 +632,7 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 			ret.dmask[i] = align_res[i].dmask;
 		}
 	}
+#endif
 
 	return ret;
 }

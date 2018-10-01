@@ -350,7 +350,11 @@ print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
 	char  *str;
 	size_t str_sz;
 	list   highlight_list;
+#ifdef MATH_SLOW_SEARCH
 	hit_occur_t pos[1] = {{expID,{0},{0}}};
+#else
+	hit_occur_t pos[1] = {{expID}};
+#endif
 	struct rank_hit mock_hit = {docID, 0, 1, pos};
 
 	printf("expr#%u @ doc#%u:\n", expID, docID);

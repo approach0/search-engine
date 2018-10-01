@@ -40,10 +40,12 @@ uint64_t pq_hit_numeric(struct math_prefix_qry*,
 
 struct pq_align_res {
 	uint32_t width;
-	uint32_t height;
 	uint32_t qr, dr;
+#ifdef MATH_SLOW_SEARCH
+	uint32_t height;
 	uint64_t qmask;
 	uint64_t dmask;
+#endif
 };
 
 uint32_t

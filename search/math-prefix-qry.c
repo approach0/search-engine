@@ -224,8 +224,10 @@ pq_align(struct math_prefix_qry *pq,
 			res[j].width = max;
 			res[j].qr = max_qr;
 			res[j].dr = max_dr;
+#ifdef MATH_SLOW_SEARCH
 			res[j].qmask = max_qmask;
 			res[j].dmask = max_dmask;
+#endif
 
 			exclude_qmask |= max_qmask;
 			exclude_dmask |= max_dmask;

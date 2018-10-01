@@ -5,8 +5,10 @@
 
 typedef struct hit_occur {
 	position_t  pos;
+#ifdef MATH_SLOW_SEARCH
 	uint64_t    qmask[MAX_MTREE];
 	uint64_t    dmask[MAX_MTREE];
+#endif
 } hit_occur_t;
 
 struct rank_hit {

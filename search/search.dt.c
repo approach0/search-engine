@@ -131,8 +131,10 @@ int math_l2_postlist_next(void *po_)
 				hit_occur_t *ho = po->occurs + po->n_occurs;
 				po->n_occurs += 1;
 				ho->pos = expr_res.exp_id;
+#ifdef MATH_SLOW_SEARCH
 				memcpy(ho->qmask, expr_res.qmask, MAX_MTREE * sizeof(uint64_t));
 				memcpy(ho->dmask, expr_res.dmask, MAX_MTREE * sizeof(uint64_t));
+#endif
 			}
 		}
 

@@ -17,7 +17,7 @@
 //#define DEBUG_POST_MERGE
 
 /* max mark score, type of mnc_score_t */
-#define MNC_MARK_BASE_SCORE 80
+#define MNC_MARK_BASE_SCORE 75
 #define MNC_MARK_FULL_SCORE 100
 
 /*
@@ -66,18 +66,20 @@
 #define MAX_MATH_EXPR_SIM_SCALE 1000
 
 /* switch between SLOW/FAST search */
-#define MATH_SLOW_SEARCH
+// #define MATH_SLOW_SEARCH
 
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
-	#define MAX_MTREE 1
+	#define MAX_MTREE 3
 #else
-	#define MAX_MTREE 3 /* 1 */
+	#define MAX_MTREE 1
 #endif
 
 #define MAX_LEAVES  64
 
-#define HIGHLIGHT_MATH_ALIGNMENT
+#ifdef MATH_SLOW_SEARCH
+	#define HIGHLIGHT_MATH_ALIGNMENT
+#endif
 
 //#define PRINT_MATH_POST_TYPE
 
