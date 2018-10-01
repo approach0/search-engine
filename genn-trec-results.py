@@ -29,7 +29,7 @@ with open(fname) as f:
         os.system(exestr);
         t1 = time.time()
         # report query process time
-        sys.stderr.write('%s %f seconds \n' % (qry_id, t1 - t0))
+        sys.stderr.write('%s %f msec \n' % (qry_id, (t1 - t0) * 1000.0))
         sys.stderr.flush()
         # print TREC output
         try:
