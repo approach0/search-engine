@@ -75,6 +75,7 @@ fork_math_postlist(math_posting_t *disk_po)
 struct math_postlist_cache_arg {
 	struct math_postlist_cache *cache;
 	char *prefix_dir;
+	uint64_t tot_cnt;
 };
 
 static enum ds_ret
@@ -101,11 +102,12 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	}
 
 	mem_po = fork_math_postlist(disk_po);
+	mpca->tot_cnt ++;
 
 	/* print progress */
 	printf(ES_RESET_LINE);
-	printf("[Cached %.3f/%.3f MB] %s",
-		(float)cache->postlist_sz / __1MB__,
+	printf("[Cached %8lu lists, %.3f/%.3f MB] %s",
+		mpca->tot_cnt, (float)cache->postlist_sz / __1MB__,
 		(float)cache->limit_sz / __1MB__, srchpath);
 	fflush(stdout);
 
@@ -157,8 +159,9 @@ int
 math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 {
 	size_t postlist_sz = cache->postlist_sz;
-	struct math_postlist_cache_arg args = {cache, (char *)"./prefix"};
+	struct math_postlist_cache_arg args = {cache, (char *)"./prefix", 0};
 	dir_search_bfs(dir, &dir_srch_callbk, &args);
+	// dir_search_podfs(dir, &dir_srch_callbk, &args);
 	printf("\n");
 
 	return (postlist_sz == cache->postlist_sz);
