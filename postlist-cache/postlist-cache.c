@@ -22,6 +22,7 @@ int postlist_cache_fork(struct postlist_cache *cache,
 	sds math_cache_path = sdsnew(mi->dir);
 	math_cache_path = sdscat(math_cache_path, "/prefix");
 
+	(void)math_postlist_cache_add_list(&cache->math_cache, mi->dir);
 	res |= math_postlist_cache_add(&cache->math_cache, math_cache_path);
 #ifndef IGNORE_TERM_INDEX
 	res |= term_postlist_cache_add(&cache->term_cache, ti);

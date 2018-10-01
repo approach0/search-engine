@@ -185,3 +185,56 @@ math_postlist_cache_list(struct math_postlist_cache c, int print)
 	}
 	return cnt;
 }
+
+int
+math_postlist_cache_add_list(struct math_postlist_cache *cache, const char *dir)
+{
+	FILE *fh = NULL;
+	char _line[4096];
+	fh = fopen("./cache-list.tmp", "r");
+	if (fh == NULL)
+		return 1;
+	
+	while (fgets(_line, 4096, fh) != NULL) {
+		/* line string */
+		sds line = sdsnew(_line);
+		sdstrim(line, "\n");
+		/* absolute path string */
+		sds abs_path = sdsnew(dir);
+		abs_path = sdscat(abs_path, "/");
+		abs_path = sdscat(abs_path, line);
+
+		printf(ES_RESET_LINE);
+		printf("[from cache-list] %s", line);
+		fflush(stdout);
+
+		math_posting_t *disk_po = math_posting_new_reader(abs_path);
+
+		if (!math_posting_start(disk_po)) {
+			/* this directory does not have index file */
+			printf("Cannot find posting list @ %s\n", abs_path);
+			goto next;
+		}
+
+		struct postlist *mem_po = fork_math_postlist(disk_po);
+
+		strmap_t path_dict = cache->path_dict;
+		if (NULL == path_dict[[line]]) {
+			path_dict[[line]] = mem_po;
+			cache->postlist_sz += mem_po->tot_sz;
+		} else {
+			printf("[duplicate cache] %s\n", line);
+			postlist_free(mem_po);
+		}
+
+		math_posting_finish(disk_po);
+next:
+		sdsfree(line);
+		sdsfree(abs_path);
+		math_posting_free_reader(disk_po);
+	}
+
+	printf("\n");
+	fclose(fh);
+	return 0;
+}

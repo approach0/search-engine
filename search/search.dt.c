@@ -327,5 +327,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 	// Sort min-heap
 	priority_Q_sort(&rk_res);
+	fflush(stdout);
 	return rk_res;
 }
