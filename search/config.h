@@ -18,7 +18,6 @@
 
 /* max mark score, type of mnc_score_t */
 #define MNC_MARK_BASE_SCORE 90
-// #define MNC_MARK_BASE_SCORE {{mc}}
 #define MNC_MARK_FULL_SCORE 100
 
 /*
@@ -72,7 +71,6 @@
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
 	#define MAX_MTREE 3
-	// #define MAX_MTREE {{K}}
 #else
 	#define MAX_MTREE 1
 #endif
@@ -81,8 +79,7 @@
 
 #ifdef MATH_SLOW_SEARCH
 	#define HIGHLIGHT_MATH_ALIGNMENT
+	#define CNT_VISIBLE_NODES_ONLY
 #endif
 
 //#define PRINT_MATH_POST_TYPE
-
-#define CNT_VISIBLE_NODES_ONLY

@@ -109,21 +109,12 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float sy0 = (float)nsim / MAX_MATH_EXPR_SIM_SCALE;
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
 
-//	const float theta = {{theta}};
-//	const float alpha = {{alpha}};
-//	const float beta[5] = {
-//		{{beta_1}},
-//		{{beta_2}},
-//		{{beta_3}},
-//		{{beta_4}},
-//		{{beta_5}}
-//	};
 	const float theta = 0.05f;
 	const float alpha = 0.4f;
 	const float beta[5] = {
-		0.7f,
-		0.25f,
-		0.05f,
+		0.70f,
+		0.20f,
+		0.10f,
 		0.f,
 		0.f
 	};
