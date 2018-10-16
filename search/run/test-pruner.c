@@ -42,6 +42,10 @@ int main()
 			int qw = q_sect->width;
 			int max = 0;
 
+			/* skip non-hit postings */
+			if (post->get_min() != post->expID)
+				continue;
+
 			/* vector addition */
 			for (int k = 0; k < 64 /* |l(T_d)| */; k++) {
 				int dw = d_sect[k].width;
