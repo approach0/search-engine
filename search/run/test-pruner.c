@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 struct sector {
 	int node_id;
 	int width;
@@ -9,7 +6,9 @@ struct sector {
 struct posting {
 	struct sector *(*get_sectors)();
 	int (*get_min)();
+	void (*advance)();
 	int expID;
+	int refcnt;
 };
 
 struct pruner_node {
@@ -18,8 +17,9 @@ struct pruner_node {
 	struct posting *posting[64];
 };
 
-int main()
+int main() // simulate one merge stage iteration
 {
+	struct posting all_post[64];
 	struct pruner_node pruner_nodes[64];
 	int theta = 123; /* best matched number of leaves */
 	int widest_match = 0;
@@ -29,10 +29,16 @@ int main()
 		int qw_match = 0;
 		int vector[128] = {0};
 
-		if (qw_upperbound <= theta)
+		if (qw_upperbound <= theta) {
+			for (int j = 0; j < 64 /* |l(T_q)| */; j++) {
+				struct posting *post = node->posting[j];
+				post->refcnt --;
+			}
+			/* delete this pruner_node */;
 			break;
-		else if (widest_match >= qw_upperbound)
+		} else if (widest_match >= qw_upperbound) {
 			break;
+		}
 
 		/* qnode best match calculation */
 		for (int j = 0; j < 64 /* |l(T_q)| */; j++) {
@@ -77,5 +83,18 @@ term_early:
 			widest_match = qw_match;
 	}
 
-	return widest_match;
+	for (int i = 0; i < 64 /* cur number of live postings */; i++) {
+		if (all_post[i].refcnt <= 0) {
+			/* delete this posting list */;
+			continue;
+		}
+
+		if (all_post[i].get_min() == all_post[i].expID)
+			all_post[i].advance();
+	}
+
+	if (widest_match > theta)
+		return widest_match; /* put widest_match scored into heap and update theta */
+	else
+		return 0;
 }
