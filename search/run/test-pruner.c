@@ -1,49 +1,49 @@
-struct sector {
-	int node_id;
+struct sector_tr {
+	int rnode;
 	int width;
 };
 
 struct posting {
-	struct sector *(*get_sectors)();
-	int (*get_min)();
-	void (*advance)();
+	struct sector_tr *(*get_sector_trees)();
+	int   (*get_min)();
+	void  (*advance)();
 	int expID;
 	int refcnt;
 };
 
 struct pruner_node {
 	int width; // each node is ordered by this key
-	struct sector   sect[64]; // each sect node_id is the same here
+	struct sector_tr secttr[64]; // each sect rnode is the same here
 	struct posting *posting[64];
 };
 
 int main() // simulate one merge stage iteration
 {
 	struct posting all_post[64];
-	struct pruner_node pruner_nodes[64];
+	struct pruner_node q_nodes[64];
 	int theta = 123; /* best matched number of leaves */
-	int widest_match = 0;
+	int q_widest_match = 0;
 	for (int i = 0; i < 64 /* |T_q| */; i++) {
-		struct pruner_node *node = pruner_nodes + i;
-		int qw_upperbound = node->width;
-		int qw_match = 0;
-		int vector[128] = {0};
+		struct pruner_node *q_node = q_nodes + i;
+		int q_upperbound = q_node->width;
+		int q_node_match = 0;
+		int sumvec[128] = {0};
 
-		if (qw_upperbound <= theta) {
+		if (q_upperbound <= theta) {
 			for (int j = 0; j < 64 /* |l(T_q)| */; j++) {
-				struct posting *post = node->posting[j];
+				struct posting *post = q_node->posting[j];
 				post->refcnt --;
 			}
 			/* delete this pruner_node */;
-			break;
+			continue;
 		}
 
 		/* qnode best match calculation */
 		for (int j = 0; j < 64 /* |l(T_q)| */; j++) {
-			struct sector *q_sect = node->sect + j;
-			struct posting *post = node->posting[j];
-			struct sector *d_sect = post->get_sectors();
-			int qw = q_sect->width;
+			struct sector_tr *q_secttr = q_node->secttr + j;
+			struct posting *post = q_node->posting[j];
+			struct sector_tr *d_secttr = post->get_sector_trees();
+			int qw = q_secttr->width;
 			int max = 0;
 
 			/* skip non-hit postings */
@@ -52,30 +52,31 @@ int main() // simulate one merge stage iteration
 
 			/* vector addition */
 			for (int k = 0; k < 64 /* |l(T_d)| */; k++) {
-				int dw = d_sect[k].width;
-				int rn = d_sect[k].node_id;
+				int dw = d_secttr[k].width;
+				int rn = d_secttr[k].rnode;
 				if (qw > dw) {
-					vector[rn] += dw;
+					sumvec[rn] += dw;
 					if (dw > max) max = dw;
 				} else {
-					vector[rn] += qw;
+					sumvec[rn] += qw;
 					if (qw > max) max = qw;
 				}
 
-				if (vector[rn] > qw_match) {
-					qw_match = vector[rn];
+				if (sumvec[rn] > q_node_match) {
+					q_node_match = sumvec[rn];
 				}
 			}
 
+			/* update upperbound for each vector addition */
 			if (max < qw) {
-				qw_upperbound -= (qw - max);
-				if (qw_upperbound <= theta)
+				q_upperbound -= (qw - max);
+				if (q_upperbound <= theta)
 					break;
 			}
 		}
 
-		if (qw_match > widest_match)
-			widest_match = qw_match;
+		if (q_node_match > q_widest_match)
+			q_widest_match = q_node_match;
 	}
 
 	for (int i = 0; i < 64 /* cur number of live postings */; i++) {
@@ -88,8 +89,8 @@ int main() // simulate one merge stage iteration
 			all_post[i].advance();
 	}
 
-	if (widest_match > theta)
-		return widest_match; /* put widest_match scored into heap and update theta */
+	if (q_widest_match > theta)
+		return q_widest_match; /* put q_widest_match scored into heap and update theta */
 	else
 		return 0;
 }
