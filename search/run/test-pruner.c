@@ -36,8 +36,6 @@ int main() // simulate one merge stage iteration
 			}
 			/* delete this pruner_node */;
 			break;
-		} else if (widest_match >= qw_upperbound) {
-			break;
 		}
 
 		/* qnode best match calculation */
@@ -66,8 +64,6 @@ int main() // simulate one merge stage iteration
 
 				if (vector[rn] > qw_match) {
 					qw_match = vector[rn];
-					if (qw_match >= qw_upperbound)
-						goto term_early;
 				}
 			}
 
@@ -78,7 +74,6 @@ int main() // simulate one merge stage iteration
 			}
 		}
 
-term_early:
 		if (qw_match > widest_match)
 			widest_match = qw_match;
 	}
