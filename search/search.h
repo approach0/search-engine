@@ -7,9 +7,10 @@
 #include "snippet.h"
 #include "query.h"
 #include "math-qry-struct.h"
+#include "math-pruning.h"
 
 struct math_l2_postlist {
-	struct postmerger pm;
+	struct postmerger pm; /* posting lists */
 	postmerger_iter_t iter;
 
 	char type[MAX_MERGE_POSTINGS][128];
@@ -23,6 +24,8 @@ struct math_l2_postlist {
 	uint32_t    max_exp_score;
 	uint32_t    n_occurs;
 	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];
+
+	struct math_pruner pruner;
 };
 
 struct l2_postlist_item {

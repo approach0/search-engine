@@ -70,8 +70,13 @@ math_l2_postlist(struct indices *indices, struct math_qry_struct* mqs)
 		&add_path_postings, &args
 	);
 
+	/* save some pointers */
 	po.mqs = mqs;
 	po.indices = indices;
+
+	/* setup pruning structures */
+	math_pruner_init(&po.pruner, mqs->n_qry_nodes, po.ele, mqs->n_uniq_paths);
+
 	return po;
 }
 
@@ -323,6 +328,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	for (int j = 0; j < root_pm.n_po; j++) {
 		POSTMERGER_POSTLIST_CALL(&root_pm, uninit, j);
 		math_qry_free(&mqs[j]);
+		math_pruner_free(&mpo[j].pruner);
 	}
 
 	// Sort min-heap

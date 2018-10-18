@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include <stdbool.h>
 #include "list/list.h"
@@ -9,7 +10,6 @@ struct subpath_ele {
 	uint32_t         dup_cnt;
 	struct subpath  *dup[MAX_MATH_PATHS];
 	uint32_t         rid[MAX_MATH_PATHS]; /*  node ID of prefix root */
-	uint32_t         expr[MAX_QRY_MATHS]; /*  corresponding expr ID  */
 	uint32_t         prefix_len;
 };
 
