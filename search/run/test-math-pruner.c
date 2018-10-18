@@ -32,6 +32,7 @@ int main()
 	}
 
 	math_qry_prepare(&indices, "a+bc+defgh", &mqs);
+	optr_print((struct optr_node*)mqs.optr, stdout);
 
 	math_index_dir_merge(
 		indices.mi, DIR_MERGE_DIRECT, DIR_PATHSET_PREFIX_PATH,

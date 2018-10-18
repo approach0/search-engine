@@ -89,7 +89,6 @@ static LIST_IT_CALLBK(push_query_path)
 
 int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct* s)
 {
-	int ret = 0;
 	struct tex_parse_ret parse_ret;
 	parse_ret = tex_parse(tex, 0, true);
 
@@ -100,9 +99,11 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 
 	if (parse_ret.code == PARSER_RETCODE_ERR ||
 	    parse_ret.operator_tree == NULL) {
-		ret = 1;		
-		goto release;
+		s->optr = NULL;
+		return 1;
 	}
+	/* save OPT */
+	s->optr = parse_ret.operator_tree;
 
 	/* generate query node visibility map */
 	optr_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
@@ -137,15 +138,15 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	);
 	//subpath_set_print(&s->subpath_set, stdout);
 
-release:
-	if (parse_ret.operator_tree)
-		optr_release((struct optr_node*)parse_ret.operator_tree);
-
-	return ret;
+	return 0;
 }
 
 void math_qry_free(struct math_qry_struct* s)
 {
+	if (s->optr) {
+		optr_release((struct optr_node*)s->optr);
+	}
+
 	if (s->subpath_set.now) {
 		// subpath_set_print(&s->subpath_set, stdout);
 		subpath_set_free(&s->subpath_set);
