@@ -147,8 +147,8 @@ static LIST_IT_CALLBK(print_subpath)
 
 	printf("(%u duplicates: ", ele->dup_cnt);
 	for (i = 0; i <= ele->dup_cnt; i++)
-		fprintf(fh, "r#%u~l#%u,p#%u", ele->rid[i],
-		ele->dup[i]->leaf_id, ele->dup[i]->path_id);
+		fprintf(fh, "r%u~l%u ", ele->rid[i],
+		ele->dup[i]->leaf_id);
 	printf(")\n");
 
 	LIST_GO_OVER;
