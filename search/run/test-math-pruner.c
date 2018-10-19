@@ -2,6 +2,7 @@
 #include <string.h>
 #include "mhook/mhook.h"
 #include "common/common.h"
+#include "tex-parser/head.h"
 #include "search.h"
 
 const char index_path[] = "/home/tk/index-fix-decimal-and-use-latexml";

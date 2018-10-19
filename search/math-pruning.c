@@ -61,7 +61,21 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		node->upperbound = sum;
 	}
 
-	/* sort node by their upperbounds */
+	/* bubble sort node by their upperbounds */
+	for (int i = 0; i < pruner->n_nodes; i++) {
+		struct pruner_node *ni = pruner->nodes + i;
+
+		for (int j = i + 1; j < pruner->n_nodes; j++) {
+			struct pruner_node *nj = pruner->nodes + j;
+
+			if (ni->upperbound < nj->upperbound) {
+				struct pruner_node tmp;
+				tmp = *nj;
+				*nj = *ni;
+				*ni = tmp;
+			}
+		}
+	}
 
 	return 0;
 }
