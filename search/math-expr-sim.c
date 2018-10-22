@@ -45,7 +45,7 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 void math_expr_set_score_0(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
-	hit->score = (uint32_t)100;
+	hit->score = 1.f;
 }
 
 /* CIKM-2018 run-1 */
@@ -65,8 +65,7 @@ void math_expr_set_score_1(struct math_expr_sim_factors* factor,
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
+	hit->score = score;
 }
 
 /* CIKM-2018 run-2 */
@@ -88,8 +87,7 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
+	hit->score = score;
 }
 
 #ifdef MATH_SLOW_SEARCH
@@ -134,8 +132,7 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float fmeasure = (st * sy) / (st + sy);
 	float score = fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dn)));
 
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
+	hit->score = score;
 }
 #endif
 
@@ -156,8 +153,7 @@ void math_expr_set_score_fast(struct math_expr_sim_factors* factor,
 	float fmeasure = (st * sy) / (st + sy);
 	float score = fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dn)));
 
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
+	hit->score = score;
 }
 
 #ifdef PQ_CELL_NUMERIC_WEIGHT
@@ -181,8 +177,7 @@ void math_expr_set_score_4(struct math_expr_sim_factors* factor,
 	float fmeasure = st*sy / (st + sy);
 	float score = fmeasure * ((1.f - alpha) + alpha * (1.f / logf(1.f + dn)));
 
-	score = score * 100000.f;
-	hit->score = (uint32_t)(score);
+	hit->score = score;
 }
 #endif
 
