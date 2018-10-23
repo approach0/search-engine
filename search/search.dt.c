@@ -178,10 +178,8 @@ static float lowerbound(int width, struct math_l2_postlist *po)
 	return fmeasure * ((1.f - theta) + theta * 0.240f);
 }
 
-int math_l2_postlist_pruning_next(void *po_)
+static void math_pruning_next_expr(struct math_l2_postlist *po)
 {
-	PTR_CAST(po, struct math_l2_postlist, po_);
-
 	float min_score = priority_Q_min_score(po->rk_res);
 	struct math_pruner *pruner = &po->pruner;
 	uint32_t n_doc_lr_paths = 0;
@@ -256,8 +254,8 @@ int math_l2_postlist_pruning_next(void *po_)
 		uint32_t qn = po->mqs->subpaths.n_lr_paths;
 		uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
 		struct math_expr_sim_factors factors = {
-			sym_sim, 0 /* search depth, not used */, qn, dn,
-			&widest, 1, 0 /* r_cnt */, 0 /* lcs */, 0 /* n_qry_nodes */
+			sym_sim, 0 /* search depth*/, qn, dn, &widest, 1 /* k */,
+			0 /* r_cnt */, 0 /* lcs */, 0 /* n_qry_nodes */
 		};
 		math_expr_set_score(&factors, &expr);
 
@@ -272,10 +270,10 @@ int math_l2_postlist_pruning_next(void *po_)
 	}
 
 	/* forward posting lists */
-	po->prev_doc_id = (uint32_t)(po->iter->min >> 32);
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (cur == UINT64_MAX || pruner->postlist_ref[i] <= 0) {
+		uint32_t p = po->iter->map[i];
+		if (cur == UINT64_MAX || pruner->postlist_ref[p] <= 0) {
 			/* drop this posting list completely */
 			postmerger_iter_remove(po->iter, i);
 			i -= 1;
@@ -284,11 +282,24 @@ int math_l2_postlist_pruning_next(void *po_)
 			postmerger_iter_call(&po->pm, po->iter, next, i);
 		}
 	}
+}
 
-	/* update min doc in merger */
-	postmerger_iter_next(po->iter);
-	if (po->iter->size) return 1;
-	else return 0;
+int math_l2_postlist_pruning_next(void *po_)
+{
+	PTR_CAST(po, struct math_l2_postlist, po_);
+
+	/* one l2 next() call may have multiple expressions */
+	po->prev_doc_id = (uint32_t)(po->iter->min >> 32);
+	do {
+		uint32_t cur_doc_id = (uint32_t)(po->iter->min >> 32);
+		if (cur_doc_id != po->prev_doc_id)
+			return 1; /* collected all the expressions in this doc */
+
+		math_pruning_next_expr(po);
+
+	} while (po->iter->size && postmerger_iter_next(po->iter));
+
+	return 0;
 }
 
 int math_l2_postlist_init(void *po_)
@@ -307,7 +318,7 @@ int math_l2_postlist_init(void *po_)
 	po->inv_qw = 1.f / qw;
 
 	/* next() will read the first item. */
-	math_l2_postlist_next(po_);
+	// ?__math_l2_postlist_next(po_);
 
 	/* setup pruning structures */
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
@@ -334,7 +345,7 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		math_l2_postlist_cur,
-		math_l2_postlist_pruning_next,
+		math_l2_postlist_pruning_next, // math_l2_postlist_next
 		NULL /* jump */,
 		math_l2_postlist_read,
 		math_l2_postlist_init,
