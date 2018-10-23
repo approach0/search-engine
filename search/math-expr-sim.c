@@ -630,3 +630,115 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 
 	return ret;
 }
+
+////////////////////  pruning functions ////////////////////////////////
+
+static float upperbound(int width, struct math_l2_postlist *po)
+{
+	const float theta = 0.05f;
+	float st = (float)width * po->inv_qw;
+	float fmeasure = st / (st + 1.f);
+	return fmeasure * ((1.f - theta) + theta * 1.443f);
+}
+
+static float lowerbound(int width, struct math_l2_postlist *po)
+{
+	const float theta = 0.05f;
+	float st = (float)width * po->inv_qw;
+	float fmeasure = (st * 0.5f) / (st + 0.5f);
+	return fmeasure * ((1.f - theta) + theta * 0.240f);
+}
+
+uint32_t
+math_l2_postlist_coarse_score(struct math_l2_postlist *po,
+                              struct pq_align_res *widest)
+{
+	float min_score = 0.f;
+	struct math_pruner *pruner = &po->pruner;
+	uint32_t n_doc_lr_paths = 0;
+
+	if (priority_Q_full(po->rk_res))
+		min_score = priority_Q_min_score(po->rk_res);
+
+	/* for each query node in sorted order */
+	for (int i = 0; i < pruner->n_nodes; i++) {
+		struct pruner_node *q_node = pruner->nodes + i;
+		float q_node_upperbound = upperbound(q_node->width, po);
+
+		/* check whether we can prune this node */
+		if (q_node_upperbound <= min_score) {
+			for (int j = 0; j < q_node->n; j++) {
+				int p = q_node->postlist_id[j];
+				pruner->postlist_ref[p] -= 1;
+			}
+			math_pruner_dele_node(pruner, i);
+			i -= 1;
+			continue;
+
+		} else if (q_node->width < widest->width &&
+		    q_node_upperbound <= lowerbound(widest->width, po)) {
+			break;
+		}
+
+		/* calculate query node max match */
+		int q_node_dr, q_node_match = 0;
+		int accu_vec[MAX_NODE_IDS] = {0};
+		for (int j = 0; j < q_node->n; j++) {
+			/* read document posting list item */
+			struct math_postlist_item item;
+			const size_t sz = sizeof(item);
+			int p = q_node->postlist_id[j];
+			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, p);
+			if (cur == UINT64_MAX || cur != po->iter->min) continue;
+			postmerger_iter_call(&po->pm, po->iter, read, p, &item, sz);
+			n_doc_lr_paths = item.n_lr_paths; /* save doc OPT width */
+
+			/* match counter vector calculation */
+			int qsw = q_node->secttr[j].width;
+			int sect_vec[MAX_NODE_IDS] = {0};
+			for (int k = 0; k < item.n_paths; k++) {
+				int dr = item.subr_id[k];
+				if (sect_vec[dr] < qsw) {
+					sect_vec[dr] ++;
+					accu_vec[dr] ++;
+					if (accu_vec[dr] > q_node_match) {
+						q_node_dr = dr;
+						q_node_match = accu_vec[dr];
+					}
+				}
+			}
+		}
+
+		/* update widest match */
+		if (q_node_match > widest->width) {
+			widest->width = q_node_match;
+			widest->qr = q_node->secttr[0].rnode;
+			widest->dr = q_node_dr;
+		}
+	}
+
+	return n_doc_lr_paths;
+}
+
+struct math_expr_score_res
+math_l2_postlist_precise_score(struct math_l2_postlist *po,
+                               struct pq_align_res *widest,
+                               uint32_t n_doc_lr_paths)
+{
+	struct math_expr_score_res expr;
+	/* get docID and exprID */
+	uint64_t cur = po->iter->min;
+	P_CAST(p, struct math_postlist_item, &cur);
+	expr.doc_id = p->doc_id;
+	expr.exp_id = p->exp_id;
+	/* get overall score */
+	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest);
+	uint32_t qn = po->mqs->subpaths.n_lr_paths;
+	uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
+	struct math_expr_sim_factors factors = {
+		sym_sim, 0 /* search depth*/, qn, dn, widest, 1 /* k */,
+		0 /* r_cnt */, 0 /* lcs */, 0 /* n_qry_nodes */
+	};
+	math_expr_set_score(&factors, &expr);
+	return expr;
+}
