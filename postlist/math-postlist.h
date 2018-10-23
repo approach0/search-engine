@@ -1,3 +1,4 @@
+#pragma once
 #include "config.h"
 
 #define MAX_MATH_POSTLIST_PATHINFO_LEN  64

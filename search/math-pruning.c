@@ -46,7 +46,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		}
 	}
 
-	/* calculate the upperbound for each node,
+	/* calculate the width for each node,
 	 * and reference counter for each posting list. */
 	memset(pruner->postlist_ref, 0, MAX_MERGE_POSTINGS * sizeof(int));
 	for (int i = 0; i < pruner->n_nodes; i++) {
@@ -58,7 +58,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 
 			sum += node->secttr[j].width;
 		}
-		node->upperbound = sum;
+		node->width = sum;
 	}
 
 	/* bubble sort node by their upperbounds */
@@ -68,7 +68,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		for (int j = i + 1; j < pruner->n_nodes; j++) {
 			struct pruner_node *nj = pruner->nodes + j;
 
-			if (ni->upperbound < nj->upperbound) {
+			if (ni->width < nj->width) {
 				struct pruner_node tmp;
 				tmp = *nj;
 				*nj = *ni;
@@ -84,7 +84,7 @@ void math_pruner_print(struct math_pruner *pruner)
 {
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
-		printf("node#%d / %d: \n", node->secttr[0].rnode, node->upperbound);
+		printf("node#%d / %d: \n", node->secttr[0].rnode, node->width);
 		for (int j = 0; j < node->n; j++) {
 			int pid = node->postlist_id[j];
 			printf("\t sector tree: (%d, %d) ---> posting_list[%d], ref: %d\n",
@@ -92,6 +92,13 @@ void math_pruner_print(struct math_pruner *pruner)
 				pid, pruner->postlist_ref[pid]);
 		}
 	}
+}
+
+void math_pruner_dele_node(struct math_pruner *pruner, int i)
+{
+	pruner->n_nodes -= 1;
+	for (int j = i; j < pruner->n_nodes; j++)
+		pruner->nodes[j] = pruner->nodes[j + 1];
 }
 
 void math_pruner_free(struct math_pruner* pruner)

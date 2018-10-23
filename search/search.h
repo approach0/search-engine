@@ -19,6 +19,8 @@ struct math_l2_postlist {
 
 	struct math_qry_struct *mqs;
 	struct indices *indices /* for debug */;
+	ranked_results_t *rk_res;
+	float  inv_qw;
 
 	uint32_t    prev_doc_id;
 	uint32_t    max_exp_score;
