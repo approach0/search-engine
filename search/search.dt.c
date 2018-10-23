@@ -195,10 +195,11 @@ int math_l2_postlist_pruning_next(void *po_)
 		/* check whether we can prune this node */
 		if (q_node_upperbound <= min_score) {
 			for (int j = 0; j < q_node->n; j++) {
-				int pid = q_node->postlist_id[j];
-				pruner->postlist_ref[pid] -= 1;
+				int p = q_node->postlist_id[j];
+				pruner->postlist_ref[p] -= 1;
 			}
 			math_pruner_dele_node(pruner, i);
+			i -= 1;
 			continue;
 
 		} else if (q_node->width < widest.width &&
@@ -212,10 +213,11 @@ int math_l2_postlist_pruning_next(void *po_)
 		for (int j = 0; j < q_node->n; j++) {
 			/* read document posting list item */
 			struct math_postlist_item item;
-			int pid = q_node->postlist_id[j];
-			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, pid);
+			const size_t sz = sizeof(item);
+			int p = q_node->postlist_id[j];
+			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, p);
 			if (cur == UINT64_MAX || cur != po->iter->min) continue;
-			postmerger_iter_call(&po->pm, po->iter, read, pid, &item, sizeof(item));
+			postmerger_iter_call(&po->pm, po->iter, read, p, &item, sz);
 			n_doc_lr_paths = item.n_lr_paths; /* save doc OPT width */
 
 			/* match counter vector calculation */
