@@ -53,3 +53,5 @@ void math_l2_postlist_print_cur(struct math_l2_postlist*);
 
 struct math_expr_score_res
 math_l2_postlist_cur_score(struct math_l2_postlist*);
+
+mnc_score_t math_l2_postlist_cur_symbol_sim(struct math_l2_postlist*, struct pq_align_res*);
