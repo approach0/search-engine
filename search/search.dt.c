@@ -177,6 +177,22 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 	return 0;
 }
 
+static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
+{
+	uint32_t cnt = 0;
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		if (cur != UINT64_MAX && cur == po->iter->min)
+			cnt ++;
+	}
+
+	return cnt;
+}
+
+#ifdef DEBUG_STATS_HOT_HIT
+static uint64_t g_hot_hit[128];
+#endif
+
 int math_l2_postlist_pruning_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -189,9 +205,14 @@ int math_l2_postlist_pruning_next(void *po_)
 			return 1; /* collected all the expressions in this doc */
 
 		/* calculate coarse score */
-		struct pq_align_res widest;
+		struct pq_align_res widest = {0};
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
-		widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
+
+#ifdef DEBUG_STATS_HOT_HIT
+		uint32_t n_hit_paths = get_num_doc_hit_paths(po);
+		g_hot_hit[n_hit_paths] ++;
+#endif
+		// widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
 
 		/* push expression results */
 		if (widest.width) {
@@ -425,8 +446,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 	}
 
-#ifdef DEBUG_MATH_PRUNING
-	printf("merge complete.\n");
+#ifdef DEBUG_STATS_HOT_HIT
+	for (int i = 0; i < 128; i++) {
+		if(g_hot_hit[i])
+			printf("%d hits freq: %lu\n", i, g_hot_hit[i]);
+	}
 #endif
 
 	// Uninitialize merger objects
