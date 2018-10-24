@@ -7,7 +7,6 @@
 #include "search.h"
 #include "math-expr-sim.h"
 #include "proximity.h"
-// #include "math-index/head.h" /* for definition of subpath_ele */
 
 struct add_path_postings_args {
 	struct indices *indices;
@@ -162,6 +161,22 @@ int math_l2_postlist_next(void *po_)
 	return 0;
 }
 
+static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
+{
+	struct math_postlist_item item;
+
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+
+		if (cur != UINT64_MAX && cur == po->iter->min) {
+			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
+			return item.n_lr_paths;
+		}
+	}
+
+	return 0;
+}
+
 int math_l2_postlist_pruning_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -174,14 +189,17 @@ int math_l2_postlist_pruning_next(void *po_)
 			return 1; /* collected all the expressions in this doc */
 
 		/* calculate coarse score */
-		struct pq_align_res widest = {0};
-		uint32_t n_doc_lr_paths = math_l2_postlist_coarse_score(po, &widest);
+		struct pq_align_res widest;
+		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
+		widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
 
 		/* push expression results */
 		if (widest.width) {
 			struct math_expr_score_res expr =
 				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
 
+//			printf("Precise score: %.3f (doc#%u, exp#%u)\n",
+//				expr.score, expr.doc_id, expr.exp_id);
 			if (expr.score > po->max_exp_score)
 				po->max_exp_score = expr.score;
 
@@ -192,6 +210,8 @@ int math_l2_postlist_pruning_next(void *po_)
 			}
 		}
 
+		// printf("\n");
+
 		/* forward posting lists */
 		for (int i = 0; i < po->iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
@@ -200,6 +220,9 @@ int math_l2_postlist_pruning_next(void *po_)
 				/* drop this posting list completely */
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
+#ifdef DEBUG_MATH_PRUNING
+				printf("drop posting list[%u]\n", p);
+#endif
 			} else if (cur == po->iter->min) {
 				/* forward */
 				postmerger_iter_call(&po->pm, po->iter, next, i);
@@ -254,7 +277,7 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		math_l2_postlist_cur,
-		//math_l2_postlist_next,
+		// math_l2_postlist_next,
 		math_l2_postlist_pruning_next,
 		NULL /* jump */,
 		math_l2_postlist_read,
@@ -352,15 +375,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 	prox_input_t prox[qry->len];
 
 	// MERGE l2 posting lists here
-	int cnt = 0;
-	foreach (iter, postmerger, &root_pm) {
-		postmerger_iter_call(&root_pm, iter, next, 0);
-		break;
-		if (cnt ++ > 5) {
-			printf("abort.\n");
-			break;
-		}
+#ifdef DEBUG_MATH_PRUNING
+	uint64_t cnt = 0;
+#endif
 
+	foreach (iter, postmerger, &root_pm) {
 		float math_score = 0.f;
 		uint32_t doc_id  = 0;
 
@@ -391,11 +410,24 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 
 		float prox_score = proximity_score(prox, iter->size);
-		float doc_score = prox_score + math_score;
+		(void)prox_score;
+		// float doc_score = prox_score + math_score;
+		float doc_score = math_score;
 		if (doc_score) {
 			topk_candidate(&rk_res, doc_id, doc_score, prox, iter->size);
 		}
+
+#ifdef DEBUG_MATH_PRUNING
+		if (cnt ++ > DEBUG_MATH_PRUNING_LIMIT_ITERS) {
+			printf("abort.\n");
+			break;
+		}
+#endif
 	}
+
+#ifdef DEBUG_MATH_PRUNING
+	printf("merge complete.\n");
+#endif
 
 	// Uninitialize merger objects
 	for (int j = 0; j < root_pm.n_po; j++) {

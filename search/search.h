@@ -23,7 +23,7 @@ struct math_l2_postlist {
 	float  inv_qw;
 
 	uint32_t    prev_doc_id;
-	uint32_t    max_exp_score;
+	float       max_exp_score;
 	uint32_t    n_occurs;
 	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];
 
@@ -32,7 +32,7 @@ struct math_l2_postlist {
 
 struct l2_postlist_item {
 	uint32_t    doc_id;
-	uint32_t    part_score;
+	float       part_score;
 	uint32_t    n_occurs;
 	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];
 };

@@ -633,50 +633,77 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 
 ////////////////////  pruning functions ////////////////////////////////
 
-static float upperbound(int width, struct math_l2_postlist *po)
+static float upperbound(int width, float dw, float inv_qw)
 {
 	const float theta = 0.05f;
-	float st = (float)width * po->inv_qw;
+	float st = (float)width * inv_qw;
 	float fmeasure = st / (st + 1.f);
-	return fmeasure * ((1.f - theta) + theta * 1.443f);
+	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
 
-static float lowerbound(int width, struct math_l2_postlist *po)
+static float lowerbound(int width, float dw, float inv_qw)
 {
 	const float theta = 0.05f;
-	float st = (float)width * po->inv_qw;
+	float st = (float)width * inv_qw;
 	float fmeasure = (st * 0.5f) / (st + 0.5f);
-	return fmeasure * ((1.f - theta) + theta * 0.240f);
+	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
 
-uint32_t
-math_l2_postlist_coarse_score(struct math_l2_postlist *po,
-                              struct pq_align_res *widest)
+struct pq_align_res
+math_l2_postlist_coarse_score(
+	struct math_l2_postlist *po,
+	uint32_t n_doc_lr_paths)
 {
-	float min_score = 0.f;
+	float dw = (float)n_doc_lr_paths, min_score = 0.f;
 	struct math_pruner *pruner = &po->pruner;
-	uint32_t n_doc_lr_paths = 0;
+	struct pq_align_res widest = {0};
 
 	if (priority_Q_full(po->rk_res))
 		min_score = priority_Q_min_score(po->rk_res);
 
+#ifdef DEBUG_MATH_PRUNING
+	int print_flag = 1;
+
+//	printf(ES_RESET_LINE);
+//	printf("Q top: %.3f, |P|: %u, dw: %u", min_score,
+//		po->iter->size, n_doc_lr_paths);
+#endif
+
 	/* for each query node in sorted order */
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *q_node = pruner->nodes + i;
-		float q_node_upperbound = upperbound(q_node->width, po);
+		float q_node_upperbound = upperbound(q_node->width, dw, po->inv_qw);
 
 		/* check whether we can prune this node */
 		if (q_node_upperbound <= min_score) {
+#ifdef DEBUG_MATH_PRUNING
+			if (print_flag) {
+				printf("permanent pruning @ %d!!!\n", i);
+				printf("node[%u]/(w=%u, up=%.3f), widest: %d, Q top: %.3f. \n",
+					i, q_node->width, q_node_upperbound, widest.width, min_score);
+				// math_l2_postlist_print_cur(po);
+
+				print_flag = false;
+				printf("\n");
+			}
+#endif
 			for (int j = 0; j < q_node->n; j++) {
 				int p = q_node->postlist_id[j];
 				pruner->postlist_ref[p] -= 1;
 			}
 			math_pruner_dele_node(pruner, i);
 			i -= 1;
-			continue;
+			continue; /* so that we can dele other nodes */
 
-		} else if (q_node->width < widest->width &&
-		    q_node_upperbound <= lowerbound(widest->width, po)) {
+		} else if (q_node->width < widest.width) { // &&
+		    //q_node_upperbound <= lowerbound(widest.width, dw, po->inv_qw)) {
+#ifdef DEBUG_MATH_PRUNING
+			printf("temporary break @ %d!!!\n", i);
+			printf("node[%u]/(w=%u, up=%.3f), widest: %d, Q top: %.3f. \n",
+				i, q_node->width, q_node_upperbound, widest.width, min_score);
+			// math_l2_postlist_print_cur(po);
+			printf("\n");
+#endif
 			break;
 		}
 
@@ -691,7 +718,6 @@ math_l2_postlist_coarse_score(struct math_l2_postlist *po,
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, p);
 			if (cur == UINT64_MAX || cur != po->iter->min) continue;
 			postmerger_iter_call(&po->pm, po->iter, read, p, &item, sz);
-			n_doc_lr_paths = item.n_lr_paths; /* save doc OPT width */
 
 			/* match counter vector calculation */
 			int qsw = q_node->secttr[j].width;
@@ -710,14 +736,21 @@ math_l2_postlist_coarse_score(struct math_l2_postlist *po,
 		}
 
 		/* update widest match */
-		if (q_node_match > widest->width) {
-			widest->width = q_node_match;
-			widest->qr = q_node->secttr[0].rnode;
-			widest->dr = q_node_dr;
+		if (q_node_match > widest.width) {
+			widest.width = q_node_match;
+			widest.qr = q_node->secttr[0].rnode;
+			widest.dr = q_node_dr;
 		}
 	}
+#ifdef DEBUG_MATH_PRUNING
+	static int min_print_widest = 0;
+	if (widest.width > min_print_widest) {
+		printf("wider hit: %d\n", widest.width);
+		min_print_widest = widest.width;
+	}
+#endif
 
-	return n_doc_lr_paths;
+	return widest;
 }
 
 struct math_expr_score_res

@@ -24,6 +24,11 @@ bool priority_Q_full(struct priority_Q* Q)
 	return heap_full(&Q->heap);
 }
 
+uint32_t priority_Q_len(struct priority_Q* Q)
+{
+	return heap_size(&Q->heap);
+}
+
 float priority_Q_min_score(struct priority_Q *Q)
 {
 	void *top = heap_top(&Q->heap);

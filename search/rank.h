@@ -31,6 +31,8 @@ void  priority_Q_sort(struct priority_Q*);
 void  priority_Q_print(struct priority_Q*);
 void  priority_Q_free(struct priority_Q*);
 
+uint32_t priority_Q_len(struct priority_Q*);
+
 /* a conceptually more descriptive name */
 #define free_ranked_results(_Q) \
 	priority_Q_free(_Q)
