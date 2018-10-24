@@ -632,57 +632,6 @@ int optr_print_idpos_map(uint32_t* map)
 	return 0;
 }
 
-int visible(enum token_id token_id)
-{
-	switch (token_id) {
-	case T_HANGER:
-	case T_BASE:
-	case T_SUPSCRIPT:
-	case T_SUBSCRIPT:
-	case T_PRE_SUPSCRIPT:
-	case T_PRE_SUBSCRIPT:
-//	case T_FRAC:
-//	case T_TIMES:
-		return 0;
-	default:
-		return 1;
-	}
-}
-
-static TREE_IT_CALLBK(gen_visibi_map)
-{
-	P_CAST(map, uint32_t, pa_extra);
-	TREE_OBJ(struct optr_node, p, tnd);
-
-	if (p->tnd.sons.now != NULL /* is not leaf */) {
-		if (visible(p->token_id))
-			map[p->node_id] = 1;
-	}
-
-	LIST_GO_OVER;
-}
-
-int optr_gen_visibi_map(uint32_t *map, struct optr_node *optr)
-{
-	/* clear bitmap */
-	memset(map, 0, sizeof(uint32_t) * MAX_SUBPATH_ID);
-
-	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_visibi_map,
-	             0 /* including root */, map);
-	return 0;
-}
-
-int optr_print_visibi_map(uint32_t* map)
-{
-	printf("node#");
-	for (int i = 0; i < MAX_SUBPATH_ID; i++) {
-		if (map[i]) printf("%u ", i);
-	}
-	printf("\n");
-
-	return 0;
-}
-
 struct _graph_pr_args {
 	char **color;
 	uint32_t *node_map;

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 /* for subpath_set_free() */
 #include "math-index/math-index.h"
@@ -87,6 +88,9 @@ static LIST_IT_CALLBK(push_query_path)
 	LIST_GO_OVER;
 }
 
+static int math_qry_print_visibi_map(uint32_t*);
+static int math_qry_gen_visibi_map(uint32_t*, struct optr_node*);
+
 int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct* s)
 {
 	struct tex_parse_ret parse_ret;
@@ -104,9 +108,10 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	}
 	/* save OPT */
 	s->optr = parse_ret.operator_tree;
+	//optr_print(s->optr, stdout);
 
 	/* generate query node visibility map */
-	optr_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
+	math_qry_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
 
 	/* copy subpaths */
 	struct subpaths *subpaths = &parse_ret.subpaths;
@@ -145,6 +150,7 @@ void math_qry_free(struct math_qry_struct* s)
 {
 	if (s->optr) {
 		optr_release((struct optr_node*)s->optr);
+		s->optr = NULL;
 	}
 
 	if (s->subpath_set.now) {
@@ -159,4 +165,57 @@ void math_qry_free(struct math_qry_struct* s)
 	if (s->pq.n) {
 		pq_free(s->pq);
 	}
+}
+
+static int OPT_node_visible(enum token_id token_id)
+{
+	switch (token_id) {
+	case T_HANGER:
+	case T_BASE:
+	case T_SUPSCRIPT:
+	case T_SUBSCRIPT:
+	case T_PRE_SUPSCRIPT:
+	case T_PRE_SUBSCRIPT:
+//	case T_FRAC:
+//	case T_TIMES:
+		return 0;
+	default:
+		return 1;
+	}
+}
+
+static TREE_IT_CALLBK(gen_visibi_map)
+{
+	P_CAST(map, uint32_t, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+
+	assert(p->node_id < MAX_NODE_IDS);
+
+	if (p->tnd.sons.now != NULL /* is not leaf */) {
+		if (OPT_node_visible(p->token_id))
+			map[p->node_id] = 1;
+	}
+
+	LIST_GO_OVER;
+}
+
+static int math_qry_gen_visibi_map(uint32_t *map, struct optr_node *optr)
+{
+	/* clear bitmap */
+	memset(map, 0, sizeof(uint32_t) * MAX_NODE_IDS);
+
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_visibi_map,
+	             0 /* including root */, map);
+	return 0;
+}
+
+static int math_qry_print_visibi_map(uint32_t* map)
+{
+	printf("node#");
+	for (int i = 0; i < MAX_SUBPATH_ID; i++) {
+		if (map[i]) printf("%u ", i);
+	}
+	printf("\n");
+
+	return 0;
 }
