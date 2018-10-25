@@ -205,22 +205,24 @@ int math_l2_postlist_pruning_next(void *po_)
 			return 1; /* collected all the expressions in this doc */
 
 		/* calculate coarse score */
-		struct pq_align_res widest = {0};
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
 
 #ifdef DEBUG_STATS_HOT_HIT
 		uint32_t n_hit_paths = get_num_doc_hit_paths(po);
 		g_hot_hit[n_hit_paths] ++;
 #endif
-		// widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
+		struct pq_align_res widest;
+		widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
 
 		/* push expression results */
 		if (widest.width) {
 			struct math_expr_score_res expr =
 				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
 
-//			printf("Precise score: %.3f (doc#%u, exp#%u)\n",
-//				expr.score, expr.doc_id, expr.exp_id);
+#ifdef DEBUG_MATH_PRUNING
+			printf("Precise score: %.3f (doc#%u, exp#%u)\n",
+				expr.score, expr.doc_id, expr.exp_id);
+#endif
 			if (expr.score > po->max_exp_score)
 				po->max_exp_score = expr.score;
 
@@ -250,6 +252,9 @@ int math_l2_postlist_pruning_next(void *po_)
 			}
 		}
 
+#ifdef DEBUG_MATH_PRUNING
+		printf("\n");
+#endif
 	} while (po->iter->size && postmerger_iter_next(po->iter));
 
 	return 0;
@@ -268,7 +273,11 @@ int math_l2_postlist_init(void *po_)
 
 	/* pre-calc factors for score pruning */
 	float qw = (float)po->mqs->subpaths.n_lr_paths;
-	po->inv_qw = 1.f / qw;
+	float inv_qw = 1.f / qw;
+	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
+	float max_dw = (float)MAX_LEAVES;
+	po->inv_qw = inv_qw;
+	po->min_threshold = math_expr_score_lowerbound(min_match, max_dw, inv_qw);
 
 	/* next() will read the first item. */
 	math_l2_postlist_next(po_);

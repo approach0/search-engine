@@ -156,6 +156,22 @@ void math_expr_set_score_fast(struct math_expr_sim_factors* factor,
 	hit->score = score;
 }
 
+float math_expr_score_upperbound(int width, float dw, float inv_qw)
+{
+	const float theta = 0.05f;
+	float st = (float)width * inv_qw;
+	float fmeasure = st / (st + 1.f);
+	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
+}
+
+float math_expr_score_lowerbound(int width, float dw, float inv_qw)
+{
+	const float theta = 0.05f;
+	float st = (float)width * inv_qw;
+	float fmeasure = (st * 0.5f) / (st + 0.5f);
+	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
+}
+
 #ifdef PQ_CELL_NUMERIC_WEIGHT
 /* CIKM-2018 run-2 with path length weight */
 void math_expr_set_score_4(struct math_expr_sim_factors* factor,
@@ -633,21 +649,9 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 
 ////////////////////  pruning functions ////////////////////////////////
 
-static float upperbound(int width, float dw, float inv_qw)
-{
-	const float theta = 0.05f;
-	float st = (float)width * inv_qw;
-	float fmeasure = st / (st + 1.f);
-	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
-}
-
-static float lowerbound(int width, float dw, float inv_qw)
-{
-	const float theta = 0.05f;
-	float st = (float)width * inv_qw;
-	float fmeasure = (st * 0.5f) / (st + 0.5f);
-	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
-}
+/* define shorthand function names */
+#define upp math_expr_score_upperbound
+#define low math_expr_score_lowerbound
 
 struct pq_align_res
 math_l2_postlist_coarse_score(
@@ -662,30 +666,26 @@ math_l2_postlist_coarse_score(
 		min_score = priority_Q_min_score(po->rk_res);
 
 #ifdef DEBUG_MATH_PRUNING
-	int print_flag = 1;
-
-//	printf(ES_RESET_LINE);
-//	printf("Q top: %.3f, |P|: %u, dw: %u", min_score,
-//		po->iter->size, n_doc_lr_paths);
+	printf("min_threshold = %.3f, |P| = %u, dw = %u, Q top: %.3f \n",
+		po->min_threshold, po->iter->size, n_doc_lr_paths, min_score);
 #endif
 
 	/* for each query node in sorted order */
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *q_node = pruner->nodes + i;
-		float q_node_upperbound = upperbound(q_node->width, dw, po->inv_qw);
+		float q_node_upperbound = upp(q_node->width, dw, po->inv_qw);
+
+#ifdef DEBUG_MATH_PRUNING
+		printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
+			i, q_node->width, q_node_upperbound, widest.width);
+		// math_l2_postlist_print_cur(po);
+#endif
 
 		/* check whether we can prune this node */
-		if (q_node_upperbound <= min_score) {
+		if (q_node_upperbound <= min_score ||
+		    q_node_upperbound <= po->min_threshold) {
 #ifdef DEBUG_MATH_PRUNING
-			if (print_flag) {
-				printf("permanent pruning @ %d!!!\n", i);
-				printf("node[%u]/(w=%u, up=%.3f), widest: %d, Q top: %.3f. \n",
-					i, q_node->width, q_node_upperbound, widest.width, min_score);
-				// math_l2_postlist_print_cur(po);
-
-				print_flag = false;
-				printf("\n");
-			}
+			printf("permanent pruning @ %d!!!\n", i);
 #endif
 			for (int j = 0; j < q_node->n; j++) {
 				int p = q_node->postlist_id[j];
@@ -695,14 +695,10 @@ math_l2_postlist_coarse_score(
 			i -= 1;
 			continue; /* so that we can dele other nodes */
 
-		} else if (q_node->width < widest.width) { // &&
-		    //q_node_upperbound <= lowerbound(widest.width, dw, po->inv_qw)) {
+		} else if (q_node->width < widest.width) { //&&
+		    //q_node_upperbound <= low(widest.width, dw, po->inv_qw)) {
 #ifdef DEBUG_MATH_PRUNING
 			printf("temporary break @ %d!!!\n", i);
-			printf("node[%u]/(w=%u, up=%.3f), widest: %d, Q top: %.3f. \n",
-				i, q_node->width, q_node_upperbound, widest.width, min_score);
-			// math_l2_postlist_print_cur(po);
-			printf("\n");
 #endif
 			break;
 		}
@@ -742,6 +738,7 @@ math_l2_postlist_coarse_score(
 			widest.dr = q_node_dr;
 		}
 	}
+
 #ifdef DEBUG_MATH_PRUNING
 	static int min_print_widest = 0;
 	if (widest.width > min_print_widest) {
