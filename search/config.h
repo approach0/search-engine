@@ -31,19 +31,21 @@
 // #define DEBUG_MATH_SCORE_INSPECT
 
 //#define DEBUG_STATS_HOT_HIT
+//#define DEBUG_PRINT_QRY_STRUCT
 
-//#define DEBUG_MATH_PRUNING
+#define MATH_PRUNING_ENABLE
+// #define DEBUG_MATH_PRUNING
 
 #define MATH_PRUNING_MIN_THRESHOLD_FACTOR .125f /* aggressive */
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .08f  /* conservative */
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
 
 #ifdef DEBUG_MATH_PRUNING
-	#define DEBUG_MATH_PRUNING_LIMIT_ITERS 9
+	#define DEBUG_MATH_PRUNING_LIMIT_ITERS 900
 	#define RANK_SET_DEFAULT_VOL 3
 #else
-	   #define RANK_SET_DEFAULT_VOL 50
-	// #define RANK_SET_DEFAULT_VOL 200
+	// #define RANK_SET_DEFAULT_VOL 50
+	   #define RANK_SET_DEFAULT_VOL 200
 	// #define RANK_SET_DEFAULT_VOL 1000
 #endif
 
@@ -87,6 +89,7 @@
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
 	#define MAX_MTREE 3
+	#undef MATH_PRUNING_ENABLE
 #else
 	#define MAX_MTREE 1
 #endif

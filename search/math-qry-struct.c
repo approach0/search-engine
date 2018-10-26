@@ -108,7 +108,9 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	}
 	/* save OPT */
 	s->optr = parse_ret.operator_tree;
-	//optr_print(s->optr, stdout);
+#ifdef DEBUG_PRINT_QRY_STRUCT
+	optr_print(s->optr, stdout);
+#endif
 
 	/* generate query node visibility map */
 	math_qry_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
@@ -141,7 +143,9 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	s->subpath_set = dir_merge_subpath_set(
 		DIR_PATHSET_PREFIX_PATH, subpaths, &s->n_uniq_paths
 	);
-	//subpath_set_print(&s->subpath_set, stdout);
+#ifdef DEBUG_PRINT_QRY_STRUCT
+	subpath_set_print(&s->subpath_set, stdout);
+#endif
 
 	return 0;
 }

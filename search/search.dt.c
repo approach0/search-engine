@@ -288,6 +288,9 @@ int math_l2_postlist_init(void *po_)
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
 	uint32_t n_postings = po->mqs->n_uniq_paths;
 	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
+#ifdef DEBUG_PRINT_QRY_STRUCT
+	math_pruner_print(&po->pruner);
+#endif
 	return 0;
 }
 
@@ -309,8 +312,11 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		math_l2_postlist_cur,
-		// math_l2_postlist_next,
+#ifdef MATH_PRUNING_ENABLE
 		math_l2_postlist_pruning_next,
+#else
+		math_l2_postlist_next,
+#endif
 		NULL /* jump */,
 		math_l2_postlist_read,
 		math_l2_postlist_init,
@@ -451,7 +457,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 #ifdef DEBUG_MATH_PRUNING
 		if (cnt ++ > DEBUG_MATH_PRUNING_LIMIT_ITERS) {
-			printf("abort.\n");
+			printf("abort (DEBUG_MATH_PRUNING_LIMIT_ITERS).\n");
 			break;
 		}
 #endif
