@@ -726,7 +726,7 @@ math_l2_postlist_coarse_score(
 //		}
 
 		/* calculate query node max match */
-		int q_node_dr, q_node_match = 0;
+		int q_node_dr = 0, q_node_match = 0;
 		int accu_vec[MAX_NODE_IDS] = {0};
 		for (int j = 0; j < q_node->n; j++) {
 			/* read document posting list item */

@@ -184,12 +184,11 @@ httpd_on_recv(const char* req, void* arg_)
 		const char* tex = json_object_get_string(parson_obj, "tex");
 		uint64_t masks[MAX_MTREE];
 #define json_getstr(_prop) json_object_get_string(parson_obj, _prop)
-		sscanf(json_getstr("mask0"), "%lx", masks + 0);
-		sscanf(json_getstr("mask1"), "%lx", masks + 1);
-		sscanf(json_getstr("mask2"), "%lx", masks + 2);
+		if (0 < MAX_MTREE) (void)sscanf(json_getstr("mask0"), "%lx", masks + 0);
+		if (1 < MAX_MTREE) (void)sscanf(json_getstr("mask1"), "%lx", masks + 1);
+		if (2 < MAX_MTREE) (void)sscanf(json_getstr("mask2"), "%lx", masks + 2);
 
-		printf("request: operands highlight for '%s' (mask: %lx,%lx,%lx)\n",
-		       tex, masks[0], masks[1], masks[2]);
+		printf("request: operands highlight for '%s'.\n", tex);
 		ret = operands_query_response(tex, masks, MAX_MTREE);
 	}
 

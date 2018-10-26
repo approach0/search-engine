@@ -140,7 +140,7 @@ postlist_write(struct postlist *po, const void *in, size_t size)
 
 size_t postlist_write_complete(struct postlist *po)
 {
-	size_t flush_sz;
+	size_t flush_sz = 0;
 
 	if (po->buf)
 		flush_sz = postlist_flush(po);

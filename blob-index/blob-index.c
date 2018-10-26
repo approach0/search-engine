@@ -135,11 +135,11 @@ blob_index_replace(blob_index_t index, doc_id_t docID,
 
 	/* read pointer file at ptr_rd_pos position */
 	assert(0 == fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET));
-	fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
+	(void)fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
 	/* replace blob data file */
 	assert(0 == fseek(bi->dat_file, dat_pos, SEEK_SET));
-	fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
+	(void)fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
 	blob_sz_written = fwrite(blob, 1, blob_sz, bi->dat_file);
 
 	return blob_sz_written;
@@ -173,14 +173,14 @@ size_t blob_index_read(blob_index_t index, doc_id_t docID, void **blob)
 #endif
 	/* seek pointer file to get blob data position */
 	assert(0 == fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET));
-	fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
+	(void)fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
 #ifdef DEBUG_BLOBINDEX
 	printf("blob reading: dat_pos @ %lu.\n", (off_t)dat_pos);
 #endif
 	/* seek to that data position and first get blob size */
 	assert(0 == fseek(bi->dat_file, dat_pos, SEEK_SET));
-	fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
+	(void)fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
 
 	/* alloc read buffer */
 	*blob = malloc(blob_sz);

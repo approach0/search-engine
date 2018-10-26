@@ -34,7 +34,7 @@ int main(void)
 	skippy_print(&skippy);
 
 	printf("Please input 'cur_num, jump_num:'\n");
-	scanf("%lu,%lu", &cur_num, &jump_num);
+	(void)scanf("%lu,%lu", &cur_num, &jump_num);
 
 	skippy_foreach(cur, save, &skippy, 0) {
 		if (cur->key == cur_num)

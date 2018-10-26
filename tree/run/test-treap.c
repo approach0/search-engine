@@ -80,7 +80,7 @@ int main()
 				&print_T, &tab);
 
 		printf("Please input a [key] value to remove:\n");
-		scanf("%u", &key);
+		(void)scanf("%u", &key);
 		if (NULL != (detached = treap_detach(&root, key))) {
 			dele = MEMBER_2_STRUCT(detached, struct T, trp_nd);
 			printf("free detached [%u]:%u (priority: %u).\n",

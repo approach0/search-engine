@@ -490,12 +490,12 @@ void print_commits_info(const char *username, const char *repo) {
         "curl -s \"https://api.github.com/repos/%s/%s/commits\" > %s",
         username, repo, output_filename);
     sprintf(cleanup_command, "rm -f %s", output_filename);
-    system(curl_command);
+    (void)system(curl_command);
 
     /* parsing json and validating output */
     root_value = json_parse_file(output_filename);
     if (json_value_get_type(root_value) != JSONArray) {
-        system(cleanup_command);
+        (void)system(cleanup_command);
         return;
     }
 
@@ -512,7 +512,7 @@ void print_commits_info(const char *username, const char *repo) {
 
     /* cleanup code */
     json_value_free(root_value);
-    system(cleanup_command);
+    (void)system(cleanup_command);
 }
 
 void persistence_example(void) {
@@ -522,7 +522,7 @@ void persistence_example(void) {
     const char *name = NULL;
     if (user_data == NULL || json_validate(schema, user_data) != JSONSuccess) {
         puts("Enter your name:");
-        scanf("%s", buf);
+        (void)scanf("%s", buf);
         user_data = json_value_init_object();
         json_object_set_string(json_object(user_data), "name", buf);
         json_serialize_to_file(user_data, "user_data.json");

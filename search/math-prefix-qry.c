@@ -198,7 +198,7 @@ pq_align(struct math_prefix_qry *pq,
 	/* find the top-K disjoint cell (i.e. common subtrees) */
 	for (uint32_t j = 0; j < MAX_MTREE; j++) {
 		uint32_t max = 0;
-		uint32_t max_qr, max_dr;
+		uint32_t max_qr = 0, max_dr = 0;
 		uint64_t max_qmask, max_dmask;
 
 		/* for all the dirty cells, find the maximum disjoint cell */
@@ -296,7 +296,7 @@ pq_align_map(struct math_prefix_qry *pq, uint32_t *qmap, uint32_t *dmap)
 	/* find the top-K disjoint cell (i.e. common subtrees) */
 	for (uint32_t j = 0; j < MAX_MTREE; j++) {
 		uint32_t max = 0;
-		uint64_t max_qmask, max_dmask;
+		uint64_t max_qmask = 0, max_dmask = 0;
 
 		/* for all the dirty cells, find the maximum disjoint cell */
 		for (uint32_t i = 0; i < pq->n_dirty; i++) {

@@ -23,7 +23,7 @@ static char *read_file(const char *path)
 
 	/* read file */
 	ret_str = malloc(file_sz + 1);
-	fread(ret_str, 1, file_sz, fd);
+	(void)fread(ret_str, 1, file_sz, fd);
 	fclose(fd);
 
 	ret_str[file_sz] = '\0';

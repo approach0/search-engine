@@ -84,7 +84,7 @@ static void test_iterator(struct postlist *po)
 	int      jumped = 0;
 
 	printf("Please input (from, jump_to) IDs:\n");
-	scanf("%u, %lu", &fromID, &jumpID);
+	(void)scanf("%u, %lu", &fromID, &jumpID);
 
 	postlist_start(po);
 
