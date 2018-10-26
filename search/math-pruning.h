@@ -1,6 +1,5 @@
 struct sector_tr {
 	int rnode;
-	int height;
 	int width;
 };
 

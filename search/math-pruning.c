@@ -13,21 +13,21 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	for (int i = 0; i < n_eles; i++) {
 		struct subpath_ele *ele = eles[i];
 
+		int dirty_r[n_nodes];
+		memset(dirty_r, 0, sizeof(dirty_r));
 		for (int j = 0; j < ele->dup_cnt + 1; j++) {
 			uint32_t r = ele->rid[j];
-			uint32_t h = ele->dup[j]->n_nodes;
 			struct pruner_node *node = pruner->nodes + (r - 1);
+			if (!dirty_r[r - 1]) {
+				dirty_r[r - 1] = 1;
+				/* allocate new sector tree */
+				node->n += 1;
+				node->secttr[node->n - 1].rnode = r;
+				node->postlist_id[node->n - 1] = i;
+			}
 
-			int k;
-			for (k = 0; k < node->n; k++)
-				if (node->secttr[k].height == h)
-					break;
-		
-			if (k == node->n) node->n += 1;
-			node->secttr[k].rnode = r;
-			node->secttr[k].height = h;
-			node->secttr[k].width += 1;
-			node->postlist_id[k] = i;
+			/* widen sector tree */
+			node->secttr[node->n - 1].width += 1;
 		}
 	}
 	
@@ -87,7 +87,7 @@ void math_pruner_print(struct math_pruner *pruner)
 		printf("node#%d / %d: \n", node->secttr[0].rnode, node->width);
 		for (int j = 0; j < node->n; j++) {
 			int pid = node->postlist_id[j];
-			printf("\t sector tree: (%d, %d) ---> posting_list[%d], ref: %d\n",
+			printf("\t sector tree: (#%d, %d) ---> posting_list[%d], ref: %d\n",
 				node->secttr[j].rnode, node->secttr[j].width,
 				pid, pruner->postlist_ref[pid]);
 		}
