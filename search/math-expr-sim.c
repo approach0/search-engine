@@ -16,7 +16,17 @@
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
 
-// #define DEBUG_MATH_SCORE_INSPECT
+void math_expr_sim_factors_print(struct math_expr_sim_factors *factor)
+{
+	printf("%s: %u\n", STRVAR_PAIR(factor->qry_lr_paths));
+	printf("%s: %u\n", STRVAR_PAIR(factor->doc_lr_paths));
+	for (int i = 0; i < factor->k; i++) {
+		printf("tree#%d: width=%u, qr=%u, dr=%u\n", i,
+			factor->align_res[i].width,
+			factor->align_res[i].qr, factor->align_res[i].dr);
+	}
+	printf("%s: %u\n", STRVAR_PAIR(factor->mnc_score));
+}
 
 static int
 score_inspect_filter(doc_id_t doc_id, struct indices *indices)
@@ -25,10 +35,11 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	int ret = 0;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-//	if (0 == strcmp(url, "Scattering_parameters:115") ||
-//	    0 == strcmp(url, "Port_(circuit_theory):0")) {
+//	if (0 == strcmp(url, "Sridhara:14") ||
+//	    0 == strcmp(url, "Septic_equation:0")) {
 
-	if (doc_id == 230891 || doc_id == 568493) {
+//	if (doc_id == 308876 || doc_id == 470478) {
+	if (doc_id == 308876) {
 
 	// if (0 == strcmp(url, "Dimension_theory_(algebra):45")) {
 
@@ -459,7 +470,7 @@ math_expr_prefix_score_on_merge(
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		if (inspect) {
 			math_expr_set_score(&factors, &ret);
-			printf("doc#%u, exp#%u, final score: %u\n",
+			printf("doc#%u, exp#%u, final score: %f\n",
 			       ret.doc_id, ret.exp_id, ret.score);
 		}
 #else
@@ -478,7 +489,7 @@ void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 		uint32_t expID = (uint32_t)(cur >> 0);
 
 		uint32_t orig = po->iter->map[i];
-		printf("[%s] [%u] -> [%u]: %u,%u \n", po->type[orig], orig, i,
+		printf("[%s] [%u] -> iter[%u]: %u,%u \n", po->type[orig], orig, i,
 				docID, expID);
 	}
 }
@@ -598,23 +609,22 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 	/* structure scores */
 	n_doc_lr_paths = math_l2_postlist_cur_struct_sim(po, align_res, &r_cnt);
 
-
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (debug) {
 		printf("doc#%u, exp#%u\n", ret.doc_id, ret.exp_id);
-		for (int i = 0; i < MAX_MTREE; i++) {
-			printf("tree#%d: width=%u, qr=%u, dr=%u, qmask=0x%lx, dmask=0x%lx\n",
-				i, align_res[i].width, align_res[i].qr, align_res[i].dr,
-				align_res[i].qmask, align_res[i].dmask);
-			for (uint32_t bit = 0; bit < MAX_LEAVES; bit++) {
-				if ((0x1L << bit) & align_res[i].qmask)
-					printf("q%u ", bit + 1);
-				if ((0x1L << bit) & align_res[i].dmask)
-					printf("d%u ", bit + 1);
-			}
-			printf("\n");
-		}
-		printf("align r_cnt = %u\n", r_cnt);
+//		for (int i = 0; i < MAX_MTREE; i++) {
+//			printf("tree#%d: width=%u, qr=%u, dr=%u, qmask=0x%lx, dmask=0x%lx\n",
+//				i, align_res[i].width, align_res[i].qr, align_res[i].dr,
+//				align_res[i].qmask, align_res[i].dmask);
+//			for (uint32_t bit = 0; bit < MAX_LEAVES; bit++) {
+//				if ((0x1L << bit) & align_res[i].qmask)
+//					printf("q%u ", bit + 1);
+//				if ((0x1L << bit) & align_res[i].dmask)
+//					printf("d%u ", bit + 1);
+//			}
+//			printf("\n");
+//		}
+//		printf("align r_cnt = %u\n", r_cnt);
 	}
 #endif
 
@@ -662,6 +672,13 @@ math_l2_postlist_coarse_score(
 	struct math_pruner *pruner = &po->pruner;
 	struct pq_align_res widest = {0};
 
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	P_CAST(p, struct math_postlist_item, &po->iter->min);
+	int inspect = score_inspect_filter(p->doc_id, po->indices);
+	if (inspect)
+		math_l2_postlist_print_cur(po);
+#endif
+
 	if (priority_Q_full(po->rk_res))
 		min_score = priority_Q_min_score(po->rk_res);
 
@@ -696,12 +713,17 @@ math_l2_postlist_coarse_score(
 			continue; /* so that we can dele other nodes */
 
 		} else if (q_node->width < widest.width) { //&&
-		    //q_node_upperbound <= low(widest.width, dw, po->inv_qw)) {
+		    // q_node_upperbound <= low(widest.width, dw, po->inv_qw)) {
 #ifdef DEBUG_MATH_PRUNING
 			printf("temporary break @ %d!!!\n", i);
 #endif
 			break;
 		}
+
+//		if (inspect) {
+//			printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
+//				i, q_node->width, q_node_upperbound, widest.width);
+//		}
 
 		/* calculate query node max match */
 		int q_node_dr, q_node_match = 0;
@@ -711,15 +733,21 @@ math_l2_postlist_coarse_score(
 			struct math_postlist_item item;
 			const size_t sz = sizeof(item);
 			int p = q_node->postlist_id[j];
-			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, p);
+			uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, p);
+
 			if (cur == UINT64_MAX || cur != po->iter->min) continue;
-			postmerger_iter_call(&po->pm, po->iter, read, p, &item, sz);
+			POSTMERGER_POSTLIST_CALL(&po->pm, read, p, &item, sz);
 
 			/* match counter vector calculation */
 			int qsw = q_node->secttr[j].width;
 			int sect_vec[MAX_NODE_IDS] = {0};
+
+//			if (inspect) printf("\t q_sect[%d]/%d: posting[%d]\n", j, qsw, p);
+//			if (inspect) printf("\t\t ");
+//
 			for (int k = 0; k < item.n_paths; k++) {
 				int dr = item.subr_id[k];
+//				if (inspect) printf("dr#%d ", dr);
 				if (sect_vec[dr] < qsw) {
 					sect_vec[dr] ++;
 					accu_vec[dr] ++;
@@ -729,6 +757,9 @@ math_l2_postlist_coarse_score(
 					}
 				}
 			}
+
+//			if (inspect) printf("\n");
+//			if (inspect) printf("\t match: %d\n", q_node_match);
 		}
 
 		/* update widest match */
@@ -753,22 +784,34 @@ math_l2_postlist_coarse_score(
 struct math_expr_score_res
 math_l2_postlist_precise_score(struct math_l2_postlist *po,
                                struct pq_align_res *widest,
-                               uint32_t n_doc_lr_paths)
+                               uint32_t dn)
 {
 	struct math_expr_score_res expr;
+
 	/* get docID and exprID */
 	uint64_t cur = po->iter->min;
 	P_CAST(p, struct math_postlist_item, &cur);
 	expr.doc_id = p->doc_id;
 	expr.exp_id = p->exp_id;
+
 	/* get overall score */
 	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest);
 	uint32_t qn = po->mqs->subpaths.n_lr_paths;
-	uint32_t dn = (n_doc_lr_paths) ? n_doc_lr_paths : MAX_MATH_PATHS;
 	struct math_expr_sim_factors factors = {
 		sym_sim, 0 /* search depth*/, qn, dn, widest, 1 /* k */,
 		0 /* r_cnt */, 0 /* lcs */, 0 /* n_qry_nodes */
 	};
 	math_expr_set_score(&factors, &expr);
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+//	int inspect = score_inspect_filter(p->doc_id, po->indices);
+//	if (inspect) {
+//		printf("doc#%u, exp#%u, final score: %f\n",
+//		       expr.doc_id, expr.exp_id, expr.score);
+//		math_expr_sim_factors_print(&factors);
+//		printf("\n");
+//	}
+#endif
+
 	return expr;
 }
