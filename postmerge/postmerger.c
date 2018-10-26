@@ -49,8 +49,12 @@ void postmerger_iter_free(postmerger_iter_t iter)
 int postmerger_iter_next(postmerger_iter_t iter)
 {
 	int last_round = (iter->min == UINT64_MAX);
-	iter->min = postmerger_iter_min(iter->pm, iter);
-	return !last_round;
+	if (last_round) {
+		return 0;
+	} else {
+		iter->min = postmerger_iter_min(iter->pm, iter);
+		return 1;
+	}
 }
 
 void

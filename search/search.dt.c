@@ -85,7 +85,7 @@ math_l2_postlist(
 uint64_t math_l2_postlist_cur(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	if (po->iter->min == UINT64_MAX) {
+	if (po->iter->size == 0 || po->iter->min == UINT64_MAX) {
 		return UINT64_MAX;
 	} else {
 		uint32_t min_docID = (uint32_t)(po->iter->min >> 32);
@@ -199,7 +199,9 @@ int math_l2_postlist_pruning_next(void *po_)
 
 	/* one l2 next() call may have multiple expressions */
 	po->prev_doc_id = (uint32_t)(po->iter->min >> 32);
-	do {
+
+	while (po->iter->size && postmerger_iter_next(po->iter)) {
+
 		uint32_t cur_doc_id = (uint32_t)(po->iter->min >> 32);
 		if (cur_doc_id != po->prev_doc_id)
 			return 1; /* collected all the expressions in this doc */
@@ -255,7 +257,7 @@ int math_l2_postlist_pruning_next(void *po_)
 #ifdef DEBUG_MATH_PRUNING
 		printf("\n");
 #endif
-	} while (po->iter->size && postmerger_iter_next(po->iter));
+	}
 
 	return 0;
 }
