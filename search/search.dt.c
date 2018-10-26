@@ -170,7 +170,7 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 
 		if (cur != UINT64_MAX && cur == po->iter->min) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
-			return item.n_lr_paths;
+			return (item.n_lr_paths) ? item.n_lr_paths : MAX_MATH_PATHS;
 		}
 	}
 
