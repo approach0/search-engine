@@ -214,7 +214,8 @@ int math_l2_postlist_pruning_next(void *po_)
 		g_hot_hit[n_hit_paths] ++;
 #endif
 		struct pq_align_res widest;
-		widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
+		// widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
+		widest = math_l2_postlist_coarse_score_v2(po, n_doc_lr_paths);
 
 		/* push expression results */
 		if (widest.width) {
@@ -279,7 +280,7 @@ int math_l2_postlist_init(void *po_)
 	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
 	float max_dw = (float)MAX_LEAVES;
 	po->inv_qw = inv_qw;
-	po->min_threshold = math_expr_score_lowerbound(min_match, max_dw, inv_qw);
+	po->init_threshold = math_expr_score_lowerbound(min_match, max_dw, inv_qw);
 
 	/* next() will read the first item. */
 	math_l2_postlist_next(po_);

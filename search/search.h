@@ -29,7 +29,7 @@ struct math_l2_postlist {
 	/* for pruning */
 	struct math_pruner pruner;
 	float  inv_qw;
-	float  min_threshold;
+	float  init_threshold, prev_threshold;
 };
 
 struct l2_postlist_item {

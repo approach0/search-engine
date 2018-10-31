@@ -12,10 +12,19 @@ struct pruner_node {
 	int postlist_id[MAX_MERGE_POSTINGS];
 };
 
+struct node_set {
+	int *rid;
+	int  sz;
+};
+
 struct math_pruner {
 	struct pruner_node *nodes;
-	uint32_t n_nodes;
+	uint16_t           *nodeID2idx; // nodeID to node index map
+	uint32_t            n_nodes;
 	int postlist_ref[MAX_MERGE_POSTINGS]; // reference counter
+	int postlist_max[MAX_MERGE_POSTINGS]; // max sector width
+	int postlist_pivot; // advance-skip seperator
+	struct node_set postlist_nodes[MAX_MERGE_POSTINGS];
 };
 
 #include "math-index/head.h"
