@@ -89,7 +89,7 @@ int u16_ht_lookup(struct u16_ht *ht, int key)
 static void u16_ht_rehash(struct u16_ht*);
 
 void
-u16_ht_insert(struct u16_ht *ht, int key, int val)
+u16_ht_update(struct u16_ht *ht, int key, int val)
 {
 	int sz = ht->sz;
 	struct u16_ht_entry *table = ht->table;
@@ -100,11 +100,36 @@ u16_ht_insert(struct u16_ht *ht, int key, int val)
 			table[pos].occupied = 1;
 			table[pos].key = key;
 			table[pos].val = val;
+			ht->len ++;
 			break;
+		} else if (table[pos].key == key) {
+			table[pos].val = val;
 		}
 	}
 
-	ht->len ++;
+	if (ht->len > ht->load_limit)
+		u16_ht_rehash(ht);
+}
+
+void
+u16_ht_incr(struct u16_ht *ht, int key, int incr)
+{
+	int sz = ht->sz;
+	struct u16_ht_entry *table = ht->table;
+
+	for (int i = 0; i < sz; i++) {
+		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
+		if (0 == table[pos].occupied) {
+			table[pos].occupied = 1;
+			table[pos].key = key;
+			table[pos].val = incr;
+			ht->len ++;
+			break;
+		} else if (table[pos].key == key) {
+			table[pos].val += incr;
+		}
+	}
+
 	if (ht->len > ht->load_limit)
 		u16_ht_rehash(ht);
 }
@@ -121,7 +146,7 @@ static void u16_ht_rehash(struct u16_ht *ht)
 
 	for (int i = 0; i < ht->sz; i++)
 		if (ht->table[i].occupied)
-			u16_ht_insert(&tmp_ht, ht->table[i].key, ht->table[i].val);
+			u16_ht_update(&tmp_ht, ht->table[i].key, ht->table[i].val);
 
 	u16_ht_free(ht);
 	*ht = tmp_ht;
