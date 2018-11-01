@@ -824,7 +824,8 @@ struct q_node_match
 calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 {
 	struct q_node_match ret = {0};
-	int accu_vec[MAX_NODE_IDS] = {0};
+	u16_ht_reset(&po->accu_ht, 0);
+
 	for (int i = 0; i < q_node->n; i++) {
 		/* read document posting list item */
 		struct math_postlist_item item;
@@ -838,16 +839,18 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 
 		/* match counter vector calculation */
 		int qsw = q_node->secttr[i].width;
-		int sect_vec[MAX_NODE_IDS] = {0};
+		u16_ht_reset(&po->sect_ht, 0);
 
 		for (int j = 0; j < item.n_paths; j++) {
 			int dr = item.subr_id[j];
-			if (sect_vec[dr] < qsw) {
-				sect_vec[dr] ++;
-				accu_vec[dr] ++;
-				if (accu_vec[dr] > ret.max) {
+			int dr_sect_cnt = u16_ht_lookup(&po->sect_ht, dr);
+			if (dr_sect_cnt < qsw) {
+				u16_ht_incr(&po->sect_ht, dr, 1);
+				u16_ht_incr(&po->accu_ht, dr, 1);
+				int dr_accu_cnt = u16_ht_lookup(&po->accu_ht, dr);
+				if (dr_accu_cnt > ret.max) {
 					ret.dr = dr;
-					ret.max = accu_vec[dr];
+					ret.max = dr_accu_cnt;
 				}
 			}
 		}
@@ -879,8 +882,9 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		}
 	}
 
-	/* get all hit nodes */
-	uint16_t hit_nodes[64] = {0};
+	/* collect all unique hit nodes */
+	int n_save = 0;
+	u16_ht_reset(&po->q_hit_nodes_ht, 0);
 	for (int i = 0; i < po->iter->size; i++) {
 		/* for skip-only posting lists ... */
 		if (i > pivot)
@@ -888,20 +892,28 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (cur == candidate) {
-			/* update score */;
 			uint32_t pid = po->iter->map[i];
 			struct node_set ns = pruner->postlist_nodes[pid];
 			for (int j = 0; j < ns.sz; j++) {
 				int qry_node = ns.rid[j];
-				hit_nodes[qry_node] = pruner->nodeID2idx[qry_node];
+				/* collect qry_node */
+				if (-1 == u16_ht_lookup(&po->q_hit_nodes_ht, qry_node)) {
+					int qry_node_idx = pruner->nodeID2idx[qry_node];
+					po->q_hit_node_idx[n_save++] = qry_node_idx;
+					/* put into set to avoid counting duplicates */
+					u16_ht_incr(&po->q_hit_nodes_ht, qry_node, 1);
+				}
 			}
 		}
 	}
 
-	/* for each hit node */ {
-		int q_node_idx = 123;
+	/* calculate score for each hit query node */
+	for (int i = 0; i < n_save; i++) {
+		/* for each saved hit query node ... */
+		int q_node_idx = po->q_hit_node_idx[i];
 		struct pruner_node *q_node = pruner->nodes + q_node_idx;
 		float q_node_upperbound = upp(q_node->width, dw, po->inv_qw); /* may speedup by lookup table */
+
 		/* check whether we can drop this node */
 		if (q_node_upperbound <= threshold) {
 			for (int j = 0; j < q_node->n; j++) {
@@ -909,10 +921,11 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 				pruner->postlist_ref[pid] -= 1;
 			}
 			math_pruner_dele_node(pruner, q_node_idx);
-			// i -= 1;
-			// continue; /* so that we can dele other nodes */
+			i -= 1;
+			continue; /* so that we can dele other nodes */
 		}
 
+		/* otherwise, calculate node score */
 		struct q_node_match qm = calc_q_node_match(po, q_node);
 		if (qm.max > widest.width) {
 			widest.width = qm.max;

@@ -1,6 +1,7 @@
 #pragma once
 #include "indices/indices.h"
 #include "postmerge/postmerger.h"
+#include "hashtable/u16-ht.h"
 
 #include "config.h"
 #include "rank.h"
@@ -30,6 +31,9 @@ struct math_l2_postlist {
 	struct math_pruner pruner;
 	float  inv_qw;
 	float  init_threshold, prev_threshold;
+	struct u16_ht accu_ht, sect_ht; 
+	struct u16_ht q_hit_nodes_ht; 
+	int q_hit_node_idx[MAX_NODE_IDS];
 };
 
 struct l2_postlist_item {
