@@ -274,17 +274,6 @@ int math_l2_postlist_init(void *po_)
 	po->max_exp_score = 0;
 	po->prev_doc_id = 0;
 
-	/* pre-calc factors for score pruning */
-	float qw = (float)po->mqs->subpaths.n_lr_paths;
-	float inv_qw = 1.f / qw;
-	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
-	float max_dw = (float)MAX_LEAVES;
-	po->inv_qw = inv_qw;
-	po->init_threshold = math_expr_score_lowerbound(min_match, max_dw, inv_qw);
-
-	/* next() will read the first item. */
-	math_l2_postlist_next(po_);
-
 	/* setup pruning structures */
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
 	uint32_t n_postings = po->mqs->n_uniq_paths;
@@ -292,6 +281,23 @@ int math_l2_postlist_init(void *po_)
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	math_pruner_print(&po->pruner);
 #endif
+
+	/* pre-calc factors for score pruning */
+	float qw = (float)po->mqs->subpaths.n_lr_paths;
+	float inv_qw = 1.f / qw;
+	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
+	float max_dw = (float)MAX_LEAVES;
+	po->inv_qw = inv_qw;
+	po->prev_threshold = -1.f;
+	po->init_threshold = math_expr_score_lowerbound(min_match, max_dw, inv_qw);
+
+	/* hashtable initialization */
+	po->accu_ht = u16_ht_new(0);
+	po->sect_ht = u16_ht_new(0);
+	po->q_hit_nodes_ht = u16_ht_new(0);
+
+	/* next() will read the first item. */
+	math_l2_postlist_next(po_);
 	return 0;
 }
 
@@ -302,9 +308,14 @@ void math_l2_postlist_uninit(void *po_)
 		POSTMERGER_POSTLIST_CALL(&po->pm, uninit, i);
 	}
 	postmerger_iter_free(po->iter);
-	
+
 	/* release pruning structures */
 	math_pruner_free(&po->pruner);
+
+	/* free hashtables */
+	u16_ht_free(&po->accu_ht);
+	u16_ht_free(&po->sect_ht);
+	u16_ht_free(&po->q_hit_nodes_ht);
 }
 
 struct postmerger_postlist
