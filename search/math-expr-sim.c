@@ -866,17 +866,14 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	int pivot = pruner->postlist_pivot;
 
 	/* update threshold value */
-	if (priority_Q_full(po->rk_res)) {
+	if (priority_Q_full(po->rk_res))
 		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
-	}
 
 	/* find out candidate docID */
 	uint64_t candidate = UINT64_MAX;
 	for (int i = 0; i <= pivot; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (cur == po->iter->min && cur < candidate) {
-			candidate = cur;
-		}
+		if (cur < candidate) candidate = cur;
 	}
 
 	/* collect all unique hit nodes */
