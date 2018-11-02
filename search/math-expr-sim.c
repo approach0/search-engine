@@ -704,11 +704,8 @@ math_l2_postlist_coarse_score(
 #ifdef DEBUG_MATH_PRUNING
 			printf("permanent pruning @ %d!!!\n", i);
 #endif
-			for (int j = 0; j < q_node->n; j++) {
-				int p = q_node->postlist_id[j];
-				pruner->postlist_ref[p] -= 1;
-			}
 			math_pruner_dele_node(pruner, i);
+			math_pruner_update(pruner);
 			i -= 1;
 			continue; /* so that we can dele other nodes */
 
@@ -886,8 +883,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	int n_save = 0;
 	u16_ht_reset(&po->q_hit_nodes_ht, 0);
 	for (int i = 0; i < po->iter->size; i++) {
-		/* for skip-only posting lists ... */
-		if (i > pivot)
+		if (i > pivot) /* for skip-only posting lists, do jumping. */
 			postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
 
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
@@ -916,11 +912,8 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		/* check whether we can drop this node */
 		if (q_node_upperbound <= threshold) {
-			for (int j = 0; j < q_node->n; j++) {
-				int pid = q_node->postlist_id[j];
-				pruner->postlist_ref[pid] -= 1;
-			}
 			math_pruner_dele_node(pruner, q_node_idx);
+			math_pruner_update(pruner);
 			i -= 1;
 			continue; /* so that we can dele other nodes */
 		}
