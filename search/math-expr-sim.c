@@ -821,18 +821,20 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 	struct q_node_match ret = {0};
 	u16_ht_reset(&pruner->accu_ht, 0);
 
+	/* for each sector tree rooted at q_node ... */
 	for (int i = 0; i < q_node->n; i++) {
-		/* read document posting list item */
 		struct math_postlist_item item;
-		const size_t sz = sizeof(item);
 		int pid = q_node->postlist_id[i];
 		uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
 
 		/* skip non-hit posting lists */
+		const size_t sz = sizeof(item);
 		if (cur == UINT64_MAX || cur != po->iter->min) continue;
+
+		/* read document posting list item */
 		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sz);
 
-		/* match counter vector calculation */
+		/* calculate match counter vector */
 		int qsw = q_node->secttr[i].width;
 		u16_ht_reset(&pruner->sect_ht, 0);
 
@@ -840,9 +842,8 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 			int dr = item.subr_id[j];
 			int dr_sect_cnt = u16_ht_lookup(&pruner->sect_ht, dr);
 			if (dr_sect_cnt < qsw) {
-				u16_ht_incr(&pruner->sect_ht, dr, 1);
-				u16_ht_incr(&pruner->accu_ht, dr, 1);
-				int dr_accu_cnt = u16_ht_lookup(&pruner->accu_ht, dr);
+				/* ..... */ (void)u16_ht_incr(&pruner->sect_ht, dr, 1);
+				int dr_accu_cnt = u16_ht_incr(&pruner->accu_ht, dr, 1);
 				if (dr_accu_cnt > ret.max) {
 					ret.dr = dr;
 					ret.max = dr_accu_cnt;
