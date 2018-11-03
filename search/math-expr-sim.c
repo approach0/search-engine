@@ -814,7 +814,7 @@ struct q_node_match {
 	int dr, max;
 };
 
-struct q_node_match
+__inline__ struct q_node_match
 calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 {
 	struct math_pruner *pruner = &po->pruner;
