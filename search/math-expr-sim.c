@@ -167,17 +167,19 @@ void math_expr_set_score_fast(struct math_expr_sim_factors* factor,
 	hit->score = score;
 }
 
-float math_expr_score_upperbound(int width, float dw, float inv_qw)
+float math_expr_score_upperbound(int width, int _dw, float inv_qw)
 {
 	const float theta = 0.05f;
+	const float dw = (float)_dw;
 	float st = (float)width * inv_qw;
 	float fmeasure = st / (st + 1.f);
 	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
 
-float math_expr_score_lowerbound(int width, float dw, float inv_qw)
+float math_expr_score_lowerbound(int width, int _dw, float inv_qw)
 {
 	const float theta = 0.05f;
+	const float dw = (float)_dw;
 	float st = (float)width * inv_qw;
 	float fmeasure = (st * 0.5f) / (st + 0.5f);
 	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
@@ -658,17 +660,12 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 }
 
 ////////////////////  pruning functions ////////////////////////////////
-
-/* define shorthand function names */
-#define upp math_expr_score_upperbound
-#define low math_expr_score_lowerbound
-
 struct pq_align_res
 math_l2_postlist_coarse_score(
 	struct math_l2_postlist *po,
 	uint32_t n_doc_lr_paths)
 {
-	float dw = (float)n_doc_lr_paths, min_score = 0.f;
+	float min_score = 0.f;
 	struct math_pruner *pruner = &po->pruner;
 	struct pq_align_res widest = {0};
 
@@ -690,7 +687,7 @@ math_l2_postlist_coarse_score(
 	/* for each query node in sorted order */
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *q_node = pruner->nodes + i;
-		float q_node_upperbound = upp(q_node->width, dw, po->inv_qw);
+		float q_node_upperbound = pruner->upp[q_node->width][n_doc_lr_paths];
 
 #ifdef DEBUG_MATH_PRUNING
 		printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
@@ -700,7 +697,7 @@ math_l2_postlist_coarse_score(
 
 		/* check whether we can prune this node */
 		if (q_node_upperbound <= min_score ||
-		    q_node_upperbound <= po->init_threshold) {
+		    q_node_upperbound <= pruner->init_threshold) {
 #ifdef DEBUG_MATH_PRUNING
 			printf("permanent pruning @ %d!!!\n", i);
 #endif
@@ -710,7 +707,7 @@ math_l2_postlist_coarse_score(
 			continue; /* so that we can dele other nodes */
 
 		} else if (q_node->width < widest.width) { //&&
-		    // q_node_upperbound <= low(widest.width, dw, po->inv_qw))
+		    // q_node_upperbound <= lowerbound)
 #ifdef DEBUG_MATH_PRUNING
 			printf("temporary break @ %d!!!\n", i);
 #endif
@@ -820,8 +817,9 @@ struct q_node_match {
 struct q_node_match
 calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 {
+	struct math_pruner *pruner = &po->pruner;
 	struct q_node_match ret = {0};
-	u16_ht_reset(&po->accu_ht, 0);
+	u16_ht_reset(&pruner->accu_ht, 0);
 
 	for (int i = 0; i < q_node->n; i++) {
 		/* read document posting list item */
@@ -836,15 +834,15 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 
 		/* match counter vector calculation */
 		int qsw = q_node->secttr[i].width;
-		u16_ht_reset(&po->sect_ht, 0);
+		u16_ht_reset(&pruner->sect_ht, 0);
 
 		for (int j = 0; j < item.n_paths; j++) {
 			int dr = item.subr_id[j];
-			int dr_sect_cnt = u16_ht_lookup(&po->sect_ht, dr);
+			int dr_sect_cnt = u16_ht_lookup(&pruner->sect_ht, dr);
 			if (dr_sect_cnt < qsw) {
-				u16_ht_incr(&po->sect_ht, dr, 1);
-				u16_ht_incr(&po->accu_ht, dr, 1);
-				int dr_accu_cnt = u16_ht_lookup(&po->accu_ht, dr);
+				u16_ht_incr(&pruner->sect_ht, dr, 1);
+				u16_ht_incr(&pruner->accu_ht, dr, 1);
+				int dr_accu_cnt = u16_ht_lookup(&pruner->accu_ht, dr);
 				if (dr_accu_cnt > ret.max) {
 					ret.dr = dr;
 					ret.max = dr_accu_cnt;
@@ -860,9 +858,11 @@ struct pq_align_res
 math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
                                  uint32_t n_doc_lr_paths)
 {
-	float dw = (float)n_doc_lr_paths, threshold = po->init_threshold;
-	struct math_pruner *pruner = &po->pruner;
 	struct pq_align_res widest = {0};
+	int dw = (int)n_doc_lr_paths;
+
+	struct math_pruner *pruner = &po->pruner;
+	int threshold = pruner->init_threshold;
 	int pivot = pruner->postlist_pivot;
 
 	/* update threshold value */
@@ -878,7 +878,8 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 	/* collect all unique hit nodes */
 	int n_save = 0;
-	u16_ht_reset(&po->q_hit_nodes_ht, 0);
+	int q_hit_node_idx[MAX_NODE_IDS];
+	u16_ht_reset(&pruner->q_hit_nodes_ht, 0);
 	for (int i = 0; i < po->iter->size; i++) {
 		if (i > pivot) /* for skip-only posting lists, do jumping. */
 			postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
@@ -888,13 +889,13 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 			uint32_t pid = po->iter->map[i];
 			struct node_set ns = pruner->postlist_nodes[pid];
 			for (int j = 0; j < ns.sz; j++) {
-				int qry_node = ns.rid[j];
-				/* collect qry_node */
-				if (-1 == u16_ht_lookup(&po->q_hit_nodes_ht, qry_node)) {
-					int qry_node_idx = pruner->nodeID2idx[qry_node];
-					po->q_hit_node_idx[n_save++] = qry_node_idx;
+				int qid = ns.rid[j];
+				/* collect qid */
+				if (-1 == u16_ht_lookup(&pruner->q_hit_nodes_ht, qid)) {
+					int qid_idx = pruner->nodeID2idx[qid];
+					q_hit_node_idx[n_save++] = qid_idx;
 					/* put into set to avoid counting duplicates */
-					u16_ht_incr(&po->q_hit_nodes_ht, qry_node, 1);
+					u16_ht_incr(&pruner->q_hit_nodes_ht, qid, 1);
 				}
 			}
 		}
@@ -903,9 +904,9 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	/* calculate score for each hit query node */
 	for (int i = 0; i < n_save; i++) {
 		/* for each saved hit query node ... */
-		int q_node_idx = po->q_hit_node_idx[i];
+		int q_node_idx = q_hit_node_idx[i];
 		struct pruner_node *q_node = pruner->nodes + q_node_idx;
-		float q_node_upperbound = upp(q_node->width, dw, po->inv_qw); /* may speedup by lookup table */
+		float q_node_upperbound = pruner->upp[q_node->width][dw];
 
 		/* check whether we can drop this node */
 		if (q_node_upperbound <= threshold) {
@@ -925,12 +926,13 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	}
 
 	/* if threshold has been updated */
-	if (threshold != po->prev_threshold) {
+	if (threshold != pruner->prev_threshold) {
 		/* try to "lift up" the pivot */
 		float sum = 0.f;
 		for (int i = pivot; i >= 0; i--) {
 			uint32_t pid = po->iter->map[i];
-			sum += upp(pruner->postlist_max[pid], dw, po->inv_qw);
+			int qmw = pruner->postlist_max[pid];
+			sum += pruner->upp[qmw][dw];
 			if (sum <= threshold)
 				/* this posting list can be skip-only */
 				pivot -= 1;
@@ -938,12 +940,12 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 				break;
 		}
 
+		/* force stop traversing if pivot < 0 */
 		if (pivot < 0)
-			/* force stop traversing */
 			po->iter->size = 0;
 
 		pruner->postlist_pivot = pivot;
-		po->prev_threshold = threshold;
+		pruner->prev_threshold = threshold;
 	}
 
 	return widest;

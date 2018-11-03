@@ -1,3 +1,4 @@
+#pragma once
 struct sector_tr {
 	int rnode;
 	int width;
@@ -17,14 +18,22 @@ struct node_set {
 	int  sz;
 };
 
+#include "config.h"
 struct math_pruner {
-	struct pruner_node *nodes;
+	struct pruner_node *nodes; // query nodes
 	uint16_t           *nodeID2idx; // nodeID to node index map
-	uint32_t            n_nodes;
+	uint32_t            n_nodes; // number of nodes in query
 	int             postlist_pivot; // advance-skip seperator
 	struct node_set postlist_nodes[MAX_MERGE_POSTINGS]; // back-reference to nodes
 	int postlist_ref[MAX_MERGE_POSTINGS]; // reference counter
 	int postlist_max[MAX_MERGE_POSTINGS]; // max sector width
+	/* upperbound pre-calculations */
+	float upp[MAX_LEAVES + 1][MAX_LEAVES + 1];
+	/* threshold records */
+	float  init_threshold, prev_threshold;
+	/* hash tables */
+	struct u16_ht accu_ht, sect_ht;
+	struct u16_ht q_hit_nodes_ht;
 };
 
 #include "math-index/head.h"
@@ -39,3 +48,7 @@ void math_pruner_dele_node(struct math_pruner*, int);
 
 /* update data structure after a node is deleted */
 void math_pruner_update(struct math_pruner*);
+
+void math_pruner_init_threshold(struct math_pruner*, uint32_t);
+
+void math_pruner_precalc_upperbound(struct math_pruner*, uint32_t);

@@ -63,7 +63,7 @@ struct pq_align_res math_l2_postlist_coarse_score_v2(struct math_l2_postlist*, u
 struct math_expr_score_res
 math_l2_postlist_precise_score(struct math_l2_postlist*, struct pq_align_res*, uint32_t);
 
-float math_expr_score_upperbound(int, float, float);
-float math_expr_score_lowerbound(int, float, float);
+float math_expr_score_upperbound(int, int, float);
+float math_expr_score_lowerbound(int, int, float);
 
 void math_expr_sim_factors_print(struct math_expr_sim_factors*);

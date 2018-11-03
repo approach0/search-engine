@@ -244,6 +244,8 @@ int math_l2_postlist_pruning_next(void *po_)
 			uint32_t p = po->iter->map[i];
 			if (cur == UINT64_MAX || po->pruner.postlist_ref[p] <= 0) {
 				/* drop this posting list completely */
+				if (po->pruner.postlist_pivot >= i)
+					po->pruner.postlist_pivot -= 1;
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
 #ifdef DEBUG_MATH_PRUNING
@@ -277,24 +279,13 @@ int math_l2_postlist_init(void *po_)
 	/* setup pruning structures */
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
 	uint32_t n_postings = po->mqs->n_uniq_paths;
+	uint32_t qw = po->mqs->subpaths.n_lr_paths;
 	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
+	math_pruner_init_threshold(&po->pruner, qw);
+	math_pruner_precalc_upperbound(&po->pruner, qw);
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	math_pruner_print(&po->pruner);
 #endif
-
-	/* pre-calc factors for score pruning */
-	float qw = (float)po->mqs->subpaths.n_lr_paths;
-	float inv_qw = 1.f / qw;
-	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
-	float max_dw = (float)MAX_LEAVES;
-	po->inv_qw = inv_qw;
-	po->prev_threshold = -1.f;
-	po->init_threshold = math_expr_score_lowerbound(min_match, max_dw, inv_qw);
-
-	/* hashtable initialization */
-	po->accu_ht = u16_ht_new(0);
-	po->sect_ht = u16_ht_new(0);
-	po->q_hit_nodes_ht = u16_ht_new(0);
 
 	/* next() will read the first item. */
 	math_l2_postlist_next(po_);
@@ -311,11 +302,6 @@ void math_l2_postlist_uninit(void *po_)
 
 	/* release pruning structures */
 	math_pruner_free(&po->pruner);
-
-	/* free hashtables */
-	u16_ht_free(&po->accu_ht);
-	u16_ht_free(&po->sect_ht);
-	u16_ht_free(&po->q_hit_nodes_ht);
 }
 
 struct postmerger_postlist

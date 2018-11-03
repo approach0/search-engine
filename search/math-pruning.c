@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include "config.h"
+#include "math-expr-sim.h"
 #include "math-pruning.h"
 
 void math_pruner_update(struct math_pruner *pruner)
 {
 	/* first, update nodeID2idx */
-	pruner->nodeID2idx = malloc(pruner->n_nodes * sizeof(uint16_t));
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
 		int node_id = node->secttr[0].rnode;
@@ -18,7 +20,6 @@ void math_pruner_update(struct math_pruner *pruner)
 	memset(pruner->postlist_max, 0, MAX_MERGE_POSTINGS * sizeof(int));
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
-		// int rid = node->secttr[0].rnode;
 
 		for (int j = 0; j < node->n; j++) {
 			/* update postlist_ref */
@@ -59,7 +60,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 			node->secttr[node->n - 1].width += 1;
 		}
 	}
-	
+
 	/* squash query nodes into consecutive index */
 	pruner->n_nodes = 0;
 	for (int i = 0; i < n_nodes; i++) {
@@ -115,22 +116,73 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 			struct pruner_node *node = pruner->nodes + j;
 			for (int k = 0; k < node->n; k++) {
 				int pid = node->postlist_id[k];
-				if (pid == i) {
+				if (pid == i)
 					save_rid[cnt++] = node->secttr[k].rnode;
-				}
 			}
 		}
 		pruner->postlist_nodes[i].sz = cnt;
 		pruner->postlist_nodes[i].rid = malloc(cnt * sizeof(int));
-		for (int j = 0; j < cnt; j++) {
+		for (int j = 0; j < cnt; j++)
 			pruner->postlist_nodes[i].rid[j] = save_rid[j];
-		}
 	}
 
-	/* set other v2 pruning data structures */
+	/* allocate nodeID2idx map */
+	pruner->nodeID2idx = malloc(pruner->n_nodes * sizeof(uint16_t));
+
+	/* nodeID2idx is allocated, setup dynamical data structures */
 	math_pruner_update(pruner);
 
+	/* pre-calc factors for score pruning */
+	pruner->prev_threshold = -1.f;
+	pruner->init_threshold = 0.f;
+
+	/* hashtable initialization */
+	pruner->accu_ht = u16_ht_new(0);
+	pruner->sect_ht = u16_ht_new(0);
+	pruner->q_hit_nodes_ht = u16_ht_new(0);
+
 	return 0;
+}
+
+void math_pruner_free(struct math_pruner* pruner)
+{
+	/* free query node records */
+	free(pruner->nodes);
+
+	/* free back-references to nodes */
+	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
+		if (pruner->postlist_nodes[i].rid)
+			free(pruner->postlist_nodes[i].rid);
+
+	/* free nodeID2idx map */
+	free(pruner->nodeID2idx);
+
+	/* free hashtables */
+	u16_ht_free(&pruner->accu_ht);
+	u16_ht_free(&pruner->sect_ht);
+	u16_ht_free(&pruner->q_hit_nodes_ht);
+}
+
+void math_pruner_init_threshold(struct math_pruner* pruner, uint32_t _qw)
+{
+	float qw = (float)_qw;
+	float inv_qw = 1.f / qw;
+	float min_mt = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
+	float max_dw = (float)MAX_LEAVES;
+	pruner->init_threshold =
+		math_expr_score_lowerbound(min_mt, max_dw, inv_qw);
+}
+
+void math_pruner_precalc_upperbound(struct math_pruner* pruner, uint32_t _qw)
+{
+	float qw = (float)_qw;
+	float inv_qw = 1.f / qw;
+	for (int i = 1; i <= MAX_LEAVES; i++) {
+		for (int j = 1; j <= MAX_LEAVES; j++) {
+			pruner->upp[i][j] =
+				math_expr_score_upperbound(i, j, inv_qw);
+		}
+	}
 }
 
 void math_pruner_print(struct math_pruner *pruner)
@@ -160,17 +212,4 @@ void math_pruner_dele_node(struct math_pruner *pruner, int i)
 	pruner->n_nodes -= 1;
 	for (int j = i; j < pruner->n_nodes; j++)
 		pruner->nodes[j] = pruner->nodes[j + 1];
-}
-
-void math_pruner_free(struct math_pruner* pruner)
-{
-	if (pruner->nodes)
-		free(pruner->nodes);
-
-	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
-		if (pruner->postlist_nodes[i].rid)
-			free(pruner->postlist_nodes[i].rid);
-	
-	if (pruner->nodeID2idx)
-		free(pruner->nodeID2idx);
 }
