@@ -887,6 +887,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (cur == candidate) {
+			/* for hit posting lists, save the corresponding nodes. */
 			uint32_t pid = po->iter->map[i];
 			struct node_set ns = pruner->postlist_nodes[pid];
 			for (int j = 0; j < ns.sz; j++) {
