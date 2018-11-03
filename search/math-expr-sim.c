@@ -950,5 +950,10 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		pruner->prev_threshold = threshold;
 	}
 
+#ifdef DEBUG_MATH_PRUNING
+	math_l2_postlist_print_cur(po);
+	math_pruner_print(pruner);
+#endif
+
 	return widest;
 }
