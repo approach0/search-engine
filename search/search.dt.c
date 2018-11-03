@@ -265,6 +265,24 @@ int math_l2_postlist_pruning_next(void *po_)
 	return 0;
 }
 
+static void math_l2_postlist_sort(struct math_l2_postlist *po)
+{
+	struct math_pruner *pruner = &po->pruner;
+	for (int i = 0; i < po->iter->size; i++) {
+		int pid_i = po->iter->map[i];
+		int max_i = pruner->postlist_max[pid_i];
+		for (int j = i + 1; j < po->iter->size; j++) {
+			int pid_j = po->iter->map[j];
+			int max_j = pruner->postlist_max[pid_j];
+			if (max_i < max_j) {
+				/* swap */
+				po->iter->map[i] = pid_j;
+				po->iter->map[j] = pid_i;
+			}
+		}
+	}
+}
+
 int math_l2_postlist_init(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -286,6 +304,9 @@ int math_l2_postlist_init(void *po_)
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	math_pruner_print(&po->pruner);
 #endif
+
+	/* sort path posting lists by max values */
+	math_l2_postlist_sort(po);
 
 	/* next() will read the first item. */
 	math_l2_postlist_next(po_);
