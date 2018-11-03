@@ -20,7 +20,7 @@ int u16_ht_lookup(struct u16_ht*, int);
 
 void u16_ht_update(struct u16_ht*, int, int);
 
-void u16_ht_incr(struct u16_ht*, int, int);
+int u16_ht_incr(struct u16_ht*, int, int);
 
 void u16_ht_reset(struct u16_ht*, int);
 

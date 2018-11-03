@@ -111,11 +111,11 @@ u16_ht_update(struct u16_ht *ht, int key, int val)
 		u16_ht_rehash(ht);
 }
 
-void
-u16_ht_incr(struct u16_ht *ht, int key, int incr)
+int u16_ht_incr(struct u16_ht *ht, int key, int incr)
 {
 	int sz = ht->sz;
 	struct u16_ht_entry *table = ht->table;
+	int ret = -1;
 
 	for (int i = 0; i < sz; i++) {
 		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
@@ -124,14 +124,18 @@ u16_ht_incr(struct u16_ht *ht, int key, int incr)
 			table[pos].key = key;
 			table[pos].val = incr;
 			ht->len ++;
+			ret = incr;
 			break;
 		} else if (table[pos].key == key) {
 			table[pos].val += incr;
+			ret = table[pos].val;
 		}
 	}
 
 	if (ht->len > ht->load_limit)
 		u16_ht_rehash(ht);
+
+	return ret;
 }
 
 static void u16_ht_rehash(struct u16_ht *ht)
