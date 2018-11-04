@@ -104,6 +104,7 @@ u16_ht_update(struct u16_ht *ht, int key, int val)
 			break;
 		} else if (table[pos].key == key) {
 			table[pos].val = val;
+			break;
 		}
 	}
 
@@ -129,6 +130,7 @@ int u16_ht_incr(struct u16_ht *ht, int key, int incr)
 		} else if (table[pos].key == key) {
 			table[pos].val += incr;
 			ret = table[pos].val;
+			break;
 		}
 	}
 
