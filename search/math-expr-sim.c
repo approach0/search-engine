@@ -39,9 +39,10 @@ score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //	    0 == strcmp(url, "Septic_equation:0")) {
 
 //	if (doc_id == 308876 || doc_id == 470478) {
-	if (doc_id == 308876) {
 
-	// if (0 == strcmp(url, "Dimension_theory_(algebra):45")) {
+	if (doc_id == 16120) {
+
+//	if (0 == strcmp(url, "Dimensionless_quantity:30")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -814,18 +815,31 @@ struct q_node_match {
 	int dr, max;
 };
 
-struct q_node_match
+static struct q_node_match
+#ifdef DEBUG_MATH_SCORE_INSPECT
+calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node, int inspect)
+#else
 calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
+#endif
 {
 	struct math_pruner *pruner = &po->pruner;
 	struct q_node_match ret = {0};
 	u16_ht_reset(&pruner->accu_ht, 0);
 
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect) printf("qr#%d/%d:\n", q_node->secttr[0].rnode, q_node->width);
+#endif
+
 	/* for each sector tree rooted at q_node ... */
 	for (int i = 0; i < q_node->n; i++) {
 		struct math_postlist_item item;
 		int pid = q_node->postlist_id[i];
+		int qsw = q_node->secttr[i].width;
 		uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		if (inspect) printf("\t secttr[%d] width: %d\n", i, qsw);
+#endif
 
 		/* skip non-hit posting lists */
 		const size_t sz = sizeof(item);
@@ -835,8 +849,15 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sz);
 
 		/* calculate match counter vector */
-		int qsw = q_node->secttr[i].width;
 		u16_ht_reset(&pruner->sect_ht, 0);
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		if (inspect) {
+			for (int _ = 0; _ < item.n_paths; _++) {
+				printf("\t + min(%d, dr=%d)\n", qsw, item.subr_id[_]);
+			}
+		}
+#endif
 
 		for (int j = 0; j < item.n_paths; j++) {
 			int dr = item.subr_id[j];
@@ -850,6 +871,14 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 				}
 			}
 		}
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		if (inspect) {
+			printf("\t ");
+			u16_ht_print(&pruner->accu_ht);
+			printf("\t max: %d, dr: %d\n", ret.max, ret.dr);
+		}
+#endif
 	}
 
 	return ret;
@@ -877,7 +906,13 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		if (cur < candidate) candidate = cur;
 	}
 
-#ifdef DEBUG_MATH_PRUNING
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	P_CAST(p, struct math_postlist_item, &candidate);
+	int inspect = score_inspect_filter(p->doc_id, po->indices);
+	if (inspect) {
+#endif
+
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 	printf("pivot = %d/%u, threshold = %.3f.\n", pruner->postlist_pivot,
 	        po->iter->size, threshold);
 	for (int i = 0; i < po->iter->size; i++) {
@@ -893,6 +928,10 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		}
 	}
 	printf("\n");
+#endif
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	}
 #endif
 
 	/* collect all unique hit nodes */
@@ -930,18 +969,37 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		/* check whether we can drop this node */
 		if (q_node_upperbound <= threshold) {
-#ifdef DEBUG_MATH_PRUNING
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect)
+#endif
 	printf("drop node#%d\n", q_node->secttr[0].rnode);
 #endif
 			math_pruner_dele_node_safe(pruner, q_node_idx, save_idx, n_save);
 			math_pruner_update(pruner);
 			continue; /* so that we can dele other nodes */
+		} else if (q_node->width < widest.width) {
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect)
+#endif
+	printf("skip node#%d (upperbound < widest = %d)\n",
+		q_node->secttr[0].rnode, widest.width);
+#endif
+			continue;
 		}
 
 		/* otherwise, calculate node score */
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		struct q_node_match qm = calc_q_node_match(po, q_node, inspect);
+#else
 		struct q_node_match qm = calc_q_node_match(po, q_node);
+#endif
 		if (qm.max > widest.width) {
-#ifdef DEBUG_MATH_PRUNING
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect)
+#endif
 	printf("update node#%d widest: %d\n", q_node->secttr[0].rnode, qm.max);
 #endif
 			widest.width = qm.max;
@@ -951,7 +1009,10 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	}
 
 	if (widest.width && pruner->upp[widest.width][dw] <= threshold) {
-#ifdef DEBUG_MATH_PRUNING
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect)
+#endif
 		printf("item widest upperbound less than threshold, drop.\n");
 #endif
 		widest.width = 0;
