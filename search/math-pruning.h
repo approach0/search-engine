@@ -9,7 +9,7 @@ struct sector_tr {
 struct pruner_node {
 	int width;
 	int n; // number of sector trees
-	struct sector_tr secttr[MAX_MERGE_POSTINGS]; // each sect rnode is the same here
+	struct sector_tr secttr[MAX_MERGE_POSTINGS]; // each sect rnode is the same
 	int postlist_id[MAX_MERGE_POSTINGS];
 };
 
@@ -20,17 +20,24 @@ struct node_set {
 
 #include "config.h"
 struct math_pruner {
-	struct pruner_node *nodes; // query nodes
-	uint16_t           *nodeID2idx; // nodeID to node index map
-	uint32_t            n_nodes; // number of nodes in query
-	int             postlist_pivot; // advance-skip seperator
-	struct node_set postlist_nodes[MAX_MERGE_POSTINGS]; // back-reference to nodes
+	/* internal node related */
+	struct pruner_node *nodes; // query internal nodes
+	uint16_t *nodeID2idx; // nodeID to node index map
+	uint32_t n_nodes; // number of internal nodes in query
+
+	/* posting list related */
+	int postlist_pivot; // advance-skip seperator
+	struct node_set postlist_nodes[MAX_MERGE_POSTINGS]; // back-references
 	int postlist_ref[MAX_MERGE_POSTINGS]; // reference counter
 	int postlist_max[MAX_MERGE_POSTINGS]; // max sector width
+	int postlist_len[MAX_MERGE_POSTINGS]; // postlist length
+
 	/* upperbound pre-calculations */
 	float upp[MAX_LEAVES + 1][MAX_LEAVES + 1];
+
 	/* threshold records */
 	float  init_threshold, prev_threshold;
+
 	/* hash tables */
 	struct u16_ht accu_ht, sect_ht;
 	struct u16_ht q_hit_nodes_ht;
@@ -44,7 +51,11 @@ void math_pruner_free(struct math_pruner*);
 
 void math_pruner_print(struct math_pruner*);
 
+void math_pruner_print_postlist(struct math_pruner*, int);
+
 void math_pruner_dele_node(struct math_pruner*, int);
+
+void math_pruner_dele_node_safe(struct math_pruner*, int, int*, int);
 
 /* update data structure after a node is deleted */
 void math_pruner_update(struct math_pruner*);

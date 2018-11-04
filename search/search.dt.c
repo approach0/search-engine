@@ -265,16 +265,26 @@ int math_l2_postlist_pruning_next(void *po_)
 	return 0;
 }
 
+static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
+{
+	if (max_i != max_j)
+		return max_i < max_j;
+	else
+		return len_i < len_j;
+}
+
 static void math_l2_postlist_sort(struct math_l2_postlist *po)
 {
 	struct math_pruner *pruner = &po->pruner;
 	for (int i = 0; i < po->iter->size; i++) {
-		int pid_i = po->iter->map[i];
-		int max_i = pruner->postlist_max[pid_i];
 		for (int j = i + 1; j < po->iter->size; j++) {
+			int pid_i = po->iter->map[i];
 			int pid_j = po->iter->map[j];
+			int max_i = pruner->postlist_max[pid_i];
 			int max_j = pruner->postlist_max[pid_j];
-			if (max_i < max_j) {
+			int len_i = pruner->postlist_len[pid_i];
+			int len_j = pruner->postlist_len[pid_j];
+			if (postlist_less_than(max_i, len_i, max_j, len_j)) {
 				/* swap */
 				po->iter->map[i] = pid_j;
 				po->iter->map[j] = pid_i;
@@ -301,15 +311,19 @@ int math_l2_postlist_init(void *po_)
 	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
 	math_pruner_init_threshold(&po->pruner, qw);
 	math_pruner_precalc_upperbound(&po->pruner, qw);
-#ifdef DEBUG_PRINT_QRY_STRUCT
-	math_pruner_print(&po->pruner);
-#endif
 
 	/* sort path posting lists by max values */
 	math_l2_postlist_sort(po);
 
-	/* next() will read the first item. */
+#ifdef DEBUG_PRINT_QRY_STRUCT
+	math_l2_postlist_print_cur(po);
+	math_pruner_print(&po->pruner);
+#endif
+
+#ifndef MATH_PRUNING_ENABLE
+	/* read the first item. */
 	math_l2_postlist_next(po_);
+#endif
 	return 0;
 }
 
