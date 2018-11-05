@@ -10,9 +10,13 @@ qryID = sys.argv[2]
 
 def send_json(obj):
 	headers = {'content-type': 'application/json'}
-	r = requests.post(url, json=obj, headers=headers)
-	j = json.loads(r.content.decode('utf-8'))
-	# print(j)
+	try:
+		r = requests.post(url, json=obj, headers=headers)
+		j = json.loads(r.content.decode('utf-8'))
+		# print(j)
+	except Exception as e:
+		print(e)
+		sys.exit(1)
 
 json_query = {
 	"page": 1,

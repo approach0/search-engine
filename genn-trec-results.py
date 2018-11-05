@@ -9,7 +9,7 @@ fname = "/home/tk/rotate-disk/ext4/ntcir-12/topics-concrete.txt"
 output = 'searchd/trec-format-results.tmp'
 
 only_qry_id = None
-#only_qry_id = 'NTCIR12-MathWiki-4'
+# only_qry_id = 'NTCIR12-MathWiki-19'
 
 with open(fname) as f:
     for line in f:
@@ -26,11 +26,12 @@ with open(fname) as f:
             continue
         # execute
         t0 = time.time()
-        os.system(exestr);
+        ret = os.system(exestr);
         t1 = time.time()
         # report query process time
         sys.stderr.write('%s %f msec \n' % (qry_id, (t1 - t0) * 1000.0))
         sys.stderr.flush()
+        if ret != 0: print('Abort evaluation.'); sys.exit(1)
         # print TREC output
         try:
             with open(output) as ff:
