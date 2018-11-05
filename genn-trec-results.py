@@ -12,7 +12,6 @@ only_qry_id = None
 
 if len(sys.argv) == 2:
     only_qry_id = 'NTCIR12-MathWiki-' + sys.argv[1]
-    print('only evaluate query: ' + only_qry_id)
 
 with open(fname) as f:
     for line in f:
@@ -34,7 +33,7 @@ with open(fname) as f:
         # report query process time
         sys.stderr.write('%s %f msec \n' % (qry_id, (t1 - t0) * 1000.0))
         sys.stderr.flush()
-        if ret != 0: print('Abort evaluation.'); sys.exit(1)
+        if ret != 0: sys.exit(1)
         # print TREC output
         try:
             with open(output) as ff:
