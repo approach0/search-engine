@@ -893,7 +893,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 	struct math_pruner *pruner = &po->pruner;
 	float threshold = pruner->init_threshold;
-	int pivot = pruner->postlist_pivot;
+	int pivot = MIN(pruner->postlist_pivot, po->iter->size - 1);
 
 	/* update threshold value */
 	if (priority_Q_full(po->rk_res))

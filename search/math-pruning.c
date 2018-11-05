@@ -129,7 +129,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	}
 
 	/* allocate nodeID2idx table */
-	pruner->nodeID2idx = calloc(n_nodes, sizeof(uint16_t));
+	pruner->nodeID2idx = calloc(1 + n_nodes, sizeof(uint16_t));
 
 	/* nodeID2idx is allocated, setup dynamical data structures */
 	math_pruner_update(pruner);
