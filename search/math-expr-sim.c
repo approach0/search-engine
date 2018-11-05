@@ -1021,23 +1021,20 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	/* if threshold has been updated */
 	if (threshold != pruner->prev_threshold) {
 		/* try to "lift up" the pivot */
-		float sum = 0.f;
-		for (int i = pivot; i >= 0; i--) {
+		int i, sum = 0;
+		for (i = po->iter->size - 1; i >= 0; i--) {
 			uint32_t pid = po->iter->map[i];
 			int qmw = pruner->postlist_max[pid];
-			sum += pruner->upp[qmw][dw];
-			if (sum <= threshold)
-				/* this posting list can be skip-only */
-				pivot -= 1;
-			else
+			sum += qmw;
+			if (pruner->upp[sum][dw] > threshold)
 				break;
+			/* otherwise this posting list can be skip-only */
 		}
 
 		/* force stop traversing if pivot < 0 */
-		if (pivot < 0)
-			po->iter->size = 0;
+		if (i < 0) po->iter->size = 0;
 
-		pruner->postlist_pivot = pivot;
+		pruner->postlist_pivot = i;
 		pruner->prev_threshold = threshold;
 	}
 
