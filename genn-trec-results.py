@@ -9,7 +9,10 @@ fname = "/home/tk/rotate-disk/ext4/ntcir-12/topics-concrete.txt"
 output = 'searchd/trec-format-results.tmp'
 
 only_qry_id = None
-# only_qry_id = 'NTCIR12-MathWiki-19'
+
+if len(sys.argv) == 2:
+    only_qry_id = 'NTCIR12-MathWiki-' + sys.argv[1]
+    print('only evaluate query: ' + only_qry_id)
 
 with open(fname) as f:
     for line in f:
