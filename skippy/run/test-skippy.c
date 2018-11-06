@@ -50,7 +50,7 @@ int main(void)
 		else
 			printf("reach the end.\n");
 	} else {
-		printf("cannot find node key %lu\n", cur_num);
+		printf("cannot find start node (key=%lu)\n", cur_num);
 	}
 
 	skippy_free(&skippy, struct T, sn, free(p));

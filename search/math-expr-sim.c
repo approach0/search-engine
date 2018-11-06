@@ -939,10 +939,12 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	int save_idx[MAX_NODE_IDS];
 	u16_ht_reset(&pruner->q_hit_nodes_ht, 0);
 	for (int i = 0; i < po->iter->size; i++) {
-		if (i > pivot) /* for skip-only posting lists, do jumping. */
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+
+		/* for skip-only posting lists, do jumping. */
+		if (i > pivot && cur < candidate)
 			postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
 
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (cur == candidate) {
 			/* for hit posting lists, save the corresponding nodes. */
 			uint32_t pid = po->iter->map[i];

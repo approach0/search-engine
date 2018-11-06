@@ -173,6 +173,8 @@ bool math_posting_next(math_posting_t po_)
 
 bool math_posting_jump(math_posting_t po_, uint64_t target)
 {
+	/* Notice: If target is going back, jump() will go to the end. */
+
 	uint32_t rightmost; /* right most of the buffer */
 	uint64_t *id64;
 	struct _math_posting *po = (struct _math_posting*)po_;
@@ -193,6 +195,7 @@ bool math_posting_jump(math_posting_t po_, uint64_t target)
 
 		/* read into buffer */
 		rebuf(po->buf, po->fh_posting, &po->buf_idx, &po->buf_end);
+
 	} while (1);
 
 	/* go through the buffer to find the target */
@@ -377,6 +380,7 @@ int math_posting_iter_next(math_posting_t po_)
 
 int math_posting_iter_jump(math_posting_t po_, uint64_t target)
 {
+	/* Notice: If target is going back, jump() will go to the end. */
 	return (int)math_posting_jump(po_, target);
 }
 

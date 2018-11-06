@@ -67,8 +67,12 @@ skippy_node_jump(struct skippy_node *sn, uint64_t target)
 {
 	int level = SKIPPY_TOTAL_LEVELS - 1;
 	struct skippy_node *forward, *upward;
-	while (1) {
 
+	while (level >= 0) {
+#ifdef DEBUG_SKIPPY
+		printf("@ key %lu, level %d -> %lu\n", sn->key, level,
+		       (sn->next[level] == NULL) ? UINT64_MAX : sn->next[level]->key);
+#endif
 		forward = sn->next[level];
 		upward = sn->next[level + 1];
 
@@ -81,17 +85,9 @@ skippy_node_jump(struct skippy_node *sn, uint64_t target)
 			/* or can we safely step forward? */
 			sn = forward;
 		} else {
-			/* check if we are at the bottom level */
-			if (level > 0)
-				/* go downward */
-				level --;
-			else
-				break;
+			/* go down one level */
+			level --;
 		}
-
-#ifdef DEBUG_SKIPPY
-		printf("go to key=%lu @ level %d\n", sn->key, level);
-#endif
 	}
 
 	return sn;

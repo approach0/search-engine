@@ -250,7 +250,7 @@ int math_l2_postlist_pruning_next(void *po_)
 				i -= 1;
 #ifdef DEBUG_MATH_PRUNING
 				uint32_t docID = (uint32_t)(cur >> 32);
-				printf("drop posting list[%u] @ doc#%u\n", p, docID);
+				printf("drop po#%u @ doc#%u\n", p, docID);
 #endif
 			} else if (cur == po->iter->min) {
 				/* forward */

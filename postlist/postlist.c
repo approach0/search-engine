@@ -232,10 +232,10 @@ int postlist_terminates(void *po_)
 	return (po->buf_end == 0);
 }
 
-bool postlist_jump(void *po_, uint64_t target_)
+bool postlist_jump(void *po_, uint64_t target)
 {
+	/* Notice: If target is going back, jump() will go to the end. */
 	struct postlist *po = (struct postlist*)po_;
-	uint32_t            target = (uint32_t)target_;
 	struct skippy_node *jump_to;
 	uint32_t           *curID;
 
