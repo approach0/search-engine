@@ -104,8 +104,8 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		}
 	}
 
-	/* set pivot */
-	pruner->postlist_pivot = n_eles;
+	/* set pivot (after pivot should be skip-only posting lists) */
+	pruner->postlist_pivot = n_eles - 1;
 
 	/* setup postlist_nodes */
 	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
