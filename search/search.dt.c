@@ -213,7 +213,7 @@ int math_l2_postlist_pruning_next(void *po_)
 		/* set candidate docID */
 		po->cur_doc_id = set_doc_candidate(po);
 		if (po->cur_doc_id == UINT32_MAX)
-			break;
+			return 0;
 
 		/* calculate coarse score */
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
@@ -267,7 +267,7 @@ int math_l2_postlist_pruning_next(void *po_)
 		/* collected all the expressions in this doc */
 	} while (po->cur_doc_id == prev_doc_id);
 
-	return 0;
+	return 1;
 }
 
 static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
