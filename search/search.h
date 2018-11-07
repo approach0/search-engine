@@ -22,7 +22,7 @@ struct math_l2_postlist {
 	struct indices *indices /* for debug */;
 	ranked_results_t *rk_res;
 
-	uint32_t    prev_doc_id;
+	uint32_t    cur_doc_id;
 	float       max_exp_score;
 	uint32_t    n_occurs;
 	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];

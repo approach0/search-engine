@@ -98,7 +98,7 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 	PTR_CAST(item, struct l2_postlist_item, dest);
 	PTR_CAST(po, struct math_l2_postlist, po_);
 
-	item->doc_id = po->prev_doc_id;
+	item->doc_id = po->cur_doc_id;
 	item->part_score = po->max_exp_score;
 	item->n_occurs = po->n_occurs;
 
@@ -112,11 +112,11 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	po->prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
+	uint32_t prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 
 	do {
-		uint32_t cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
-		if (cur_doc_id != po->prev_doc_id) { return 1; }
+		po->cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
+		if (po->cur_doc_id != prev_doc_id) { return 1; }
 
 		struct math_expr_score_res expr_res;
 		expr_res = math_l2_postlist_cur_score(po);
@@ -189,7 +189,7 @@ static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 	return cnt;
 }
 
-static void set_candidate(struct math_l2_postlist *po)
+static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 {
 	uint64_t candidate = UINT64_MAX;
 	for (int i = 0; i <= po->pruner.postlist_pivot; i++) {
@@ -197,6 +197,7 @@ static void set_candidate(struct math_l2_postlist *po)
 		if (cur < candidate) candidate = cur;
 	}
 	po->pruner.candidate = candidate;
+	return (uint32_t)(candidate >> 32);
 }
 
 #ifdef DEBUG_STATS_HOT_HIT
@@ -206,17 +207,13 @@ static uint64_t g_hot_hit[128];
 int math_l2_postlist_pruning_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
+	uint32_t prev_doc_id = po->cur_doc_id;
 
-	/* one l2 next() call may have multiple expressions */
-	po->prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
-
-	while (po->pruner.candidate != UINT64_MAX) {
-		uint32_t cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
-		if (cur_doc_id != po->prev_doc_id)
-			return 1; /* collected all the expressions in this doc */
-
+	do {
 		/* set candidate docID */
-		set_candidate(po);
+		po->cur_doc_id = set_doc_candidate(po);
+		if (po->cur_doc_id == UINT32_MAX)
+			break;
 
 		/* calculate coarse score */
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
@@ -267,7 +264,8 @@ int math_l2_postlist_pruning_next(void *po_)
 #ifdef DEBUG_MATH_PRUNING
 		printf("\n");
 #endif
-	}
+		/* collected all the expressions in this doc */
+	} while (po->cur_doc_id == prev_doc_id);
 
 	return 0;
 }
@@ -309,7 +307,7 @@ int math_l2_postlist_init(void *po_)
 	po->iter = postmerger_iterator(&po->pm);
 	po->n_occurs = 0;
 	po->max_exp_score = 0;
-	po->prev_doc_id = 0;
+	po->cur_doc_id = 0;
 
 	/* setup pruning structures */
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;

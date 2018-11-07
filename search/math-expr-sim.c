@@ -987,7 +987,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		/* otherwise, calculate node score */
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		struct q_node_match qm = calc_q_node_match(po, q_node, 1);
+		struct q_node_match qm = calc_q_node_match(po, q_node, inspect);
 #else
 		struct q_node_match qm = calc_q_node_match(po, q_node);
 #endif

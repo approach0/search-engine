@@ -163,7 +163,7 @@ size_t blob_index_read(blob_index_t index, doc_id_t docID, void **blob)
 	blob_sz_t  blob_sz;
 
 	if (ptr_rd_pos + sizeof(blob_ptr_t) > ptr_file_end) {
-		fprintf(stderr, "blob index: not indexed docID.\n");
+		fprintf(stderr, "blob index: not indexed docID: %u.\n", docID);
 		*blob = NULL;
 		return 0;
 	}
