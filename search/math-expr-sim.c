@@ -801,9 +801,9 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	int inspect = score_inspect_filter(p->doc_id, po->indices);
 	if (inspect) {
+		math_expr_sim_factors_print(&factors);
 		printf("doc#%u, exp#%u, final score: %f\n",
 		       expr.doc_id, expr.exp_id, expr.score);
-		math_expr_sim_factors_print(&factors);
 		printf("\n");
 	}
 #endif

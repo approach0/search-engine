@@ -179,6 +179,8 @@ bool math_posting_jump(math_posting_t po_, uint64_t target)
 	uint64_t *id64;
 	struct _math_posting *po = (struct _math_posting*)po_;
 
+	/* "cheating skip":
+	 * Read one item by one item until target <= cur */
 	do {
 		rightmost = po->buf_end - 1;
 		id64 = (uint64_t*)(po->buf + rightmost);
