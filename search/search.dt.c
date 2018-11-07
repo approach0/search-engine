@@ -251,7 +251,7 @@ int math_l2_postlist_pruning_next(void *po_)
 					po->pruner.postlist_pivot -= 1;
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
-#ifdef DEBUG_MATH_PRUNING
+#if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 				uint32_t docID = (uint32_t)(cur >> 32);
 				printf("drop po#%u @ doc#%u\n", p, docID);
 #endif
@@ -261,7 +261,7 @@ int math_l2_postlist_pruning_next(void *po_)
 			}
 		}
 
-#ifdef DEBUG_MATH_PRUNING
+#if defined (DEBUG_MATH_PRUNING)
 		printf("\n");
 #endif
 		/* collected all the expressions in this doc */
@@ -451,7 +451,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	prox_input_t prox[qry->len];
 
 	// MERGE l2 posting lists here
-#ifdef DEBUG_MATH_PRUNING
+#if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 	uint64_t cnt = 0;
 #endif
 
@@ -493,9 +493,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 			topk_candidate(&rk_res, doc_id, doc_score, prox, iter->size);
 		}
 
-#ifdef DEBUG_MATH_PRUNING
-		if (cnt ++ > DEBUG_MATH_PRUNING_LIMIT_ITERS) {
-			printf("abort (DEBUG_MATH_PRUNING_LIMIT_ITERS).\n");
+#if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
+		if (cnt ++ > DEBUG_MERGE_LIMIT_ITERS) {
+			printf("abort (DEBUG_MERGE_LIMIT_ITERS).\n");
 			break;
 		}
 #endif

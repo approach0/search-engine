@@ -237,7 +237,7 @@ bool postlist_jump(void *po_, uint64_t target)
 	/* Notice: If target is going back, jump() will go to the end. */
 	struct postlist *po = (struct postlist*)po_;
 	struct skippy_node *jump_to;
-	uint32_t           *curID;
+	uint64_t           *curID;
 
 	/* using skip-list */
 	jump_to = skippy_node_jump(&po->cur->sn, target);
@@ -266,8 +266,10 @@ bool postlist_jump(void *po_, uint64_t target)
 	 * equal to target ID. */
 	do {
 		/* docID must be the first member of structure */
-		curID = (uint32_t*)postlist_cur_item(po);
-
+		curID = (uint64_t*)postlist_cur_item(po);
+#ifdef DEBUG_POSTLIST
+		printf("glide to: %u\n", (*curID) >> 32);
+#endif
 		if (*curID >= target) {
 			return 1;
 		}

@@ -70,8 +70,9 @@ skippy_node_jump(struct skippy_node *sn, uint64_t target)
 
 	while (level >= 0) {
 #ifdef DEBUG_SKIPPY
-		printf("@ key %lu, level %d -> %lu\n", sn->key, level,
-		       (sn->next[level] == NULL) ? UINT64_MAX : sn->next[level]->key);
+		printf("@ key %lu (%u), level %d -> %lu (%u)\n", sn->key, sn->key >> 32, level,
+		       (sn->next[level] == NULL) ? UINT64_MAX : sn->next[level]->key,
+		       (sn->next[level] == NULL) ? UINT32_MAX : sn->next[level]->key >> 32);
 #endif
 		forward = sn->next[level];
 		upward = sn->next[level + 1];

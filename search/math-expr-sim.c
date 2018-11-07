@@ -936,8 +936,14 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 
 		/* for skip-only posting lists, do jumping. */
-		if (i > pivot && cur < candidate)
+		if (i > pivot && cur < candidate) {
 			postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
+#ifdef DEBUG_MERGE_SKIPPING
+			uint64_t cur_ = postmerger_iter_call(&po->pm, po->iter, cur, i);
+			printf("target: %u, po[%d] jumps: %u --> %u.\n",
+			       candidate >> 32, i, cur >> 32, cur_ >> 32);
+#endif
+		}
 
 		if (cur == candidate) {
 			/* for hit posting lists, save the corresponding nodes. */
