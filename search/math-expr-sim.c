@@ -560,7 +560,7 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 		uint32_t orig = po->iter->map[i];
 		struct subpath_ele *ele = po->ele[orig];
 
-		if (cur != UINT64_MAX && cur == po->iter->min) {
+		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
@@ -669,6 +669,9 @@ math_l2_postlist_coarse_score(
 	float min_score = 0.f;
 	struct math_pruner *pruner = &po->pruner;
 	struct pq_align_res widest = {0};
+
+	/* set candidate score */
+	pruner->candidate = po->iter->min;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	P_CAST(p, struct math_postlist_item, &po->iter->min);
@@ -784,7 +787,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	struct math_expr_score_res expr;
 
 	/* get docID and exprID */
-	uint64_t cur = po->iter->min;
+	uint64_t cur = po->pruner.candidate;
 	P_CAST(p, struct math_postlist_item, &cur);
 	expr.doc_id = p->doc_id;
 	expr.exp_id = p->exp_id;
@@ -799,13 +802,13 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	math_expr_set_score(&factors, &expr);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-//	int inspect = score_inspect_filter(p->doc_id, po->indices);
-//	if (inspect) {
-//		printf("doc#%u, exp#%u, final score: %f\n",
-//		       expr.doc_id, expr.exp_id, expr.score);
-//		math_expr_sim_factors_print(&factors);
-//		printf("\n");
-//	}
+	int inspect = score_inspect_filter(p->doc_id, po->indices);
+	if (inspect) {
+		printf("doc#%u, exp#%u, final score: %f\n",
+		       expr.doc_id, expr.exp_id, expr.score);
+		math_expr_sim_factors_print(&factors);
+		printf("\n");
+	}
 #endif
 
 	return expr;
@@ -838,12 +841,12 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 		uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		if (inspect) printf("\t secttr[%d] width: %d\n", i, qsw);
+		if (inspect) printf("\t secttr[%d] width: %d -> po#%d\n", i, qsw, pid);
 #endif
 
 		/* skip non-hit posting lists */
 		const size_t sz = sizeof(item);
-		if (cur == UINT64_MAX || cur != po->iter->min) continue;
+		if (cur == UINT64_MAX || cur != po->pruner.candidate) continue;
 
 		/* read document posting list item */
 		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sz);
@@ -895,16 +898,17 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	float threshold = pruner->init_threshold;
 	int pivot = MIN(pruner->postlist_pivot, po->iter->size - 1);
 
-	/* update threshold value */
-	if (priority_Q_full(po->rk_res))
-		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
-
-	/* find out candidate docID */
+	/* set candidate docID */
 	uint64_t candidate = UINT64_MAX;
 	for (int i = 0; i <= pivot; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (cur < candidate) candidate = cur;
 	}
+	pruner->candidate = candidate;
+
+	/* update threshold value */
+	if (priority_Q_full(po->rk_res))
+		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	P_CAST(p, struct math_postlist_item, &candidate);
@@ -993,7 +997,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		/* otherwise, calculate node score */
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		struct q_node_match qm = calc_q_node_match(po, q_node, inspect);
+		struct q_node_match qm = calc_q_node_match(po, q_node, 1);
 #else
 		struct q_node_match qm = calc_q_node_match(po, q_node);
 #endif
@@ -1015,7 +1019,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 #endif
-		printf("item widest upperbound less than threshold, drop.\n");
+		printf("item widest upperbound less than threshold, skip.\n");
 #endif
 		widest.width = 0;
 	}
@@ -1033,12 +1037,15 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 			/* otherwise this posting list can be skip-only */
 		}
 
-		/* force stop traversing if pivot < 0 */
-		if (i < 0) po->iter->size = 0;
-
 		pruner->postlist_pivot = i;
 		pruner->prev_threshold = threshold;
 	}
 
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect)
+#endif
+		printf("\n");
+#endif
 	return widest;
 }

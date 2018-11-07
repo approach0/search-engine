@@ -38,6 +38,9 @@ struct math_pruner {
 	/* threshold records */
 	float  init_threshold, prev_threshold;
 
+	/* candidate record */
+	uint64_t candidate;
+
 	/* hash tables */
 	struct u16_ht accu_ht, sect_ht;
 	struct u16_ht q_hit_nodes_ht;

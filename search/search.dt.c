@@ -85,11 +85,11 @@ math_l2_postlist(
 uint64_t math_l2_postlist_cur(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	if (po->iter->size == 0 || po->iter->min == UINT64_MAX) {
+	if (po->pruner.candidate == UINT64_MAX) {
 		return UINT64_MAX;
 	} else {
-		uint32_t min_docID = (uint32_t)(po->iter->min >> 32);
-		return min_docID;
+		uint32_t candidate = (uint32_t)(po->pruner.candidate >> 32);
+		return candidate;
 	}
 }
 
@@ -112,10 +112,10 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	po->prev_doc_id = (uint32_t)(po->iter->min >> 32);
+	po->prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 
 	do {
-		uint32_t cur_doc_id = (uint32_t)(po->iter->min >> 32);
+		uint32_t cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 		if (cur_doc_id != po->prev_doc_id) { return 1; }
 
 		struct math_expr_score_res expr_res;
@@ -150,7 +150,7 @@ int math_l2_postlist_next(void *po_)
 			if (cur == UINT64_MAX) {
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
-			} else if (cur == po->iter->min) {
+			} else if (cur == po->pruner.candidate) {
 				/* forward */
 				postmerger_iter_call(&po->pm, po->iter, next, i);
 			}
@@ -168,7 +168,7 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 
-		if (cur != UINT64_MAX && cur == po->iter->min) {
+		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 			return (item.n_lr_paths) ? item.n_lr_paths : MAX_MATH_PATHS;
 		}
@@ -182,7 +182,7 @@ static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 	uint32_t cnt = 0;
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (cur != UINT64_MAX && cur == po->iter->min)
+		if (cur != UINT64_MAX && cur == po->pruner.candidate)
 			cnt ++;
 	}
 
@@ -198,11 +198,11 @@ int math_l2_postlist_pruning_next(void *po_)
 	PTR_CAST(po, struct math_l2_postlist, po_);
 
 	/* one l2 next() call may have multiple expressions */
-	po->prev_doc_id = (uint32_t)(po->iter->min >> 32);
+	po->prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 
-	while (po->iter->size && postmerger_iter_next(po->iter)) {
+	while (po->pruner.candidate != UINT64_MAX) {
 
-		uint32_t cur_doc_id = (uint32_t)(po->iter->min >> 32);
+		uint32_t cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 		if (cur_doc_id != po->prev_doc_id)
 			return 1; /* collected all the expressions in this doc */
 
@@ -222,10 +222,6 @@ int math_l2_postlist_pruning_next(void *po_)
 			struct math_expr_score_res expr =
 				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
 
-#ifdef DEBUG_MATH_PRUNING
-			printf("Precise score: %.3f (doc#%u, exp#%u)\n",
-				expr.score, expr.doc_id, expr.exp_id);
-#endif
 			if (expr.score > po->max_exp_score)
 				po->max_exp_score = expr.score;
 
@@ -235,8 +231,6 @@ int math_l2_postlist_pruning_next(void *po_)
 				ho->pos = expr.exp_id;
 			}
 		}
-
-		// printf("\n");
 
 		/* forward posting lists */
 		for (int i = 0; i < po->iter->size; i++) {
@@ -252,7 +246,7 @@ int math_l2_postlist_pruning_next(void *po_)
 				uint32_t docID = (uint32_t)(cur >> 32);
 				printf("drop po#%u @ doc#%u\n", p, docID);
 #endif
-			} else if (cur == po->iter->min) {
+			} else if (cur == po->pruner.candidate) {
 				/* forward */
 				postmerger_iter_call(&po->pm, po->iter, next, i);
 			}
