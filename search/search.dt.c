@@ -167,7 +167,7 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-
+//printf("i = %d, cur = %lu, candi = %lu.\n", i, cur, po->pruner.candidate);
 		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 			return (item.n_lr_paths) ? item.n_lr_paths : MAX_MATH_PATHS;
@@ -189,6 +189,16 @@ static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 	return cnt;
 }
 
+static void set_candidate(struct math_l2_postlist *po)
+{
+	uint64_t candidate = UINT64_MAX;
+	for (int i = 0; i <= po->pruner.postlist_pivot; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		if (cur < candidate) candidate = cur;
+	}
+	po->pruner.candidate = candidate;
+}
+
 #ifdef DEBUG_STATS_HOT_HIT
 static uint64_t g_hot_hit[128];
 #endif
@@ -201,10 +211,12 @@ int math_l2_postlist_pruning_next(void *po_)
 	po->prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 
 	while (po->pruner.candidate != UINT64_MAX) {
-
 		uint32_t cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
 		if (cur_doc_id != po->prev_doc_id)
 			return 1; /* collected all the expressions in this doc */
+
+		/* set candidate docID */
+		set_candidate(po);
 
 		/* calculate coarse score */
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);

@@ -670,9 +670,6 @@ math_l2_postlist_coarse_score(
 	struct math_pruner *pruner = &po->pruner;
 	struct pq_align_res widest = {0};
 
-	/* set candidate score */
-	pruner->candidate = po->iter->min;
-
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	P_CAST(p, struct math_postlist_item, &po->iter->min);
 	int inspect = score_inspect_filter(p->doc_id, po->indices);
@@ -897,14 +894,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	struct math_pruner *pruner = &po->pruner;
 	float threshold = pruner->init_threshold;
 	int pivot = MIN(pruner->postlist_pivot, po->iter->size - 1);
-
-	/* set candidate docID */
-	uint64_t candidate = UINT64_MAX;
-	for (int i = 0; i <= pivot; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (cur < candidate) candidate = cur;
-	}
-	pruner->candidate = candidate;
+	uint64_t candidate = pruner->candidate;
 
 	/* update threshold value */
 	if (priority_Q_full(po->rk_res))
