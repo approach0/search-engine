@@ -171,21 +171,19 @@ void math_pruner_free(struct math_pruner* pruner)
 void math_pruner_init_threshold(struct math_pruner* pruner, uint32_t _qw)
 {
 	float qw = (float)_qw;
-	float inv_qw = 1.f / qw;
 	float min_mt = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
 	float max_dw = (float)MAX_LEAVES;
 	pruner->init_threshold =
-		math_expr_score_lowerbound(min_mt, max_dw, inv_qw);
+		math_expr_score_lowerbound(min_mt, max_dw, qw);
 }
 
 void math_pruner_precalc_upperbound(struct math_pruner* pruner, uint32_t _qw)
 {
 	float qw = (float)_qw;
-	float inv_qw = 1.f / qw;
 	for (int i = 1; i <= MAX_LEAVES; i++) {
 		for (int j = 1; j <= MAX_LEAVES; j++) {
 			pruner->upp[i][j] =
-				math_expr_score_upperbound(i, j, inv_qw);
+				math_expr_score_upperbound(i, j, qw);
 		}
 	}
 }

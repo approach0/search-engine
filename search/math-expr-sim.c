@@ -101,9 +101,8 @@ void math_expr_set_score_2(struct math_expr_sim_factors* factor,
 
 	hit->score = score;
 }
-
+ 
 #ifdef MATH_SLOW_SEARCH
-/* experimental scoring function  */
 void math_expr_set_score_3(struct math_expr_sim_factors* factor,
                            struct math_expr_score_res* hit)
 {
@@ -168,23 +167,55 @@ void math_expr_set_score_fast(struct math_expr_sim_factors* factor,
 	hit->score = score;
 }
 
-float math_expr_score_upperbound(int width, int _dw, float inv_qw)
+//#ifdef MATH_SLOW_SEARCH
+//float math_expr_score_upperbound(int width, int dw, float qw)
+//{
+//	struct pq_align_res ar[MAX_MTREE] = {0};
+//	for (int i = 0; i < MAX_MTREE; i++) {
+//		ar[i].width = qw;
+//		ar[i].height = qw + qw;
+//	}
+//	uint32_t nsim = (uint32_t)(qw * MNC_MARK_FULL_SCORE) + 1;
+//
+//	struct math_expr_score_res expr;
+//	struct math_expr_sim_factors factors = {
+//		nsim, 0 /* search depth*/, qw, dw, ar, MAX_MTREE,
+//		0 /* r_cnt */, 0 /* lcs */, qw + qw};
+//	math_expr_set_score(&factors, &expr);
+//	return expr.score;
+//}
+//float math_expr_score_lowerbound(int width, int dw, float qw)
+//{
+//	struct pq_align_res ar[MAX_MTREE] = {0};
+//	ar[0].width = dw;
+//	ar[0].height = 1;
+//	uint32_t nsim = (uint32_t)(qw * MNC_MARK_FULL_SCORE) / 2;
+//
+//	struct math_expr_score_res expr;
+//	struct math_expr_sim_factors factors = {
+//		nsim, 0 /* search depth*/, qw, dw, ar, MAX_MTREE,
+//		0 /* r_cnt */, 0 /* lcs */, qw + qw};
+//	math_expr_set_score(&factors, &expr);
+//	return expr.score;
+//}
+//#else
+float math_expr_score_upperbound(int width, int _dw, float qw)
 {
 	const float theta = 0.05f;
 	const float dw = (float)_dw;
-	float st = (float)width * inv_qw;
+	float st = (float)width / qw;
 	float fmeasure = st / (st + 1.f);
 	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
-
-float math_expr_score_lowerbound(int width, int _dw, float inv_qw)
+float math_expr_score_lowerbound(int width, int _dw, float qw)
 {
 	const float theta = 0.05f;
 	const float dw = (float)_dw;
-	float st = (float)width * inv_qw;
+	float st = (float)width / qw;
 	float fmeasure = (st * 0.5f) / (st + 0.5f);
 	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
+//#endif
 
 #ifdef PQ_CELL_NUMERIC_WEIGHT
 /* CIKM-2018 run-2 with path length weight */
@@ -460,7 +491,7 @@ math_expr_prefix_score_on_merge(
 		ret.doc_id = po_item->doc_id;
 		ret.exp_id = po_item->exp_id;
 
-#ifdef MATH_SLOW_SEARCH
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
 		/* set postional information */
 		for (int i = 0; i < MAX_MTREE; i++) {
 			if (align_res[i].width) {
@@ -514,7 +545,7 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 		uint32_t orig = po->iter->map[i];
 		struct subpath_ele *ele = po->ele[orig];
 
-		if (cur != UINT64_MAX && cur == po->iter->min) {
+		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 			n_doc_lr_paths = item.n_lr_paths;
 
@@ -647,7 +678,7 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 	/* calculate similarity score */
 	math_expr_set_score(&factors, &ret);
 
-#ifdef MATH_SLOW_SEARCH
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
 	/* set postional information */
 	for (int i = 0; i < MAX_MTREE; i++) {
 		if (align_res[i].width) {
@@ -782,6 +813,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
                                uint32_t dn)
 {
 	struct math_expr_score_res expr;
+	uint32_t r_cnt = 0;
 
 	/* get docID and exprID */
 	uint64_t cur = po->pruner.candidate;
@@ -789,13 +821,23 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	expr.doc_id = p->doc_id;
 	expr.exp_id = p->exp_id;
 
-	/* get overall score */
+#ifdef MATH_SLOW_SEARCH
+	/* expansive multi-tree metrics, but good bpref score */
+	struct pq_align_res align_res[MAX_MTREE] = {0};
+	const uint32_t k = MAX_MTREE; widest = align_res;
+	(void)math_l2_postlist_cur_struct_sim(po, align_res, &r_cnt);
+	/* get multi-tree symbolic score */
+	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, align_res);
+#else
+	const uint32_t k = 1;
+	/* get single tree symbolic score */
 	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest);
+#endif
+
 	uint32_t qn = po->mqs->subpaths.n_lr_paths;
 	struct math_expr_sim_factors factors = {
-		sym_sim, 0 /* search depth*/, qn, dn, widest, 1 /* k */,
-		0 /* r_cnt */, 0 /* lcs */, 0 /* n_qry_nodes */
-	};
+		sym_sim, 0 /* search depth*/, qn, dn, widest, k,
+		r_cnt, 0 /* lcs */, po->mqs->n_qry_nodes};
 	math_expr_set_score(&factors, &expr);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT

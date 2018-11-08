@@ -49,8 +49,8 @@
 	#define RANK_SET_DEFAULT_VOL 200
 #else
 	// #define RANK_SET_DEFAULT_VOL 50
-	   #define RANK_SET_DEFAULT_VOL 200
-	// #define RANK_SET_DEFAULT_VOL 1000
+	#define RANK_SET_DEFAULT_VOL 200
+	///// #define RANK_SET_DEFAULT_VOL 1000
 #endif
 
 #define DEFAULT_RES_PER_PAGE 10
@@ -88,12 +88,11 @@
 #define MAX_MATH_EXPR_SIM_SCALE 1000
 
 /* switch between SLOW/FAST search */
-// #define MATH_SLOW_SEARCH
+//// #define MATH_SLOW_SEARCH
 
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
 	#define MAX_MTREE 3
-	#undef MATH_PRUNING_ENABLE
 #else
 	#define MAX_MTREE 1
 #endif
@@ -101,7 +100,7 @@
 #define MAX_LEAVES  64
 
 #ifdef MATH_SLOW_SEARCH
-	#define HIGHLIGHT_MATH_ALIGNMENT
+	// #define HIGHLIGHT_MATH_ALIGNMENT
 	#define CNT_VISIBLE_NODES_ONLY
 #endif
 
