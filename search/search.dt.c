@@ -311,7 +311,7 @@ int math_l2_postlist_init(void *po_)
 
 	/* setup pruning structures */
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
-	uint32_t n_postings = po->mqs->n_uniq_paths;
+	uint32_t n_postings = po->pm.n_po;
 	uint32_t qw = po->mqs->subpaths.n_lr_paths;
 	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
 	math_pruner_init_threshold(&po->pruner, qw);

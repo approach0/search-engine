@@ -35,13 +35,14 @@ void math_pruner_update(struct math_pruner *pruner)
 
 int
 math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
-                 struct subpath_ele** eles, uint32_t n_eles)
+                 struct subpath_ele** eles, uint32_t n_po)
 {
 	/* place query nodes into pruner */
 	pruner->nodes = calloc(n_nodes, sizeof(struct pruner_node));
 
-	for (int i = 0; i < n_eles; i++) {
+	for (int i = 0; i < n_po; i++) {
 		struct subpath_ele *ele = eles[i];
+		if (ele == NULL) continue;
 
 		int dirty_r[n_nodes];
 		memset(dirty_r, 0, sizeof(dirty_r));
@@ -105,13 +106,13 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	}
 
 	/* set pivot (after pivot should be skip-only posting lists) */
-	pruner->postlist_pivot = n_eles - 1;
+	pruner->postlist_pivot = n_po - 1;
 
 	/* setup postlist_nodes */
 	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
 		pruner->postlist_nodes[i].rid = NULL;
 
-	for (int i = 0; i < n_eles; i++) {
+	for (int i = 0; i < n_po; i++) {
 		int save_rid[pruner->n_nodes];
 		int cnt = 0;
 		for (int j = 0; j < pruner->n_nodes; j++) {
