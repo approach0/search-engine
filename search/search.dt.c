@@ -29,7 +29,6 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			l2po->pm.po[n] = math_memo_postlist(po);
 
 			sprintf(args->po->type[n], "memo");
-			args->po->weight[n] = 1;
 			args->po->ele[n] = eles[i];
 
 			printf("[%u] (in memo) %s\n", i, base_paths[i]);
@@ -39,17 +38,16 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			l2po->pm.po[n] = math_disk_postlist(po);
 
 			sprintf(args->po->type[n], "disk");
-			args->po->weight[n] = 1;
 			args->po->ele[n] = eles[i];
 
 			printf("[%u] (on disk) %s\n", i, base_paths[i]);
 		} else {
-			printf("[%u] (empty) %s\n", i, base_paths[i]);
 			l2po->pm.po[n] = empty_postlist(NULL);
 
 			sprintf(args->po->type[n], "empty");
-			args->po->weight[n] = 0;
 			args->po->ele[n] = NULL;
+
+			printf("[%u] (empty) %s\n", i, base_paths[i]);
 		}
 		l2po->pm.n_po += 1;
 	}
