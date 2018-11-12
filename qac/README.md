@@ -1,5 +1,5 @@
 1. Compile the code, see http://approach0.xyz:8080/docs/src/build.html
-2. `cd ./qac`, and `make update`
+2. `cd ./qac`, and `make` (if you change code other than in this folder, `make` at the top level)
 3. run qad daemon: `./run/qacd.out`
 4. index and query:
 	* example can be found at `test.py`
