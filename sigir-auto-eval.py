@@ -26,6 +26,7 @@ def do_evaluation(run_file):
         ['./run/searchd.out',
          "-i", index_dir,
          '-c', str(0),
+         "-T" # Delete this option if you do not want to include writing overhead.
         ], stdout=subprocess.PIPE,
            cwd=proj_dir + '/searchd')
 
