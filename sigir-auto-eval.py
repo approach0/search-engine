@@ -37,15 +37,24 @@ def do_evaluation(run_file):
             break
 
     # Run queries
-    trec_file = run_file + '.runtime.dat'
-    fh = open(trec_file, 'w')
-    res = subprocess.run(['./genn-trec-results.py'], stderr=fh)
-    fh.close()
+    time_file = run_file + '.runtime.dat'
+    trec_file = run_file + '.trec.dat'
+    time_fh = open(time_file, 'w')
+    trec_fh = open(trec_file, 'w')
+    res = subprocess.run(['./genn-trec-results.py'], stderr=time_fh, stdout=trec_fh)
+    time_fh.close()
+    trec_fh.close()
 
     # Run evaluations
+    fh = open(run_file + '.eval.dat', 'w')
+    res = subprocess.run(
+        ['./eval-trec-results-summary.sh', trec_file], stdout=fh)
+    fh.close()
+
+    # Run stats
     fh = open(run_file + '.stats.dat', 'w')
     res = subprocess.run(
-        ['python3', './stats-efficiency-summary.py', trec_file], stdout=fh)
+        ['python3', './stats-efficiency-summary.py', time_file], stdout=fh)
     fh.close()
 
     # close daemon
@@ -93,7 +102,7 @@ with open(input_tsv) as fd:
     replaces = dict()
     for idx, row in enumerate(rd):
         if idx == 0: continue # skip the header row
-        if idx == 2: break # for debug
+        # if idx == 2: break # for debug
         run_name = row[0]
         print('[row %u / %u] %s' % (idx + 1, tot_rows, run_name))
         if os.path.exists('./tmp/' + run_name + '.eval'):
