@@ -34,23 +34,25 @@
 
 #define MATH_PRUNING_ENABLE
 
+#define MERGE_TIME_LOG "merge.runtime.dat"
+
 // #define DEBUG_MERGE_LIMIT_ITERS 900
 // #define DEBUG_MERGE_SKIPPING
 
 // #define DEBUG_MATH_PRUNING
 // #define DEBUG_PRINT_QRY_STRUCT
 
-#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .125f /* aggressive */
+#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.125f /* aggressive */
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .08f  /* conservative */
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
 
 #ifdef DEBUG_MATH_PRUNING
-	#define DEBUG_MERGE_LIMIT_ITERS 90
+	#define DEBUG_MERGE_LIMIT_ITERS 2
 	#define RANK_SET_DEFAULT_VOL 200
 #else
 	// #define RANK_SET_DEFAULT_VOL 50
-	#define RANK_SET_DEFAULT_VOL 200
-	///// #define RANK_SET_DEFAULT_VOL 1000
+	#define RANK_SET_DEFAULT_VOL 1000
+	// #define RANK_SET_DEFAULT_VOL 1000
 #endif
 
 #define DEFAULT_RES_PER_PAGE 10

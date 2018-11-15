@@ -2,6 +2,7 @@
 #include <string.h>
 #include <math.h>
 #include "common/common.h"
+#include "timer/timer.h"
 #include "postmerge/postcalls.h"
 #include "postlist/math-postlist.h"
 #include "search.h"
@@ -453,6 +454,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 	uint64_t cnt = 0;
 #endif
 
+#ifdef MERGE_TIME_LOG
+	struct timer timer;
+	timer_reset(&timer);
+#endif
 	foreach (iter, postmerger, &root_pm) {
 		float math_score = 0.f;
 		uint32_t doc_id  = 0;
@@ -498,6 +503,12 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 #endif
 	}
+	
+#ifdef MERGE_TIME_LOG
+	FILE *mergetime_fh = fopen(MERGE_TIME_LOG, "a");
+	fprintf(mergetime_fh, "mergecost %ld msec.\n", timer_tot_msec(&timer));
+	fclose(mergetime_fh);
+#endif
 
 #ifdef DEBUG_STATS_HOT_HIT
 	for (int i = 0; i < 128; i++) {
