@@ -148,7 +148,7 @@ reply:
 	fprintf(log_fh, "\n");
 	fclose(log_fh);
 #endif
-	
+
 	printf("post-run %ld msec.\n", timer_last_msec(&timer));
 	return ret;
 }

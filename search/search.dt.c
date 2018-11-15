@@ -421,12 +421,21 @@ topk_candidate(ranked_results_t *rk_res,
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry)
 {
+#ifdef MERGE_TIME_LOG
+	struct timer timer;
+	timer_reset(&timer);
+	FILE *mergetime_fh = fopen(MERGE_TIME_LOG, "a");
+#endif
+
 	struct postmerger root_pm;
 	postmerger_init(&root_pm);
 
 	ranked_results_t rk_res;
 	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
 
+#ifdef MERGE_TIME_LOG
+	// fprintf(mergetime_fh, "checkpoint-a %ld msec.\n", timer_tot_msec(&timer));
+#endif
 	struct math_qry_struct  mqs[qry->len];
 	struct math_l2_postlist mpo[qry->len];
 
@@ -451,6 +460,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 	for (int j = 0; j < root_pm.n_po; j++) {
 		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
 	}
+#ifdef MERGE_TIME_LOG
+	// fprintf(mergetime_fh, "checkpoint-init %ld msec.\n", timer_tot_msec(&timer));
+#endif
 
 	/* proximity score data structure */
 	prox_input_t prox[qry->len];
@@ -460,10 +472,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 	uint64_t cnt = 0;
 #endif
 
-#ifdef MERGE_TIME_LOG
-	struct timer timer;
-	timer_reset(&timer);
-#endif
 	foreach (iter, postmerger, &root_pm) {
 		float math_score = 0.f;
 		uint32_t doc_id  = 0;
@@ -511,9 +519,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	}
 	
 #ifdef MERGE_TIME_LOG
-	FILE *mergetime_fh = fopen(MERGE_TIME_LOG, "a");
 	fprintf(mergetime_fh, "mergecost %ld msec.\n", timer_tot_msec(&timer));
-	fclose(mergetime_fh);
 #endif
 
 #ifdef DEBUG_STATS_HOT_HIT
@@ -529,8 +535,16 @@ indices_run_query(struct indices* indices, struct query* qry)
 		math_qry_free(&mqs[j]);
 	}
 
+#ifdef MERGE_TIME_LOG
+	// fprintf(mergetime_fh, "checkpoint-unit %ld msec.\n", timer_tot_msec(&timer));
+#endif
+
 	// Sort min-heap
 	priority_Q_sort(&rk_res);
 	//////////fflush(stdout);
+#ifdef MERGE_TIME_LOG
+	// fprintf(mergetime_fh, "checkpoint-Q %ld msec.\n", timer_tot_msec(&timer));
+	fclose(mergetime_fh);
+#endif
 	return rk_res;
 }
