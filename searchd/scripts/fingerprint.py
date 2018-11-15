@@ -44,11 +44,17 @@ def draw(qry_num, rel):
 	colors = np.array([[1, 0, 0], [0, 1, 0]])
 	plt.xticks([0, 1], [labelA, labelB])
 	plt.eventplot(data, orientation='vertical', colors=colors)
-	plt.savefig('./eventplot_output/%s-rel%s.png' % (qry, rel))
+	savefile = './tmp/%s-rel%s.png' % (qry, rel)
+	print(savefile)
+	plt.savefig(savefile)
+	plt.close()
 	# plt.show()
 
-draw(5, 3)
-quit()
+### DEBUG ####
+# draw(5, 3)
+# quit()
+##############
+
 for rel in [FULLREL, PARTREL]:
 	for num in [_ for _ in range(1, 21) if _ != 2]:
 		draw(num, rel)
