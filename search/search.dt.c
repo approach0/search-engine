@@ -31,28 +31,32 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 
 			sprintf(args->po->type[n], "memo");
 			args->po->ele[n] = eles[i];
-
+#ifndef QUIET_SEARCH
 			printf("[%u] (in memo) %s\n", i, base_paths[i]);
-
+#endif
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
 			l2po->pm.po[n] = math_disk_postlist(po);
 
 			sprintf(args->po->type[n], "disk");
 			args->po->ele[n] = eles[i];
-
+#ifndef QUIET_SEARCH
 			printf("[%u] (on disk) %s\n", i, base_paths[i]);
+#endif
 		} else {
 			l2po->pm.po[n] = empty_postlist(NULL);
 
 			sprintf(args->po->type[n], "empty");
 			args->po->ele[n] = NULL;
-
+#ifndef QUIET_SEARCH
 			printf("[%u] (empty) %s\n", i, base_paths[i]);
+#endif
 		}
 		l2po->pm.n_po += 1;
 	}
+#ifndef QUIET_SEARCH
 	printf("\n");
+#endif
 	return DIR_MERGE_RET_CONTINUE;
 }
 
@@ -429,7 +433,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 	// Create merger objects
 	for (int i = 0; i < qry->len; i++) {
 		const char *kw = query_get_keyword(qry, i);
+#ifndef QUIET_SEARCH
 		printf("processing query keyword `%s' ...\n", kw);
+#endif
 		int j = root_pm.n_po;
 		if (0 == math_qry_prepare(indices, (char*)kw, &mqs[j])) {
 			/* construct level-2 postlist */

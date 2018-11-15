@@ -98,7 +98,10 @@ httpd_on_recv(const char* req, void* arg_)
 #endif
 
 #if 1
+	printf("\n");
+	printf("pre-run %ld msec.\n", timer_last_msec(&timer));
 	srch_res = indices_run_query(args->indices, &qry);
+	printf("runcost %ld msec.\n", timer_last_msec(&timer));
 #else
 	/* temporary backup */
 	wchar_t *kw = query_keyword(qry, 0);
@@ -145,6 +148,8 @@ reply:
 	fprintf(log_fh, "\n");
 	fclose(log_fh);
 #endif
+	
+	printf("post-run %ld msec.\n", timer_last_msec(&timer));
 	return ret;
 }
 

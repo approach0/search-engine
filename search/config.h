@@ -34,6 +34,7 @@
 
 #define MATH_PRUNING_ENABLE
 
+// #define QUIET_SEARCH
 #define MERGE_TIME_LOG "merge.runtime.dat"
 
 // #define DEBUG_MERGE_LIMIT_ITERS 900
