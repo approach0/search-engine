@@ -43,6 +43,7 @@ def draw(qry_num, rel):
 	# draw event plot
 	colors = np.array([[1, 0, 0], [0, 1, 0]])
 	plt.xticks([0, 1], [labelA, labelB])
+	plt.title('%s @ relevance level %s (judged only)' % (qry, rel))
 	plt.eventplot(data, orientation='vertical', colors=colors)
 	savefile = './tmp/%s-rel%s.png' % (qry, rel)
 	print(savefile)
