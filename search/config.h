@@ -33,6 +33,11 @@
 //#define DEBUG_STATS_HOT_HIT
 
 #define MATH_PRUNING_ENABLE
+// #define MATH_PRUNING_DISABLE_JUMP
+
+#ifndef MATH_PRUNING_ENABLE
+#define MATH_SLOW_SEARCH
+#endif
 
 // #define QUIET_SEARCH
 // #define MERGE_TIME_LOG "merge.runtime.dat"
@@ -91,11 +96,12 @@
 #define MAX_MATH_EXPR_SIM_SCALE 1000
 
 /* switch between SLOW/FAST search */
+#define MATH_FAST_SEARCH
 //// #define MATH_SLOW_SEARCH
 
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
-	#define MAX_MTREE 3
+	#define MAX_MTREE 1
 #else
 	#define MAX_MTREE 1
 #endif

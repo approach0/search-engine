@@ -28,21 +28,21 @@ void math_expr_sim_factors_print(struct math_expr_sim_factors *factor)
 	printf("%s: %u\n", STRVAR_PAIR(factor->mnc_score));
 }
 
-static int
-score_inspect_filter(doc_id_t doc_id, struct indices *indices)
+int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 {
 	size_t url_sz;
 	int ret = 0;
+//return 1;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-//	if (0 == strcmp(url, "Sridhara:14") ||
-//	    0 == strcmp(url, "Septic_equation:0")) {
+//	if (0 == strcmp(url, "Opening_(morphology):7") ||
+//	    0 == strcmp(url, "Mathematical_morphology:24")) {
 
 //	if (doc_id == 308876 || doc_id == 470478) {
 
-	if (doc_id == 16120) {
+	if (doc_id == 186710) {
 
-//	if (0 == strcmp(url, "Dimensionless_quantity:30")) {
+//	if (0 == strcmp(url, "Opening_(morphology):7")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -926,6 +926,36 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 	return ret;
 }
 
+void math_l2_cur_print(struct math_l2_postlist *po,
+                       uint64_t candidate, float threshold)
+{
+	struct math_pruner *pruner = &po->pruner;
+	printf("doc#%lu, pivot = %d/%u, threshold = %.3f.\n", candidate >> 32,
+	        pruner->postlist_pivot, po->iter->size, threshold);
+	for (int i = 0; i < po->iter->size; i++) {
+		uint32_t pid = po->iter->map[i];
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		if (i > pruner->postlist_pivot || cur == candidate) {
+			printf("%s: ", (cur == candidate) ? "hit " : "skip");
+			printf("[%u] ", i);
+			math_pruner_print_postlist(pruner, pid);
+			uint32_t docID = (uint32_t)(cur >> 32);
+			uint32_t expID = (uint32_t)(cur >> 0);
+			printf(" [doc#%u, exp#%u]\n", docID, expID);
+		}
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		else {
+			printf("pass: [%u] ", i);
+			math_pruner_print_postlist(pruner, pid);
+			uint32_t docID = (uint32_t)(cur >> 32);
+			uint32_t expID = (uint32_t)(cur >> 0);
+			printf(" [doc#%u, exp#%u]\n", docID, expID);
+		}
+#endif
+	}
+	printf("\n");
+}
+
 struct pq_align_res
 math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
                                  uint32_t n_doc_lr_paths)
@@ -949,21 +979,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #endif
 
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
-	printf("pivot = %d/%u, threshold = %.3f.\n", pruner->postlist_pivot,
-	        po->iter->size, threshold);
-	for (int i = 0; i < po->iter->size; i++) {
-		uint32_t pid = po->iter->map[i];
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (i > pruner->postlist_pivot || cur == candidate) {
-			printf("%s: ", (cur == candidate) ? "hit " : "skip");
-			printf("[%u] ", i);
-			math_pruner_print_postlist(pruner, pid);
-			uint32_t docID = (uint32_t)(cur >> 32);
-			uint32_t expID = (uint32_t)(cur >> 0);
-			printf(" [doc#%u, exp#%u]\n", docID, expID);
-		}
-	}
-	printf("\n");
+		math_l2_cur_print(po, candidate, threshold);
 #endif
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
@@ -977,6 +993,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 
+#ifndef MATH_PRUNING_DISABLE_JUMP
 		/* for skip-only posting lists, do jumping. */
 		if (i > pivot && cur < candidate) {
 			postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
@@ -986,6 +1003,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 			       candidate >> 32, i, cur >> 32, cur_ >> 32);
 #endif
 		}
+#endif
 
 		if (cur == candidate) {
 			/* for hit posting lists, save the corresponding nodes. */
@@ -1062,6 +1080,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		widest.width = 0;
 	}
 
+#ifndef MATH_PRUNING_DISABLE_JUMP
 	/* if threshold has been updated */
 	if (threshold != pruner->prev_threshold) {
 		/* try to "lift up" the pivot */
@@ -1078,6 +1097,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		pruner->postlist_pivot = i;
 		pruner->prev_threshold = threshold;
 	}
+#endif
 
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 #ifdef DEBUG_MATH_SCORE_INSPECT
