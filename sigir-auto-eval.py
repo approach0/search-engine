@@ -12,7 +12,6 @@ def signal_handler(sig, _):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-proj_dir  = "/home/tk/Desktop/approach0"
 index_dir = "/home/tk/index-fix-decimal-and-use-latexml/"
 
 def do_evaluation(run_file):
@@ -28,7 +27,7 @@ def do_evaluation(run_file):
          '-c', str(0),
          "-T" # Delete this option if you do not want to include writing overhead.
         ], stdout=subprocess.PIPE,
-           cwd=proj_dir + '/searchd')
+           cwd='./searchd')
 
     while True:
         line_bytes = daemon.stdout.readline()
