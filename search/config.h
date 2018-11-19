@@ -48,9 +48,9 @@
 // #define DEBUG_MATH_PRUNING
 // #define DEBUG_PRINT_QRY_STRUCT
 
-#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.125f /* aggressive */
+//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.125f /* aggressive */
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .08f  /* conservative */
-//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
+#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
 
 #ifdef DEBUG_MATH_PRUNING
 	#define DEBUG_MERGE_LIMIT_ITERS 2
