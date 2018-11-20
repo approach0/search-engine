@@ -30,7 +30,7 @@ struct math_pruner {
 	struct node_set postlist_nodes[MAX_MERGE_POSTINGS]; // back-references
 	int postlist_ref[MAX_MERGE_POSTINGS]; // reference counter
 	int postlist_max[MAX_MERGE_POSTINGS]; // max sector width
-	int postlist_len[MAX_MERGE_POSTINGS]; // postlist length
+	int postlist_len[MAX_MERGE_POSTINGS]; // postlist path prefix-length
 
 	/* upperbound pre-calculations */
 	float upp[MAX_LEAVES + 1][MAX_LEAVES + 1];

@@ -15,16 +15,27 @@ void math_pruner_update(struct math_pruner *pruner)
 		pruner->nodeID2idx[node_id] = i;
 	}
 
-	/* second, update postlist_ref and postlist_max */
+	/* clear back-reference */
+	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
+		pruner->postlist_nodes[i].sz = 0;
+
+	/* second, update postlist_ref, postlist_nodes and postlist_max */
 	memset(pruner->postlist_ref, 0, MAX_MERGE_POSTINGS * sizeof(int));
 	memset(pruner->postlist_max, 0, MAX_MERGE_POSTINGS * sizeof(int));
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
+		int rid = node->secttr[0].rnode;
 
 		for (int j = 0; j < node->n; j++) {
 			/* update postlist_ref */
 			int pid = node->postlist_id[j];
 			pruner->postlist_ref[pid] += 1;
+
+			/* update postlist_nodes */
+			int k = pruner->postlist_nodes[pid].sz;
+			pruner->postlist_nodes[pid].rid[k] = rid;
+			pruner->postlist_nodes[pid].sz += 1;
+
 			/* update postlist_max */
 			int width = node->secttr[j].width;
 			if (pruner->postlist_max[pid] < width)
@@ -109,24 +120,20 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	pruner->postlist_pivot = n_po - 1;
 
 	/* setup postlist_nodes */
-	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
-		pruner->postlist_nodes[i].rid = NULL;
+	memset(pruner->postlist_nodes, 0, sizeof(pruner->postlist_nodes));
 
 	for (int i = 0; i < n_po; i++) {
-		int save_rid[pruner->n_nodes];
 		int cnt = 0;
 		for (int j = 0; j < pruner->n_nodes; j++) {
 			struct pruner_node *node = pruner->nodes + j;
 			for (int k = 0; k < node->n; k++) {
 				int pid = node->postlist_id[k];
 				if (pid == i)
-					save_rid[cnt++] = node->secttr[k].rnode;
+					cnt ++;
 			}
 		}
-		pruner->postlist_nodes[i].sz = cnt;
+		/* allocate memory only */
 		pruner->postlist_nodes[i].rid = malloc(cnt * sizeof(int));
-		for (int j = 0; j < cnt; j++)
-			pruner->postlist_nodes[i].rid[j] = save_rid[j];
 	}
 
 	/* allocate nodeID2idx table */
