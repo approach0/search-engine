@@ -40,9 +40,9 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 //	if (doc_id == 308876 || doc_id == 470478) {
 
-	if (doc_id == 186710) {
+	if (doc_id == 368782) {
 
-//	if (0 == strcmp(url, "Opening_(morphology):7")) {
+//	if (0 == strcmp(url, "Mathematical_descriptions_of_the_electromagnetic_field:13")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -1035,10 +1035,12 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 #endif
-	printf("drop node#%d\n", q_node->secttr[0].rnode);
+	printf("drop node#%d width %u upperbound %f <= threshold %f\n",
+		q_node->secttr[0].rnode, q_node->width, q_node_upperbound, threshold);
 #endif
 			math_pruner_dele_node_safe(pruner, q_node_idx, save_idx, n_save);
 			math_pruner_update(pruner);
+			//math_pruner_print(pruner);
 			continue; /* so that we can dele other nodes */
 		} else if (q_node->width < widest.width) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)

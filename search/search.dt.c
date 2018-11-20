@@ -321,6 +321,7 @@ int math_l2_postlist_pruning_next(void *po_)
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 				uint32_t docID = (uint32_t)(cur >> 32);
 				printf("drop po#%u @ doc#%u\n", p, docID);
+				// math_pruner_print(&po->pruner);
 #endif
 			} else if (cur == po->pruner.candidate) {
 				/* forward */
