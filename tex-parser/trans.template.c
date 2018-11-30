@@ -43,16 +43,21 @@ char *trans_symbol(enum symbol_id id)
 {
 	static char ret[TRANS_BUF_LEN];
 
-	if (id >= S_N) {
-		/* number symbols */
-		if (id < S_N + 26 /* is lowercase alphabet */) {
-			sprintf(ret, "`%c'", id - S_N + 'a');
+	if (id >= SYMBOL_ID_a2Z_BEGIN) {
+		if (id >= SYMBOL_ID_NUM_BEGIN /* small number */) {
+			sprintf(ret, "`%u'", id - SYMBOL_ID_NUM_BEGIN);
 			return ret;
-		} else if (id < S_N + 52 /* is uppercase alphabet */) {
-			sprintf(ret, "`%c'", id - S_N - 26 + 'A');
-			return ret;
-		} else /* is small number */ {
-			sprintf(ret, "`%u'", id - S_N - 52);
+		} else /* a-Z in different fonts */ {
+			int r_id = id - SYMBOL_ID_a2Z_BEGIN; /* relative ID */
+			int l_id = r_id % (2 * 26); /* letter ID (with font) */
+			int font = r_id / (2 * 26); /* font */
+			if (l_id >= 26 /* uppercase */) {
+				int o = l_id - 26; /* offset */
+				sprintf(ret, "`%c' %s font", 'A' + o, math_font_name(font));
+			} else /* lowercase */ {
+				int o = l_id; /* offset */
+				sprintf(ret, "`%c' %s font", 'a' + o, math_font_name(font));
+			}
 			return ret;
 		}
 	}

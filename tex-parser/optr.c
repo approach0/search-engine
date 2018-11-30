@@ -326,6 +326,12 @@ uint32_t optr_prune_nil_nodes(struct optr_node *optr)
 	return purne_cnt;
 }
 
+int is_single_node(struct optr_node *p)
+{
+	return (p->tnd.sons.now == NULL /* is leaf */ &&
+	       p->tnd.father == NULL /* is root */);
+}
+
 struct subpath *create_subpath(struct optr_node *p, bool leaf)
 {
 	struct subpath *subpath = malloc(sizeof(struct subpath));
