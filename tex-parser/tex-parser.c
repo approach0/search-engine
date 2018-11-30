@@ -60,12 +60,6 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 	}
 #endif
 
-	/* return operator tree or not, depends on `keep_optr' */
-	if (keep_optr)
-		ret.operator_tree = grammar_optr_root;
-	else
-		ret.operator_tree = NULL;
-
 	/* is there any grammar error? */
 	if (grammar_err_flag) {
 		/* grammar error */
@@ -76,6 +70,15 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			uint32_t max_path_id;
 
 			optr_prune_nil_nodes(grammar_optr_root);
+
+			if (is_single_node(grammar_optr_root)) {
+				/* HACKY: In order to process this single-node tree correctly
+				 * in our model, add an 'isolated-node' on top of it. */
+				struct optr_node *iso = optr_alloc(S_NIL, T_NIL,
+				                                   WC_COMMUT_OPERATOR);
+				grammar_optr_root = optr_attach(grammar_optr_root, iso);
+			}
+
 			max_path_id = optr_assign_values(grammar_optr_root);
 
 			// optr_print(grammar_optr_root, stdout);
@@ -107,6 +110,12 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			strcpy(ret.msg, "operator tree not generated.");
 		}
 	}
+
+	/* return operator tree or not, depends on `keep_optr' */
+	if (keep_optr)
+		ret.operator_tree = grammar_optr_root;
+	else
+		ret.operator_tree = NULL;
 
 	return ret;
 }

@@ -44,6 +44,8 @@ int optr_print_idpos_map(uint32_t*);
 
 int optr_print_visibi_map(uint32_t*);
 
+int is_single_node(struct optr_node*);
+
 #include "sds/sds.h"
 int
 optr_graph_print(struct optr_node*, char **, uint32_t*, int, sds*);
