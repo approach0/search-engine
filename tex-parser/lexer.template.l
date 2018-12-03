@@ -1,5 +1,6 @@
 %{
 #include "head.h"
+#include "math-fonts.h"
 #include "y.tab.h"
 
 #define SET_TOK_POS(_nd) \
@@ -26,9 +27,12 @@ int ret_num(char*, struct optr_node **);
 int ret_qvar_num(char*, struct optr_node **);
 int ret_float_num(char*, struct optr_node **);
 int hack_attach(struct optr_node*, char*, struct optr_node **, int);
+void update_font_state(void);
 
 extern unsigned int ign_stack;
 extern unsigned int mat_stack;
+extern unsigned int fnt_stack;
+extern enum math_font_t cur_font;
 extern int lexer_warning_flag;
 %}
  /* ==================
@@ -43,6 +47,8 @@ extern int lexer_warning_flag;
 %x cmt
  /* matrix domain */
 %s mat
+ /* fonts command, e.g. \mathfrak{P} */
+%s fnt
 
 %%
 "{"[ ]*"}"                                         { /* ignore */ }
@@ -182,15 +188,37 @@ extern int lexer_warning_flag;
 <mat>\\newline                   { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
 <mat>&                        { RET_TOK(column, TAB_COL, WC_COMMUT_OPERATOR, TAB_COL); }
 
-<mat>"}" { 
-	mat_stack --; 
-	if (!mat_stack) { 
+<mat>"}" {
+	mat_stack --;
+	if (!mat_stack) {
 		BEGIN(INITIAL);
-		return _END_MAT; 
+		return _END_MAT;
 	} else {
 		return _R_TEX_BRACE;
 	}
 }
+
+ /* ==============================
+  *  variables with special fonts
+  * ==============================*/
+\\mathfrak                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
+\\textfrak                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
+\\textswab                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
+\\textgoth                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
+
+\\mathcal                         { BEGIN(fnt); cur_font = MFONT_CALLI; }
+\\mathscr                         { BEGIN(fnt); cur_font = MFONT_CALLI; }
+\\mathpzc                         { BEGIN(fnt); cur_font = MFONT_CALLI; }
+
+\\mathbb                          { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
+\\varmathbb                       { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathbbm                         { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathbbmss                       { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathbbmtt                       { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathds                          { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
+
+<fnt>"{"                          { fnt_stack ++;}
+<fnt>"}"                          { fnt_stack --; update_font_state(); }
 
  /* ==========
   * binomials
@@ -921,10 +949,22 @@ extern int lexer_warning_flag;
 /* self-defined stack values */
 unsigned int ign_stack = 0;
 unsigned int mat_stack = 0;
+unsigned int fnt_stack = 0;
 int lexer_warning_flag = 0;
+
+/* current math font */
+enum math_font_t cur_font = MFONT_NORMAL;
 
 /* current positional pointer */
 size_t lex_cur_bytes;
+
+void update_font_state()
+{
+	if (0 == fnt_stack) {
+		BEGIN(INITIAL);
+		cur_font = MFONT_NORMAL;
+	}
+}
 
 /* =======================================================
  * Symbol ID Space:
@@ -936,6 +976,10 @@ int ret_var(char *text, struct optr_node **tr, char offset)
 {
 	int c = (int)(text[0] - offset);
 	*tr = optr_alloc(S_N + c, T_VAR, WC_NORMAL_LEAF);
+
+	printf("%s is of font: %s\n", text, math_font_name(cur_font));
+	update_font_state();
+
 	SET_TOK_POS(*tr);
 
 	return VAR;
