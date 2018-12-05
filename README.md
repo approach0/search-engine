@@ -44,6 +44,7 @@ $ ./run/indexd.out -o ./mnt-vdisk.img/
 ```
 
 5. Indexing NTCIR-12 document formulas
+
 Open another shell, feed the downloaded corpus data to indexer
 ```sh
 $ ln -sf /path/to/corpus.txt $PROJECT/indexer/test-corpus/ntcir12/ntcir12-full.tmp
