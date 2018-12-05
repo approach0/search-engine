@@ -52,7 +52,7 @@ $ ./ntcir-feeder.py
 ``` 
 (this process is going to take hours even on a SSH drive because our indexer is implemented very naively)
 
-### (Retrieving)
+### (Retrieval)
 6. Start search daemon
 ```sh
 $ cd $PROJECT/searchd
@@ -79,6 +79,7 @@ $ ./genn-trec-results.py > search-results.trec.tmp
 ```
 to generate search results for all 20 queries, output overwrites `search-results.trec.tmp` which contains the search results in TREC format.
 
+### (Evaluation)
 8. Evaluate search results
 Now you can evaluate the generated results using `trec_eval` command (get it [here](https://github.com/usnistgov/trec_eval)).
 
