@@ -51,7 +51,7 @@ $ ln -sf /path/to/corpus.txt $PROJECT/indexer/test-corpus/ntcir12/ntcir12-full.t
 $ cd $PROJECT/indexer/test-corpus/ntcir12
 $ ./ntcir-feeder.py
 ``` 
-(this process is going to take hours even on a SSH drive because our indexer is implemented very naively)
+(this process is going to take hours even on a SSD drive because our indexer is implemented very naively)
 
 ### (Retrieval)
 6. Start search daemon
