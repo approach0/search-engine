@@ -1,6 +1,5 @@
 %{
 #include "head.h"
-#include "math-fonts.h"
 #include "y.tab.h"
 
 #define SET_TOK_POS(_nd) \
@@ -966,18 +965,13 @@ void update_font_state()
 	}
 }
 
-/* =======================================================
- * Symbol ID Space:
- *  0 ... S_N - 1:                         enum symbols
- *  S_N ... S_N + 51:                      a - Z
- *  S_N + 52 ... SYMBOL_ID_VOLUME - 1:     small number
- * ======================================================*/
 int ret_var(char *text, struct optr_node **tr, char offset)
 {
 	int c = (int)(text[0] - offset);
-	*tr = optr_alloc(S_N + c, T_VAR, WC_NORMAL_LEAF);
+	int sym_code = SYMBOL_ID_a2Z_BEGIN + c + cur_font * (26 * 2);
+	*tr = optr_alloc(sym_code , T_VAR, WC_NORMAL_LEAF);
 
-	printf("%s is of font: %s\n", text, math_font_name(cur_font));
+	// printf("%s is of font: %s\n", text, math_font_name(cur_font));
 	update_font_state();
 
 	SET_TOK_POS(*tr);
@@ -987,10 +981,10 @@ int ret_var(char *text, struct optr_node **tr, char offset)
 
 static uint32_t num2symbol_id(uint32_t n)
 {
-	if (n >= SYMBOL_ID_VOLUME - S_N - 52)
+	if (n >= SYMBOL_ID_LARGE_NUM_FIRST)
 		n = S_bignum;
 	else
-		n = n + S_N + 52;
+		n = SYMBOL_ID_NUM_BEGIN + n;
 	return n;
 }
 

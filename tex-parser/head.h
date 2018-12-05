@@ -13,3 +13,5 @@
 #include "trans.h"
 #include "tex-parser.h"
 #include "optr.h"
+#include "math-fonts.h"
+#include "math-symb-space.h"
