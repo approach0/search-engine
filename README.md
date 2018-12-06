@@ -63,6 +63,7 @@ Notice: Caching the entire index into memory takes very long time, so we provide
 If you want to disable caching, just rename `cache-list.tmp` to some other name.
 
 7. Feed NTCIR-12 queries to search daemon
+
 After search daemon is on, you can test arbitrary query by enter formula in a locally hosted WEB front end. Refer to [this documentation](https://approach0.xyz/docs/src/demo.html#install-and-config-nginx-php) to setup the demo WEB page, the demo WEB page will be available locally at `http://localhost/demo`.
 
 To evaluate NTCIR-12 queries, follow the steps below.
