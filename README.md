@@ -69,8 +69,8 @@ After search daemon is on, you can test arbitrary query by enter formula in a lo
 To evaluate NTCIR-12 queries, follow the steps below.
 
 At `$PROJECT` directory, modify `genn-trec-results.py` script and change Python variable `fname` to your downloaded `topic.txt` path.
-Since in our paper we only evaluate non-wildcard queries, you also need to delete those lines in `topic.txt` where it associates to `NTCIR12-MathWiki-21` to `NTCIR12-MathWiki-40`.
-You can use this command to do the job:
+Since in our paper we only evaluate non-wildcard queries (also, we do not support wildcard query yet), you also need to delete those lines associating to `NTCIR12-MathWiki-21` through `NTCIR12-MathWiki-40` in `topic.txt`.
+You can use the following command to achieve this:
 ```sh
 $ cat topics.txt | head -20 > topics-concrete.txt
 ```
@@ -79,11 +79,12 @@ Then simply issue
 ```sh
 $ ./genn-trec-results.py > search-results.trec.tmp
 ```
-to generate search results for all 20 queries, output overwrites `search-results.trec.tmp` which contains the search results in TREC format.
+to generate search results for all 20 queries, output overwrites `search-results.trec.tmp` which will contain the search results in TREC format.
 
 ### (Evaluation)
 8. Evaluate search results
-Now you can evaluate the generated results using `trec_eval` command (get it [here](https://github.com/usnistgov/trec_eval)).
+
+Now you can evaluate the generated results using `trec_eval` command (if you do not have it, get it [here](https://github.com/usnistgov/trec_eval)).
 
 For example, for full-relevance scores
 ```sh
@@ -95,6 +96,7 @@ for partial-relevance scores
 $ trec_eval -l1 /path/to/judge.dat ./search-results.trec.tmp
 ```
 
+### (Finishing)
 Unmount the index device image before you need to delete the index image:
 ```sh
 $ cd $PROJECT/indexer
