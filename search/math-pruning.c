@@ -176,24 +176,17 @@ void math_pruner_free(struct math_pruner* pruner)
 	u16_ht_free(&pruner->q_hit_nodes_ht);
 }
 
-void math_pruner_init_threshold(struct math_pruner* pruner, uint32_t _qw)
+void math_pruner_init_threshold(struct math_pruner* pruner, uint32_t qw)
 {
-	float qw = (float)_qw;
-	float min_mt = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
-	float max_dw = (float)MAX_LEAVES;
+	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
 	pruner->init_threshold =
-		math_expr_score_lowerbound(min_mt, max_dw, qw);
+		math_expr_score_lowerbound(min_match, qw);
 }
 
-void math_pruner_precalc_upperbound(struct math_pruner* pruner, uint32_t _qw)
+void math_pruner_precalc_upperbound(struct math_pruner* pruner, uint32_t qw)
 {
-	float qw = (float)_qw;
-	for (int i = 1; i <= MAX_LEAVES; i++) {
-		for (int j = 1; j <= MAX_LEAVES; j++) {
-			pruner->upp[i][j] =
-				math_expr_score_upperbound(i, j, qw);
-		}
-	}
+	for (int match = 1; match <= MAX_LEAVES; match++)
+		pruner->upp[match] = math_expr_score_upperbound(match, qw);
 }
 
 void math_pruner_print_postlist(struct math_pruner *pruner, int pid)

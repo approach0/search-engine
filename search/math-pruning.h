@@ -33,7 +33,7 @@ struct math_pruner {
 	int postlist_len[MAX_MERGE_POSTINGS]; // postlist path prefix-length
 
 	/* upperbound pre-calculations */
-	float upp[MAX_LEAVES + 1][MAX_LEAVES + 1];
+	float upp[MAX_LEAVES + 1];
 
 	/* threshold records */
 	float  init_threshold, prev_threshold;

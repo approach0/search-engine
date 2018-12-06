@@ -329,9 +329,6 @@ int math_l2_postlist_pruning_next(void *po_)
 			}
 		}
 
-#if defined (DEBUG_MATH_PRUNING)
-		printf("\n");
-#endif
 		/* collected all the expressions in this doc */
 	} while (po->cur_doc_id == prev_doc_id);
 
@@ -354,7 +351,7 @@ int math_l2_postlist_one_by_one_through(void *po_)
 			cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			if ((cur >> 32) == UINT32_MAX) break;
 			if (score_inspect_filter(cur >> 32, po->indices)) {
-				printf("for po#%u iter[%d]\n", pid, i);
+				printf("it is in po#%u iter[%d]\n", pid, i);
 				break;
 			}
 			postmerger_iter_call(&po->pm, po->iter, next, i);

@@ -199,19 +199,19 @@ void math_expr_set_score_fast(struct math_expr_sim_factors* factor,
 //	return expr.score;
 //}
 //#else
-float math_expr_score_upperbound(int width, int _dw, float qw)
+float math_expr_score_upperbound(int width, int qw)
 {
 	const float theta = 0.05f;
-	const float dw = (float)_dw;
-	float st = (float)width / qw;
+	const float dw = 1.f;
+	float st = (float)width / (float)qw;
 	float fmeasure = st / (st + 1.f);
 	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
-float math_expr_score_lowerbound(int width, int _dw, float qw)
+float math_expr_score_lowerbound(int width, int qw)
 {
 	const float theta = 0.05f;
-	const float dw = (float)_dw;
-	float st = (float)width / qw;
+	const float dw = (float)MAX_LEAVES;
+	float st = (float)width / (float)qw;
 	float fmeasure = (st * 0.5f) / (st + 0.5f);
 	return fmeasure * ((1.f - theta) + theta * (1.f / logf(1.f + dw)));
 }
@@ -719,7 +719,7 @@ math_l2_postlist_coarse_score(
 	/* for each query node in sorted order */
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *q_node = pruner->nodes + i;
-		float q_node_upperbound = pruner->upp[q_node->width][n_doc_lr_paths];
+		float q_node_upperbound = pruner->upp[q_node->width];
 
 #ifdef DEBUG_MATH_PRUNING
 		printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
@@ -961,7 +961,6 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
                                  uint32_t n_doc_lr_paths)
 {
 	struct pq_align_res widest = {0};
-	int dw = (int)n_doc_lr_paths;
 
 	struct math_pruner *pruner = &po->pruner;
 	float threshold = pruner->init_threshold;
@@ -1027,13 +1026,13 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		/* for each saved hit query node ... */
 		int q_node_idx = save_idx[i];
 		struct pruner_node *q_node = pruner->nodes + q_node_idx;
-		float q_node_upperbound = pruner->upp[q_node->width][dw];
+		float q_node_upperbound = pruner->upp[q_node->width];
 
 		/* check whether we can drop this node */
 		if (q_node_upperbound <= threshold) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 #ifdef DEBUG_MATH_SCORE_INSPECT
-	if (inspect)
+	//if (inspect)
 #endif
 	printf("drop node#%d width %u upperbound %f <= threshold %f\n",
 		q_node->secttr[0].rnode, q_node->width, q_node_upperbound, threshold);
@@ -1072,7 +1071,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		}
 	}
 
-	if (widest.width && pruner->upp[widest.width][dw] <= threshold) {
+	if (widest.width && pruner->upp[widest.width] <= threshold) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
@@ -1091,7 +1090,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 			uint32_t pid = po->iter->map[i];
 			int qmw = pruner->postlist_max[pid];
 			sum += qmw;
-			if (pruner->upp[sum][dw] > threshold)
+			if (pruner->upp[sum] > threshold)
 				break;
 			/* otherwise this posting list can be skip-only */
 		}
