@@ -2,6 +2,7 @@
 
 #define GENER_PATH_NAME "gener"
 #define TOKEN_PATH_NAME "token"
+#define PREFIX_PATH_NAME "prefix"
 
 #define MATH_POSTING_FNAME "posting.bin"
 #define PATH_INFO_FNAME    "pathinfo.bin"

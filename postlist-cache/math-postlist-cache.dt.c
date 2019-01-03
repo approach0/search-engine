@@ -159,7 +159,9 @@ int
 math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 {
 	size_t postlist_sz = cache->postlist_sz;
-	struct math_postlist_cache_arg args = {cache, (char *)"./prefix", 0};
+	struct math_postlist_cache_arg args = {
+		cache, (char *)"./" PREFIX_PATH_NAME, 0
+	};
 	dir_search_bfs(dir, &dir_srch_callbk, &args);
 	// dir_search_podfs(dir, &dir_srch_callbk, &args);
 	printf("\n");

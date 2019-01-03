@@ -116,7 +116,7 @@ math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
 	if (prefix_len > sp->n_nodes)
 		return 1;
 
-	p += sprintf(dest_path, "%s", "prefix");
+	p += sprintf(dest_path, "%s", PREFIX_PATH_NAME);
 	list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	return 0;
