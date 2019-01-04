@@ -30,13 +30,13 @@ $ git checkout ecir2019
 2. Build the code according to this documentation:
 [https://approach0.xyz/docs](https://approach0.xyz/docs/src/build.html)
 
-3. Create new index image
+3. Create new index image (`$PROJECT` is the environment variable pointing to your cloned repository)
 ```sh
 $ cd $PROJECT/indexer
 $ ./scripts/vdisk-creat.sh reiserfs 2 # create 2 GB new index image partitioned in reiserFS
 $ sudo ./scripts/vdisk-mount.sh reiserfs vdisk.img
 ```
-(`$PROJECT` is the environment variable pointing to your cloned repository)
+you may need to install `reiserfsprogs` to have your system support reiserFS partition, or you can replace `reiserfs` above with `btrfs` for alternative index partition format.
 
 4. Run indexer daemon and specify the output index to be our newly created image
 ```sh
