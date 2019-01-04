@@ -36,7 +36,7 @@ $ cd $PROJECT/indexer
 $ ./scripts/vdisk-creat.sh reiserfs 2 # create 2 GB new index image partitioned in reiserFS
 $ sudo ./scripts/vdisk-mount.sh reiserfs vdisk.img
 ```
-you may need to install `reiserfsprogs` to have your system support reiserFS partition, or you can replace `reiserfs` above with `btrfs` for alternative index partition format.
+you may need to install `reiserfsprogs` to have your system support reiserFS partition, or you can replace `reiserfs` above with `btrfs` for alternative index partition format. However, we recommand `reiserfs` because it performs well with large number of small files (fit in our case where we have many posting list files in a deep directory hierarchy).
 
 4. Run indexer daemon and specify the output index to be our newly created image
 ```sh
