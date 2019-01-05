@@ -74,6 +74,13 @@ You can use the following command to achieve this:
 ```sh
 $ cat topics.txt | head -20 > topics-concrete.txt
 ```
+So the final `genn-trec-results.py` will contain something like:
+```py
+...
+fname = "/path/to/topics-concrete.txt"
+output = 'searchd/trec-format-results.tmp'
+...
+```
 
 Then simply issue
 ```sh
