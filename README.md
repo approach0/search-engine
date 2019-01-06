@@ -103,6 +103,19 @@ for partial-relevance scores
 $ trec_eval -l1 /path/to/judge.dat ./search-results.trec.tmp
 ```
 
+9. Reproduce results
+Our explored parameters are stored in `./test.tsv` file. Each row (except the first header row) contains a unique set of parameters. To view it, open this file in Google spreadsheet.
+
+We provide an auto-evaluation script `ecir-auto-eval.py` which will replace source code and rebuild with different parameters, through rows of parameters specified in `./test.tsv`.
+
+Ensure `index_dir` variable specified in `ecir-auto-eval.py` correctly points to your index directory (unless you did not follow above steps strictly, you do not need to change it), then simply run the script to reproduce results. Results are generated under `./tmp` folder.
+
+To view results generated from `ecir-auto-eval.py`, run
+```sh
+./ecir-collect.py > test.out.tsv
+```
+and again, use Google spreadsheet to view generated results.
+
 ### (Finishing)
 Unmount the index device image before you need to delete the index image:
 ```sh
