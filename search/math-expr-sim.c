@@ -110,11 +110,11 @@ void math_expr_set_score_3(struct math_expr_sim_factors* factor,
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
 
 	const float theta = 0.05f;
-	const float alpha = 0.4f;
+	const float alpha = 0.0f;
 	const float beta[5] = {
-		0.70f,
-		0.20f,
-		0.10f,
+		1.00f,
+		0.f,
+		0.f,
 		0.f,
 		0.f
 	};

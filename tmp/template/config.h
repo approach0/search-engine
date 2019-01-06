@@ -72,13 +72,14 @@
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
 	#define MAX_MTREE {{K}}
 #else
-	#define MAX_MTREE 3 /* 1 */
+	#define MAX_MTREE 1
 #endif
 
 #define MAX_LEAVES  64
 
-#define HIGHLIGHT_MATH_ALIGNMENT
+#ifdef MATH_SLOW_SEARCH
+	#define HIGHLIGHT_MATH_ALIGNMENT
+	#define CNT_VISIBLE_NODES_ONLY
+#endif
 
 //#define PRINT_MATH_POST_TYPE
-
-#define CNT_VISIBLE_NODES_ONLY
