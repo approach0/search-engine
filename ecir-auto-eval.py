@@ -12,7 +12,7 @@ def signal_handler(sig, _):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-index_dir = "/home/tk/index-fix-decimal-and-use-latexml/"
+index_dir = "./indexer/mnt-vdisk.img"
 
 def do_evaluation(run_file):
     # Run make
