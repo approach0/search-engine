@@ -104,6 +104,7 @@ $ trec_eval -l1 /path/to/judge.dat ./search-results.trec.tmp
 ```
 
 9. Reproduce results
+
 Our explored parameters are stored in `./test.tsv` file. Each row (except the first header row) contains a unique set of parameters. To view it, open this file in Google spreadsheet.
 
 We provide an auto-evaluation script `ecir-auto-eval.py` which will replace source code and rebuild with different parameters, through rows of parameters specified in `./test.tsv`.
