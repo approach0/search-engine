@@ -193,7 +193,7 @@ math_postlist_cache_add_list(struct math_postlist_cache *cache, const char *dir)
 {
 	FILE *fh = NULL;
 	char _line[4096];
-	fh = fopen("./cache-list.tmp", "r");
+	fh = fopen(PROPHET_CACHE_LIST, "r");
 	if (fh == NULL)
 		return 1;
 	
