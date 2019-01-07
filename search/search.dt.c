@@ -53,6 +53,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		l2po->pm.n_po += 1;
 	}
 	printf("\n");
+	fflush(stdout);
 	return DIR_MERGE_RET_CONTINUE;
 }
 
