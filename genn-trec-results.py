@@ -26,6 +26,8 @@ with open(fname) as f:
         if len(sys.argv) > 1 and sys.argv[1] == '--dry-run':
             print(exestr)
             continue
+        # ensure not using old output file
+        os.system('rm -f ' + output)
         # execute
         t0 = time.time()
         ret = os.system(exestr);
