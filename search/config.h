@@ -75,6 +75,8 @@
 	#define MAX_MTREE 1
 #endif
 
+#define HIGHLIGHT_MTREE_ALLOC (MAX_MTREE + 3)
+
 #define MAX_LEAVES  64
 
 #ifdef MATH_SLOW_SEARCH
