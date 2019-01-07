@@ -397,8 +397,8 @@ log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
 	char *url = get_blob_string(indices->url_bi, hit->docID, 0, &url_sz);
 	
 	/* format: NTCIR12-MathWiki-3 1 Attenuation:3 2 58583.000000 runID */
-	uint64_t qmask[MAX_MTREE + 3 /* to be safe */] = {0};
-	uint64_t dmask[MAX_MTREE + 3 /* to be safe */] = {0};
+	uint64_t qmask[HIGHLIGHT_MTREE_ALLOC] = {0};
+	uint64_t dmask[HIGHLIGHT_MTREE_ALLOC] = {0};
 #ifdef MATH_SLOW_SEARCH
 	if (hit->n_occurs == 1){
 		hit_occur_t o = hit->occurs[0];
