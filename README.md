@@ -113,7 +113,7 @@ Ensure `index_dir` variable specified in `ecir-auto-eval.py` correctly points to
 ```sh
  ln -sf /path/to/judge.dat $PROJECT/NTCIR12_MathWiki-qrels_judge.dat
 ```
-Then simply run the `ecir-auto-eval.py` to reproduce results. Results are generated under `./tmp` folder.
+Then simply run the `ecir-auto-eval.py` to reproduce results (at this point please make sure no search daemon are running, this script will spawn its own search daemon). Results of this script are generated under `./tmp` folder.
 
 To view results generated from `ecir-auto-eval.py`, run
 ```sh
