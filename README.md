@@ -109,7 +109,11 @@ Our explored parameters are stored in `./test.tsv` file. Each row (except the fi
 
 We provide an auto-evaluation script `ecir-auto-eval.py` which will replace source code and rebuild with different parameters, through rows of parameters specified in `./test.tsv`.
 
-Ensure `index_dir` variable specified in `ecir-auto-eval.py` correctly points to your index directory (unless you did not follow above steps strictly, you do not need to change it), then simply run the script to reproduce results. Results are generated under `./tmp` folder.
+Ensure `index_dir` variable specified in `ecir-auto-eval.py` correctly points to your index directory (unless you did not follow above steps strictly, you do not need to change it), and make a symbolic link named `NTCIR12_MathWiki-qrels_judge.dat` pointing to your downloaded judge file.
+```sh
+ ln -sf /path/to/judge.dat $PROJECT/NTCIR12_MathWiki-qrels_judge.dat
+```
+Then simply run the `ecir-auto-eval.py` to reproduce results. Results are generated under `./tmp` folder.
 
 To view results generated from `ecir-auto-eval.py`, run
 ```sh
