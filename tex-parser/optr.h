@@ -42,7 +42,7 @@ int optr_gen_visibi_map(uint32_t*, struct optr_node*);
 
 int optr_print_idpos_map(uint32_t*);
 
-int optr_print_visibi_map(uint32_t*);
+int optr_print_visibi_map(uint32_t*, size_t);
 
 int is_single_node(struct optr_node*);
 

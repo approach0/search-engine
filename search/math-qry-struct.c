@@ -105,6 +105,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	}
 
 	/* generate query node visibility map */
+	memset(s->visibimap, 0, sizeof(uint32_t) * MAX_NODE_IDS);
 	optr_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
 
 	/* copy subpaths */

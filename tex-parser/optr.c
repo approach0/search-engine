@@ -670,18 +670,15 @@ static TREE_IT_CALLBK(gen_visibi_map)
 
 int optr_gen_visibi_map(uint32_t *map, struct optr_node *optr)
 {
-	/* clear bitmap */
-	memset(map, 0, sizeof(uint32_t) * MAX_SUBPATH_ID);
-
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_visibi_map,
 	             0 /* including root */, map);
 	return 0;
 }
 
-int optr_print_visibi_map(uint32_t* map)
+int optr_print_visibi_map(uint32_t* map, size_t sz)
 {
 	printf("node#");
-	for (int i = 0; i < MAX_SUBPATH_ID; i++) {
+	for (int i = 0; i < sz; i++) {
 		if (map[i]) printf("%u ", i);
 	}
 	printf("\n");
