@@ -4,16 +4,20 @@ import signal
 import time
 import sys
 
+# search daemon
+daemon = None
+
 # setup python script signal handler
 def signal_handler(sig, _):
-    global daemon
-    daemon.send_signal(signal.SIGINT)
+    if daemon is not None:
+        daemon.send_signal(signal.SIGINT)
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
 
 # Notice: index_dir must be absolute path or relative directory to ./searchd
-index_dir = "../indexer/mnt-vdisk.img"
+#index_dir = "../indexer/mnt-vdisk.img"
+index_dir = "/home/tk/nvme0n1/mnt-mathfont.img"
 
 def do_evaluation(run_file):
     # Run make
