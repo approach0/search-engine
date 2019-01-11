@@ -17,7 +17,7 @@ touch /root/test || exit
 
 filesys="$1"
 mnt_img="$2"
-mnt_dir="mnt-${mnt_img}"
+mnt_dir="mnt-$(basename ${mnt_img})"
 
 if [ "$filesys" == "reiserfs" ]
 then
