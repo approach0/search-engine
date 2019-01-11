@@ -7,6 +7,7 @@
 	(_nd)->pos_end = lex_cur_bytes;
 
 #define RET_TOK(_symbol, _token, _wc, _gram_token) \
+	/* printf("operator: %s\n", # _token); */ \
 	yylval.nd = optr_alloc(S_ ## _symbol, T_ ## _token, _wc); \
 	SET_TOK_POS(yylval.nd); \
 	return _gram_token;
@@ -26,17 +27,33 @@ int ret_num(char*, struct optr_node **);
 int ret_qvar_num(char*, struct optr_node **);
 int ret_float_num(char*, struct optr_node **);
 int hack_attach(struct optr_node*, char*, struct optr_node **, int);
-void update_font_state(void);
+
+void update_font_state();
+
+void print_start_condition_stack(void);
 
 extern unsigned int ign_stack;
-extern unsigned int mat_stack;
-extern unsigned int fnt_stack;
+extern unsigned int mat_brace_stack;
+
 extern enum math_font_t cur_font;
 extern int lexer_warning_flag;
+
 %}
  /* ==================
   *  start conditions
   * =================*/
+ /* Enable start condition stacks (http://dinosaur.compilertools.net/flex/flex_11.html) */
+%option stack
+ /* The implementation looks like below. */
+ /* yy_push_state(new_state): */
+ /*		(yy_start_stack)[(yy_start_stack_ptr)++] = YY_START (current state) */
+ /*		BEGIN(new_state); */
+
+ /* yy_pop_state(): */
+ /*		BEGIN((yy_start_stack)[(yy_start_stack_ptr)]); */
+
+ /* yy_top_state(): */
+ /*		return (yy_start_stack)[(yy_start_stack_ptr) - 1]; */
 
  /* for dimension (include cm, mm, in and pt) */
 %x dim
@@ -160,27 +177,26 @@ extern int lexer_warning_flag;
  /* ===============
   *  table/matrix
   * ===============*/
-\\begin\{matrix\}                       { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{vmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{Vmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{bmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{Bmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{pmatrix\}                      { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{smallmatrix\}                  { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-\\begin\{cases\}                        { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
+\\begin\{matrix\}                             { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{vmatrix\}                            { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{Vmatrix\}                            { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{bmatrix\}                            { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{Bmatrix\}                            { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{pmatrix\}                            { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{smallmatrix\}                        { yy_push_state(mat); return _BEGIN_MAT; }
+\\begin\{cases\}                              { yy_push_state(mat); return _BEGIN_MAT; }
 
-\\end\{matrix\}                       { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{vmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{Vmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{bmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{Bmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{pmatrix\}                      { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{smallmatrix\}                  { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
-\\end\{cases\}                        { BEGIN(INITIAL); mat_stack ++; return _END_MAT; } 
+\\array\{                                     { yy_push_state(mat); return _BEGIN_MAT; }
+<mat>"{"                                    { mat_brace_stack ++; return _L_TEX_BRACE; }
 
-\\array\{                               { BEGIN(mat); mat_stack ++; return _BEGIN_MAT; }
-
-<mat>"{"                                          { mat_stack ++; return _L_TEX_BRACE; }
+\\end\{matrix\}                                     { yy_pop_state(); return _END_MAT; }
+\\end\{vmatrix\}                                    { yy_pop_state(); return _END_MAT; }
+\\end\{Vmatrix\}                                    { yy_pop_state(); return _END_MAT; }
+\\end\{bmatrix\}                                    { yy_pop_state(); return _END_MAT; }
+\\end\{Bmatrix\}                                    { yy_pop_state(); return _END_MAT; }
+\\end\{pmatrix\}                                    { yy_pop_state(); return _END_MAT; }
+\\end\{smallmatrix\}                                { yy_pop_state(); return _END_MAT; }
+\\end\{cases\}                                      { yy_pop_state(); return _END_MAT; }
 
 <mat>\\\\                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
 <mat>\\cr                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
@@ -188,36 +204,34 @@ extern int lexer_warning_flag;
 <mat>&                        { RET_TOK(column, TAB_COL, WC_COMMUT_OPERATOR, TAB_COL); }
 
 <mat>"}" {
-	mat_stack --;
-	if (!mat_stack) {
-		BEGIN(INITIAL);
-		return _END_MAT;
+	if (mat_brace_stack > 0) {
+		mat_brace_stack --;
+		return _R_TEX_BRACE; /* brace in matrix */
 	} else {
-		return _R_TEX_BRACE;
+		yy_pop_state();
+		return _END_MAT;  /* \array end */
 	}
 }
 
  /* ==============================
   *  variables with special fonts
   * ==============================*/
-\\mathfrak                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
-\\textfrak                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
-\\textswab                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
-\\textgoth                        { BEGIN(fnt); cur_font = MFONT_FRAK; }
+\\mathfrak                        { yy_push_state(fnt); cur_font = MFONT_FRAK; }
+\\textfrak                        { yy_push_state(fnt); cur_font = MFONT_FRAK; }
+\\textswab                        { yy_push_state(fnt); cur_font = MFONT_FRAK; }
+\\textgoth                        { yy_push_state(fnt); cur_font = MFONT_FRAK; }
+\\mathcal                         { yy_push_state(fnt); cur_font = MFONT_CALLI; }
+\\mathscr                         { yy_push_state(fnt); cur_font = MFONT_CALLI; }
+\\mathpzc                         { yy_push_state(fnt); cur_font = MFONT_CALLI; }
+\\mathbb                          { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
+\\varmathbb                       { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathbbm                         { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathbbmss                       { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathbbmtt                       { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
+\\mathds                          { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
 
-\\mathcal                         { BEGIN(fnt); cur_font = MFONT_CALLI; }
-\\mathscr                         { BEGIN(fnt); cur_font = MFONT_CALLI; }
-\\mathpzc                         { BEGIN(fnt); cur_font = MFONT_CALLI; }
-
-\\mathbb                          { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
-\\varmathbb                       { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
-\\mathbbm                         { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
-\\mathbbmss                       { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
-\\mathbbmtt                       { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
-\\mathds                          { BEGIN(fnt); cur_font = MFONT_BLACKBOARD; }
-
-<fnt>"{"                          { fnt_stack ++;}
-<fnt>"}"                          { fnt_stack --; update_font_state(); }
+<fnt>"{"                          { yy_push_state(fnt); }
+<fnt>"}"                          { yy_pop_state(); update_font_state(); }
 
  /* ==========
   * binomials
@@ -351,7 +365,7 @@ extern int lexer_warning_flag;
 [0-9]+                                                 { return ret_num(yytext, LVAL); }
 
  /* =============
-  *  wildcard 
+  *  wildcard
   * ============*/
 \\qvar                                                                 { return _QVAR; }
 
@@ -376,7 +390,7 @@ extern int lexer_warning_flag;
 φ                                            { RET_TOK(phi, VAR, WC_NORMAL_LEAF, VAR); }
 
 
- /* auto-generated discriminative tokens, where NIL is to be 
+ /* auto-generated discriminative tokens, where NIL is to be
   * replaced by specially assigned symbol. */
 \\Alpha                                { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\Beta                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
@@ -540,7 +554,7 @@ extern int lexer_warning_flag;
 \\nexists                 { RET_TOK(_AUTOGEN_, EXISTS, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\forall                  { RET_TOK(_AUTOGEN_, FORALL, WC_NONCOM_OPERATOR, SEP_CLASS); }
 
- /* classic seperator */ 
+ /* classic seperator */
 \\cr                         { RET_TOK(_AUTOGEN_, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\newline                    { RET_TOK(_AUTOGEN_, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
 \\\\                           { RET_TOK(newline, SEP, WC_NONCOM_OPERATOR, SEP_CLASS); }
@@ -879,7 +893,7 @@ extern int lexer_warning_flag;
 
  /* proportional to */
 \\propto                  { RET_TOK(_AUTOGEN_, PROPTO, WC_COMMUT_OPERATOR, REL_CLASS); }
- 
+
  /* ============================
   *  "stack-above" operations
   * ===========================*/
@@ -947,8 +961,8 @@ extern int lexer_warning_flag;
 %%
 /* self-defined stack values */
 unsigned int ign_stack = 0;
-unsigned int mat_stack = 0;
-unsigned int fnt_stack = 0;
+unsigned int mat_brace_stack = 0;
+
 int lexer_warning_flag = 0;
 
 /* current math font */
@@ -957,12 +971,44 @@ enum math_font_t cur_font = MFONT_NORMAL;
 /* current positional pointer */
 size_t lex_cur_bytes;
 
+static const char *start_condition_name(int state)
+{
+	switch (state) {
+	case 0:
+		return "INITIAL";
+	case dim:
+		return "dim";
+	case ign:
+		return "ign";
+	case cmt:
+		return "cmt";
+	case mat:
+		return "mat";
+	case fnt:
+		return "fnt";
+	default:
+		return "unknown";
+	}
+
+	return NULL;
+}
+
+void print_start_condition_stack()
+{
+	printf("Start condition stack: \n");
+	for (int i = yy_start_stack_ptr - 1; i >= 0; i--) {
+		printf("%s\n", start_condition_name(yy_start_stack[i]));
+	}
+	printf("Current state: %s\n", start_condition_name(YY_START));
+}
+
 void update_font_state()
 {
-	if (0 == fnt_stack) {
-		BEGIN(INITIAL);
+	if (yy_start_stack_ptr > 0 && yy_top_state() != fnt && YY_START == fnt)
+		yy_pop_state();
+
+	if (yy_start_stack_ptr <= 0 || yy_top_state() != fnt)
 		cur_font = MFONT_NORMAL;
-	}
 }
 
 int ret_var(char *text, struct optr_node **tr, char offset)
@@ -971,8 +1017,11 @@ int ret_var(char *text, struct optr_node **tr, char offset)
 	int sym_code = SYMBOL_ID_a2Z_BEGIN + c + cur_font * (26 * 2);
 	*tr = optr_alloc(sym_code , T_VAR, WC_NORMAL_LEAF);
 
-	// printf("%s is of font: %s\n", text, math_font_name(cur_font));
 	update_font_state();
+
+//	printf("%s is of font: %s\n", text, math_font_name(cur_font));
+//	print_start_condition_stack();
+//	printf("\n");
 
 	SET_TOK_POS(*tr);
 
