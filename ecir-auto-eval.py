@@ -16,8 +16,7 @@ def signal_handler(sig, _):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Notice: index_dir must be absolute path or relative directory to ./searchd
-#index_dir = "../indexer/mnt-vdisk.img"
-index_dir = "/home/tk/nvme0n1/mnt-mathfont.img"
+index_dir = "../indexer/mnt-vdisk.img"
 
 def do_evaluation(run_file):
     # Run make
