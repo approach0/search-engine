@@ -30,9 +30,11 @@ int hack_attach(struct optr_node*, char*, struct optr_node **, int);
 
 void update_font_state();
 
+void safe_pop_start_condition(void);
+
 void print_start_condition_stack(void);
 
-extern unsigned int ign_stack;
+extern unsigned int ign_brace_stack;
 extern unsigned int mat_brace_stack;
 
 extern enum math_font_t cur_font;
@@ -71,27 +73,36 @@ extern int lexer_warning_flag;
  /* ============
   *  comments
   * ===========*/
-"%"                                           { BEGIN(cmt); }
-<cmt>\n                      { BEGIN(INITIAL); return '\n'; }
-<cmt>.                                       { /* ignore */ }
+"%"                                         { yy_push_state(cmt); }
+<cmt>\n                { safe_pop_start_condition(); return '\n'; }
+<cmt>.                                             { /* ignore */ }
 
-"*"[0-9]+"*"                                 { return ret_qvar_num(yytext, LVAL); }
+ /* ============
+  * qvar number
+  * ===========*/
+"*"[0-9]+"*"                 { return ret_qvar_num(yytext, LVAL); }
 
  /* ========================
   *  commands to be ignored
   * ========================*/
-\\color\{                       { BEGIN(ign); ign_stack ++; }
-\\mbox\{                        { BEGIN(ign); ign_stack ++; }
-\\hbox\{                        { BEGIN(ign); ign_stack ++; }
-\\label\{                       { BEGIN(ign); ign_stack ++; }
-\\tag\{                         { BEGIN(ign); ign_stack ++; }
-\\text\{           { BEGIN(ign); ign_stack ++; RET_TOK(ast, STAR, WC_NORMAL_LEAF, VAR);}
-\\leftroot\{                    { BEGIN(ign); ign_stack ++; }
-\\uproot\{                      { BEGIN(ign); ign_stack ++; }
+\\color\{                       { yy_push_state(ign); }
+\\mbox\{                        { yy_push_state(ign); }
+\\hbox\{                        { yy_push_state(ign); }
+\\label\{                       { yy_push_state(ign); }
+\\tag\{                         { yy_push_state(ign); }
+\\text\{                        { yy_push_state(ign); RET_TOK(ast, STAR, WC_NORMAL_LEAF, VAR);}
+\\leftroot\{                    { yy_push_state(ign); }
+\\uproot\{                      { yy_push_state(ign); }
 
-<ign>\{                         { ign_stack ++; }
-<ign>\}     { ign_stack --; if (!ign_stack) BEGIN(INITIAL); }
-<ign>.|\n                                                  {}
+<ign>\{                         { ign_brace_stack ++; }
+<ign>\} {
+	if (ign_brace_stack > 0 /* brace in ign */) {
+		ign_brace_stack --;
+	} else /* ign state ends */ {
+		safe_pop_start_condition();
+	}
+}
+<ign>.|\n                                            {}
 
  /* =============
   *  add/minus
@@ -141,7 +152,7 @@ extern int lexer_warning_flag;
   * we need to filter this argument out since it is irrelevant to
   * math semantics.
   */
-\\above                  { BEGIN(dim); RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, ABOVE); }
+\\above          { yy_push_state(dim); RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, ABOVE); }
 
  /* frac */
 \\frac                                { RET_TOK(frac, FRAC, WC_NONCOM_OPERATOR, FRAC); }
@@ -156,22 +167,22 @@ extern int lexer_warning_flag;
  /* ============================
   *  dimension condition state
   * ===========================*/
-\\hspace                                                                 { BEGIN(dim); }
-\\hskip                                                                  { BEGIN(dim); }
-\\mspace                                                                 { BEGIN(dim); }
-\\mskip                                                                  { BEGIN(dim); }
-\\mkern                                                                  { BEGIN(dim); }
-\\kern                                                                   { BEGIN(dim); }
+\\hspace                                                         { yy_push_state(dim); }
+\\hskip                                                          { yy_push_state(dim); }
+\\mspace                                                         { yy_push_state(dim); }
+\\mskip                                                          { yy_push_state(dim); }
+\\mkern                                                          { yy_push_state(dim); }
+\\kern                                                           { yy_push_state(dim); }
 
-<dim>em\}?                                                           { BEGIN(INITIAL); }
-<dim>ex\}?                                                           { BEGIN(INITIAL); }
-<dim>pt\}?                                                           { BEGIN(INITIAL); }
-<dim>pc\}?                                                           { BEGIN(INITIAL); }
-<dim>mu\}?                                                           { BEGIN(INITIAL); }
-<dim>cm\}?                                                           { BEGIN(INITIAL); }
-<dim>mm\}?                                                           { BEGIN(INITIAL); }
-<dim>in\}?                                                           { BEGIN(INITIAL); }
-<dim>px\}?                                                           { BEGIN(INITIAL); }
+<dim>em\}?                                               { safe_pop_start_condition(); }
+<dim>ex\}?                                               { safe_pop_start_condition(); }
+<dim>pt\}?                                               { safe_pop_start_condition(); }
+<dim>pc\}?                                               { safe_pop_start_condition(); }
+<dim>mu\}?                                               { safe_pop_start_condition(); }
+<dim>cm\}?                                               { safe_pop_start_condition(); }
+<dim>mm\}?                                               { safe_pop_start_condition(); }
+<dim>in\}?                                               { safe_pop_start_condition(); }
+<dim>px\}?                                               { safe_pop_start_condition(); }
 <dim>.|\n                                                                             {}
 
  /* ===============
@@ -189,14 +200,14 @@ extern int lexer_warning_flag;
 \\array\{                                     { yy_push_state(mat); return _BEGIN_MAT; }
 <mat>"{"                                    { mat_brace_stack ++; return _L_TEX_BRACE; }
 
-\\end\{matrix\}                                     { yy_pop_state(); return _END_MAT; }
-\\end\{vmatrix\}                                    { yy_pop_state(); return _END_MAT; }
-\\end\{Vmatrix\}                                    { yy_pop_state(); return _END_MAT; }
-\\end\{bmatrix\}                                    { yy_pop_state(); return _END_MAT; }
-\\end\{Bmatrix\}                                    { yy_pop_state(); return _END_MAT; }
-\\end\{pmatrix\}                                    { yy_pop_state(); return _END_MAT; }
-\\end\{smallmatrix\}                                { yy_pop_state(); return _END_MAT; }
-\\end\{cases\}                                      { yy_pop_state(); return _END_MAT; }
+\\end\{matrix\}                         { safe_pop_start_condition(); return _END_MAT; }
+\\end\{vmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
+\\end\{Vmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
+\\end\{bmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
+\\end\{Bmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
+\\end\{pmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
+\\end\{smallmatrix\}                    { safe_pop_start_condition(); return _END_MAT; }
+\\end\{cases\}                          { safe_pop_start_condition(); return _END_MAT; }
 
 <mat>\\\\                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
 <mat>\\cr                        { RET_TOK(row, TAB_ROW, WC_COMMUT_OPERATOR, TAB_ROW); }
@@ -208,7 +219,7 @@ extern int lexer_warning_flag;
 		mat_brace_stack --;
 		return _R_TEX_BRACE; /* brace in matrix */
 	} else {
-		yy_pop_state();
+		safe_pop_start_condition();
 		return _END_MAT;  /* \array end */
 	}
 }
@@ -231,7 +242,7 @@ extern int lexer_warning_flag;
 \\mathds                          { yy_push_state(fnt); cur_font = MFONT_BLACKBOARD; }
 
 <fnt>"{"                          { yy_push_state(fnt); }
-<fnt>"}"                          { yy_pop_state(); update_font_state(); }
+<fnt>"}"                          { safe_pop_start_condition(); update_font_state(); }
 
  /* ==========
   * binomials
@@ -960,7 +971,7 @@ extern int lexer_warning_flag;
 .      { /* lexer_warning_flag = 1; fprintf(stderr, "parser: `%s' esc.\n", yytext); */ }
 %%
 /* self-defined stack values */
-unsigned int ign_stack = 0;
+unsigned int ign_brace_stack = 0;
 unsigned int mat_brace_stack = 0;
 
 int lexer_warning_flag = 0;
@@ -974,7 +985,7 @@ size_t lex_cur_bytes;
 static const char *start_condition_name(int state)
 {
 	switch (state) {
-	case 0:
+	case INITIAL:
 		return "INITIAL";
 	case dim:
 		return "dim";
@@ -1000,6 +1011,12 @@ void print_start_condition_stack()
 		printf("%s\n", start_condition_name(yy_start_stack[i]));
 	}
 	printf("Current state: %s\n", start_condition_name(YY_START));
+}
+
+void safe_pop_start_condition()
+{
+	if (yy_start_stack_ptr > 0)
+		yy_pop_state();
 }
 
 void update_font_state()
