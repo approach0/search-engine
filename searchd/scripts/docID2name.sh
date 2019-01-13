@@ -2,7 +2,7 @@
 if [ "$1" == "-h" ]; then
 cat << USAGE
 Examples:
-cat docID.log | $0 /path/to/index
+cat docID.log | awk '{print \$2}' | $0 /path/to/index
 USAGE
 exit
 fi
@@ -19,8 +19,7 @@ function get_url() {
 }
 
 cat /dev/stdin | while read line; do
-	info=`echo $line | awk '{print $1}'`
-	docID=`echo $line | awk '{print $2}'`
-	echo -n "$info "
+	docID="$line"
+	echo -n "$docID "
 	get_url $docID
 done
