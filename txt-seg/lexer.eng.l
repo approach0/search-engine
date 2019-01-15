@@ -10,7 +10,7 @@
 %}
 
 engword [a-zA-Z]
-mathsym [\x20-\x7e]
+mathsym [\x20-\xf3]
 
  /* ==================
   *  start conditions
