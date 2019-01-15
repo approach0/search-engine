@@ -11,7 +11,7 @@
 
 engword [a-zA-Z]
 chinese [\x80-\xf3]
-mathsym [\x20-\x7e]
+mathsym [\x20-\xf3]
 
  /* ==================
   *  start conditions
