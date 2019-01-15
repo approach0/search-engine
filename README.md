@@ -29,6 +29,7 @@ $ git checkout ecir2019
 
 2. Build the code according to this documentation:
 [https://approach0.xyz/docs](https://approach0.xyz/docs/src/build.html)
+(for reproducing results, our chosen LaTeXML version is 0.8.3; revision 22db863)
 
 3. Create new index image (`$PROJECT` is the environment variable pointing to your cloned repository)
 ```sh
