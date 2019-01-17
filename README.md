@@ -2,8 +2,8 @@
 This branch saves the source code snapshot for ECIR2019 paper.
 
 ## Results
-Resources can be downloaded from [http://approach0.xyz:3838/](http://approach0.xyz:3838/), it includes:
-* Search results from our system (with tree graph and match highlight, see [example](http://approach0.xyz:3838/3-beta-70-4/NTCIR12-MathWiki-20/Fisher_transformation:0/highlight))
+Resources can be downloaded from [http://approach0.xyz/ecir2019/](http://approach0.xyz/ecir2019/), it includes:
+* Search results from our system (with tree graph and match highlight, see [example](http://approach0.xyz/ecir2019/3-beta-80-2/NTCIR12-MathWiki-20/Fisher_transformation:0/highlight))
 * Search results from MCAT and Tangent-S system
 * corpus.txt (contains all document formulas separated by lines)
 * topics.txt (contains all NTCIR-12 query set, including wildcard queries)
@@ -125,6 +125,7 @@ To view results generated from `ecir-auto-eval.py`, run
 and again, use Google spreadsheet to view generated results.
 
 Our full grid-search evaluation results can be viewed here:
+
 https://docs.google.com/spreadsheets/d/1TQ4Ixj3ock8i-EDqfRiy0KJ4SCB3VJP1VaYC7sy64B4/edit?usp=sharing
 
 ### (Finishing)
