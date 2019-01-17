@@ -13,11 +13,11 @@ Resources can be downloaded from [http://approach0.xyz:3838/](http://approach0.x
 To reproduce our results, you need to at least download `corpus.txt`, `topics.txt` and `judge.dat` files.
 
 ## Environment
-* Ubuntu 16.04.3 LTS
-* gcc version: 5.4.0 20160609
+* Ubuntu 18.04.1 LTS
+* gcc version: 7.3.0
 * Support reiserFS (optional)
 	* If reiserFS is not installed, you may try to install the `reiserfsprogs` package in Ubuntu case
-	* If you do not want the index image to be partitioned in reiserFS, pass available partition options to `vdisk-creat.sh` script instead.
+	* If you do not want the index image to be partitioned in reiserFS, pass other available partition options to `vdisk-creat.sh` script instead, or index directly on host filesystem (not recommended, top directory deletion will take a very long time).
 
 ## Steps to reproduce the results
 ### (Indexing)
