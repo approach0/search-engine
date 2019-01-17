@@ -126,7 +126,7 @@ and again, use Google spreadsheet to view generated results.
 
 Our full grid-search evaluation results can be viewed here:
 
-https://docs.google.com/spreadsheets/d/1TQ4Ixj3ock8i-EDqfRiy0KJ4SCB3VJP1VaYC7sy64B4/edit?usp=sharing
+https://docs.google.com/spreadsheets/d/1TQ4Ixj3ock8i-EDqfRiy0KJ4SCB3VJP1VaYC7sy64B4/edit#gid=0
 
 ### (Finishing)
 Unmount the index device image before you need to delete the index image:
