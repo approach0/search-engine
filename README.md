@@ -132,7 +132,7 @@ https://docs.google.com/spreadsheets/d/1TQ4Ixj3ock8i-EDqfRiy0KJ4SCB3VJP1VaYC7sy6
 ```sh
 $ ./genn-trec-results.py > /dev/null
 ```
-You may also need to comment the `MATH_SLOW_SEARCH` macro at `search/config.h` to disable operator matching, highlight information and visibility check for reproducing the most efficient run.
+You may also need to comment the `MATH_SLOW_SEARCH` macro at `search/config.h` to disable operator matching, highlight information and visibility check in order to reproduce the most efficient run stated in the paper.
 
 ### (Finishing)
 Unmount the index device image before you need to delete the index image:
