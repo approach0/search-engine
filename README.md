@@ -124,12 +124,29 @@ To view results generated from `ecir-auto-eval.py`, run
 ```
 and again, use Google spreadsheet to view generated results.
 
+10. For efficiency results, get query time using:
+```sh
+$ ./genn-trec-results.py > /dev/null
+```
+You may also need to comment the `MATH_SLOW_SEARCH` macro at `search/config.h` to disable operator matching, highlight information and visibility check for reproducing the most efficient run.
+
 ### (Finishing)
 Unmount the index device image before you need to delete the index image:
 ```sh
 $ cd $PROJECT/indexer
 $ sudo umount ./mnt-vdisk.img
 ```
+
+## Result render and highlight view
+To see results with math rendered (like [this page](http://approach0.xyz/ecir2019)), you may want to clone [this repository](https://github.com/approach0/approach-trec) and put your generated TREC format result into `./trecfiles` folder, modify hard-coded file variables (e.g. `run_file_list`) in `daemon.js` accordingly. And run `build-bundle.js` and `daemon.js` to view it locally in browser.
+
+The highlight results is generated using `genn-highlight.py` script:
+```sh
+$ ./searchd/run/highlightd.out -i /path/to/index
+$ ./genn-highlight.py /path/to/approach-trec/trecfiles/foo.dat
+```
+it will generate match highlight file for both TeX (`foo.hi-operands.dat` file) and OPT tree (`foo.hi-trees.dat` file).
+They can be viewed in approach-trec tool without any configuration.
 
 ## License
 MIT
