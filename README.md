@@ -142,7 +142,7 @@ $ sudo umount ./mnt-vdisk.img
 ```
 
 ## Result render and highlight view
-To see results with math rendered (like [this page](http://approach0.xyz/ecir2019)), you may want to clone [this repository](https://github.com/approach0/approach-trec) and put your generated TREC format result into `./trecfiles` folder, modify hard-coded file variables (e.g. `run_file_list`) in `daemon.js` accordingly. And run `build-bundle.js` and `daemon.js` to view it locally in browser.
+To see results with math rendered (like [this page](http://approach0.xyz/ecir2019)), you may want to clone [this repository](https://github.com/approach0/approach-trec/tree/77f35e09ae91088a051ecff381e95094a8e5b529) and put your generated TREC format result into `./trecfiles` folder, modify hard-coded file variables (e.g. `run_file_list`) in `daemon.js` accordingly. And run `build-bundle.js` and `daemon.js` to view it locally in browser.
 
 The highlight results is generated using `genn-highlight.py` script:
 ```sh
