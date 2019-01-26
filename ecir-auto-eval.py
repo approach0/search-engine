@@ -96,8 +96,9 @@ with open(input_tsv) as fd:
     rd = csv.reader(fd, delimiter="\t")
     replaces = dict()
     for idx, row in enumerate(rd):
+        if idx == 0: continue # skip the header row.
         run_name = row[0]
-        print('[row %u / %u] %s' % (idx + 1, tot_rows, run_name))
+        print('[row %u / %u] %s' % (idx, tot_rows, run_name))
         if os.path.exists('./tmp/' + run_name + '.eval'):
             print('skip this row')
             time.sleep(0.1)

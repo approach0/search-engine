@@ -24,6 +24,9 @@ def parse_evaluation_results(lines):
 with open(input_tsv) as fd:
     rd = csv.reader(fd, delimiter="\t")
     for idx, row in enumerate(rd):
+        if idx == 0:
+            print('\t'.join(row)) # keep the header row.
+            continue
         run_name = row[0]
         run_eval = './tmp/' + run_name + '.eval'
         if not os.path.exists(run_eval):
