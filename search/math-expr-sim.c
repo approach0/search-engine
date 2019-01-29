@@ -448,7 +448,7 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 		uint32_t orig = po->iter->map[i];
 		struct subpath_ele *ele = po->ele[orig];
 
-		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
+		if (cur != UINT64_MAX && cur == po->candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 			n_doc_lr_paths = item.n_lr_paths;
 
@@ -494,7 +494,7 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 		uint32_t orig = po->iter->map[i];
 		struct subpath_ele *ele = po->ele[orig];
 
-		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
+		if (cur != UINT64_MAX && cur == po->candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
@@ -595,6 +595,36 @@ math_l2_postlist_cur_score(struct math_l2_postlist *po)
 }
 
 ////////////////////  pruning functions ////////////////////////////////
+void math_l2_cur_print(struct math_l2_postlist *po,
+                       uint64_t candidate, float threshold)
+{
+	struct math_pruner *pruner = &po->pruner;
+	printf("doc#%lu, pivot = %d/%u, threshold = %.3f.\n", candidate >> 32,
+	        pruner->postlist_pivot, po->iter->size, threshold);
+	for (int i = 0; i < po->iter->size; i++) {
+		uint32_t pid = po->iter->map[i];
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		if (i > pruner->postlist_pivot || cur == candidate) {
+			printf("%s: ", (cur == candidate) ? "hit " : "skip");
+			printf("[%u] ", i);
+			math_pruner_print_postlist(pruner, pid);
+			uint32_t docID = (uint32_t)(cur >> 32);
+			uint32_t expID = (uint32_t)(cur >> 0);
+			printf(" [doc#%u, exp#%u]\n", docID, expID);
+		}
+#ifdef DEBUG_MATH_SCORE_INSPECT
+		else {
+			printf("pass: [%u] ", i);
+			math_pruner_print_postlist(pruner, pid);
+			uint32_t docID = (uint32_t)(cur >> 32);
+			uint32_t expID = (uint32_t)(cur >> 0);
+			printf(" [doc#%u, exp#%u]\n", docID, expID);
+		}
+#endif
+	}
+	printf("\n");
+}
+
 struct pq_align_res
 math_l2_postlist_coarse_score(
 	struct math_l2_postlist *po,
@@ -604,12 +634,10 @@ math_l2_postlist_coarse_score(
 	struct math_pruner *pruner = &po->pruner;
 	struct pq_align_res widest = {0};
 
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	P_CAST(p, struct math_postlist_item, &po->iter->min);
-	int inspect = score_inspect_filter(p->doc_id, po->indices);
-	if (inspect)
-		math_l2_postlist_print_cur(po);
-#endif
+//	P_CAST(p, struct math_postlist_item, &po->iter->min);
+//	int inspect = score_inspect_filter(p->doc_id, po->indices);
+//	if (inspect)
+//		math_l2_postlist_print_cur(po);
 
 	if (priority_Q_full(po->rk_res))
 		min_score = priority_Q_min_score(po->rk_res);
@@ -719,7 +747,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	uint32_t r_cnt = 0;
 
 	/* get docID and exprID */
-	uint64_t cur = po->pruner.candidate;
+	uint64_t cur = po->candidate;
 	P_CAST(p, struct math_postlist_item, &cur);
 	expr.doc_id = p->doc_id;
 	expr.exp_id = p->exp_id;
@@ -746,6 +774,9 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	int inspect = score_inspect_filter(p->doc_id, po->indices);
 	if (inspect) {
+		/* print posting list hits */
+		math_l2_cur_print(po, po->candidate, 0);
+
 		math_expr_sim_factors_print(&factors);
 		printf("doc#%u, exp#%u, final score: %f\n",
 		       expr.doc_id, expr.exp_id, expr.score);
@@ -788,7 +819,7 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 
 		/* skip non-hit posting lists */
 		const size_t sz = sizeof(item);
-		if (cur == UINT64_MAX || cur != po->pruner.candidate) continue;
+		if (cur == UINT64_MAX || cur != po->candidate) continue;
 
 		/* read document posting list item */
 		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sz);
@@ -829,36 +860,6 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 	return ret;
 }
 
-void math_l2_cur_print(struct math_l2_postlist *po,
-                       uint64_t candidate, float threshold)
-{
-	struct math_pruner *pruner = &po->pruner;
-	printf("doc#%lu, pivot = %d/%u, threshold = %.3f.\n", candidate >> 32,
-	        pruner->postlist_pivot, po->iter->size, threshold);
-	for (int i = 0; i < po->iter->size; i++) {
-		uint32_t pid = po->iter->map[i];
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (i > pruner->postlist_pivot || cur == candidate) {
-			printf("%s: ", (cur == candidate) ? "hit " : "skip");
-			printf("[%u] ", i);
-			math_pruner_print_postlist(pruner, pid);
-			uint32_t docID = (uint32_t)(cur >> 32);
-			uint32_t expID = (uint32_t)(cur >> 0);
-			printf(" [doc#%u, exp#%u]\n", docID, expID);
-		}
-#ifdef DEBUG_MATH_SCORE_INSPECT
-		else {
-			printf("pass: [%u] ", i);
-			math_pruner_print_postlist(pruner, pid);
-			uint32_t docID = (uint32_t)(cur >> 32);
-			uint32_t expID = (uint32_t)(cur >> 0);
-			printf(" [doc#%u, exp#%u]\n", docID, expID);
-		}
-#endif
-	}
-	printf("\n");
-}
-
 struct pq_align_res
 math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
                                  uint32_t n_doc_lr_paths)
@@ -867,8 +868,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 	struct math_pruner *pruner = &po->pruner;
 	float threshold = pruner->init_threshold;
-	int pivot = MIN(pruner->postlist_pivot, po->iter->size - 1);
-	uint64_t candidate = pruner->candidate;
+	uint64_t candidate = po->candidate;
 
 	/* update threshold value */
 	if (priority_Q_full(po->rk_res))
@@ -877,15 +877,6 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	P_CAST(p, struct math_postlist_item, &candidate);
 	int inspect = score_inspect_filter(p->doc_id, po->indices);
-	if (inspect) {
-#endif
-
-#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
-		math_l2_cur_print(po, candidate, threshold);
-#endif
-
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	}
 #endif
 
 	/* collect all unique hit nodes */
@@ -894,18 +885,6 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	u16_ht_reset(&pruner->q_hit_nodes_ht, 0);
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-
-#ifndef MATH_PRUNING_DISABLE_JUMP
-		/* for skip-only posting lists, do jumping. */
-		if (i > pivot && cur < candidate) {
-			postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
-#ifdef DEBUG_MERGE_SKIPPING
-			uint64_t cur_ = postmerger_iter_call(&po->pm, po->iter, cur, i);
-			printf("target: %u, po[%d] jumps: %u --> %u.\n",
-			       candidate >> 32, i, cur >> 32, cur_ >> 32);
-#endif
-		}
-#endif
 
 		if (cur == candidate) {
 			/* for hit posting lists, save the corresponding nodes. */

@@ -151,9 +151,6 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	pruner->prev_threshold = -1.f;
 	pruner->init_threshold = 0.f;
 
-	/* set candidate docID */
-	pruner->candidate = 0;
-
 	return 0;
 }
 

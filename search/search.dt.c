@@ -88,10 +88,10 @@ math_l2_postlist(
 uint64_t math_l2_postlist_cur(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	if (po->pruner.candidate == UINT64_MAX) {
+	if (po->candidate == UINT64_MAX) {
 		return UINT64_MAX;
 	} else {
-		uint32_t candidate = (uint32_t)(po->pruner.candidate >> 32);
+		uint32_t candidate = (uint32_t)(po->candidate >> 32);
 		return candidate;
 	}
 }
@@ -117,7 +117,7 @@ static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 	uint32_t cnt = 0;
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (cur != UINT64_MAX && cur == po->pruner.candidate)
+		if (cur != UINT64_MAX && cur == po->candidate)
 			cnt ++;
 	}
 
@@ -135,7 +135,7 @@ static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (cur < candidate) candidate = cur;
 	}
-	po->pruner.candidate = candidate;
+	po->candidate = candidate;
 	return (uint32_t)(candidate >> 32);
 }
 
@@ -145,8 +145,7 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-//printf("i = %d, cur = %lu, candi = %lu.\n", i, cur, po->pruner.candidate);
-		if (cur != UINT64_MAX && cur == po->pruner.candidate) {
+		if (cur != UINT64_MAX && cur == po->candidate) {
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 			return (item.n_lr_paths) ? item.n_lr_paths : MAX_MATH_PATHS;
 		}
@@ -165,6 +164,7 @@ int math_l2_postlist_next(void *po_)
 		po->cur_doc_id = set_doc_candidate(po);
 		if (po->cur_doc_id == UINT32_MAX)
 			return 0;
+		uint64_t candidate = po->candidate;
 
 		/* calculate coarse score */
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
@@ -195,7 +195,7 @@ int math_l2_postlist_next(void *po_)
 					po->pruner.postlist_pivot -= 1;
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
-			} else if (cur == po->pruner.candidate) {
+			} else if (cur == candidate) {
 				/* forward */
 				postmerger_iter_call(&po->pm, po->iter, next, i);
 			}
@@ -218,8 +218,26 @@ int math_l2_postlist_pruning_next(void *po_)
 	do {
 		/* set candidate docID */
 		po->cur_doc_id = set_doc_candidate(po);
-		if (po->cur_doc_id == UINT32_MAX)
-			return 0;
+		if (po->cur_doc_id == UINT32_MAX) return 0;
+		uint64_t candidate = po->candidate;
+
+#ifndef MATH_PRUNING_DISABLE_JUMP
+		/* followers jump to candidate */
+		for (int i = 0; i < po->iter->size; i++) {
+			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+
+			/* for skip-only posting lists, do jumping. */
+			int pivot = po->pruner.postlist_pivot;
+			if (i > pivot && cur < candidate) {
+				postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
+#ifdef DEBUG_MERGE_SKIPPING
+				uint64_t cur_ = postmerger_iter_call(&po->pm, po->iter, cur, i);
+				printf("target: %u, po[%d] jumps: %u --> %u.\n",
+					   candidate >> 32, i, cur >> 32, cur_ >> 32);
+#endif
+			}
+		}
+#endif
 
 		/* calculate coarse score */
 		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
@@ -258,12 +276,12 @@ int math_l2_postlist_pruning_next(void *po_)
 					po->pruner.postlist_pivot -= 1;
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
-#if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
+#if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING) || defined (DEBUG_MATH_SCORE_INSPECT)
 				uint32_t docID = (uint32_t)(cur >> 32);
 				printf("drop po#%u @ doc#%u\n", p, docID);
 				// math_pruner_print(&po->pruner);
 #endif
-			} else if (cur == po->pruner.candidate) {
+			} else if (cur == candidate) {
 				/* forward */
 				postmerger_iter_call(&po->pm, po->iter, next, i);
 			}
@@ -346,6 +364,11 @@ int math_l2_postlist_init(void *po_)
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
 	uint32_t n_postings = po->pm.n_po;
 	uint32_t qw = po->mqs->subpaths.n_lr_paths;
+
+	/* initialize candidate */
+	po->candidate = 0;
+
+	/* initialize pruner */
 	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
 	math_pruner_init_threshold(&po->pruner, qw);
 	math_pruner_precalc_upperbound(&po->pruner, qw);

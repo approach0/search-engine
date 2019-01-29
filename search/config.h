@@ -25,8 +25,8 @@
 #define MNC_SMALL_BITMAP
 */
 
-#define MATH_SYMBOLIC_SCORING_ENABLE
-#define MATH_PRUNING_ENABLE
+#define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
+#define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
 
 // #define PRINT_RECUR_MERGING_ITEMS
 

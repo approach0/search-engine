@@ -26,6 +26,9 @@ struct math_l2_postlist {
 	uint32_t    n_occurs;
 	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];
 
+	/* candidate docID, expID */
+	uint64_t candidate;
+
 	/* for pruning */
 	struct math_pruner pruner;
 };
