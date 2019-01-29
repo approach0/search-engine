@@ -399,7 +399,7 @@ log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
 	/* format: NTCIR12-MathWiki-3 1 Attenuation:3 2 58583.000000 runID */
 	uint64_t qmask[HIGHLIGHT_MTREE_ALLOC] = {0};
 	uint64_t dmask[HIGHLIGHT_MTREE_ALLOC] = {0};
-#ifdef MATH_SLOW_SEARCH
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
 	if (hit->n_occurs == 1){
 		hit_occur_t o = hit->occurs[0];
 		for (int i = 0; i < MAX_MTREE; i++) {

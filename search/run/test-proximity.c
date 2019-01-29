@@ -8,7 +8,7 @@
 
 uint32_t test1()
 {
-#ifdef MATH_SLOW_SEARCH
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
 	hit_occur_t arr1[] = {{5,{0},{0}}, {8,{0},{0}}, {10,{0},{0}}, {19,{0},{0}}};
 	hit_occur_t arr2[] = {{1,{0},{0}}, {4,{0},{0}}, {9,{0},{0}}};
 	hit_occur_t arr3[] = {{2,{0},{0}}, {3,{0},{0}}, {6,{0},{0}}, {7,{0},{0}},

@@ -112,58 +112,6 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 	return sizeof(struct l2_postlist_item);
 }
 
-//int math_l2_postlist_next(void *po_)
-//{
-//	PTR_CAST(po, struct math_l2_postlist, po_);
-//	uint32_t prev_doc_id = (uint32_t)(po->pruner.candidate >> 32);
-//
-//	do {
-//		po->cur_doc_id = (uint32_t)(po->pruner.candidate >> 32);
-//		if (po->cur_doc_id != prev_doc_id) { return 1; }
-//
-//		struct math_expr_score_res expr_res;
-//		expr_res = math_l2_postlist_cur_score(po);
-//
-////#ifdef PRINT_RECUR_MERGING_ITEMS
-////		if (cur_doc_id > 411280 && cur_doc_id < 411295) {
-////			math_l2_postlist_print_cur(po);
-////			printf("%u, %u score = %u \n\n",
-////				cur_doc_id, expr_res.exp_id, expr_res.score);
-////		}
-////#endif
-//		if (expr_res.score) {
-//			/* save best expression score */
-//			if (expr_res.score > po->max_exp_score)
-//				po->max_exp_score = expr_res.score;
-//
-//			/* save occurs  */
-//			if (po->n_occurs < MAX_HIGHLIGHT_OCCURS) {
-//				hit_occur_t *ho = po->occurs + po->n_occurs;
-//				po->n_occurs += 1;
-//				ho->pos = expr_res.exp_id;
-//#ifdef MATH_SLOW_SEARCH
-//				memcpy(ho->qmask, expr_res.qmask, MAX_MTREE * sizeof(uint64_t));
-//				memcpy(ho->dmask, expr_res.dmask, MAX_MTREE * sizeof(uint64_t));
-//#endif
-//			}
-//		}
-//
-//		for (int i = 0; i < po->iter->size; i++) {
-//			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-//			if (cur == UINT64_MAX) {
-//				postmerger_iter_remove(po->iter, i);
-//				i -= 1;
-//			} else if (cur == po->pruner.candidate) {
-//				/* forward */
-//				postmerger_iter_call(&po->pm, po->iter, next, i);
-//			}
-//		}
-//
-//	} while (postmerger_iter_next(po->iter));
-//
-//	return 0;
-//}
-
 static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 {
 	uint32_t cnt = 0;
@@ -207,7 +155,6 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 	return 0;
 }
 
-#ifndef MATH_PRUNING_ENABLE
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -226,10 +173,6 @@ int math_l2_postlist_next(void *po_)
 
 		/* push expression results */
 		if (1) {
-#ifndef MATH_SLOW_SEARCH
-#error "no-pruning method should define MATH_SLOW_SEARCH"
-// also set MAX_MTREE to one to farily compare the results.
-#endif
 			struct math_expr_score_res expr =
 				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
 
@@ -248,6 +191,8 @@ int math_l2_postlist_next(void *po_)
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			if (cur == UINT64_MAX) {
 				/* drop this posting list completely */
+				if (po->pruner.postlist_pivot >= i)
+					po->pruner.postlist_pivot -= 1;
 				postmerger_iter_remove(po->iter, i);
 				i -= 1;
 			} else if (cur == po->pruner.candidate) {
@@ -260,7 +205,6 @@ int math_l2_postlist_next(void *po_)
 
 	return 1;
 }
-#endif
 
 #ifdef DEBUG_STATS_HOT_HIT
 static uint64_t g_hot_hit[128];
@@ -308,10 +252,6 @@ int math_l2_postlist_pruning_next(void *po_)
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			uint32_t p = po->iter->map[i];
 
-//			if ((cur >> 32) == 186710) {
-//				printf("#%u touched 186710.\n", p);
-//			}
-
 			if (cur == UINT64_MAX || po->pruner.postlist_ref[p] <= 0) {
 				/* drop this posting list completely */
 				if (po->pruner.postlist_pivot >= i)
@@ -336,9 +276,9 @@ int math_l2_postlist_pruning_next(void *po_)
 }
 
 /* for debug purpose */
-int score_inspect_filter(doc_id_t, struct indices*);
 void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
-
+#ifdef DEBUG_MATH_SCORE_INSPECT
+int score_inspect_filter(doc_id_t, struct indices*);
 int math_l2_postlist_one_by_one_through(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -361,6 +301,7 @@ int math_l2_postlist_one_by_one_through(void *po_)
 	po->pruner.candidate = UINT64_MAX;
 	return 0;
 }
+#endif
 
 static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
 {
@@ -417,10 +358,6 @@ int math_l2_postlist_init(void *po_)
 	math_pruner_print(&po->pruner);
 #endif
 
-#ifndef MATH_PRUNING_ENABLE
-	/* read the first item. */
-	math_l2_postlist_next(po_);
-#endif
 	return 0;
 }
 
@@ -453,6 +390,7 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 		math_l2_postlist_init,
 		math_l2_postlist_uninit
 	};
+
 	return ret;
 }
 

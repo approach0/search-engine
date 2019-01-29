@@ -5,7 +5,7 @@
 
 typedef struct hit_occur {
 	position_t  pos;
-#ifdef MATH_SLOW_SEARCH
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
 	uint64_t    qmask[HIGHLIGHT_MTREE_ALLOC];
 	uint64_t    dmask[HIGHLIGHT_MTREE_ALLOC];
 #endif

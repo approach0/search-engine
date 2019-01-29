@@ -25,6 +25,9 @@
 #define MNC_SMALL_BITMAP
 */
 
+#define MATH_SYMBOLIC_SCORING_ENABLE
+#define MATH_PRUNING_ENABLE
+
 // #define PRINT_RECUR_MERGING_ITEMS
 
 // #define DEBUG_MATH_EXPR_SEARCH
@@ -32,12 +35,7 @@
 
 //#define DEBUG_STATS_HOT_HIT
 
-#define MATH_PRUNING_ENABLE
 // #define MATH_PRUNING_DISABLE_JUMP
-
-#ifndef MATH_PRUNING_ENABLE
-#define MATH_SLOW_SEARCH
-#endif
 
 // #define QUIET_SEARCH
 // #define MERGE_TIME_LOG "merge.runtime.dat"
@@ -81,9 +79,8 @@
 
 //#define DEBUG_PRINT_TARGET_DOC_MATH_SCORE
 
-#define MAX_MATH_EXP_SEARCH_ITEMS 9301000
-// #define MAX_MATH_EXP_SEARCH_ITEMS 301000
-#define MAX_MATH_EXP_SEARCH_DIRS  521
+#define MAX_MATH_EXP_SEARCH_ITEMS 9301000 /* dead */
+#define MAX_MATH_EXP_SEARCH_DIRS  521     /* dead */
 
 #define MATCH_DIM_WEIGHT 10000
 
@@ -95,12 +92,10 @@
 
 #define MAX_MATH_EXPR_SIM_SCALE 1000
 
-/* switch between SLOW/FAST search */
-#define MATH_FAST_SEARCH
-//// #define MATH_SLOW_SEARCH
-
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
+	#define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
+	#define CNT_VISIBLE_NODES_ONLY /* count operator only if it is visible */
 	#define MAX_MTREE 1
 #else
 	#define MAX_MTREE 1
@@ -109,10 +104,5 @@
 #define HIGHLIGHT_MTREE_ALLOC (MAX_MTREE + 3)
 
 #define MAX_LEAVES  64
-
-#ifdef MATH_SLOW_SEARCH
-	// #define HIGHLIGHT_MATH_ALIGNMENT
-	#define CNT_VISIBLE_NODES_ONLY
-#endif
 
 //#define PRINT_MATH_POST_TYPE

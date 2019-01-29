@@ -41,9 +41,7 @@ uint64_t pq_hit_numeric(struct math_prefix_qry*,
 struct pq_align_res {
 	uint32_t width;
 	uint32_t qr, dr;
-#ifdef MATH_SLOW_SEARCH
 	uint32_t height; /* number of aligned operators */
-#endif
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 	uint64_t qmask;
 	uint64_t dmask;
