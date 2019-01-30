@@ -196,12 +196,11 @@ int math_l2_postlist_next(void *po_)
 
 #ifndef MATH_PRUNING_DISABLE_JUMP
 		/* followers jump to candidate */
-		for (int i = 0; i < po->iter->size; i++) {
+		int pivot = po->pruner.postlist_pivot;
+		for (int i = pivot + 1; i < po->iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 
-			/* for skip-only posting lists, do jumping. */
-			int pivot = po->pruner.postlist_pivot;
-			if (i > pivot && cur < candidate) {
+			if (cur < candidate) {
 				postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
 #ifdef DEBUG_MERGE_SKIPPING
 				uint64_t cur_ = postmerger_iter_call(&po->pm, po->iter, cur, i);
