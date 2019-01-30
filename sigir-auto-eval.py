@@ -12,7 +12,7 @@ def signal_handler(sig, _):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-index_dir = "/home/tk/index-fix-decimal-and-use-latexml/"
+index_dir = "/home/tk/nvme0n1/mnt-math-symb-unicode-range-fix.img/"
 
 def do_evaluation(run_file):
     # Run make
@@ -109,8 +109,10 @@ with open(input_tsv) as fd:
             print('skip this row')
             time.sleep(0.1)
             continue
-        replaces["K"]          = row[1]
-        replaces["initTheta"]  = float_str(row[2])
-        replaces["slow"]       = row[3]
+        replaces["symbol"] = row[1].upper()
+        replaces["prune"]  = row[2].upper()
+        replaces["skip"]   = row[3].upper()
+        replaces["factor"] = float_str(row[4])
         replace_source_code(replaces)
         do_evaluation('./tmp/' + run_name)
+        # break
