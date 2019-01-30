@@ -865,6 +865,11 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	int inspect = score_inspect_filter(p->doc_id, po->indices);
 #endif
 
+#ifdef MATH_PRUNING_EARLY_DROP_ENABLE
+	/* hit width upperbound */
+	int hit_width_upp = 0;
+#endif
+
 	/* collect all unique hit nodes */
 	int n_save = 0;
 	int save_idx[MAX_NODE_IDS];
@@ -886,8 +891,20 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 					u16_ht_incr(&pruner->q_hit_nodes_ht, qid, 1);
 				}
 			}
+#ifdef MATH_PRUNING_EARLY_DROP_ENABLE
+			/* increase hit width upperbound */
+			hit_width_upp += pruner->postlist_max[pid];
+#endif
 		}
 	}
+
+#ifdef MATH_PRUNING_EARLY_DROP_ENABLE
+	/* match tree width <= hit width upperbound <= threshold width */
+	/* (not using upp[] here due to possible out-of-array access) */
+	uint32_t qw = po->mqs->subpaths.n_lr_paths;
+	if (math_expr_score_upperbound(hit_width_upp, qw) <= threshold)
+		return widest; /* => 0 */
+#endif
 
 	/* calculate score for each hit query node */
 	for (int i = 0; i < n_save; i++) {

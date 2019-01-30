@@ -31,6 +31,8 @@
 // #define DEBUG_MERGE_SKIPPING /* show all the jumping/skipping points */
 // #define DEBUG_MATH_SCORE_INSPECT /* particular expID scoring inspect */
 
+#define MATH_PRUNING_EARLY_DROP_ENABLE
+
 // #define PRINT_RECUR_MERGING_ITEMS
 
 // #define DEBUG_MATH_EXPR_SEARCH
