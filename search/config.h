@@ -27,21 +27,21 @@
 
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
+// #define MATH_PRUNING_DISABLE_JUMP /* disable jumping/skipping */
+// #define DEBUG_MERGE_SKIPPING /* show all the jumping/skipping points */
+// #define DEBUG_MATH_SCORE_INSPECT /* particular expID scoring inspect */
 
 // #define PRINT_RECUR_MERGING_ITEMS
 
 // #define DEBUG_MATH_EXPR_SEARCH
-// #define DEBUG_MATH_SCORE_INSPECT
 
 //#define DEBUG_STATS_HOT_HIT
 
-// #define MATH_PRUNING_DISABLE_JUMP
 
 // #define QUIET_SEARCH
 // #define MERGE_TIME_LOG "merge.runtime.dat"
 
 // #define DEBUG_MERGE_LIMIT_ITERS 900
-// #define DEBUG_MERGE_SKIPPING
 
 // #define DEBUG_MATH_PRUNING
 // #define DEBUG_PRINT_QRY_STRUCT

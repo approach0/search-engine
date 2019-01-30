@@ -58,7 +58,7 @@ mnc_score_t math_l2_postlist_cur_symbol_sim(struct math_l2_postlist*, struct pq_
 
 struct pq_align_res math_l2_postlist_coarse_score(struct math_l2_postlist*, uint32_t);
 
-struct pq_align_res math_l2_postlist_coarse_score_v2(struct math_l2_postlist*, uint32_t);
+struct pq_align_res math_l2_postlist_coarse_score_v2(struct math_l2_postlist*, uint32_t, float);
 
 struct math_expr_score_res
 math_l2_postlist_precise_score(struct math_l2_postlist*, struct pq_align_res*, uint32_t);

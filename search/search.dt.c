@@ -154,66 +154,39 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 	return 0;
 }
 
-int math_l2_postlist_next(void *po_)
-{
-	PTR_CAST(po, struct math_l2_postlist, po_);
-	uint32_t prev_doc_id = po->cur_doc_id;
-
-	do {
-		/* set candidate docID */
-		po->cur_doc_id = set_doc_candidate(po);
-		if (po->cur_doc_id == UINT32_MAX)
-			return 0;
-		uint64_t candidate = po->candidate;
-
-		/* calculate coarse score */
-		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
-
-		struct pq_align_res widest;
-
-		/* push expression results */
-		if (1) {
-			struct math_expr_score_res expr =
-				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
-
-			if (expr.score > po->max_exp_score)
-				po->max_exp_score = expr.score;
-
-			if (po->n_occurs < MAX_HIGHLIGHT_OCCURS) {
-				hit_occur_t *ho = po->occurs + po->n_occurs;
-				po->n_occurs += 1;
-				ho->pos = expr.exp_id;
-			}
-		}
-
-		/* forward posting lists */
-		for (int i = 0; i < po->iter->size; i++) {
-			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-			if (cur == UINT64_MAX) {
-				/* drop this posting list completely */
-				if (po->pruner.postlist_pivot >= i)
-					po->pruner.postlist_pivot -= 1;
-				postmerger_iter_remove(po->iter, i);
-				i -= 1;
-			} else if (cur == candidate) {
-				/* forward */
-				postmerger_iter_call(&po->pm, po->iter, next, i);
-			}
-		}
-
-	} while (po->cur_doc_id == prev_doc_id);
-
-	return 1;
-}
-
 #ifdef DEBUG_STATS_HOT_HIT
 static uint64_t g_hot_hit[128];
 #endif
 
-int math_l2_postlist_pruning_next(void *po_)
+int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
+	struct math_pruner *pruner = &po->pruner;
 	uint32_t prev_doc_id = po->cur_doc_id;
+	float threshold = pruner->init_threshold;
+
+	/* update threshold value */
+	if (priority_Q_full(po->rk_res))
+		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
+
+#ifndef MATH_PRUNING_DISABLE_JUMP
+	/* if threshold has been updated */
+	if (threshold != pruner->prev_threshold) {
+		/* try to "lift up" the pivot */
+		int i, sum = 0;
+		for (i = po->iter->size - 1; i >= 0; i--) {
+			uint32_t pid = po->iter->map[i];
+			int qmw = pruner->postlist_max[pid];
+			sum += qmw;
+			if (pruner->upp[sum] > threshold)
+				break;
+			/* otherwise this posting list can be skip-only */
+		}
+
+		pruner->postlist_pivot = i;
+		pruner->prev_threshold = threshold;
+	}
+#endif
 
 	do {
 		/* set candidate docID */
@@ -248,7 +221,7 @@ int math_l2_postlist_pruning_next(void *po_)
 #endif
 		struct pq_align_res widest;
 		// widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
-		widest = math_l2_postlist_coarse_score_v2(po, n_doc_lr_paths);
+		widest = math_l2_postlist_coarse_score_v2(po, n_doc_lr_paths, threshold);
 
 		/* push expression results */
 		if (widest.width) {
@@ -270,7 +243,11 @@ int math_l2_postlist_pruning_next(void *po_)
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			uint32_t p = po->iter->map[i];
 
-			if (cur == UINT64_MAX || po->pruner.postlist_ref[p] <= 0) {
+			if (cur == UINT64_MAX
+#ifdef MATH_PRUNING_ENABLE
+			|| po->pruner.postlist_ref[p] <= 0
+#endif
+			) {
 				/* drop this posting list completely */
 				if (po->pruner.postlist_pivot >= i)
 					po->pruner.postlist_pivot -= 1;
@@ -316,7 +293,7 @@ int math_l2_postlist_one_by_one_through(void *po_)
 		}
 	}
 
-	po->pruner.candidate = UINT64_MAX;
+	po->candidate = UINT64_MAX;
 	return 0;
 }
 #endif
@@ -402,12 +379,8 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		math_l2_postlist_cur,
-#ifdef MATH_PRUNING_ENABLE
-		math_l2_postlist_pruning_next,
-		// math_l2_postlist_one_by_one_through, /* for debug */
-#else
 		math_l2_postlist_next,
-#endif
+		// math_l2_postlist_one_by_one_through, /* for debug */
 		NULL /* jump */,
 		math_l2_postlist_read,
 		math_l2_postlist_init,

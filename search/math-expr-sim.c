@@ -752,19 +752,11 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	expr.doc_id = p->doc_id;
 	expr.exp_id = p->exp_id;
 
-#ifndef MATH_PRUNING_ENABLE
-	/* expansive multi-tree metrics, but good bpref score */
-	struct pq_align_res align_res[MAX_MTREE] = {0};
-	const uint32_t k = MAX_MTREE; widest = align_res;
-	(void)math_l2_postlist_cur_struct_sim(po, align_res, &r_cnt);
-	/* get multi-tree symbolic score */
-	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, align_res);
-#else /* pruning mode, where widest is passed in. */
-	const uint32_t k = 1;
-	/* get single tree symbolic score */
+	/* get symbolic score */
 	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest);
-#endif
 
+	/* get single tree overall score */
+	const uint32_t k = 1;
 	uint32_t qn = po->mqs->subpaths.n_lr_paths;
 	struct math_expr_sim_factors factors = {
 		sym_sim, 0 /* search depth*/, qn, dn, widest, k,
@@ -862,17 +854,11 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 
 struct pq_align_res
 math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
-                                 uint32_t n_doc_lr_paths)
+                                 uint32_t n_doc_lr_paths, float threshold)
 {
 	struct pq_align_res widest = {0};
-
 	struct math_pruner *pruner = &po->pruner;
-	float threshold = pruner->init_threshold;
 	uint64_t candidate = po->candidate;
-
-	/* update threshold value */
-	if (priority_Q_full(po->rk_res))
-		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	P_CAST(p, struct math_postlist_item, &candidate);
@@ -910,6 +896,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		struct pruner_node *q_node = pruner->nodes + q_node_idx;
 		float q_node_upperbound = pruner->upp[q_node->width];
 
+#ifdef MATH_PRUNING_ENABLE /* === Math pruning begin === */
 		/* check whether we can drop this node */
 		if (q_node_upperbound <= threshold) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
@@ -933,6 +920,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #endif
 			continue;
 		}
+#endif                     /* === Math pruning end === */
 
 		/* otherwise, calculate node score */
 #ifdef DEBUG_MATH_SCORE_INSPECT
@@ -953,6 +941,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 		}
 	}
 
+#ifdef MATH_PRUNING_ENABLE /* === Math pruning begin === */
 	if (widest.width && pruner->upp[widest.width] <= threshold) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 #ifdef DEBUG_MATH_SCORE_INSPECT
@@ -962,25 +951,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #endif
 		widest.width = 0;
 	}
-
-#ifndef MATH_PRUNING_DISABLE_JUMP
-	/* if threshold has been updated */
-	if (threshold != pruner->prev_threshold) {
-		/* try to "lift up" the pivot */
-		int i, sum = 0;
-		for (i = po->iter->size - 1; i >= 0; i--) {
-			uint32_t pid = po->iter->map[i];
-			int qmw = pruner->postlist_max[pid];
-			sum += qmw;
-			if (pruner->upp[sum] > threshold)
-				break;
-			/* otherwise this posting list can be skip-only */
-		}
-
-		pruner->postlist_pivot = i;
-		pruner->prev_threshold = threshold;
-	}
-#endif
+#endif                     /* === Math pruning end === */
 
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 #ifdef DEBUG_MATH_SCORE_INSPECT
