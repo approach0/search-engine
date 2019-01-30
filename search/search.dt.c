@@ -358,6 +358,7 @@ int math_l2_postlist_init(void *po_)
 	math_pruner_print(&po->pruner);
 #endif
 
+	// printf("%u postings.\n", po->iter->size);
 	return 0;
 }
 
