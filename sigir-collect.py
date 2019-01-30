@@ -25,17 +25,22 @@ def parse_evaluation_results(lines):
 with open(input_tsv) as fd:
     rd = csv.reader(fd, delimiter="\t")
     for idx, row in enumerate(rd):
+        if idx == 0:
+            print('\t'.join(row))
+            continue # skip the header row
         run_name = row[0]
         res = []
         # Read eval file
         eval_file = './tmp/' + run_name + '.eval.dat'
         if not os.path.exists(eval_file):
-            res += ["-1.f", "-1.f"]
+            res += ["-1.f", "-1.f"] # placeholder
         else:
             with open(eval_file) as in_fh:
                 a = parse_evaluation_results(in_fh.readlines())
-                res.append(a[0])
-                res.append(a[0 + 5])
+                fullrel = a[0]
+                partrel = a[5]
+                res.append(fullrel)
+                res.append(partrel)
         # Read stats file
         stats_file = './tmp/' + run_name + '.stats.dat'
         if not os.path.exists(stats_file):
@@ -46,5 +51,6 @@ with open(input_tsv) as fd:
             j = json.loads(content)
             res += [("%.2f" % j[f]) for f in ['mean', 'median', 'max', 'min', 'variance']]
             res += [("%.3f" % t) for t in j['runtime']]
-        head=row[0:4]
-        print('\t'.join(head), '\t', '\t'.join(res))
+        indat=row[0:5]
+        print('\t'.join(indat), '\t', '\t'.join(res))
+        # break
