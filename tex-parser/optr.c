@@ -441,7 +441,7 @@ static TREE_IT_CALLBK(gen_subpaths)
 			f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 
 			/* create a subpath */
-			if (is_leaf || (p->sons > 1 && f != NULL)) {
+			if (is_leaf || f != NULL) {
 				/* calculate bitmap index */
 				if (is_leaf)
 					bitmap_idx = p->path_id;
