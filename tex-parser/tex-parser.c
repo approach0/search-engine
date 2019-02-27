@@ -81,8 +81,6 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 
 			max_path_id = optr_assign_values(grammar_optr_root);
 
-			// optr_print(grammar_optr_root, stdout);
-
 			/*
 			 * Inside optr_subpaths(), it uses a bitmap data
 			 * structure, we need to make sure path_id is in
@@ -90,6 +88,11 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			 */
 			ret.subpaths = optr_subpaths(grammar_optr_root);
 
+#if 0       /* print */
+			printf("tex: `%s', max_path_id: %u.\n", tex_str, max_path_id);
+			optr_print(grammar_optr_root, stdout);
+			subpaths_print(&ret.subpaths, stdout);
+#endif
 			if (max_path_id > MAX_SUBPATH_ID) {
 				ret.code = PARSER_RETCODE_WARN;
 				sprintf(ret.msg, "too many subpaths (%u/%u).",

@@ -23,8 +23,7 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->token_id = t_id;
 	n->sons = 0;
 	n->rank = 0;
-	n->fr_hash = s_id;
-	n->ge_hash = 0;
+	n->subtr_hash = 0;
 	n->path_id = 0;
 	n->node_id = 0;
 	n->pos_begin = 0;
@@ -37,7 +36,6 @@ static __inline__ void update(struct optr_node *c, struct optr_node *f)
 {
 	f->sons++;
 	c->rank = f->sons;
-	c->fr_hash = f->fr_hash + c->symbol_id;
 }
 
 static LIST_IT_CALLBK(pass_children_to_father)
@@ -119,13 +117,12 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 		// fprintf(fh, "%u son(s), ", p->sons);
 	}
 
-	fprintf(fh, "ID_%u, ", p->node_id);
+	fprintf(fh, "#%u, ", p->node_id);
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
 	//fprintf(fh, "path_id=%u, ", p->path_id);
-	fprintf(fh, "ge_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->ge_hash));
+	fprintf(fh, "subtr_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->subtr_hash));
 	fprintf(fh, "pos=[%u, %u].", p->pos_begin, p->pos_end);
-	//fprintf(fh, "fr_hash=" C_GRAY "%s" C_RST ".", optr_hash_str(p->fr_hash));
 	fprintf(fh, "\n");
 }
 
@@ -201,12 +198,26 @@ static LIST_IT_CALLBK(digest_children)
 	LIST_OBJ(struct optr_node, p, tnd.ln);
 	P_CAST(children_hash, symbol_id_t, pa_extra);
 
-	*children_hash += p->ge_hash;
+	*children_hash += p->subtr_hash;
 
 #ifdef OPTR_HASH_DEBUG
 	printf("after digest %s: %s\n", trans_symbol(p->symbol_id),
 	       optr_hash_str(*children_hash));
 #endif
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(calpos_children)
+{
+	LIST_OBJ(struct optr_node, child, tnd.ln);
+	P_CAST(father, struct optr_node, pa_extra);
+
+	if (child->pos_begin < father->pos_begin)
+		father->pos_begin = child->pos_begin;
+
+	if (child->pos_end > father->pos_end)
+		father->pos_end = child->pos_end;
 
 	LIST_GO_OVER;
 }
@@ -245,7 +256,7 @@ static TREE_IT_CALLBK(assign_value)
 	symbol_id_t children_hash;
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
-		p->ge_hash = p->symbol_id;
+		p->subtr_hash = p->symbol_id;
 		p->path_id = ++(*lcnt);
 		p->node_id = p->path_id;
 
@@ -258,14 +269,20 @@ static TREE_IT_CALLBK(assign_value)
 			q = MEMBER_2_STRUCT(q->tnd.father, struct optr_node, tnd);
 		}
 	} else {
+		/* generate subtree hash in DFS traversal */
 		children_hash = 0;
 		list_foreach(&p->tnd.sons, &digest_children, &children_hash);
-		p->ge_hash = p->symbol_id * children_hash;
+		p->subtr_hash = p->symbol_id * children_hash;
+
+		/* generate position range in DFS traversal */
+		p->pos_begin = UINT32_MAX;
+		p->pos_end = 0;
+		list_foreach(&p->tnd.sons, &calpos_children, p);
 
 #ifdef OPTR_HASH_DEBUG
 		printf("%s * %s ", trans_symbol(p->symbol_id),
 			   optr_hash_str(children_hash));
-		printf("= %s\n", optr_hash_str(p->ge_hash));
+		printf("= %s\n", optr_hash_str(p->subtr_hash));
 #endif
 	}
 
@@ -346,10 +363,9 @@ struct subpath *create_subpath(struct optr_node *p, bool leaf)
 		subpath->lf_symbol_id = p->symbol_id;
 	} else {
 		subpath->type = SUBPATH_TYPE_GENERNODE;
-		subpath->ge_hash = p->ge_hash;
+		subpath->subtree_hash = p->subtr_hash;
 	}
 
-	subpath->fr_hash = p->fr_hash;
 	LIST_NODE_CONS(subpath->ln);
 
 	return subpath;
@@ -535,8 +551,11 @@ static LIST_IT_CALLBK(print_subpath_path_node)
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(fh, FILE, pa_extra);
 
-	fprintf(fh, C_BROWN "%s" C_RST "(ID_%u)/",
+	fprintf(fh, C_BROWN "%s" C_RST "(#%u)",
 	        trans_token(sp_nd->token_id), sp_nd->node_id);
+
+	if (pa_now->now != pa_head->last)
+		fprintf(fh, "/");
 
 	LIST_GO_OVER;
 }
@@ -546,21 +565,27 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(fh, FILE, pa_extra);
 
-	fprintf(fh, "* ");
-	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
+	if (sp->type == SUBPATH_TYPE_GENERNODE)
+		fprintf(fh, "* ");
+	else if (sp->type == SUBPATH_TYPE_WILDCARD)
+		fprintf(fh, "? ");
+	else if (sp->type == SUBPATH_TYPE_NORMAL)
+		fprintf(fh, "- ");
+	else
+		assert(0);
 
-	fprintf(fh, "[");
-	fprintf(fh, "path_id=%u, leaf_id=%u: type=%s, ",
-	        sp->path_id, sp->leaf_id, subpath_type_str(sp->type));
+	fprintf(fh, "[path#%u, leaf#%u] ", sp->path_id, sp->leaf_id);
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE)
-		fprintf(fh, "ge_hash=" C_BLUE "%s" C_RST,
-		        optr_hash_str(sp->ge_hash));
+		fprintf(fh, C_BLUE "%s" C_RST,
+		        optr_hash_str(sp->subtree_hash));
 	else
-		fprintf(fh, "leaf symbol=" C_GREEN "%s" C_RST,
+		fprintf(fh, C_GREEN "%s" C_RST,
 		        trans_symbol(sp->lf_symbol_id));
 
-	fprintf(fh, "]\n");
+	fprintf(fh, ": ");
+	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
+	fprintf(fh, "\n");
 
 	LIST_GO_OVER;
 }
@@ -652,7 +677,7 @@ static TREE_IT_CALLBK(graph_print)
 
 	struct optr_node *f =
 		MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
-	
+
 	char rank[128] = "";
 	if (f && !f->commutative)
 		sprintf(rank, "r%u", f->rank);
