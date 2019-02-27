@@ -262,7 +262,7 @@ static TREE_IT_CALLBK(assign_value)
 
 		q = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 		while (q) {
-			if (q->sons > 1 && q->path_id == 0) {
+			if (meaningful_gener(q->token_id) && q->path_id == 0) {
 				q->path_id = p->path_id;
 				break;
 			}
@@ -441,7 +441,7 @@ static TREE_IT_CALLBK(gen_subpaths)
 			f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 
 			/* create a subpath */
-			if (is_leaf || f != NULL) {
+			if (is_leaf || (f != NULL && meaningful_gener(f->token_id))) {
 				/* calculate bitmap index */
 				if (is_leaf)
 					bitmap_idx = p->path_id;

@@ -116,10 +116,33 @@ math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
 	if (prefix_len > sp->n_nodes)
 		return 1;
 
-	p += sprintf(dest_path, "%s", PREFIX_PATH_NAME);
-	list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
+		arg.skip_one = 1;
+		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	} else if (sp->type  == SUBPATH_TYPE_WILDCARD) {
+		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
+		arg.skip_one = 1;
+		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	} else if (sp->type  == SUBPATH_TYPE_NORMAL) {
+		p += sprintf(dest_path, "%s", TOKEN_PATH_NAME);
+		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
+
+	} else {
+		return 1;
+	}
 
 	return 0;
+}
+
+int prefix_path_level(struct subpath *sp, int prefix_len)
+{
+	if (prefix_len > sp->n_nodes)
+		return 1;
+
+	return sp->n_nodes - prefix_len;
 }
 
 /* ================
@@ -203,7 +226,7 @@ static LIST_IT_CALLBK(_set_pathinfo_v2)
 {
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(arg, struct _set_pathinfo_v2_arg, pa_extra);
-	
+
 	if (pa_now->now == pa_head->now)
 		arg->pathinfo.leaf_id = sp_nd->node_id;
 
@@ -282,30 +305,6 @@ static LIST_IT_CALLBK(path_index_step1)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(path_index_step4)
-{
-	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(arg, struct _index_path_arg, pa_extra);
-	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	char *append = path;
-	
-	if (sp->type != SUBPATH_TYPE_NORMAL) {
-		LIST_GO_OVER;
-	}
-
-	append += sprintf(append, "%s/", arg->index->dir);
-	if (math_index_mk_prefix_path_str(sp, arg->prefix_len, append)) {
-		LIST_GO_OVER;
-	}
-
-	//printf("mkdir -p %s \n", path);
-	mkdir_p(path);
-
-	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len);
-
-	LIST_GO_OVER;
-}
-
 static uint32_t pathinfo_len(const char *path)
 {
 	FILE *fh;
@@ -361,7 +360,47 @@ static LIST_IT_CALLBK(path_index_step2)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(path_index_step5)
+static LIST_IT_CALLBK(mkdir_and_setify)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(arg, struct _index_path_arg, pa_extra);
+	char path[MAX_DIR_PATH_NAME_LEN] = "";
+	char *append = path;
+	append += sprintf(append, "%s/", arg->index->dir);
+
+	/* sanity check */
+	if (sp->type != SUBPATH_TYPE_NORMAL &&
+	    sp->type != SUBPATH_TYPE_GENERNODE) {
+		LIST_GO_OVER;
+	}
+
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		int level = prefix_path_level(sp, arg->prefix_len);
+#ifdef DEBUG_MATH_INDEX
+		// printf("wildcard level = %u\n", level);
+#endif
+		if (level > MAX_WILDCARD_LEVEL) {
+			/* this prefix gener path is lower than considered tree level */
+			LIST_GO_OVER;
+		}
+	}
+
+	if (math_index_mk_prefix_path_str(sp, arg->prefix_len, append)) {
+		/* specified prefix_len is greater than actual path length */
+		LIST_GO_OVER;
+	}
+
+#ifdef DEBUG_MATH_INDEX
+	// printf("mkdir -p %s \n", path);
+#endif
+	mkdir_p(path);
+
+	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len);
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(set_write_to_index)
 {
 	LIST_OBJ(struct subpath_ele, ele, ln);
 	P_CAST(arg, struct _index_path_arg, pa_extra);
@@ -399,7 +438,7 @@ static LIST_IT_CALLBK(path_index_step3)
 	P_CAST(arg, struct _index_path_arg, pa_extra);
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
 	char *append = path;
-	struct math_pathinfo info = {sp->path_id, sp->ge_hash, sp->fr_hash};
+	struct math_pathinfo info = {sp->path_id, 0, 0};
 
 	append += sprintf(append, "%s/", arg->index->dir);
 	if (math_index_mk_path_str(sp, append)) {
@@ -474,7 +513,7 @@ skip_classic:
 
 	for (arg.prefix_len = 2;; arg.prefix_len++) {
 		LIST_CONS(arg.subpath_set);
-		list_foreach(&subpaths.li, &path_index_step4, &arg);
+		list_foreach(&subpaths.li, &mkdir_and_setify, &arg);
 #ifdef DEBUG_MATH_INDEX
 		printf("subpath set at prefix_len = %d.\n", arg.prefix_len);
 		subpath_set_print(&arg.subpath_set, stdout);
@@ -487,7 +526,7 @@ skip_classic:
 			break;
 		}
 
-		list_foreach(&arg.subpath_set, &path_index_step5, &arg);
+		list_foreach(&arg.subpath_set, &set_write_to_index, &arg);
 		subpath_set_free(&arg.subpath_set);
 	}
 

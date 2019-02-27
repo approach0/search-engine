@@ -1,21 +1,23 @@
 #include "mhook/mhook.h"
+#include "tex-parser/head.h"
 #include "math-index.h"
 
 int main()
 {
 	/* simple test */
-	const char *test[] = {
-		"ab",             // expID = 0
-		"a+k(b+c)",       // expID = 1
-		"a+bc+xy",        // expID = 2
-		"a(b+cd)",        // expID = 3
-		"\\sqrt{pq + m}", // expID = 4
-	};
+//	const char *test[] = {
+//		"ab",             // expID = 0
+//		"a+k(b+c)",       // expID = 1
+//		"a+bc+xy",        // expID = 2
+//		"a(b+cd)",        // expID = 3
+//		"\\sqrt{pq + m}", // expID = 4
+//	};
 
 	/* prefix match test */
-//	const char *test[] = {
-//		"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \\binom{n}{r}"
-//	};
+	const char *test[] = {
+		//"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \\binom{n}{r}"
+		"a+bc+ef +\\sqrt z + g/h + (ij + k)"
+	};
 
 	/* joint node constraints test */
 //	const char *test[] = {
@@ -50,11 +52,18 @@ int main()
 
 	for (i = 0; i < n_test; i++) {
 		printf("add: `%s' as experssion#%u\n", test[i], expID);
-		parse_ret = tex_parse(test[i], 0, false);
+		parse_ret = tex_parse(test[i], 0, true);
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
+			/* print operator tree */
+			optr_print(parse_ret.operator_tree, stdout);
+			optr_release(parse_ret.operator_tree);
+
+			/* print subpaths */
 			subpaths_print(&parse_ret.subpaths, stdout);
-			math_index_add_tex(index, docID, expID, parse_ret.subpaths, MATH_INDEX_ALL);
+
+			/* index the tex */
+			math_index_add_tex(index, docID, expID, parse_ret.subpaths, MATH_INDEX_WO_CLASSIC);
 			subpaths_release(&parse_ret.subpaths);
 			expID ++;
 		} else {

@@ -30,6 +30,7 @@ struct math_pathinfo_pack {
 	struct math_pathinfo  pathinfo[];
 };
 
+/* v2 */
 struct math_posting_item_v2 {
 	uint32_t        exp_id     :20; /* lower address, less significant */
 	uint32_t        n_lr_paths :6; /* number of paths in original tree */
@@ -44,6 +45,7 @@ struct math_pathinfo_v2 {
 	uint32_t    leaf_id;
 	uint32_t    subr_id;
 	symbol_id_t lf_symb;
+	symbol_id_t op_hash;
 };
 #pragma pack(pop)
 

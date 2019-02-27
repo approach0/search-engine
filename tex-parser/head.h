@@ -9,6 +9,7 @@
 #include "tree/tree.h"
 #include "gen-token.h"
 #include "gen-symbol.h"
+#include "meaning.h"
 #include "yy.h"
 #include "trans.h"
 #include "tex-parser.h"
