@@ -16,7 +16,7 @@ int main()
 	/* prefix match test */
 	const char *test[] = {
 		//"2 \\sum_{k=0}^{r-1} \\binom{n}{2k+1} \\binom{n}{2r-2k-1} &= \\binom{2n}{2r} - (-1)^k \\binom{n}{r}"
-		"a+bc+ef +\\sqrt z + g/h + (ij + k)"
+		"a+bc+ef +\\sqrt z + g/h + (ij + k) \\le 0"
 	};
 
 	/* joint node constraints test */

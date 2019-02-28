@@ -21,6 +21,7 @@ enum subpath_type {
 };
 
 struct subpath_node {
+	uint32_t         symbol_id;
 	uint32_t         token_id;
 	uint32_t         node_id;
 	uint32_t         sons;

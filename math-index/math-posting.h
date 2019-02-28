@@ -30,6 +30,14 @@ struct math_pathinfo_pack {
 	struct math_pathinfo  pathinfo[];
 };
 
+struct math_posting_compound_item_v1 {
+	exp_id_t              exp_id;
+	doc_id_t              doc_id;
+	uint32_t              n_paths;
+	uint32_t              n_lr_paths;
+	struct math_pathinfo  pathinfo[MAX_MATH_PATHS];
+};
+
 /* v2 */
 struct math_posting_item_v2 {
 	uint32_t        exp_id     :20; /* lower address, less significant */
@@ -42,20 +50,18 @@ struct math_posting_item_v2 {
 };
 
 struct math_pathinfo_v2 {
-	uint32_t    leaf_id;
-	uint32_t    subr_id;
-	symbol_id_t lf_symb;
+	union {
+		uint32_t leaf_id;
+		uint32_t wild_id;
+	};
+	union {
+		symbol_id_t lf_symb;
+		symbol_id_t tr_hash;
+	};
 	symbol_id_t op_hash;
+	uint32_t    subr_id;
 };
 #pragma pack(pop)
-
-struct math_posting_compound_item_v1 {
-	exp_id_t              exp_id;
-	doc_id_t              doc_id;
-	uint32_t              n_paths;
-	uint32_t              n_lr_paths;
-	struct math_pathinfo  pathinfo[MAX_MATH_PATHS];
-};
 
 struct math_posting_compound_item_v2 {
 	exp_id_t                 exp_id;
@@ -63,6 +69,15 @@ struct math_posting_compound_item_v2 {
 	uint32_t                 n_paths;
 	uint32_t                 n_lr_paths;
 	struct math_pathinfo_v2  pathinfo[MAX_MATH_PATHS];
+};
+
+struct math_gener_posting_compound_item_v2 {
+	exp_id_t                 exp_id;
+	doc_id_t                 doc_id;
+	uint32_t                 n_paths;
+	uint32_t                 n_lr_paths;
+	struct math_pathinfo_v2  pathinfo[MAX_MATH_PATHS];
+	uint64_t                 wild_leaves[MAX_MATH_PATHS];
 };
 
 struct subpath_ele;

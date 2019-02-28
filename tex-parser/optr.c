@@ -371,12 +371,19 @@ struct subpath *create_subpath(struct optr_node *p, bool leaf)
 	return subpath;
 }
 
-struct subpath_node *create_subpath_node(enum token_id token_id, uint32_t sons)
+static struct subpath_node *create_subpath_node(
+	enum symbol_id symbol_id,
+	enum token_id token_id,
+	uint32_t sons,
+	uint32_t node_id)
 {
 	struct subpath_node *nd;
 	nd = malloc(sizeof(struct subpath_node));
+
+	nd->symbol_id = symbol_id;
 	nd->token_id = token_id;
 	nd->sons = sons;
+	nd->node_id = node_id;
 	LIST_NODE_CONS(nd->ln);
 
 	return nd;
@@ -398,16 +405,16 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t
 		f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 
 		/* create and insert token node */
-		nd = create_subpath_node(p->token_id, p->sons);
-		nd->node_id = p->node_id;
+		nd = create_subpath_node(p->symbol_id, p->token_id, p->sons, p->node_id);
 		list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
 		cnt ++; // increment subpath nodes counter
 
 		/* create and insert rank node if necessary */
 		if (f && !f->commutative) {
 			nd = create_subpath_node(
-				T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank), 1);
-			nd->node_id = (*sn_ids)++;
+				S_NIL, T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank),
+				1 /* rank node has only one son */, (*sn_ids)++
+			);
 			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,
 			                        NULL, NULL);
 			cnt ++; // increment subpath nodes counter

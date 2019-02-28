@@ -227,8 +227,15 @@ static LIST_IT_CALLBK(_set_pathinfo_v2)
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(arg, struct _set_pathinfo_v2_arg, pa_extra);
 
-	if (pa_now->now == pa_head->now)
+	if (pa_now->now == pa_head->now) {
 		arg->pathinfo.leaf_id = sp_nd->node_id;
+	} else {
+		/* generate operators' hash */
+		arg->pathinfo.op_hash += sp_nd->symbol_id * (arg->cnt + 1);
+#ifdef DEBUG_MATH_INDEX
+		// printf("%s\n", trans_symbol(sp_nd->symbol_id));
+#endif
+	}
 
 	if (arg->cnt >= arg->prefix_len - 1 ||
 	    pa_now->now == pa_head->last) {
@@ -240,11 +247,54 @@ static LIST_IT_CALLBK(_set_pathinfo_v2)
 	}
 }
 
+struct _gener_path_match_args {
+	uint32_t wild_node_id;
+	uint32_t cur_test_path;
+	uint64_t wild_leaves;
+};
+
+static LIST_IT_CALLBK(_gener_path_node_match)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(args, struct _gener_path_match_args, pa_extra);
+
+	if (args->wild_node_id == sp_nd->node_id) {
+		// printf("match #%u\n", args->cur_test_path);
+		args->wild_leaves |= (1 << (args->cur_test_path - 1));
+		return LIST_RET_BREAK;
+	}
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(_gener_path_match)
+{
+	LIST_OBJ(struct subpath, test_sp, ln);
+	P_CAST(args, struct _gener_path_match_args, pa_extra);
+
+	args->cur_test_path = test_sp->leaf_id;
+
+	if (test_sp->type == SUBPATH_TYPE_NORMAL)
+		list_foreach(&test_sp->path_nodes, &_gener_path_node_match, pa_extra);
+
+	LIST_GO_OVER;
+}
+
+static uint64_t get_wild_leaves(struct subpath *sp, struct subpaths subpaths)
+{
+	struct _gener_path_match_args args = {sp->leaf_id, 0, 0};
+	list_foreach(&subpaths.li, &_gener_path_match, &args);
+
+	return args.wild_leaves;
+}
+
 static int
 write_pathinfo_v2(const char *path, struct subpath *sp,
-                  uint32_t prefix_len)
+                  uint32_t prefix_len, struct subpaths subpaths)
 {
 	struct _set_pathinfo_v2_arg arg;
+	uint64_t wild_leaves;
+
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
 	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
@@ -253,22 +303,43 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
 	if (fh == NULL)
 		return -1;
 
-	arg.pathinfo.lf_symb = sp->lf_symbol_id;
 	arg.cnt = 0;
+	arg.pathinfo.op_hash = 0;
 	arg.prefix_len = prefix_len;
 
+	/* set lf_symb (sp->subtree_hash and lf_symbol_id are union) */
+	arg.pathinfo.lf_symb = sp->lf_symbol_id;
+
+	/* set leaf_id, subr_id and op_hash */
 	list_foreach(&sp->path_nodes, &_set_pathinfo_v2, &arg);
 
+	fwrite(&arg.pathinfo, 1, sizeof(arg.pathinfo), fh);
+
+	/* append and write wild_leaves bitmap for gener path */
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		wild_leaves = get_wild_leaves(sp, subpaths);
+		fwrite(&wild_leaves, 1, sizeof(uint64_t), fh);
+	}
+
+	fclose(fh);
+
 #ifdef DEBUG_MATH_INDEX
-	printf("writing pathinfo @ %s: %u, %u, %u \n", path,
+	if (sp->type == SUBPATH_TYPE_GENERNODE)
+	printf("written gener pathinfo @ %s: %u, %u, 0x%x, 0x%x, 0x%lx \n", path,
+		arg.pathinfo.wild_id,
+		arg.pathinfo.subr_id,
+		arg.pathinfo.tr_hash,
+		arg.pathinfo.op_hash,
+		wild_leaves
+	);
+	else if (sp->type == SUBPATH_TYPE_NORMAL)
+	printf("written normal pathinfo @ %s: %u, %u, %s, 0x%x \n", path,
 		arg.pathinfo.leaf_id,
 		arg.pathinfo.subr_id,
-		arg.pathinfo.lf_symb
+		trans_symbol(arg.pathinfo.lf_symb),
+		arg.pathinfo.op_hash
 	);
 #endif
-
-	fwrite(&arg.pathinfo, 1, sizeof(arg.pathinfo), fh);
-	fclose(fh);
 	return 0;
 }
 
@@ -278,32 +349,13 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
  * ====================== */
 
 struct _index_path_arg {
-	math_index_t   index;
-	doc_id_t       docID;
-	exp_id_t       expID;
-	list           subpath_set;
-	uint32_t       n_lr_paths;
-	int            prefix_len;
+	math_index_t     index;
+	doc_id_t         docID;
+	exp_id_t         expID;
+	struct subpaths  subpaths;
+	list             subpath_set;
+	int              prefix_len;
 };
-
-static LIST_IT_CALLBK(path_index_step1)
-{
-	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(arg, struct _index_path_arg, pa_extra);
-	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	char *append = path;
-
-	append += sprintf(append, "%s/", arg->index->dir);
-	if (math_index_mk_path_str(sp, append)) {
-		LIST_GO_OVER;
-	}
-
-	mkdir_p(path);
-
-	subpath_set_add(&arg->subpath_set, sp, 0);
-
-	LIST_GO_OVER;
-}
 
 static uint32_t pathinfo_len(const char *path)
 {
@@ -321,43 +373,6 @@ static uint32_t pathinfo_len(const char *path)
 	fclose(fh);
 
 	return (uint32_t)ret;
-}
-
-static LIST_IT_CALLBK(path_index_step2)
-{
-	LIST_OBJ(struct subpath_ele, ele, ln);
-	P_CAST(arg, struct _index_path_arg, pa_extra);
-	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	char *append = path;
-
-	struct math_posting_item  po_item;
-	struct math_pathinfo_pack pathinfo_hd;
-
-	struct subpath tmp = *(ele->dup[0]);
-
-	append += sprintf(append, "%s/", arg->index->dir);
-	if (0 == math_index_mk_path_str(&tmp, append)) {
-		/* write posting item */
-		po_item.doc_id = arg->docID;
-		po_item.exp_id = arg->expID;
-		po_item.pathinfo_pos = pathinfo_len(path);
-#ifdef DEBUG_MATH_INDEX
-		printf("write item(docID=%u, expID=%u, pos=%u) @ %s.\n",
-		       po_item.doc_id, po_item.exp_id, po_item.pathinfo_pos, path);
-#endif
-		write_posting_item(path, &po_item);
-
-		/* write pathinfo head */
-		pathinfo_hd.n_paths = ele->dup_cnt + 1;
-		pathinfo_hd.n_lr_paths = arg->n_lr_paths;
-#ifdef DEBUG_MATH_INDEX
-		printf("write pathinfo head(n_paths=%u, n_lr_paths=%u) @ %s.\n",
-		       pathinfo_hd.n_paths, pathinfo_hd.n_lr_paths, path);
-#endif
-		write_pathinfo_head(path, &pathinfo_hd);
-	}
-
-	LIST_GO_OVER;
 }
 
 static LIST_IT_CALLBK(mkdir_and_setify)
@@ -416,7 +431,7 @@ static LIST_IT_CALLBK(set_write_to_index)
 	if (0 == math_index_mk_prefix_path_str(&tmp, arg->prefix_len, append)) {
 		/* write posting item */
 		po_item.exp_id       = arg->expID;
-		po_item.n_lr_paths   = arg->n_lr_paths;
+		po_item.n_lr_paths   = arg->subpaths.n_lr_paths;
 		po_item.n_paths      = ele->dup_cnt + 1;
 		po_item.doc_id       = arg->docID;
 		po_item.pathinfo_pos = pathinfo_len(path);
@@ -425,33 +440,8 @@ static LIST_IT_CALLBK(set_write_to_index)
 		/* write n_paths number of pathinfo structure */
 		for (i = 0; i <= ele->dup_cnt; i++) {
 			struct subpath * sp = ele->dup[i];
-			write_pathinfo_v2(path, sp, arg->prefix_len);
+			write_pathinfo_v2(path, sp, arg->prefix_len, arg->subpaths);
 		}
-	}
-
-	LIST_GO_OVER;
-}
-
-static LIST_IT_CALLBK(path_index_step3)
-{
-	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(arg, struct _index_path_arg, pa_extra);
-	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	char *append = path;
-	struct math_pathinfo info = {sp->path_id, 0, 0};
-
-	append += sprintf(append, "%s/", arg->index->dir);
-	if (math_index_mk_path_str(sp, append)) {
-		LIST_GO_OVER;
-	}
-
-#ifdef DEBUG_MATH_INDEX
-	printf("write pathinfo item(pathID=%u, ge_hash/symbol=%x) @ %s.\n",
-	       info.path_id, info.lf_symb, path);
-#endif
-	if (0 != write_pathinfo_payload(path, &info)) {
-		fprintf(stderr, "cannot write path info @%s\n", path);
-		LIST_GO_OVER;
 	}
 
 	LIST_GO_OVER;
@@ -465,7 +455,7 @@ math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
 	arg.index = (math_index_t)index;
 	arg.docID = docID;
 	arg.expID = expID;
-	arg.n_lr_paths = subpaths.n_lr_paths;
+	arg.subpaths = subpaths;
 	LIST_CONS(arg.subpath_set);
 
 #ifdef DEBUG_MATH_INDEX
@@ -478,38 +468,6 @@ math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
 #endif
 		return 1;
 	}
-
-	if (opt == MATH_INDEX_WO_CLASSIC)
-		goto skip_classic;
-
-#ifdef DEBUG_MATH_INDEX
-	printf("path index step 1 (adding into subpath set):\n");
-#endif
-
-	list_foreach(&subpaths.li, &path_index_step1, &arg);
-
-#ifdef DEBUG_MATH_INDEX
-	printf("subpath set:\n");
-	subpath_set_print(&arg.subpath_set, stdout);
-
-	printf("path index step 2 (write post item and pathinfo head)...\n");
-#endif
-	list_foreach(&arg.subpath_set, &path_index_step2, &arg);
-
-#ifdef DEBUG_MATH_INDEX
-	printf("path index step 3 (write pathinfo payload)...\n");
-#endif
-	list_foreach(&subpaths.li, &path_index_step3, &arg);
-
-#ifdef DEBUG_MATH_INDEX
-	printf("deleting subpath set...\n");
-#endif
-	subpath_set_free(&arg.subpath_set);
-
-skip_classic:
-
-	if (opt == MATH_INDEX_WO_PREFIX)
-		goto skip_prefix;
 
 	for (arg.prefix_len = 2;; arg.prefix_len++) {
 		LIST_CONS(arg.subpath_set);
@@ -530,7 +488,6 @@ skip_classic:
 		subpath_set_free(&arg.subpath_set);
 	}
 
-skip_prefix:
 	return 0;
 }
 
