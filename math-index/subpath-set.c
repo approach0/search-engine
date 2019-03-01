@@ -310,9 +310,12 @@ static LIST_IT_CALLBK(set_add)
 
 	if (ele->prefix_len == args->prefix_len &&
 	    0 == sp_tokens_comparer(sp, ele->dup[0], args->prefix_len)) {
-		ele->dup_cnt ++;
-		ele->dup[ele->dup_cnt] = sp;
-		ele->rid[ele->dup_cnt] = get_subpath_nodeid_at(sp, ele->prefix_len);
+		/* avoid dup array overflow, possible in wildcards paths. */
+		if (ele->dup_cnt + 1 < MAX_MATH_PATHS) {
+			ele->dup_cnt ++;
+			ele->dup[ele->dup_cnt] = sp;
+			ele->rid[ele->dup_cnt] = get_subpath_nodeid_at(sp, ele->prefix_len);
+		}
 		return LIST_RET_BREAK;
 	}
 
