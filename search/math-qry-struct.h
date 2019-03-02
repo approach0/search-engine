@@ -2,8 +2,9 @@
 #include "indices/indices.h"
 #include "math-prefix-qry.h"
 
+/* search irrelevant math query structure */
 struct math_qry_struct {
-	struct math_prefix_qry pq;
+	struct math_prefix_qry pq; /* except this! */
 	struct subpaths subpaths;
 	list subpath_set;
 	int n_uniq_paths;

@@ -44,7 +44,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			printf("#%u (on disk) %s\n", n, base_paths[i]);
 #endif
 		} else {
-			l2po->pm.po[n] = empty_postlist(NULL);
+			l2po->pm.po[n] = empty_postlist();
 
 			sprintf(args->po->type[n], "empty");
 			args->po->ele[n] = NULL;
@@ -112,6 +112,7 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 	return sizeof(struct l2_postlist_item);
 }
 
+#ifdef DEBUG_STATS_HOT_HIT
 static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 {
 	uint32_t cnt = 0;
@@ -123,6 +124,7 @@ static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
 
 	return cnt;
 }
+#endif
 
 static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 {
@@ -327,24 +329,27 @@ static void math_l2_postlist_sort(struct math_l2_postlist *po)
 
 int math_l2_postlist_init(void *po_)
 {
+	/* initialize inner pm */
 	PTR_CAST(po, struct math_l2_postlist, po_);
 	for (int i = 0; i < po->pm.n_po; i++) {
 		POSTMERGER_POSTLIST_CALL(&po->pm, init, i);
 	}
+
+	/* allocate iterator */
 	po->iter = postmerger_iterator(&po->pm);
-	po->n_occurs = 0;
-	po->max_exp_score = 0;
+
+	/* setup current doc-level item */
 	po->cur_doc_id = 0;
+	po->max_exp_score = 0;
+	po->n_occurs = 0;
+
+	/* initialize candidate */
+	po->candidate = 0;
 
 	/* setup pruning structures */
 	uint32_t n_qnodes = po->mqs->n_qry_nodes;
 	uint32_t n_postings = po->pm.n_po;
 	uint32_t qw = po->mqs->subpaths.n_lr_paths;
-
-	/* initialize candidate */
-	po->candidate = 0;
-
-	/* initialize pruner */
 	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
 	math_pruner_init_threshold(&po->pruner, qw);
 	math_pruner_precalc_upperbound(&po->pruner, qw);
@@ -364,9 +369,13 @@ int math_l2_postlist_init(void *po_)
 void math_l2_postlist_uninit(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
+
+	/* release inner pm */
 	for (int i = 0; i < po->pm.n_po; i++) {
 		POSTMERGER_POSTLIST_CALL(&po->pm, uninit, i);
 	}
+
+	/* release iterator */
 	postmerger_iter_free(po->iter);
 
 	/* release pruning structures */
@@ -460,8 +469,8 @@ indices_run_query(struct indices* indices, struct query* qry)
 #ifdef MERGE_TIME_LOG
 	// fprintf(mergetime_fh, "checkpoint-a %ld msec.\n", timer_tot_msec(&timer));
 #endif
-	struct math_qry_struct  mqs[qry->len];
-	struct math_l2_postlist mpo[qry->len];
+	struct math_qry_struct  mqs[qry->len]; /* search irrelevant structure "TeX" */
+	struct math_l2_postlist mpo[qry->len]; /* search/iterator related structure */
 
 	// Create merger objects
 	for (int i = 0; i < qry->len; i++) {
@@ -475,13 +484,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 			mpo[j] = math_l2_postlist(indices, mqs + j, &rk_res);
 			root_pm.po[j] = postmerger_math_l2_postlist(mpo + j);
 		} else {
-			root_pm.po[j] = empty_postlist(NULL);
+			root_pm.po[j] = empty_postlist();
 		}
 		root_pm.n_po += 1;
 	}
 
 	// Initialize merger objects
 	for (int j = 0; j < root_pm.n_po; j++) {
+		/* calling math_l2_postlist_init() */
 		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
 	}
 #ifdef MERGE_TIME_LOG
@@ -555,7 +565,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 	// Uninitialize merger objects
 	for (int j = 0; j < root_pm.n_po; j++) {
+		/* calling math_l2_postlist_uninit() */
 		POSTMERGER_POSTLIST_CALL(&root_pm, uninit, j);
+
 		math_qry_free(&mqs[j]);
 	}
 

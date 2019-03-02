@@ -138,10 +138,10 @@ static void empty_postlist_uninit(void *po)
 }
 
 struct postmerger_postlist
-empty_postlist(void *po)
+empty_postlist()
 {
 	struct postmerger_postlist ret = {
-		po,
+		NULL,
 		&empty_postlist_cur,
 		&empty_postlist_next,
 		&empty_postlist_jump,

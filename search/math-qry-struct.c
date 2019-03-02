@@ -119,7 +119,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	struct subpaths *subpaths = &parse_ret.subpaths;
 	s->subpaths = *subpaths;
 
-	/* strip gener paths because they are not used for searching */
+	/* strip gener paths (but not wildcard paths) since they are not for searching */
 	delete_gener_paths(subpaths);
 	
 	/* sort subpaths by <bound variable size, symbol> tuple */
