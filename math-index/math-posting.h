@@ -50,15 +50,15 @@ struct math_posting_item_v2 {
 };
 
 struct math_pathinfo_v2 {
-	uint32_t    leaf_id;
-	uint32_t    subr_id;
+	uint16_t    leaf_id;
+	uint16_t    subr_id;
 	symbol_id_t lf_symb;
 	symbol_id_t op_hash;
 };
 
 struct math_pathinfo_gener_v2 {
-	uint32_t    wild_id;
-	uint32_t    subr_id;
+	uint16_t    wild_id;
+	uint16_t    subr_id;
 	symbol_id_t tr_hash;
 	symbol_id_t op_hash;
 	uint64_t    wild_leaves;
