@@ -88,33 +88,6 @@ struct postmerge_callbks mergecalls_mem_math_postlist()
 #include "postmerge/config.h"
 char *trans_symbol(int symbol_id);
 
-void* wrap_disk_math_postlist_cur_item_v2(void *po)
-{
-	PTR_CAST(disk_item, struct math_posting_compound_item_v2,
-	         math_posting_cur_item_v2(po));
-
-	static struct math_postlist_item mem_item[MAX_MERGE_POSTINGS];
-	static int p = 0;
-	void *ret = mem_item + p;
-
-	disk_item_v2_to_mem_item(mem_item + p, disk_item);
-
-//	if (disk_item->doc_id == 221900) {
-//		struct math_postlist_item *item = mem_item + p;
-//		printf("doc#%u, exp#%u.  n_paths: %u, n_lr_paths: %u \n",
-//				item->doc_id, item->exp_id,
-//				item->n_paths, item->n_lr_paths);
-//		for (u32 j = 0; j < item->n_paths; j ++) {
-//			printf("\t doc prefix path [%u ~ %u, %s]\n",
-//				   item->leaf_id[j], item->subr_id[j],
-//				   trans_symbol(item->lf_symb[j]));
-//		}
-//	}
-
-	p = (p + 1) % MAX_MERGE_POSTINGS;
-	return ret;
-}
-
 struct postmerge_callbks mergecalls_disk_math_postlist_v1()
 {
 	struct postmerge_callbks ret;
@@ -135,7 +108,7 @@ struct postmerge_callbks mergecalls_disk_math_postlist_v2()
 	ret.finish = &math_posting_finish;
 	ret.jump   = &math_posting_jump;
 	ret.next   = &math_posting_next;
-	ret.cur    = &wrap_disk_math_postlist_cur_item_v2;
+	ret.cur    = NULL; /* deprecated */
 	ret.cur_id = &math_posting_cur_id_v2;
 
 	return ret;

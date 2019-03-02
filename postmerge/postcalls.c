@@ -4,7 +4,6 @@
 #include "common/common.h"
 #include "postlist/postlist.h"
 #include "postlist/math-postlist.h" /* for math_postlist_item */
-#include "postlist-cache/math-postlist-cache.h" /* for disk_item_v2_to_mem_item */
 #include "term-index/term-index.h"
 #include "math-index/math-index.h"
 #include "postcalls.h"
@@ -73,12 +72,9 @@ static int math_disk_postlist_jump(void *po, uint64_t target)
 	return (int)math_posting_jump(po, target);
 }
 
-static size_t math_disk_postlist_read(void *po, void *dest, size_t sz)
+static size_t math_disk_postlist_read(void *po_, void *dest_, size_t sz)
 {
-	PTR_CAST(disk_item, struct math_posting_compound_item_v2,
-	         math_posting_cur_item_v2(po));
-	disk_item_v2_to_mem_item(dest, disk_item);
-	return sizeof(struct math_postlist_item);
+	return math_posting_read(po_, dest_);
 }
 
 static int math_disk_postlist_init(void *po)

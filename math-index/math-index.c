@@ -13,6 +13,7 @@
 #include "tex-parser/gen-symbol.h" /* for symbol_id */
 #include "tex-parser/trans.h"      /* for trans_token() */
 
+#include "postlist/math-postlist.h" /* for math_postlist_item */
 #include "head.h"
 
 /* ======================
@@ -293,7 +294,6 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
                   uint32_t prefix_len, struct subpaths subpaths)
 {
 	struct _set_pathinfo_v2_arg arg;
-	uint64_t wild_leaves;
 
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
@@ -313,12 +313,19 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
 	/* set leaf_id, subr_id and op_hash */
 	list_foreach(&sp->path_nodes, &_set_pathinfo_v2, &arg);
 
-	fwrite(&arg.pathinfo, 1, sizeof(arg.pathinfo), fh);
+	if (sp->type == SUBPATH_TYPE_NORMAL) {
+		/* write normal pathinfo */
+		fwrite(&arg.pathinfo, 1, sizeof(arg.pathinfo), fh);
 
-	/* append and write wild_leaves bitmap for gener path */
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		wild_leaves = get_wild_leaves(sp, subpaths);
-		fwrite(&wild_leaves, 1, sizeof(uint64_t), fh);
+	} else if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		/* write gener pathinfo */
+		struct math_pathinfo_gener_v2 pathinfo_gener;
+		pathinfo_gener.wild_id = arg.pathinfo.leaf_id;
+		pathinfo_gener.subr_id = arg.pathinfo.subr_id;
+		pathinfo_gener.tr_hash = arg.pathinfo.lf_symb;
+		pathinfo_gener.op_hash = arg.pathinfo.op_hash;
+		pathinfo_gener.wild_leaves = get_wild_leaves(sp, subpaths);
+		fwrite(&pathinfo_gener, 1, sizeof(pathinfo_gener), fh);
 	}
 
 	fclose(fh);
@@ -434,7 +441,7 @@ static LIST_IT_CALLBK(set_write_to_index)
 		po_item.n_lr_paths   = arg->subpaths.n_lr_paths;
 		po_item.n_paths      = ele->dup_cnt + 1;
 		po_item.doc_id       = arg->docID;
-		po_item.pathinfo_pos = pathinfo_len(path);
+		po_item.pathinfo_pos = pathinfo_len(path); /* to be appended */
 		write_posting_item_v2(path, &po_item);
 
 		/* write n_paths number of pathinfo structure */
@@ -543,7 +550,7 @@ free:
 	return ret;
 }
 
-int math_inex_probe_v2(const char* path, bool trans, FILE *fh)
+int math_inex_probe_v2(const char* path, bool trans, bool gener, FILE *fh)
 {
 	int ret = 0;
 	math_posting_t *po = math_posting_new_reader(path);
@@ -557,26 +564,47 @@ int math_inex_probe_v2(const char* path, bool trans, FILE *fh)
 
 	do {
 		/* read posting list item */
-		PTR_CAST(po_item, struct math_posting_compound_item_v2,
-		         math_posting_cur_item_v2(po));
-		fprintf(fh, "doc#%u, exp#%u. %u lr_paths, %u paths {",
-		        po_item->doc_id, po_item->exp_id, po_item->n_lr_paths,
-		        po_item->n_paths);
+		if (!gener) {
+			struct math_postlist_item po_item;
+			math_posting_read(po, &po_item);
+			fprintf(fh, "doc#%u, exp#%u. %u lr_paths, %u paths {",
+					po_item.doc_id, po_item.exp_id, po_item.n_lr_paths,
+					po_item.n_paths);
 
-		for (uint32_t i = 0; i < po_item->n_paths; i++) {
-			struct math_pathinfo_v2 *p = po_item->pathinfo + i;
-			if (!trans) {
-				fprintf(fh, "[%u ~ %u, %x]", p->subr_id, p->leaf_id,
-				                             p->lf_symb);
-			} else {
-				fprintf(fh, "[%u ~ %u, %s]", p->subr_id, p->leaf_id,
-				                             trans_symbol(p->lf_symb));
+			for (uint32_t i = 0; i < po_item.n_paths; i++) {
+				struct math_postlist_item *p = &po_item;
+				if (!trans) {
+					fprintf(fh, "[%u ~ %u, lf%x, op%x]",
+						p->subr_id[i], p->leaf_id[i],
+						p->lf_symb[i], p->op_hash[i]);
+				} else {
+					fprintf(fh, "[%u ~ %u, %s, op%x]",
+						p->subr_id[i], p->leaf_id[i],
+						trans_symbol(p->lf_symb[i]), p->op_hash[i]);
+				}
+
+				if (i + 1 != po_item.n_paths)
+					fprintf(fh, ", ");
 			}
+			fprintf(fh, "}");
+		} else {
+			struct math_postlist_gener_item po_item;
+			math_posting_read_gener(po, &po_item);
+			fprintf(fh, "doc#%u, exp#%u. %u lr_paths, %u paths {",
+					po_item.doc_id, po_item.exp_id, po_item.n_lr_paths,
+					po_item.n_paths);
 
-			if (i + 1 != po_item->n_paths)
-				fprintf(fh, ", ");
+			for (uint32_t i = 0; i < po_item.n_paths; i++) {
+				struct math_postlist_gener_item *p = &po_item;
+				fprintf(fh, "[%u ~ %u, tr%x, op%x, 0x%lx]",
+					p->subr_id[i], p->wild_id[i], p->tr_hash[i],
+					p->op_hash[i], p->wild_leaves[i]);
+
+				if (i + 1 != po_item.n_paths)
+					fprintf(fh, ", ");
+			}
+			fprintf(fh, "}");
 		}
-		fprintf(fh, "}");
 
 		/* finish probing this posting item */
 		fprintf(fh, "\n");

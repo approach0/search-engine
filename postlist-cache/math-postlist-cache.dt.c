@@ -15,32 +15,6 @@
 char *trans_symbol(int);
 #endif
 
-void disk_item_v2_to_mem_item(
-	struct math_postlist_item *mem_item,
-	struct math_posting_compound_item_v2 *disk_item)
-{
-#ifdef DEBUG_MATH_POSTLIST_CACHE
-	prinfo("[%u, %u, %u, %u]", disk_item->exp_id, disk_item->doc_id,
-	                           disk_item->n_lr_paths, disk_item->n_paths);
-#endif
-	mem_item->doc_id     = disk_item->doc_id;
-	mem_item->exp_id     = disk_item->exp_id;
-	mem_item->n_lr_paths = disk_item->n_lr_paths;
-	mem_item->n_paths    = disk_item->n_paths;
-
-	/* copy pathinfo items */
-	for (int i = 0; i < disk_item->n_paths; i++) {
-		struct math_pathinfo_v2 *p = disk_item->pathinfo + i;
-		mem_item->subr_id[i] = p->subr_id;
-		mem_item->leaf_id[i] = p->leaf_id;
-		mem_item->lf_symb[i] = p->lf_symb;
-#ifdef DEBUG_MATH_POSTLIST_CACHE
-		prinfo("[%u ~ %u, %s (%u)]", p->leaf_id, p->subr_id,
-		       trans_symbol(p->lf_symb), p->lf_symb);
-#endif
-	}
-}
-
 struct postlist *
 fork_math_postlist(math_posting_t *disk_po)
 {
@@ -51,9 +25,7 @@ fork_math_postlist(math_posting_t *disk_po)
 	mem_po = math_postlist_create_compressed();
 
 	do {
-		PTR_CAST(disk_item, struct math_posting_compound_item_v2,
-		         math_posting_cur_item_v2(disk_po));
-		disk_item_v2_to_mem_item(&mem_item, disk_item);
+		math_posting_read(disk_po, &mem_item);
 
 		fl_sz = postlist_write(mem_po, &mem_item, sizeof(mem_item));
 #ifdef DEBUG_MATH_POSTLIST_CACHE

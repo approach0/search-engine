@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "common/common.h"
+#include "postlist/math-postlist.h" /* for math_postlist_item */
 #include "head.h"
 
 #define MATH_ONDISK_SIGNATURE "mtdskpst"
@@ -155,6 +156,7 @@ bool math_posting_start(math_posting_t po_)
 	return 1;
 }
 
+/* reading the next disk posting item, there is no fh_pathinfo involved */
 bool math_posting_next(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
@@ -171,6 +173,7 @@ bool math_posting_next(math_posting_t po_)
 	return 0;
 }
 
+/* jump to target item, again, there is no fh_pathinfo involved */
 bool math_posting_jump(math_posting_t po_, uint64_t target)
 {
 	/* Notice: If target is going back, jump() will go to the end. */
@@ -250,8 +253,8 @@ math_posting_pathinfo(math_posting_t po_, uint32_t position)
 }
 
 static int
-math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_paths,
-                         struct math_pathinfo_v2 *pathinfo)
+math_posting_read_pathinfo(math_posting_t po_, uint32_t position,
+	size_t pathinfo_sz, uint32_t n_paths, void *dest)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
 
@@ -259,12 +262,70 @@ math_posting_pathinfo_v2(math_posting_t po_, uint32_t position, uint32_t n_paths
 	if (-1 == fseek(po->fh_pathinfo, position, SEEK_SET))
 		return 1;
 
-	if (n_paths == fread(pathinfo, sizeof(struct math_pathinfo_v2),
-				   n_paths, po->fh_pathinfo)) {
+	if (n_paths == fread(dest, pathinfo_sz, n_paths, po->fh_pathinfo)) {
 		return 0;
 	} else {
 		return 1;
 	}
+}
+
+size_t math_posting_read(math_posting_t po_, void *dest_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	struct math_pathinfo_v2 pathinfo[MAX_MATH_PATHS];
+	PTR_CAST(src, struct math_posting_item_v2, po->buf + po->buf_idx);
+	PTR_CAST(dest, struct math_postlist_item, dest_);
+
+	dest->exp_id     = src->exp_id;
+	dest->doc_id     = src->doc_id;
+	dest->n_lr_paths = src->n_lr_paths;
+	dest->n_paths    = src->n_paths;
+
+	if (0 != math_posting_read_pathinfo(po_, src->pathinfo_pos,
+		sizeof(pathinfo) / MAX_MATH_PATHS, src->n_paths, pathinfo)) {
+		/* failure */
+		return 0;
+	}
+
+	/* copy pathinfo items */
+	for (int i = 0; i < src->n_paths; i++) {
+		dest->leaf_id[i] = pathinfo[i].leaf_id;
+		dest->subr_id[i] = pathinfo[i].subr_id;
+		dest->lf_symb[i] = pathinfo[i].lf_symb;
+		dest->op_hash[i] = pathinfo[i].op_hash;
+	}
+
+ 	return sizeof(struct math_postlist_item);
+}
+
+size_t math_posting_read_gener(math_posting_t po_, void *dest_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	struct math_pathinfo_gener_v2 pathinfo[MAX_MATH_PATHS];
+	PTR_CAST(src, struct math_posting_item_v2, po->buf + po->buf_idx);
+	PTR_CAST(dest, struct math_postlist_gener_item, dest_);
+
+	dest->exp_id     = src->exp_id;
+	dest->doc_id     = src->doc_id;
+	dest->n_lr_paths = src->n_lr_paths;
+	dest->n_paths    = src->n_paths;
+
+	if (0 != math_posting_read_pathinfo(po_, src->pathinfo_pos,
+		sizeof(pathinfo) / MAX_MATH_PATHS, src->n_paths, pathinfo)) {
+		/* failure */
+		return 0;
+	}
+
+	/* copy pathinfo items */
+	for (int i = 0; i < src->n_paths; i++) {
+		dest->wild_id[i] = pathinfo[i].wild_id;
+		dest->subr_id[i] = pathinfo[i].subr_id;
+		dest->tr_hash[i] = pathinfo[i].tr_hash;
+		dest->op_hash[i] = pathinfo[i].op_hash;
+		dest->wild_leaves[i] = pathinfo[i].wild_leaves;
+	}
+
+ 	return sizeof(struct math_postlist_gener_item);
 }
 
 uint64_t math_posting_cur_id_v1(math_posting_t po_)
@@ -312,24 +373,6 @@ void *math_posting_cur_item_v1(math_posting_t po_)
 
 	memcpy(ret.pathinfo, pathinfo_pack->pathinfo,
 	       sizeof(struct math_pathinfo) * ret.n_paths);
-ret:
-	return &ret;
-}
-
-void *math_posting_cur_item_v2(math_posting_t po_)
-{
-	struct _math_posting *po = (struct _math_posting*)po_;
-	PTR_CAST(item, struct math_posting_item_v2, po->buf + po->buf_idx);
-	static struct math_posting_compound_item_v2 ret;
-
-	ret.exp_id     = item->exp_id;
-	ret.doc_id     = item->doc_id;
-	ret.n_paths    = item->n_paths;
-	ret.n_lr_paths = item->n_lr_paths;
-
-	if (math_posting_pathinfo_v2(po, item->pathinfo_pos, item->n_paths,
-	    ret.pathinfo))
-		goto ret;
 ret:
 	return &ret;
 }

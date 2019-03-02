@@ -46,7 +46,7 @@ bool math_index_mk_prefix_path_str(struct subpath*, int, char*);
 
 /* two debug functions */
 int math_inex_probe_v1(const char*, bool, FILE*);
-int math_inex_probe_v2(const char*, bool, FILE*);
+int math_inex_probe_v2(const char*, bool, bool, FILE*);
 
 void math_index_close(math_index_t);
 
