@@ -82,6 +82,10 @@ const char *math_posting_get_pathstr(math_posting_t);
 int math_posting_signature(math_posting_t);
 enum math_posting_type math_posting_type(math_posting_t);
 
+/* some writing functions to write mock posting */
+int write_posting_item_v2(const char*, struct math_posting_item_v2*);
+uint32_t get_pathinfo_len(const char*);
+
 bool math_posting_start(math_posting_t);
 bool math_posting_jump(math_posting_t, uint64_t);
 bool math_posting_next(math_posting_t);

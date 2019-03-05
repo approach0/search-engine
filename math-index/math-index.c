@@ -199,9 +199,8 @@ write_posting_item(const char *path, struct math_posting_item *po_item)
 	return 0;
 }
 
-static int
-write_posting_item_v2(const char *path,
-                      struct math_posting_item_v2 *item)
+int write_posting_item_v2(const char *path,
+                          struct math_posting_item_v2 *item)
 {
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
@@ -364,7 +363,7 @@ struct _index_path_arg {
 	int              prefix_len;
 };
 
-static uint32_t pathinfo_len(const char *path)
+uint32_t get_pathinfo_len(const char *path)
 {
 	FILE *fh;
 	uint64_t ret;
@@ -441,7 +440,7 @@ static LIST_IT_CALLBK(set_write_to_index)
 		po_item.n_lr_paths   = arg->subpaths.n_lr_paths;
 		po_item.n_paths      = ele->dup_cnt + 1;
 		po_item.doc_id       = arg->docID;
-		po_item.pathinfo_pos = pathinfo_len(path); /* to be appended */
+		po_item.pathinfo_pos = get_pathinfo_len(path); /* to be appended */
 		write_posting_item_v2(path, &po_item);
 
 		/* write n_paths number of pathinfo structure */
