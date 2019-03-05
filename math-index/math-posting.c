@@ -18,7 +18,11 @@
 	(DISK_RD_BUF_BYTES % sizeof(struct math_posting_item))
 
 struct _math_posting {
+	/* profile */
 	uint64_t   signature;
+	enum math_posting_type type;
+
+	/* path and files */
 	const char *fullpath;
 	FILE  *fh_posting;
 	FILE  *fh_pathinfo;
@@ -51,6 +55,14 @@ math_posting_new_reader(const char *fullpath)
 		malloc(sizeof(struct _math_posting));
 
 	memcpy(&po->signature, MATH_ONDISK_SIGNATURE, 8);
+
+	if (strstr(fullpath, GENER_PATH_NAME) != NULL) {
+		po->type = TYPE_GENER;
+	} else {
+		/* for efficiency here, just assume it is prefix path */
+		po->type = TYPE_PREFIX;
+	}
+
 	po->fullpath = strdup(fullpath);
 	po->fh_posting = NULL;
 	po->fh_pathinfo = NULL;
@@ -105,6 +117,12 @@ int math_posting_signature(math_posting_t po_)
 	if (po == NULL) return 0;
 	const char signature[] = MATH_ONDISK_SIGNATURE;
 	return (memcmp(&po->signature, signature, 8) == 0);
+}
+
+enum math_posting_type math_posting_type(math_posting_t po_)
+{
+	struct _math_posting *po = (struct _math_posting*)po_;
+	return po->type;
 }
 
 void math_posting_free_reader(math_posting_t po_)

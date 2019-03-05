@@ -77,6 +77,11 @@ static size_t math_disk_postlist_read(void *po_, void *dest_, size_t sz)
 	return math_posting_read(po_, dest_);
 }
 
+static size_t math_disk_postlist_read_gener(void *po_, void *dest_, size_t sz)
+{
+	return math_posting_read_gener(po_, dest_);
+}
+
 static int math_disk_postlist_init(void *po)
 {
 	return (int)math_posting_start(po);
@@ -91,16 +96,29 @@ static void math_disk_postlist_uninit(void *po)
 struct postmerger_postlist
 math_disk_postlist(void *po)
 {
-	struct postmerger_postlist ret = {
-		po,
-		&math_disk_postlist_cur,
-		&math_disk_postlist_next,
-		&math_disk_postlist_jump,
-		&math_disk_postlist_read,
-		&math_disk_postlist_init,
-		&math_disk_postlist_uninit
-	};
-	return ret;
+	if (math_posting_type(po) == TYPE_PREFIX) {
+		struct postmerger_postlist ret = {
+			po,
+			&math_disk_postlist_cur,
+			&math_disk_postlist_next,
+			&math_disk_postlist_jump,
+			&math_disk_postlist_read,
+			&math_disk_postlist_init,
+			&math_disk_postlist_uninit
+		};
+		return ret;
+	} else {
+		struct postmerger_postlist ret = {
+			po,
+			&math_disk_postlist_cur,
+			&math_disk_postlist_next,
+			&math_disk_postlist_jump,
+			&math_disk_postlist_read_gener,
+			&math_disk_postlist_init,
+			&math_disk_postlist_uninit
+		};
+		return ret;
+	}
 }
 
 static uint64_t empty_postlist_cur(void *po)

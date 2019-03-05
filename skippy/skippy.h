@@ -19,6 +19,7 @@
 #define SKIPPY_SKIP_LEVELS 2
 #define SKIPPY_TOTAL_LEVELS (SKIPPY_SKIP_LEVELS + 1)
 
+/* SPAN: append upper level on every how many appends in the lower level. */
 #define DEFAULT_SKIPPY_SPANS 3
 #define MAX_SKIPPY_SPANS     UINT_MAX
 
@@ -105,10 +106,13 @@ static __inline bool
 _skippy_append_level(struct skippy *sk, struct skippy_node *sn, int level)
 {
 	uint32_t n_nodes;
-	if (level == 0)
+	if (level == 0) {
+		/* first level must allow placement each time */
 		n_nodes = 1;
-	else
+	} else {
+		/* other levels depend on lower level n_nodes */
 		n_nodes = sk->n_nodes[level - 1];
+	}
 
 	if (n_nodes % sk->n_spans == 1 /* set to 1 so that we make every
 	    level have the first skippy element as its head. */) {

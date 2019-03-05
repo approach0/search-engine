@@ -19,34 +19,39 @@ struct postlist *
 fork_math_postlist(math_posting_t *disk_po)
 {
 	struct postlist *mem_po;
-	struct math_postlist_item mem_item;
+	struct math_postlist_item       prefix_item;
+	struct math_postlist_gener_item gener_item;
+	enum math_posting_type type;
 	size_t fl_sz;
 
-	mem_po = math_postlist_create_compressed();
+	/* get the type of on-disk math posting list */
+	type = math_posting_type(disk_po);
 
-	do {
-		math_posting_read(disk_po, &mem_item);
+	if (type == TYPE_PREFIX) {
+		mem_po = math_postlist_create_compressed();
 
-		fl_sz = postlist_write(mem_po, &mem_item, sizeof(mem_item));
-#ifdef DEBUG_MATH_POSTLIST_CACHE
-		if (fl_sz)
-			printf("flush %lu bytes.\n", fl_sz);
-#endif
-	} while (math_posting_next(disk_po));
+		do {
+			math_posting_read(disk_po, &prefix_item);
+			fl_sz = postlist_write(mem_po, &prefix_item, sizeof(prefix_item));
+		} while (math_posting_next(disk_po));
+
+	} else {
+		mem_po = math_postlist_create_gener_compressed();
+
+		do {
+			math_posting_read_gener(disk_po, &gener_item);
+			fl_sz = postlist_write(mem_po, &gener_item, sizeof(gener_item));
+		} while (math_posting_next(disk_po));
+	}
 
 	fl_sz = postlist_write_complete(mem_po);
-#ifdef DEBUG_MATH_POSTLIST_CACHE
-	printf("final flush %lu bytes.\n", fl_sz);
-#else
 	(void)fl_sz;
-#endif
 
 	return mem_po;
 }
 
 struct math_postlist_cache_arg {
 	struct math_postlist_cache *cache;
-	char *prefix_dir;
 	uint64_t tot_cnt;
 };
 
@@ -62,7 +67,6 @@ dir_srch_callbk(const char* path, const char *srchpath,
 		return ret;
 
 	PTR_CAST(mpca, struct math_postlist_cache_arg, arg);
-	sds key = sdsnew(mpca->prefix_dir);
 	struct math_postlist_cache *cache = mpca->cache;
 	strmap_t path_dict = cache->path_dict;
 
@@ -92,13 +96,20 @@ dir_srch_callbk(const char* path, const char *srchpath,
 		postlist_free(mem_po);
 		ret = DS_RET_STOP_ALLDIR;
 	} else {
+		sds key;
+		if (math_posting_type(disk_po) == TYPE_PREFIX) {
+			key = sdsnew(PREFIX_PATH_NAME);
+		} else {
+			key = sdsnew(GENER_PATH_NAME);
+		}
 		key = sdscat(key, srchpath + 1);
+
 		path_dict[[key]] = mem_po;
 		cache->postlist_sz += mem_po->tot_sz;
+		sdsfree(key);
 	}
 
 next:
-	sdsfree(key);
 	math_posting_finish(disk_po);
 	math_posting_free_reader(disk_po);
 
@@ -131,11 +142,8 @@ int
 math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 {
 	size_t postlist_sz = cache->postlist_sz;
-	struct math_postlist_cache_arg args = {
-		cache, (char *)"./" PREFIX_PATH_NAME, 0
-	};
+	struct math_postlist_cache_arg args = {cache, 0};
 	dir_search_bfs(dir, &dir_srch_callbk, &args);
-	// dir_search_podfs(dir, &dir_srch_callbk, &args);
 	printf("\n");
 
 	return (postlist_sz == cache->postlist_sz);

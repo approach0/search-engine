@@ -19,11 +19,16 @@ int postlist_cache_fork(struct postlist_cache *cache,
                         term_index_t ti, math_index_t mi)
 {
 	int res = 0;
-	sds math_cache_path = sdsnew(mi->dir);
-	math_cache_path = sdscat(math_cache_path, "/" PREFIX_PATH_NAME);
+	sds prefix_path = sdscat(sdsnew(mi->dir), "/" PREFIX_PATH_NAME);
+	sds gener_path = sdscat(sdsnew(mi->dir), "/" GENER_PATH_NAME);
 
+	/* caching from specifed path list */
 	(void)math_postlist_cache_add_list(&cache->math_cache, mi->dir);
-	res |= math_postlist_cache_add(&cache->math_cache, math_cache_path);
+
+	/* caching from index w/ memory limit */
+	res |= math_postlist_cache_add(&cache->math_cache, prefix_path);
+	res |= math_postlist_cache_add(&cache->math_cache, gener_path);
+
 #ifndef IGNORE_TERM_INDEX
 	res |= term_postlist_cache_add(&cache->term_cache, ti);
 #endif
@@ -31,7 +36,8 @@ int postlist_cache_fork(struct postlist_cache *cache,
 	cache->tot_used = cache->math_cache.postlist_sz +
 	                  cache->term_cache.postlist_sz;
 	
-	sdsfree(math_cache_path);
+	sdsfree(prefix_path);
+	sdsfree(gener_path);
 	return res;
 }
 

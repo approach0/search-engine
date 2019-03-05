@@ -67,13 +67,20 @@ struct math_pathinfo_gener_v2 {
 
 struct subpath_ele;
 
+enum math_posting_type {
+	TYPE_PREFIX,
+	TYPE_GENER
+};
+
 math_posting_t
 math_posting_new_reader(const char*);
 
 void math_posting_free_reader(math_posting_t);
 
 const char *math_posting_get_pathstr(math_posting_t);
+
 int math_posting_signature(math_posting_t);
+enum math_posting_type math_posting_type(math_posting_t);
 
 bool math_posting_start(math_posting_t);
 bool math_posting_jump(math_posting_t, uint64_t);

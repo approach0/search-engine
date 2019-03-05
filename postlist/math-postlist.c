@@ -18,22 +18,22 @@
 #include "postlist.h"
 #include "math-postlist.h"
 
+/* skip list span */
 #ifdef DEBUG_POSTLIST
 #define MATH_POSTLIST_SKIP_SPAN       2
 #else
 #define MATH_POSTLIST_SKIP_SPAN       DEFAULT_SKIPPY_SPANS
 #endif
 
-#define MIN_MATH_POSTING_BUF_SZ       sizeof(struct math_postlist_item)
-
+/* buffer sizes */
 #ifdef DEBUG_POSTLIST
-#define MATH_POSTLIST_BUF_SZ          (MIN_MATH_POSTING_BUF_SZ * 2)
+#define BUF_SZ(_item_struct)  (sizeof(_item_struct) * 2)
 #else
-#define MATH_POSTLIST_BUF_SZ          ROUND_UP(MIN_MATH_POSTING_BUF_SZ, 65536 * 2)
+#define BUF_SZ(_item_struct)  ROUND_UP(65536 * 2, sizeof(_item_struct))
 #endif
 
-#define MATH_POSTLIST_BUF_MAX_ITEMS   \
-	(MATH_POSTLIST_BUF_SZ / MIN_MATH_POSTING_BUF_SZ)
+#define BUF_MAX_ITEMS(_item_struct)   \
+	(BUF_SZ(_item_struct) / sizeof(_item_struct))
 
 static uint64_t
 onflush_for_plain_post(char *buf, uint32_t *buf_sz, void *buf_arg)
@@ -83,19 +83,23 @@ static uint field_offset(uint j)
 {
 	switch (j) {
 	case 0:
-		return offsetof(struct math_postlist_item, exp_id);
+		return offsetof(struct math_postlist_gener_item, exp_id);
 	case 1:
-		return offsetof(struct math_postlist_item, doc_id);
+		return offsetof(struct math_postlist_gener_item, doc_id);
 	case 2:
-		return offsetof(struct math_postlist_item, n_lr_paths);
+		return offsetof(struct math_postlist_gener_item, n_lr_paths);
 	case 3:
-		return offsetof(struct math_postlist_item, n_paths);
+		return offsetof(struct math_postlist_gener_item, n_paths);
 	case 4:
-		return offsetof(struct math_postlist_item, leaf_id);
+		return offsetof(struct math_postlist_gener_item, wild_id);
 	case 5:
-		return offsetof(struct math_postlist_item, subr_id);
+		return offsetof(struct math_postlist_gener_item, subr_id);
 	case 6:
-		return offsetof(struct math_postlist_item, lf_symb);
+		return offsetof(struct math_postlist_gener_item, tr_hash);
+	case 7:
+		return offsetof(struct math_postlist_gener_item, op_hash);
+	case 8:
+		return offsetof(struct math_postlist_gener_item, wild_leaves);
 	default:
 		prerr("Unexpected field number");
 		abort();
@@ -104,7 +108,7 @@ static uint field_offset(uint j)
 
 static uint field_len(void *inst, uint j)
 {
-	PTR_CAST(a, struct math_postlist_item, inst);
+	PTR_CAST(a, struct math_postlist_gener_item, inst);
 	switch (j) {
 	case 0:
 	case 1:
@@ -114,6 +118,8 @@ static uint field_len(void *inst, uint j)
 	case 4:
 	case 5:
 	case 6:
+	case 7:
+	case 8:
 		return a->n_paths;
 	default:
 		prerr("Unexpected field number");
@@ -124,18 +130,24 @@ static uint field_len(void *inst, uint j)
 static uint field_size(uint j)
 {
 	size_t sz = 0;
-	struct math_postlist_item a;
+	struct math_postlist_gener_item a;
 	switch (j) {
 	case 0:
 	case 1:
+		sz = sizeof(uint32_t);
+		break;
 	case 2:
 	case 3:
-		sz = sizeof(uint32_t);
+		sz = sizeof(uint16_t);
 		break;
 	case 4:
 	case 5:
 	case 6:
-		sz = sizeof(a.leaf_id);
+	case 7:
+		sz = sizeof(a.wild_id);
+		break;
+	case 8:
+		sz = sizeof(a.wild_leaves);
 		break;
 	default:
 		prerr("Unexpected field number");
@@ -162,7 +174,11 @@ static char *field_info(uint j)
 	case 5:
 		return "path subr-end vertex";
 	case 6:
-		return "leaf (operand) symbol";
+		return "operand(s) symbol/hash";
+	case 7:
+		return "operators symbol hash";
+	case 8:
+		return "wildcards operands IDs";
 	default:
 		prerr("Unexpected field number");
 		abort();
@@ -182,23 +198,24 @@ math_postlist_create_plain()
 	};
 	
 	codec = postlist_codec_alloc(
-		MATH_POSTLIST_BUF_MAX_ITEMS,
+		BUF_MAX_ITEMS(struct math_postlist_item),
 		sizeof(struct math_postlist_item),
-		7 /* number of fields */,
+		8 /* number of fields */,
 		field_offset, field_len,
 		field_size,   field_info,
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+		/* 1 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 2 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 3 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 4 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 5 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 6 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 8 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	);
 
 	po = postlist_create(
 		MATH_POSTLIST_SKIP_SPAN,
-		MATH_POSTLIST_BUF_SZ,
+		BUF_SZ(struct math_postlist_item),
 		sizeof(struct math_postlist_item),
 		codec, calls);
 
@@ -218,24 +235,101 @@ math_postlist_create_compressed()
 	};
 	
 	codec = postlist_codec_alloc(
-		MATH_POSTLIST_BUF_MAX_ITEMS,
+		BUF_MAX_ITEMS(struct math_postlist_item),
 		sizeof(struct math_postlist_item),
-		7 /* number of fields */,
+		8 /* number of fields */,
 		field_offset, field_len,
 		field_size,   field_info,
-		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
+		/* 1 */ codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		/* 2 */ codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		/* 3 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 4 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 5 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 6 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 8 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	);
 	
 	po = postlist_create(
 		MATH_POSTLIST_SKIP_SPAN,
-		MATH_POSTLIST_BUF_SZ,
+		BUF_SZ(struct math_postlist_item),
 		sizeof(struct math_postlist_item),
+		codec, calls);
+
+	return po;
+}
+
+struct postlist *
+math_postlist_create_gener_plain()
+{
+	struct postlist *po;
+	struct postlist_codec *codec;
+
+	struct postlist_callbks calls = {
+		onflush_for_plain_post,
+		onrebuf_for_plain_post,
+		onfree
+	};
+	
+	codec = postlist_codec_alloc(
+		BUF_MAX_ITEMS(struct math_postlist_gener_item),
+		sizeof(struct math_postlist_gener_item),
+		9 /* number of fields */,
+		field_offset, field_len,
+		field_size,   field_info,
+		/* 1 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 2 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 3 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 4 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 5 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 6 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 8 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 9 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+	);
+
+	po = postlist_create(
+		MATH_POSTLIST_SKIP_SPAN,
+		BUF_SZ(struct math_postlist_gener_item),
+		sizeof(struct math_postlist_gener_item),
+		codec, calls);
+
+	return po;
+}
+
+struct postlist *
+math_postlist_create_gener_compressed()
+{
+	struct postlist *po;
+	struct postlist_codec *codec;
+
+	struct postlist_callbks calls = {
+		onflush_for_compressed_post,
+		onrebuf_for_compressed_post,
+		onfree
+	};
+	
+	codec = postlist_codec_alloc(
+		BUF_MAX_ITEMS(struct math_postlist_gener_item),
+		sizeof(struct math_postlist_gener_item),
+		9 /* number of fields */,
+		field_offset, field_len,
+		field_size,   field_info,
+		/* 1 */ codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		/* 2 */ codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		/* 3 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 4 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 5 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 6 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 8 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 9 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+	);
+	
+	po = postlist_create(
+		MATH_POSTLIST_SKIP_SPAN,
+		BUF_SZ(struct math_postlist_gener_item),
+		sizeof(struct math_postlist_gener_item),
 		codec, calls);
 
 	return po;
