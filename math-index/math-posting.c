@@ -57,10 +57,10 @@ math_posting_new_reader(const char *fullpath)
 	memcpy(&po->signature, MATH_ONDISK_SIGNATURE, 8);
 
 	if (strstr(fullpath, GENER_PATH_NAME) != NULL) {
-		po->type = TYPE_GENER;
+		po->type = MATH_PATH_TYPE_GENER;
 	} else {
 		/* for efficiency here, just assume it is prefix path */
-		po->type = TYPE_PREFIX;
+		po->type = MATH_PATH_TYPE_PREFIX;
 	}
 
 	po->fullpath = strdup(fullpath);

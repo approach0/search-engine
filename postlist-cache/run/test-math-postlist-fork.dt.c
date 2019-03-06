@@ -11,27 +11,8 @@ void test_mem_post(struct postlist *po, int gener)
 	foreach (iter, postlist, po) {
 		struct math_postlist_gener_item *item;
 		item = postlist_iter_cur_item(iter);
-		printf("doc#%u, exp#%u, ", item->doc_id, item->exp_id);
-		printf("lr#%u, %u paths:\n", item->n_lr_paths, item->n_paths);
 
-		for (int i = 0; i < item->n_paths; i++) {
-			if (gener) {
-				printf("\t gener pathinfo %u, %u, 0x%x, 0x%x, 0x%lx \n",
-					item->wild_id[i],
-					item->subr_id[i],
-					item->tr_hash[i],
-					item->op_hash[i],
-					item->wild_leaves[i]
-				);
-			} else {
-				printf("\t normal pathinfo %u, %u, %u, 0x%x \n",
-					item->wild_id[i],
-					item->subr_id[i],
-					item->tr_hash[i],
-					item->op_hash[i]
-				);
-			}
-		}
+		math_postlist_print_item(item, gener);
 	}
 }
 
@@ -51,7 +32,7 @@ static int fork_from(char *path)
 
 	mem_po = fork_math_postlist(disk_po);
 
-	if (math_posting_type(disk_po) == TYPE_PREFIX)
+	if (math_posting_type(disk_po) == MATH_PATH_TYPE_PREFIX)
 		printf("prefix path uncompressed: %lu bytes / block (%lu items)\n",
 			ROUND_UP(65536, sizeof(struct math_postlist_item)),
 			ROUND_UP(65536, sizeof(struct math_postlist_item)) / sizeof(struct math_postlist_item)
@@ -64,7 +45,7 @@ static int fork_from(char *path)
 	printf("compressed: %lu bytes / block\n", (mem_po->head) ? mem_po->head->blk_sz : 0);
 	printf("\n");
 
-	if (math_posting_type(disk_po) == TYPE_PREFIX)
+	if (math_posting_type(disk_po) == MATH_PATH_TYPE_PREFIX)
 		test_mem_post(mem_po, 0);
 	else
 		test_mem_post(mem_po, 1);

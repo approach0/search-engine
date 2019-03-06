@@ -357,3 +357,29 @@ math_postlist_create_gener_compressed()
 
 	return po;
 }
+
+/* print functions */
+void math_postlist_print_item(struct math_postlist_gener_item *item, int gener)
+{
+	printf("doc#%u, exp#%u, ", item->doc_id, item->exp_id);
+	printf("lr#%u, %u paths:\n", item->n_lr_paths, item->n_paths);
+
+	for (int i = 0; i < item->n_paths; i++) {
+		if (gener) {
+			printf("\t gener pathinfo %u, %u, 0x%x, 0x%x, 0x%lx \n",
+				item->wild_id[i],
+				item->subr_id[i],
+				item->tr_hash[i],
+				item->op_hash[i],
+				item->wild_leaves[i]
+			);
+		} else {
+			printf("\t normal pathinfo %u, %u, %u, 0x%x \n",
+				item->wild_id[i],
+				item->subr_id[i],
+				item->tr_hash[i],
+				item->op_hash[i]
+			);
+		}
+	}
+}

@@ -68,8 +68,9 @@ struct math_pathinfo_gener_v2 {
 struct subpath_ele;
 
 enum math_posting_type {
-	TYPE_PREFIX,
-	TYPE_GENER
+	MATH_PATH_TYPE_UNKNOWN,
+	MATH_PATH_TYPE_PREFIX,
+	MATH_PATH_TYPE_GENER
 };
 
 math_posting_t

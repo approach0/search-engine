@@ -96,7 +96,7 @@ static void math_disk_postlist_uninit(void *po)
 struct postmerger_postlist
 math_disk_postlist(void *po)
 {
-	if (math_posting_type(po) == TYPE_PREFIX) {
+	if (math_posting_type(po) == MATH_PATH_TYPE_PREFIX) {
 		struct postmerger_postlist ret = {
 			po,
 			&math_disk_postlist_cur,

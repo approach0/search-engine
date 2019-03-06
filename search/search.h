@@ -14,6 +14,7 @@ struct math_l2_postlist {
 	struct postmerger pm; /* posting lists */
 	postmerger_iter_t iter;
 
+	enum math_posting_type path_type[MAX_MERGE_POSTINGS];
 	struct subpath_ele *ele[MAX_MERGE_POSTINGS];
 
 	struct math_qry_struct *mqs;

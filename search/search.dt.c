@@ -24,11 +24,18 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 	struct math_l2_postlist *l2po = args->po;
 
 	for (uint32_t i = 0; i < n_eles; i++) {
+		/* determine path type */
+		enum math_posting_type path_type = MATH_PATH_TYPE_UNKNOWN;
+		if (base_paths[i][2] == 'p') path_type = MATH_PATH_TYPE_PREFIX;
+		else if (base_paths[i][2] == 'g') path_type = MATH_PATH_TYPE_GENER;
+
+		/* map posting list from cache or create on-disk posting list. */
 		void *po = math_postlist_cache_find(ci.math_cache, base_paths[i]);
 		int n = l2po->pm.n_po;
 		if (po) {
 			l2po->pm.po[n] = math_memo_postlist(po);
 
+			args->po->path_type[n] = path_type;
 			args->po->ele[n] = eles[i];
 #ifndef QUIET_SEARCH
 			printf("#%u (in memo) %s\n", n, base_paths[i]);
@@ -37,6 +44,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			po = math_posting_new_reader(full_paths[i]);
 			l2po->pm.po[n] = math_disk_postlist(po);
 
+			args->po->path_type[n] = path_type;
 			args->po->ele[n] = eles[i];
 #ifndef QUIET_SEARCH
 			printf("#%u (on disk) %s\n", n, base_paths[i]);
@@ -44,6 +52,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		} else {
 			l2po->pm.po[n] = empty_postlist();
 
+			args->po->path_type[n] = MATH_PATH_TYPE_UNKNOWN;
 			args->po->ele[n] = NULL;
 #ifndef QUIET_SEARCH
 			printf("#%u (empty) %s\n", n, base_paths[i]);
@@ -278,16 +287,18 @@ int math_l2_postlist_one_by_one_through(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 
-	math_pruner_print(&po->pruner);
-	math_l2_postlist_print_cur(po);
-	printf("\n");
+//	math_pruner_print(&po->pruner);
+//	math_l2_postlist_print_cur(po);
+//	printf("\n");
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint32_t pid = po->iter->map[i];
-		printf("Going through posting list #%u ...\n", pid);
-		uint64_t cur = 0;
+		enum math_posting_type pt = po->path_type[pid];
+
+		printf("Going through posting list #%u (%s) ...\n", pid,
+			(pt == MATH_PATH_TYPE_PREFIX) ? "prefix" : "gener");
 		while (1) {
-			cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			if ((cur >> 32) == UINT32_MAX) break;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
@@ -296,10 +307,16 @@ int math_l2_postlist_one_by_one_through(void *po_)
 				break;
 			}
 #else
+			/* print math postlist item */
+			struct math_postlist_gener_item item;
+			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
+			math_postlist_print_item(&item, pt == MATH_PATH_TYPE_GENER);
 #endif
 
 			postmerger_iter_call(&po->pm, po->iter, next, i);
 		}
+
+		printf("\n");
 	}
 
 	po->candidate = UINT64_MAX;
@@ -562,7 +579,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 #endif
 	}
-	
+
 #ifdef MERGE_TIME_LOG
 	fprintf(mergetime_fh, "mergecost %ld msec.\n", timer_tot_msec(&timer));
 #endif

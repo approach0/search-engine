@@ -27,7 +27,7 @@ fork_math_postlist(math_posting_t *disk_po)
 	/* get the type of on-disk math posting list */
 	type = math_posting_type(disk_po);
 
-	if (type == TYPE_PREFIX) {
+	if (type == MATH_PATH_TYPE_PREFIX) {
 		mem_po = math_postlist_create_compressed();
 
 		do {
@@ -99,7 +99,7 @@ dir_srch_callbk(const char* path, const char *srchpath,
 		ret = DS_RET_STOP_ALLDIR;
 	} else {
 		sds key;
-		if (math_posting_type(disk_po) == TYPE_PREFIX) {
+		if (math_posting_type(disk_po) == MATH_PATH_TYPE_PREFIX) {
 			key = sdsnew(PREFIX_PATH_NAME);
 		} else {
 			key = sdsnew(GENER_PATH_NAME);
