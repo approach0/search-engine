@@ -6,13 +6,9 @@ before_install:
   - sudo apt-get install -qq ctags bison flex
   - sudo apt-get install -qq libz-dev
   - sudo apt-get install -qq libevent-dev
-  - wget 'https://github.com/yanyiwu/cppjieba/archive/v4.8.1.tar.gz' -O cppjieba.tar.gz
-  - mkdir -p /home/`whoami`/cppjieba
-  - tar -xzf cppjieba.tar.gz -C /home/`whoami`/cppjieba --strip-components=1
-  - wget -O indri-5.9.tar.gz 'https://sourceforge.net/projects/lemur/files/lemur/indri-5.9/indri-5.9.tar.gz/download'
-  - tar -xzf indri-5.9.tar.gz
-  - (cd indri-5.9 && chmod +x configure && ./configure && make)
-  - mv indri-5.9 /home/`whoami`/
+  - git clone 'https://github.com/approach0/fork-cppjieba.git' /home/`whoami`/cppjieba
+  - git clone 'https://github.com/approach0/fork-indri.git' /home/`whoami`/indri
+  - (cd /home/`whoami`/indri && chmod +x configure && ./configure && make)
 script:
-  - ./configure --indri-path=/home/`whoami`/indri-5.9
+  - ./configure --indri-path=/home/`whoami`/indri
   - make
