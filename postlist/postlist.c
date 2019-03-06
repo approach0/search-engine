@@ -309,7 +309,7 @@ postlist_iter_rebuf(struct postlist_iterator *iter)
 {
 	struct postlist_node *cur = iter->cur;
 	struct postlist *po = iter->po;
-	if (cur) { /* when forward_cur hits NULL */
+	if (cur) { /* when forward_cur not hitting NULL */
 		memcpy(iter->buf, cur->blk, cur->blk_sz);
 		iter->buf_end = cur->blk_sz;
 
@@ -347,13 +347,15 @@ int postlist_iter_next(struct postlist_iterator* iter)
 	if (iter->buf_idx + po->item_sz < iter->buf_end) {
 		iter->buf_idx += po->item_sz;
 		return 1;
+
 	} else if (iter->buf_end != 0) {
 		/* next block */
 		forward_cur(&iter->cur);
 		/* reset buffer */
 		postlist_iter_rebuf(iter);
-		return (po->buf_end != 0);
+		return (iter->buf_end != 0);
 	}
+
 	return 0;
 }
 

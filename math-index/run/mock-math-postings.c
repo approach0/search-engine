@@ -116,20 +116,20 @@ static void append_mock_item(const char *path, int gener)
 
 int main()
 {
-	const char path1[] = "./tmp/gener/ADD";
-	const char path2[] = "./tmp/prefix/VAR";
+	const char gener_path[] = "./tmp/gener/ADD";
+	const char prefix_path[] = "./tmp/prefix/VAR";
 
 	srand(time(NULL));
 
-	mkdir_p(path1);
-	mkdir_p(path2);
+	mkdir_p(gener_path);
+	mkdir_p(prefix_path);
 
 	for (int i = 0; i < 99; i++)
-		append_mock_item(path1, 0);
+		append_mock_item(gener_path, 1);
 
 	printf("\n");
 	reset();
 
 	for (int i = 0; i < 100; i++)
-		append_mock_item(path2, 1);
+		append_mock_item(prefix_path, 0);
 }

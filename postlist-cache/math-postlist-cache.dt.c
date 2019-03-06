@@ -32,6 +32,8 @@ fork_math_postlist(math_posting_t *disk_po)
 
 		do {
 			math_posting_read(disk_po, &prefix_item);
+			// printf("%u, %u\n", prefix_item.doc_id, prefix_item.exp_id);
+
 			fl_sz = postlist_write(mem_po, &prefix_item, sizeof(prefix_item));
 		} while (math_posting_next(disk_po));
 
@@ -40,6 +42,8 @@ fork_math_postlist(math_posting_t *disk_po)
 
 		do {
 			math_posting_read_gener(disk_po, &gener_item);
+			// printf("%u, %u\n", gener_item.doc_id, gener_item.exp_id);
+
 			fl_sz = postlist_write(mem_po, &gener_item, sizeof(gener_item));
 		} while (math_posting_next(disk_po));
 	}
