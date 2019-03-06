@@ -6,7 +6,7 @@
 
 #include "mhook/mhook.h"
 #include "math-index.h"
-#include "config.h" /* for TOKEN_PATH_NAME */
+#include "config.h"
 
 int math_posting_iter_test(const char* path)
 {

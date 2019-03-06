@@ -83,14 +83,16 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 		printf("[index tex] `%s'\n", tex);
 		subpaths_print(&parse_ret.subpaths, stdout);
 #endif
+
 		/* actual tex indexing */
-#ifdef INDEX_PREFIX_ONLY
-		math_index_add_tex(math_index, prev_docID + 1, cur_position,
-		                   parse_ret.subpaths, MATH_INDEX_WO_CLASSIC);
-#else
+#ifdef INDEX_SUPPORT_MATH_WILDCARDS
 		math_index_add_tex(math_index, prev_docID + 1, cur_position,
 		                   parse_ret.subpaths, MATH_INDEX_ALL);
+#else
+		math_index_add_tex(math_index, prev_docID + 1, cur_position,
+		                   parse_ret.subpaths, MATH_INDEX_PREFIX_ONLY);
 #endif
+
 		subpaths_release(&parse_ret.subpaths);
 	} else {
 		/* grammar error */

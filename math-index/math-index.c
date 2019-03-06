@@ -128,7 +128,7 @@ math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_NORMAL) {
-		p += sprintf(dest_path, "%s", TOKEN_PATH_NAME);
+		p += sprintf(dest_path, "%s", PREFIX_PATH_NAME);
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else {
@@ -356,6 +356,7 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
 
 struct _index_path_arg {
 	math_index_t     index;
+	enum math_index_wr_opt opt;
 	doc_id_t         docID;
 	exp_id_t         expID;
 	struct subpaths  subpaths;
@@ -392,6 +393,12 @@ static LIST_IT_CALLBK(mkdir_and_setify)
 	/* sanity check */
 	if (sp->type != SUBPATH_TYPE_NORMAL &&
 	    sp->type != SUBPATH_TYPE_GENERNODE) {
+		LIST_GO_OVER;
+	}
+
+	/* only index prefix path under MATH_INDEX_PREFIX_ONLY */
+	if (arg->opt == MATH_INDEX_PREFIX_ONLY &&
+		sp->type == SUBPATH_TYPE_GENERNODE) {
 		LIST_GO_OVER;
 	}
 
@@ -459,6 +466,7 @@ math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
 {
 	struct _index_path_arg arg;
 	arg.index = (math_index_t)index;
+	arg.opt   = opt;
 	arg.docID = docID;
 	arg.expID = expID;
 	arg.subpaths = subpaths;

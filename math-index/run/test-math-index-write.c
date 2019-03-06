@@ -63,7 +63,7 @@ int main()
 			subpaths_print(&parse_ret.subpaths, stdout);
 
 			/* index the tex */
-			math_index_add_tex(index, docID, expID, parse_ret.subpaths, MATH_INDEX_WO_CLASSIC);
+			math_index_add_tex(index, docID, expID, parse_ret.subpaths, MATH_INDEX_ALL);
 			subpaths_release(&parse_ret.subpaths);
 			expID ++;
 		} else {
