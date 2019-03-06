@@ -29,7 +29,6 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		if (po) {
 			l2po->pm.po[n] = math_memo_postlist(po);
 
-			sprintf(args->po->type[n], "memo");
 			args->po->ele[n] = eles[i];
 #ifndef QUIET_SEARCH
 			printf("#%u (in memo) %s\n", n, base_paths[i]);
@@ -38,7 +37,6 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			po = math_posting_new_reader(full_paths[i]);
 			l2po->pm.po[n] = math_disk_postlist(po);
 
-			sprintf(args->po->type[n], "disk");
 			args->po->ele[n] = eles[i];
 #ifndef QUIET_SEARCH
 			printf("#%u (on disk) %s\n", n, base_paths[i]);
@@ -46,7 +44,6 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		} else {
 			l2po->pm.po[n] = empty_postlist();
 
-			sprintf(args->po->type[n], "empty");
 			args->po->ele[n] = NULL;
 #ifndef QUIET_SEARCH
 			printf("#%u (empty) %s\n", n, base_paths[i]);
@@ -275,21 +272,32 @@ int math_l2_postlist_next(void *po_)
 void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
 #ifdef DEBUG_MATH_SCORE_INSPECT
 int score_inspect_filter(doc_id_t, struct indices*);
+#endif
+
 int math_l2_postlist_one_by_one_through(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	//math_l2_cur_print(po, 0, 0.f);
+
+	math_pruner_print(&po->pruner);
+	math_l2_postlist_print_cur(po);
+	printf("\n");
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint32_t pid = po->iter->map[i];
+		printf("Going through posting list #%u ...\n", pid);
 		uint64_t cur = 0;
 		while (1) {
 			cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 			if ((cur >> 32) == UINT32_MAX) break;
+
+#ifdef DEBUG_MATH_SCORE_INSPECT
 			if (score_inspect_filter(cur >> 32, po->indices)) {
 				printf("it is in po#%u iter[%d]\n", pid, i);
 				break;
 			}
+#else
+#endif
+
 			postmerger_iter_call(&po->pm, po->iter, next, i);
 		}
 	}
@@ -297,14 +305,17 @@ int math_l2_postlist_one_by_one_through(void *po_)
 	po->candidate = UINT64_MAX;
 	return 0;
 }
-#endif
 
 static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
 {
 	if (max_i != max_j)
+		/* descending refMax value, according to
+		 * the pruning algorithm. */
 		return max_i < max_j;
 	else
-		return len_i < len_j;
+		/* ascending posting list length, so that
+		 * longer one gets dropped or skipped. */
+		return len_i > len_j;
 }
 
 static void math_l2_postlist_sort(struct math_l2_postlist *po)
@@ -358,8 +369,8 @@ int math_l2_postlist_init(void *po_)
 	math_l2_postlist_sort(po);
 
 #ifdef DEBUG_PRINT_QRY_STRUCT
-	math_l2_postlist_print_cur(po);
 	math_pruner_print(&po->pruner);
+	math_l2_postlist_print_cur(po);
 #endif
 
 	// printf("%u postings.\n", po->iter->size);
@@ -388,8 +399,8 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		math_l2_postlist_cur,
-		math_l2_postlist_next,
-		// math_l2_postlist_one_by_one_through, /* for debug */
+		// math_l2_postlist_next,
+		math_l2_postlist_one_by_one_through, /* for debug */
 		NULL /* jump */,
 		math_l2_postlist_read,
 		math_l2_postlist_init,

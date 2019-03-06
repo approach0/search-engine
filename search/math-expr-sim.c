@@ -426,8 +426,7 @@ void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 		uint32_t expID = (uint32_t)(cur >> 0);
 
 		uint32_t orig = po->iter->map[i];
-		printf("(%s) #%u iter[%u]: doc#%u,exp#%u \n",
-			po->type[orig], orig, i, docID, expID);
+		printf("po#%u iter[%u]: doc#%u,exp#%u \n", orig, i, docID, expID);
 	}
 }
 
