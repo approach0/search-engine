@@ -359,7 +359,8 @@ math_postlist_create_gener_compressed()
 }
 
 /* print functions */
-void math_postlist_print_item(struct math_postlist_gener_item *item, int gener)
+void math_postlist_print_item(struct math_postlist_gener_item *item,
+                              int gener, trans_fun_t trans)
 {
 	printf("doc#%u, exp#%u, ", item->doc_id, item->exp_id);
 	printf("lr#%u, %u paths:\n", item->n_lr_paths, item->n_paths);
@@ -374,12 +375,20 @@ void math_postlist_print_item(struct math_postlist_gener_item *item, int gener)
 				item->wild_leaves[i]
 			);
 		} else {
-			printf("\t normal pathinfo %u, %u, %u, 0x%x \n",
-				item->wild_id[i],
-				item->subr_id[i],
-				item->tr_hash[i],
-				item->op_hash[i]
-			);
+			if (trans == NULL)
+				printf("\t normal pathinfo %u, %u, %u, 0x%x \n",
+					item->wild_id[i],
+					item->subr_id[i],
+					item->tr_hash[i],
+					item->op_hash[i]
+				);
+			else
+				printf("\t normal pathinfo %u, %u, %s, 0x%x \n",
+					item->wild_id[i],
+					item->subr_id[i],
+					trans(item->tr_hash[i]),
+					item->op_hash[i]
+				);
 		}
 	}
 }

@@ -283,6 +283,7 @@ void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
 int score_inspect_filter(doc_id_t, struct indices*);
 #endif
 
+#include "tex-parser/head.h"
 int math_l2_postlist_one_by_one_through(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -310,7 +311,7 @@ int math_l2_postlist_one_by_one_through(void *po_)
 			/* print math postlist item */
 			struct math_postlist_gener_item item;
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
-			math_postlist_print_item(&item, pt == MATH_PATH_TYPE_GENER);
+			math_postlist_print_item(&item, pt == MATH_PATH_TYPE_GENER, trans_symbol);
 #endif
 
 			postmerger_iter_call(&po->pm, po->iter, next, i);

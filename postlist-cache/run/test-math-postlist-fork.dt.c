@@ -12,7 +12,7 @@ void test_mem_post(struct postlist *po, int gener)
 		struct math_postlist_gener_item *item;
 		item = postlist_iter_cur_item(iter);
 
-		math_postlist_print_item(item, gener);
+		math_postlist_print_item(item, gener, NULL);
 	}
 }
 

@@ -34,4 +34,5 @@ struct postlist *math_postlist_create_compressed();
 struct postlist *math_postlist_create_gener_plain();
 struct postlist *math_postlist_create_gener_compressed();
 
-void math_postlist_print_item(struct math_postlist_gener_item*, int);
+typedef char *(*trans_fun_t)(uint32_t);
+void math_postlist_print_item(struct math_postlist_gener_item*, int, trans_fun_t);
