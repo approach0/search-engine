@@ -52,6 +52,19 @@ static int fork_from(char *path)
 	mem_po = fork_math_postlist(disk_po);
 
 	if (math_posting_type(disk_po) == TYPE_PREFIX)
+		printf("prefix path uncompressed: %lu bytes / block (%lu items)\n",
+			ROUND_UP(65536, sizeof(struct math_postlist_item)),
+			ROUND_UP(65536, sizeof(struct math_postlist_item)) / sizeof(struct math_postlist_item)
+		);
+	else
+		printf("gener path uncompressed: %lu bytes / block (%lu items)\n",
+			ROUND_UP(65536, sizeof(struct math_postlist_gener_item)),
+			ROUND_UP(65536, sizeof(struct math_postlist_gener_item)) / sizeof(struct math_postlist_gener_item)
+		);
+	printf("compressed: %lu bytes / block\n", (mem_po->head) ? mem_po->head->blk_sz : 0);
+	printf("\n");
+
+	if (math_posting_type(disk_po) == TYPE_PREFIX)
 		test_mem_post(mem_po, 0);
 	else
 		test_mem_post(mem_po, 1);
