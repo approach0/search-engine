@@ -279,14 +279,14 @@ dir_search_bfs(const char *path_, ds_callbk fun, void *arg)
 				/* not .. or . or hidden files*/
 				continue;
 
-			snprintf(newpath[0], MAX_DIR_PATH_NAME_LEN, "%s/%s",
+			snprintf(newpath[0], MAX_DIR_PATH_NAME_LEN * 2, "%s/%s",
 			         top->path, dname);
 
 			/* is a directory ? */
 			if (!dir_exists(newpath[0]))
 				continue;
 
-			snprintf(newpath[1], MAX_DIR_PATH_NAME_LEN, "%s/%s",
+			snprintf(newpath[1], MAX_DIR_PATH_NAME_LEN * 2, "%s/%s",
 			         top->srchpath, dname);
 			Q_push(&Q, newpath[0], newpath[1], top->level + 1);
 		}
