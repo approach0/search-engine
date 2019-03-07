@@ -189,20 +189,8 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 							dr = item->subr_id[k];
 							dl = item->leaf_id[k];
 							if (dr == align_res[m].dr) {
-								uint32_t slot;
-								struct mnc_ref mnc_ref;
-								mnc_ref.sym = item->lf_symb[k];
-								slot = mnc_map_slot(mnc_ref);
-								mnc_doc_add_rele(slot, dl - 1, ql - 1);
-
-#ifdef DEBUG_MATH_SCORE_INSPECT
-//if (po_item->doc_id == 68557 || po_item->doc_id == 97423) {
-//enum symbol_id qs = subpath_ele->dup[j]->lf_symbol_id;
-//printf("prefix MNC:  qpath#%u `%s' --- dpath#%u `%s' "
-//	   "@slot%u\n", ql, trans_symbol(qs), dl, trans_symbol(p->lf_symb),
-//	   slot);
-//}
-#endif
+								struct mnc_ref ref = {item->lf_symb[k], 0};
+								mnc_doc_add_rele(ql - 1, dl - 1, ref);
 							}
 						}
 					}
@@ -485,15 +473,16 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 mnc_score_t
 math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res *ar)
 {
-	struct math_postlist_item item = {0};
+	struct math_postlist_gener_item item;
 	mnc_reset_docs();
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		uint32_t orig = po->iter->map[i];
-		struct subpath_ele *ele = po->ele[orig];
 
 		if (cur != UINT64_MAX && cur == po->candidate) {
+			uint32_t orig = po->iter->map[i];
+			struct subpath_ele *ele = po->ele[orig];
+			enum math_posting_type pt = po->path_type[orig];
 			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
@@ -503,14 +492,20 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 					if (qr == ar[m].qr) {
 						for (uint32_t k = 0; k < item.n_paths; k++) {
 							uint32_t dr = item.subr_id[k];
-							uint32_t dl = item.leaf_id[k];
 
 							if (dr == ar[m].dr) {
-								uint32_t slot;
-								struct mnc_ref mnc_ref;
-								mnc_ref.sym = item.lf_symb[k];
-								slot = mnc_map_slot(mnc_ref);
-								mnc_doc_add_rele(slot, dl - 1, ql - 1);
+								struct mnc_ref ref = {
+									item.tr_hash[k],
+									item.op_hash[k]
+								};
+
+								if (MATH_PATH_TYPE_PREFIX == pt) { 
+									uint32_t dl = item.wild_id[k];
+									mnc_doc_add_rele(ql - 1, dl - 1, ref);
+								} else {
+									uint64_t dls = item.wild_leaves[k];
+									mnc_doc_add_reles(ql - 1, dls, ref);
+								}
 							}
 						}
 					}
@@ -624,118 +619,118 @@ void math_l2_cur_print(struct math_l2_postlist *po,
 	printf("\n");
 }
 
-struct pq_align_res
-math_l2_postlist_coarse_score(
-	struct math_l2_postlist *po,
-	uint32_t n_doc_lr_paths)
-{
-	float min_score = 0.f;
-	struct math_pruner *pruner = &po->pruner;
-	struct pq_align_res widest = {0};
-
-//	P_CAST(p, struct math_postlist_item, &po->iter->min);
-//	int inspect = score_inspect_filter(p->doc_id, po->indices);
-//	if (inspect)
-//		math_l2_postlist_print_cur(po);
-
-	if (priority_Q_full(po->rk_res))
-		min_score = priority_Q_min_score(po->rk_res);
-
-#ifdef DEBUG_MATH_PRUNING
-	printf("init_threshold = %.3f, |P| = %u, dw = %u, Q top: %.3f \n",
-		pruner->init_threshold, po->iter->size, n_doc_lr_paths, min_score);
-#endif
-
-	/* for each query node in sorted order */
-	for (int i = 0; i < pruner->n_nodes; i++) {
-		struct pruner_node *q_node = pruner->nodes + i;
-		float q_node_upperbound = pruner->upp[q_node->width];
-
-#ifdef DEBUG_MATH_PRUNING
-		printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
-			i, q_node->width, q_node_upperbound, widest.width);
-		// math_l2_postlist_print_cur(po);
-#endif
-
-		/* check whether we can prune this node */
-		if (q_node_upperbound <= min_score ||
-		    q_node_upperbound <= pruner->init_threshold) {
-#ifdef DEBUG_MATH_PRUNING
-			printf("permanent pruning @ %d!!!\n", i);
-#endif
-			math_pruner_dele_node(pruner, i);
-			math_pruner_update(pruner);
-			i -= 1;
-			continue; /* so that we can dele other nodes */
-
-		} else if (q_node->width < widest.width) { //&&
-		    // q_node_upperbound <= lowerbound)
-#ifdef DEBUG_MATH_PRUNING
-			printf("temporary break @ %d!!!\n", i);
-#endif
-			break;
-		}
-
-//		if (inspect) {
-//			printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
-//				i, q_node->width, q_node_upperbound, widest.width);
-//		}
-
-		/* calculate query node max match */
-		int q_node_dr = 0, q_node_match = 0;
-		int accu_vec[MAX_NODE_IDS] = {0};
-		for (int j = 0; j < q_node->n; j++) {
-			/* read document posting list item */
-			struct math_postlist_item item;
-			const size_t sz = sizeof(item);
-			int p = q_node->postlist_id[j];
-			uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, p);
-
-			if (cur == UINT64_MAX || cur != po->iter->min) continue;
-			POSTMERGER_POSTLIST_CALL(&po->pm, read, p, &item, sz);
-
-			/* match counter vector calculation */
-			int qsw = q_node->secttr[j].width;
-			int sect_vec[MAX_NODE_IDS] = {0};
-
-//			if (inspect) printf("\t q_sect[%d]/%d: posting[%d]\n", j, qsw, p);
-//			if (inspect) printf("\t\t ");
+//struct pq_align_res
+//math_l2_postlist_coarse_score(
+//	struct math_l2_postlist *po,
+//	uint32_t n_doc_lr_paths)
+//{
+//	float min_score = 0.f;
+//	struct math_pruner *pruner = &po->pruner;
+//	struct pq_align_res widest = {0};
 //
-			for (int k = 0; k < item.n_paths; k++) {
-				int dr = item.subr_id[k];
-//				if (inspect) printf("dr#%d ", dr);
-				if (sect_vec[dr] < qsw) {
-					sect_vec[dr] ++;
-					accu_vec[dr] ++;
-					if (accu_vec[dr] > q_node_match) {
-						q_node_dr = dr;
-						q_node_match = accu_vec[dr];
-					}
-				}
-			}
-
-//			if (inspect) printf("\n");
-//			if (inspect) printf("\t match: %d\n", q_node_match);
-		}
-
-		/* update widest match */
-		if (q_node_match > widest.width) {
-			widest.width = q_node_match;
-			widest.qr = q_node->secttr[0].rnode;
-			widest.dr = q_node_dr;
-		}
-	}
-
-#ifdef DEBUG_MATH_PRUNING
-	static int min_print_widest = 0;
-	if (widest.width > min_print_widest) {
-		printf("wider hit: %d\n", widest.width);
-		min_print_widest = widest.width;
-	}
-#endif
-
-	return widest;
-}
+////	P_CAST(p, struct math_postlist_item, &po->iter->min);
+////	int inspect = score_inspect_filter(p->doc_id, po->indices);
+////	if (inspect)
+////		math_l2_postlist_print_cur(po);
+//
+//	if (priority_Q_full(po->rk_res))
+//		min_score = priority_Q_min_score(po->rk_res);
+//
+//#ifdef DEBUG_MATH_PRUNING
+//	printf("init_threshold = %.3f, |P| = %u, dw = %u, Q top: %.3f \n",
+//		pruner->init_threshold, po->iter->size, n_doc_lr_paths, min_score);
+//#endif
+//
+//	/* for each query node in sorted order */
+//	for (int i = 0; i < pruner->n_nodes; i++) {
+//		struct pruner_node *q_node = pruner->nodes + i;
+//		float q_node_upperbound = pruner->upp[q_node->width];
+//
+//#ifdef DEBUG_MATH_PRUNING
+//		printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
+//			i, q_node->width, q_node_upperbound, widest.width);
+//		// math_l2_postlist_print_cur(po);
+//#endif
+//
+//		/* check whether we can prune this node */
+//		if (q_node_upperbound <= min_score ||
+//		    q_node_upperbound <= pruner->init_threshold) {
+//#ifdef DEBUG_MATH_PRUNING
+//			printf("permanent pruning @ %d!!!\n", i);
+//#endif
+//			math_pruner_dele_node(pruner, i);
+//			math_pruner_update(pruner);
+//			i -= 1;
+//			continue; /* so that we can dele other nodes */
+//
+//		} else if (q_node->width < widest.width) { //&&
+//		    // q_node_upperbound <= lowerbound)
+//#ifdef DEBUG_MATH_PRUNING
+//			printf("temporary break @ %d!!!\n", i);
+//#endif
+//			break;
+//		}
+//
+////		if (inspect) {
+////			printf("node[%u]/(w=%u, up=%.3f), current widest: %d. \n",
+////				i, q_node->width, q_node_upperbound, widest.width);
+////		}
+//
+//		/* calculate query node max match */
+//		int q_node_dr = 0, q_node_match = 0;
+//		int accu_vec[MAX_NODE_IDS] = {0};
+//		for (int j = 0; j < q_node->n; j++) {
+//			/* read document posting list item */
+//			struct math_postlist_gener_item item;
+//			const size_t sz = sizeof(item);
+//			int p = q_node->postlist_id[j];
+//			uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, p);
+//
+//			if (cur == UINT64_MAX || cur != po->iter->min) continue;
+//			POSTMERGER_POSTLIST_CALL(&po->pm, read, p, &item, sz);
+//
+//			/* match counter vector calculation */
+//			int qsw = q_node->secttr[j].width;
+//			int sect_vec[MAX_NODE_IDS] = {0};
+//
+////			if (inspect) printf("\t q_sect[%d]/%d: posting[%d]\n", j, qsw, p);
+////			if (inspect) printf("\t\t ");
+////
+//			for (int k = 0; k < item.n_paths; k++) {
+//				int dr = item.subr_id[k];
+////				if (inspect) printf("dr#%d ", dr);
+//				if (sect_vec[dr] < qsw) {
+//					sect_vec[dr] ++;
+//					accu_vec[dr] ++;
+//					if (accu_vec[dr] > q_node_match) {
+//						q_node_dr = dr;
+//						q_node_match = accu_vec[dr];
+//					}
+//				}
+//			}
+//
+////			if (inspect) printf("\n");
+////			if (inspect) printf("\t match: %d\n", q_node_match);
+//		}
+//
+//		/* update widest match */
+//		if (q_node_match > widest.width) {
+//			widest.width = q_node_match;
+//			widest.qr = q_node->secttr[0].rnode;
+//			widest.dr = q_node_dr;
+//		}
+//	}
+//
+//#ifdef DEBUG_MATH_PRUNING
+//	static int min_print_widest = 0;
+//	if (widest.width > min_print_widest) {
+//		printf("wider hit: %d\n", widest.width);
+//		min_print_widest = widest.width;
+//	}
+//#endif
+//
+//	return widest;
+//}
 
 struct math_expr_score_res
 math_l2_postlist_precise_score(struct math_l2_postlist *po,
@@ -799,7 +794,7 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 
 	/* for each sector tree rooted at q_node ... */
 	for (int i = 0; i < q_node->n; i++) {
-		struct math_postlist_item item;
+		struct math_postlist_gener_item item;
 		int pid = q_node->postlist_id[i];
 		int qsw = q_node->secttr[i].width;
 		uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
@@ -809,11 +804,10 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 #endif
 
 		/* skip non-hit posting lists */
-		const size_t sz = sizeof(item);
 		if (cur == UINT64_MAX || cur != po->candidate) continue;
 
 		/* read document posting list item */
-		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sz);
+		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sizeof(item));
 
 		/* calculate match counter vector */
 		u16_ht_reset(&pruner->sect_ht, 0);
@@ -829,7 +823,7 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 		for (int j = 0; j < item.n_paths; j++) {
 			int dr = item.subr_id[j];
 			int dr_sect_cnt = u16_ht_lookup(&pruner->sect_ht, dr);
-			if (dr_sect_cnt < qsw) {
+			if (dr_sect_cnt < qsw) { /* calculate min(qsw, dr_sect_cnt) */
 				/* ..... */ (void)u16_ht_incr(&pruner->sect_ht, dr, 1);
 				int dr_accu_cnt = u16_ht_incr(&pruner->accu_ht, dr, 1);
 				if (dr_accu_cnt > ret.max) {

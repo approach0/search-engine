@@ -14,7 +14,6 @@ int main(void)
 	int i;
 	struct mnc_ref ref = {'_', '@'};
 	mnc_score_t score;
-	uint32_t slot;
 
 	mnc_reset_qry();
 
@@ -45,48 +44,42 @@ int main(void)
 		 *           0   1   2   3 4   5
 		 */
 		ref.sym = alphabet_to_sym('x'); /* 2 */
-		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
-		mnc_doc_add_rele(slot, 2, 1);
-		mnc_doc_add_rele(slot, 2, 0);
-		mnc_doc_add_rele(slot, 2, 4);
-		mnc_doc_add_rele(slot, 2, 3);
+		mnc_doc_add_rele(1, 2, ref);
+		mnc_doc_add_rele(0, 2, ref);
+		mnc_doc_add_rele(4, 2, ref);
+		mnc_doc_add_rele(3, 2, ref);
 
 		ref.sym = alphabet_to_sym('y'); /* 1 */
-		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
-		mnc_doc_add_rele(slot, 1, 1);
-		mnc_doc_add_rele(slot, 1, 0);
-		mnc_doc_add_rele(slot, 1, 4);
-		mnc_doc_add_rele(slot, 1, 3);
+		mnc_doc_add_rele(1, 1, ref);
+		mnc_doc_add_rele(0, 1, ref);
+		mnc_doc_add_rele(4, 1, ref);
+		mnc_doc_add_rele(3, 1, ref);
 
 		ref.sym = S_one; /* 3 */
-		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
-		mnc_doc_add_rele(slot, 3, 5);
+		mnc_doc_add_rele(5, 3, ref);
 
 		ref.sym = alphabet_to_sym('x'); /* 4 */
-		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
-		mnc_doc_add_rele(slot, 4, 2);
+		mnc_doc_add_rele(2, 4, ref);
 
 		ref.sym = alphabet_to_sym('y'); /* 0 */
-		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
-		mnc_doc_add_rele(slot, 0, 3);
-		mnc_doc_add_rele(slot, 0, 1);
-		mnc_doc_add_rele(slot, 0, 4);
-		mnc_doc_add_rele(slot, 0, 0);
+		mnc_doc_add_rele(3, 0, ref);
+		mnc_doc_add_rele(1, 0, ref);
+		mnc_doc_add_rele(4, 0, ref);
+		mnc_doc_add_rele(0, 0, ref);
 
 //#define TEST_EARLY_TERMINATION
 #ifndef TEST_EARLY_TERMINATION
 		ref.sym = alphabet_to_sym('x'); /* 5 */
-		slot = mnc_map_slot(ref);
 		/* write corresponding relevance_bitmap column */
-		mnc_doc_add_rele(slot, 5, 4);
-		mnc_doc_add_rele(slot, 5, 1);
-		mnc_doc_add_rele(slot, 5, 3);
-		mnc_doc_add_rele(slot, 5, 0);
+		mnc_doc_add_rele(4, 5, ref);
+		mnc_doc_add_rele(1, 5, ref);
+		mnc_doc_add_rele(3, 5, ref);
+		mnc_doc_add_rele(0, 5, ref);
 #endif
 
 		score = mnc_score(true);

@@ -73,7 +73,7 @@ static LIST_IT_CALLBK(push_query_path)
 {
 	uint32_t q_path_id;
 	LIST_OBJ(struct subpath, sp, ln);
-	struct mnc_ref mnc_ref;
+	struct mnc_ref mnc_ref = {0};
 
 	mnc_ref.sym = sp->lf_symbol_id;
 	q_path_id = mnc_push_qry(mnc_ref);

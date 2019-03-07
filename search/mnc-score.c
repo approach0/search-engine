@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "common/common.h"
 #include "tex-parser/tex-parser.h" /* for symbol_id_t */
 
 /* for trans_symbol() */
@@ -22,19 +23,6 @@
 
 #include "config.h"
 #include "mnc-score.h"
-
-/* byte printing macros */
-#define BYTE_STR_FMT "%d%d%d%d%d%d%d%d"
-
-#define BYTE_STR_ARGS(_byte)  \
-	(_byte & 0x80 ? 1 : 0), \
-	(_byte & 0x40 ? 1 : 0), \
-	(_byte & 0x20 ? 1 : 0), \
-	(_byte & 0x10 ? 1 : 0), \
-	(_byte & 0x08 ? 1 : 0), \
-	(_byte & 0x04 ? 1 : 0), \
-	(_byte & 0x02 ? 1 : 0), \
-	(_byte & 0x01 ? 1 : 0)
 
 /* define max number of slots (bound variables) */
 #define MAX_DOC_UNIQ_SYM MAX_SUBPATH_ID
@@ -49,16 +37,21 @@ typedef uint64_t mnc_slot_t;
 #define MNC_SLOTS_BYTES 8
 #endif
 
+/* finger print */
+typedef uint16_t mnc_finpr_t;
+
 /*
  * statical local variables
  */
 
 /* query expression ordered subpaths/symbols list */
 symbol_id_t     qry_sym[MAX_SUBPATH_ID];
+mnc_finpr_t     qry_fnp[MAX_SUBPATH_ID];
 uint32_t        n_qry_syms;
 
 /* document expression unique symbols list */
 symbol_id_t     doc_uniq_sym[MAX_DOC_UNIQ_SYM];
+mnc_finpr_t     doc_fnp[MAX_SUBPATH_ID];
 uint32_t        n_doc_uniq_syms;
 
 /* query / document bitmaps */
@@ -77,22 +70,23 @@ mnc_score_t     doc_uniq_sym_score[MAX_DOC_UNIQ_SYM];
 uint32_t
 mnc_push_qry(struct mnc_ref qry_path_ref)
 {
-	qry_sym[n_qry_syms ++] = qry_path_ref.sym;
-	return n_qry_syms;
+	qry_sym[n_qry_syms] = qry_path_ref.sym;
+	qry_fnp[n_qry_syms] = qry_path_ref.fnp;
+	return (++ n_qry_syms);
 }
 
 /* return slot index that this document path belongs */
-uint32_t mnc_map_slot(struct mnc_ref doc_path_ref)
+static uint32_t map_slot(symbol_id_t doc_sym)
 {
 	uint32_t i;
 	/* find the symbol slot to which doc_path belongs. */
 	for (i = 0; i < n_doc_uniq_syms; i++)
-		if (doc_uniq_sym[i] == doc_path_ref.sym)
+		if (doc_uniq_sym[i] == doc_sym)
 			break;
 
 	/* not found, append a new slot and add the doc_path */
 	if (i == n_doc_uniq_syms) {
-		doc_uniq_sym[i] = doc_path_ref.sym;
+		doc_uniq_sym[i] = doc_sym;
 		n_doc_uniq_syms ++;
 	}
 
@@ -100,12 +94,28 @@ uint32_t mnc_map_slot(struct mnc_ref doc_path_ref)
 }
 
 /* set the corresponding bit to indicate relevance between two paths */
-void
-mnc_doc_add_rele(uint32_t slot, uint32_t doc_path, uint32_t qry_path)
+void mnc_doc_add_rele(uint32_t qry_path, uint32_t doc_path,
+                      struct mnc_ref doc_path_ref)
 {
+	/* setup doc symbolic relevance map */
+	uint32_t slot = map_slot(doc_path_ref.sym);
 	mnc_slot_t bit = 1;
 	bit = bit << doc_path;
 	relevance_bitmap[qry_path][slot] |= bit;
+
+	/* save doc path fingerprint */
+	doc_fnp[doc_path] = doc_path_ref.fnp;
+}
+
+void mnc_doc_add_reles(uint32_t qry_path, uint64_t doc_paths,
+                      struct mnc_ref doc_path_ref)
+{
+	/* setup doc symbolic relevance map */
+	uint32_t slot = map_slot(doc_path_ref.sym);
+	relevance_bitmap[qry_path][slot] |= doc_paths;
+
+	/* save doc path fingerprint */
+	// doc_fnp[doc_path] = doc_path_ref.fnp;
 }
 
 /*
@@ -242,15 +252,29 @@ static __inline mnc_score_t mark(int i, int j)
 	if (unmark == 0)
 		return 0;
 
+	/* save the lowest set bit index number */
+	uint32_t lo_doc_path = lsb_pos(unmark);
+
 	/* extract the lowest set bit (only need to mark one),
 	 * write this mark bit on doc_mark_bitmap */
 	doc_mark_bitmap[j] |= unmark & ~(unmark - 1);
 
 	/* return score */
-	if (qry_sym[i] == doc_uniq_sym[j])
-		return MNC_MARK_FULL_SCORE; /* bonus for exact match */
-	else
-		return MNC_MARK_BASE_SCORE; /* normal match */
+	int fnp_equal = (qry_fnp[i] == doc_fnp[lo_doc_path]) ? 0x1 : 0x0;
+	int sym_equal = (qry_sym[i] == doc_uniq_sym[j]) ? 0x2 : 0x0;
+	switch (sym_equal | fnp_equal) {
+	case 0x3:
+		return MNC_MARK_FULL_SCORE; /* exact match */
+		break;
+	case 0x2:
+		return MNC_MARK_MID_SCORE;  /* match except for fingerprint */
+		break;
+	case 0x1:
+		return MNC_MARK_MID_SCORE;  /* match fingerprint but not symbol */
+		break;
+	default:
+		return MNC_MARK_BASE_SCORE;
+	}
 }
 
 static __inline void cross(int max_slot)

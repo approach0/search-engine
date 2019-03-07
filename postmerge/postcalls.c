@@ -28,7 +28,13 @@ static int math_memo_postlist_jump(void *po, uint64_t target)
 
 static size_t math_memo_postlist_read(void *po, void *dest, size_t sz)
 {
-	memcpy(dest, postlist_cur_item(po), sz);
+	memcpy(dest, postlist_cur_item(po), sizeof(struct math_postlist_item));
+	return sz;
+}
+
+static size_t math_memo_postlist_read_gener(void *po, void *dest, size_t sz)
+{
+	memcpy(dest, postlist_cur_item(po), sizeof(struct math_postlist_gener_item));
 	return sz;
 }
 
@@ -51,6 +57,21 @@ math_memo_postlist(void *po)
 		&math_memo_postlist_next,
 		&math_memo_postlist_jump,
 		&math_memo_postlist_read,
+		&math_memo_postlist_init,
+		&math_memo_postlist_uninit
+	};
+	return ret;
+}
+
+struct postmerger_postlist
+math_memo_postlist_gener(void *po)
+{
+	struct postmerger_postlist ret = {
+		po,
+		&math_memo_postlist_cur,
+		&math_memo_postlist_next,
+		&math_memo_postlist_jump,
+		&math_memo_postlist_read_gener,
 		&math_memo_postlist_init,
 		&math_memo_postlist_uninit
 	};
@@ -96,29 +117,31 @@ static void math_disk_postlist_uninit(void *po)
 struct postmerger_postlist
 math_disk_postlist(void *po)
 {
-	if (math_posting_type(po) == MATH_PATH_TYPE_PREFIX) {
-		struct postmerger_postlist ret = {
-			po,
-			&math_disk_postlist_cur,
-			&math_disk_postlist_next,
-			&math_disk_postlist_jump,
-			&math_disk_postlist_read,
-			&math_disk_postlist_init,
-			&math_disk_postlist_uninit
-		};
-		return ret;
-	} else {
-		struct postmerger_postlist ret = {
-			po,
-			&math_disk_postlist_cur,
-			&math_disk_postlist_next,
-			&math_disk_postlist_jump,
-			&math_disk_postlist_read_gener,
-			&math_disk_postlist_init,
-			&math_disk_postlist_uninit
-		};
-		return ret;
-	}
+	struct postmerger_postlist ret = {
+		po,
+		&math_disk_postlist_cur,
+		&math_disk_postlist_next,
+		&math_disk_postlist_jump,
+		&math_disk_postlist_read,
+		&math_disk_postlist_init,
+		&math_disk_postlist_uninit
+	};
+	return ret;
+}
+
+struct postmerger_postlist
+math_disk_postlist_gener(void *po)
+{
+	struct postmerger_postlist ret = {
+		po,
+		&math_disk_postlist_cur,
+		&math_disk_postlist_next,
+		&math_disk_postlist_jump,
+		&math_disk_postlist_read_gener,
+		&math_disk_postlist_init,
+		&math_disk_postlist_uninit
+	};
+	return ret;
 }
 
 static uint64_t empty_postlist_cur(void *po)

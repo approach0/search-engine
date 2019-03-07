@@ -41,3 +41,16 @@ static inline void print_size(size_t _sz)
 
 #define print_var(_fmt, _var) \
 	printf("%s = " _fmt "\n", # _var, _var)
+
+/* byte bitmap print macros */
+#define BYTE_STR_FMT "%d%d%d%d%d%d%d%d"
+
+#define BYTE_STR_ARGS(_byte)  \
+	(_byte & 0x80 ? 1 : 0), \
+	(_byte & 0x40 ? 1 : 0), \
+	(_byte & 0x20 ? 1 : 0), \
+	(_byte & 0x10 ? 1 : 0), \
+	(_byte & 0x08 ? 1 : 0), \
+	(_byte & 0x04 ? 1 : 0), \
+	(_byte & 0x02 ? 1 : 0), \
+	(_byte & 0x01 ? 1 : 0)

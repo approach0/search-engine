@@ -269,8 +269,8 @@ math_postlist_create_compressed()
 		/* 3 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 4 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 5 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		/* 6 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+		/* 6 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 7 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
 	);
 
 	po = postlist_create(
@@ -344,8 +344,8 @@ math_postlist_create_gener_compressed()
 		/* 3 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 4 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 5 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		/* 6 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
+		/* 6 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
+		/* 7 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 8 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
 	);
 

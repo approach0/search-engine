@@ -4,6 +4,7 @@
 #include "list/list.h"
 
 typedef uint16_t symbol_id_t;
+typedef uint16_t fingerpri_t;
 
 #define PARSER_RETCODE_WARN 2
 #define PARSER_RETCODE_ERR  1
@@ -38,6 +39,7 @@ struct subpath {
 		symbol_id_t       lf_symbol_id;
 		symbol_id_t       subtree_hash;
 	};
+	fingerpri_t           fingerprint; /* operator fingerprint, each operator 4 bits */
 	struct list_node      ln;
 };
 

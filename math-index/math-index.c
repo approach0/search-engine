@@ -8,10 +8,7 @@
 #include "list/list.h"
 #include "tex-parser/tex-parser.h"
 
-#include "tex-parser/config.h"
-#include "tex-parser/gen-token.h"  /* for token_id */
-#include "tex-parser/gen-symbol.h" /* for symbol_id */
-#include "tex-parser/trans.h"      /* for trans_token() */
+#include "tex-parser/head.h"
 
 #include "postlist/math-postlist.h" /* for math_postlist_item */
 #include "head.h"
@@ -216,30 +213,23 @@ int write_posting_item_v2(const char *path,
 	return 0;
 }
 
-struct _set_pathinfo_v2_arg {
-	uint32_t                 prefix_len;
-	uint32_t                 cnt;
-	struct math_pathinfo_v2  pathinfo;
+struct _set_pathinfo_endpoints_arg {
+	uint32_t cnt, prefix_len;
+	uint32_t leaf_id, subr_id;
 };
 
-static LIST_IT_CALLBK(_set_pathinfo_v2)
+static LIST_IT_CALLBK(_set_pathinfo_endpoints)
 {
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
-	P_CAST(arg, struct _set_pathinfo_v2_arg, pa_extra);
+	P_CAST(arg, struct _set_pathinfo_endpoints_arg, pa_extra);
 
 	if (pa_now->now == pa_head->now) {
-		arg->pathinfo.leaf_id = sp_nd->node_id;
-	} else {
-		/* generate operators' hash */
-		arg->pathinfo.op_hash += sp_nd->symbol_id * (arg->cnt + 1);
-#ifdef DEBUG_MATH_INDEX
-		// printf("%s\n", trans_symbol(sp_nd->symbol_id));
-#endif
+		arg->leaf_id = sp_nd->node_id;
 	}
 
 	if (arg->cnt >= arg->prefix_len - 1 ||
 	    pa_now->now == pa_head->last) {
-		arg->pathinfo.subr_id = sp_nd->node_id;
+		arg->subr_id = sp_nd->node_id;
 		return LIST_RET_BREAK;
 	} else {
 		arg->cnt ++;
@@ -292,7 +282,8 @@ static int
 write_pathinfo_v2(const char *path, struct subpath *sp,
                   uint32_t prefix_len, struct subpaths subpaths)
 {
-	struct _set_pathinfo_v2_arg arg;
+	struct _set_pathinfo_endpoints_arg arg;
+	struct math_pathinfo_gener_v2 pathinfo_gener;
 
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
@@ -302,27 +293,25 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
 	if (fh == NULL)
 		return -1;
 
-	arg.cnt = 0;
-	arg.pathinfo.op_hash = 0;
-	arg.prefix_len = prefix_len;
+	/* set operator hash (fingerprint) */
+	pathinfo_gener.op_hash = subpath_fingerprint(sp, prefix_len);
 
 	/* set lf_symb (sp->subtree_hash and lf_symbol_id are union) */
-	arg.pathinfo.lf_symb = sp->lf_symbol_id;
+	pathinfo_gener.tr_hash = sp->lf_symbol_id;
 
-	/* set leaf_id, subr_id and op_hash */
-	list_foreach(&sp->path_nodes, &_set_pathinfo_v2, &arg);
+	/* set end-point IDs */
+	arg.cnt = 0;
+	arg.prefix_len = prefix_len;
+	list_foreach(&sp->path_nodes, &_set_pathinfo_endpoints, &arg);
+	pathinfo_gener.wild_id = arg.leaf_id;
+	pathinfo_gener.subr_id = arg.subr_id;
 
 	if (sp->type == SUBPATH_TYPE_NORMAL) {
 		/* write normal pathinfo */
-		fwrite(&arg.pathinfo, 1, sizeof(arg.pathinfo), fh);
+		fwrite(&pathinfo_gener, 1, sizeof(struct math_pathinfo_v2), fh);
 
 	} else if (sp->type == SUBPATH_TYPE_GENERNODE) {
 		/* write gener pathinfo */
-		struct math_pathinfo_gener_v2 pathinfo_gener;
-		pathinfo_gener.wild_id = arg.pathinfo.leaf_id;
-		pathinfo_gener.subr_id = arg.pathinfo.subr_id;
-		pathinfo_gener.tr_hash = arg.pathinfo.lf_symb;
-		pathinfo_gener.op_hash = arg.pathinfo.op_hash;
 		pathinfo_gener.wild_leaves = get_wild_leaves(sp, subpaths);
 		fwrite(&pathinfo_gener, 1, sizeof(pathinfo_gener), fh);
 	}

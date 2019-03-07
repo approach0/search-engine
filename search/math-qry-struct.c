@@ -74,16 +74,12 @@ static LIST_IT_CALLBK(assign_path_id_in_order)
 
 static LIST_IT_CALLBK(push_query_path)
 {
-	uint32_t q_path_id;
 	LIST_OBJ(struct subpath, sp, ln);
 	struct mnc_ref mnc_ref;
 
 	mnc_ref.sym = sp->lf_symbol_id;
-	q_path_id = mnc_push_qry(mnc_ref);
-
-	(void)q_path_id;
-//	printf("MNC: push query path#%u %s\n", q_path_id,
-//	       trans_symbol(mnc_ref.sym));
+	mnc_ref.fnp = sp->fingerprint;
+	mnc_push_qry(mnc_ref);
 
 	LIST_GO_OVER;
 }

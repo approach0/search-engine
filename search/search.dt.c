@@ -33,7 +33,10 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		void *po = math_postlist_cache_find(ci.math_cache, base_paths[i]);
 		int n = l2po->pm.n_po;
 		if (po) {
-			l2po->pm.po[n] = math_memo_postlist(po);
+			if (path_type == MATH_PATH_TYPE_PREFIX)
+				l2po->pm.po[n] = math_memo_postlist(po);
+			else
+				l2po->pm.po[n] = math_memo_postlist_gener(po);
 
 			args->po->path_type[n] = path_type;
 			args->po->ele[n] = eles[i];
@@ -42,7 +45,10 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 #endif
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
-			l2po->pm.po[n] = math_disk_postlist(po);
+			if (path_type == MATH_PATH_TYPE_PREFIX)
+				l2po->pm.po[n] = math_disk_postlist(po);
+			else
+				l2po->pm.po[n] = math_disk_postlist_gener(po);
 
 			args->po->path_type[n] = path_type;
 			args->po->ele[n] = eles[i];
@@ -149,7 +155,7 @@ static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 
 static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 {
-	struct math_postlist_item item;
+	struct math_postlist_gener_item item;
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
@@ -227,7 +233,6 @@ int math_l2_postlist_next(void *po_)
 		g_hot_hit[n_hit_paths] ++;
 #endif
 		struct pq_align_res widest;
-		// widest = math_l2_postlist_coarse_score(po, n_doc_lr_paths);
 		widest = math_l2_postlist_coarse_score_v2(po, n_doc_lr_paths, threshold);
 
 		/* push expression results */
@@ -417,8 +422,8 @@ postmerger_math_l2_postlist(struct math_l2_postlist *po)
 	struct postmerger_postlist ret = {
 		po,
 		math_l2_postlist_cur,
-		// math_l2_postlist_next,
-		math_l2_postlist_one_by_one_through, /* for debug */
+		math_l2_postlist_next,
+		// math_l2_postlist_one_by_one_through, /* for debug */
 		NULL /* jump */,
 		math_l2_postlist_read,
 		math_l2_postlist_init,

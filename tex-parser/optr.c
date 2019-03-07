@@ -389,6 +389,43 @@ static struct subpath_node *create_subpath_node(
 	return nd;
 }
 
+struct _gen_fingerprint_arg {
+	fingerpri_t fp;
+	uint32_t cnt, prefix_len;
+};
+
+static LIST_IT_CALLBK(_gen_fingerprint)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(arg, struct _gen_fingerprint_arg, pa_extra);
+
+	if (pa_now->now != pa_head->now) {
+		/* skip the first node (operand) */
+
+		/* prohibit to encode beyond 4 nodes */
+		if (arg->cnt > 4) goto halt;
+
+		arg->fp = arg->fp << 4;
+		arg->fp = arg->fp | (sp_nd->symbol_id % 0xf);
+	}
+
+	if (arg->cnt >= arg->prefix_len - 1 ||
+	    pa_now->now == pa_head->last) {
+halt:
+		return LIST_RET_BREAK;
+	} else {
+		arg->cnt ++;
+		return LIST_RET_CONTINUE;
+	}
+}
+
+fingerpri_t subpath_fingerprint(struct subpath *sp, uint32_t prefix_len)
+{
+	struct _gen_fingerprint_arg arg = {0};
+	list_foreach(&sp->path_nodes, &_gen_fingerprint, &arg);
+	return arg.fp;
+}
+
 struct _gen_subpaths_arg {
 	struct subpaths *sp;
 	uint32_t special_node_ids; /* for assigning rank node ids */
@@ -460,12 +497,17 @@ static TREE_IT_CALLBK(gen_subpaths)
 
 				/* insert only when not inserted before */
 				if (!gen_subpaths_bitmap[bitmap_idx]) {
+					/* start create and generate a subpath */
 					subpath = create_subpath(p, is_leaf);
+					/* generate nodes of this subpath */
 					insert_subpath_nodes(subpath, p, &arg->special_node_ids);
+					/* generate fingerprint of this subpath */
+					subpath->fingerprint = subpath_fingerprint(subpath, UINT32_MAX);
+					/* insert this new subpath to subpath list */
 					list_insert_one_at_tail(&subpath->ln, &arg->sp->li,
 					                        NULL, NULL);
+					/* stop enter this if again */
 					gen_subpaths_bitmap[bitmap_idx] = 1;
-
 					/* count total subpaths generated. */
 					arg->sp->n_subpaths ++;
 				}
@@ -592,6 +634,7 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 
 	fprintf(fh, ": ");
 	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
+	fprintf(fh, " (fingerprint %s)", optr_hash_str(sp->fingerprint));
 	fprintf(fh, "\n");
 
 	LIST_GO_OVER;
