@@ -78,16 +78,8 @@ struct optr_node* optr_attach(struct optr_node *c /* child */,
 
 char *optr_hash_str(symbol_id_t hash)
 {
-#define LEN (sizeof(symbol_id_t))
-	int i;
-	static char str[LEN * 2 + 1];
-	uint8_t *c = (uint8_t*)&hash;
-	str[LEN * 2] = '\0';
-
-	for (i = 0; i < LEN; i++, c++) {
-		sprintf(str + (i << 1), "%02x", *c);
-	}
-
+	static char str[sizeof(symbol_id_t) * 2 + 1];
+	sprintf(str, "%04x", hash);
 	return str;
 }
 
@@ -399,8 +391,8 @@ static LIST_IT_CALLBK(_gen_fingerprint)
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(arg, struct _gen_fingerprint_arg, pa_extra);
 
+	/* skip the first node (operand) */
 	if (pa_now->now != pa_head->now) {
-		/* skip the first node (operand) */
 
 		/* prohibit to encode beyond 4 nodes */
 		if (arg->cnt > 4) goto halt;
