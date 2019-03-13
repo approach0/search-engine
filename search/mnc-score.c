@@ -114,8 +114,7 @@ void mnc_doc_add_reles(uint32_t qry_path, uint64_t doc_paths,
 	uint32_t slot = map_slot(doc_path_ref.sym);
 	relevance_bitmap[qry_path][slot] |= doc_paths;
 
-	/* save doc path fingerprint */
-	// doc_fnp[doc_path] = doc_path_ref.fnp;
+	/* no need to save gener path fingerprint */
 }
 
 /*
@@ -259,9 +258,19 @@ static __inline mnc_score_t mark(int i, int j)
 	 * write this mark bit on doc_mark_bitmap */
 	doc_mark_bitmap[j] |= unmark & ~(unmark - 1);
 
-	/* return score */
-	int fnp_equal = (qry_fnp[i] == doc_fnp[lo_doc_path]) ? 0x1 : 0x0;
+	/* fingerpirnt score */
+	int fnp_equal;
+	if (qry_fnp[i] == WILDCARD_FINGERPRINT_MAGIC)
+		fnp_equal = 0x1;
+	else if (qry_fnp[i] == doc_fnp[lo_doc_path])
+		fnp_equal = 0x1;
+	else
+		fnp_equal = 0x0;
+
+	/* symbol score */
 	int sym_equal = (qry_sym[i] == doc_uniq_sym[j]) ? 0x2 : 0x0;
+
+	/* return score */
 	switch (sym_equal | fnp_equal) {
 	case 0x3:
 		return MNC_MARK_FULL_SCORE; /* exact match */
@@ -286,10 +295,9 @@ static __inline void cross(int max_slot)
 	memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
 }
 
-mnc_score_t mnc_score(bool en_early_termination /* enable early termination */)
+mnc_score_t mnc_score()
 {
 	uint32_t i, j, max_subscore_idx = 0;
-	bool early_termination = false;
 
 	mnc_score_t mark_score, total_score = 0;
 	mnc_score_t max_subscore = 0;
@@ -299,13 +307,11 @@ mnc_score_t mnc_score(bool en_early_termination /* enable early termination */)
 	mnc_print(-1, max_subscore_idx);
 #endif
 
-	for (i = 0; i < n_qry_syms && !early_termination; i++) {
-		early_termination = en_early_termination;
+	for (i = 0; i < n_qry_syms; i++) {
 		for (j = 0; j < n_doc_uniq_syms; j++) {
 			mark_score = mark(i, j);
 
 			if (mark_score != 0) {
-				early_termination = false;
 				doc_uniq_sym_score[j] += mark_score;
 				if (doc_uniq_sym_score[j] > max_subscore) {
 					max_subscore = doc_uniq_sym_score[j];
@@ -314,8 +320,7 @@ mnc_score_t mnc_score(bool en_early_termination /* enable early termination */)
 			}
 		}
 
-		if (early_termination || /* early termination */
-		    n_qry_syms == i + 1 || /* this is the final iteration */
+		if (n_qry_syms == i + 1 || /* this is the final iteration */
 		    qry_sym[i + 1] != qry_sym[i] /* next symbol is different */) {
 
 #ifdef MNC_DEBUG
@@ -326,18 +331,12 @@ mnc_score_t mnc_score(bool en_early_termination /* enable early termination */)
 			cross(max_subscore_idx);
 
 			/* accumulate into total score */
-			if (early_termination)
-				total_score = 0;
-			else
-				total_score += max_subscore;
+			total_score += max_subscore;
 
 #ifdef MNC_DEBUG
 			/* print after cross */
 			printf(C_RED "Current total score: %u\n" C_RST, total_score);
-			if (early_termination)
-				printf("(early termination).\n");
-			else
-				printf("=========\n");
+			printf("=========\n");
 #endif
 
 			/* clean sub-scores */

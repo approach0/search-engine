@@ -199,7 +199,7 @@ prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
 		} /* end if */
 	} /* end for */
 
-	return mnc_score(false);
+	return mnc_score();
 }
 
 int string_longest_common_substring(enum symbol_id *str1, enum symbol_id *str2)
@@ -514,7 +514,7 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 		} /* end if */
 	} /* end for */
 
-	return mnc_score(false);
+	return mnc_score();
 }
 
 struct math_expr_score_res

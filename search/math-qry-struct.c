@@ -78,7 +78,8 @@ static LIST_IT_CALLBK(push_query_path)
 	struct mnc_ref mnc_ref;
 
 	mnc_ref.sym = sp->lf_symbol_id;
-	mnc_ref.fnp = sp->fingerprint;
+	mnc_ref.fnp = (sp->type == SUBPATH_TYPE_NORMAL) ?
+		sp->fingerprint : WILDCARD_FINGERPRINT_MAGIC;
 	mnc_push_qry(mnc_ref);
 
 	LIST_GO_OVER;
