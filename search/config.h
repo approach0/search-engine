@@ -19,7 +19,6 @@
 /* max mark score, type of mnc_score_t */
 #define MNC_MARK_BASE_SCORE 90
 #define MNC_MARK_FULL_SCORE 100
-
 #define MNC_MARK_MID_SCORE ((MNC_MARK_BASE_SCORE + MNC_MARK_FULL_SCORE) / 2)
 
 /*
@@ -29,6 +28,7 @@
 
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
+#define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
 // #define MATH_PRUNING_DISABLE_JUMP /* disable jumping/skipping */
 // #define DEBUG_MERGE_SKIPPING /* show all the jumping/skipping points */
 // #define DEBUG_MATH_SCORE_INSPECT /* particular expID scoring inspect */
@@ -98,7 +98,6 @@
 
 #ifdef MATH_SLOW_SEARCH
 	#define MATH_COMPUTE_R_CNT /* compute internode node mapping/count */
-	#define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
 	#define CNT_VISIBLE_NODES_ONLY /* count operator only if it is visible */
 	#define MAX_MTREE 1
 #else

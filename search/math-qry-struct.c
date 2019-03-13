@@ -18,11 +18,13 @@ static LIST_CMP_CALLBK(compare_qry_path)
 	struct subpath *sp1 = MEMBER_2_STRUCT(pa_node1, struct subpath, ln);
 
 	/* larger size bound variables are ranked higher, if sizes are equal,
-	 * rank by symbol ID (kind of alphabet order). */
-	if (sp0->path_id == sp1->path_id)
-		return sp0->lf_symbol_id < sp1->lf_symbol_id;
-	else
+	 * rank by path type (wildcard or concrete) then symbol (alphabet).*/
+	if (sp0->path_id != sp1->path_id)
 		return sp0->path_id > sp1->path_id;
+	else if (sp0->type != sp1->type)
+		return (sp0->type == SUBPATH_TYPE_NORMAL) ? 1 : 0;
+	else
+		return sp0->lf_symbol_id < sp1->lf_symbol_id;
 }
 
 struct cnt_same_symbol_args {
@@ -119,7 +121,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	/* strip gener paths (but not wildcard paths) since they are not for searching */
 	delete_gener_paths(subpaths);
 	
-	/* sort subpaths by <bound variable size, symbol> tuple */
+	/* sort subpaths by <bound variable size, path type, symbol> */
 	list_foreach(&subpaths->li, &overwrite_pathID_to_bondvar_sz, NULL);
 	struct list_sort_arg sort_arg = {&compare_qry_path, NULL};
 	list_sort(&subpaths->li, &sort_arg);

@@ -163,44 +163,44 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 #endif
 }
 
-static mnc_score_t
-prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
-                            struct math_postlist_item *items[],
-                            struct pq_align_res *align_res, uint32_t n_mtrees)
-{
-	/* reset mnc for scoring new document */
-	mnc_reset_docs();
-
-	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		if (pm->curIDs[i] == cur_min) {
-			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-			struct math_postlist_item *item = items[i];
-
-			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
-				uint32_t qr, ql;
-				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->path_id; /* use path_id for mnc_score */
-				/* (so that the ql is the index of query array in MNC scoring */
-
-				for (uint32_t m = 0; m < n_mtrees; m++) {
-					if (qr == align_res[m].qr) {
-						for (uint32_t k = 0; k < item->n_paths; k++) {
-							uint32_t dr, dl;
-							dr = item->subr_id[k];
-							dl = item->leaf_id[k];
-							if (dr == align_res[m].dr) {
-								struct mnc_ref ref = {item->lf_symb[k], 0};
-								mnc_doc_add_rele(ql - 1, dl - 1, ref);
-							}
-						}
-					}
-				}
-			}
-		} /* end if */
-	} /* end for */
-
-	return mnc_score();
-}
+//static mnc_score_t
+//prefix_symbolset_similarity(uint64_t cur_min, struct postmerge* pm,
+//                            struct math_postlist_item *items[],
+//                            struct pq_align_res *align_res, uint32_t n_mtrees)
+//{
+//	/* reset mnc for scoring new document */
+//	mnc_reset_docs();
+//
+//	for (uint32_t i = 0; i < pm->n_postings; i++) {
+//		if (pm->curIDs[i] == cur_min) {
+//			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+//			struct math_postlist_item *item = items[i];
+//
+//			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
+//				uint32_t qr, ql;
+//				qr = mepa->ele->rid[j];
+//				ql = mepa->ele->dup[j]->path_id; /* use path_id for mnc_score */
+//				/* (so that the ql is the index of query array in MNC scoring */
+//
+//				for (uint32_t m = 0; m < n_mtrees; m++) {
+//					if (qr == align_res[m].qr) {
+//						for (uint32_t k = 0; k < item->n_paths; k++) {
+//							uint32_t dr, dl;
+//							dr = item->subr_id[k];
+//							dl = item->leaf_id[k];
+//							if (dr == align_res[m].dr) {
+//								struct mnc_ref ref = {item->lf_symb[k], 0};
+//								mnc_doc_add_rele(ql - 1, dl - 1, ref);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		} /* end if */
+//	} /* end for */
+//
+//	return mnc_score();
+//}
 
 int string_longest_common_substring(enum symbol_id *str1, enum symbol_id *str2)
 {
@@ -296,112 +296,112 @@ math_expr_prefix_score_on_merge(
 )
 {
 	struct math_expr_score_res     ret = {0};
-	struct math_postlist_item *po_item = NULL;
-
-	struct math_prefix_qry    *pq = &mesa->pq;
-	mnc_score_t               symbol_sim = 0;
-	int                       lcs = 0;
-	struct math_postlist_item *items[pm->n_postings];
-
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	int inspect = 0;
-#endif
-
-	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		if (pm->curIDs[i] == cur_min) {
-			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-			items[i] = (struct math_postlist_item*)POSTMERGE_CUR(pm, i);
-			struct math_postlist_item *item = items[i];
-
-			po_item = item;
-
-#ifdef DEBUG_MATH_SCORE_INSPECT
-		inspect = score_inspect_filter(po_item->doc_id, indices);
-#endif
-			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
-				uint32_t qr, ql;
-				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->leaf_id; /* use leaf_id for aligning */
-				/* (to generate correct leaf mask to be highlighted in tree) */
-#ifdef DEBUG_MATH_SCORE_INSPECT
-//				if (inspect) {
-//					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
-//					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+//	struct math_postlist_item *po_item = NULL;
+//
+//	struct math_prefix_qry    *pq = &mesa->pq;
+//	mnc_score_t               symbol_sim = 0;
+//	int                       lcs = 0;
+//	struct math_postlist_item *items[pm->n_postings];
+//
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+//	int inspect = 0;
+//#endif
+//
+//	for (uint32_t i = 0; i < pm->n_postings; i++) {
+//		if (pm->curIDs[i] == cur_min) {
+//			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+//			items[i] = (struct math_postlist_item*)POSTMERGE_CUR(pm, i);
+//			struct math_postlist_item *item = items[i];
+//
+//			po_item = item;
+//
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+//		inspect = score_inspect_filter(po_item->doc_id, indices);
+//#endif
+//			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
+//				uint32_t qr, ql;
+//				qr = mepa->ele->rid[j];
+//				ql = mepa->ele->dup[j]->leaf_id; /* use leaf_id for aligning */
+//				/* (to generate correct leaf mask to be highlighted in tree) */
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+////				if (inspect) {
+////					printf("\t qry prefix path [%u ~ %u, %s] hits: \n", qr, ql,
+////					       trans_symbol(mepa->ele->dup[j]->lf_symbol_id));
+////				}
+//#endif
+//				for (uint32_t k = 0; k < item->n_paths; k++) {
+//					uint32_t dr, dl;
+//					dr = item->subr_id[k];
+//					dl = item->leaf_id[k];
+//
+//					uint64_t res = 0;
+//					res = pq_hit(pq, qr, ql, dr, dl);
+//					(void)res;
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+////					if (inspect) {
+////						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
+////						       trans_symbol(item->lf_symb[k]));
+////						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
+////						//pq_print(*pq, 26);
+////						printf("\n");
+////					}
+//#endif
 //				}
-#endif
-				for (uint32_t k = 0; k < item->n_paths; k++) {
-					uint32_t dr, dl;
-					dr = item->subr_id[k];
-					dl = item->leaf_id[k];
-
-					uint64_t res = 0;
-					res = pq_hit(pq, qr, ql, dr, dl);
-					(void)res;
-#ifdef DEBUG_MATH_SCORE_INSPECT
-//					if (inspect) {
-//						printf("\t\t doc prefix path [%u ~ %u, %s]\n", dr, dl,
-//						       trans_symbol(item->lf_symb[k]));
-//						printf("\t\t hit returns 0x%lu, n_dirty = %u \n", res, pq->n_dirty);
-//						//pq_print(*pq, 26);
-//						printf("\n");
-//					}
-#endif
-				}
-			}
-#ifdef DEBUG_MATH_SCORE_INSPECT
-//			if (inspect) {
-//				printf("}\n");
 //			}
-#endif
-		}
-	}
-
-	/* sub-structure align */
-	struct pq_align_res align_res[MAX_MTREE] = {0};
-	uint32_t r_cnt = pq_align(pq, align_res, NULL);
-
-#ifdef DEBUG_MATH_SCORE_INSPECT
-//	if (inspect)
-//		pq_print_dirty_array(pq);
-#endif
-	pq_reset(pq);
-
-	/* symbol set similarity */
-	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, align_res, MAX_MTREE);
-
-	/* symbol sequence similarity */
-	//lcs = prefix_symbolseq_similarity(cur_min, pm);
-	(void)lcs;
-
-	if (po_item) {
-		uint32_t dn = (po_item->n_lr_paths) ? po_item->n_lr_paths : MAX_MATH_PATHS;
-		struct math_expr_sim_factors factors = {
-			symbol_sim, 0 /* search depth */, mesa->n_qry_lr_paths, dn,
-			align_res, MAX_MTREE, r_cnt, lcs, mesa->n_qry_max_node
-		};
-		ret.doc_id = po_item->doc_id;
-		ret.exp_id = po_item->exp_id;
-
-#ifdef HIGHLIGHT_MATH_ALIGNMENT
-		/* set postional information */
-		for (int i = 0; i < MAX_MTREE; i++) {
-			if (align_res[i].width) {
-				ret.qmask[i] = align_res[i].qmask;
-				ret.dmask[i] = align_res[i].dmask;
-			}
-		}
-#endif
-
-#ifdef DEBUG_MATH_SCORE_INSPECT
-		if (inspect) {
-			math_expr_set_score(&factors, &ret);
-			printf("doc#%u, exp#%u, final score: %f\n",
-			       ret.doc_id, ret.exp_id, ret.score);
-		}
-#else
-		math_expr_set_score(&factors, &ret);
-#endif
-	}
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+////			if (inspect) {
+////				printf("}\n");
+////			}
+//#endif
+//		}
+//	}
+//
+//	/* sub-structure align */
+//	struct pq_align_res align_res[MAX_MTREE] = {0};
+//	uint32_t r_cnt = pq_align(pq, align_res, NULL);
+//
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+////	if (inspect)
+////		pq_print_dirty_array(pq);
+//#endif
+//	pq_reset(pq);
+//
+//	/* symbol set similarity */
+//	symbol_sim = prefix_symbolset_similarity(cur_min, pm, items, align_res, MAX_MTREE);
+//
+//	/* symbol sequence similarity */
+//	//lcs = prefix_symbolseq_similarity(cur_min, pm);
+//	(void)lcs;
+//
+//	if (po_item) {
+//		uint32_t dn = (po_item->n_lr_paths) ? po_item->n_lr_paths : MAX_MATH_PATHS;
+//		struct math_expr_sim_factors factors = {
+//			symbol_sim, 0 /* search depth */, mesa->n_qry_lr_paths, dn,
+//			align_res, MAX_MTREE, r_cnt, lcs, mesa->n_qry_max_node
+//		};
+//		ret.doc_id = po_item->doc_id;
+//		ret.exp_id = po_item->exp_id;
+//
+//#ifdef HIGHLIGHT_MATH_ALIGNMENT
+//		/* set postional information */
+//		for (int i = 0; i < MAX_MTREE; i++) {
+//			if (align_res[i].width) {
+//				ret.qmask[i] = align_res[i].qmask;
+//				ret.dmask[i] = align_res[i].dmask;
+//			}
+//		}
+//#endif
+//
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+//		if (inspect) {
+//			math_expr_set_score(&factors, &ret);
+//			printf("doc#%u, exp#%u, final score: %f\n",
+//			       ret.doc_id, ret.exp_id, ret.score);
+//		}
+//#else
+//		math_expr_set_score(&factors, &ret);
+//#endif
+//	}
 
 	return ret;
 }
@@ -470,10 +470,61 @@ math_l2_postlist_cur_struct_sim(struct math_l2_postlist *po,
 	return n_doc_lr_paths;
 }
 
+//mnc_score_t
+//math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res *ar)
+//{
+//	struct math_postlist_gener_item item;
+//	mnc_reset_docs();
+//
+//	for (int i = 0; i < po->iter->size; i++) {
+//		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+//
+//		if (cur != UINT64_MAX && cur == po->candidate) {
+//			uint32_t orig = po->iter->map[i];
+//			struct subpath_ele *ele = po->ele[orig];
+//			enum math_posting_type pt = po->path_type[orig];
+//			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
+//
+//			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
+//				uint32_t qr = ele->rid[j];
+//				uint32_t ql = ele->dup[j]->path_id; /* use path_id for mnc_score */
+//				for (uint32_t m = 0; m < MAX_MTREE; m++) {
+//					if (qr == ar[m].qr) {
+//						for (uint32_t k = 0; k < item.n_paths; k++) {
+//							uint32_t dr = item.subr_id[k];
+//
+//							if (dr == ar[m].dr) {
+//								struct mnc_ref ref = {
+//									item.tr_hash[k],
+//									item.op_hash[k]
+//								};
+//
+//								if (MATH_PATH_TYPE_PREFIX == pt) { 
+//									uint32_t dl = item.wild_id[k];
+//									mnc_doc_add_rele(ql - 1, dl - 1, ref);
+//								} else {
+//									uint64_t dls = item.wild_leaves[k];
+//									mnc_doc_add_reles(ql - 1, dls, ref);
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
+//		} /* end if */
+//	} /* end for */
+//
+//	struct mnc_match_t match = mnc_match();
+//	// mnc_slot_t qry_paths, doc_paths;
+//	return match.score;
+//}
+
+/* symbolset similarity calculation, single-tree only. */
 mnc_score_t
 math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res *ar)
 {
 	struct math_postlist_gener_item item;
+	struct math_postlist_item *_item;
 	mnc_reset_docs();
 
 	for (int i = 0; i < po->iter->size; i++) {
@@ -488,33 +539,37 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
 				uint32_t qr = ele->rid[j];
 				uint32_t ql = ele->dup[j]->path_id; /* use path_id for mnc_score */
-				for (uint32_t m = 0; m < MAX_MTREE; m++) {
-					if (qr == ar[m].qr) {
-						for (uint32_t k = 0; k < item.n_paths; k++) {
-							uint32_t dr = item.subr_id[k];
+				if (qr == ar->qr) {
+					for (uint32_t k = 0; k < item.n_paths; k++) {
+						uint32_t dr = item.subr_id[k];
 
-							if (dr == ar[m].dr) {
-								struct mnc_ref ref = {
-									item.tr_hash[k],
-									item.op_hash[k]
-								};
+						if (dr == ar->dr) {
+							struct mnc_ref ref = {
+								item.tr_hash[k],
+								item.op_hash[k]
+							};
 
-								if (MATH_PATH_TYPE_PREFIX == pt) { 
-									uint32_t dl = item.wild_id[k];
-									mnc_doc_add_rele(ql - 1, dl - 1, ref);
-								} else {
-									uint64_t dls = item.wild_leaves[k];
-									mnc_doc_add_reles(ql - 1, dls, ref);
-								}
+							if (MATH_PATH_TYPE_PREFIX == pt) { 
+								_item = (struct math_postlist_item*)&item;
+								uint32_t dl = _item->leaf_id[k];
+								mnc_doc_add_rele(ql - 1, dl - 1, ref);
+							} else {
+								uint64_t dls = item.wild_leaves[k];
+								mnc_doc_add_reles(ql - 1, dls, ref);
 							}
 						}
 					}
 				}
-			}
+			} /* end for */
 		} /* end if */
 	} /* end for */
 
-	return mnc_score();
+	struct mnc_match_t match = mnc_match();
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
+	ar->qmask = match.qry_paths;
+	ar->dmask = match.doc_paths;
+#endif
+	return match.score;
 }
 
 struct math_expr_score_res

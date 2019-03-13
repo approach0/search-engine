@@ -13,7 +13,7 @@ int main(void)
 {
 	int i;
 	struct mnc_ref ref = {'_', '@'};
-	mnc_score_t score;
+	struct mnc_match_t match;
 
 	mnc_reset_qry();
 
@@ -82,8 +82,9 @@ int main(void)
 		mnc_doc_add_rele(0, 5, ref);
 #endif
 
-		score = mnc_score();
-		printf("score = %u.\n", score);
+		match = mnc_match();
+		printf("score = %u, qry_paths: 0x%lx, doc_paths: 0x%lx.\n",
+			match.score, match.qry_paths, match.doc_paths);
 	}
 
 	printf("lsb position of %#x: %d\n", 0x18, lsb_pos(0x18)); /* b11000 */

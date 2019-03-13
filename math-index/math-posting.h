@@ -50,17 +50,16 @@ struct math_posting_item_v2 {
 };
 
 struct math_pathinfo_v2 {
-	uint16_t    leaf_id;
 	uint16_t    subr_id;
-	symbol_id_t lf_symb;
 	symbol_id_t op_hash;
+	symbol_id_t lf_symb;
+	uint16_t    leaf_id;
 };
 
 struct math_pathinfo_gener_v2 {
-	uint16_t    wild_id;
 	uint16_t    subr_id;
-	symbol_id_t tr_hash;
 	symbol_id_t op_hash;
+	symbol_id_t tr_hash;
 	uint64_t    wild_leaves;
 };
 #pragma pack(pop)

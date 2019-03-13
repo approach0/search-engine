@@ -21,24 +21,7 @@
 #include "tex-parser/gen-symbol.h"
 #include "tex-parser/trans.h"
 
-#include "config.h"
 #include "mnc-score.h"
-
-/* define max number of slots (bound variables) */
-#define MAX_DOC_UNIQ_SYM MAX_SUBPATH_ID
-
-#ifdef MNC_SMALL_BITMAP
-/* for debug */
-typedef uint8_t  mnc_slot_t;
-#define MNC_SLOTS_BYTES 1
-#else
-/* for real */
-typedef uint64_t mnc_slot_t;
-#define MNC_SLOTS_BYTES 8
-#endif
-
-/* finger print */
-typedef uint16_t mnc_finpr_t;
 
 /*
  * statical local variables
@@ -104,7 +87,7 @@ void mnc_doc_add_rele(uint32_t qry_path, uint32_t doc_path,
 	doc_fnp[doc_path] = doc_path_ref.fnp;
 }
 
-void mnc_doc_add_reles(uint32_t qry_path, uint64_t doc_paths,
+void mnc_doc_add_reles(uint32_t qry_path, mnc_slot_t doc_paths,
                       struct mnc_ref doc_path_ref)
 {
 	/* setup doc symbolic relevance map */
@@ -283,7 +266,7 @@ static __inline mnc_score_t mark(int i, int j)
 	}
 }
 
-static __inline uint64_t cross(int max_slot)
+static __inline mnc_slot_t cross(int max_slot)
 {
 	/* rule out the document path in the "max" slot */
 	doc_cross_bitmap |= doc_mark_bitmap[max_slot];
@@ -294,9 +277,10 @@ static __inline uint64_t cross(int max_slot)
 	return doc_cross_bitmap;
 }
 
-mnc_score_t mnc_score()
+struct mnc_match_t mnc_match()
 {
 	uint32_t i, j, max_subscore_idx = 0;
+	mnc_slot_t qry_cross_bitmap = 0;
 
 	mnc_score_t mark_score, total_score = 0;
 	mnc_score_t max_subscore = 0;
@@ -314,6 +298,7 @@ mnc_score_t mnc_score()
 			mark_score = mark(i, j);
 
 			if (mark_score != 0) {
+				qry_cross_bitmap |= (1L << i); /* mask this query path */
 				doc_uniq_sym_score[j] += mark_score;
 				if (doc_uniq_sym_score[j] > max_subscore) {
 					max_subscore = doc_uniq_sym_score[j];
@@ -358,5 +343,9 @@ mnc_score_t mnc_score()
 	}
 
 	clean_bitmaps();
-	return total_score;
+
+	return ((struct mnc_match_t) {
+		total_score,
+		qry_cross_bitmap, doc_cross_bitmap
+	});
 }

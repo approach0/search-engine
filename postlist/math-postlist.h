@@ -8,10 +8,10 @@ struct math_postlist_item {
 	/* 1 */ uint32_t  doc_id; /* higher address, more significant */
 	/* 2 */ uint32_t  n_lr_paths;
 	/* 3 */ uint32_t  n_paths;
-	/* 4 */ uint32_t  leaf_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
-	/* 5 */ uint32_t  subr_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
+	/* 4 */ uint32_t  subr_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
+	/* 5 */ uint32_t  op_hash[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* actually 16 bits */
 	/* 6 */ uint32_t  lf_symb[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* actually 16 bits */
-	/* 7 */ uint32_t  op_hash[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* actually 16 bits */
+	/* 7 */ uint32_t  leaf_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
 };
 
 struct math_postlist_gener_item {
@@ -19,11 +19,10 @@ struct math_postlist_gener_item {
 	/* 1 */ uint32_t  doc_id; /* higher address, more significant */
 	/* 2 */ uint32_t  n_lr_paths;
 	/* 3 */ uint32_t  n_paths;
-	/* 4 */ uint32_t  wild_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
-	/* 5 */ uint32_t  subr_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
+	/* 4 */ uint32_t  subr_id[MAX_MATH_POSTLIST_PATHINFO_LEN];
+	/* 5 */ uint32_t  op_hash[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* actually 16 bits */
 	/* 6 */ uint32_t  tr_hash[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* actually 16 bits */
-	/* 7 */ uint32_t  op_hash[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* actually 16 bits */
-	/* 8 */ uint64_t  wild_leaves[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* additional */
+	/* 7 */ uint64_t  wild_leaves[MAX_MATH_POSTLIST_PATHINFO_LEN]; /* difference */
 };
 
 struct postlist;

@@ -115,14 +115,12 @@ static uint field_offset(uint j)
 	case 3:
 		return offsetof(struct math_postlist_gener_item, n_paths);
 	case 4:
-		return offsetof(struct math_postlist_gener_item, wild_id);
-	case 5:
 		return offsetof(struct math_postlist_gener_item, subr_id);
+	case 5:
+		return offsetof(struct math_postlist_gener_item, op_hash);
 	case 6:
 		return offsetof(struct math_postlist_gener_item, tr_hash);
 	case 7:
-		return offsetof(struct math_postlist_gener_item, op_hash);
-	case 8:
 		return offsetof(struct math_postlist_gener_item, wild_leaves);
 	default:
 		prerr("Unexpected field number");
@@ -132,7 +130,7 @@ static uint field_offset(uint j)
 
 static uint field_len(void *inst, uint j)
 {
-	PTR_CAST(a, struct math_postlist_gener_item, inst);
+	PTR_CAST(a, struct math_postlist_item, inst);
 	switch (j) {
 	case 0:
 	case 1:
@@ -144,7 +142,26 @@ static uint field_len(void *inst, uint j)
 	case 6:
 	case 7:
 		return a->n_paths;
-	case 8:
+	default:
+		prerr("Unexpected field number");
+		abort();
+	}
+}
+
+static uint field_len_gener(void *inst, uint j)
+{
+	PTR_CAST(a, struct math_postlist_gener_item, inst);
+	switch (j) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+		return 1;
+	case 4:
+	case 5:
+	case 6:
+		return a->n_paths;
+	case 7:
 		return (a->n_paths << 1);
 	default:
 		prerr("Unexpected field number");
@@ -153,6 +170,32 @@ static uint field_len(void *inst, uint j)
 }
 
 static uint field_size(uint j)
+{
+	size_t sz = 0;
+	struct math_postlist_item a;
+	switch (j) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+		sz = sizeof(uint32_t);
+		break;
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+		sz = sizeof(a.subr_id);
+		break;
+	default:
+		prerr("Unexpected field number");
+		abort();
+	}
+
+	//printf("%lu @%d\n", sz, __LINE__);
+	return sz;
+}
+
+static uint field_size_gener(uint j)
 {
 	size_t sz = 0;
 	struct math_postlist_gener_item a;
@@ -166,10 +209,9 @@ static uint field_size(uint j)
 	case 4:
 	case 5:
 	case 6:
-	case 7:
-		sz = sizeof(a.wild_id);
+		sz = sizeof(a.subr_id);
 		break;
-	case 8:
+	case 7:
 		sz = sizeof(a.wild_leaves);
 		break;
 	default:
@@ -193,15 +235,13 @@ static char *field_info(uint j)
 	case 3:
 		return "item leaf-root paths";
 	case 4:
-		return "path leaf-end vertex";
-	case 5:
 		return "path subr-end vertex";
+	case 5:
+		return "operators symbol hash";
 	case 6:
 		return "operand(s) symbol/hash";
 	case 7:
-		return "operators symbol hash";
-	case 8:
-		return "wildcards operands IDs";
+		return "operands ID(s)";
 	default:
 		prerr("Unexpected field number");
 		abort();
@@ -297,9 +337,9 @@ math_postlist_create_gener_plain()
 	codec = postlist_codec_alloc(
 		BUF_MAX_ITEMS(struct math_postlist_gener_item),
 		sizeof(struct math_postlist_gener_item),
-		9 /* number of fields */,
-		field_offset, field_len,
-		field_size,   field_info,
+		8 /* number of fields */,
+		field_offset, field_len_gener,
+		field_size_gener,   field_info,
 		/* 0 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		/* 1 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		/* 2 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
@@ -307,8 +347,7 @@ math_postlist_create_gener_plain()
 		/* 4 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		/* 5 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		/* 6 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
-		/* 8 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
+		/* 7 */ codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
 	);
 
 	po = postlist_create(
@@ -335,9 +374,9 @@ math_postlist_create_gener_compressed()
 	codec = postlist_codec_alloc(
 		BUF_MAX_ITEMS(struct math_postlist_gener_item),
 		sizeof(struct math_postlist_gener_item),
-		9 /* number of fields */,
-		field_offset, field_len,
-		field_size,   field_info,
+		8 /* number of fields */,
+		field_offset, field_len_gener,
+		field_size_gener,   field_info,
 		/* 0 */ codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
 		/* 1 */ codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
 		/* 2 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
@@ -345,8 +384,7 @@ math_postlist_create_gener_compressed()
 		/* 4 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 5 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		/* 6 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		/* 7 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
-		/* 8 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
+		/* 7 */ codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
 	);
 
 	po = postlist_create(
@@ -367,27 +405,27 @@ void math_postlist_print_item(struct math_postlist_gener_item *item,
 
 	for (int i = 0; i < item->n_paths; i++) {
 		if (gener) {
-			printf("\t gener pathinfo %u, %u, 0x%x, 0x%x, 0x%lx \n",
-				item->wild_id[i],
+			printf("\t gener pathinfo %u, %u, 0x%x, 0x%lx \n",
 				item->subr_id[i],
-				item->tr_hash[i],
 				item->op_hash[i],
+				item->tr_hash[i],
 				item->wild_leaves[i]
 			);
 		} else {
+			P_CAST(_item, struct math_postlist_item, item);
 			if (trans == NULL)
-				printf("\t normal pathinfo %u, %u, %u, 0x%x \n",
-					item->wild_id[i],
-					item->subr_id[i],
-					item->tr_hash[i],
-					item->op_hash[i]
+				printf("\t normal pathinfo %u, 0x%u, 0x%u, %u \n",
+					_item->subr_id[i],
+					_item->op_hash[i],
+					_item->lf_symb[i],
+					_item->leaf_id[i]
 				);
 			else
-				printf("\t normal pathinfo %u, %u, %s, 0x%x \n",
-					item->wild_id[i],
-					item->subr_id[i],
-					trans(item->tr_hash[i]),
-					item->op_hash[i]
+				printf("\t normal pathinfo %u, 0x%u, %s, %u \n",
+					_item->subr_id[i],
+					_item->op_hash[i],
+					trans(_item->lf_symb[i]),
+					_item->leaf_id[i]
 				);
 		}
 	}

@@ -35,7 +35,7 @@ int main()
 			}
 			printf("\n");
 
-			printf("Subpaths (leaf-root paths/total subpaths = %u/%u):\n", 
+			printf("Suffix paths (leaf-root paths/total = %u/%u):\n",
 				   ret.subpaths.n_lr_paths, ret.subpaths.n_subpaths);
 			subpaths_print(&ret.subpaths, stdout);
 
