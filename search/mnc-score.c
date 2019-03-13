@@ -59,9 +59,6 @@ mnc_slot_t      doc_mark_bitmap[MAX_DOC_UNIQ_SYM];
 mnc_slot_t      doc_cross_bitmap;
 mnc_slot_t      relevance_bitmap[MAX_SUBPATH_ID][MAX_DOC_UNIQ_SYM];
 
-/* query / document slot sub-scores */
-mnc_score_t     doc_uniq_sym_score[MAX_DOC_UNIQ_SYM];
-
 /*
  * implementation functions
  */
@@ -137,7 +134,8 @@ static void print_slot(char *byte)
 			printf("%*c ", 8, ' ');
 
 static void
-mnc_print(int highlight_qry_path, int max_subscore_idx)
+mnc_print(mnc_score_t *sub_score,
+          int highlight_qry_path, int max_subscore_idx)
 {
 	uint32_t i, j;
 	if (n_doc_uniq_syms == 0)
@@ -145,12 +143,12 @@ mnc_print(int highlight_qry_path, int max_subscore_idx)
 
 	/* print scores */
 	printf("Max sub-score: %u from doc symbol `%s'\n",
-	       doc_uniq_sym_score[max_subscore_idx],
+	       sub_score[max_subscore_idx],
 	       trans_symbol(doc_uniq_sym[max_subscore_idx]));
 
 	printf("%*s", _MAX_SYMBOL_STR_LEN, "Score: ");
 	for (i = 0; i < n_doc_uniq_syms; i++) {
-		printf("%-*u ", 8, doc_uniq_sym_score[i]);
+		printf("%-*u ", 8, sub_score[i]);
 		_PADDING_SPACE;
 	}
 	printf("\n");
@@ -285,13 +283,15 @@ static __inline mnc_score_t mark(int i, int j)
 	}
 }
 
-static __inline void cross(int max_slot)
+static __inline uint64_t cross(int max_slot)
 {
 	/* rule out the document path in the "max" slot */
 	doc_cross_bitmap |= doc_mark_bitmap[max_slot];
 
 	/* clear 'mark' bitmap */
 	memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
+
+	return doc_cross_bitmap;
 }
 
 mnc_score_t mnc_score()
@@ -301,9 +301,12 @@ mnc_score_t mnc_score()
 	mnc_score_t mark_score, total_score = 0;
 	mnc_score_t max_subscore = 0;
 
+	/* query / document slot sub-scores */
+	mnc_score_t doc_uniq_sym_score[MAX_DOC_UNIQ_SYM] = {0};
+
 #ifdef MNC_DEBUG
 	/* print initial state */
-	mnc_print(-1, max_subscore_idx);
+	mnc_print(doc_uniq_sym_score, -1, max_subscore_idx);
 #endif
 
 	for (i = 0; i < n_qry_syms; i++) {
@@ -324,10 +327,11 @@ mnc_score_t mnc_score()
 
 #ifdef MNC_DEBUG
 			/* print before cross */
-			mnc_print(i, max_subscore_idx);
+			mnc_print(doc_uniq_sym_score, i, max_subscore_idx);
 #endif
 
-			cross(max_subscore_idx);
+			if (cross(max_subscore_idx) == (0L - 1))
+				break; /* early termination */
 
 			/* accumulate into total score */
 			total_score += max_subscore;
@@ -347,7 +351,7 @@ mnc_score_t mnc_score()
 #ifdef MNC_DEBUG
 		else {
 			/* print */
-			mnc_print(i, max_subscore_idx);
+			mnc_print(doc_uniq_sym_score, i, max_subscore_idx);
 			printf("~~~~~~~~~\n");
 		}
 #endif
