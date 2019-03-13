@@ -56,7 +56,7 @@ uint32_t        n_doc_uniq_syms;
 
 /* query / document bitmaps */
 mnc_slot_t      doc_mark_bitmap[MAX_DOC_UNIQ_SYM];
-mnc_slot_t      doc_cross_bitmap[MAX_DOC_UNIQ_SYM];
+mnc_slot_t      doc_cross_bitmap;
 mnc_slot_t      relevance_bitmap[MAX_SUBPATH_ID][MAX_DOC_UNIQ_SYM];
 
 /* query / document slot sub-scores */
@@ -165,8 +165,7 @@ mnc_print(int highlight_qry_path, int max_subscore_idx)
 
 	/* print mark and cross rows */
 	printf("Cross: ");
-	for (i = 0; i < n_doc_uniq_syms; i++)
-		print_slot((char*)&doc_cross_bitmap[i]);
+	print_slot((char*)&doc_cross_bitmap);
 	printf("\n");
 
 	printf("Mark:  ");
@@ -217,7 +216,7 @@ static void clean_bitmaps(void)
 	 * already ensures a clean 'mark bitmap' after main function. */
 	// memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
 
-	memset(doc_cross_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
+	doc_cross_bitmap = 0x0;
 
 	for (i = 0; i < n_qry_syms; i++) {
 		memset(relevance_bitmap[i], 0,
@@ -242,7 +241,7 @@ static __inline mnc_score_t mark(int i, int j)
 {
 	mnc_slot_t unmark;
 	mnc_slot_t mark   = doc_mark_bitmap[j];
-	mnc_slot_t cross  = doc_cross_bitmap[j];
+	mnc_slot_t cross  = doc_cross_bitmap;
 
 	/* get relevance bitmap without marked or crossed bits */
 	unmark = relevance_bitmap[i][j] & ~(mark | cross);
@@ -289,7 +288,7 @@ static __inline mnc_score_t mark(int i, int j)
 static __inline void cross(int max_slot)
 {
 	/* rule out the document path in the "max" slot */
-	doc_cross_bitmap[max_slot] |= doc_mark_bitmap[max_slot];
+	doc_cross_bitmap |= doc_mark_bitmap[max_slot];
 
 	/* clear 'mark' bitmap */
 	memset(doc_mark_bitmap, 0, sizeof(mnc_slot_t) * n_doc_uniq_syms);
