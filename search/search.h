@@ -43,3 +43,5 @@ struct l2_postlist_item {
 
 ranked_results_t
 indices_run_query(struct indices*, struct query*);
+
+void math_l2_postlist_sort(struct math_l2_postlist*);

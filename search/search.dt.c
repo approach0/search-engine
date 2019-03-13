@@ -341,7 +341,7 @@ static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
 		return len_i > len_j;
 }
 
-static void math_l2_postlist_sort(struct math_l2_postlist *po)
+void math_l2_postlist_sort(struct math_l2_postlist *po)
 {
 	struct math_pruner *pruner = &po->pruner;
 	for (int i = 0; i < po->iter->size; i++) {

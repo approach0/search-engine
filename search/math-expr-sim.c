@@ -918,6 +918,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #endif
 			math_pruner_dele_node_safe(pruner, q_node_idx, save_idx, n_save);
 			math_pruner_update(pruner);
+			math_l2_postlist_sort(po);
 			//math_pruner_print(pruner);
 			continue; /* so that we can dele other nodes */
 		} else if (q_node->width < widest.width) {
