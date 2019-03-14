@@ -117,11 +117,13 @@ math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
 	if (sp->type == SUBPATH_TYPE_GENERNODE) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
 		arg.skip_one = 1;
+		arg.max -= 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_WILDCARD) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
 		arg.skip_one = 1;
+		arg.max -= 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_NORMAL) {

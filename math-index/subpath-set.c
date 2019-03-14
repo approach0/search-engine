@@ -79,10 +79,14 @@ static LIST_IT_CALLBK(add_subpaths)
 
 #ifdef DEBUG_SUBPATH_SET
 	if (args->prefix_len <= sp->n_nodes) {
-		fprintf(stdout, "adding subpath (prefix_len=%u):\n", args->prefix_len);
+		fprintf(stdout, "adding subpath (prefix_len=%u, n_nodes=%u):\n",
+		        args->prefix_len, sp->n_nodes);
 		printf("r#%u~l#%u,p#%u: ", get_subpath_nodeid_at(sp, args->prefix_len),
 		       sp->leaf_id, sp->path_id);
 		_print_subpath(sp, args->prefix_len);
+		printf("\n");
+		printf("extracted from: \n");
+		_print_subpath(sp, sp->n_nodes);
 		printf("\n");
 
 		fprintf(stdout, "subpath set becomes: \n");
