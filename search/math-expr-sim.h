@@ -33,21 +33,6 @@ struct math_expr_sim_factors {
 void math_expr_set_score(struct math_expr_sim_factors*,
                          struct math_expr_score_res*);
 
-struct math_expr_score_res
-math_expr_score_on_merge(struct postmerge*, uint32_t, uint32_t);
-
-struct math_expr_score_res
-math_expr_filter_on_merge(struct postmerge*, uint32_t, uint32_t);
-
-uint32_t math_expr_doc_lr_paths(struct postmerge*);
-
-struct math_expr_score_res
-math_expr_prefix_score_on_merge(
-	uint64_t, struct postmerge*,
-	struct math_extra_score_arg*,
-	struct indices*
-);
-
 #include "search.h"
 void math_l2_postlist_print_cur(struct math_l2_postlist*);
 
