@@ -283,7 +283,6 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
                   uint32_t prefix_len, struct subpaths subpaths)
 {
 	struct _set_pathinfo_endpoints_arg arg;
-	struct math_pathinfo_gener_v2 pathinfo_gener;
 
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
@@ -293,27 +292,32 @@ write_pathinfo_v2(const char *path, struct subpath *sp,
 	if (fh == NULL)
 		return -1;
 
-	/* set operator hash (fingerprint) */
-	pathinfo_gener.op_hash = subpath_fingerprint(sp, prefix_len);
-
-	/* set lf_symb (sp->subtree_hash and lf_symbol_id are union) */
-	pathinfo_gener.tr_hash = sp->lf_symbol_id;
-
-	/* set end-point IDs */
+	/* get end-point IDs (arg.leaf_id and arg.subr_id) */
 	arg.cnt = 0;
 	arg.prefix_len = prefix_len;
 	list_foreach(&sp->path_nodes, &_set_pathinfo_endpoints, &arg);
-	pathinfo_gener.wild_id = arg.leaf_id;
-	pathinfo_gener.subr_id = arg.subr_id;
 
 	if (sp->type == SUBPATH_TYPE_NORMAL) {
+		struct math_pathinfo_v2 pathinfo;
+
+		pathinfo.op_hash = subpath_fingerprint(sp, prefix_len);
+		pathinfo.lf_symb = sp->lf_symbol_id;
+		pathinfo.subr_id = arg.subr_id;
+		pathinfo.leaf_id = arg.leaf_id;
+
 		/* write normal pathinfo */
-		fwrite(&pathinfo_gener, 1, sizeof(struct math_pathinfo_v2), fh);
+		fwrite(&pathinfo, 1, sizeof(struct math_pathinfo_v2), fh);
 
 	} else if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		struct math_pathinfo_gener_v2 pathinfo;
+
+		pathinfo.op_hash = subpath_fingerprint(sp, prefix_len);
+		pathinfo.tr_hash = sp->subtree_hash;
+		pathinfo.subr_id = arg.subr_id;
+		pathinfo.wild_leaves = get_wild_leaves(sp, subpaths);
+
 		/* write gener pathinfo */
-		pathinfo_gener.wild_leaves = get_wild_leaves(sp, subpaths);
-		fwrite(&pathinfo_gener, 1, sizeof(pathinfo_gener), fh);
+		fwrite(&pathinfo, 1, sizeof(struct math_pathinfo_gener_v2), fh);
 	}
 
 	fclose(fh);
@@ -570,11 +574,11 @@ int math_inex_probe_v2(const char* path, bool trans, bool gener, FILE *fh)
 			for (uint32_t i = 0; i < po_item.n_paths; i++) {
 				struct math_postlist_item *p = &po_item;
 				if (!trans) {
-					fprintf(fh, "[%u ~ %u, lf%x, op%x]",
+					fprintf(fh, "[%u ~ %u, symbol_%x, ophash_%x]",
 						p->subr_id[i], p->leaf_id[i],
 						p->lf_symb[i], p->op_hash[i]);
 				} else {
-					fprintf(fh, "[%u ~ %u, %s, op%x]",
+					fprintf(fh, "[%u ~ %u, %s, op_hash%x]",
 						p->subr_id[i], p->leaf_id[i],
 						trans_symbol(p->lf_symb[i]), p->op_hash[i]);
 				}
@@ -592,9 +596,9 @@ int math_inex_probe_v2(const char* path, bool trans, bool gener, FILE *fh)
 
 			for (uint32_t i = 0; i < po_item.n_paths; i++) {
 				struct math_postlist_gener_item *p = &po_item;
-				fprintf(fh, "[%u ~ %u, tr%x, op%x, 0x%lx]",
-					p->subr_id[i], p->wild_id[i], p->tr_hash[i],
-					p->op_hash[i], p->wild_leaves[i]);
+				fprintf(fh, "[%u ~ %lx, ophash_%x, symbol_%x]",
+					p->subr_id[i], p->wild_leaves[i],
+					p->op_hash[i], p->tr_hash[i]);
 
 				if (i + 1 != po_item.n_paths)
 					fprintf(fh, ", ");

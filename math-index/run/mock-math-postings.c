@@ -77,36 +77,34 @@ static void append_mock_item(const char *path, int gener)
 
 	for (int i = 0; i < item.n_paths; i++) {
 		if (gener) {
-			struct math_pathinfo_gener_v2 pathinfo;
-			pathinfo.wild_id = (random() % 64) + 1;
-			pathinfo.subr_id = (random() % 300) + 1;
-			pathinfo.tr_hash = random() % 0xffff;
-			pathinfo.op_hash = random() % 0xffff;
 			uint64_t r1 = random(), r2 = random();
+			struct math_pathinfo_gener_v2 pathinfo;
+			pathinfo.subr_id = (random() % 300) + 1;
+			pathinfo.op_hash = random() % 0xffff;
+			pathinfo.tr_hash = random() % 0xffff;
 			pathinfo.wild_leaves = (r1 << 32) | r2;
 			fwrite(&pathinfo, 1, sizeof(pathinfo), fh);
 
-			printf("\t gener pathinfo %u, %u, 0x%x, 0x%x, 0x%lx \n",
-				pathinfo.wild_id,
+			printf("\t gener pathinfo %u, 0x%x, 0x%x, 0x%lx \n",
 				pathinfo.subr_id,
-				pathinfo.tr_hash,
 				pathinfo.op_hash,
+				pathinfo.tr_hash,
 				pathinfo.wild_leaves
 			);
 
 		} else {
 			struct math_pathinfo_v2 pathinfo;
-			pathinfo.leaf_id = (random() % 64) + 1;
 			pathinfo.subr_id = (random() % 300) + 1;
-			pathinfo.lf_symb = random() % 0xffff;
 			pathinfo.op_hash = random() % 0xffff;
+			pathinfo.lf_symb = random() % 0xffff;
+			pathinfo.leaf_id = (random() % 64) + 1;
 			fwrite(&pathinfo, 1, sizeof(pathinfo), fh);
 
-			printf("\t normal pathinfo %u, %u, %u, 0x%x \n",
-				pathinfo.leaf_id,
+			printf("\t normal pathinfo %u, 0x%x, 0x%x, %u \n",
 				pathinfo.subr_id,
+				pathinfo.op_hash,
 				pathinfo.lf_symb,
-				pathinfo.op_hash
+				pathinfo.leaf_id
 			);
 		}
 	}

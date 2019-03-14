@@ -307,10 +307,10 @@ size_t math_posting_read(math_posting_t po_, void *dest_)
 
 	/* copy pathinfo items */
 	for (int i = 0; i < src->n_paths; i++) {
-		dest->leaf_id[i] = pathinfo[i].leaf_id;
 		dest->subr_id[i] = pathinfo[i].subr_id;
-		dest->lf_symb[i] = pathinfo[i].lf_symb;
 		dest->op_hash[i] = pathinfo[i].op_hash;
+		dest->lf_symb[i] = pathinfo[i].lf_symb;
+		dest->leaf_id[i] = pathinfo[i].leaf_id;
 	}
 
  	return sizeof(struct math_postlist_item);
@@ -336,10 +336,9 @@ size_t math_posting_read_gener(math_posting_t po_, void *dest_)
 
 	/* copy pathinfo items */
 	for (int i = 0; i < src->n_paths; i++) {
-		dest->wild_id[i] = pathinfo[i].wild_id;
 		dest->subr_id[i] = pathinfo[i].subr_id;
-		dest->tr_hash[i] = pathinfo[i].tr_hash;
 		dest->op_hash[i] = pathinfo[i].op_hash;
+		dest->tr_hash[i] = pathinfo[i].tr_hash;
 		dest->wild_leaves[i] = pathinfo[i].wild_leaves;
 	}
 
