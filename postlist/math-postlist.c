@@ -405,7 +405,7 @@ void math_postlist_print_item(struct math_postlist_gener_item *item,
 
 	for (int i = 0; i < item->n_paths; i++) {
 		if (gener) {
-			printf("\t gener pathinfo %u, %u, 0x%x, 0x%lx \n",
+			printf("\t gener pathinfo %u, 0x%x, 0x%x, 0x%lx \n",
 				item->subr_id[i],
 				item->op_hash[i],
 				item->tr_hash[i],
@@ -414,14 +414,14 @@ void math_postlist_print_item(struct math_postlist_gener_item *item,
 		} else {
 			P_CAST(_item, struct math_postlist_item, item);
 			if (trans == NULL)
-				printf("\t normal pathinfo %u, 0x%u, 0x%u, %u \n",
+				printf("\t normal pathinfo %u, 0x%x, 0x%x, %u \n",
 					_item->subr_id[i],
 					_item->op_hash[i],
 					_item->lf_symb[i],
 					_item->leaf_id[i]
 				);
 			else
-				printf("\t normal pathinfo %u, 0x%u, %s, %u \n",
+				printf("\t normal pathinfo %u, 0x%x, %s, %u \n",
 					_item->subr_id[i],
 					_item->op_hash[i],
 					trans(_item->lf_symb[i]),
