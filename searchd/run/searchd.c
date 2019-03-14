@@ -7,7 +7,6 @@
 #include "timer/timer.h"
 
 #include "search/config.h"
-#include "search/math-expr-search.h" /////////////////
 #include "search/search.h"
 #include "httpd/httpd.h"
 #include "wstring/wstring.h"

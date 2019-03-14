@@ -14,7 +14,6 @@
 
 #include "search/config.h"
 #include "search/search-utils.h"
-#include "search/math-expr-search.h"
 #include "search/math-prefix-qry.h"
 #include "search/math-expr-sim.h"
 
@@ -24,45 +23,45 @@
 
 char *get_expr_by_pos(char*, size_t, uint32_t);
 
-static struct math_postlist_item*
-math_expr_prefix_alignmap(
-	uint64_t cur_min, struct postmerge *pm,
-	struct math_extra_score_arg *mesa,
-	uint32_t *qmap, uint32_t *dmap
-)
-{
-	struct math_postlist_item *item = NULL;
-	struct math_prefix_qry    *pq = &mesa->pq;
-	for (uint32_t i = 0; i < pm->n_postings; i++) {
-		if (pm->curIDs[i] == cur_min) {
-			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-			item = (struct math_postlist_item*)POSTMERGE_CUR(pm, i);
-
-			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
-				uint32_t qr, ql;
-				qr = mepa->ele->rid[j];
-				ql = mepa->ele->dup[j]->leaf_id;
-
-				for (uint32_t k = 0; k < item->n_paths; k++) {
-					uint32_t dr, dl;
-					dr = item->subr_id[k];
-					dl = item->leaf_id[k];
-
-					uint64_t res = pq_hit(pq, qr, ql, dr, dl);
-					(void)res;
-//					if (0 == res && item->doc_id == 219890) {
-//						printf("r%u~l%u hit r%u~l%u\n", qr, ql, dr, dl);
-//					}
-				}
-			}
-		}
-	}
-
-	pq_align_map(pq, qmap, dmap);
-	pq_reset(pq);
-
-	return item;
-}
+//static struct math_postlist_item*
+//math_expr_prefix_alignmap(
+//	uint64_t cur_min, struct postmerge *pm,
+//	struct math_extra_score_arg *mesa,
+//	uint32_t *qmap, uint32_t *dmap
+//)
+//{
+//	struct math_postlist_item *item = NULL;
+//	struct math_prefix_qry    *pq = &mesa->pq;
+//	for (uint32_t i = 0; i < pm->n_postings; i++) {
+//		if (pm->curIDs[i] == cur_min) {
+//			PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
+//			item = (struct math_postlist_item*)POSTMERGE_CUR(pm, i);
+//
+//			for (uint32_t j = 0; j <= mepa->ele->dup_cnt; j++) {
+//				uint32_t qr, ql;
+//				qr = mepa->ele->rid[j];
+//				ql = mepa->ele->dup[j]->leaf_id;
+//
+//				for (uint32_t k = 0; k < item->n_paths; k++) {
+//					uint32_t dr, dl;
+//					dr = item->subr_id[k];
+//					dl = item->leaf_id[k];
+//
+//					uint64_t res = pq_hit(pq, qr, ql, dr, dl);
+//					(void)res;
+////					if (0 == res && item->doc_id == 219890) {
+////						printf("r%u~l%u hit r%u~l%u\n", qr, ql, dr, dl);
+////					}
+//				}
+//			}
+//		}
+//	}
+//
+//	pq_align_map(pq, qmap, dmap);
+//	pq_reset(pq);
+//
+//	return item;
+//}
 
 struct highlight_args {
 	struct indices *indices;
@@ -81,33 +80,33 @@ static void _debug_print_map(uint32_t *map, int n, int color)
 static int
 math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 {
-	PTR_CAST(mesa, struct math_extra_score_arg, args);
-	PTR_CAST(hila, struct highlight_args, mesa->expr_srch_arg);
-
-	struct math_postlist_item *item = NULL;
-	uint32_t qmap[MAX_NODE_IDS] = {0};
-	uint32_t dmap[MAX_NODE_IDS] = {0};
-
-	item = math_expr_prefix_alignmap(cur_min, pm, mesa, qmap, dmap);
-
-//	if (item && item->doc_id == 219890) {
-//		_debug_print_map(qmap, MAX_NODE_IDS, 2);
-//		_debug_print_map(dmap, MAX_NODE_IDS, 2);
+//	PTR_CAST(mesa, struct math_extra_score_arg, args);
+//	PTR_CAST(hila, struct highlight_args, mesa->expr_srch_arg);
+//
+//	struct math_postlist_item *item = NULL;
+//	uint32_t qmap[MAX_NODE_IDS] = {0};
+//	uint32_t dmap[MAX_NODE_IDS] = {0};
+//
+//	item = math_expr_prefix_alignmap(cur_min, pm, mesa, qmap, dmap);
+//
+////	if (item && item->doc_id == 219890) {
+////		_debug_print_map(qmap, MAX_NODE_IDS, 2);
+////		_debug_print_map(dmap, MAX_NODE_IDS, 2);
+////	}
+//
+//	if (item && item->doc_id == hila->doc_id && item->exp_id == hila->exp_id) {
+//		size_t txt_sz;
+//		char *txt = get_blob_string(hila->indices->txt_bi, item->doc_id, 1, &txt_sz);
+//		char *doc_tex = get_expr_by_pos(txt, txt_sz, item->exp_id);
+//		free(txt);
+//
+//		math_tree_highlight((char*)hila->query_tex, qmap, MAX_MTREE, hila->qout);
+//		math_tree_highlight(doc_tex, dmap, MAX_MTREE, hila->dout);
+//
+//		return 1;
 //	}
-
-	if (item && item->doc_id == hila->doc_id && item->exp_id == hila->exp_id) {
-		size_t txt_sz;
-		char *txt = get_blob_string(hila->indices->txt_bi, item->doc_id, 1, &txt_sz);
-		char *doc_tex = get_expr_by_pos(txt, txt_sz, item->exp_id);
-		free(txt);
-
-		math_tree_highlight((char*)hila->query_tex, qmap, MAX_MTREE, hila->qout);
-		math_tree_highlight(doc_tex, dmap, MAX_MTREE, hila->dout);
-
-		return 1;
-	}
-
-	return 0;
+//
+//	return 0;
 }
 
 static const char*
@@ -115,23 +114,23 @@ graph_query_response(struct indices *indices,
                      const char *q, uint32_t doc_id, uint32_t exp_id)
 {
 	static char ret[MAX_SNIPPET_SZ];
-	sds q_out = sdsempty();
-	sds d_out = sdsempty();
-	struct highlight_args args = {
-		indices, doc_id, exp_id, q, &q_out, &d_out
-	};
-
-	math_postmerge(indices, (char*)q, MATH_SRCH_FUZZY_STRUCT,
-	               &math_highlight_on_merge, &args);
-	char *esc_q_out = json_encode_string(q_out);
-	char *esc_d_out = json_encode_string(d_out);
-
-	sprintf(ret, "{\"qry\": %s, \"doc\": %s}", esc_q_out, esc_d_out);
-
-	free(esc_q_out);
-	free(esc_d_out);
-	sdsfree(q_out);
-	sdsfree(d_out);
+//	sds q_out = sdsempty();
+//	sds d_out = sdsempty();
+//	struct highlight_args args = {
+//		indices, doc_id, exp_id, q, &q_out, &d_out
+//	};
+//
+//	math_postmerge(indices, (char*)q, MATH_SRCH_FUZZY_STRUCT,
+//	               &math_highlight_on_merge, &args);
+//	char *esc_q_out = json_encode_string(q_out);
+//	char *esc_d_out = json_encode_string(d_out);
+//
+//	sprintf(ret, "{\"qry\": %s, \"doc\": %s}", esc_q_out, esc_d_out);
+//
+//	free(esc_q_out);
+//	free(esc_d_out);
+//	sdsfree(q_out);
+//	sdsfree(d_out);
 	return (const char*)ret;
 }
 
