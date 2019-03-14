@@ -133,6 +133,11 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	mnc_reset_qry();
 	list_foreach(&subpaths->li, &push_query_path, NULL);
 
+#ifdef DEBUG_PRINT_QRY_STRUCT
+	printf("Suffix paths (path_id sorted by bond-vars):\n");
+	subpaths_print(subpaths, stdout);
+#endif
+
 	/* prepare structure scoring structure */
 	s->n_qry_nodes = optr_max_node_id(parse_ret.operator_tree);
 	s->pq = pq_allocate(s->n_qry_nodes);
@@ -142,6 +147,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 		DIR_PATHSET_PREFIX_PATH, subpaths, &s->n_uniq_paths
 	);
 #ifdef DEBUG_PRINT_QRY_STRUCT
+	printf("Search path set:\n");
 	subpath_set_print(&s->subpath_set, stdout);
 #endif
 

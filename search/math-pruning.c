@@ -208,7 +208,7 @@ void math_pruner_print(struct math_pruner *pruner)
 		       node->width);
 		for (int j = 0; j < node->n; j++) {
 			int pid = node->postlist_id[j];
-			printf("\t sector tree: (#%d, %d) ---> posting_list[%d], ",
+			printf("\t sector tree: (#%d, %d) ---> po#%d, ",
 				node->secttr[j].rnode, node->secttr[j].width, pid);
 			printf("max: %d, len: %d, ref: %d [", pruner->postlist_max[pid],
 				pruner->postlist_len[pid], pruner->postlist_ref[pid]);
