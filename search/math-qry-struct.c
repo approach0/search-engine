@@ -79,6 +79,9 @@ static LIST_IT_CALLBK(push_query_path)
 	LIST_OBJ(struct subpath, sp, ln);
 	struct mnc_ref mnc_ref;
 
+	assert(!(sp->type == SUBPATH_TYPE_NORMAL &&
+	       sp->fingerprint == WILDCARD_FINGERPRINT_MAGIC));
+
 	mnc_ref.sym = sp->lf_symbol_id;
 	mnc_ref.fnp = (sp->type == SUBPATH_TYPE_NORMAL) ?
 		sp->fingerprint : WILDCARD_FINGERPRINT_MAGIC;

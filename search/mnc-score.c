@@ -220,32 +220,49 @@ int lsb_pos(uint64_t v)
  */
 static __inline mnc_score_t mark(int i, int j)
 {
-	mnc_slot_t unmark;
-	mnc_slot_t mark   = doc_mark_bitmap[j];
-	mnc_slot_t cross  = doc_cross_bitmap;
+	mnc_slot_t mark  = doc_mark_bitmap[j];
+	mnc_slot_t cross = doc_cross_bitmap;
+	mnc_slot_t rels = relevance_bitmap[i][j];
 
-	/* get relevance bitmap without marked or crossed bits */
-	unmark = relevance_bitmap[i][j] & ~(mark | cross);
+	/* get relevance bitmap without conflict bits */
+	mnc_slot_t unmark = rels & ~(mark | cross);
 
-	/* no relevant bits now */
+	/* if there is no relevant bits left ... */
 	if (unmark == 0)
 		return 0;
 
-	/* save the lowest set bit index number */
-	uint32_t lo_doc_path = lsb_pos(unmark);
-
-	/* extract the lowest set bit (only need to mark one),
-	 * write this mark bit on doc_mark_bitmap */
-	doc_mark_bitmap[j] |= unmark & ~(unmark - 1);
-
-	/* fingerpirnt score */
 	int fnp_equal;
-	if (qry_fnp[i] == WILDCARD_FINGERPRINT_MAGIC)
+
+	if (qry_fnp[i] == WILDCARD_FINGERPRINT_MAGIC) {
+		/* wildcard path */
+
+		if (unmark == rels) {
+			/* no conflict at all */
+
+			/* mark all relevance bits */
+			doc_mark_bitmap[j] |= rels;
+		} else {
+			/* won't match on any conflict */
+			return 0;
+		}
+
+		/* for simplicity, ignore wildcard fingerprint */
 		fnp_equal = 0x1;
-	else if (qry_fnp[i] == doc_fnp[lo_doc_path])
-		fnp_equal = 0x1;
-	else
-		fnp_equal = 0x0;
+
+	} else {
+		/* concrete path */
+
+		/* extract the lowest set bit (only need to mark one),
+		 * set this mark bit on doc_mark_bitmap */
+		doc_mark_bitmap[j] |= unmark & ~(unmark - 1);
+
+		/* fingerpirnt score */
+		uint32_t lo_doc_path = lsb_pos(unmark);
+		if (qry_fnp[i] == doc_fnp[lo_doc_path])
+			fnp_equal = 0x1;
+		else
+			fnp_equal = 0x0;
+	}
 
 	/* symbol score */
 	int sym_equal = (qry_sym[i] == doc_uniq_sym[j]) ? 0x2 : 0x0;
