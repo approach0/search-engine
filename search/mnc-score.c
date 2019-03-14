@@ -30,11 +30,13 @@
 /* query expression ordered subpaths/symbols list */
 symbol_id_t     qry_sym[MAX_SUBPATH_ID];
 mnc_finpr_t     qry_fnp[MAX_SUBPATH_ID];
+int             qry_wil[MAX_SUBPATH_ID];
 uint32_t        n_qry_syms;
 
 /* document expression unique symbols list */
 symbol_id_t     doc_uniq_sym[MAX_DOC_UNIQ_SYM];
 mnc_finpr_t     doc_fnp[MAX_SUBPATH_ID];
+mnc_finpr_t     doc_wild_fnp[MAX_DOC_UNIQ_SYM];
 uint32_t        n_doc_uniq_syms;
 
 /* query / document bitmaps */
@@ -48,10 +50,11 @@ mnc_slot_t      relevance_bitmap[MAX_SUBPATH_ID][MAX_DOC_UNIQ_SYM];
 
 /* push query (should be pushed in the order of query path symbol) */
 uint32_t
-mnc_push_qry(struct mnc_ref qry_path_ref)
+mnc_push_qry(struct mnc_ref qry_path_ref, int is_wildcard)
 {
 	qry_sym[n_qry_syms] = qry_path_ref.sym;
 	qry_fnp[n_qry_syms] = qry_path_ref.fnp;
+	qry_wil[n_qry_syms] = is_wildcard;
 	return (++ n_qry_syms);
 }
 
@@ -87,6 +90,8 @@ void mnc_doc_add_rele(uint32_t qry_path, uint32_t doc_path,
 	doc_fnp[doc_path] = doc_path_ref.fnp;
 }
 
+/* set the corresponding bits to indicate relevance between
+ * a wildcard query path and a document gener path. */
 void mnc_doc_add_reles(uint32_t qry_path, mnc_slot_t doc_paths,
                       struct mnc_ref doc_path_ref)
 {
@@ -94,7 +99,8 @@ void mnc_doc_add_reles(uint32_t qry_path, mnc_slot_t doc_paths,
 	uint32_t slot = map_slot(doc_path_ref.sym);
 	relevance_bitmap[qry_path][slot] |= doc_paths;
 
-	/* no need to save gener path fingerprint */
+	/* save gener path fingerprint by slot */
+	doc_wild_fnp[slot] = doc_path_ref.fnp;
 }
 
 /*
@@ -233,7 +239,7 @@ static __inline mnc_score_t mark(int i, int j)
 
 	int fnp_equal;
 
-	if (qry_fnp[i] == WILDCARD_FINGERPRINT_MAGIC) {
+	if (qry_wil[i]) {
 		/* wildcard path */
 
 		if (unmark == rels) {
@@ -246,8 +252,11 @@ static __inline mnc_score_t mark(int i, int j)
 			return 0;
 		}
 
-		/* for simplicity, ignore wildcard fingerprint */
-		fnp_equal = 0x1;
+		/* wildcard match fingerprint score */
+		if (qry_fnp[i] == doc_wild_fnp[j])
+			fnp_equal = 0x1;
+		else
+			fnp_equal = 0x0;
 
 	} else {
 		/* concrete path */
