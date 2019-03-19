@@ -90,6 +90,26 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		}
 	}
 
+#ifdef MATH_PRUNING_SECTR_DROP_ENABLE
+	/* bubble sector tree in each node by their upperbounds */
+	for (int k = 0; k < pruner->n_nodes; k++) {
+		struct pruner_node *n = pruner->nodes + k;
+
+		for (int i = 0; i < n->n; i++)
+			for (int j = i + 1; j < n->n; j++)
+				if (n->secttr[i].width < n->secttr[j].width) {
+					struct sector_tr t1 = n->secttr[i];
+					int t2 = n->postlist_id[i];
+
+					n->secttr[i] = n->secttr[j];
+					n->postlist_id[i] = n->postlist_id[j];
+
+					n->secttr[j] = t1;
+					n->postlist_id[j] = t2;
+				}
+	}
+#endif
+
 	/* calculate the width for each node. */
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
@@ -100,21 +120,21 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		node->width = sum;
 	}
 
-	/* bubble sort node by their upperbounds */
-	for (int i = 0; i < pruner->n_nodes; i++) {
-		struct pruner_node *ni = pruner->nodes + i;
-
-		for (int j = i + 1; j < pruner->n_nodes; j++) {
-			struct pruner_node *nj = pruner->nodes + j;
-
-			if (ni->width < nj->width) {
-				struct pruner_node tmp;
-				tmp = *nj;
-				*nj = *ni;
-				*ni = tmp;
-			}
-		}
-	}
+//	/* bubble sort node by their upperbounds */
+//	for (int i = 0; i < pruner->n_nodes; i++) {
+//		struct pruner_node *ni = pruner->nodes + i;
+//
+//		for (int j = i + 1; j < pruner->n_nodes; j++) {
+//			struct pruner_node *nj = pruner->nodes + j;
+//
+//			if (ni->width < nj->width) {
+//				struct pruner_node tmp;
+//				tmp = *nj;
+//				*nj = *ni;
+//				*ni = tmp;
+//			}
+//		}
+//	}
 
 	/* set pivot (after pivot should be skip-only posting lists) */
 	pruner->postlist_pivot = n_po - 1;
