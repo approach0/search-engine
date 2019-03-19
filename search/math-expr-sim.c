@@ -246,12 +246,13 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 			uint32_t orig = po->iter->map[i];
 			struct subpath_ele *ele = po->ele[orig];
 			enum math_posting_type pt = po->path_type[orig];
-			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
 				uint32_t qr = ele->rid[j];
 				uint32_t ql = ele->dup[j]->path_id; /* use path_id for mnc_score */
 				if (qr == ar->qr) {
+					postmerger_iter_call(&po->pm, po->iter, read, i,
+					                     &item, sizeof(item));
 					for (uint32_t k = 0; k < item.n_paths; k++) {
 						uint32_t dr = item.subr_id[k];
 
