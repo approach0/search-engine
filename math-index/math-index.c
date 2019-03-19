@@ -284,7 +284,7 @@ static int
 write_pathinfo_v2(const char *path, struct subpath *sp,
                   uint32_t prefix_len, struct subpaths subpaths)
 {
-	struct _set_pathinfo_endpoints_arg arg;
+	struct _set_pathinfo_endpoints_arg arg = {0};
 
 	FILE *fh;
 	char file_path[MAX_DIR_PATH_NAME_LEN];
