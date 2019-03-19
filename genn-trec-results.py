@@ -3,9 +3,7 @@ import os
 import time
 import sys
 
-# ./search/run/test-search.out -n -i ./tmp/ -m 'a+b' -q 'NTCIR12-MathWiki-123'
-
-fname = "/home/tk/rotate-disk/ext4/ntcir-12/topics-concrete.txt"
+fname = "/home/tk/Desktop/ntcir-12/topics.txt"
 output = 'searchd/trec-format-results.tmp'
 
 only_qry_id = None
