@@ -61,7 +61,7 @@ math_expr_set_score__fixed(
 {
 	hit->score = 1.f;
 }
- 
+
 static void
 math_expr_set_score__multi_tree(
 	struct math_expr_sim_factors* factor,
@@ -262,7 +262,7 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 								item.op_hash[k]
 							};
 
-							if (MATH_PATH_TYPE_PREFIX == pt) { 
+							if (MATH_PATH_TYPE_PREFIX == pt) {
 								_item = (struct math_postlist_item*)&item;
 								uint32_t dl = _item->leaf_id[k];
 								mnc_doc_add_rele(ql - 1, dl - 1, ref);
@@ -363,9 +363,11 @@ struct q_node_match {
 
 static struct q_node_match
 #ifdef DEBUG_MATH_SCORE_INSPECT
-calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node, int inspect)
+calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node,
+                  uint32_t widest, int inspect)
 #else
-calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
+calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node,
+                  uint32_t widest)
 #endif
 {
 	struct math_pruner *pruner = &po->pruner;
@@ -374,6 +376,10 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect) printf("qr#%d/%d:\n", q_node->secttr[0].rnode, q_node->width);
+#endif
+
+#ifdef MATH_PRUNING_SECTR_DROP_ENABLE
+	int upbound = q_node->width;
 #endif
 
 	/* for each sector tree rooted at q_node ... */
@@ -417,6 +423,15 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 			}
 		}
 
+#ifdef MATH_PRUNING_SECTR_DROP_ENABLE
+		/* get more precise estimate, drop early. */
+		upbound -= qsw;
+		if (ret.max + upbound <= widest) {
+			ret.max = 0;
+			break;
+		}
+#endif
+
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		if (inspect) {
 			printf("\t ");
@@ -430,8 +445,7 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node)
 }
 
 struct pq_align_res
-math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
-                                 uint32_t n_doc_lr_paths, float threshold)
+math_l2_postlist_widest_match(struct math_l2_postlist *po, float threshold)
 {
 	struct pq_align_res widest = {0};
 	struct math_pruner *pruner = &po->pruner;
@@ -445,6 +459,7 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 #ifdef MATH_PRUNING_EARLY_DROP_ENABLE
 	/* hit width upperbound */
 	int hit_width_upp = 0;
+	int hit_width_max = 0;
 #endif
 
 	/* collect all unique hit nodes */
@@ -466,6 +481,11 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 					save_idx[n_save++] = qid_idx;
 					/* put into set to avoid counting duplicates */
 					u16_ht_incr(&pruner->q_hit_nodes_ht, qid, 1);
+#ifdef MATH_PRUNING_EARLY_DROP_ENABLE
+					struct pruner_node *q_node = pruner->nodes + qid_idx;
+					if (hit_width_max < q_node->width)
+						hit_width_max = q_node->width;
+#endif
 				}
 			}
 #ifdef MATH_PRUNING_EARLY_DROP_ENABLE
@@ -480,7 +500,9 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 	/* (not using upp[] here due to possible out-of-array access) */
 	uint32_t qw = po->mqs->subpaths.n_lr_paths;
 	if (math_expr_score_upperbound(hit_width_upp, qw) <= threshold)
-		return widest; /* => 0 */
+		return widest; /* widest is 0 */
+	else if (pruner->upp[hit_width_max] <= threshold)
+		return widest; /* widest is 0 */
 #endif
 
 	/* calculate score for each hit query node */
@@ -505,12 +527,12 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 			math_l2_postlist_sort(po);
 			//math_pruner_print(pruner);
 			continue; /* so that we can dele other nodes */
-		} else if (q_node->width < widest.width) {
+		} else if (q_node->width <= widest.width) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect)
 #endif
-	printf("skip node#%d (upperbound < widest = %d)\n",
+	printf("skip node#%d (upperbound <= widest = %d)\n",
 		q_node->secttr[0].rnode, widest.width);
 #endif
 			continue;
@@ -519,9 +541,9 @@ math_l2_postlist_coarse_score_v2(struct math_l2_postlist *po,
 
 		/* otherwise, calculate node score */
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		struct q_node_match qm = calc_q_node_match(po, q_node, inspect);
+		struct q_node_match qm = calc_q_node_match(po, q_node, widest.width, inspect);
 #else
-		struct q_node_match qm = calc_q_node_match(po, q_node);
+		struct q_node_match qm = calc_q_node_match(po, q_node, widest.width);
 #endif
 		if (qm.max > widest.width) {
 #if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)

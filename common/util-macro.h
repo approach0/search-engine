@@ -54,3 +54,6 @@ static inline void print_size(size_t _sz)
 	(_byte & 0x04 ? 1 : 0), \
 	(_byte & 0x02 ? 1 : 0), \
 	(_byte & 0x01 ? 1 : 0)
+
+#define likely(x)   __builtin_expect((x), 1)
+#define unlikely(x) __builtin_expect((x), 0)

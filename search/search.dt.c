@@ -185,7 +185,7 @@ int math_l2_postlist_next(void *po_)
 
 #ifndef MATH_PRUNING_DISABLE_JUMP
 	/* if threshold has been updated */
-	if (threshold != pruner->prev_threshold) {
+	if (unlikely(threshold != pruner->prev_threshold)) {
 		/* try to "lift up" the pivot */
 		int i, sum = 0;
 		for (i = po->iter->size - 1; i >= 0; i--) {
@@ -225,18 +225,18 @@ int math_l2_postlist_next(void *po_)
 		}
 #endif
 
-		/* calculate coarse score */
-		uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
 
 #ifdef DEBUG_STATS_HOT_HIT
 		uint32_t n_hit_paths = get_num_doc_hit_paths(po);
 		g_hot_hit[n_hit_paths] ++;
 #endif
 		struct pq_align_res widest;
-		widest = math_l2_postlist_coarse_score_v2(po, n_doc_lr_paths, threshold);
+		widest = math_l2_postlist_widest_match(po, threshold);
 
 		/* push expression results */
 		if (widest.width) {
+			uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
+
 			struct math_expr_score_res expr =
 				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
 
