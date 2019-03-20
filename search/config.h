@@ -29,6 +29,7 @@
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
 #define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
+
 // #define MATH_PRUNING_DISABLE_JUMP /* disable jumping/skipping */
 // #define DEBUG_MERGE_SKIPPING /* show all the jumping/skipping points */
 // #define DEBUG_MATH_SCORE_INSPECT /* particular expID scoring inspect */

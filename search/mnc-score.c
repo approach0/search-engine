@@ -106,6 +106,7 @@ void mnc_doc_add_reles(uint32_t qry_path, mnc_slot_t doc_paths,
 /*
  * print functions for debug
  */
+#ifdef MNC_SMALL_BITMAP
 static void print_slot(char *byte)
 {
 	int i;
@@ -121,10 +122,23 @@ static void print_slot(char *byte)
 	if (i != n_doc_uniq_syms - 1) \
 		for (j = 1; j < MNC_SLOTS_BYTES; j++) \
 			printf("%*c ", 8, ' ');
+#else
+static void print_slot(char *byte)
+{
+	/* MNC_SLOTS_BYTES is 8 in this case */
+	uint64_t *p = (uint64_t *)byte;
+	printf(" 0x%lx ", *p);
+}
 
-static void
-mnc_print(mnc_score_t *sub_score,
-          int highlight_qry_path, int max_subscore_idx)
+#define _MAX_SYMBOL_STR_LEN 7
+#define _PADDING_SPACE \
+	if (i != n_doc_uniq_syms - 1) \
+		printf("%*c ", 8, ' ');
+
+#endif
+
+void mnc_print(mnc_score_t *sub_score,
+               int highlight_qry_path, int max_subscore_idx)
 {
 	uint32_t i, j;
 	if (n_doc_uniq_syms == 0)
@@ -378,4 +392,9 @@ struct mnc_match_t mnc_match()
 	clean_bitmaps();
 
 	return ret;
+}
+
+struct mnc_match_t mnc_match_debug()
+{
+	return mnc_match();
 }

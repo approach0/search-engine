@@ -41,7 +41,7 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 //	if (doc_id == 368782) {
 
-	if (0 == strcmp(url, "John's_equation:7")) {
+	if (0 == strcmp(url, "Riemann–Stieltjes_integral:9")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -232,9 +232,16 @@ void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 }
 
 /* symbolset similarity calculation, single-tree only. */
-mnc_score_t
-math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res *ar)
+static mnc_score_t
+#ifdef DEBUG_MATH_SCORE_INSPECT
+math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po,
+	struct pq_align_res *ar, int inspect)
+#else
+math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po,
+	struct pq_align_res *ar)
+#endif
 {
+	struct mnc_match_t match;
 	struct math_postlist_gener_item item;
 	struct math_postlist_item *_item;
 	mnc_reset_docs();
@@ -276,8 +283,14 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po, struct pq_align_res
 			} /* end for */
 		} /* end if */
 	} /* end for */
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	if (inspect) {
+		match = mnc_match_debug();
+	} else
+#endif
 
-	struct mnc_match_t match = mnc_match();
+	match = mnc_match();
+
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 	ar->qmask = match.qry_paths;
 	ar->dmask = match.doc_paths;
@@ -296,8 +309,8 @@ void math_l2_cur_print(struct math_l2_postlist *po,
 		uint32_t pid = po->iter->map[i];
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (i > pruner->postlist_pivot || cur == candidate) {
-			printf("%s: ", (cur == candidate) ? "hit " : "skip");
-			printf("[%u] ", i);
+			printf("%s ", (cur == candidate) ? "hit: " : "skip:");
+			printf("iter[%u] ", i);
 			math_pruner_print_postlist(pruner, pid);
 			uint32_t docID = (uint32_t)(cur >> 32);
 			uint32_t expID = (uint32_t)(cur >> 0);
@@ -331,7 +344,12 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	expr.exp_id = p->exp_id;
 
 	/* get symbolic score */
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	int inspect = score_inspect_filter(p->doc_id, po->indices);
+	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest, inspect);
+#else
 	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest);
+#endif
 
 	/* get single tree overall score */
 	const uint32_t k = 1;
@@ -342,12 +360,15 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	math_expr_set_score(&factors, &expr);
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-	int inspect = score_inspect_filter(p->doc_id, po->indices);
 	if (inspect) {
 		/* print posting list hits */
 		math_l2_cur_print(po, po->candidate, 0);
 
 		math_expr_sim_factors_print(&factors);
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
+		printf("alignment: qry: 0x%lx, doc: 0x%lx.\n",
+		       widest->qmask, widest->dmask);
+#endif
 		printf("doc#%u, exp#%u, final score: %f\n",
 		       expr.doc_id, expr.exp_id, expr.score);
 		printf("\n");

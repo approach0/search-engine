@@ -9,7 +9,7 @@ static symbol_id_t alphabet_to_sym(char c)
 	return S_N + inc;
 }
 
-int main(void)
+static void test_concrete_case()
 {
 	int i;
 	struct mnc_ref ref = {'_', '@'};
@@ -86,10 +86,58 @@ int main(void)
 		printf("score = %u, qry_paths: 0x%lx, doc_paths: 0x%lx.\n",
 			match.score, match.qry_paths, match.doc_paths);
 	}
+}
 
-	printf("lsb position of %#x: %d\n", 0x18, lsb_pos(0x18)); /* b11000 */
-	printf("lsb position of %#x: %d\n", 0x01, lsb_pos(0x01));
-	printf("lsb position of %#x: %d\n", 0x00, lsb_pos(0x00));
+static void test_wildcards_case()
+{
+	int i;
+	struct mnc_ref ref = {'_', '@'};
+	struct mnc_match_t match;
+
+	mnc_reset_qry();
+
+	/*
+	 * query: e ? ?
+	 *        0 1 2
+	 */
+	ref.sym = alphabet_to_sym('x');
+	mnc_push_qry(ref, 1);
+	ref.sym = alphabet_to_sym('x');
+	mnc_push_qry(ref, 1);
+	ref.sym = alphabet_to_sym('e');
+	mnc_push_qry(ref, 0);
+
+	/* run twice to test init/uninit */
+	for (i = 0; i < 2; i++) {
+		printf("======test %d=======\n", i);
+		mnc_reset_docs();
+
+		/*
+		 * document: f(x) f(y)
+		 *           0 1  2 3
+		 */
+		ref.sym = alphabet_to_sym('f');
+		mnc_doc_add_rele(2, 0, ref);
+		mnc_doc_add_rele(2, 2, ref);
+
+		ref.sym = alphabet_to_sym('x');
+		mnc_doc_add_reles(0, 0x2, ref);
+		mnc_doc_add_reles(0, 0x8, ref);
+
+		ref.sym = alphabet_to_sym('y');
+		mnc_doc_add_reles(1, 0x2, ref);
+		mnc_doc_add_reles(1, 0x8, ref);
+
+		match = mnc_match();
+		printf("score = %u, qry_paths: 0x%lx, doc_paths: 0x%lx.\n",
+			match.score, match.qry_paths, match.doc_paths);
+	}
+}
+
+int main(void)
+{
+	// test_concrete_case();
+	test_wildcards_case();
 
 	mhook_print_unfree();
 	return 0;

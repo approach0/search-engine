@@ -34,8 +34,6 @@ void math_l2_postlist_print_cur(struct math_l2_postlist*);
 struct math_expr_score_res
 math_l2_postlist_cur_score(struct math_l2_postlist*);
 
-mnc_score_t math_l2_postlist_cur_symbol_sim(struct math_l2_postlist*, struct pq_align_res*);
-
 struct pq_align_res math_l2_postlist_coarse_score(struct math_l2_postlist*, uint32_t);
 
 struct pq_align_res math_l2_postlist_widest_match(struct math_l2_postlist*, float);
