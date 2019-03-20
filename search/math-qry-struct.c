@@ -86,6 +86,25 @@ static LIST_IT_CALLBK(push_query_path)
 	LIST_GO_OVER;
 }
 
+static LIST_IT_CALLBK(dele_if_gener)
+{
+	bool res;
+	LIST_OBJ(struct subpath, sp, ln);
+
+	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
+		subpath_free(sp);
+		return res;
+	}
+
+	LIST_GO_OVER;
+}
+
+static void delete_gener_paths(struct subpaths *subpaths)
+{
+	list_foreach(&subpaths->li, &dele_if_gener, NULL);
+}
+
 static int math_qry_print_visibi_map(uint32_t*);
 static int math_qry_gen_visibi_map(uint32_t*, struct optr_node*);
 

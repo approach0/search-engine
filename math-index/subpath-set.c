@@ -369,22 +369,3 @@ subpath_set_add(list *set, struct subpath *sp, int prefix_len)
 }
 
 LIST_DEF_FREE_FUN(subpath_set_free, struct subpath_ele, ln, free(p));
-
-static LIST_IT_CALLBK(dele_if_gener)
-{
-	bool res;
-	LIST_OBJ(struct subpath, sp, ln);
-
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-		subpath_free(sp);
-		return res;
-	}
-
-	LIST_GO_OVER;
-}
-
-void delete_gener_paths(struct subpaths *subpaths)
-{
-	list_foreach(&subpaths->li, &dele_if_gener, NULL);
-}

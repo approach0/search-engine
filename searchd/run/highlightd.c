@@ -105,8 +105,8 @@ math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
 //
 //		return 1;
 //	}
-//
-//	return 0;
+
+	return 0;
 }
 
 static const char*

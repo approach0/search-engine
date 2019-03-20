@@ -31,5 +31,3 @@ lr_subpath_set_from_subpaths(struct subpaths*, list* /* set output */);
 
 struct subpath_ele_added
 prefix_subpath_set_from_subpaths(struct subpaths*, list*  /* set output */);
-
-void delete_gener_paths(struct subpaths*);

@@ -58,5 +58,3 @@ void math_index_close(math_index_t);
  * math index directory merge
  * =========================== */
 #include "dir-merge.h"
-
-void delete_gener_paths(struct subpaths*);
