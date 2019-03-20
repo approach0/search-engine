@@ -25,7 +25,7 @@ int interested_token(enum token_id tokid)
 {
 	enum token_id rank_base = T_MAX_RANK - OPTR_INDEX_RANK_MAX;
 	if (rank_base < tokid && tokid < T_MAX_RANK) {
-		//printf("Not interested at subr token %s.\n", trans_token(tokid));
+		//printf("Not interested at rank token %s.\n", trans_token(tokid));
 		return 0;
 	} else {
 		//printf("subr token %s is interesting.\n", trans_token(tokid));

@@ -86,6 +86,46 @@ static LIST_IT_CALLBK(push_query_path)
 	LIST_GO_OVER;
 }
 
+static TREE_IT_CALLBK(_expand_path)
+{
+	P_CAST(subpaths, struct subpaths, pa_extra);
+	TREE_OBJ(struct optr_node, p, tnd);
+	struct subpath *subpath;
+
+	if (p->tnd.sons.now == NULL /* is leaf */) {
+
+		/* reached the limit of maximum paths we can generate */
+		if (subpaths->n_lr_paths >= MAX_SUBPATH_ID)
+			return LIST_RET_BREAK;
+		else
+			subpaths->n_lr_paths ++; /* count leaf-root paths */
+
+		/* mirror only wildcard path */
+		if (p->wildcard) {
+			/* create a mirror normal path for wildcard path */
+			subpath = create_subpath(p, true);
+			subpath->type = SUBPATH_TYPE_NORMAL;
+			/* generate nodes of this subpath */
+			insert_subpath_nodes(subpath, p, NULL);
+			/* generate fingerprint of this subpath */
+			subpath->fingerprint = subpath_fingerprint(subpath, UINT32_MAX);
+			/* insert this new subpath to subpath list */
+			list_insert_one_at_tail(&subpath->ln, &subpaths->li, NULL, NULL);
+			/* count total subpaths generated. */
+			subpaths->n_subpaths ++;
+		}
+	}
+
+	LIST_GO_OVER;
+}
+
+static void
+expand_query_subpaths(struct subpaths *subpaths, struct optr_node* optr)
+{
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &_expand_path,
+	             1 /* excluding root */, subpaths);
+}
+
 static int math_qry_print_visibi_map(uint32_t*);
 static int math_qry_gen_visibi_map(uint32_t*, struct optr_node*);
 
@@ -111,12 +151,17 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	optr_print(s->optr, stdout);
 #endif
 
-	/* generate query node visibility map */
-	math_qry_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
-
 	/* copy subpaths reference */
 	struct subpaths *subpaths = &parse_ret.subpaths;
 	s->subpaths = *subpaths;
+
+#ifdef WILDCARD_PATH_QUERY_EXPAND_ENABLE
+	/* "mirror" wildcard path to also match single-symbol for better recall */
+	expand_query_subpaths(subpaths, parse_ret.operator_tree);
+#endif
+
+	/* generate query node visibility map */
+	math_qry_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
 	
 	/* sort subpaths by <bound variable size, path type, symbol> */
 	list_foreach(&subpaths->li, &overwrite_pathID_to_bondvar_sz, NULL);

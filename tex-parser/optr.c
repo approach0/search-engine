@@ -425,7 +425,10 @@ struct _gen_subpaths_arg {
 	int lr_only; /* if only generate leaf-root paths */
 };
 
-void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t *sn_ids)
+/* Assign node-to-root path (from node p) to subpath path_nodes, if sn_ids
+ * is NULL, copy exact path. Otherwise, create rank node if needed.*/
+void insert_subpath_nodes(struct subpath *subpath,
+                          struct optr_node *p, uint32_t *sn_ids)
 {
 	struct subpath_node *nd;
 	struct optr_node *f;
@@ -441,10 +444,17 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t
 
 		/* create and insert rank node if necessary */
 		if (f && !f->commutative) {
+			/* should be OK to assign an zero ID for rank node, since
+			 * rank node is NOT an interesting node (see interested_token()).
+			 * As it will never be used as subr node nor a leaf node. */
+			uint32_t assign_id = 0;
+			if (sn_ids != NULL)
+				assign_id = (*sn_ids)++;
 			nd = create_subpath_node(
 				S_NIL, T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank),
-				1 /* rank node has only one son */, (*sn_ids)++
+				1 /* rank node has only one son */, assign_id
 			);
+
 			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,
 			                        NULL, NULL);
 			cnt ++; // increment subpath nodes counter

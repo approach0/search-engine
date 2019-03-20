@@ -44,6 +44,10 @@ int optr_print_idpos_map(uint32_t*);
 
 int optr_print_visibi_map(uint32_t*);
 
+void insert_subpath_nodes(struct subpath*, struct optr_node*, uint32_t*);
+
+struct subpath *create_subpath(struct optr_node*, bool);
+
 int is_single_node(struct optr_node*);
 
 fingerpri_t subpath_fingerprint(struct subpath*, uint32_t);
