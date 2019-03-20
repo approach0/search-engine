@@ -13,11 +13,6 @@ struct math_expr_score_res {
 	doc_id_t  doc_id;
 	exp_id_t  exp_id;
 	float     score;
-#ifdef HIGHLIGHT_MATH_ALIGNMENT
-	/* postiional info */
-	uint64_t  qmask[MAX_MTREE];
-	uint64_t  dmask[MAX_MTREE];
-#endif
 };
 
 struct math_expr_sim_factors {

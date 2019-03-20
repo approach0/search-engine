@@ -247,6 +247,12 @@ int math_l2_postlist_next(void *po_)
 				hit_occur_t *ho = po->occurs + po->n_occurs;
 				po->n_occurs += 1;
 				ho->pos = expr.exp_id;
+
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
+				/* copy highlight mask */
+				ho->qmask[0] = widest.qmask;
+				ho->dmask[0] = widest.dmask;
+#endif
 			}
 		}
 

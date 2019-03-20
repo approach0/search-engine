@@ -105,6 +105,7 @@
 	#define MAX_MTREE 1
 #endif
 
+/* plus 3 to be safe, since some places mask[] index is harded coded. */
 #define HIGHLIGHT_MTREE_ALLOC (MAX_MTREE + 3)
 
 #define MAX_LEAVES  64

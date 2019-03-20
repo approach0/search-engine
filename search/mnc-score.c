@@ -305,6 +305,7 @@ static __inline mnc_slot_t cross(int max_slot)
 
 struct mnc_match_t mnc_match()
 {
+	struct mnc_match_t ret;
 	uint32_t i, j, max_subscore_idx = 0;
 	mnc_slot_t qry_cross_bitmap = 0;
 
@@ -368,10 +369,13 @@ struct mnc_match_t mnc_match()
 #endif
 	}
 
-	clean_bitmaps();
-
-	return ((struct mnc_match_t) {
+	/* save return values before clean_bitmaps() */
+	ret = ((struct mnc_match_t) {
 		total_score,
 		qry_cross_bitmap, doc_cross_bitmap
 	});
+
+	clean_bitmaps();
+
+	return ret;
 }
