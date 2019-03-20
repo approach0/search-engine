@@ -64,6 +64,33 @@ function qry_explode($qry_str)
 }
 
 /*
+ * replace_interrogation: return string with question
+ * marks replaced by wildcards with different names,
+ * e.g., \qvar{X}, \qvar{Y}.
+ */
+function replace_interrogation($str)
+{
+	$wildcards_letters = array();
+	$offsets = range(0, 26 - 1);
+	foreach ($offsets as $offset) {
+		$c = chr(ord('A') + $offset);
+		if (strpos($str, $c) === false)
+			array_push($wildcards_letters, $c);
+	}
+	if (sizeof($wildcards_letters) == 0)
+		array_push($wildcards_letters, 'x');
+
+	foreach ($wildcards_letters as $letter) {
+		$pos = strpos($str, '?');
+		if ($pos === false) break;
+		$replace = '\qvar{'.$letter.'}';
+		$str = substr_replace($str, $replace, $pos, strlen($letter));
+	}
+
+	return $str;
+}
+
+/*
  * get remote IP
  */
 $remote_ip=$_SERVER['REMOTE_ADDR'];
@@ -108,7 +135,7 @@ foreach ($keywords as $kw) {
 	} else if ($kw[0] == '$') {
 		$kw_str = trim($kw, '$');
 		/* treat question mark as wildcard */
-		$kw_str = str_replace('?', '\qvar{x}', $kw_str);
+		$kw_str = replace_interrogation($kw_str);
 		$kw_type = 'tex';
 	} else {
 		$kw_str = $kw;
