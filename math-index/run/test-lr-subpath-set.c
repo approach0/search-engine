@@ -12,7 +12,7 @@ int main()
 
 	for (i = 0; i < n_test; i++) {
 		printf("test: %s\n", test[i]);
-		parse_ret = tex_parse(test[i], 0, false);
+		parse_ret = tex_parse(test[i], 0, false, false);
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
 			printf("%u subpaths:\n", parse_ret.subpaths.n_subpaths);

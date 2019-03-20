@@ -156,7 +156,7 @@ uint32_t math_qac_index_uniq_tex(qac_index_t *qi_, const char *tex)
 	}
 #endif
 
-	parse_ret = tex_parse(tex, 0, false);
+	parse_ret = tex_parse(tex, 0, false, false);
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		uint32_t n_lr_paths = parse_ret.subpaths.n_lr_paths;

@@ -3,7 +3,7 @@
 
 int main()
 {
-	struct tex_parse_ret ret = tex_parse("a+b", 0, true);
+	struct tex_parse_ret ret = tex_parse("a+b", 0, true, false);
 
 	optr_print(ret.operator_tree, stdout);
 	optr_release(ret.operator_tree);

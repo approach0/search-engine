@@ -22,7 +22,7 @@ static char *mk_scan_buf(const char *str, size_t *out_sz)
 }
 
 struct tex_parse_ret
-tex_parse(const char *tex_str, size_t len, bool keep_optr)
+tex_parse(const char *tex_str, size_t len, bool keep_optr, bool lr_path)
 {
 	struct tex_parse_ret ret;
 	YY_BUFFER_STATE state_buf;
@@ -86,7 +86,7 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr)
 			 * structure, we need to make sure path_id is in
 			 * a legal range.
 			 */
-			ret.subpaths = optr_subpaths(grammar_optr_root);
+			ret.subpaths = optr_subpaths(grammar_optr_root, lr_path);
 
 #if 0       /* print */
 			printf("tex: `%s', max_path_id: %u.\n", tex_str, max_path_id);

@@ -21,7 +21,7 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 	JSON_Object *parson_obj = json_value_get_object(parson_val);
 	const char *tex = json_object_get_string(parson_obj, "tex");
 
-	ret = tex_parse(tex, 0, false);
+	ret = tex_parse(tex, 0, false, false);
 	total_cnt ++;
 
 	if (ret.code != PARSER_RETCODE_ERR) {

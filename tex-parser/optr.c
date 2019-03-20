@@ -422,6 +422,7 @@ struct _gen_subpaths_arg {
 	struct subpaths *sp;
 	uint32_t special_node_ids; /* for assigning rank node ids */
 	uint32_t n_paths_limit;      /* constrain the number of paths */
+	int lr_only; /* if only generate leaf-root paths */
 };
 
 void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p, uint32_t *sn_ids)
@@ -476,8 +477,9 @@ static TREE_IT_CALLBK(gen_subpaths)
 		do {
 			f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 
-			/* create a subpath */
-			if (is_leaf || (f != NULL && meaningful_gener(f->token_id))) {
+			/* create a subpath from each node through bottom to top node */
+			if (is_leaf || (!arg->lr_only &&
+			    f != NULL && meaningful_gener(f->token_id))) {
 				/* calculate bitmap index */
 				if (is_leaf)
 					bitmap_idx = p->path_id;
@@ -535,7 +537,7 @@ uint32_t optr_max_node_id(struct optr_node *optr)
 	return max_node_id;
 }
 
-struct subpaths optr_subpaths(struct optr_node* optr)
+struct subpaths optr_subpaths(struct optr_node* optr, int lr_only)
 {
 	struct subpaths subpaths;
 	struct _gen_subpaths_arg arg;
@@ -551,7 +553,8 @@ struct subpaths optr_subpaths(struct optr_node* optr)
 
 	arg.sp = &subpaths;
 	arg.special_node_ids = special_node_id;
-	arg.n_paths_limit = MAX_SUBPATH_ID;
+	arg.n_paths_limit = MAX_SUBPATH_ID; /* generate limit number of paths */
+	arg.lr_only = lr_only;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
 	             0 /* including root */, &arg);
 	return subpaths;

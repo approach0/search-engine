@@ -52,7 +52,7 @@ int main()
 
 	for (i = 0; i < n_test; i++) {
 		printf("add: `%s' as experssion#%u\n", test[i], expID);
-		parse_ret = tex_parse(test[i], 0, true);
+		parse_ret = tex_parse(test[i], 0, true, false);
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
 			/* print operator tree */

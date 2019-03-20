@@ -28,7 +28,7 @@ int main()
 		/* Add to the history. */
 		linenoiseHistoryAdd(line);
 
-		ret = tex_parse(line, 0, true);
+		ret = tex_parse(line, 0, true, false);
 
 		if (ret.code != PARSER_RETCODE_ERR) {
 			if (ret.operator_tree) {

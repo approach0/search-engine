@@ -30,7 +30,7 @@ uint32_t optr_assign_values(struct optr_node*);
 
 uint32_t optr_prune_nil_nodes(struct optr_node*);
 
-struct subpaths optr_subpaths(struct optr_node*);
+struct subpaths optr_subpaths(struct optr_node*, int);
 
 void optr_leafroot_path(struct optr_node*);
 

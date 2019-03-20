@@ -86,32 +86,14 @@ static LIST_IT_CALLBK(push_query_path)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(dele_if_gener)
-{
-	bool res;
-	LIST_OBJ(struct subpath, sp, ln);
-
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		res = list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-		subpath_free(sp);
-		return res;
-	}
-
-	LIST_GO_OVER;
-}
-
-static void delete_gener_paths(struct subpaths *subpaths)
-{
-	list_foreach(&subpaths->li, &dele_if_gener, NULL);
-}
-
 static int math_qry_print_visibi_map(uint32_t*);
 static int math_qry_gen_visibi_map(uint32_t*, struct optr_node*);
 
 int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct* s)
 {
 	struct tex_parse_ret parse_ret;
-	parse_ret = tex_parse(tex, 0, true);
+	/* no gener paths since they are not used for searching */
+	parse_ret = tex_parse(tex, 0, true, true);
 
 	s->pq.n = 0;
 	s->subpaths.n_lr_paths = 0;
@@ -132,12 +114,9 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	/* generate query node visibility map */
 	math_qry_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
 
-	/* copy subpaths */
+	/* copy subpaths reference */
 	struct subpaths *subpaths = &parse_ret.subpaths;
 	s->subpaths = *subpaths;
-
-	/* strip gener paths (but not wildcard paths) since they are not for searching */
-	delete_gener_paths(subpaths);
 	
 	/* sort subpaths by <bound variable size, path type, symbol> */
 	list_foreach(&subpaths->li, &overwrite_pathID_to_bondvar_sz, NULL);
@@ -153,7 +132,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	list_foreach(&subpaths->li, &push_query_path, NULL);
 
 #ifdef DEBUG_PRINT_QRY_STRUCT
-	printf("Suffix paths (path_id sorted by bond-vars):\n");
+	printf("Leaf-root paths (path_id sorted by bond-vars):\n");
 	subpaths_print(subpaths, stdout);
 #endif
 

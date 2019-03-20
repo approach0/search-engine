@@ -22,7 +22,7 @@ int main()
 		/* Add to the history. */
 		linenoiseHistoryAdd(line);
 
-		ret = tex_parse(line, 0, true);
+		ret = tex_parse(line, 0, true, false);
 
 		printf("return string: %s\n", ret.msg);
 		printf("return code: %d\n", ret.code);

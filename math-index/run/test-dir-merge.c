@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	}
 
 	printf("search: `%s'\n", tex);
-	parse_ret = tex_parse(tex, 0, false);
+	parse_ret = tex_parse(tex, 0, false, false);
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		subpaths_print(&parse_ret.subpaths, stdout);

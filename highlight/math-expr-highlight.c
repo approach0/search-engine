@@ -41,7 +41,7 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 
 	struct tex_parse_ret ret;
 	uint32_t idposmap[MAX_SUBPATH_ID];
-	ret = tex_parse(kw, strlen(kw), true);
+	ret = tex_parse(kw, strlen(kw), true, true);
 
 	if (ret.code == PARSER_RETCODE_ERR ||
 	    ret.operator_tree == NULL) {
@@ -92,7 +92,7 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 int math_tree_highlight(char *tex, uint32_t *map, int k, sds *o)
 {
 	struct tex_parse_ret ret;
-	ret = tex_parse(tex, strlen(tex), 1);
+	ret = tex_parse(tex, strlen(tex), true, true);
 
 	if (ret.code != PARSER_RETCODE_ERR && ret.operator_tree) {
 		optr_graph_print(ret.operator_tree, colors, map, k, o);

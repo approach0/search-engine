@@ -75,7 +75,7 @@ index_tex(char *tex, uint32_t offset, size_t n_bytes)
 #ifdef DEBUG_INDEXER
 	printf("[parse tex] `%s'\n", tex);
 #endif
-	parse_ret = tex_parse(tex, 0, false);
+	parse_ret = tex_parse(tex, 0, false, false);
 
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
 		/* warning or completely successful */
