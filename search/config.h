@@ -21,11 +21,6 @@
 #define MNC_MARK_FULL_SCORE 100
 #define MNC_MARK_MID_SCORE ((MNC_MARK_BASE_SCORE + MNC_MARK_FULL_SCORE) / 2)
 
-/*
-#define MNC_DEBUG
-#define MNC_SMALL_BITMAP
-*/
-
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
 #define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */

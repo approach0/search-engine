@@ -39,7 +39,7 @@ char *trans_token(enum token_id id)
 	return ret;
 }
 
-char *trans_symbol(enum symbol_id id)
+static char *trans_symbol_(enum symbol_id id, int show_font)
 {
 	static char ret[TRANS_BUF_LEN];
 
@@ -50,13 +50,19 @@ char *trans_symbol(enum symbol_id id)
 		} else /* a-Z in different fonts */ {
 			int r_id = id - SYMBOL_ID_a2Z_BEGIN; /* relative ID */
 			int l_id = r_id % (2 * 26); /* letter ID (with font) */
-			int font = r_id / (2 * 26); /* font */
+
+			/* font */
+			int font = r_id / (2 * 26);
+			char font_str[128] = "";
+			if (show_font)
+				strcpy(font_str, math_font_name(font));
+
 			if (l_id >= 26 /* uppercase */) {
 				int o = l_id - 26; /* offset */
-				sprintf(ret, "`%c' %s font", 'A' + o, math_font_name(font));
+				sprintf(ret, "%s`%c'", font_str, 'A' + o);
 			} else /* lowercase */ {
 				int o = l_id; /* offset */
-				sprintf(ret, "`%c' %s font", 'a' + o, math_font_name(font));
+				sprintf(ret, "%s`%c'", font_str, 'a' + o);
 			}
 			return ret;
 		}
@@ -82,4 +88,15 @@ char *trans_symbol(enum symbol_id id)
 	}
 
 	return ret;
+}
+
+
+char *trans_symbol(enum symbol_id id)
+{
+	return trans_symbol_(id, true);
+}
+
+char *trans_symbol_wo_font(enum symbol_id id)
+{
+	return trans_symbol_(id, false);
 }

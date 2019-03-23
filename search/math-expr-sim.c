@@ -41,7 +41,7 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 //	if (doc_id == 368782) {
 
-	if (0 == strcmp(url, "YUV:7")) {
+	if (0 == strcmp(url, "Helmholtz_equation:37")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);

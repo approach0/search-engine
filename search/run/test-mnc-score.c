@@ -82,7 +82,7 @@ static void test_concrete_case()
 		mnc_doc_add_rele(0, 5, ref);
 #endif
 
-		match = mnc_match();
+		match = mnc_match_debug();
 		printf("score = %u, qry_paths: 0x%lx, doc_paths: 0x%lx.\n",
 			match.score, match.qry_paths, match.doc_paths);
 	}
@@ -128,7 +128,7 @@ static void test_wildcards_case()
 		mnc_doc_add_reles(1, 0x2, ref);
 		mnc_doc_add_reles(1, 0x8, ref);
 
-		match = mnc_match();
+		match = mnc_match_debug();
 		printf("score = %u, qry_paths: 0x%lx, doc_paths: 0x%lx.\n",
 			match.score, match.qry_paths, match.doc_paths);
 	}

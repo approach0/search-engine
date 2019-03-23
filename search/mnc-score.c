@@ -106,36 +106,17 @@ void mnc_doc_add_reles(uint32_t qry_path, mnc_slot_t doc_paths,
 /*
  * print functions for debug
  */
-#ifdef MNC_SMALL_BITMAP
-static void print_slot(char *byte)
+#define _MAX_SYMBOL_STR_LEN 16
+
+#define _MARGIN_PAD printf(" ")
+
+static void print_slot(unsigned char *byte)
 {
-	int i;
-	for (i = 0; i < MNC_SLOTS_BYTES; i++) {
-		printf(BYTE_STR_FMT " ", BYTE_STR_ARGS(*byte));
-		byte ++;
+	for (int i = 7; i >= 0; i--) {
+		printf("%02x", byte[i]);
 	}
+	_MARGIN_PAD;
 }
-
-#define _MAX_SYMBOL_STR_LEN 7
-
-#define _PADDING_SPACE \
-	if (i != n_doc_uniq_syms - 1) \
-		for (j = 1; j < MNC_SLOTS_BYTES; j++) \
-			printf("%*c ", 8, ' ');
-#else
-static void print_slot(char *byte)
-{
-	/* MNC_SLOTS_BYTES is 8 in this case */
-	uint64_t *p = (uint64_t *)byte;
-	printf(" 0x%lx ", *p);
-}
-
-#define _MAX_SYMBOL_STR_LEN 7
-#define _PADDING_SPACE \
-	if (i != n_doc_uniq_syms - 1) \
-		printf("%*c ", 8, ' ');
-
-#endif
 
 void mnc_print(mnc_score_t *sub_score,
                int highlight_qry_path, int max_subscore_idx)
@@ -147,29 +128,30 @@ void mnc_print(mnc_score_t *sub_score,
 	/* print scores */
 	printf("Max sub-score: %u from doc symbol `%s'\n",
 	       sub_score[max_subscore_idx],
-	       trans_symbol(doc_uniq_sym[max_subscore_idx]));
+	       trans_symbol_wo_font(doc_uniq_sym[max_subscore_idx]));
 
-	printf("%*s", _MAX_SYMBOL_STR_LEN, "Score: ");
+	printf("%-*s", _MAX_SYMBOL_STR_LEN, "Score: ");
 	for (i = 0; i < n_doc_uniq_syms; i++) {
-		printf("%-*u ", 8, sub_score[i]);
-		_PADDING_SPACE;
+		printf("%-*u ", _MAX_SYMBOL_STR_LEN, sub_score[i]);
+		_MARGIN_PAD;
 	}
 	printf("\n");
 
 	/* print document symbol slots */
 	printf("%*c", _MAX_SYMBOL_STR_LEN, ' ');
 	for (i = 0; i < n_doc_uniq_syms; i++) {
-		printf("%-*s ", 8, trans_symbol(doc_uniq_sym[i]));
-		_PADDING_SPACE;
+		printf("%-*s ", _MAX_SYMBOL_STR_LEN,
+			trans_symbol_wo_font(doc_uniq_sym[i]));
+		_MARGIN_PAD;
 	}
 	printf("\n");
 
 	/* print mark and cross rows */
-	printf("Cross: ");
+	printf("%-*s", _MAX_SYMBOL_STR_LEN, "Cross:");
 	print_slot((char*)&doc_cross_bitmap);
 	printf("\n");
 
-	printf("Mark:  ");
+	printf("%-*s", _MAX_SYMBOL_STR_LEN, "Mark: ");
 	for (i = 0; i < n_doc_uniq_syms; i++)
 		print_slot((char*)&doc_mark_bitmap[i]);
 	printf("\n");
@@ -180,10 +162,10 @@ print_bitmap:
 	for (i = 0; i < n_qry_syms; i++) {
 		if ((uint32_t)highlight_qry_path == i)
 			printf("-> %-*s", _MAX_SYMBOL_STR_LEN - 3,
-			       trans_symbol(qry_sym[i]));
+			       trans_symbol_wo_font(qry_sym[i]));
 		else
 			printf("%-*s", _MAX_SYMBOL_STR_LEN,
-			       trans_symbol(qry_sym[i]));
+			       trans_symbol_wo_font(qry_sym[i]));
 
 		for (j = 0; j < n_doc_uniq_syms; j++)
 			print_slot((char*)&relevance_bitmap[i][j]);
@@ -396,5 +378,69 @@ struct mnc_match_t mnc_match()
 
 struct mnc_match_t mnc_match_debug()
 {
-	return mnc_match();
+	struct mnc_match_t ret;
+	uint32_t i, j, max_subscore_idx = 0;
+	mnc_slot_t qry_cross_bitmap = 0;
+
+	mnc_score_t mark_score, total_score = 0;
+	mnc_score_t max_subscore = 0;
+
+	/* query / document slot sub-scores */
+	mnc_score_t doc_uniq_sym_score[MAX_DOC_UNIQ_SYM] = {0};
+
+	/* print initial state */
+	mnc_print(doc_uniq_sym_score, -1, max_subscore_idx);
+
+	for (i = 0; i < n_qry_syms; i++) {
+		for (j = 0; j < n_doc_uniq_syms; j++) {
+			mark_score = mark(i, j);
+
+			if (mark_score != 0) {
+				qry_cross_bitmap |= (1L << i); /* mask this query path */
+				doc_uniq_sym_score[j] += mark_score;
+				if (doc_uniq_sym_score[j] > max_subscore) {
+					max_subscore = doc_uniq_sym_score[j];
+					max_subscore_idx = j;
+				}
+			}
+		}
+
+		if (n_qry_syms == i + 1 || /* this is the final iteration */
+		    qry_sym[i + 1] != qry_sym[i] /* next symbol is different */) {
+
+			/* print before cross */
+			mnc_print(doc_uniq_sym_score, i, max_subscore_idx);
+
+			if (cross(max_subscore_idx) == (0L - 1))
+				break; /* early termination */
+
+			/* accumulate into total score */
+			total_score += max_subscore;
+
+			/* print after cross */
+			printf(C_RED "Current total score: %u\n" C_RST, total_score);
+			printf("=========\n");
+
+			/* clean sub-scores */
+			memset(doc_uniq_sym_score, 0,
+			       sizeof(mnc_score_t) * n_doc_uniq_syms);
+			max_subscore = 0;
+			max_subscore_idx = 0;
+		}
+		else {
+			/* print */
+			mnc_print(doc_uniq_sym_score, i, max_subscore_idx);
+			printf("~~~~~~~~~\n");
+		}
+	}
+
+	/* save return values before clean_bitmaps() */
+	ret = ((struct mnc_match_t) {
+		total_score,
+		qry_cross_bitmap, doc_cross_bitmap
+	});
+
+	clean_bitmaps();
+
+	return ret;
 }
