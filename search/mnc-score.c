@@ -112,8 +112,11 @@ void mnc_doc_add_reles(uint32_t qry_path, mnc_slot_t doc_paths,
 
 static void print_slot(unsigned char *byte)
 {
+	uint64_t u64 = *(uint64_t*)byte;
 	for (int i = 7; i >= 0; i--) {
+		if (u64 == 0) printf(C_GRAY);
 		printf("%02x", byte[i]);
+		if (u64 == 0) printf(C_RST);
 	}
 	_MARGIN_PAD;
 }
