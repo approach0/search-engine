@@ -86,33 +86,40 @@ static LIST_IT_CALLBK(push_query_path)
 	LIST_GO_OVER;
 }
 
+static void
+expand_as(struct subpaths *subpaths, struct optr_node *p,
+          enum subpath_type type, enum token_id token)
+{
+	struct subpath *subpath;
+	/* create a mirror normal path for wildcard path */
+	subpath = create_subpath(p, true);
+	subpath->type = type;
+	/* generate nodes of this subpath */
+	insert_subpath_nodes(subpath, p, token);
+	/* generate fingerprint of this subpath */
+	subpath->fingerprint = subpath_fingerprint(subpath, UINT32_MAX);
+	/* insert this new subpath to subpath list */
+	list_insert_one_at_tail(&subpath->ln, &subpaths->li, NULL, NULL);
+	/* count total subpaths generated. */
+	subpaths->n_subpaths ++;
+}
+
 static TREE_IT_CALLBK(_expand_path)
 {
 	P_CAST(subpaths, struct subpaths, pa_extra);
 	TREE_OBJ(struct optr_node, p, tnd);
-	struct subpath *subpath;
+
+	/* reached the limit of maximum paths we can generate */
+	if (subpaths->n_lr_paths >= MAX_SUBPATH_ID)
+		return LIST_RET_BREAK;
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
 
-		/* reached the limit of maximum paths we can generate */
-		if (subpaths->n_lr_paths >= MAX_SUBPATH_ID)
-			return LIST_RET_BREAK;
-		else
-			subpaths->n_lr_paths ++; /* count leaf-root paths */
-
-		/* mirror only wildcard path */
+		/* mirror only wildcards path, no need to increment number
+		 * of leaf-root paths in subpaths. */
 		if (p->wildcard) {
-			/* create a mirror normal path for wildcard path */
-			subpath = create_subpath(p, true);
-			subpath->type = SUBPATH_TYPE_NORMAL;
-			/* generate nodes of this subpath */
-			insert_subpath_nodes(subpath, p, NULL);
-			/* generate fingerprint of this subpath */
-			subpath->fingerprint = subpath_fingerprint(subpath, UINT32_MAX);
-			/* insert this new subpath to subpath list */
-			list_insert_one_at_tail(&subpath->ln, &subpaths->li, NULL, NULL);
-			/* count total subpaths generated. */
-			subpaths->n_subpaths ++;
+			expand_as(subpaths, p, SUBPATH_TYPE_NORMAL, T_VAR);
+			expand_as(subpaths, p, SUBPATH_TYPE_NORMAL, T_NUM);
 		}
 	}
 
@@ -220,6 +227,9 @@ void math_qry_free(struct math_qry_struct* s)
 
 static int OPT_node_visible(enum token_id token_id)
 {
+	if (token_id <= T_MAX_RANK)
+		return 0;
+
 	switch (token_id) {
 	case T_HANGER:
 	case T_BASE:

@@ -49,7 +49,7 @@ void math_index_close(math_index_t index)
  * ========================== */
 struct _mk_path_str_arg {
 	char **p;
-	bool skip_one;
+	bool skip_first;
 	int max;
 	int cnt;
 };
@@ -59,8 +59,8 @@ static LIST_IT_CALLBK(_mk_path_str)
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(arg, struct _mk_path_str_arg, pa_extra);
 
-	if (arg->skip_one) {
-		arg->skip_one = 0;
+	if (arg->skip_first) {
+		arg->skip_first = 0;
 		goto next;
 	}
 
@@ -85,12 +85,12 @@ math_index_mk_path_str(struct subpath *sp, char *dest_path)
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
-		arg.skip_one = 1;
+		arg.skip_first = 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_WILDCARD) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
-		arg.skip_one = 1;
+		arg.skip_first = 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_NORMAL) {
@@ -116,13 +116,13 @@ math_index_mk_prefix_path_str(struct subpath *sp, int prefix_len,
 
 	if (sp->type == SUBPATH_TYPE_GENERNODE) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
-		arg.skip_one = 1;
+		arg.skip_first = 1;
 		arg.max -= 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 
 	} else if (sp->type  == SUBPATH_TYPE_WILDCARD) {
 		p += sprintf(dest_path, "%s", GENER_PATH_NAME);
-		arg.skip_one = 1;
+		arg.skip_first = 1;
 		arg.max -= 1;
 		list_foreach(&sp->path_nodes, &_mk_path_str, &arg);
 

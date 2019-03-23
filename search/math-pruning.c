@@ -68,7 +68,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 				node->postlist_id[node->n - 1] = i;
 			}
 
-			/* widen sector tree */
+			/* increment sector tree width */
 			node->secttr[node->n - 1].width += 1;
 		}
 
@@ -91,7 +91,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	}
 
 #ifdef MATH_PRUNING_SECTR_DROP_ENABLE
-	/* bubble sector tree in each node by their upperbounds */
+	/* sort sector tree in each node by their upperbounds */
 	for (int k = 0; k < pruner->n_nodes; k++) {
 		struct pruner_node *n = pruner->nodes + k;
 
