@@ -113,7 +113,13 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
 	//fprintf(fh, "path_id=%u, ", p->path_id);
-	fprintf(fh, "subtr_hash=" C_GRAY "%s" C_RST ", ", optr_hash_str(p->subtr_hash));
+	fprintf(fh, "subtr_hash=" C_GRAY "%s" C_RST ", ",
+#if 0
+		optr_hash_str(p->subtr_hash)
+#else
+		trans_symbol_wo_font(p->subtr_hash)
+#endif
+	);
 	fprintf(fh, "pos=[%u, %u].", p->pos_begin, p->pos_end);
 	fprintf(fh, "\n");
 }
@@ -349,12 +355,16 @@ struct subpath *create_subpath(struct optr_node *p, bool leaf)
 	subpath->leaf_id = p->node_id;
 	LIST_CONS(subpath->path_nodes);
 
+	/* a subpath is pseudo if it is created from expanding of
+	 * another subpath, or if it is a wildcard path. */
 	if (leaf) {
 		subpath->type = (p->wildcard) ? \
 		     SUBPATH_TYPE_WILDCARD : SUBPATH_TYPE_NORMAL;
+		subpath->pseudo = (p->wildcard) ? true : false;
 		subpath->lf_symbol_id = p->symbol_id;
 	} else {
 		subpath->type = SUBPATH_TYPE_GENERNODE;
+		subpath->pseudo = false;
 		subpath->subtree_hash = p->subtr_hash;
 	}
 

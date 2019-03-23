@@ -19,17 +19,28 @@ static LIST_CMP_CALLBK(compare_qry_path)
 
 	/* larger size bound variables are ranked higher, if sizes are equal,
 	 * rank by path type (wildcard or concrete) then symbol (alphabet).*/
+	if (sp0->pseudo != sp1->pseudo ||
+	         sp0->type != sp1->type) {
+
+		/* Order this case: normal (00), normal pseudo (01), wildcards (11) */
+		if (sp0->type != sp1->type)
+			return (sp0->type == SUBPATH_TYPE_NORMAL) ? 1 : 0;
+		else
+			return (sp0->pseudo) ? 0 : 1;
+
+	}
+
 	if (sp0->path_id != sp1->path_id)
 		return sp0->path_id > sp1->path_id;
-	else if (sp0->type != sp1->type)
-		return (sp0->type == SUBPATH_TYPE_NORMAL) ? 1 : 0;
-	else
-		return sp0->lf_symbol_id < sp1->lf_symbol_id;
+
+	return sp0->lf_symbol_id < sp1->lf_symbol_id;
 }
 
 struct cnt_same_symbol_args {
-	uint32_t    cnt;
-	symbol_id_t symbol_id;
+	uint32_t          cnt;
+	symbol_id_t       symbol_id;
+	enum subpath_type path_type;
+	bool              pseudo;
 };
 
 static LIST_IT_CALLBK(cnt_same_symbol)
@@ -37,7 +48,9 @@ static LIST_IT_CALLBK(cnt_same_symbol)
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(cnt_arg, struct cnt_same_symbol_args, pa_extra);
 
-	if (cnt_arg->symbol_id == sp->lf_symbol_id)
+	if (cnt_arg->symbol_id == sp->lf_symbol_id &&
+	    cnt_arg->path_type == sp->type &&
+	    cnt_arg->pseudo == sp->pseudo)
 		cnt_arg->cnt ++;
 
 	LIST_GO_OVER;
@@ -55,6 +68,8 @@ static LIST_IT_CALLBK(overwrite_pathID_to_bondvar_sz)
 	/* go through this list to count subpaths with same symbol */
 	cnt_arg.cnt = 0;
 	cnt_arg.symbol_id = sp->lf_symbol_id;
+	cnt_arg.path_type = sp->type;
+	cnt_arg.pseudo    = sp->pseudo;
 	list_foreach(&this_list, &cnt_same_symbol, &cnt_arg);
 
 	/* overwrite path_id to cnt number */

@@ -35,6 +35,7 @@ struct subpath {
 	uint32_t              n_nodes;
 	list                  path_nodes;
 	enum subpath_type     type;
+	bool                  pseudo;
 	union {
 		symbol_id_t       lf_symbol_id;
 		symbol_id_t       subtree_hash;

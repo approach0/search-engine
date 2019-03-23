@@ -164,10 +164,10 @@ print_bitmap:
 	/* print main bitmaps */
 	for (i = 0; i < n_qry_syms; i++) {
 		if ((uint32_t)highlight_qry_path == i)
-			printf("-> %-*s", _MAX_SYMBOL_STR_LEN - 3,
+			printf("[%d]-> %-*s", qry_wil[i], _MAX_SYMBOL_STR_LEN - 3 - 2 - 1,
 			       trans_symbol_wo_font(qry_sym[i]));
 		else
-			printf("%-*s", _MAX_SYMBOL_STR_LEN,
+			printf("[%d] %-*s", qry_wil[i], _MAX_SYMBOL_STR_LEN - 3 - 1,
 			       trans_symbol_wo_font(qry_sym[i]));
 
 		for (j = 0; j < n_doc_uniq_syms; j++)
