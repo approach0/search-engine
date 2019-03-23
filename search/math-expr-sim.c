@@ -34,14 +34,14 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //return 1;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-//	if (0 == strcmp(url, "Opening_(morphology):7") ||
-//	    0 == strcmp(url, "Mathematical_morphology:24")) {
+	if (0 == strcmp(url, "Hyperbola:17") ||
+	    0 == strcmp(url, "Sridhara:15")) {
 
 //	if (doc_id == 308876 || doc_id == 470478) {
 
 //	if (doc_id == 368782) {
 
-	if (0 == strcmp(url, "Helmholtz_equation:37")) {
+//	if (0 == strcmp(url, "Hyperbola:17")) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -232,12 +232,12 @@ void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 }
 
 /* symbolset similarity calculation, single-tree only. */
-static mnc_score_t
+static struct mnc_match_t
 #ifdef DEBUG_MATH_SCORE_INSPECT
-math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po,
+math_l2_postlist_cur_match(struct math_l2_postlist *po,
 	struct pq_align_res *ar, int inspect)
 #else
-math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po,
+math_l2_postlist_cur_match(struct math_l2_postlist *po,
 	struct pq_align_res *ar)
 #endif
 {
@@ -290,12 +290,7 @@ math_l2_postlist_cur_symbol_sim(struct math_l2_postlist *po,
 #endif
 
 	match = mnc_match();
-
-#ifdef HIGHLIGHT_MATH_ALIGNMENT
-	ar->qmask = match.qry_paths;
-	ar->dmask = match.doc_paths;
-#endif
-	return match.score;
+	return match;
 }
 
 ////////////////////  pruning functions ////////////////////////////////
@@ -335,6 +330,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
                                uint32_t dn)
 {
 	struct math_expr_score_res expr;
+	struct mnc_match_t match;
 	uint32_t r_cnt = 0;
 
 	/* get docID and exprID */
@@ -346,16 +342,23 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	/* get symbolic score */
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	int inspect = score_inspect_filter(p->doc_id, po->indices);
-	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest, inspect);
+	match = math_l2_postlist_cur_match(po, widest, inspect);
 #else
-	mnc_score_t sym_sim = math_l2_postlist_cur_symbol_sim(po, widest);
+	match = math_l2_postlist_cur_match(po, widest);
+#endif
+
+	/* get precise structure match width */
+	widest->width = __builtin_popcountll(match.qry_paths);
+#ifdef HIGHLIGHT_MATH_ALIGNMENT
+	widest->qmask = match.qry_paths;
+	widest->dmask = match.doc_paths;
 #endif
 
 	/* get single tree overall score */
 	const uint32_t k = 1;
 	uint32_t qn = po->mqs->subpaths.n_lr_paths;
 	struct math_expr_sim_factors factors = {
-		sym_sim, 0 /* search depth*/, qn, dn, widest, k,
+		match.score, 0 /* search depth*/, qn, dn, widest, k,
 		r_cnt, 0 /* lcs */, po->mqs->n_qry_nodes};
 	math_expr_set_score(&factors, &expr);
 
@@ -466,7 +469,7 @@ calc_q_node_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 }
 
 struct pq_align_res
-math_l2_postlist_widest_match(struct math_l2_postlist *po, float threshold)
+math_l2_postlist_widest_estimate(struct math_l2_postlist *po, float threshold)
 {
 	struct pq_align_res widest = {0};
 	struct math_pruner *pruner = &po->pruner;

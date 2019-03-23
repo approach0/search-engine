@@ -89,6 +89,41 @@ static LIST_IT_CALLBK(assign_path_id_in_order)
 	LIST_GO_OVER;
 }
 
+struct find_conjugacy_args {
+	struct subpath *sp;
+	uint64_t conjugacy;
+};
+
+static LIST_IT_CALLBK(find_conjugacy)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(arg, struct find_conjugacy_args, pa_extra);
+
+	if (arg->sp != sp && arg->sp->leaf_id == sp->leaf_id) {
+		arg->conjugacy |= (1L << (sp->path_id - 1));
+	}
+
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(assign_conjugacy)
+{
+	struct list_it this_list;
+	LIST_OBJ(struct subpath, sp, ln);
+
+	/* get iterator of this list */
+	this_list = list_get_it(pa_head->now);
+
+	/* go through this list to find conjugacy */
+	struct find_conjugacy_args arg = {sp, 0};
+	list_foreach(&this_list, &find_conjugacy, &arg);
+
+	/* assign conjugacy */
+	sp->conjugacy = arg.conjugacy;
+
+	LIST_GO_OVER;
+}
+
 static LIST_IT_CALLBK(push_query_path)
 {
 	LIST_OBJ(struct subpath, sp, ln);
@@ -96,7 +131,12 @@ static LIST_IT_CALLBK(push_query_path)
 
 	mnc_ref.sym = sp->lf_symbol_id;
 	mnc_ref.fnp = sp->fingerprint;
-	mnc_push_qry(mnc_ref, sp->type == SUBPATH_TYPE_WILDCARD);
+
+	mnc_push_qry(
+		mnc_ref,
+		sp->type == SUBPATH_TYPE_WILDCARD,
+		sp->conjugacy
+	);
 
 	LIST_GO_OVER;
 }
@@ -193,6 +233,9 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	/* assign path_id in this new order. */
 	uint32_t new_path_id = 0;
 	list_foreach(&subpaths->li, &assign_path_id_in_order, &new_path_id);
+
+	/* assign conjugacy bitmap */
+	list_foreach(&subpaths->li, &assign_conjugacy, NULL);
 
 	/* prepare symbolic scoring structure */
 	mnc_reset_qry();

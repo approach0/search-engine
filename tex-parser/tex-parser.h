@@ -36,6 +36,7 @@ struct subpath {
 	list                  path_nodes;
 	enum subpath_type     type;
 	bool                  pseudo;
+	uint64_t              conjugacy;
 	union {
 		symbol_id_t       lf_symbol_id;
 		symbol_id_t       subtree_hash;

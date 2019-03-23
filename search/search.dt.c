@@ -231,7 +231,7 @@ int math_l2_postlist_next(void *po_)
 		g_hot_hit[n_hit_paths] ++;
 #endif
 		struct pq_align_res widest;
-		widest = math_l2_postlist_widest_match(po, threshold);
+		widest = math_l2_postlist_widest_estimate(po, threshold);
 
 		/* push expression results */
 		if (widest.width) {
