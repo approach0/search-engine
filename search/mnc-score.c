@@ -148,12 +148,12 @@ void mnc_print(mnc_score_t *sub_score,
 
 	/* print mark and cross rows */
 	printf("%-*s", _MAX_SYMBOL_STR_LEN, "Cross:");
-	print_slot((char*)&doc_cross_bitmap);
+	print_slot((uint8_t*)&doc_cross_bitmap);
 	printf("\n");
 
 	printf("%-*s", _MAX_SYMBOL_STR_LEN, "Mark: ");
 	for (i = 0; i < n_doc_uniq_syms; i++)
-		print_slot((char*)&doc_mark_bitmap[i]);
+		print_slot((uint8_t*)&doc_mark_bitmap[i]);
 	printf("\n");
 
 print_bitmap:
@@ -168,7 +168,7 @@ print_bitmap:
 			       trans_symbol_wo_font(qry_sym[i]));
 
 		for (j = 0; j < n_doc_uniq_syms; j++)
-			print_slot((char*)&relevance_bitmap[i][j]);
+			print_slot((uint8_t*)&relevance_bitmap[i][j]);
 
 		printf("\n");
 	}
