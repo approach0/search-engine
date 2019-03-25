@@ -19,6 +19,7 @@ struct node_set {
 };
 
 #include "config.h"
+#include "hashtable/u16-ht.h"
 struct math_pruner {
 	/* internal node related */
 	struct pruner_node *nodes; // query internal nodes

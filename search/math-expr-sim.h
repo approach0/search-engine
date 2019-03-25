@@ -1,11 +1,9 @@
 #pragma once
 
 #include <stdbool.h>
-#include "postmerge/postmerge.h"
-#include "indices/indices.h"
-#include "mnc-score.h"
-#include "math-prefix-qry.h"
 #include "config.h"
+#include "mnc-score.h"
+#include "math-search.h"
 
 struct math_extra_score_arg;
 

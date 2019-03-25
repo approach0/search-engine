@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 struct u16_ht_entry {

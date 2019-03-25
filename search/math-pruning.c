@@ -2,7 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#include "common/common.h"
+#include "hashtable/u16-ht.h"
+#include "tex-parser/head.h"
+
 #include "config.h"
+#include "mnc-score.h"
 #include "math-expr-sim.h"
 #include "math-pruning.h"
 

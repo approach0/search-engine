@@ -8,11 +8,13 @@
 #include "indexer/config.h"
 #include "indexer/index.h"
 #include "postlist/math-postlist.h"
+#include "hashtable/u16-ht.h"
 
 #include "config.h"
 #include "search-utils.h"
 #include "math-prefix-qry.h"
 #include "math-expr-sim.h"
+#include "math-search.h"
 
 void math_expr_sim_factors_print(struct math_expr_sim_factors *factor)
 {
