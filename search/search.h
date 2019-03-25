@@ -22,7 +22,7 @@ struct math_l2_postlist {
 	ranked_results_t *rk_res;
 
 	/* current doc-level item recorder */
-	uint32_t    cur_doc_id;
+	uint32_t    cur_doc_id, future_doc_id;
 	float       max_exp_score;
 	uint32_t    n_occurs;
 	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];

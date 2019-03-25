@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
 	qry = query_new();
 
-	while ((opt = getopt(argc, argv, "hi:m:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:m:t:p:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -88,7 +88,8 @@ int main(int argc, char *argv[])
 			printf("USAGE:\n");
 			printf("%s -h |"
 			       " -i <index path> |"
-			       " -m <tex> |"
+			       " -t <text keyword> |"
+			       " -m <math keyword> |"
 			       " -p <page> |"
 			       "\n", argv[0]);
 			printf("\n");
@@ -104,6 +105,10 @@ int main(int argc, char *argv[])
 
 		case 'm':
 			query_push_keyword_str(&qry, optarg, QUERY_KEYWORD_TEX);
+			break;
+
+		case 't':
+			query_push_keyword_str(&qry, optarg, QUERY_KEYWORD_TERM);
 			break;
 
 		default:
@@ -122,6 +127,8 @@ int main(int argc, char *argv[])
 		printf("index open failed.\n");
 		goto close;
 	}
+
+	query_print(qry, stdout);
 
 	printf("caching index...\n");
 	postlist_cache_set_limit(&indices.ci, 100 KB, 100 KB);

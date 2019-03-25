@@ -176,7 +176,6 @@ int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 	struct math_pruner *pruner = &po->pruner;
-	uint32_t prev_doc_id = po->cur_doc_id;
 	float threshold = pruner->init_threshold;
 
 	/* update threshold value */
@@ -202,10 +201,25 @@ int math_l2_postlist_next(void *po_)
 	}
 #endif
 
+	/* Iterate through future math items until cur goes to even future,
+	 * i.e., cur != future. Then update future ID. */
+	po->cur_doc_id = po->future_doc_id;
 	do {
 		/* set candidate docID */
 		po->cur_doc_id = set_doc_candidate(po);
-		if (po->cur_doc_id == UINT32_MAX) return 0;
+
+		if (po->cur_doc_id == UINT32_MAX) {
+			po->future_doc_id = UINT32_MAX;
+			return 0;
+
+		} else if (po->cur_doc_id != po->future_doc_id) {
+			/* cur is now even future than future. */
+			uint32_t save = po->cur_doc_id;
+			po->cur_doc_id = po->future_doc_id;
+			po->future_doc_id = save;
+			return 1;
+		}
+
 		uint64_t candidate = po->candidate;
 
 #ifndef MATH_PRUNING_DISABLE_JUMP
@@ -247,7 +261,6 @@ int math_l2_postlist_next(void *po_)
 				hit_occur_t *ho = po->occurs + po->n_occurs;
 				po->n_occurs += 1;
 				ho->pos = expr.exp_id;
-
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 				/* copy highlight mask */
 				ho->qmask[0] = widest.qmask;
@@ -283,7 +296,7 @@ int math_l2_postlist_next(void *po_)
 		}
 
 		/* collected all the expressions in this doc */
-	} while (po->cur_doc_id == prev_doc_id);
+	} while (true);
 
 	return 1;
 }
@@ -380,6 +393,7 @@ int math_l2_postlist_init(void *po_)
 
 	/* setup current doc-level item */
 	po->cur_doc_id = 0;
+	po->future_doc_id = 0;
 	po->max_exp_score = 0;
 	po->n_occurs = 0;
 

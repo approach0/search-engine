@@ -22,17 +22,17 @@ static void test_concrete_case()
 	 *        1   0   5 2   4   3
 	 */
 	ref.sym = alphabet_to_sym('b'); /* 0 */
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 	ref.sym = alphabet_to_sym('b'); /* 1 */
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 	ref.sym = alphabet_to_sym('b'); /* 2 */
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 	ref.sym = alphabet_to_sym('a'); /* 3 */
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 	ref.sym = alphabet_to_sym('a'); /* 4 */
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 	ref.sym = S_one; /* 5 */
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 
 	/* run twice to test init/uninit */
 	for (i = 0; i < 2; i++) {
@@ -101,11 +101,11 @@ static void test_wildcards_case()
 	 *        0 1 2
 	 */
 	ref.sym = alphabet_to_sym('x');
-	mnc_push_qry(ref, 1);
+	mnc_push_qry(ref, 1, 0);
 	ref.sym = alphabet_to_sym('x');
-	mnc_push_qry(ref, 1);
+	mnc_push_qry(ref, 1, 0);
 	ref.sym = alphabet_to_sym('e');
-	mnc_push_qry(ref, 0);
+	mnc_push_qry(ref, 0, 0);
 
 	/* run twice to test init/uninit */
 	for (i = 0; i < 2; i++) {

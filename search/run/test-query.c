@@ -38,19 +38,19 @@ int main()
 	query_digest_utf8txt(&qry, "hello world");
 
 	printf("before sorting: \n");
-	query_print_to(qry, stdout);
+	query_print(qry, stdout);
 	printf("\n");
 
 	query_sort_by_df(&qry);
 
 	printf("after sorting: \n");
-	query_print_to(qry, stdout);
+	query_print(qry, stdout);
 	printf("\n");
 
 	query_uniq_by_post_id(&qry);
 
 	printf("after uniq: \n");
-	query_print_to(qry, stdout);
+	query_print(qry, stdout);
 	printf("\n");
 
 	query_delete(qry);

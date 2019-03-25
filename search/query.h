@@ -37,7 +37,7 @@ struct query {
 struct query query_new(void);
 void query_push_keyword(struct query*, const struct query_keyword*);
 void query_digest_utf8txt(struct query*, const char*);
-void query_print_to(struct query, FILE*);
+void query_print(struct query, FILE*);
 void query_delete(struct query);
 void query_sort_by_df(const struct query*);
 void query_uniq_by_post_id(struct query*);

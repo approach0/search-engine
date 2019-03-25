@@ -50,7 +50,7 @@ static void test_json_file(const char *path)
 	if (page != 0) {
 		printf("page number = %u.\n", page);
 		printf("parsed query: \n");
-		query_print_to(qry, stdout);
+		query_print(qry, stdout);
 		printf("\n");
 	}
 
