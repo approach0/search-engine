@@ -560,6 +560,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 	uint64_t cnt = 0;
 #endif
 
+#ifdef SKIP_SEARCH
+	goto skip_search;
+#endif
+
 	foreach (iter, postmerger, &root_pm) {
 		float math_score = 0.f;
 		uint32_t doc_id  = 0;
@@ -615,6 +619,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 		if(g_hot_hit[i])
 			printf("%d hits freq: %lu\n", i, g_hot_hit[i]);
 	}
+#endif
+
+#ifdef SKIP_SEARCH
+skip_search:
 #endif
 
 	// Uninitialize merger objects

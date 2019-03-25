@@ -214,36 +214,37 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 #endif
 
 	/* copy subpaths reference */
-	struct subpaths *subpaths = &parse_ret.subpaths;
-	s->subpaths = *subpaths;
+	struct subpaths subpaths = parse_ret.subpaths;
+	/* clear the old reference (ensure no one uses that) */
+	parse_ret.subpaths.li = list_get_it(NULL);
 
 #ifdef WILDCARD_PATH_QUERY_EXPAND_ENABLE
 	/* "mirror" wildcard path to also match single-symbol for better recall */
-	expand_query_subpaths(subpaths, parse_ret.operator_tree);
+	expand_query_subpaths(&subpaths, parse_ret.operator_tree);
 #endif
 
 	/* generate query node visibility map */
 	math_qry_gen_visibi_map(s->visibimap, parse_ret.operator_tree);
 	
 	/* sort subpaths by <bound variable size, path type, symbol> */
-	list_foreach(&subpaths->li, &overwrite_pathID_to_bondvar_sz, NULL);
+	list_foreach(&subpaths.li, &overwrite_pathID_to_bondvar_sz, NULL);
 	struct list_sort_arg sort_arg = {&compare_qry_path, NULL};
-	list_sort(&subpaths->li, &sort_arg);
+	list_sort(&subpaths.li, &sort_arg);
 
 	/* assign path_id in this new order. */
 	uint32_t new_path_id = 0;
-	list_foreach(&subpaths->li, &assign_path_id_in_order, &new_path_id);
+	list_foreach(&subpaths.li, &assign_path_id_in_order, &new_path_id);
 
 	/* assign conjugacy bitmap */
-	list_foreach(&subpaths->li, &assign_conjugacy, NULL);
+	list_foreach(&subpaths.li, &assign_conjugacy, NULL);
 
 	/* prepare symbolic scoring structure */
 	mnc_reset_qry();
-	list_foreach(&subpaths->li, &push_query_path, NULL);
+	list_foreach(&subpaths.li, &push_query_path, NULL);
 
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	printf("Leaf-root paths (path_id sorted by bond-vars):\n");
-	subpaths_print(subpaths, stdout);
+	subpaths_print(&subpaths, stdout);
 #endif
 
 	/* prepare structure scoring structure */
@@ -252,12 +253,15 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 	
 	/* create subpath set (unique paths for merging) */
 	s->subpath_set = dir_merge_subpath_set(
-		DIR_PATHSET_PREFIX_PATH, subpaths, &s->n_uniq_paths
+		DIR_PATHSET_PREFIX_PATH, &subpaths, &s->n_uniq_paths
 	);
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	printf("Search path set:\n");
 	subpath_set_print(&s->subpath_set, stdout);
 #endif
+
+	/* set return subpaths */
+	s->subpaths = subpaths;
 
 	return 0;
 }

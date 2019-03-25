@@ -25,6 +25,8 @@
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
 #define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
 
+//#define SKIP_SEARCH
+
 // #define MATH_PRUNING_DISABLE_JUMP /* disable jumping/skipping */
 // #define DEBUG_MERGE_SKIPPING /* show all the jumping/skipping points */
 
