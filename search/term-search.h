@@ -10,10 +10,8 @@ struct term_postlist_item {
 struct term_qry_struct {
 	uint32_t term_id, qf;
 	uint32_t df;
-	uint32_t kw_pos;
-	uint32_t postlist_id;
+	struct postmerger_postlist po;
 };
 
 void term_query_preprocess(struct term_qry_struct *, int);
 int text_qry_prepare(struct indices*, char*, struct term_qry_struct*);
-struct postmerger_postlist term_get_postlist(struct term_qry_struct*);

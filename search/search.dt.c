@@ -110,7 +110,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		} else { /* normal text query */
 			struct term_qry_struct *ts = tqs + n_term_kw;
 			if (0 == text_qry_prepare(indices, kw_str, ts)) {
-				root_pm.po[i] = term_get_postlist(ts);
+				root_pm.po[i] = ts->po;
 			} else {
 				root_pm.po[i] = empty_postlist();
 			}

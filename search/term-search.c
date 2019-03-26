@@ -24,13 +24,27 @@ int
 text_qry_prepare(struct indices *indices, char *kw_str,
                  struct term_qry_struct *tqs)
 {
-	return 0;
-}
+	struct postlist_cache ci = indices->ci;
+	void *po = term_postlist_cache_find(ci.term_cache, kw_str);
 
-struct postmerger_postlist
-term_get_postlist(struct term_qry_struct *tqs)
-{
-	return term_disk_postlist(NULL);
+	term_id_t term_id = term_lookup(indices->ti, kw_str);
+
+	if (term_id == 0) {
+		/* this term is not found in dictionary */
+		return 1;
+	}
+
+	if (po) {
+		tqs->po = term_memo_postlist(po);
+	} else {
+		po = term_index_get_posting(indices->ti, term_id);
+		tqs->po = term_disk_postlist(po);
+	}
+
+	tqs->term_id = term_id;
+	tqs->qf = 1;
+	tqs->df = term_index_get_df(indices->ti, term_id);
+	return 0;
 }
 
 ///*
