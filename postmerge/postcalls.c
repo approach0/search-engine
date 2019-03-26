@@ -152,6 +152,112 @@ math_disk_postlist_gener(void *po)
 	return ret;
 }
 
+/*
+ * Term in-memory posting list calls
+ */
+
+static uint64_t term_memo_postlist_cur(void *po)
+{
+	if (postlist_terminates(po))
+		return UINT64_MAX;
+	else
+		return *(uint64_t*)postlist_cur_item(po);
+}
+
+static int term_memo_postlist_next(void *po)
+{
+	return (int)postlist_next(po);
+}
+
+static int term_memo_postlist_jump(void *po, uint64_t target)
+{
+	return (int)postlist_jump(po, target);
+}
+
+static size_t term_memo_postlist_read(void *po, void *dest, size_t sz)
+{
+	memcpy(dest, postlist_cur_item(po), sz);
+	return sz;
+}
+
+static int term_memo_postlist_init(void *po)
+{
+	return (int)postlist_start(po);
+}
+
+static void term_memo_postlist_uninit(void *po)
+{
+	postlist_finish(po);
+}
+
+struct postmerger_postlist
+term_memo_postlist(void *po)
+{
+	struct postmerger_postlist ret = {
+		po,
+		&term_memo_postlist_cur,
+		&term_memo_postlist_next,
+		&term_memo_postlist_jump,
+		&term_memo_postlist_read,
+		&term_memo_postlist_init,
+		&term_memo_postlist_uninit
+	};
+	return ret;
+}
+
+/*
+ * Term on-disk posting list calls
+ */
+
+static uint64_t term_disk_postlist_cur(void *po)
+{
+	return (int)term_posting_cur(po);
+}
+
+static int term_disk_postlist_next(void *po)
+{
+	return (int)term_posting_next(po);
+}
+
+static int term_disk_postlist_jump(void *po, uint64_t target)
+{
+	return (int)term_posting_jump(po, target);
+}
+
+static size_t term_disk_postlist_read(void *po, void *dest, size_t sz)
+{
+	return term_posting_read(po, dest);
+}
+
+static int term_disk_postlist_init(void *po)
+{
+	return (int)term_posting_start(po);
+}
+
+static void term_disk_postlist_uninit(void *po)
+{
+	term_posting_finish(po);
+}
+
+struct postmerger_postlist
+term_disk_postlist(void *po)
+{
+	struct postmerger_postlist ret = {
+		po,
+		&term_disk_postlist_cur,
+		&term_disk_postlist_next,
+		&term_disk_postlist_jump,
+		&term_disk_postlist_read,
+		&term_disk_postlist_init,
+		&term_disk_postlist_uninit
+	};
+	return ret;
+}
+
+/*
+ * Empty posting list calls
+ */
+
 static uint64_t empty_postlist_cur(void *po)
 {
 	return UINT64_MAX;

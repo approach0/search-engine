@@ -217,46 +217,25 @@ void term_posting_finish(void *posting)
 	delete po;
 }
 
-struct term_posting_item *term_posting_cur_item(void *posting)
+uint64_t term_posting_cur(void *posting)
 {
-	static struct term_posting_item *ret, q[MAX_TERM_MERGE_POSTINGS];
-	static int i = 0;
-
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
 	indri::index::DocListIterator::DocumentData *doc;
 	doc = po->currentEntry();
 
-	if (doc) {
-		/* a hacky way to return term_posting_item pointers. This array is
-		 * made of MAX_TERM_MERGE_POSTINGS objects to avoid different posting
-		 * lists referring to the same object at merge time, which leads to
-		 * all query terms sharing an identical term-frequency, and a wrong
-		 * score as a result. */
-		ret = &q[i];
-		i = (i + 1) % MAX_TERM_MERGE_POSTINGS;
-		ret->doc_id = doc->document;
-		ret->tf = doc->positions.size();
-
-		return ret;
-	} else {
-		return NULL;
-	}
+	return (doc == NULL) ? UINT64_MAX : doc->document;
 }
 
-struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
+size_t term_posting_read(void *posting, void *dest)
 {
-	static int i = 0;
-
 #pragma pack(push, 1)
-	static struct _item_with_pos {
+	struct _item_with_pos {
 		doc_id_t   doc_id;
 		uint32_t   tf;
 		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
-	} q[MAX_TERM_MERGE_POSTINGS];
+	} *p;
 #pragma pack(pop)
-
-	unsigned int k;
-	static struct _item_with_pos *ret;
+	p = (struct _item_with_pos *)dest;
 
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
 	indri::index::DocListIterator::DocumentData *doc;
@@ -264,22 +243,19 @@ struct term_posting_item *term_posting_cur_item_with_pos(void *posting)
 	doc = po->currentEntry();
 
 	if (doc) {
-		ret = &q[i];
-		i = (i + 1) % MAX_TERM_MERGE_POSTINGS;
-
-		ret->doc_id = doc->document;
-		ret->tf = doc->positions.size();
+		p->doc_id = doc->document;
+		p->tf = doc->positions.size();
 
 		/* reduce tf if it exceed limit of the positions we can return. */
-		if (ret->tf > MAX_TERM_INDEX_ITEM_POSITIONS)
-			ret->tf = MAX_TERM_INDEX_ITEM_POSITIONS;
+		if (p->tf > MAX_TERM_INDEX_ITEM_POSITIONS)
+			p->tf = MAX_TERM_INDEX_ITEM_POSITIONS;
 
-		for (k = 0; k < ret->tf; k++) {
-			ret->pos_arr[k] = doc->positions[k];
+		for (unsigned int k = 0; k < p->tf; k++) {
+			p->pos_arr[k] = doc->positions[k];
 		}
 
-		return (struct term_posting_item *)ret;
+		return sizeof(struct _item_with_pos);
 	} else {
-		return NULL;
+		return 0;
 	}
 }

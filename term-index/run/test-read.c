@@ -1,4 +1,3 @@
-#include "term-index.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
@@ -9,6 +8,9 @@
 #include <assert.h>
 
 #include "mhook/mhook.h"
+
+#include "term-index/config.h"
+#include "term-index.h"
 
 static void print_help(char *argv[])
 {
@@ -34,7 +36,6 @@ static void print_help(char *argv[])
 int main(int argc, char* argv[])
 {
 	void *posting, *ti;
-	struct term_posting_item *pi, *pip;
 	uint32_t k, termN, docN, avgDocLen;
 	position_t *pos_arr;
 	term_id_t i;
@@ -150,21 +151,27 @@ int main(int argc, char* argv[])
 				term_posting_start(posting);
 				do {
 					/* test both "get_cur_item" functions */
-					pi = term_posting_cur_item(posting);
-					pip = term_posting_cur_item_with_pos(posting);
+					#pragma pack(push, 1)
+					struct _item_with_pos {
+						doc_id_t   doc_id;
+						uint32_t   tf;
+						position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
+					} pi;
+					#pragma pack(pop)
+					uint64_t doc_id = term_posting_cur(posting);
+					term_posting_read(posting, &pi);
 
-					assert(pi->doc_id == pip->doc_id);
-					assert(pi->tf == pip->tf);
+					assert(doc_id == pi.doc_id);
 
-					printf("[docID=%u, tf=%u", pi->doc_id, pi->tf);
+					printf("[docID=%u, tf=%u", pi.doc_id, pi.tf);
 
 					if (opt_all || opt_posting_termpos) {
 						/* read term positions in this document */
 						printf(", pos=");
-						pos_arr = TERM_POSTING_ITEM_POSITIONS(pip);
-						for (k = 0; k < pi->tf; k++)
+						pos_arr = TERM_POSTING_ITEM_POSITIONS(&pi);
+						for (k = 0; k < pi.tf; k++)
 							printf("%d%c", pos_arr[k],
-							       (k == pi->tf - 1) ? '.' : ',');
+							       (k == pi.tf - 1) ? '.' : ',');
 						printf("]");
 					} else {
 						printf("]");

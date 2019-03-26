@@ -78,7 +78,7 @@ static void _debug_print_map(uint32_t *map, int n, int color)
 }
 
 static int
-math_highlight_on_merge(uint64_t cur_min, struct postmerge* pm, void* args)
+math_highlight_on_merge()
 {
 //	PTR_CAST(mesa, struct math_extra_score_arg, args);
 //	PTR_CAST(hila, struct highlight_args, mesa->expr_srch_arg);

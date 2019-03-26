@@ -54,28 +54,35 @@ term_postlist_cache_free(struct term_postlist_cache cache)
 static struct postlist *fork_term_postlist(void *disk_po)
 {
 	struct postlist *mem_po;
-	struct term_posting_item *pip;
 	size_t fl_sz; /* flush size */
+
+#pragma pack(push, 1)
+	struct _item_with_pos {
+		doc_id_t   doc_id;
+		uint32_t   tf;
+		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
+	} pi;
+#pragma pack(pop)
 
 	/* create memory posting list */
 	mem_po = term_postlist_create_compressed();
 	
 	/* start iterating term posting list */
-	term_posting_start(disk_po);
+	assert (0 != term_posting_start(disk_po));
 
 	do {
 		/* get docID, TF and position array */
-		pip = term_posting_cur_item_with_pos(disk_po);
+		term_posting_read(disk_po, &pi);
 
 #ifdef DEBUG_TERM_POSTLIST_CACHE
-		printf("[%u, tf=%u], pos = [", pip->doc_id, pip->tf);
-		for (uint32_t i = 0; i < pip->tf; i++)
-			printf("%u ", pip->pos_arr[i]);
+		printf("[%u, tf=%u], pos = [", pi.doc_id, pi.tf);
+		for (uint32_t i = 0; i < pi.tf; i++)
+			printf("%u ", pi.pos_arr[i]);
 		printf("]\n");
 #endif
 
 		/* pass combined posting item to a single write() */
-		fl_sz = postlist_write(mem_po, pip, TERM_POSTLIST_ITEM_SZ);
+		fl_sz = postlist_write(mem_po, &pi, TERM_POSTLIST_ITEM_SZ);
 #ifdef DEBUG_TERM_POSTLIST_CACHE
 		if (fl_sz)
 			printf("flush %lu bytes.\n", fl_sz);

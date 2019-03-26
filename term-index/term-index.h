@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,8 +51,8 @@ struct term_posting_item {
 bool term_posting_start(void *);
 bool term_posting_jump(void *, uint64_t);
 bool term_posting_next(void *);
-struct term_posting_item *term_posting_cur_item(void *);
-struct term_posting_item *term_posting_cur_item_with_pos(void *);
+uint64_t term_posting_cur(void*);
+size_t term_posting_read(void*, void*);
 void term_posting_finish(void *);
 
 position_t *term_posting_get_item_pos(struct term_posting_item*);

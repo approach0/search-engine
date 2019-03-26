@@ -327,6 +327,8 @@ uint64_t math_posting_cur_id_v2_2(math_posting_t po_)
 		return math_posting_cur_id_v2(po_);
 }
 
+/* 2nd generation iterators (yet to be placed in ./postmerge/postcalls.c) */
+
 #include <unistd.h>
 static FILE *duplicate(FILE *fh)
 {

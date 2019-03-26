@@ -19,7 +19,7 @@ int main()
 	
 	term_postlist_cache_add(&cache, term_index);
 
-	size_t cnt = term_postlist_cache_list(cache, 1);
+	size_t cnt = term_postlist_cache_list(cache, true);
 	printf("cached items: %lu, total size: %lu.\n", cnt, cache.postlist_sz);
 
 	{
