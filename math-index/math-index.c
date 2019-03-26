@@ -148,56 +148,6 @@ int prefix_path_level(struct subpath *sp, int prefix_len)
 /* ================
  * write functions
  * ================ */
-
-static int
-write_pathinfo_payload(const char *path, struct math_pathinfo *pathinfo)
-{
-	FILE *fh;
-	char file_path[MAX_DIR_PATH_NAME_LEN];
-	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
-
-	fh = fopen(file_path, "a");
-	if (fh == NULL)
-		return -1;
-
-	fwrite(pathinfo, 1, sizeof(struct math_pathinfo), fh);
-	fclose(fh);
-
-	return 0;
-}
-
-static void
-write_pathinfo_head(const char *path, struct math_pathinfo_pack* pack)
-{
-	FILE *fh;
-	char file_path[MAX_DIR_PATH_NAME_LEN];
-	sprintf(file_path, "%s/" PATH_INFO_FNAME, path);
-
-	fh = fopen(file_path, "a");
-	if (fh == NULL)
-		return;
-
-	fwrite(pack, 1, sizeof(struct math_pathinfo_pack), fh);
-	fclose(fh);
-}
-
-static int
-write_posting_item(const char *path, struct math_posting_item *po_item)
-{
-	FILE *fh;
-	char file_path[MAX_DIR_PATH_NAME_LEN];
-	sprintf(file_path, "%s/" MATH_POSTING_FNAME, path);
-
-	fh = fopen(file_path, "a");
-	if (fh == NULL)
-		return -1;
-
-	fwrite(po_item, 1, sizeof(struct math_posting_item), fh);
-	fclose(fh);
-
-	return 0;
-}
-
 int write_posting_item_v2(const char *path,
                           struct math_posting_item_v2 *item)
 {
@@ -503,54 +453,6 @@ math_index_add_tex(math_index_t index, doc_id_t docID, exp_id_t expID,
 /* ===============================
  * probe math index posting list
  * =============================== */
-
-int math_inex_probe_v1(const char* path, bool trans, FILE *fh)
-{
-	int ret = 0;
-	math_posting_t *po = math_posting_new_reader(path);
-
-	/* start reading posting list (try to open file) */
-	if (!math_posting_start(po)) {
-		ret = 1;
-		fprintf(stderr, "cannot start reading posting list.\n");
-		goto free;
-	}
-
-	/* assume first item must exists, which is actually true. */
-	do {
-		PTR_CAST(po_item, struct math_posting_compound_item_v1,
-		         math_posting_cur_item_v1(po));
-		fprintf(fh, "doc#%u, exp#%u ", po_item->doc_id, po_item->exp_id);
-		fprintf(fh, " %u lr_paths, {", po_item->n_lr_paths);
-		for (uint32_t i = 0; i < po_item->n_paths; i++) {
-			struct math_pathinfo *pathinfo;
-			pathinfo = po_item->pathinfo + i;
-			if (!trans) {
-				fprintf(fh, "[%u %x hash=%x]",
-				        pathinfo->path_id, pathinfo->lf_symb,
-				        pathinfo->fr_hash);
-			} else {
-				fprintf(fh, "[%u %s hash=%x]",
-				        pathinfo->path_id,
-				        trans_symbol(pathinfo->lf_symb),
-				        pathinfo->fr_hash);
-			}
-
-			if (i + 1 != po_item->n_paths)
-				fprintf(fh, ", ");
-		}
-		fprintf(fh, "}");
-
-		/* finish probing this posting item */
-		fprintf(fh, "\n");
-	} while (math_posting_next(po));
-
-free:
-	math_posting_finish(po);
-	math_posting_free_reader(po);
-
-	return ret;
-}
 
 int math_inex_probe_v2(const char* path, bool trans, bool gener, FILE *fh)
 {

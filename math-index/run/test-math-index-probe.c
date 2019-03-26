@@ -13,9 +13,8 @@ int main(int argc, char *argv[])
 	char *path = NULL;
 	bool trans = 0;
 	bool gener = false;
-	int v2 = false;
 
-	while ((opt = getopt(argc, argv, "htp:2g")) != -1) {
+	while ((opt = getopt(argc, argv, "htp:g")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -25,7 +24,6 @@ int main(int argc, char *argv[])
 			printf("USAGE:\n");
 			printf("%s -h |"
 			       " -p <path contains .bin files> |"
-			       " -2 (v2 for prefix) |"
 			       " -g (gener path) |"
 			       " -t (translate)", argv[0]);
 			printf("\n");
@@ -40,10 +38,6 @@ int main(int argc, char *argv[])
 
 		case 't':
 			trans = 1;
-			break;
-		
-		case '2':
-			v2 = true;
 			break;
 
 		case 'g':
@@ -63,12 +57,9 @@ int main(int argc, char *argv[])
 		goto exit;
 	}
 
-	if (v2) {
-		printf("Probing prefix paths \n");
-		math_inex_probe_v2(path, trans, gener, stdout);
-	} else {
-		math_inex_probe_v1(path, trans, stdout);
-	}
+	printf("Probing prefix paths \n");
+	math_inex_probe_v2(path, trans, gener, stdout);
+
 	free(path);
 exit:
 	return 0;

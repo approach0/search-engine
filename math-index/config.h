@@ -22,7 +22,8 @@
 
 //#define DEBUG_MATH_INDEX
 
-#include "postmerge/postmerge.h" /* for MAX_MERGE_POSTINGS */
+#include "postmerge/config.h" /* for MAX_MERGE_POSTINGS */
+
 #define MAX_MERGE_DIRS MAX_MERGE_POSTINGS
 
 #define MAX_WILDCARD_LEVEL 2

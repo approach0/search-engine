@@ -20,21 +20,22 @@
 #include "postlist.h"
 #include "term-postlist.h"
 
-#define MIN_TERM_POSTING_BUF_SZ       TERM_POSTLIST_ITEM_SZ
-
+/* skip list span */
 #ifdef DEBUG_POSTLIST
 #define TERM_POSTLIST_SKIP_SPAN       2
 #else
 #define TERM_POSTLIST_SKIP_SPAN       DEFAULT_SKIPPY_SPANS
 #endif
 
+/* buffer sizes */
 #ifdef DEBUG_POSTLIST
-#define TERM_POSTLIST_BUF_SZ          (MIN_TERM_POSTING_BUF_SZ * 2)
+#define TERM_POSTLIST_BUF_SZ  (TERM_POSTLIST_ITEM_SZ * 2)
 #else
-#define TERM_POSTLIST_BUF_SZ          ROUND_UP(4096, MIN_TERM_POSTING_BUF_SZ)
+#define TERM_POSTLIST_BUF_SZ  ROUND_UP(4096, TERM_POSTLIST_ITEM_SZ)
 #endif
 
-#define TERM_POSTLIST_BUF_MAX_ITEMS   (TERM_POSTLIST_BUF_SZ / MIN_TERM_POSTING_BUF_SZ)  
+#define TERM_POSTLIST_BUF_MAX_ITEMS \
+	(TERM_POSTLIST_BUF_SZ / TERM_POSTLIST_ITEM_SZ)  
 
 static uint64_t
 onflush_for_plain_post(char *buf, uint32_t *buf_sz, void *buf_arg)

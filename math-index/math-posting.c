@@ -234,42 +234,6 @@ bool math_posting_jump(math_posting_t po_, uint64_t target)
 	return 1;
 }
 
-static struct math_pathinfo_pack*
-math_posting_pathinfo(math_posting_t po_, uint32_t position)
-{
-	pathinfo_num_t i;
-	struct _math_posting *po = (struct _math_posting*)po_;
-
-#pragma pack(push, 1)
-	static struct {
-		struct math_pathinfo_pack head;
-		struct math_pathinfo      info_arr[MAX_MATH_PATHS];
-	} ret;
-#pragma pack(pop)
-
-	/* first go the specified file & position */
-	if (-1 == fseek(po->fh_pathinfo, position, SEEK_SET))
-		return NULL;
-
-	if (1 == fread(&ret.head, sizeof(struct math_pathinfo_pack),
-				   1, po->fh_pathinfo)) {
-		/* check the sanity of n_paths */
-		if (ret.head.n_paths > MAX_MATH_PATHS)
-			return NULL;
-
-		/* now, read all the path info items */
-		for (i = 0; i < ret.head.n_paths; i++) {
-			if (1 != fread(ret.info_arr + i, sizeof(struct math_pathinfo),
-				   1, po->fh_pathinfo))
-				return NULL;
-		}
-	} else {
-		return NULL;
-	}
-
-	return (struct math_pathinfo_pack*)&ret;
-}
-
 static int
 math_posting_read_pathinfo(math_posting_t po_, uint32_t position,
 	size_t pathinfo_sz, uint32_t n_paths, void *dest)
@@ -345,13 +309,6 @@ size_t math_posting_read_gener(math_posting_t po_, void *dest_)
  	return sizeof(struct math_postlist_gener_item);
 }
 
-uint64_t math_posting_cur_id_v1(math_posting_t po_)
-{
-	struct _math_posting *po = (struct _math_posting*)po_;
-	struct math_posting_item *item = po->buf + po->buf_idx;
-	return *(uint64_t *)item;
-}
-
 uint64_t math_posting_cur_id_v2(math_posting_t po_)
 {
 	struct _math_posting *po = (struct _math_posting*)po_;
@@ -368,30 +325,6 @@ uint64_t math_posting_cur_id_v2_2(math_posting_t po_)
 		return UINT64_MAX;
 	else
 		return math_posting_cur_id_v2(po_);
-}
-
-void *math_posting_cur_item_v1(math_posting_t po_)
-{
-	struct _math_posting *po = (struct _math_posting*)po_;
-	struct math_posting_item *item = po->buf + po->buf_idx;
-	static struct math_posting_compound_item_v1 ret;
-
-	ret.exp_id     = item->exp_id;
-	ret.doc_id     = item->doc_id;
-
-	struct math_pathinfo_pack *pathinfo_pack;
-	pathinfo_pack = math_posting_pathinfo(po, item->pathinfo_pos);
-
-	if (pathinfo_pack == NULL)
-		goto ret;
-
-	ret.n_paths    = pathinfo_pack->n_paths;
-	ret.n_lr_paths = pathinfo_pack->n_lr_paths;
-
-	memcpy(ret.pathinfo, pathinfo_pack->pathinfo,
-	       sizeof(struct math_pathinfo) * ret.n_paths);
-ret:
-	return &ret;
 }
 
 #include <unistd.h>

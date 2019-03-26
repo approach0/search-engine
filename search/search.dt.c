@@ -80,8 +80,8 @@ indices_run_query(struct indices* indices, struct query* qry)
 #ifdef MERGE_TIME_LOG
 	// fprintf(mergetime_fh, "checkpoint-a %ld msec.\n", timer_tot_msec(&timer));
 #endif
-	struct math_qry_struct  mqs[qry->len]; /* search irrelevant structure "TeX" */
-	struct math_l2_postlist mpo[qry->len]; /* search/iterator related structure */
+	struct math_qry_struct  mqs[qry->len]; /* "TeX" tree/path structure */
+	struct math_l2_postlist mpo[qry->len]; /* math level-2 posting list */
 
 	// Create merger objects
 	for (int i = 0; i < qry->len; i++) {

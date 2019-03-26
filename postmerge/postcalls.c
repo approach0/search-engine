@@ -8,6 +8,10 @@
 #include "math-index/math-index.h"
 #include "postcalls.h"
 
+/*
+ * Math in-memory posting list calls
+ */
+
 static uint64_t math_memo_postlist_cur(void *po)
 {
 	if (postlist_terminates(po))
@@ -77,6 +81,10 @@ math_memo_postlist_gener(void *po)
 	};
 	return ret;
 }
+
+/*
+ * Math on-disk posting list calls
+ */
 
 static uint64_t math_disk_postlist_cur(void *po)
 {

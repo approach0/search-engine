@@ -56,6 +56,7 @@ void term_posting_finish(void *);
 
 position_t *term_posting_get_item_pos(struct term_posting_item*);
 
+/* get pos_arr array from term posting item */
 #define TERM_POSTING_ITEM_POSITIONS(_item) \
 	((position_t*)((char*)_item + sizeof(struct term_posting_item)));
 
