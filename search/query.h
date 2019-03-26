@@ -16,14 +16,9 @@ enum query_kw_type {
 
 struct query_keyword {
 	enum query_kw_type type;
-	uint32_t           pos; /* number of keywords ahead in the same query */
+	uint32_t           pos;
 	wchar_t            wstr[MAX_QUERY_WSTR_LEN];
-
 	struct list_node   ln;
-
-	/* values to be assinged */
-	int64_t            post_id;
-	uint64_t           df;
 };
 
 struct query {
@@ -39,9 +34,5 @@ void query_push_keyword(struct query*, const struct query_keyword*);
 void query_digest_utf8txt(struct query*, const char*);
 void query_print(struct query, FILE*);
 void query_delete(struct query);
-void query_sort_by_df(const struct query*);
-void query_uniq_by_post_id(struct query*);
 void query_push_keyword_str(struct query*, const char*, enum query_kw_type);
-
-wchar_t *query_keyword(struct query, int);
-char *query_get_keyword(struct query *, int); /* return utf-8 string */
+struct query_keyword *query_keyword(struct query*, int);

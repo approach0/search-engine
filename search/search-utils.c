@@ -14,61 +14,6 @@
 #include <assert.h>
 
 /*
- * new rank hit
- */
-#define CUR_POS(_in, _i) \
-	_in[_i].pos[_in[_i].cur].pos
-
-#include "txt-seg/lex.h"
-#define LEXER_FUN lex_eng_file
-
-static uint32_t
-mergesort(hit_occur_t *dest, prox_input_t* in, uint32_t n)
-{
-	uint32_t dest_end = 0;
-
-	while (dest_end < MAX_HIGHLIGHT_OCCURS) {
-		uint32_t i, min_idx, min_cur, min = MAX_N_POSITIONS;
-
-		for (i = 0; i < n; i++)
-			if (in[i].cur < in[i].n_pos)
-				if (CUR_POS(in, i) < min) {
-					min = CUR_POS(in, i);
-					min_idx = i;
-					min_cur = in[i].cur;
-				}
-
-		if (min == MAX_N_POSITIONS)
-			/* input exhausted */
-			break;
-		else
-			/* consume input */
-			in[min_idx].cur ++;
-
-		if (dest_end == 0 || /* first put */
-		    dest[dest_end - 1].pos != min /* unique */)
-			dest[dest_end++] = in[min_idx].pos[min_cur];
-	}
-
-	return dest_end;
-}
-
-struct rank_hit *new_hit(doc_id_t hitID, float score,
-                         prox_input_t *prox_in, uint32_t n)
-{
-	struct rank_hit *hit;
-
-	hit = malloc(sizeof(struct rank_hit));
-	hit->docID = hitID;
-	hit->score = score;
-
-	hit->occurs = malloc(sizeof(hit_occur_t) * MAX_HIGHLIGHT_OCCURS);
-	hit->n_occurs = mergesort(hit->occurs, prox_in, n);
-
-	return hit;
-}
-
-/*
  * get blob string
  */
 char
@@ -105,6 +50,9 @@ char
 /*
  * prepare snippet
  */
+#include "txt-seg/lex.h"
+#define LEXER_FUN lex_eng_file
+
 typedef void (*seg_it_callbk)(char*, uint32_t, size_t, void*);
 
 struct seg_it_args {
@@ -284,63 +232,6 @@ prepare_snippet(struct rank_hit* hit, const char *text, size_t text_sz)
 	fclose(text_fh);
 
 	return hi_arg.hi_list;
-}
-
-/*
- * consider_top_K() function
- */
-void
-consider_top_K(ranked_results_t *rk_res,
-               doc_id_t docID, float score,
-               prox_input_t *prox_in, uint32_t n)
-{
-	struct rank_hit *hit;
-
-	if (!priority_Q_full(rk_res) ||
-	    score > priority_Q_min_score(rk_res)) {
-
-		hit = new_hit(docID, score, prox_in, n);
-		priority_Q_add_or_replace(rk_res, hit);
-	}
-}
-
-/*
- * query related functions
- */
-static LIST_IT_CALLBK(set_kw_values)
-{
-	LIST_OBJ(struct query_keyword, kw, ln);
-	P_CAST(indices, struct indices, pa_extra);
-	term_id_t term_id;
-
-	if (kw->type == QUERY_KEYWORD_TEX) {
-		/*
-		 * currently math expressions do not have cached posting
-		 * list, so set post_id to zero as a mark so that they
-		 * will not be deleted by query_uniq_by_post_id().
-		 */
-
-		kw->post_id = 0;
-		kw->df = 0;
-	} else if (kw->type == QUERY_KEYWORD_TERM) {
-		term_id = term_lookup(indices->ti, wstr2mbstr(kw->wstr));
-		kw->post_id = (int64_t)term_id;
-
-		if (term_id == 0)
-			kw->df = 0;
-		else
-			kw->df = (uint64_t)term_index_get_df(indices->ti,
-			                                     term_id);
-	} else {
-		assert(0);
-	}
-
-	LIST_GO_OVER;
-}
-
-void set_keywords_val(struct query *qry, struct indices *indices)
-{
-	list_foreach((list*)&qry->keywords, &set_kw_values, indices);
 }
 
 /* Below are debug functions */

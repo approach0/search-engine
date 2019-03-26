@@ -4,9 +4,11 @@
 #include "common/common.h"
 #include "timer/timer.h"
 #include "postmerge/postcalls.h"
+#include "wstring/wstring.h"
 
 #include "config.h"
 #include "math-search.h"
+#include "term-search.h"
 #include "search.h"
 #include "proximity.h"
 
@@ -80,25 +82,46 @@ indices_run_query(struct indices* indices, struct query* qry)
 #ifdef MERGE_TIME_LOG
 	// fprintf(mergetime_fh, "checkpoint-a %ld msec.\n", timer_tot_msec(&timer));
 #endif
-	struct math_qry_struct  mqs[qry->len]; /* "TeX" tree/path structure */
-	struct math_l2_postlist mpo[qry->len]; /* math level-2 posting list */
+	uint32_t n_math_kw = 0, n_term_kw = 0;
+	struct math_qry_struct  mqs[qry->n_math]; /* "TeX" tree/path structure */
+	struct math_l2_postlist mpo[qry->n_math]; /* math level-2 posting list */
+	struct term_qry_struct  tqs[qry->n_term]; /* term TF-IDF information */
 
 	// Create merger objects
 	for (int i = 0; i < qry->len; i++) {
-		const char *kw = query_get_keyword(qry, i);
+		struct query_keyword *kw = query_keyword(qry, i);
+		char *kw_str = wstr2mbstr(kw->wstr);
+
 #ifndef QUIET_SEARCH
-		printf("processing query keyword `%s' ...\n", kw);
+		printf("processing query keyword `%s' ...\n", kw_str);
 #endif
-		int j = root_pm.n_po;
-		if (0 == math_qry_prepare(indices, (char*)kw, &mqs[j])) {
-			/* construct level-2 postlist */
-			mpo[j] = math_l2_postlist(indices, mqs + j, &rk_res);
-			root_pm.po[j] = postmerger_math_l2_postlist(mpo + j);
-		} else {
-			root_pm.po[j] = empty_postlist();
+		if (kw->type == QUERY_KEYWORD_TEX) {
+			struct math_qry_struct *ms = mqs + n_math_kw;
+			if (0 == math_qry_prepare(indices, kw_str, ms)) {
+				/* construct level-2 postlist */
+				mpo[n_math_kw] = math_l2_postlist(indices, ms, &rk_res);
+				root_pm.po[i] = postmerger_math_l2_postlist(mpo + n_math_kw);
+			} else {
+				root_pm.po[i] = empty_postlist();
+			}
+
+			n_math_kw ++; /* count the number of math keywords */
+
+		} else { /* normal text query */
+			struct term_qry_struct *ts = tqs + n_term_kw;
+			if (0 == text_qry_prepare(indices, kw_str, ts)) {
+				root_pm.po[i] = term_get_postlist(ts);
+			} else {
+				root_pm.po[i] = empty_postlist();
+			}
+
+			n_term_kw ++;
 		}
+
 		root_pm.n_po += 1;
 	}
+
+	term_query_preprocess(tqs, n_term_kw);
 
 	// Initialize merger objects
 	for (int j = 0; j < root_pm.n_po; j++) {
@@ -186,8 +209,10 @@ skip_search:
 	for (int j = 0; j < root_pm.n_po; j++) {
 		/* calling math_l2_postlist_uninit() */
 		POSTMERGER_POSTLIST_CALL(&root_pm, uninit, j);
+	}
 
-		math_qry_free(&mqs[j]);
+	for	(int j = 0; j < n_math_kw; j++) {
+		math_qry_free(mqs + j);
 	}
 
 #ifdef MERGE_TIME_LOG

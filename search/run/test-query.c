@@ -12,16 +12,12 @@
 	wstr_copy(kw.wstr, L ## _str); \
 	query_push_keyword(&qry, &kw)
 
-#define PUSH_TERM(_str, _df, _post_id) \
+#define PUSH_TERM(_str, _df, _id) \
 	kw.type = QUERY_KEYWORD_TERM; \
-	kw.df = _df; \
-	kw.post_id = _post_id; \
 	_PUSH(_str)
 
 #define PUSH_TEX(_str) \
 	kw.type = QUERY_KEYWORD_TEX; \
-	kw.df = 0; \
-	kw.post_id = 0; \
 	_PUSH(_str)
 
 int main()
@@ -30,26 +26,13 @@ int main()
 	struct query_keyword kw;
 
 	PUSH_TERM("dog", 90800, 1234);
-	PUSH_TERM("你好", 1300, 1235);
+	PUSH_TERM("cat", 1300, 1235);
 	PUSH_TEX("f(x)");
-	PUSH_TERM("the", 9999999, 1234);
+	PUSH_TERM("dog", 999, 1234);
 	PUSH_TEX("2x^3 + x");
 
-	query_digest_utf8txt(&qry, "hello world");
+	query_digest_utf8txt(&qry, "dog eats cat");
 
-	printf("before sorting: \n");
-	query_print(qry, stdout);
-	printf("\n");
-
-	query_sort_by_df(&qry);
-
-	printf("after sorting: \n");
-	query_print(qry, stdout);
-	printf("\n");
-
-	query_uniq_by_post_id(&qry);
-
-	printf("after uniq: \n");
 	query_print(qry, stdout);
 	printf("\n");
 

@@ -38,10 +38,7 @@ static LIST_IT_CALLBK(qry_keyword_print)
 
 	if (kw->type == QUERY_KEYWORD_TEX)
 		fprintf(fh, " (tex)");
-	else
-		fprintf(fh, " (df=%lu)", kw->df);
 
-	fprintf(fh, " (post ID = %ld)", kw->post_id);
 	fprintf(fh, "\n");
 
 	LIST_GO_OVER;
@@ -55,7 +52,7 @@ void query_print(struct query qry, FILE* fh)
 }
 
 struct query_keyword_arg {
-	wchar_t *wstr;
+	struct query_keyword *kw;
 	int      target;
 	int      cur;
 };
@@ -66,7 +63,7 @@ static LIST_IT_CALLBK(get_query_keyword)
 	P_CAST(arg, struct query_keyword_arg, pa_extra);
 
 	if (arg->cur == arg->target) {
-		arg->wstr = kw->wstr;
+		arg->kw = kw;
 		return LIST_RET_BREAK;
 	}
 
@@ -74,20 +71,12 @@ static LIST_IT_CALLBK(get_query_keyword)
 	LIST_GO_OVER;
 }
 
-wchar_t *query_keyword(struct query qry, int idx)
-{
-	struct query_keyword_arg arg = {NULL, idx, 0};
-	list_foreach(&qry.keywords, &get_query_keyword, &arg);
-
-	return arg.wstr;
-}
-
-char *query_get_keyword(struct query *qry, int idx)
+struct query_keyword *query_keyword(struct query *qry, int idx)
 {
 	struct query_keyword_arg arg = {NULL, idx, 0};
 	list_foreach(&qry->keywords, &get_query_keyword, &arg);
 
-	return wstr2mbstr(arg.wstr);
+	return arg.kw;
 }
 
 void query_push_keyword(struct query *qry, const struct query_keyword* kw)
@@ -128,7 +117,6 @@ static struct query *adding_qry = NULL;
 static int add_into_qry(struct lex_slice *slice)
 {
 	struct query_keyword kw;
-	kw.df   = 0;
 	kw.type = QUERY_KEYWORD_TERM;
 	eng_to_lower_case(slice->mb_str, strlen(slice->mb_str));
 	wstr_copy(kw.wstr, mbstr2wstr(slice->mb_str));
@@ -156,112 +144,4 @@ query_digest_utf8txt(struct query *qry, const char* txt)
 
 	/* close file handler */
 	fclose(text_fh);
-}
-
-/*
- * query sort
- */
-static
-LIST_CMP_CALLBK(compare)
-{
-	uint64_t df0, df1;
-	struct query_keyword *p0, *p1;
-	p0 = MEMBER_2_STRUCT(pa_node0, struct query_keyword, ln);
-	p1 = MEMBER_2_STRUCT(pa_node1, struct query_keyword, ln);
-
-	if (p0->type == QUERY_KEYWORD_TEX)
-		df0 = 0;
-	else
-		df0 = p0->df;
-
-	if (p1->type == QUERY_KEYWORD_TEX)
-		df1 = 0;
-	else
-		df1 = p1->df;
-
-	return df0 < df1;
-}
-
-void query_sort_by_df(const struct query *qry)
-{
-	struct list_sort_arg sort;
-	sort.cmp = &compare;
-	sort.extra = NULL;
-
-	list_sort((list*)&qry->keywords, &sort);
-}
-
-/*
- * query uniq
- */
-struct dele_identical_kw_arg {
-	int64_t           post_id;
-	struct list_node *stop_at;
-	struct query     *query;
-};
-
-static
-LIST_IT_CALLBK(dele_identical_kw)
-{
-	LIST_OBJ(struct query_keyword, kw, ln);
-	P_CAST(arg, struct dele_identical_kw_arg, pa_extra);
-	bool res;
-
-	if (pa_now->now == arg->stop_at)
-		res = LIST_RET_BREAK;
-	else
-		res = LIST_RET_CONTINUE;
-
-	if (kw->post_id == arg->post_id) {
-		list_detach_one(pa_now->now, pa_head, pa_now, pa_fwd);
-
-		arg->query->len --;
-
-		if (kw->type == QUERY_KEYWORD_TEX)
-			arg->query->n_math --;
-		else if (kw->type == QUERY_KEYWORD_TERM)
-			arg->query->n_term --;
-		else
-			fprintf(stderr, "bad keyword type!\n");
-
-		free(kw);
-	}
-
-	return res;
-}
-
-static
-LIST_IT_CALLBK(uniq_kw)
-{
-	LIST_OBJ(struct query_keyword, kw, ln);
-	P_CAST(query, struct query, pa_extra);
-
-	struct dele_identical_kw_arg arg;
-	struct list_it sub_li;
-
-	/* if we do not need to uniq this element? (post_id = 0)
-	 * or this is the last element? */
-	if (kw->post_id != 0 &&
-	    pa_now->now != pa_head->last) {
-
-		/* set arguments for dele_identical_kw() */
-		arg.post_id = kw->post_id;
-		arg.stop_at = pa_head->last;
-		arg.query   = query;
-
-		/* for each sublist after "this element" */
-		sub_li = list_get_it(pa_now->now->next);
-		list_foreach(&sub_li, &dele_identical_kw, &arg);
-
-		/* update iterator */
-		*pa_head = list_get_it(pa_head->now);
-		*pa_fwd = list_get_it(pa_now->now->next);
-	}
-
-	LIST_GO_OVER;
-}
-
-void query_uniq_by_post_id(struct query* qry)
-{
-	list_foreach(&qry->keywords, &uniq_kw, qry);
 }
