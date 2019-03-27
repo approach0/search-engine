@@ -12,6 +12,7 @@ struct math_qry_struct {
 	int n_qry_nodes;
 	uint32_t visibimap[MAX_NODE_IDS];
 	void *optr;
+	char *kw_str;
 };
 
 int math_qry_prepare(struct indices*, char*, struct math_qry_struct*);

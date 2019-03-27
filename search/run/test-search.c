@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 	}
 
 	query_print(qry, stdout);
+	printf("\n");
 
 	printf("caching index...\n");
 	postlist_cache_set_limit(&indices.ci, 100 KB, 100 KB);

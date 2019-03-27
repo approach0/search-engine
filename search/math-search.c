@@ -3,9 +3,49 @@
 #include "tex-parser/head.h"
 #include "postlist/math-postlist.h"
 #include "postmerge/postcalls.h"
+#include "math-index/math-index.h" /* for math_index_mk_prefix_path_str() */
 
 #include "math-expr-sim.h"
 #include "math-search.h"
+
+void math_l2_postlist_print(struct math_l2_postlist* po)
+{
+	char path_str[MAX_DIR_PATH_NAME_LEN];
+	char medium_str[1024];
+	char pathtype_str[1024];
+	for (int i = 0; i < po->pm.n_po; i++) {
+		struct subpath_ele *ele = po->ele[i];
+		if (ele == NULL)
+			strcpy(path_str, "<empty>");
+		else
+			math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len,
+				path_str);
+
+		switch (po->medium[i]) {
+		case MATH_POSTLIST_INMEMO:
+			strcpy(medium_str, "in memo");
+			break;
+		case MATH_POSTLIST_ONDISK:
+			strcpy(medium_str, "on disk");
+			break;
+		default:
+			strcpy(medium_str, "empty");
+		}
+
+		switch (po->path_type[i]) {
+		case MATH_PATH_TYPE_PREFIX:
+			strcpy(pathtype_str, "prefix path");
+			break;
+		case MATH_PATH_TYPE_GENER:
+			strcpy(pathtype_str, "gener path");
+			break;
+		default:
+			strcpy(pathtype_str, "unkown type path");
+		}
+
+		printf("\t [%u] %s %s: ./%s\n", i, medium_str, pathtype_str, path_str);
+	}
+}
 
 struct add_path_postings_args {
 	struct indices *indices;
@@ -36,11 +76,11 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			else
 				l2po->pm.po[n] = math_memo_postlist_gener(po);
 
+			args->po->medium[n] = MATH_POSTLIST_INMEMO;
 			args->po->path_type[n] = path_type;
 			args->po->ele[n] = eles[i];
-#ifndef QUIET_SEARCH
-			printf("#%u (in memo) %s\n", n, base_paths[i]);
-#endif
+			//printf("#%u (in memo) %s\n", n, base_paths[i]);
+
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
 			if (path_type == MATH_PATH_TYPE_PREFIX)
@@ -48,25 +88,23 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			else
 				l2po->pm.po[n] = math_disk_postlist_gener(po);
 
+			args->po->medium[n] = MATH_POSTLIST_ONDISK;
 			args->po->path_type[n] = path_type;
 			args->po->ele[n] = eles[i];
-#ifndef QUIET_SEARCH
-			printf("#%u (on disk) %s\n", n, base_paths[i]);
-#endif
+			//printf("#%u (on disk) %s\n", n, base_paths[i]);
+
 		} else {
 			l2po->pm.po[n] = empty_postlist();
 
+			args->po->medium[n] = MATH_POSTLIST_EMPTYMEM;
 			args->po->path_type[n] = MATH_PATH_TYPE_UNKNOWN;
 			args->po->ele[n] = NULL;
-#ifndef QUIET_SEARCH
-			printf("#%u (empty) %s\n", n, base_paths[i]);
-#endif
+			//printf("#%u (empty) %s\n", n, base_paths[i]);
+
 		}
 		l2po->pm.n_po += 1;
 	}
-#ifndef QUIET_SEARCH
-	printf("\n");
-#endif
+
 	return DIR_MERGE_RET_CONTINUE;
 }
 

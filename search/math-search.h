@@ -5,10 +5,17 @@
 #include "math-pruning.h"
 #include "search.h"
 
+enum math_postlist_medium {
+	MATH_POSTLIST_ONDISK,
+	MATH_POSTLIST_INMEMO,
+	MATH_POSTLIST_EMPTYMEM
+};
+
 struct math_l2_postlist {
 	struct postmerger pm; /* posting lists */
 	postmerger_iter_t iter;
 
+	enum math_postlist_medium medium[MAX_MERGE_POSTINGS];
 	enum math_posting_type path_type[MAX_MERGE_POSTINGS];
 	struct subpath_ele *ele[MAX_MERGE_POSTINGS];
 
@@ -37,6 +44,8 @@ struct l2_postlist_item {
 };
 
 void math_l2_postlist_sort(struct math_l2_postlist*);
+
+void math_l2_postlist_print(struct math_l2_postlist*);
 
 struct math_l2_postlist
 math_l2_postlist(struct indices*, struct math_qry_struct*, ranked_results_t*);

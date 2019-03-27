@@ -195,6 +195,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 {
 	struct tex_parse_ret parse_ret;
 	/* no gener paths since they are not used for searching */
+	s->kw_str = strdup(tex);
 	parse_ret = tex_parse(tex, 0, true, true);
 
 	s->pq.n = 0;
@@ -284,6 +285,10 @@ void math_qry_free(struct math_qry_struct* s)
 
 	if (s->pq.n) {
 		pq_free(s->pq);
+	}
+
+	if (s->kw_str) {
+		free(s->kw_str);
 	}
 }
 

@@ -82,48 +82,76 @@ indices_run_query(struct indices* indices, struct query* qry)
 #ifdef MERGE_TIME_LOG
 	// fprintf(mergetime_fh, "checkpoint-a %ld msec.\n", timer_tot_msec(&timer));
 #endif
-	uint32_t n_math_kw = 0, n_term_kw = 0;
+	uint32_t sep = 0; /* term / math postlist separator */
+	struct term_qry_struct  tqs[qry->n_term]; /* term TF-IDF information */
 	struct math_qry_struct  mqs[qry->n_math]; /* "TeX" tree/path structure */
 	struct math_l2_postlist mpo[qry->n_math]; /* math level-2 posting list */
-	struct term_qry_struct  tqs[qry->n_term]; /* term TF-IDF information */
 
-	// Create merger objects
+#define SKIP_SEARCH ///////////////////////////////
+	// Prepare term posting list iterators
 	for (int i = 0; i < qry->len; i++) {
 		struct query_keyword *kw = query_keyword(qry, i);
-		char *kw_str = wstr2mbstr(kw->wstr);
 
-#ifndef QUIET_SEARCH
-		printf("processing query keyword `%s' ...\n", kw_str);
-#endif
-		if (kw->type == QUERY_KEYWORD_TEX) {
-			struct math_qry_struct *ms = mqs + n_math_kw;
-			if (0 == math_qry_prepare(indices, kw_str, ms)) {
-				/* construct level-2 postlist */
-				mpo[n_math_kw] = math_l2_postlist(indices, ms, &rk_res);
-				root_pm.po[i] = postmerger_math_l2_postlist(mpo + n_math_kw);
-			} else {
-				root_pm.po[i] = empty_postlist();
-			}
+		if (kw->type == QUERY_KEYWORD_TERM) {
+			char *kw_str = wstr2mbstr(kw->wstr);
+			struct term_qry_struct *ts = tqs + (sep ++);
 
-			n_math_kw ++; /* count the number of math keywords */
-
-		} else { /* normal text query */
-			struct term_qry_struct *ts = tqs + n_term_kw;
-			if (0 == text_qry_prepare(indices, kw_str, ts)) {
-				root_pm.po[i] = ts->po;
-			} else {
-				root_pm.po[i] = empty_postlist();
-			}
-
-			n_term_kw ++;
+			(void)term_qry_prepare(indices, kw_str, ts);
 		}
+	}
 
+	// Preprocess term query keywords (merge duplicates)
+	sep = term_query_merge(tqs, qry->n_term);
+
+	// Insert term posting list iterators
+	for (int i = 0; i < sep; i++) {
+		if (tqs[i].term_id == 0)
+			root_pm.po[i] = empty_postlist();
+		else
+			root_pm.po[i] = postmerger_term_postlist(indices, tqs + i);
 		root_pm.n_po += 1;
 	}
 
-	term_query_preprocess(tqs, n_term_kw);
 
-	// Initialize merger objects
+	// Insert math posting list iterators
+	for (int k = 0; k < qry->len; k++) {
+		struct query_keyword *kw = query_keyword(qry, k);
+
+		if (kw->type == QUERY_KEYWORD_TEX) {
+			char *kw_str = wstr2mbstr(kw->wstr);
+			const int i = root_pm.n_po;
+			const int j = i - sep;
+			struct math_qry_struct *ms = mqs + j;
+
+			/* construct level-2 postlist */
+			if (0 == math_qry_prepare(indices, kw_str, ms)) {
+				mpo[j] = math_l2_postlist(indices, ms, &rk_res /* top-K */);
+
+				root_pm.po[i] = postmerger_math_l2_postlist(mpo + j);
+			} else {
+				/* math parse error */
+				root_pm.po[i] = empty_postlist();
+			}
+
+			root_pm.n_po += 1;
+		}
+	}
+
+
+	// Print processed query
+	//(void)math_postlist_cache_list(indices->ci.math_cache, true);
+	for (int i = 0; i < root_pm.n_po; i++) {
+		if (i < sep) { /* term query */
+			printf("po[%u] `%s' (id=%u, qf=%u, df=%u)\n", i, tqs[i].kw_str,
+			       tqs[i].term_id, tqs[i].qf, tqs[i].df);
+		} else { /* math query */
+			const int j = i - sep;
+			printf("po[%u] `%s'\n", i, mqs[j].kw_str);
+			math_l2_postlist_print(mpo + j); /* print sub-level posting lists */
+		}
+	}
+
+	// Initialize merger iterators
 	for (int j = 0; j < root_pm.n_po; j++) {
 		/* calling math_l2_postlist_init() */
 		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
@@ -205,14 +233,15 @@ indices_run_query(struct indices* indices, struct query* qry)
 skip_search:
 #endif
 
-	// Uninitialize merger objects
+	// Destroy merger iterators
 	for (int j = 0; j < root_pm.n_po; j++) {
 		/* calling math_l2_postlist_uninit() */
 		POSTMERGER_POSTLIST_CALL(&root_pm, uninit, j);
 	}
 
-	for	(int j = 0; j < n_math_kw; j++) {
-		math_qry_free(mqs + j);
+	// Free math query structure
+	for (int j = sep; j < root_pm.n_po; j++) {
+		math_qry_free(mqs + (j - sep));
 	}
 
 #ifdef MERGE_TIME_LOG
