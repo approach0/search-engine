@@ -82,13 +82,6 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	mem_po = fork_math_postlist(disk_po);
 	mpca->tot_cnt ++;
 
-	/* print progress */
-	printf(ES_RESET_LINE);
-	printf("[Cached %8lu lists, %.3f/%.3f MB] %s",
-		mpca->tot_cnt, (float)cache->postlist_sz / __1MB__,
-		(float)cache->limit_sz / __1MB__, srchpath);
-	fflush(stdout);
-
 //	if (0 == strcmp(srchpath, "./ZERO/ARROW")) {
 //		print_postlist(mem_po);
 //	}
@@ -100,14 +93,29 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	} else {
 		sds key;
 		if (math_posting_type(disk_po) == MATH_PATH_TYPE_PREFIX) {
-			key = sdsnew(PREFIX_PATH_NAME);
+			key = sdsnew("./" PREFIX_PATH_NAME);
 		} else {
-			key = sdsnew(GENER_PATH_NAME);
+			key = sdsnew("./" GENER_PATH_NAME);
 		}
 		key = sdscat(key, srchpath + 1);
 
-		path_dict[[key]] = mem_po;
-		cache->postlist_sz += mem_po->tot_sz;
+#ifndef NO_CACHING_PROGRESS
+	/* print progress */
+		printf(ES_RESET_LINE);
+		printf("[Cached %8lu lists, %.3f/%.3f MB] %s",
+			mpca->tot_cnt, (float)cache->postlist_sz / __1MB__,
+			(float)cache->limit_sz / __1MB__, key);
+		fflush(stdout);
+#endif
+
+		if (NULL == strmap_lookup(path_dict, key)) {
+			path_dict[[key]] = mem_po;
+			cache->postlist_sz += mem_po->tot_sz;
+		} else {
+			/* already exists ?! That is fine, perhaps from cache-list */
+			postlist_free(mem_po);
+		}
+
 		sdsfree(key);
 	}
 
@@ -133,7 +141,7 @@ math_postlist_cache_free(struct math_postlist_cache cache)
 {
 	foreach (iter, strmap, cache.path_dict) {
 		char *key = iter->cur->keystr;
-		struct postlist *po = cache.path_dict[[key]];
+		struct postlist *po = strmap_lookup(cache.path_dict, key);
 		if (po) postlist_free(po);
 	}
 
@@ -155,7 +163,7 @@ void*
 math_postlist_cache_find(struct math_postlist_cache cache, char* path)
 {
 	strmap_t d = cache.path_dict;
-	return d[[path]];
+	return strmap_lookup(d, path);
 }
 
 size_t
@@ -188,9 +196,11 @@ math_postlist_cache_add_list(struct math_postlist_cache *cache, const char *dir)
 		abs_path = sdscat(abs_path, "/");
 		abs_path = sdscat(abs_path, line);
 
+#ifndef NO_CACHING_PROGRESS
 		printf(ES_RESET_LINE);
 		printf("[from cache-list] %s", line);
 		fflush(stdout);
+#endif
 
 		math_posting_t *disk_po = math_posting_new_reader(abs_path);
 
@@ -203,7 +213,7 @@ math_postlist_cache_add_list(struct math_postlist_cache *cache, const char *dir)
 		struct postlist *mem_po = fork_math_postlist(disk_po);
 
 		strmap_t path_dict = cache->path_dict;
-		if (NULL == path_dict[[line]]) {
+		if (NULL == strmap_lookup(path_dict, line)) {
 			path_dict[[line]] = mem_po;
 			cache->postlist_sz += mem_po->tot_sz;
 		} else {
@@ -211,8 +221,8 @@ math_postlist_cache_add_list(struct math_postlist_cache *cache, const char *dir)
 			postlist_free(mem_po);
 		}
 
-		math_posting_finish(disk_po);
 next:
+		math_posting_finish(disk_po);
 		sdsfree(line);
 		sdsfree(abs_path);
 		math_posting_free_reader(disk_po);

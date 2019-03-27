@@ -20,6 +20,7 @@ typedef struct strmap *strmap_t;
 struct strmap *strmap_new();
 void           strmap_free(struct strmap*);
 void         **strmap_val_ptr(struct strmap*, char*);
+void          *strmap_lookup(strmap_t, char*);
 struct strmap *strmap_va_list(int, ...);
 
 #include "ppnarg.h"

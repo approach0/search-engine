@@ -31,6 +31,20 @@ void strmap_free(strmap_t map)
 	free(map);
 }
 
+void *strmap_lookup(strmap_t map, char *key)
+{
+	struct strmap_entry *ent;
+	datrie_state_t key_idx;
+	key_idx = datrie_lookup(&map->dat, key);
+
+	if (key_idx != 0) {
+		ent = &map->entries[key_idx - 1];
+		return ent->value;
+	} else {
+		return NULL;
+	}
+}
+
 void **strmap_val_ptr(strmap_t map, char *key)
 {
 	struct strmap_entry *ent;
