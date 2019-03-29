@@ -68,13 +68,16 @@
 #define DEFAULT_RES_PER_PAGE 10
 
 //#define DEBUG_PROXIMITY
-//#define ENABLE_PROXIMITY_SCORE
+#define ENABLE_PROXIMITY_SCORE
 
 #define MATH_PREFIX_SEARCH_ONLY /* determine lr_search or prefix_search */
 
 //#define ENABLE_PARTIAL_MATCH_PENALTY
 
-#define MAX_HIGHLIGHT_OCCURS 8
+#define MAX_MATH_OCCURS 16
+
+#define MAX_TOTAL_OCCURS 32
+
 //#define DEBUG_HILIGHT_SEG_OFFSET
 //#define DEBUG_HILIGHT_SEG
 
@@ -112,3 +115,6 @@
 #define MAX_LEAVES  64
 
 //#define PRINT_MATH_POST_TYPE
+
+// #define SKIP_SEARCH /* for debug */
+// #define PRINT_RECUR_MERGING_ITEMS /* for debug */

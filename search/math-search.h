@@ -27,7 +27,7 @@ struct math_l2_postlist {
 	uint32_t    cur_doc_id, future_doc_id;
 	float       max_exp_score;
 	uint32_t    n_occurs;
-	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];
+	hit_occur_t occurs[MAX_MATH_OCCURS];
 
 	/* candidate docID, expID */
 	uint64_t candidate;
@@ -36,11 +36,11 @@ struct math_l2_postlist {
 	struct math_pruner pruner;
 };
 
-struct l2_postlist_item {
-	uint32_t    doc_id;
-	float       part_score;
-	uint32_t    n_occurs;
-	hit_occur_t occurs[MAX_HIGHLIGHT_OCCURS];
+struct math_l2_postlist_item {
+	uint32_t     doc_id;
+	float        part_score;
+	uint32_t     n_occurs;
+	hit_occur_t  occurs[MAX_MATH_OCCURS];
 };
 
 void math_l2_postlist_sort(struct math_l2_postlist*);

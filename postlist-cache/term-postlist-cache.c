@@ -56,14 +56,7 @@ static struct postlist *fork_term_postlist(void *disk_po)
 	struct postlist *mem_po;
 	size_t fl_sz; /* flush size */
 
-#pragma pack(push, 1)
-	struct _item_with_pos {
-		doc_id_t   doc_id;
-		uint32_t   tf;
-		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
-	} pi;
-#pragma pack(pop)
-
+	struct term_posting_item pi;
 	/* create memory posting list */
 	mem_po = term_postlist_create_compressed();
 	
@@ -76,7 +69,7 @@ static struct postlist *fork_term_postlist(void *disk_po)
 
 #ifdef DEBUG_TERM_POSTLIST_CACHE
 		printf("[%u, tf=%u], pos = [", pi.doc_id, pi.tf);
-		for (uint32_t i = 0; i < pi.tf; i++)
+		for (uint32_t i = 0; i < pi.n_occur; i++)
 			printf("%u ", pi.pos_arr[i]);
 		printf("]\n");
 #endif

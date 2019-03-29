@@ -32,6 +32,7 @@ static struct term_posting_item
 
 	pi->doc_id = docID;
 	pi->tf = n;
+	pi->n_occur = n;
 
 	printf("(docID=%u, tf=%u) ", docID, n);
 
@@ -97,7 +98,7 @@ print_current:
 		{
 			pos_arr = pi->pos_arr;
 			printf("positions: [");
-			for (i = 0; i < pi->tf; i++)
+			for (i = 0; i < pi->n_occur; i++)
 				printf("%u ", pos_arr[i]);
 			printf("] ");
 		}

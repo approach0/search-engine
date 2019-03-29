@@ -146,7 +146,7 @@ uint64_t math_l2_postlist_cur(void *po_)
 
 size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 {
-	PTR_CAST(item, struct l2_postlist_item, dest);
+	PTR_CAST(item, struct math_l2_postlist_item, dest);
 	PTR_CAST(po, struct math_l2_postlist, po_);
 
 	item->doc_id = po->cur_doc_id;
@@ -157,7 +157,7 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 
 	po->max_exp_score = 0;
 	po->n_occurs = 0;
-	return sizeof(struct l2_postlist_item);
+	return sizeof(struct math_l2_postlist_item);
 }
 
 #ifdef DEBUG_STATS_HOT_HIT
@@ -293,7 +293,7 @@ int math_l2_postlist_next(void *po_)
 			if (expr.score > po->max_exp_score)
 				po->max_exp_score = expr.score;
 
-			if (po->n_occurs < MAX_HIGHLIGHT_OCCURS) {
+			if (po->n_occurs < MAX_MATH_OCCURS) {
 				hit_occur_t *ho = po->occurs + po->n_occurs;
 				po->n_occurs += 1;
 				ho->pos = expr.exp_id;

@@ -81,11 +81,7 @@ float prox_calc_score(uint32_t min_dist)
 
 float proximity_score(prox_input_t *prox, int n)
 {
-#ifdef ENABLE_PROXIMITY_SCORE
 	position_t min_dist = prox_min_dist(prox, n);
 	prox_reset_inputs(prox, n); /* reset */
 	return prox_calc_score(min_dist);
-#else
-	return 0.f;
-#endif
 }

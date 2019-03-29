@@ -228,14 +228,7 @@ uint64_t term_posting_cur(void *posting)
 
 size_t term_posting_read(void *posting, void *dest)
 {
-#pragma pack(push, 1)
-	struct _item_with_pos {
-		doc_id_t   doc_id;
-		uint32_t   tf;
-		position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
-	} *p;
-#pragma pack(pop)
-	p = (struct _item_with_pos *)dest;
+	struct term_posting_item *p = (struct term_posting_item *)dest;
 
 	indri::index::DocListIterator *po = (indri::index::DocListIterator*)posting;
 	indri::index::DocListIterator::DocumentData *doc;
@@ -245,16 +238,13 @@ size_t term_posting_read(void *posting, void *dest)
 	if (doc) {
 		p->doc_id = doc->document;
 		p->tf = doc->positions.size();
+		p->n_occur = min(MAX_TERM_ITEM_POSITIONS, (int)p->tf);
 
-		/* reduce tf if it exceed limit of the positions we can return. */
-		if (p->tf > MAX_TERM_INDEX_ITEM_POSITIONS)
-			p->tf = MAX_TERM_INDEX_ITEM_POSITIONS;
-
-		for (unsigned int k = 0; k < p->tf; k++) {
+		for (unsigned int k = 0; k < p->n_occur; k++) {
 			p->pos_arr[k] = doc->positions[k];
 		}
 
-		return sizeof(struct _item_with_pos);
+		return sizeof(struct term_posting_item);
 	} else {
 		return 0;
 	}

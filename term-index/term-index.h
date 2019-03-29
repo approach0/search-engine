@@ -42,10 +42,12 @@ char *term_lookup_r(void *, term_id_t);
 
 void *term_index_get_posting(void *, term_id_t);
 
+#include "config.h"
 struct term_posting_item {
 	doc_id_t doc_id;
 	uint32_t tf;
-	uint32_t pos_arr[];
+	uint32_t n_occur;
+	uint32_t pos_arr[MAX_TERM_ITEM_POSITIONS];
 };
 
 bool term_posting_start(void *);
@@ -54,12 +56,6 @@ bool term_posting_next(void *);
 uint64_t term_posting_cur(void*);
 size_t term_posting_read(void*, void*);
 void term_posting_finish(void *);
-
-position_t *term_posting_get_item_pos(struct term_posting_item*);
-
-/* get pos_arr array from term posting item */
-#define TERM_POSTING_ITEM_POSITIONS(_item) \
-	((position_t*)((char*)_item + sizeof(struct term_posting_item)));
 
 #ifdef __cplusplus
 }

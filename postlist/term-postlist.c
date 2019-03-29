@@ -89,6 +89,8 @@ static uint field_offset(uint j)
 	case 1:
 		return offsetof(struct term_posting_item, tf);
 	case 2:
+		return offsetof(struct term_posting_item, n_occur);
+	case 3:
 		return offsetof(struct term_posting_item, pos_arr);
 	default:
 		prerr("Unexpected field number");
@@ -105,7 +107,9 @@ static uint field_len(void *inst, uint j)
 	case 1:
 		return 1;
 	case 2:
-		return a->tf;
+		return 1;
+	case 3:
+		return a->n_occur;
 	default:
 		prerr("Unexpected field number");
 		abort();
@@ -121,7 +125,9 @@ static uint field_size(uint j)
 	case 1:
 		return sizeof(a.tf);
 	case 2:
-		return sizeof(uint32_t) * MAX_TERM_INDEX_ITEM_POSITIONS;
+		return sizeof(a.n_occur);
+	case 3:
+		return sizeof(uint32_t) * MAX_TERM_ITEM_POSITIONS;
 	default:
 		prerr("Unexpected field number");
 		abort();
@@ -136,7 +142,9 @@ static char *field_info(uint j)
 	case 1:
 		return "term freq";
 	case 2:
-		return "positions";
+		return "number of occurs";
+	case 3:
+		return "occur positions";
 	default:
 		prerr("Unexpected field number");
 		abort();
@@ -158,9 +166,10 @@ term_postlist_create_plain()
 	codec = postlist_codec_alloc(
 		TERM_POSTLIST_BUF_MAX_ITEMS,
 		TERM_POSTLIST_ITEM_SZ,
-		3 /* three fields */,
+		4 /* three fields */,
 		field_offset, field_len,
 		field_size,   field_info,
+		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_PLAIN, CODEC_DEFAULT_ARGS)
@@ -190,10 +199,11 @@ term_postlist_create_compressed()
 	codec = postlist_codec_alloc(
 		TERM_POSTLIST_BUF_MAX_ITEMS,
 		TERM_POSTLIST_ITEM_SZ,
-		3 /* three fields */,
+		4 /* three fields */,
 		field_offset, field_len,
 		field_size,   field_info,
 		codec_new(CODEC_FOR_DELTA, CODEC_DEFAULT_ARGS),
+		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS),
 		codec_new(CODEC_FOR, CODEC_DEFAULT_ARGS)
 	);

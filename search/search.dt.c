@@ -18,7 +18,7 @@ sort_occurs(hit_occur_t *dest, prox_input_t* in, int n)
 #define CUR_POS(_in, _i) \
 	_in[_i].pos[_in[_i].cur].pos
 	uint32_t dest_end = 0;
-	while (dest_end < MAX_HIGHLIGHT_OCCURS) {
+	while (dest_end < MAX_TOTAL_OCCURS) {
 		uint32_t i, min_idx, min_cur, min = MAX_N_POSITIONS;
 		for (i = 0; i < n; i++)
 			if (in[i].cur < in[i].n_pos)
@@ -47,7 +47,7 @@ static struct rank_hit
 	hit = malloc(sizeof(struct rank_hit));
 	hit->docID = hitID;
 	hit->score = score;
-	hit->occurs = malloc(sizeof(hit_occur_t) * MAX_HIGHLIGHT_OCCURS);
+	hit->occurs = malloc(sizeof(hit_occur_t) * MAX_TOTAL_OCCURS);
 	hit->n_occurs = sort_occurs(hit->occurs, prox, n);
 	return hit;
 }
@@ -87,7 +87,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 	struct math_qry_struct  mqs[qry->n_math]; /* "TeX" tree/path structure */
 	struct math_l2_postlist mpo[qry->n_math]; /* math level-2 posting list */
 
-#define SKIP_SEARCH ///////////////////////////////
 	// Prepare term posting list iterators
 	for (int i = 0; i < qry->len; i++) {
 		struct query_keyword *kw = query_keyword(qry, i);
@@ -161,7 +160,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 	/* proximity score data structure */
-	prox_input_t prox[qry->len];
+//	prox_input_t prox[qry->len];
 
 	// MERGE l2 posting lists here
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
@@ -173,42 +172,57 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 	foreach (iter, postmerger, &root_pm) {
-		float math_score = 0.f;
-		uint32_t doc_id  = 0;
+		struct math_l2_postlist_item mi;
+		struct term_posting_item     ti;
 
 		for (int i = 0; i < iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(&root_pm, iter, cur, i);
+			uint32_t pid = iter->map[i];
 
 			if (cur != UINT64_MAX && cur == iter->min) {
-				struct l2_postlist_item item;
-				postmerger_iter_call(&root_pm, iter, read, i, &item, 0);
-
+				if (pid < sep) {
+					POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
+						&ti, sizeof(struct term_posting_item));
 #ifdef PRINT_RECUR_MERGING_ITEMS
-				printf("root[%u]: ", iter->map[i]);
-				printf("%s=%u, ", STRVAR_PAIR(item.doc_id));
-				printf("%s=%u, ", STRVAR_PAIR(item.part_score));
-				printf("%s=%u: ", STRVAR_PAIR(item.n_occurs));
-				for (int j = 0; j < item.n_occurs; j++)
-					printf("%u ", item.occurs[j].pos);
-				if (item.n_occurs == MAX_HIGHLIGHT_OCCURS) printf("(maximum)");
-				printf("\n\n");
+					printf("term po[%u]: ", iter->map[i]);
+					printf("%s=%u, ", STRVAR_PAIR(ti.doc_id));
+					printf("%s=%u, ", STRVAR_PAIR(ti.tf));
+					printf("%s=%u: ", STRVAR_PAIR(ti.n_occur));
+					for (int j = 0; j < ti.n_occur; j++)
+						printf("%u ", ti.pos_arr[j]);
+					printf("\n\n");
 #endif
-				doc_id     = item.doc_id;
-				math_score = (float)item.part_score;
-				prox_set_input(prox + i, item.occurs, item.n_occurs);
+				} else {
+					POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
+						&mi, sizeof(struct math_l2_postlist_item));
+#ifdef PRINT_RECUR_MERGING_ITEMS
+					printf("math po[%u]: ", iter->map[i]);
+					printf("%s=%u, ", STRVAR_PAIR(mi.doc_id));
+					printf("%s=%.3f, ", STRVAR_PAIR(mi.part_score));
+					printf("%s=%u: ", STRVAR_PAIR(mi.n_occurs));
+					for (int j = 0; j < mi.n_occurs; j++)
+						printf("%u ", mi.occurs[j].pos);
+					printf("\n\n");
+#endif
+				}
+
+#ifdef ENABLE_PROXIMITY_SCORE
+				//prox_set_input(prox + i, item.occurs, item.n_occurs);
+#endif
 
 				/* advance posting iterators */
 				postmerger_iter_call(&root_pm, iter, next, i);
 			}
 		}
 
-		float prox_score = proximity_score(prox, iter->size);
-		(void)prox_score;
+#ifdef ENABLE_PROXIMITY_SCORE
+//		float prox_score = proximity_score(prox, iter->size);
+//		(void)prox_score;
+#endif
 		// float doc_score = prox_score + math_score;
-		float doc_score = math_score;
-		if (doc_score) {
-			topk_candidate(&rk_res, doc_id, doc_score, prox, iter->size);
-		}
+//		if (0) {
+//			topk_candidate(&rk_res, doc_id, doc_score, prox, iter->size);
+//		}
 
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 		if (cnt ++ > DEBUG_MERGE_LIMIT_ITERS) {

@@ -151,13 +151,7 @@ int main(int argc, char* argv[])
 				term_posting_start(posting);
 				do {
 					/* test both "get_cur_item" functions */
-					#pragma pack(push, 1)
-					struct _item_with_pos {
-						doc_id_t   doc_id;
-						uint32_t   tf;
-						position_t pos_arr[MAX_TERM_INDEX_ITEM_POSITIONS];
-					} pi;
-					#pragma pack(pop)
+					struct term_posting_item pi;
 					uint64_t doc_id = term_posting_cur(posting);
 					term_posting_read(posting, &pi);
 
@@ -168,8 +162,8 @@ int main(int argc, char* argv[])
 					if (opt_all || opt_posting_termpos) {
 						/* read term positions in this document */
 						printf(", pos=");
-						pos_arr = TERM_POSTING_ITEM_POSITIONS(&pi);
-						for (k = 0; k < pi.tf; k++)
+						pos_arr = pi.pos_arr;
+						for (k = 0; k < pi.n_occur; k++)
 							printf("%d%c", pos_arr[k],
 							       (k == pi.tf - 1) ? '.' : ',');
 						printf("]");
