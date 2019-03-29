@@ -70,6 +70,36 @@ uint32_t prox_min_dist(prox_input_t* in, uint32_t n)
 	return min_dist;
 }
 
+uint32_t
+prox_sort_occurs(hit_occur_t *dest, prox_input_t* in, int n)
+{
+	uint32_t dest_end = 0;
+	while (dest_end < MAX_TOTAL_OCCURS) {
+		uint32_t i, min_idx, min_cur, min = MAX_N_POSITIONS;
+
+		for (i = 0; i < n; i++)
+			if (in[i].cur < in[i].n_pos)
+				if (CUR_POS(in, i) < min) {
+					min = CUR_POS(in, i);
+					min_idx = i;
+					min_cur = in[i].cur;
+				}
+
+		if (min == MAX_N_POSITIONS)
+			/* input exhausted */
+			break;
+		else
+			/* consume input */
+			in[min_idx].cur ++;
+
+		if (dest_end == 0 || /* first put */
+		    dest[dest_end - 1].pos != min /* unique */)
+			/* copy entire element */
+			dest[dest_end++] = in[min_idx].pos[min_cur];
+	}
+	return dest_end;
+}
+
 #include <math.h>
 
 float prox_calc_score(uint32_t min_dist)
@@ -82,6 +112,5 @@ float prox_calc_score(uint32_t min_dist)
 float proximity_score(prox_input_t *prox, int n)
 {
 	position_t min_dist = prox_min_dist(prox, n);
-	prox_reset_inputs(prox, n); /* reset */
 	return prox_calc_score(min_dist);
 }

@@ -12,6 +12,7 @@ typedef struct {
 } prox_input_t;
 
 uint32_t prox_min_dist(prox_input_t*, uint32_t);
+uint32_t prox_sort_occurs(hit_occur_t*, prox_input_t*, int);
 
 float prox_calc_score(uint32_t);
 

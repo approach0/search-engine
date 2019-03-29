@@ -136,12 +136,10 @@ math_l2_postlist(
 uint64_t math_l2_postlist_cur(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
-	if (po->candidate == UINT64_MAX) {
+	if (po->cur_doc_id == UINT32_MAX)
 		return UINT64_MAX;
-	} else {
-		uint32_t candidate = (uint32_t)(po->candidate >> 32);
-		return candidate;
-	}
+	else
+		return po->cur_doc_id;
 }
 
 size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
@@ -159,20 +157,6 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 	po->n_occurs = 0;
 	return sizeof(struct math_l2_postlist_item);
 }
-
-#ifdef DEBUG_STATS_HOT_HIT
-static uint32_t get_num_doc_hit_paths(struct math_l2_postlist *po)
-{
-	uint32_t cnt = 0;
-	for (int i = 0; i < po->iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-		if (cur != UINT64_MAX && cur == po->candidate)
-			cnt ++;
-	}
-
-	return cnt;
-}
-#endif
 
 static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 {
@@ -203,10 +187,6 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 
 	return 0;
 }
-
-#ifdef DEBUG_STATS_HOT_HIT
-static uint64_t g_hot_hit[128];
-#endif
 
 int math_l2_postlist_next(void *po_)
 {
@@ -275,11 +255,6 @@ int math_l2_postlist_next(void *po_)
 		}
 #endif
 
-
-#ifdef DEBUG_STATS_HOT_HIT
-		uint32_t n_hit_paths = get_num_doc_hit_paths(po);
-		g_hot_hit[n_hit_paths] ++;
-#endif
 		struct pq_align_res widest;
 		widest = math_l2_postlist_widest_estimate(po, threshold);
 

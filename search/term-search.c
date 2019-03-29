@@ -70,6 +70,7 @@ term_qry_prepare(struct indices *indices, char *kw_str,
 	if (term_id == 0) {
 		/* this term is not found in dictionary */
 		tqs->term_id = 0;
+		tqs->df = 0;
 		return 1;
 	}
 
