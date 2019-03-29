@@ -138,6 +138,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 			math_l2_postlist_print(mpo + j); /* print sub-level posting lists */
 		}
 	}
+	printf("\n");
 
 	// Initialize merger iterators
 	for (int j = 0; j < root_pm.n_po; j++) {
