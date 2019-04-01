@@ -8,6 +8,12 @@
 #include "math-expr-sim.h"
 #include "math-search.h"
 
+/* for debug purpose */
+#ifdef DEBUG_MATH_SCORE_INSPECT
+int score_inspect_filter(doc_id_t, struct indices*);
+#endif
+void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
+
 void math_l2_postlist_print(struct math_l2_postlist* po)
 {
 	char path_str[MAX_DIR_PATH_NAME_LEN];
@@ -200,7 +206,7 @@ int math_l2_postlist_next(void *po_)
 
 #ifndef MATH_PRUNING_DISABLE_JUMP
 	/* if threshold has been updated */
-	if (unlikely(threshold != pruner->prev_threshold)) {
+	if (threshold != pruner->prev_threshold) {
 		/* try to "lift up" the pivot */
 		int i, sum = 0;
 		for (i = po->iter->size - 1; i >= 0; i--) {
@@ -268,10 +274,21 @@ int math_l2_postlist_next(void *po_)
 			if (expr.score > po->max_exp_score)
 				po->max_exp_score = expr.score;
 
-			if (po->n_occurs < MAX_MATH_OCCURS) {
+			if (po->n_occurs < MAX_MATH_OCCURS
+#ifdef MATH_OCCUR_ONLY_ONE
+				&& expr.score == po->max_exp_score
+#endif
+			) {
+#ifndef MATH_OCCUR_ONLY_ONE
 				hit_occur_t *ho = po->occurs + po->n_occurs;
 				po->n_occurs += 1;
+#else
+				hit_occur_t *ho = po->occurs + 0;
+				po->n_occurs = 1;
+#endif
+
 				ho->pos = expr.exp_id;
+
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 				/* copy highlight mask */
 				ho->qmask[0] = widest.qmask;
@@ -311,12 +328,6 @@ int math_l2_postlist_next(void *po_)
 
 	return 1;
 }
-
-/* for debug purpose */
-void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
-#ifdef DEBUG_MATH_SCORE_INSPECT
-int score_inspect_filter(doc_id_t, struct indices*);
-#endif
 
 int math_l2_postlist_one_by_one_through(void *po_)
 {

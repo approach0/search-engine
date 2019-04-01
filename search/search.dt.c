@@ -226,6 +226,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 					POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
 						mi, sizeof(struct math_l2_postlist_item));
 
+//					if (mi->doc_id == 150175) {
+//						printf("doc#%u, exp#%u score = %f\n", mi->doc_id,  mi->occurs[0].pos, mi->part_score);
+//					}
+
 					/* find math best score */
 					if (mi->part_score > max_math_score)
 						max_math_score = mi->part_score;
@@ -263,7 +267,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 		/* now, calculate the overall score for ranking */
-#if 1
+#if 0
 		float math_score = (1.f + max_math_score) / 2.f;
 		float text_score = 1.f + tf_idf_score;
 		float doc_score = prox_score + math_score * text_score;
@@ -271,8 +275,8 @@ indices_run_query(struct indices* indices, struct query* qry)
 		float doc_score = max_math_score; /* math-only search */
 #endif
 
-		/* if anything hits, consider as top-K candidate */
-		if (h) {
+		/* if anything scored, consider as top-K candidate */
+		if (doc_score > 0) {
 			topk_candidate(&rk_res, (doc_id_t)cur, doc_score, prox, h);
 			h = 0;
 		}

@@ -36,14 +36,15 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //return 1;
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
-	if (0 == strcmp(url, "Hyperbola:17") ||
-	    0 == strcmp(url, "Sridhara:15")) {
 
-//	if (doc_id == 308876 || doc_id == 470478) {
+//	if (NULL != strstr(url, "/2542668/") ||
+//	    NULL != strstr(url, "/932112/")) {
 
-//	if (doc_id == 368782) {
+//	if (NULL != strstr(url, "/179098/")) {
 
-//	if (0 == strcmp(url, "Hyperbola:17")) {
+//	if (doc_id == 28965 || doc_id == 253275) {
+
+	if (doc_id == 150175) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
