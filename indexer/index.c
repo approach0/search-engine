@@ -202,12 +202,8 @@ int indexer_handle_slice(struct lex_slice *slice)
 
 int index_maintain()
 {
-	printf("\r[index maintaining...]");
-	fflush(stdout);
-#ifndef IGNORE_TERM_INDEX
 	term_index_maintain(term_index);
 	sleep(10);
-#endif
 
 	return 0;
 }

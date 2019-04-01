@@ -55,5 +55,5 @@ for dirname, basename in each_json_file(corpus, maxfiles):
 		except Exception as err:
 			print(err)
 			break
-		print('[%u / %u] docID=%u: %s' % (cnt + 1, N, docid, j['url']))
+		print(f'[{cnt + 1:,d} / {N:,d}] doc#{docid}: {j["url"]}')
 	cnt += 1

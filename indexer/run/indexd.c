@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <getopt.h>
 
+#include "common/common.h"
 #include "mhook/mhook.h"
 #include "httpd/httpd.h"
 #include "config.h"
@@ -14,7 +15,16 @@
 static const char *httpd_on_recv(const char* req, void* arg_)
 {
 	static char retjson[1024];
-	printf("%s \n\n", req);
+
+	{
+		const int64_t unfree = mhook_unfree();
+		printf(ES_RESET_LINE "Unfree: %ld / %u", unfree, UNFREE_CNT_INDEXER_MAINTAIN);
+		if (unfree > UNFREE_CNT_INDEXER_MAINTAIN) {
+			printf(ES_RESET_LINE "[index maintaining...]");
+			fflush(stdout);
+			index_maintain();
+		}
+	}
 
 	text_lexer *lex = (text_lexer*)arg_;
 
