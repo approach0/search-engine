@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	int                   opt;
 	char                 *index_path = NULL;
 	struct indices        indices;
-	unsigned short        cache_sz = SEARCHD_DEFAULT_CACHE_MB;
+	size_t                cache_sz = SEARCHD_DEFAULT_CACHE_MB;
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	struct searchd_args   searchd_args;
 	int                   trec_log = 0;
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'c':
-			sscanf(optarg, "%hu", &cache_sz);
+			sscanf(optarg, "%lu", &cache_sz);
 			break;
 
 		default:
@@ -215,8 +215,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* setup cache */
-	printf("setup cache size: %hu MB\n", cache_sz);
-	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0);
+	printf("setup cache size: %lu MB\n", cache_sz);
+	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0);;
 	indices_cache(&indices);
 
 	/* run httpd */

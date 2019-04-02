@@ -25,8 +25,12 @@ int postlist_cache_fork(struct postlist_cache *cache,
 	/* caching from specifed path list */
 	(void)math_postlist_cache_add_list(&cache->math_cache, mi->dir);
 
-	/* caching from index w/ memory limit */
+	/* caching from index w/ memory limit, cache size for normal path
+	 * and gener path follows 1:1 ratio. */
+	size_t size = cache->math_cache.limit_sz;
+	cache->math_cache.limit_sz = size * 0.5f;
 	res |= math_postlist_cache_add(&cache->math_cache, prefix_path);
+	cache->math_cache.limit_sz = size;
 	res |= math_postlist_cache_add(&cache->math_cache, gener_path);
 
 #ifndef IGNORE_TERM_INDEX
