@@ -100,6 +100,29 @@ int term_index_maintain(void *handle)
 	return 0;
 }
 
+int term_index_write(void *handle)
+{
+	struct term_index *ti = (struct term_index*)handle;
+	ti->repo.write();
+
+	return 0;
+}
+
+size_t term_index_size(void *handle)
+{
+	struct term_index *ti = (struct term_index*)handle;
+	indri::collection::Repository::index_state state = ti->repo.indexes();
+	return state->size();
+}
+
+int term_index_should_maintain(void *handle)
+{
+	struct term_index *ti = (struct term_index*)handle;
+	indri::collection::Repository::index_state state = ti->repo.indexes();
+
+	return state->size() > MAXIMUM_INDEX_COUNT;
+}
+
 void term_index_doc_begin(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;

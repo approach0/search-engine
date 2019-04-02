@@ -31,6 +31,9 @@ int indexer_index_json(const char *, text_lexer);
 int indexer_handle_slice(struct lex_slice*);
 
 int index_maintain();
+int index_should_maintain();
+size_t index_size();
+int index_write();
 
 /* other utilities */
 static __inline void strip_math_tag(char *str, size_t n_bytes)

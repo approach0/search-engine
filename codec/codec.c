@@ -137,7 +137,7 @@ size_t
 codec_compress(struct codec* codec, const void* src, size_t src_sz,
                void** dest)
 {
-	long unsigned int dest_sz;
+	long unsigned int dest_sz = 0;
 	int res;
 
 	switch (codec->method) {

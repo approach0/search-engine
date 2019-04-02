@@ -18,11 +18,21 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 
 	{
 		const int64_t unfree = mhook_unfree();
-		printf(ES_RESET_LINE "Unfree: %ld / %u", unfree, UNFREE_CNT_INDEXER_MAINTAIN);
-		if (unfree > UNFREE_CNT_INDEXER_MAINTAIN) {
+		printf(ES_RESET_LINE "Unfree: %ld / %u, Size: %lu / %u",
+			unfree, UNFREE_CNT_INDEXER_MAINTAIN,
+			index_size(), MAXIMUM_INDEX_COUNT
+		);
+		fflush(stdout);
+
+		if (index_should_maintain()) {
 			printf(ES_RESET_LINE "[index maintaining...]");
 			fflush(stdout);
 			index_maintain();
+
+		} else if (unfree > UNFREE_CNT_INDEXER_MAINTAIN) {
+			printf(ES_RESET_LINE "[index write onto disk...]");
+			fflush(stdout);
+			index_write();
 		}
 	}
 

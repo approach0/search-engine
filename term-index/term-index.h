@@ -25,6 +25,9 @@ void *term_index_open(const char *, enum term_index_open_flag);
 void term_index_close(void *);
 
 int term_index_maintain(void*);
+int term_index_should_maintain(void*);
+size_t term_index_size(void*);
+int term_index_write(void*);
 
 void     term_index_doc_begin(void *);
 void     term_index_doc_add(void *, char *);

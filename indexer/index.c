@@ -208,6 +208,21 @@ int index_maintain()
 	return 0;
 }
 
+int index_should_maintain()
+{
+	return term_index_should_maintain(term_index);
+}
+
+size_t index_size()
+{
+	return term_index_size(term_index);
+}
+
+int index_write()
+{
+	return term_index_write(term_index);
+}
+
 static bool get_json_val(const char *json, const char *key, char *val)
 {
 	JSON_Value *parson_val = json_parse_string(json);
