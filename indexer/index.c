@@ -203,7 +203,7 @@ int indexer_handle_slice(struct lex_slice *slice)
 int index_maintain()
 {
 	term_index_maintain(term_index);
-	sleep(10);
+	sleep(30);
 
 	return 0;
 }
@@ -220,7 +220,9 @@ size_t index_size()
 
 int index_write()
 {
-	return term_index_write(term_index);
+	term_index_write(term_index);
+	sleep(10);
+	return 0;
 }
 
 static bool get_json_val(const char *json, const char *key, char *val)
