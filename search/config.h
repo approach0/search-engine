@@ -41,9 +41,9 @@
 
 #define MATH_OCCUR_ONLY_ONE
 
-//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.125f /* aggressive */
-//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .08f  /* conservative */
-#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
+#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.30f /* aggressive */
+//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .15f  /* conservative */
+//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
 
 #ifdef DEBUG_MATH_PRUNING
 	#define DEBUG_MERGE_LIMIT_ITERS UINT64_MAX
