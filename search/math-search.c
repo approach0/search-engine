@@ -218,6 +218,9 @@ int math_l2_postlist_next(void *po_)
 			/* otherwise this posting list can be skip-only */
 		}
 
+#ifdef DEBUG_MATH_PRUNING
+		printf("lift pivot from %u to %u\n", pruner->postlist_pivot, i);
+#endif
 		pruner->postlist_pivot = i;
 		pruner->prev_threshold = threshold;
 	}
