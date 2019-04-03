@@ -76,10 +76,11 @@ int main(int argc, char *argv[])
 	char                 index_path[1024];
 	ranked_results_t     results;
 	int                  page = 1;
+	size_t               cache_sz = 0;
 
 	qry = query_new();
 
-	while ((opt = getopt(argc, argv, "hi:m:t:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:m:t:p:c:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
 			       " -i <index path> |"
 			       " -t <text keyword> |"
 			       " -m <math keyword> |"
+			       " -c <cache size (MB)> | "
 			       " -p <page> |"
 			       "\n", argv[0]);
 			printf("\n");
@@ -109,6 +111,10 @@ int main(int argc, char *argv[])
 
 		case 't':
 			query_push_keyword_str(&qry, optarg, QUERY_KEYWORD_TERM);
+			break;
+
+		case 'c':
+			sscanf(optarg, "%lu", &cache_sz);
 			break;
 
 		default:
@@ -131,8 +137,8 @@ int main(int argc, char *argv[])
 	query_print(qry, stdout);
 	printf("\n");
 
-	printf("caching index...\n");
-	postlist_cache_set_limit(&indices.ci, 100 KB, 100 KB);
+	printf("caching index (%lu MB)...\n", cache_sz);
+	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0 KB);
 	indices_cache(&indices);
 
 	/* search query */
