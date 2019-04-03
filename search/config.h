@@ -39,7 +39,7 @@
 
 //#define DEBUG_MATH_PRUNING
 
-#define DEBUG_MATH_MERGE
+//#define DEBUG_MATH_MERGE
 
 #define MATH_OCCUR_ONLY_ONE
 

@@ -203,58 +203,53 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 }
 
 static void
-print_math_merge_state(struct math_l2_postlist *po,
+print_math_merge_state(struct math_l2_postlist *po, long msec,
 	uint64_t *current, uint64_t *forward, uint64_t *skipped, int *state)
 {
-	long msec = timer_tot_msec(&g_debug_timer);
-	if (msec > 100) {
-		printf(ES_RESET_CONSOLE);
-		char path_str[MAX_DIR_PATH_NAME_LEN];
-		char medium_str[1024];
-		char state_str[1024];
-		for (int i = 0; i < po->pm.n_po; i++) {
-			if (i % 2) printf(ES_INVERTED_COLOR);
+	printf(ES_RESET_CONSOLE);
+	char path_str[MAX_DIR_PATH_NAME_LEN];
+	char medium_str[1024];
+	char state_str[1024];
+	for (int i = 0; i < po->pm.n_po; i++) {
+		if (i % 2) printf(ES_INVERTED_COLOR);
 
-			struct subpath_ele *ele = po->ele[i];
-			if (ele == NULL)
-				strcpy(path_str, "<empty>");
-			else
-				math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len,
-					path_str);
+		struct subpath_ele *ele = po->ele[i];
+		if (ele == NULL)
+			strcpy(path_str, "<empty>");
+		else
+			math_index_mk_prefix_path_str(ele->dup[0], ele->prefix_len,
+				path_str);
 
-			switch (po->medium[i]) {
-			case MATH_POSTLIST_INMEMO:
-				strcpy(medium_str, "in memo");
-				break;
-			case MATH_POSTLIST_ONDISK:
-				strcpy(medium_str, "on disk");
-				break;
-			default:
-				strcpy(medium_str, "empty");
-			}
-
-			switch (state[i]) {
-			case 0:
-				strcpy(state_str, "forwarding");
-				break;
-			case 1:
-				strcpy(state_str, "skipping");
-				break;
-			default:
-				strcpy(state_str, "dropped");
-				break;
-			}
-
-			printf("@%7u,%4u ", current[i] >> 32, current[i] & 0xffffffff);
-			printf("fwd+skip:%7u+%7u %10s ", forward[i], skipped[i], state_str);
-			printf("%s: %s ", medium_str, path_str);
-			math_pruner_print_postlist(&po->pruner, i);
-			printf(C_RST "\n");
+		switch (po->medium[i]) {
+		case MATH_POSTLIST_INMEMO:
+			strcpy(medium_str, "in memo");
+			break;
+		case MATH_POSTLIST_ONDISK:
+			strcpy(medium_str, "on disk");
+			break;
+		default:
+			strcpy(medium_str, "empty");
 		}
-		fflush(stdout);
-		timer_reset(&g_debug_timer);
+
+		switch (state[i]) {
+		case 0:
+			strcpy(state_str, "forwarding");
+			break;
+		case 1:
+			strcpy(state_str, "skipping");
+			break;
+		default:
+			strcpy(state_str, "dropped");
+			break;
+		}
+
+		printf("@%7u,%4u ", current[i] >> 32, current[i] & 0xffffffff);
+		printf("fwd+skip:%7u+%7u %10s ", forward[i], skipped[i], state_str);
+		printf("%s: %s ", medium_str, path_str);
+		math_pruner_print_postlist(&po->pruner, i);
+		printf(C_RST "\n");
 	}
-	delay(0, 0, 5);
+	fflush(stdout);
 }
 
 int math_l2_postlist_next(void *po_)
@@ -268,7 +263,12 @@ int math_l2_postlist_next(void *po_)
 	static uint64_t forward[MAX_MERGE_POSTINGS] = {0};
 	static uint64_t skipped[MAX_MERGE_POSTINGS] = {0};
 	static int      state[MAX_MERGE_POSTINGS]   = {0};
-	print_math_merge_state(po, current, forward, skipped, state);
+	long msec = timer_tot_msec(&g_debug_timer);
+	if (msec > 100) {
+		print_math_merge_state(po, msec, current, forward, skipped, state);
+		timer_reset(&g_debug_timer);
+	}
+	delay(0, 0, 5);
 #endif
 
 	/* update threshold value */
