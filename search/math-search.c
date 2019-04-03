@@ -379,9 +379,9 @@ static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
 		 * the pruning algorithm. */
 		return max_i < max_j;
 	else
-		/* ascending posting list length, so that
+		/* descending posting path length, so that
 		 * longer one gets dropped or skipped. */
-		return len_i > len_j;
+		return len_i < len_j;
 }
 
 void math_l2_postlist_sort(struct math_l2_postlist *po)
