@@ -297,12 +297,18 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 }
 
 ////////////////////  pruning functions ////////////////////////////////
-void math_l2_cur_print(struct math_l2_postlist *po,
-                       uint64_t candidate, float threshold)
+void math_l2_cur_print(struct math_l2_postlist *po)
 {
+	uint32_t heap_len = priority_Q_len(po->rk_res);
+	float threshold = -1.f;
+	if (heap_len != 0)
+		threshold = priority_Q_min_score(po->rk_res);
+
+	uint64_t candidate = po->candidate;
 	struct math_pruner *pruner = &po->pruner;
-	printf("doc#%lu, pivot = %d/%u, threshold = %.3f.\n", candidate >> 32,
-	        pruner->postlist_pivot, po->iter->size, threshold);
+	printf("doc#%lu, pivot = %d/%u, threshold = %.3f from heap %u/%u.\n",
+		candidate >> 32, pruner->postlist_pivot, po->iter->size, threshold,
+		heap_len, RANK_SET_DEFAULT_VOL);
 	for (int i = 0; i < po->iter->size; i++) {
 		uint32_t pid = po->iter->map[i];
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
@@ -368,7 +374,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect) {
 		/* print posting list hits */
-		math_l2_cur_print(po, po->candidate, 0);
+		math_l2_cur_print(po);
 
 		math_expr_sim_factors_print(&factors);
 #ifdef HIGHLIGHT_MATH_ALIGNMENT

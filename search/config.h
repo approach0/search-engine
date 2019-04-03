@@ -39,6 +39,8 @@
 
 //#define DEBUG_MATH_PRUNING
 
+#define DEBUG_MATH_MERGE
+
 #define MATH_OCCUR_ONLY_ONE
 
 #define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.30f /* aggressive */

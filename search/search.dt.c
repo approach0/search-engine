@@ -277,6 +277,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 		/* if anything scored, consider as top-K candidate */
 		if (doc_score > 0) {
+			// printf("push doc#%u score = %f\n", cur, doc_score);
 			topk_candidate(&rk_res, (doc_id_t)cur, doc_score, prox, h);
 			h = 0;
 		}

@@ -8,4 +8,7 @@
 #define C_GRAY    "\033[1m\033[30m"      /* Bold Gray */
 #define C_BROWN   "\033[1m\033[0;33m"    /* brown */
 
-#define ES_RESET_LINE "\33[2K\r"         /* erase line and reset cursor */
+#define ES_RESET_LINE    "\33[2K\r"      /* erase line and reset cursor */
+#define ES_RESET_CONSOLE "\e[1;1H\e[2J"  /* reset console */
+
+#define ES_INVERTED_COLOR "\e[7m"        /* invert foreground and background color */
