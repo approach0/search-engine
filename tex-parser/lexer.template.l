@@ -293,9 +293,8 @@ extern int lexer_warning_flag;
  /* =====================
   *  groups and pairs
   * ===================*/
-"\\{"|"\\}"                                                            {  /* ignore */ }
  /* left long match */
-"("                                                               { return _L_BRACKET; }
+"("|"\\{"                                                         { return _L_BRACKET; }
 \\left[ ]*"."                                                         { return _L_DOT; }
 \\left[ ]*"("                                                     { return _L_BRACKET; }
 \\left[ ]*\\lgroup                                                { return _L_BRACKET; }
@@ -319,7 +318,7 @@ extern int lexer_warning_flag;
 \\lbrack                                                          { return _L_BRACKET; }
 
  /* right long match */
-")"                                                               { return _R_BRACKET; }
+")"|"\\}"                                                         { return _R_BRACKET; }
 \\right[ ]*"."                                                        { return _R_DOT; }
 \\right[ ]*")"                                                    { return _R_BRACKET; }
 \\right[ ]*\\rgroup                                               { return _R_BRACKET; }
