@@ -110,6 +110,15 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 			strip_math_tag(mb_str, sz); // strip [imath] tags
 			char *hi_tex = math_oprand_highlight(mb_str, dmask, MAX_MTREE);
 			char hi_kw[strlen(hi_tex) + 512 /* additional chars below */];
+#ifdef HIGHLIGHT_MATH_W_DEGREE
+			snprintf(hi_kw, sizeof(hi_kw),
+				"<span class=\"score\">%lu</span>"
+				"<span class=\"dmask\">%lx,%lx,%lx</span>"
+				"<span class=\"expid\">%u</span>[imath]%s[/imath]",
+				qmask[0], dmask[0], dmask[1], dmask[2],
+				ha->cur_lex_pos, hi_tex
+			);
+#else
 			snprintf(hi_kw, sizeof(hi_kw),
 				"<span class=\"qmask\">%lx,%lx,%lx</span>"
 				"<span class=\"dmask\">%lx,%lx,%lx</span>"
@@ -118,6 +127,7 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 				dmask[0], dmask[1], dmask[2],
 				ha->cur_lex_pos, hi_tex
 			);
+#endif
 			snippet_push_highlight(&ha->hi_list, hi_kw, offset, sz);
 		} else {
 			/* this is text keyword */

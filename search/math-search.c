@@ -374,7 +374,11 @@ int math_l2_postlist_next(void *po_)
 
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 				/* copy highlight mask */
+#ifdef HIGHLIGHT_MATH_W_DEGREE
+				ho->qmask[0] = (uint64_t)(expr.score * 100.f);
+#else
 				ho->qmask[0] = widest.qmask;
+#endif
 				ho->dmask[0] = widest.dmask;
 #endif
 			}

@@ -45,10 +45,28 @@ function handle_search_res(res, enc_qry, page) {
 		tex_render("a.title");
 		tex_render("p.snippet");
 	}, 500);
+
+//	setTimeout(function(){
+//		$("p.snippet > em.hl").each(function() {
+//			var score = parseInt($(this).find('span.score').text());
+//			var alpha = 255; /* lightest */
+//			if (score >= 48)
+//				alpha = 0;
+//			else if (score > 45)
+//				alpha = 20;
+//			else if (score > 40)
+//				alpha = 100;
+//			else
+//				alpha = 200;
+//			$(this).css('background-color', 'rgba(255,255,' + alpha + ')');
+//			/* debug print */
+//			//console.log('' + parseInt(score) + ',' + alpha);
+//			//$(this).html('' + parseInt(score) + ',' + alpha);
+//		});
+//	}, 200);
 }
 
 function srch_enc_qry(enc_qry, page, is_pushState) {
-
 	/* a dot dot dot animation */
 	var dots_timer = window.setInterval(function() {
 		$("span.dots").each(function () {
