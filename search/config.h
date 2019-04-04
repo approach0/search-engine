@@ -18,7 +18,8 @@
 
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
-#define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
+
+//#define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
 
 //#define SKIP_SEARCH
 
@@ -53,7 +54,7 @@
 	#define DEBUG_MERGE_LIMIT_ITERS UINT64_MAX
 	#define RANK_SET_DEFAULT_VOL 200
 #else
-	// #define RANK_SET_DEFAULT_VOL 50
+	//#define RANK_SET_DEFAULT_VOL 100
 	// #define RANK_SET_DEFAULT_VOL 200
 	#define RANK_SET_DEFAULT_VOL 1000
 #endif

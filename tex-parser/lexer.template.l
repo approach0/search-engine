@@ -70,6 +70,7 @@ extern int lexer_warning_flag;
 
 %%
 "{"[ ]*"}"                                         { /* ignore */ }
+"["[ ]*"]"                                         { /* ignore */ }
  /* ============
   *  comments
   * ===========*/
@@ -200,6 +201,9 @@ extern int lexer_warning_flag;
 \\array\{                                     { yy_push_state(mat); return _BEGIN_MAT; }
 <mat>"{"                                    { mat_brace_stack ++; return _L_TEX_BRACE; }
 
+\\begin\{array\}                              { yy_push_state(mat); return _BEGIN_MAT; }
+\\end\{array\}                          { safe_pop_start_condition(); return _END_MAT; }
+
 \\end\{matrix\}                         { safe_pop_start_condition(); return _END_MAT; }
 \\end\{vmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
 \\end\{Vmatrix\}                        { safe_pop_start_condition(); return _END_MAT; }
@@ -289,8 +293,9 @@ extern int lexer_warning_flag;
  /* =====================
   *  groups and pairs
   * ===================*/
+"\\{"|"\\}"                                                            {  /* ignore */ }
  /* left long match */
-"("|"\\{"                                                         { return _L_BRACKET; }
+"("                                                               { return _L_BRACKET; }
 \\left[ ]*"."                                                         { return _L_DOT; }
 \\left[ ]*"("                                                     { return _L_BRACKET; }
 \\left[ ]*\\lgroup                                                { return _L_BRACKET; }
@@ -314,7 +319,7 @@ extern int lexer_warning_flag;
 \\lbrack                                                          { return _L_BRACKET; }
 
  /* right long match */
-")"|"\\}"                                                         { return _R_BRACKET; }
+")"                                                               { return _R_BRACKET; }
 \\right[ ]*"."                                                        { return _R_DOT; }
 \\right[ ]*")"                                                    { return _R_BRACKET; }
 \\right[ ]*\\rgroup                                               { return _R_BRACKET; }
@@ -932,8 +937,6 @@ extern int lexer_warning_flag;
 \\end\{aligned\}                                                                      {}
 \\begin\{alignedat\}\{[^}]*\}                                                         {}
 \\end\{alignedat\}                                                                    {}
-\\begin\{array\}\{[^}]*\}                                                             {}
-\\end\{array\}                                                                        {}
 \\begin\{eqnarray\}                                                                   {}
 \\end\{eqnarray\}                                                                     {}
 \\begin\{eqnarray\*\}                                                                 {}
