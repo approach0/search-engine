@@ -135,7 +135,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 		} else { /* math query */
 			const int j = i - sep;
 			printf("po[%u] `%s'\n", i, mqs[j].kw_str);
-			math_l2_postlist_print(mpo + j); /* print sub-level posting lists */
+			if (NULL == root_pm.po[i].po)
+				printf("\t[] empty posting list. (parser error)\n");
+			else
+				math_l2_postlist_print(mpo + j); /* print sub-level posting lists */
 		}
 	}
 	printf("\n");
