@@ -43,8 +43,6 @@ struct math_l2_postlist_item {
 	hit_occur_t  occurs[MAX_MATH_OCCURS];
 };
 
-void math_l2_postlist_sort(struct math_l2_postlist*);
-
 void math_l2_postlist_print(struct math_l2_postlist*);
 
 struct math_l2_postlist

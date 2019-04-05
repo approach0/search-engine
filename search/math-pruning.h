@@ -14,12 +14,14 @@ struct pruner_node {
 };
 
 struct node_set {
-	int *rid;
+	int *rid; /* root of reference sector tree */
+	int *ref; /* width of reference sector tree */
 	int  sz;
 };
 
 #include "config.h"
 #include "hashtable/u16-ht.h"
+#include "bin-lp.h"
 struct math_pruner {
 	/* internal node related */
 	struct pruner_node *nodes; // query internal nodes
@@ -38,6 +40,9 @@ struct math_pruner {
 
 	/* threshold records */
 	float  init_threshold, prev_threshold;
+
+	/* binary 0-1 linear-programming problem */
+	struct bin_lp blp;
 
 	/* hash tables */
 	struct u16_ht accu_ht, sect_ht;

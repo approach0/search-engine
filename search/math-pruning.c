@@ -33,6 +33,8 @@ void math_pruner_update(struct math_pruner *pruner)
 		int rid = node->secttr[0].rnode;
 
 		for (int j = 0; j < node->n; j++) {
+			int ref = node->secttr[j].width;
+
 			/* update postlist_ref */
 			int pid = node->postlist_id[j];
 			pruner->postlist_ref[pid] += 1;
@@ -40,6 +42,7 @@ void math_pruner_update(struct math_pruner *pruner)
 			/* update postlist_nodes */
 			int k = pruner->postlist_nodes[pid].sz;
 			pruner->postlist_nodes[pid].rid[k] = rid;
+			pruner->postlist_nodes[pid].ref[k] = ref;
 			pruner->postlist_nodes[pid].sz += 1;
 
 			/* update postlist_max */
@@ -160,6 +163,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		}
 		/* allocate memory only */
 		pruner->postlist_nodes[i].rid = malloc(cnt * sizeof(int));
+		pruner->postlist_nodes[i].ref = malloc(cnt * sizeof(int));
 	}
 
 	/* allocate nodeID2idx table */
@@ -187,8 +191,10 @@ void math_pruner_free(struct math_pruner* pruner)
 
 	/* free back-references to nodes */
 	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
-		if (pruner->postlist_nodes[i].rid)
+		if (pruner->postlist_nodes[i].rid) {
 			free(pruner->postlist_nodes[i].rid);
+			free(pruner->postlist_nodes[i].ref);
+		}
 
 	/* free nodeID2idx table */
 	free(pruner->nodeID2idx);

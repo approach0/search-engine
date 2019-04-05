@@ -252,6 +252,99 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 	fflush(stdout);
 }
 
+static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
+{
+	if (max_i != max_j)
+		/* descending refMax value, according to
+		 * the pruning algorithm. */
+		return max_i < max_j;
+	else
+		/* descending posting path length, so that
+		 * longer one gets dropped or skipped. */
+		return len_i < len_j;
+}
+
+static void math_l2_postlist_sort_by_refmax(struct math_l2_postlist *po)
+{
+	struct math_pruner *pruner = &po->pruner;
+	for (int i = 0; i < po->iter->size; i++) {
+		for (int j = i + 1; j < po->iter->size; j++) {
+			int pid_i = po->iter->map[i];
+			int pid_j = po->iter->map[j];
+			int max_i = pruner->postlist_max[pid_i];
+			int max_j = pruner->postlist_max[pid_j];
+			int len_i = pruner->postlist_len[pid_i];
+			int len_j = pruner->postlist_len[pid_j];
+			if (postlist_less_than(max_i, len_i, max_j, len_j)) {
+				/* swap */
+				po->iter->map[i] = pid_j;
+				po->iter->map[j] = pid_i;
+			}
+		}
+	}
+}
+
+static int lift_up_pivot(struct math_l2_postlist *po, float threshold)
+{
+	struct math_pruner *pruner = &po->pruner;
+	/* try to "lift up" the pivot */
+	int i, sum = 0;
+	for (i = po->iter->size - 1; i >= 0; i--) {
+		uint32_t pid = po->iter->map[i];
+		int qmw = pruner->postlist_max[pid];
+		sum += qmw;
+		if (pruner->upp[sum] > threshold)
+			break;
+		/* otherwise this posting list can be skip-only */
+	}
+
+	return i;
+}
+
+static float get_upperbound(int i, void *po_)
+{
+	PTR_CAST(po, struct math_l2_postlist, po_);
+	struct math_pruner *pruner = &po->pruner;
+
+	return pruner->upp[i];
+}
+
+static int requirement_set(struct math_l2_postlist *po, float threshold)
+{
+	int pivot;
+	struct math_pruner *pruner = &po->pruner;
+
+	/* input binary LP problem */
+	bin_lp_reset(&pruner->blp);
+	for (int i = 0; i < po->iter->size; i++) {
+		uint32_t pid = po->iter->map[i];
+		for (int k = 0; k < pruner->postlist_nodes[pid].sz; k++) {
+			int rid = pruner->postlist_nodes[pid].rid[k];
+			int ref = pruner->postlist_nodes[pid].ref[k];
+			(void)bin_lp_assign(&pruner->blp, rid - 1, pid, ref);
+		}
+	}
+
+#ifdef DEBUG_MATH_SKIP_SET_SELECTION
+	bin_lp_print(pruner->blp);
+#endif
+
+	/* solve binary LP problem */
+	pivot = bin_lp_run(&pruner->blp, threshold, &get_upperbound, po);
+
+#ifdef DEBUG_MATH_SKIP_SET_SELECTION
+	printf("requirement set: %d / %d\n", pivot, po->iter->size);
+	bin_lp_print(pruner->blp);
+	printf("\n");
+#endif
+
+	/* reorder posting lists into requirement set + follower set */
+	for (int i = 0; i < po->iter->size; i++)
+		po->iter->map[i] = pruner->blp.po[i];
+
+	return pivot - 1;
+}
+
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -278,22 +371,26 @@ int math_l2_postlist_next(void *po_)
 #ifndef MATH_PRUNING_DISABLE_JUMP
 	/* if threshold has been updated */
 	if (threshold != pruner->prev_threshold) {
-		/* try to "lift up" the pivot */
-		int i, sum = 0;
-		for (i = po->iter->size - 1; i >= 0; i--) {
-			uint32_t pid = po->iter->map[i];
-			int qmw = pruner->postlist_max[pid];
-			sum += qmw;
-			if (pruner->upp[sum] > threshold)
-				break;
-			/* otherwise this posting list can be skip-only */
-		}
+
+#ifdef MATH_SKIP_SET_FAST_SELECTION
+		pruner->postlist_pivot = lift_up_pivot(po, threshold);
+#else
+		pruner->postlist_pivot = requirement_set(po, threshold);
+#endif
+
+		pruner->prev_threshold = threshold;
 
 #ifdef DEBUG_MATH_PRUNING
 		printf("lift pivot from %u to %u\n", pruner->postlist_pivot, i);
 #endif
-		pruner->postlist_pivot = i;
-		pruner->prev_threshold = threshold;
+
+		if (pruner->postlist_pivot < 0) {
+			/* all current posting lists won't yield anything more relevant. */
+			po->candidate = UINT64_MAX;
+			po->cur_doc_id = UINT32_MAX;
+			po->future_doc_id = UINT32_MAX;
+			return 0;
+		}
 	}
 #endif
 
@@ -470,38 +567,6 @@ int math_l2_postlist_one_by_one_through(void *po_)
 	return 0;
 }
 
-static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
-{
-	if (max_i != max_j)
-		/* descending refMax value, according to
-		 * the pruning algorithm. */
-		return max_i < max_j;
-	else
-		/* descending posting path length, so that
-		 * longer one gets dropped or skipped. */
-		return len_i < len_j;
-}
-
-void math_l2_postlist_sort(struct math_l2_postlist *po)
-{
-	struct math_pruner *pruner = &po->pruner;
-	for (int i = 0; i < po->iter->size; i++) {
-		for (int j = i + 1; j < po->iter->size; j++) {
-			int pid_i = po->iter->map[i];
-			int pid_j = po->iter->map[j];
-			int max_i = pruner->postlist_max[pid_i];
-			int max_j = pruner->postlist_max[pid_j];
-			int len_i = pruner->postlist_len[pid_i];
-			int len_j = pruner->postlist_len[pid_j];
-			if (postlist_less_than(max_i, len_i, max_j, len_j)) {
-				/* swap */
-				po->iter->map[i] = pid_j;
-				po->iter->map[j] = pid_i;
-			}
-		}
-	}
-}
-
 int math_l2_postlist_init(void *po_)
 {
 	/* initialize inner pm */
@@ -510,7 +575,7 @@ int math_l2_postlist_init(void *po_)
 		POSTMERGER_POSTLIST_CALL(&po->pm, init, i);
 	}
 
-	/* allocate iterator */
+	/* allocate iterator for each posting list */
 	po->iter = postmerger_iterator(&po->pm);
 
 	/* setup current doc-level item */
@@ -530,8 +595,12 @@ int math_l2_postlist_init(void *po_)
 	math_pruner_init_threshold(&po->pruner, qw);
 	math_pruner_precalc_upperbound(&po->pruner, qw);
 
+#ifdef MATH_SKIP_SET_FAST_SELECTION
 	/* sort path posting lists by max values */
-	math_l2_postlist_sort(po);
+	math_l2_postlist_sort_by_refmax(po);
+#else
+	po->pruner.blp = bin_lp_alloc(n_qnodes, po->pm.n_po);
+#endif
 
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	math_pruner_print(&po->pruner);
@@ -553,6 +622,10 @@ void math_l2_postlist_uninit(void *po_)
 
 	/* release iterator */
 	postmerger_iter_free(po->iter);
+
+#ifndef MATH_SKIP_SET_FAST_SELECTION
+	bin_lp_free(po->pruner.blp);
+#endif
 
 	/* release pruning structures */
 	math_pruner_free(&po->pruner);
