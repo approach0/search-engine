@@ -161,14 +161,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 	uint64_t cnt = 0;
 #endif
 
-#ifdef SKIP_SEARCH
-	goto skip_search;
-#endif
-
 	/* allocate posting list items storage */
 	struct math_l2_postlist_item math_item[qry->n_math];
 	struct term_posting_item     term_item[qry->n_term];
 	hit_occur_t term_pos[qry->n_term][MAX_TOTAL_OCCURS];
+
+#ifdef SKIP_SEARCH
+	goto skip_search;
+#endif
 
 	/* merge top-level posting lists here */
 	foreach (iter, postmerger, &root_pm) {
