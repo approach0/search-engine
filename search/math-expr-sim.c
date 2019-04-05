@@ -558,7 +558,9 @@ math_l2_postlist_widest_estimate(struct math_l2_postlist *po, float threshold)
 #endif
 			math_pruner_dele_node_safe(pruner, q_node_idx, save_idx, n_save);
 			math_pruner_update(pruner);
-			math_l2_postlist_sort(po);
+			/* although postlists may need to reorder here, we can defer the
+			 * reordering until min-heap threshold is really updated. */
+
 			//math_pruner_print(pruner);
 			continue; /* so that we can dele other nodes */
 
