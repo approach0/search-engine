@@ -99,8 +99,9 @@ httpd_on_recv(const char* req, void* arg_)
 #if 1
 //	printf("\n");
 //	printf("pre-run %ld msec.\n", timer_last_msec(&timer));
+	timer_reset(&timer);
 	srch_res = indices_run_query(args->indices, &qry);
-//	printf("runcost %ld msec.\n", timer_last_msec(&timer));
+	printf("runcost %ld msec.\n", timer_last_msec(&timer));
 #else
 	/* temporary backup */
 	wchar_t *kw = query_keyword(qry, 0);
