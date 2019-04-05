@@ -17,7 +17,7 @@ struct bin_lp bin_lp_alloc(int height, int width)
 	return blp;
 }
 
-void bin_lp_print(struct bin_lp blp)
+void bin_lp_print_all(struct bin_lp blp)
 {
 	for (int column = 0; column < blp.width; column++)
 		if (column < blp.n_po)
@@ -34,6 +34,19 @@ void bin_lp_print(struct bin_lp blp)
 			printf(" (node-%d) \n", blp.node[row]);
 		else
 			printf(" (node-X) \n");
+	}
+}
+
+void bin_lp_print(struct bin_lp blp)
+{
+	for (int column = 0; column < blp.n_po; column++)
+		printf(" po-%-3u|", blp.po[column]);
+	printf("\n");
+
+	for (int row = 0; row < blp.n_nodes; row++) {
+		for (int column = 0; column < blp.n_po; column++)
+			printf("%5u   ", blp.matrix[row * blp.width + column]);
+		printf(" (node-%d) \n", blp.node[row]);
 	}
 }
 
@@ -131,23 +144,29 @@ static int row_max_column(struct bin_lp *blp, int r, int pivot)
 }
 
 /* return pivot of matrix */
-int bin_lp_run(struct bin_lp *blp, float threshold, get_upp_callbk upp)
+int
+bin_lp_run(struct bin_lp *blp, float threshold, get_upp_callbk upp, void *args)
 {
 	int pivot = 0;
 	int column, row;
+
+#ifdef DEBUG_BIN_LP
+	printf("INPUT: (pivot = %d)\n", pivot);
+	bin_lp_print(*blp);
+#endif
 
 	/* initialize */
 	for (column = 0; column < blp->n_po; column++) {
 		int max = column_max(blp, column);
 
 		/* violates constraints anyway, take out */
-		if (upp(max) > threshold) {
+		if (upp(max, args) > threshold) {
 			column_swap(blp, pivot ++, column);
 		}
 	}
 
 	/* pick out all required posting lists that can make threshold value */
-	while (1) {
+	while (pivot < blp->n_po) {
 #ifdef DEBUG_BIN_LP
 		printf("pivot = %d\n", pivot);
 		bin_lp_print(*blp);
@@ -164,7 +183,7 @@ int bin_lp_run(struct bin_lp *blp, float threshold, get_upp_callbk upp)
 #ifdef DEBUG_BIN_LP
 		printf("max_row = %d, val = %d\n", max_row, max);
 #endif
-		if (upp(max) > threshold) {
+		if (upp(max, args) > threshold) {
 			/* find out the max element in the violating row */
 			int max_col = row_max_column(blp, max_row, pivot);
 			column_swap(blp, pivot ++, max_col);

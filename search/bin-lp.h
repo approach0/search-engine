@@ -7,11 +7,12 @@ struct bin_lp {
 	int *matrix;
 };
 
-typedef float (*get_upp_callbk)(int);
+typedef float (*get_upp_callbk)(int, void*);
 
 struct bin_lp bin_lp_alloc(int, int);
 void   bin_lp_print(struct bin_lp);
+void   bin_lp_print_all(struct bin_lp);
 int    bin_lp_assign(struct bin_lp*, int, int, int);
 void   bin_lp_reset(struct bin_lp*);
 void   bin_lp_free(struct bin_lp);
-int    bin_lp_run(struct bin_lp*, float, get_upp_callbk);
+int    bin_lp_run(struct bin_lp*, float, get_upp_callbk, void*);

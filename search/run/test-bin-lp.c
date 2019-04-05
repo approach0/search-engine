@@ -5,7 +5,7 @@
 #include "mhook/mhook.h"
 #include "bin-lp.h"
 
-static float test_get_upperbound(int i)
+static float test_get_upperbound(int i, void *_)
 {
 	return (float)i;
 }
@@ -58,7 +58,7 @@ int main()
 	}
 
 	bin_lp_print(blp);
-	pivot = bin_lp_run(&blp, 5.f, &test_get_upperbound);
+	pivot = bin_lp_run(&blp, 5.f, &test_get_upperbound, NULL);
 	for (int i = 0; i < pivot; i++)
 		printf("po[%d] is of requirement set.\n", blp.po[i]);
 
