@@ -202,6 +202,15 @@ static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 	return 0;
 }
 
+static int get_postlist_iter_idx(struct math_l2_postlist *po, int pid)
+{
+	for (int i = 0; i < po->iter->size; i++) {
+		if (po->iter->map[i] == pid)
+			return i;
+	}
+	return -1;
+}
+
 static void
 print_math_merge_state(struct math_l2_postlist *po, long msec,
 	uint64_t *current, uint64_t *forward, uint64_t *skipped, int *state)
@@ -210,10 +219,14 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 	char path_str[MAX_DIR_PATH_NAME_LEN];
 	char medium_str[1024];
 	char state_str[1024];
-	for (int i = 0; i < po->pm.n_po; i++) {
-		if (state[i] == 1) printf(ES_INVERTED_COLOR);
 
+	for (int i = 0; i < po->pm.n_po; i++) {
+		int j = get_postlist_iter_idx(po, i);
 		struct subpath_ele *ele = po->ele[i];
+
+		/* highlight active post lists */
+		if (state[i] <= 1) printf(ES_INVERTED_COLOR);
+
 		if (ele == NULL)
 			strcpy(path_str, "<empty>");
 		else
@@ -236,19 +249,23 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 			strcpy(state_str, "stepping");
 			break;
 		case 1:
-			strcpy(state_str, "skipping");
+			strcpy(state_str, "SKIPPING");
 			break;
 		default:
 			strcpy(state_str, "dropped");
 			break;
 		}
 
-		printf("@%7u,%4u ", current[i] >> 32, current[i] & 0xffffffff);
+		if (j < 0) printf("      "); else printf("[%3d] ", j);
+		printf("po#%-3u@%7u,%4u ", i, current[i] >> 32, current[i] & (~0U));
 		printf("step+skip:%7u+%7u %10s ", forward[i], skipped[i], state_str);
 		printf("%s: %s ", medium_str, path_str);
 		math_pruner_print_postlist(&po->pruner, i);
 		printf(C_RST "\n");
 	}
+
+	const int n = po->iter->size;
+	printf("required iterators: %u/%u\n", po->pruner.postlist_pivot + 1, n);
 	fflush(stdout);
 }
 
@@ -370,7 +387,7 @@ int math_l2_postlist_next(void *po_)
 		timer_reset(&g_debug_timer);
 	}
 
-	if (math_next_pause) delay(1, 0, 5); else delay(0, 0, 5);
+	if (math_next_pause) delay(1, 0, 5); else delay(0, 0, 1);
 #endif
 
 	/* update threshold value */
@@ -403,6 +420,7 @@ int math_l2_postlist_next(void *po_)
 	}
 #endif
 
+	/* Collected all the expressions in this doc. */
 	/* Iterate through future math items until cur goes to even future,
 	 * i.e., cur != future. Then update future ID. */
 	po->cur_doc_id = po->future_doc_id;
@@ -513,8 +531,7 @@ int math_l2_postlist_next(void *po_)
 #endif
 
 #ifdef DEBUG_MATH_MERGE
-				state[po->iter->map[i + 1]] = 2; /* debug, dropped state */
-				continue;
+				state[p] = 2; /* debug, dropped state */
 #endif
 			} else if (cur == candidate) {
 				/* forward */
@@ -530,7 +547,6 @@ int math_l2_postlist_next(void *po_)
 #endif
 		}
 
-		/* collected all the expressions in this doc */
 	} while (true);
 
 	return 1;
