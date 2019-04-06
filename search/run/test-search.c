@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <signal.h>
 
 #include "mhook/mhook.h"
 #include "common/common.h"
@@ -8,6 +9,8 @@
 #include "query.h"
 #include "search.h"
 #include "search-utils.h"
+
+#include "math-search.h" /* for math_search_pause_toggle() */
 
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 {
@@ -62,10 +65,17 @@ print_res(struct indices *indices, ranked_results_t *rk_res, int page)
 	}
 
 	for (i = from_page - 1; i < MIN(to_page, tot_pages); i++) {
-		printf("page %u/%u, top result(s) from %u to %u:\n",
+		printf("page %d/%u, top result(s) from %u to %u:\n",
 			   i + 1, tot_pages, wind.from + 1, wind.to);
 		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
 		rank_window_foreach(&wind, &print_res_item, indices);
+	}
+}
+
+static void signal_handler(int sig) {
+	if (sig == SIGINT) {
+		int pause = math_search_pause_toggle();
+		printf("SIGINT received, pause = %d.\n", pause);
 	}
 }
 
@@ -134,6 +144,8 @@ int main(int argc, char *argv[])
 		printf("index open failed.\n");
 		goto close;
 	}
+
+	signal(SIGINT, signal_handler);
 
 	query_print(qry, stdout);
 	printf("\n");

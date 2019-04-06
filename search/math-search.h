@@ -50,3 +50,5 @@ math_l2_postlist(struct indices*, struct math_qry_struct*, ranked_results_t*);
 
 struct postmerger_postlist
 postmerger_math_l2_postlist(struct math_l2_postlist*);
+
+int math_search_pause_toggle(); /* for debug */

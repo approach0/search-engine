@@ -345,6 +345,14 @@ static int requirement_set(struct math_l2_postlist *po, float threshold)
 	return pivot - 1;
 }
 
+static int math_next_pause = 0;
+
+int math_search_pause_toggle()
+{
+	math_next_pause = !math_next_pause;
+	return math_next_pause;
+}
+
 int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -361,7 +369,8 @@ int math_l2_postlist_next(void *po_)
 		print_math_merge_state(po, msec, current, forward, skipped, state);
 		timer_reset(&g_debug_timer);
 	}
-	delay(0, 0, 5);
+
+	if (math_next_pause) delay(1, 0, 5); else delay(0, 0, 5);
 #endif
 
 	/* update threshold value */
