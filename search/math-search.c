@@ -270,7 +270,7 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 	}
 
 	const int n = po->iter->size;
-	printf("required iterators: %u/%u\n", po->pruner.postlist_pivot + 1, n);
+	printf("required set: %u/%u\n", po->pruner.postlist_pivot + 1, n);
 	fflush(stdout);
 }
 
