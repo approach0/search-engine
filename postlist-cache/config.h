@@ -7,6 +7,6 @@
 
 #define MAX_MATH_CACHE_DIR_LEVEL 32
 
-#define PROPHET_CACHE_LIST "./cache-list.txt"
+#define PROPHET_CACHE_LIST "./cache-list.tmp"
 
 //#define DEBUG_MATH_POSTLIST_CACHE
