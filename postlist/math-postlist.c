@@ -19,17 +19,14 @@
 #include "math-postlist.h"
 
 /* skip list span */
-#ifdef DEBUG_POSTLIST
-#define MATH_POSTLIST_SKIP_SPAN       2
-#else
-#define MATH_POSTLIST_SKIP_SPAN       DEFAULT_SKIPPY_SPANS
-#endif
+#define MATH_POSTLIST_SKIP_SPAN   DEFAULT_SKIPPY_SPANS
 
 /* buffer sizes */
 #ifdef DEBUG_POSTLIST
 #define BUF_SZ(_item_struct)  (sizeof(_item_struct) * 2)
 #else
-#define BUF_SZ(_item_struct)  ROUND_UP(65536, sizeof(_item_struct))
+//#define BUF_SZ(_item_struct)  ROUND_UP(65536, sizeof(_item_struct))
+#define BUF_SZ(_item_struct)  ROUND_UP(32768, sizeof(_item_struct))
 #endif
 
 #define BUF_MAX_ITEMS(_item_struct)   \
