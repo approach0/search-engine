@@ -41,7 +41,7 @@
 
 //#define DEBUG_MATH_PRUNING
 
-//#define DEBUG_MATH_MERGE
+// #define DEBUG_MATH_MERGE
 
 //#define HIGHLIGHT_MATH_W_DEGREE
 

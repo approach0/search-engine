@@ -5,6 +5,7 @@
 
 #include "mhook/mhook.h"
 #include "common/common.h"
+#include "timer/timer.h"
 
 #include "query.h"
 #include "search.h"
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
 	ranked_results_t     results;
 	int                  page = 1;
 	size_t               cache_sz = 0;
+	struct timer         timer;
 
 	qry = query_new();
 
@@ -156,7 +158,10 @@ int main(int argc, char *argv[])
 
 	/* search query */
 	printf("running query...\n");
+	timer_reset(&timer);
 	results = indices_run_query(&indices, &qry);
+	long msec = timer_tot_msec(&timer);
+	printf("runtime: %lu msec.\n", msec);
 
 	/* print ranked search results in pages */
 	printf("showing results (page %d) ...\n", page);
