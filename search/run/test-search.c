@@ -48,10 +48,11 @@ void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 }
 
 void
-print_res(struct indices *indices, ranked_results_t *rk_res, uint32_t page)
+print_res(struct indices *indices, ranked_results_t *rk_res, int page)
 {
 	struct rank_window wind;
-	uint32_t i, from_page = page, to_page = page, tot_pages = 1;
+	int i, from_page = page, to_page = page;
+	uint32_t tot_pages = 1;
 	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
 
 	/* show all pages */
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'p':
-			sscanf(optarg, "%u", &page);
+			sscanf(optarg, "%d", &page);
 			break;
 
 		case 'm':
@@ -146,7 +147,7 @@ int main(int argc, char *argv[])
 	results = indices_run_query(&indices, &qry);
 
 	/* print ranked search results in pages */
-	printf("showing results (page %u) ...\n", page);
+	printf("showing results (page %d) ...\n", page);
 	print_res(&indices, &results, page);
 
 	/* free ranked results */
