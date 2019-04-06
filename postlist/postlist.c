@@ -233,28 +233,38 @@ int postlist_terminates(void *po_)
 	return (po->buf_end == 0);
 }
 
+//#define DEBUG_POSTLIST
 bool postlist_jump(void *po_, uint64_t target)
 {
 	/* Notice: If target is going back, jump() will go to the end. */
 	struct postlist *po = (struct postlist*)po_;
 	struct skippy_node *jump_to;
-	uint64_t           *curID;
+	uint64_t           *curID, *endID;
+
+#ifdef DEBUG_POSTLIST
+	int debug_cnt = 0;
+#endif
+
+	endID = (uint64_t*)(po->buf + po->buf_end - po->item_sz);
+
+#ifdef DEBUG_POSTLIST
+	assert(po->buf_end != 0);
+	printf("jump to target=%lu, endID=%lu.\n", target, *endID);
+#endif
+	if (target <= *endID)
+		goto glide;
 
 	/* using skip-list */
-	jump_to = skippy_node_jump(&po->cur->sn, target);
+	//jump_to = skippy_node_jump(&po->cur->sn, target);
+	jump_to = skippy_node_lazy_jump(&po->cur->sn, target);
 
-	if (jump_to != &po->cur->sn) {
-		/* if we can jump over some blocks */
 #ifdef DEBUG_POSTLIST
-		printf("jump to a different node.\n");
+	assert(jump_to != &po->cur->sn); /* must be a different node */
 #endif
-		po->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
-		rebuf_cur(po);
-	}
-#ifdef DEBUG_POSTLIST
-	else
-		printf("stay in the same node.\n");
-#endif
+
+	/* this is a new block, update pointer and rebuf. */
+	po->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
+	rebuf_cur(po);
 
 	/* at this point, there shouldn't be any problem to access
 	 * current posting item:
@@ -265,9 +275,7 @@ bool postlist_jump(void *po_, uint64_t target)
 
 	/* seek in the current block until we get to an ID greater or
 	 * equal to target ID. */
-#ifdef DEBUG_POSTLIST
-	int debug_cnt = 0;
-#endif
+glide:
 	do {
 		/* docID must be the first member of structure */
 		curID = (uint64_t*)postlist_cur_item(po);
@@ -288,6 +296,7 @@ bool postlist_jump(void *po_, uint64_t target)
 
 	return 0;
 }
+//#undef DEBUG_POSTLIST
 
 void postlist_finish(void *po_)
 {
@@ -341,6 +350,7 @@ postlist_iter_t postlist_iterator(struct postlist *po)
 	iter->buf = malloc(po->buf_sz);
 	iter->buf_idx = 0;
 	iter->buf_end = 0;
+	iter->item_sz = po->item_sz;
 
 	postlist_iter_rebuf(iter);
 	return iter;
@@ -378,18 +388,21 @@ int
 postlist_iter_jump(struct postlist_iterator* iter, uint64_t target)
 {
 	struct skippy_node *jump_to;
-	/* jump */
-	jump_to = skippy_node_jump(&iter->cur->sn, target);
+	uint64_t            id;
 
-	/* update iterator after jumping */
-	if (jump_to != &iter->cur->sn) {
-		iter->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
-		postlist_iter_rebuf(iter);
-	}
+	id = *(uint64_t*)(iter->buf + iter->buf_end - iter->item_sz);
+	if (target <= id)
+		goto glide;
 
-	/* walk the rest of items within the block */
+	jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
+
+	/* this is a new block, update pointer and rebuf. */
+	iter->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
+	postlist_iter_rebuf(iter);
+
+glide:
 	do {
-		uint64_t id = *(uint32_t*)postlist_iter_cur_item(iter);
+		id = *(uint64_t*)postlist_iter_cur_item(iter);
 		if (id >= target) return 1;
 
 	} while (postlist_iter_next(iter));

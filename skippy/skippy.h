@@ -67,23 +67,18 @@ static __inline struct skippy_node*
 skippy_node_jump(struct skippy_node *sn, uint64_t target)
 {
 	int level = SKIPPY_TOTAL_LEVELS - 1;
-	struct skippy_node *forward, *upward;
+	struct skippy_node *forward;
 
 	while (level >= 0) {
 #ifdef DEBUG_SKIPPY
-		printf("@ key %lu (%lu), level %d -> %lu (%lu)\n", sn->key, sn->key >> 32, level,
-		       (sn->next[level] == NULL) ? UINT64_MAX : sn->next[level]->key,
-		       (sn->next[level] == NULL) ? UINT32_MAX : sn->next[level]->key >> 32);
+		printf("@ key %lu (%lu), level %d -> %lu (%lu)\n",
+			sn->key, sn->key >> 32, level,
+			(sn->next[level] == NULL) ? UINT64_MAX : sn->next[level]->key,
+			(sn->next[level] == NULL) ? UINT32_MAX : sn->next[level]->key >> 32);
 #endif
 		forward = sn->next[level];
-		upward = sn->next[level + 1];
 
-		if (upward && level + 1 < SKIPPY_TOTAL_LEVELS &&
-		    upward->key <= target) {
-			/* first see if we can safely go higher */
-			sn = upward;
-			level ++;
-		} else if (forward && forward->key <= target) {
+		if (forward && forward->key <= target) {
 			/* or can we safely step forward? */
 			sn = forward;
 		} else {
@@ -91,7 +86,46 @@ skippy_node_jump(struct skippy_node *sn, uint64_t target)
 			level --;
 		}
 	}
+#ifdef DEBUG_SKIPPY
+	printf("\n");
+#endif
+	return sn;
+}
 
+/* similar to skippy_node_jump(), except it goes from lowest level */
+static __inline struct skippy_node*
+skippy_node_lazy_jump(struct skippy_node *sn, uint64_t target)
+{
+	int level = 0;
+	struct skippy_node *forward, *further;
+
+	while (level >= 0) {
+#ifdef DEBUG_SKIPPY
+		printf("@ key %lu (%lu), level %d -> %lu (%lu)\n",
+			sn->key, sn->key >> 32, level,
+			(sn->next[level] == NULL) ? UINT64_MAX : sn->next[level]->key,
+			(sn->next[level] == NULL) ? UINT32_MAX : sn->next[level]->key >> 32);
+#endif
+		if (level + 1 < SKIPPY_TOTAL_LEVELS)
+			further = sn->next[level + 1];
+		else
+			further = NULL;
+
+		forward = sn->next[level];
+
+		if (further && further->key <= target) {
+			sn = further;
+			level ++;
+			// printf("level %d\n", level);
+		} else if (forward && forward->key <= target) {
+			sn = forward;
+		} else {
+			level --;
+		}
+	}
+#ifdef DEBUG_SKIPPY
+	printf("sn = %p\n", sn);
+#endif
 	return sn;
 }
 

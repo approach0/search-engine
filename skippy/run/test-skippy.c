@@ -43,11 +43,11 @@ int main(void)
 
 	if (cur != NULL) {
 		skippy_node_print(cur);
-		res = skippy_node_jump(cur, jump_num);
+		//res = skippy_node_jump(cur, jump_num);
+		res = skippy_node_lazy_jump(cur, jump_num);
+		printf("reach %lu\n", res->key);
 
-		if (res)
-			printf("reach %lu\n", res->key);
-		else
+		if (res->key < jump_num)
 			printf("reach the end.\n");
 	} else {
 		printf("cannot find start node (key=%lu)\n", cur_num);

@@ -50,6 +50,7 @@ typedef struct postlist_iterator {
 	char                   *buf;
 	uint32_t                buf_idx;
 	uint32_t                buf_end; /* in bytes */
+	uint32_t                item_sz;
 } *postlist_iter_t;
 
 /* main functions */
