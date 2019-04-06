@@ -3,6 +3,7 @@
 #include "hashtable/u16-ht.h"
 #include "tex-parser/head.h"
 #include "postlist/math-postlist.h"
+#include "postlist/postlist.h"
 #include "postmerge/postcalls.h"
 #include "math-index/math-index.h" /* for math_index_mk_prefix_path_str() */
 
@@ -50,6 +51,10 @@ void math_l2_postlist_print(struct math_l2_postlist* po)
 		}
 
 		printf("\t [%u] %s %s: ./%s\n", i, medium_str, pathtype_str, path_str);
+#if 0
+		if (po->medium[i] == MATH_POSTLIST_INMEMO)
+			postlist_print_info(po->pm.po[i].po);
+#endif
 	}
 }
 

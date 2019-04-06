@@ -27,10 +27,11 @@ void postlist_print_info(struct postlist *po)
 	printf("==== memory posting list info ====\n");
 	printf("%u blocks (%.2f KB).\n", po->n_blk,
 	       (float)po->tot_sz / 1024.f);
-	printf("item size: %u\n", po->item_sz);
-	printf("buffer size: %u\n", po->buf_sz);
+	printf("item size: %u B\n", po->item_sz);
+	printf("buffer size: %u B\n", po->buf_sz);
+	printf("(%u items)\n", po->buf_sz / po->item_sz);
 
-	skippy_print(&po->skippy);
+	skippy_print(&po->skippy, 0);
 }
 
 struct postlist *
@@ -264,6 +265,9 @@ bool postlist_jump(void *po_, uint64_t target)
 
 	/* seek in the current block until we get to an ID greater or
 	 * equal to target ID. */
+#ifdef DEBUG_POSTLIST
+	int debug_cnt = 0;
+#endif
 	do {
 		/* docID must be the first member of structure */
 		curID = (uint64_t*)postlist_cur_item(po);
@@ -271,9 +275,15 @@ bool postlist_jump(void *po_, uint64_t target)
 		printf("glide to: %u\n", (*curID) >> 32);
 #endif
 		if (*curID >= target) {
+#ifdef DEBUG_POSTLIST
+			printf("glides: %d\n", debug_cnt);
+#endif
 			return 1;
 		}
 
+#ifdef DEBUG_POSTLIST
+		debug_cnt ++;
+#endif
 	} while (postlist_next(po));
 
 	return 0;

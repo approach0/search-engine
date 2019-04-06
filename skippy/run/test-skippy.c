@@ -22,7 +22,7 @@ int main(void)
 	uint64_t cur_num, jump_num;
 
 	skippy_init(&skippy, 3);
-	skippy_print(&skippy);
+	skippy_print(&skippy, true);
 
 	for (i = 0; i < 30; i++) {
 		t = malloc(sizeof(struct T));
@@ -31,7 +31,7 @@ int main(void)
 		skippy_append(&skippy, &t->sn);
 	}
 
-	skippy_print(&skippy);
+	skippy_print(&skippy, true);
 
 	printf("Please input 'cur_num, jump_num:'\n");
 	(void)scanf("%lu,%lu", &cur_num, &jump_num);

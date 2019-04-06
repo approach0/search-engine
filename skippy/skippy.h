@@ -149,19 +149,22 @@ skippy_append(struct skippy *sk, struct skippy_node *sn)
 }
 
 static __inline void
-skippy_print(struct skippy *sk)
+skippy_print(struct skippy *sk, int detail)
 {
 	int i = SKIPPY_TOTAL_LEVELS - 1;
 	struct skippy_node *cur, *save;
 	printf("skippy list (span = %u):\n", sk->n_spans);
 	while (1) {
-		printf("level %d (%u nodes): ", i, sk->n_nodes[i]);
-		skippy_foreach(cur, save, sk, i) {
-			printf("-%lu", cur->key);
-		}
+		printf("level %d (%u nodes)", i, sk->n_nodes[i]);
+		if (detail) {
+			printf(": ");
+			skippy_foreach(cur, save, sk, i) {
+				printf("-%lu", cur->key);
+			}
 
-		if (sk->tail[i])
-			printf(" (tail=%lu)", sk->tail[i]->key);
+			if (sk->tail[i])
+				printf(" (tail=%lu)", sk->tail[i]->key);
+		}
 		printf("\n");
 
 		if (i == 0)
