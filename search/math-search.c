@@ -211,7 +211,7 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 	char medium_str[1024];
 	char state_str[1024];
 	for (int i = 0; i < po->pm.n_po; i++) {
-		if (i % 2) printf(ES_INVERTED_COLOR);
+		if (state[i] == 1) printf(ES_INVERTED_COLOR);
 
 		struct subpath_ele *ele = po->ele[i];
 		if (ele == NULL)
@@ -233,7 +233,7 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 
 		switch (state[i]) {
 		case 0:
-			strcpy(state_str, "forwarding");
+			strcpy(state_str, "stepping");
 			break;
 		case 1:
 			strcpy(state_str, "skipping");
@@ -244,7 +244,7 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 		}
 
 		printf("@%7u,%4u ", current[i] >> 32, current[i] & 0xffffffff);
-		printf("fwd+skip:%7u+%7u %10s ", forward[i], skipped[i], state_str);
+		printf("step+skip:%7u+%7u %10s ", forward[i], skipped[i], state_str);
 		printf("%s: %s ", medium_str, path_str);
 		math_pruner_print_postlist(&po->pruner, i);
 		printf(C_RST "\n");
