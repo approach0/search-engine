@@ -177,14 +177,10 @@ size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 	return sizeof(struct math_l2_postlist_item);
 }
 
-static uint32_t set_doc_candidate(struct math_l2_postlist *po)
+inline static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 {
 	uint64_t candidate = UINT64_MAX;
-#ifdef MATH_PRUNING_DISABLE_JUMP
-	for (int i = 0; i < po->iter->size; i++) {
-#else
 	for (int i = 0; i <= po->pruner.postlist_pivot; i++) {
-#endif
 		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
 		if (cur < candidate) candidate = cur;
 	}
@@ -192,7 +188,7 @@ static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 	return (uint32_t)(candidate >> 32);
 }
 
-static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
+inline static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 {
 	struct math_postlist_gener_item item;
 
@@ -230,7 +226,7 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 		struct subpath_ele *ele = po->ele[i];
 
 		/* highlight active post lists */
-		if (state[i] <= 1) printf(ES_INVERTED_COLOR);
+		if (j >= 0) printf(ES_INVERTED_COLOR);
 
 		if (ele == NULL)
 			strcpy(path_str, "<empty>");
@@ -323,17 +319,11 @@ static int lift_up_pivot(struct math_l2_postlist *po, float threshold)
 	return i;
 }
 
-static float get_upperbound(int i, void *po_)
-{
-	PTR_CAST(po, struct math_l2_postlist, po_);
-	struct math_pruner *pruner = &po->pruner;
+/* === newer pruning next === */
 
-	return pruner->upp[i];
-}
-
-static int requirement_set(struct math_l2_postlist *po, float threshold)
+inline static void
+math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 {
-	int pivot;
 	struct math_pruner *pruner = &po->pruner;
 
 	/* input binary LP problem */
@@ -346,10 +336,24 @@ static int requirement_set(struct math_l2_postlist *po, float threshold)
 			(void)bin_lp_assign(&pruner->blp, rid - 1, pid, ref);
 		}
 	}
-
 #ifdef DEBUG_MATH_SKIP_SET_SELECTION
 	bin_lp_print(pruner->blp);
 #endif
+}
+
+static float get_upperbound(int i, void *po_)
+{
+	PTR_CAST(po, struct math_l2_postlist, po_);
+	struct math_pruner *pruner = &po->pruner;
+
+	return pruner->upp[i];
+}
+
+inline static int
+requirement_set(struct math_l2_postlist *po, float threshold)
+{
+	int pivot;
+	struct math_pruner *pruner = &po->pruner;
 
 	/* solve binary LP problem */
 	pivot = bin_lp_run(&pruner->blp, threshold, &get_upperbound, po);
@@ -367,6 +371,133 @@ static int requirement_set(struct math_l2_postlist *po, float threshold)
 	return pivot - 1;
 }
 
+inline static void
+drop_small_nodes(struct math_l2_postlist *po, float threshold)
+{
+	struct math_pruner *pruner = &po->pruner;
+	for (int i = 0; i < pruner->n_nodes; i++) {
+		struct pruner_node *q_node = pruner->nodes + i;
+		float q_node_upperbound = pruner->upp[q_node->width];
+
+		if (q_node_upperbound <= threshold) {
+#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+#ifdef DEBUG_MATH_SCORE_INSPECT
+	//if (inspect)
+#endif
+	printf("drop node#%d width %u upperbound %f <= threshold %f\n",
+		q_node->secttr[0].rnode, q_node->width, q_node_upperbound, threshold);
+#endif
+			math_pruner_dele_node(pruner, i--);
+			math_pruner_update(pruner);
+			/* although postlists may need to reorder here, we can defer the
+			 * reordering until min-heap threshold is really updated. */
+
+			//math_pruner_print(pruner);
+		}
+	}
+}
+
+inline static void
+drop_useless_postlist_iters(struct math_l2_postlist *po)
+{
+	for (int i = 0; i < po->iter->size; i++) {
+		uint32_t p = po->iter->map[i];
+		if (po->pruner.postlist_ref[p] <= 0) {
+			if (po->pruner.postlist_pivot >= i)
+				po->pruner.postlist_pivot -= 1;
+			postmerger_iter_remove(po->iter, i);
+			i -= 1;
+		}
+	}
+}
+
+inline static int
+get_hit_nodes(struct math_l2_postlist *po, int *save_idx)
+{
+	int n_save = 0;
+	uint64_t candidate = po->candidate;
+	struct math_pruner *pruner = &po->pruner;
+	u16_ht_reset(&pruner->q_hit_nodes_ht, 0);
+
+	for (int i = 0; i <= pruner->postlist_pivot; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+
+		if (cur == candidate) {
+			uint32_t pid = po->iter->map[i];
+			struct node_set ns = pruner->postlist_nodes[pid];
+
+			for (int j = 0; j < ns.sz; j++) {
+				int qid = ns.rid[j];
+
+				if (-1 == u16_ht_lookup(&pruner->q_hit_nodes_ht, qid)) {
+					int qid_idx = pruner->nodeID2idx[qid];
+					save_idx[n_save++] = qid_idx;
+					u16_ht_incr(&pruner->q_hit_nodes_ht, qid, 1);
+				}
+			}
+		}
+	}
+	return n_save;
+}
+
+struct vec_match_res {
+	int dr, w;
+};
+
+inline static struct vec_match_res
+vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
+          int widest, float threshold)
+{
+	struct vec_match_res ret = {0};
+	struct math_pruner *pruner = &po->pruner;
+	uint64_t candidate = po->candidate;
+	int upbound, leftover = q_node->width;
+
+	u16_ht_reset(&pruner->accu_ht, 0);
+
+	for (int i = 0; i < q_node->n; i++) {
+		int pid = q_node->postlist_id[i];
+		uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
+		int qsw = q_node->secttr[i].width;
+
+		if (cur < candidate) {
+			POSTMERGER_POSTLIST_CALL(&po->pm, jump, pid, candidate);
+			cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
+		}
+
+		leftover -= qsw; /* must precede `continue' */
+
+		if (cur != candidate) goto estimate;
+
+		struct math_postlist_gener_item item;
+		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sizeof(item));
+
+		u16_ht_reset(&pruner->sect_ht, 0);
+
+		for (int j = 0; j < item.n_paths; j++) {
+			int dr = item.subr_id[j];
+			int dr_sect_cnt = u16_ht_lookup(&pruner->sect_ht, dr);
+			if (dr_sect_cnt < qsw) { /* calculate min(qsw, dr_sect_cnt) */
+				/* ..... */ (void)u16_ht_incr(&pruner->sect_ht, dr, 1);
+				int dr_accu_cnt = u16_ht_incr(&pruner->accu_ht, dr, 1);
+				if (dr_accu_cnt > ret.w) {
+					ret.dr = dr;
+					ret.w = dr_accu_cnt;
+				}
+			}
+		}
+
+estimate:
+		upbound = ret.w + leftover;
+		if (upbound <= widest || pruner->upp[upbound] <= threshold) {
+			ret.w = 0;
+			break;
+		}
+	}
+
+	return ret;
+}
+
 static int math_next_pause = 0;
 
 int math_search_pause_toggle()
@@ -381,6 +512,28 @@ int math_l2_postlist_next(void *po_)
 	struct math_pruner *pruner = &po->pruner;
 	float threshold = pruner->init_threshold;
 
+	if (priority_Q_full(po->rk_res))
+		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
+
+	if (threshold != pruner->prev_threshold) {
+		drop_small_nodes(po, threshold);
+		drop_useless_postlist_iters(po);
+
+		math_l2_binlp_assignment_upate(po);
+		pruner->postlist_pivot = requirement_set(po, threshold);
+
+		// math_pruner_print(pruner);
+
+		if (pruner->postlist_pivot < 0) {
+			po->candidate = UINT64_MAX;
+			po->cur_doc_id = UINT32_MAX;
+			po->future_doc_id = UINT32_MAX;
+			return 0;
+		}
+
+		pruner->prev_threshold = threshold;
+	}
+
 #ifdef DEBUG_MATH_MERGE
 	static uint64_t current[MAX_MERGE_POSTINGS] = {0};
 	static uint64_t forward[MAX_MERGE_POSTINGS] = {0};
@@ -391,46 +544,20 @@ int math_l2_postlist_next(void *po_)
 		print_math_merge_state(po, msec, current, forward, skipped, state);
 		timer_reset(&g_debug_timer);
 	}
-
 	if (math_next_pause) delay(1, 0, 5); else delay(0, 0, 1);
-#endif
-
-	/* update threshold value */
-	if (priority_Q_full(po->rk_res))
-		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
-
-#ifndef MATH_PRUNING_DISABLE_JUMP
-	/* if threshold has been updated */
-	if (threshold != pruner->prev_threshold) {
-
-#ifdef MATH_SKIP_SET_FAST_SELECTION
-		pruner->postlist_pivot = lift_up_pivot(po, threshold);
-#else
-		pruner->postlist_pivot = requirement_set(po, threshold);
-#endif
-
-		pruner->prev_threshold = threshold;
-
-#ifdef DEBUG_MATH_PRUNING
-		printf("lift pivot from %u to %u\n", pruner->postlist_pivot, i);
-#endif
-
-		if (pruner->postlist_pivot < 0) {
-			/* all current posting lists won't yield anything more relevant. */
-			po->candidate = UINT64_MAX;
-			po->cur_doc_id = UINT32_MAX;
-			po->future_doc_id = UINT32_MAX;
-			return 0;
-		}
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint32_t pid = po->iter->map[i];
+		current[pid] = cur;
+		if (i <= pruner->postlist_pivot)
+			state[pid] = 0;
+		else
+			state[pid] = 1;
 	}
 #endif
 
-	/* Collected all the expressions in this doc. */
-	/* Iterate through future math items until cur goes to even future,
-	 * i.e., cur != future. Then update future ID. */
 	po->cur_doc_id = po->future_doc_id;
 	do {
-		/* set candidate docID */
 		po->cur_doc_id = set_doc_candidate(po);
 
 		if (po->cur_doc_id == UINT32_MAX) {
@@ -445,111 +572,42 @@ int math_l2_postlist_next(void *po_)
 			return 1;
 		}
 
-		uint64_t candidate = po->candidate;
+		int save_idx[MAX_NODE_IDS];
+		int n_save = get_hit_nodes(po, save_idx);
 
-#ifndef MATH_PRUNING_DISABLE_JUMP
-		/* followers jump to candidate */
-		int pivot = po->pruner.postlist_pivot;
-		for (int i = pivot + 1; i < po->iter->size; i++) {
-			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		struct pq_align_res widest = {0};
+		struct vec_match_res mr;
+		for (int i = 0; i < n_save; i++) {
+			struct pruner_node *q_node = pruner->nodes + save_idx[i];
+			if (q_node->width <= widest.width)
+				continue;
 
-#ifdef DEBUG_MATH_MERGE
-			state[po->iter->map[i]] = 1; /* debug, skipping state */
-#endif
-
-			if (cur < candidate) {
-				postmerger_iter_call(&po->pm, po->iter, jump, i, candidate);
-
-#ifdef DEBUG_MATH_MERGE
-				skipped[po->iter->map[i]] += 1; /* debug */
-#endif
-
-#ifdef DEBUG_MERGE_SKIPPING
-				uint64_t cur_ = postmerger_iter_call(&po->pm, po->iter, cur, i);
-				printf("target: %u, po[%d] jumps: %u --> %u.\n",
-					   candidate >> 32, i, cur >> 32, cur_ >> 32);
-#endif
+			mr = vec_match(po, q_node, widest.width, threshold);
+			if (mr.w > widest.width) {
+				widest.width = mr.w;
+				widest.qr = q_node->secttr[0].rnode;
+				widest.dr = mr.dr;
 			}
 		}
-#endif
 
-		struct pq_align_res widest;
-		widest = math_l2_postlist_widest_estimate(po, threshold);
-
-		/* push expression results */
-		if (widest.width) {
+		if (widest.width > 0) {
 			uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
 
 			struct math_expr_score_res expr =
 				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
 
-			if (expr.score > po->max_exp_score)
-				po->max_exp_score = expr.score;
-
-			if (po->n_occurs < MAX_MATH_OCCURS
-#ifdef MATH_OCCUR_ONLY_ONE
-				&& expr.score == po->max_exp_score
-#endif
-			) {
-#ifndef MATH_OCCUR_ONLY_ONE
-				hit_occur_t *ho = po->occurs + po->n_occurs;
-				po->n_occurs += 1;
-#else
+			if (expr.score > po->max_exp_score) {
 				hit_occur_t *ho = po->occurs + 0;
+				po->max_exp_score = expr.score;
 				po->n_occurs = 1;
-#endif
-
 				ho->pos = expr.exp_id;
-
-#ifdef HIGHLIGHT_MATH_ALIGNMENT
-				/* copy highlight mask */
-#ifdef HIGHLIGHT_MATH_W_DEGREE
-				ho->qmask[0] = (uint64_t)(expr.score * 100.f);
-#else
-				ho->qmask[0] = widest.qmask;
-#endif
-				ho->dmask[0] = widest.dmask;
-#endif
 			}
 		}
 
-		/* forward posting lists */
-		for (int i = 0; i < po->iter->size; i++) {
+		for (int i = 0; i <= pruner->postlist_pivot; i++) {
 			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
-			uint32_t p = po->iter->map[i];
-
-			if (cur == UINT64_MAX
-#ifdef MATH_PRUNING_ENABLE
-			|| po->pruner.postlist_ref[p] <= 0
-#endif
-			) {
-				/* drop this posting list completely */
-				if (po->pruner.postlist_pivot >= i)
-					po->pruner.postlist_pivot -= 1;
-				postmerger_iter_remove(po->iter, i);
-				i -= 1;
-
-#if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING) || defined (DEBUG_MATH_SCORE_INSPECT)
-				uint32_t docID = (uint32_t)(cur >> 32);
-				printf("drop po#%u @ doc#%u\n", p, docID);
-				// math_pruner_print(&po->pruner);
-#endif
-
-#ifdef DEBUG_MATH_MERGE
-				state[p] = 2; /* debug, dropped state */
-#endif
-			} else if (cur == candidate) {
-				/* forward */
+			if (cur == po->candidate)
 				postmerger_iter_call(&po->pm, po->iter, next, i);
-#ifdef DEBUG_MATH_MERGE
-				forward[po->iter->map[i]] += 1; /* debug */
-#endif
-			}
-
-
-#ifdef DEBUG_MATH_MERGE
-			current[po->iter->map[i]] = cur;
-#endif
 		}
 
 	} while (true);
