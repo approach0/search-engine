@@ -30,13 +30,6 @@ void math_expr_set_score(struct math_expr_sim_factors*,
 void math_l2_postlist_print_cur(struct math_l2_postlist*);
 
 struct math_expr_score_res
-math_l2_postlist_cur_score(struct math_l2_postlist*);
-
-struct pq_align_res math_l2_postlist_coarse_score(struct math_l2_postlist*, uint32_t);
-
-struct pq_align_res math_l2_postlist_widest_estimate(struct math_l2_postlist*, float);
-
-struct math_expr_score_res
 math_l2_postlist_precise_score(struct math_l2_postlist*, struct pq_align_res*, uint32_t);
 
 float math_expr_score_upperbound(int, int);

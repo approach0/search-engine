@@ -519,8 +519,13 @@ int math_l2_postlist_next(void *po_)
 		drop_small_nodes(po, threshold);
 		drop_useless_postlist_iters(po);
 
+#ifdef MATH_SKIP_SET_FAST_SELECTION
+		math_l2_postlist_sort_by_refmax(po);
+		pruner->postlist_pivot = lift_up_pivot(po, threshold);
+#else
 		math_l2_binlp_assignment_upate(po);
 		pruner->postlist_pivot = requirement_set(po, threshold);
+#endif
 
 		// math_pruner_print(pruner);
 
@@ -559,6 +564,7 @@ int math_l2_postlist_next(void *po_)
 	po->cur_doc_id = po->future_doc_id;
 	do {
 		po->cur_doc_id = set_doc_candidate(po);
+//		printf("%u, %u\n", po->cur_doc_id, po->candidate >> 32);
 
 		if (po->cur_doc_id == UINT32_MAX) {
 			po->future_doc_id = UINT32_MAX;

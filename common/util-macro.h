@@ -57,3 +57,14 @@ static inline void print_size(size_t _sz)
 
 #define likely(x)   __builtin_expect((x), 1)
 #define unlikely(x) __builtin_expect((x), 0)
+
+#define ACC_TIMER_RESET \
+		struct timespec t0, t1; \
+		clock_gettime(CLOCK_MONOTONIC, &t0);
+
+#define ACC_TIMER_PRINT \
+		clock_gettime(CLOCK_MONOTONIC, &t1); \
+		static uint64_t us = 0; \
+		static uint64_t ct = 0; \
+		if (t1.tv_nsec - t0.tv_nsec > 0) us += (t1.tv_nsec - t0.tv_nsec) / 1000; \
+		printf("%'lu ns, %'lu times\n", us, ++ct);
