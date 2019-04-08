@@ -207,7 +207,7 @@ void math_pruner_free(struct math_pruner* pruner)
 
 void math_pruner_init_threshold(struct math_pruner* pruner, uint32_t qw)
 {
-	float min_match = floorf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
+	float min_match = ceilf(MATH_PRUNING_MIN_THRESHOLD_FACTOR * qw);
 	pruner->init_threshold =
 		math_expr_score_lowerbound(min_match, qw);
 }
