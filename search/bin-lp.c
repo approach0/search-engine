@@ -3,49 +3,31 @@
 #include <string.h>
 
 #include "bin-lp.h"
+#include "common/common.h"
 
-struct bin_lp bin_lp_alloc(int height, int width)
+/*
+ * Printing functions
+ */
+void bin_lp_print(struct bin_lp blp, int level)
 {
-	struct bin_lp blp;
-	blp.n_po = 0;
-	blp.n_nodes = 0;
-	blp.width = width;
-	blp.height = height;
-	blp.po   = malloc(sizeof(int) * width);
-	blp.node = malloc(sizeof(int) * height);
-	blp.matrix = malloc(sizeof(int) * height * width);
-	return blp;
-}
-
-void bin_lp_print_all(struct bin_lp blp)
-{
-	for (int column = 0; column < blp.width; column++)
-		if (column < blp.n_po)
-			printf(" po-%-3u|", blp.po[column]);
-		else
-			printf(" po-X  |");
-	printf("\n");
-
-	for (int row = 0; row < blp.height; row++) {
-		for (int column = 0; column < blp.width; column++)
-			printf("%5u   ", blp.matrix[row * blp.width + column]);
-
-		if (row < blp.n_nodes)
-			printf(" (node-%d) \n", blp.node[row]);
-		else
-			printf(" (node-X) \n");
-	}
-}
-
-void bin_lp_print(struct bin_lp blp)
-{
+	printf("%*c", level * 2, ' ');
 	for (int column = 0; column < blp.n_po; column++)
 		printf(" po-%-3u|", blp.po[column]);
 	printf("\n");
 
+	printf("%*c", level * 2, ' ');
+	for (int column = 0; column < blp.n_po; column++)
+		printf(" w= %-3u|", blp.weight[column]);
+	printf("\n");
+
 	for (int row = 0; row < blp.n_nodes; row++) {
-		for (int column = 0; column < blp.n_po; column++)
+		printf("%*c", level * 2, ' ');
+		for (int column = 0; column < blp.n_po; column++) {
+			if (column < blp.zero_pivot) printf(C_BLUE);
+			else if (column >= blp.one_pivot) printf(C_GREEN);
 			printf("%5u   ", blp.matrix[row * blp.width + column]);
+			printf(C_RST);
+		}
 		printf(" (node-%d) \n", blp.node[row]);
 	}
 }
@@ -85,22 +67,62 @@ int bin_lp_assign(struct bin_lp *blp, int node, int po, int val)
 	return modified;
 }
 
-void bin_lp_reset(struct bin_lp *blp)
+/*
+ * Allocation/Copy functions
+ */
+struct bin_lp bin_lp_alloc(int height, int width)
 {
-	blp->n_po = 0;
-	blp->n_nodes = 0;
-	memset(blp->po, 0, sizeof(int) * blp->width);
-	memset(blp->node, 0, sizeof(int) * blp->height);
-	memset(blp->matrix, 0, sizeof(int) * blp->height * blp->width);
+	struct bin_lp blp;
+	blp.n_po = 0;
+	blp.n_nodes = 0;
+	blp.width = width;
+	blp.height = height;
+	blp.zero_pivot = 0;
+	blp.one_pivot = 0;
+	blp.po   = malloc(sizeof(int) * width);
+	blp.node = malloc(sizeof(int) * height);
+	blp.weight = malloc(sizeof(int) * width);
+	blp.matrix = malloc(sizeof(int) * height * width);
+	return blp;
 }
 
 void bin_lp_free(struct bin_lp blp)
 {
 	free(blp.po);
 	free(blp.node);
+	free(blp.weight);
 	free(blp.matrix);
 }
 
+void bin_lp_reset(struct bin_lp *blp)
+{
+	blp->n_po = 0;
+	blp->n_nodes = 0;
+	blp->zero_pivot = 0;
+	blp->one_pivot = 0;
+	memset(blp->po, 0, sizeof(int) * blp->width);
+	memset(blp->node, 0, sizeof(int) * blp->height);
+	memset(blp->weight, 0, sizeof(int) * blp->width);
+	memset(blp->matrix, 0, sizeof(int) * blp->height * blp->width);
+}
+
+static void bin_lp_copy(struct bin_lp *dest, struct bin_lp *src)
+{
+	dest->n_po = src->n_po;
+	dest->n_nodes = src->n_nodes;
+	dest->width = src->width;
+	dest->height = src->height;
+	dest->zero_pivot = src->zero_pivot;
+	dest->one_pivot = src->one_pivot;
+	memcpy(dest->po, src->po, sizeof(int) * src->width);
+	memcpy(dest->node, src->node, sizeof(int) * src->height);
+	memcpy(dest->weight, src->weight, sizeof(int) * src->width);
+	memcpy(dest->matrix, src->matrix, sizeof(int) * src->height * src->width);
+}
+
+/*
+ * Manipulation functions
+ */
 static int column_max(struct bin_lp *blp, int c)
 {
 	int max = 0;
@@ -112,6 +134,7 @@ static int column_max(struct bin_lp *blp, int c)
 
 static void column_swap(struct bin_lp *blp, int a, int b)
 {
+	printf("swap %d with %d\n", a, b);
 	int tmp;
 	for (int row = 0; row < blp->n_nodes; row++) {
 		tmp = blp->matrix[row * blp->width + a];
@@ -122,20 +145,32 @@ static void column_swap(struct bin_lp *blp, int a, int b)
 	tmp = blp->po[a];
 	blp->po[a] = blp->po[b];
 	blp->po[b] = tmp;
+
+	tmp = blp->weight[a];
+	blp->weight[a] = blp->weight[b];
+	blp->weight[b] = tmp;
 }
 
-static int row_sum(struct bin_lp *blp, int r, int pivot)
+static int row_weight_sum(struct bin_lp *blp, int r)
 {
 	int sum = 0;
-	for (int column = pivot; column < blp->n_po; column++)
+	for (int column = blp->zero_pivot; column < blp->n_po; column++)
 		sum += blp->matrix[r * blp->width + column];
 	return sum;
 }
 
-static int row_max_column(struct bin_lp *blp, int r, int pivot)
+static int objective_weight_sum(struct bin_lp *blp)
+{
+	int sum = 0;
+	for (int column = blp->zero_pivot; column < blp->n_po; column++)
+		sum += blp->weight[column];
+	return sum;
+}
+
+static int row_max_column(struct bin_lp *blp, int r)
 {
 	int max_column = 0, max = 0;
-	for (int column = pivot; column < blp->n_po; column++)
+	for (int column = blp->zero_pivot; column < blp->one_pivot; column++)
 		if (blp->matrix[r * blp->width + column] > max) {
 			max = blp->matrix[r * blp->width + column];
 			max_column = column;
@@ -143,54 +178,94 @@ static int row_max_column(struct bin_lp *blp, int r, int pivot)
 	return max_column;
 }
 
-/* return pivot of matrix */
+/*
+ * Solver functions
+ */
 int
 bin_lp_run(struct bin_lp *blp, float threshold, get_upp_callbk upp, void *args)
 {
-	int pivot = 0;
-	int column, row;
+	return 0;
+}
 
-#ifdef DEBUG_BIN_LP
-	printf("INPUT: (pivot = %d)\n", pivot);
-	bin_lp_print(*blp);
-#endif
+static void
+bin_lp_solve_r(struct bin_lp* blp, float threshold,
+               int *max, struct bin_lp *sol,
+               get_upp_callbk upp, void* args, int level)
+{
+	int cur_max = objective_weight_sum(blp);
+
+	printf("current max: %d\n", cur_max);
+	bin_lp_print(*blp, level);
+
+	if (cur_max <= *max) {
+		printf("pruned");
+		return;
+	}
+
+	if (blp->zero_pivot < blp->one_pivot) {
+		/* find out which row violates threshold constraints the most */
+		int max_row = -1; float max_delta = 0.f;
+		for (int row = 0; row < blp->n_nodes; row++) {
+			int sum = row_weight_sum(blp, row);
+			float delta = upp(sum, args) - threshold;
+			if (delta > max_delta) {
+				max_delta = delta;
+				max_row = row;
+			}
+		}
+
+		/* if this problem does not satisfy all of our constraints */
+		if (max_row >= 0) {
+			/* solve sub-problems */
+			int max_col = row_max_column(blp, max_row);
+			printf("max_row = %d, max_col = %d\n", max_row, max_col);
+
+			struct bin_lp lp1, lp2;
+			lp1 = bin_lp_alloc(blp->height, blp->width);
+			lp2 = bin_lp_alloc(blp->height, blp->width);
+
+			bin_lp_copy(&lp1, blp);
+			bin_lp_copy(&lp2, blp);
+
+			column_swap(&lp1, lp1.zero_pivot ++, max_col);
+			bin_lp_solve_r(&lp1, threshold, max, sol, upp, args, level + 1);
+
+			column_swap(&lp2, -- lp2.one_pivot, max_col);
+			bin_lp_solve_r(&lp2, threshold, max, sol, upp, args, level + 1);
+
+			bin_lp_free(lp1);
+			bin_lp_free(lp2);
+			return;
+		}
+
+	}
+
+	printf("update result, max = %d.\n", cur_max);
+	*max = cur_max;
+	bin_lp_copy(sol, blp);
+}
+
+int
+bin_lp_solve(struct bin_lp* blp, float threshold,
+             get_upp_callbk upp, void* args)
+{
+	for (int column = 0; column < blp->n_po; column++) {
+		blp->weight[column] = 1;
+	}
+	blp->weight[2] = 3;
+	blp->one_pivot = blp->n_po;
 
 	/* initialize */
-	for (column = 0; column < blp->n_po; column++) {
+	for (int column = 0; column < blp->n_po; column++) {
 		int max = column_max(blp, column);
 
 		/* violates constraints anyway, take out */
 		if (upp(max, args) > threshold) {
-			column_swap(blp, pivot ++, column);
+			column_swap(blp, blp->zero_pivot ++, column);
 		}
 	}
 
-	/* pick out all required posting lists that can make threshold value */
-	while (pivot < blp->n_po) {
-#ifdef DEBUG_BIN_LP
-		printf("pivot = %d\n", pivot);
-		bin_lp_print(*blp);
-#endif
-		/* find out which row violates threshold constraints the most */
-		int max_row = 0, max = 0;
-		for (row = 0; row < blp->n_nodes; row++) {
-			int sum = row_sum(blp, row, pivot);
-			if (sum > max) {
-				max = sum;
-				max_row = row;
-			}
-		}
-#ifdef DEBUG_BIN_LP
-		printf("max_row = %d, val = %d\n", max_row, max);
-#endif
-		if (upp(max, args) > threshold) {
-			/* find out the max element in the violating row */
-			int max_col = row_max_column(blp, max_row, pivot);
-			column_swap(blp, pivot ++, max_col);
-		} else {
-			break;
-		}
-	}
-
-	return pivot;
+	int max = -1;
+	bin_lp_solve_r(blp, threshold, &max, blp, upp, args, 0);
+	return blp->zero_pivot;
 }

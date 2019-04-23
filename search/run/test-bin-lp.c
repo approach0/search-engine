@@ -10,10 +10,16 @@ static float test_get_upperbound(int i, void *_)
 	return (float)i;
 }
 
+
+static int test_set_weight(int i, void *_)
+{
+	return 2;
+}
+
 int main()
 {
 	struct bin_lp blp = bin_lp_alloc(3, 5);
-	int pivot, res = 0;
+	int res = 0;
 	bin_lp_reset(&blp);
 
 	{
@@ -57,9 +63,8 @@ int main()
 		printf("res = 0x%x\n", res);
 	}
 
-	bin_lp_print(blp);
-	pivot = bin_lp_run(&blp, 5.f, &test_get_upperbound, NULL);
-	for (int i = 0; i < pivot; i++)
+	res = bin_lp_solve(&blp, 5.f, &test_get_upperbound, NULL);
+	for (int i = 0; i < res; i++)
 		printf("po[%d] is of requirement set.\n", blp.po[i]);
 
 	bin_lp_free(blp);
