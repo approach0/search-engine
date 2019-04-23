@@ -325,19 +325,27 @@ inline static void
 math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 {
 	struct math_pruner *pruner = &po->pruner;
+	struct bin_lp *blp = &pruner->blp;
 
 	/* input binary LP problem */
-	bin_lp_reset(&pruner->blp);
+	bin_lp_reset(blp);
 	for (int i = 0; i < po->iter->size; i++) {
 		uint32_t pid = po->iter->map[i];
 		for (int k = 0; k < pruner->postlist_nodes[pid].sz; k++) {
 			int rid = pruner->postlist_nodes[pid].rid[k];
 			int ref = pruner->postlist_nodes[pid].ref[k];
-			(void)bin_lp_assign(&pruner->blp, rid - 1, pid, ref);
+			(void)bin_lp_assign(blp, rid - 1, pid, ref);
 		}
 	}
+
+	/* set objective weights */
+	for (int i = 0; i < blp->n_po; i++) {
+		int pid = blp->po[i];
+		blp->weight[i] = pruner->postlist_len[pid];
+	}
+
 #ifdef DEBUG_MATH_SKIP_SET_SELECTION
-	bin_lp_print(pruner->blp);
+	bin_lp_print(blp);
 #endif
 }
 
@@ -356,7 +364,7 @@ requirement_set(struct math_l2_postlist *po, float threshold)
 	struct math_pruner *pruner = &po->pruner;
 
 	/* solve binary LP problem */
-	pivot = bin_lp_run(&pruner->blp, threshold, &get_upperbound, po);
+	pivot = bin_lp_solve(&pruner->blp, threshold, &get_upperbound, po);
 
 #ifdef DEBUG_MATH_SKIP_SET_SELECTION
 	printf("requirement set: %d / %d\n", pivot, po->iter->size);

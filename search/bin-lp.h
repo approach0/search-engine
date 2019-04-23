@@ -15,5 +15,4 @@ void   bin_lp_print(struct bin_lp, int);
 int    bin_lp_assign(struct bin_lp*, int, int, int);
 void   bin_lp_reset(struct bin_lp*);
 void   bin_lp_free(struct bin_lp);
-int    bin_lp_run(struct bin_lp*, float, get_upp_callbk, void*);
 int    bin_lp_solve(struct bin_lp*, float, get_upp_callbk, void*);

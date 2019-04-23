@@ -19,7 +19,7 @@ static int test_set_weight(int i, void *_)
 int main()
 {
 	struct bin_lp blp = bin_lp_alloc(3, 5);
-	int res = 0;
+	int i, pivot, res = 0;
 	bin_lp_reset(&blp);
 
 	{
@@ -63,9 +63,20 @@ int main()
 		printf("res = 0x%x\n", res);
 	}
 
-	res = bin_lp_solve(&blp, 5.f, &test_get_upperbound, NULL);
-	for (int i = 0; i < res; i++)
-		printf("po[%d] is of requirement set.\n", blp.po[i]);
+	/* set objective weights */
+	for (i = 0; i < blp.n_po; i++) {
+		blp.weight[i] = 1;
+	}
+	blp.weight[4] = 3;
+
+	/* solve binary programming problem */
+	pivot = bin_lp_solve(&blp, 5.f, &test_get_upperbound, NULL);
+
+	/* print results */
+	for (i = 0; i < pivot; i++)
+		printf("po[%d] is in requirement set.\n", blp.po[i]);
+	for (i = pivot; i < blp.n_po; i++)
+		printf("po[%d] is in skipping set.\n", blp.po[i]);
 
 	bin_lp_free(blp);
 
