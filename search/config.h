@@ -43,6 +43,8 @@
 
 //#define DEBUG_MATH_MERGE
 
+//#define DEBUG_BIN_LP
+
 //#define HIGHLIGHT_MATH_W_DEGREE
 
 #define MATH_OCCUR_ONLY_ONE

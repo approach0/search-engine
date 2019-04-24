@@ -341,11 +341,13 @@ math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 	/* set objective weights */
 	for (int i = 0; i < blp->n_po; i++) {
 		int pid = blp->po[i];
-		blp->weight[i] = pruner->postlist_len[pid];
+		float l = (float)pruner->postlist_len[pid];
+		blp->weight[i] = (int)(1000.f / (l * l));
 	}
 
 #ifdef DEBUG_MATH_SKIP_SET_SELECTION
-	bin_lp_print(blp);
+	blp->one_pivot = blp->n_po;
+	bin_lp_print(*blp, 0);
 #endif
 }
 
@@ -368,7 +370,7 @@ requirement_set(struct math_l2_postlist *po, float threshold)
 
 #ifdef DEBUG_MATH_SKIP_SET_SELECTION
 	printf("requirement set: %d / %d\n", pivot, po->iter->size);
-	bin_lp_print(pruner->blp);
+	bin_lp_print(pruner->blp, 0);
 	printf("\n");
 #endif
 

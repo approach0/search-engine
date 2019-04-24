@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bin-lp.h"
 #include "common/common.h"
+#include "bin-lp.h"
+#include "config.h"
 
 /*
  * Printing functions
@@ -182,61 +183,63 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
                get_upp_callbk upp, void* args, int level)
 {
 	int cur_max = objective_weight_sum(blp);
+
 #ifdef DEBUG_BIN_LP
 	printf("\n");
 	printf("objective weight sum: %d\n", cur_max);
 	bin_lp_print(*blp, level);
 #endif
+
 	if (cur_max <= *max) {
 #ifdef DEBUG_BIN_LP
 		printf("pruned.\n");
 #endif
 		return;
+	} else if (blp->zero_pivot > blp->one_pivot) {
+		return;
 	}
 
-	if (blp->zero_pivot < blp->one_pivot) {
-		/* find out which row violates threshold constraints the most */
-		int max_row = -1; float max_delta = 0.f;
-		for (int row = 0; row < blp->n_nodes; row++) {
-			int sum = row_weight_sum(blp, row);
-			float delta = upp(sum, args) - threshold;
+	/* find out which row violates threshold constraints the most */
+	int max_row = -1; float max_delta = 0.f;
+	for (int row = 0; row < blp->n_nodes; row++) {
+		int sum = row_weight_sum(blp, row);
+		float delta = upp(sum, args) - threshold;
 #ifdef DEBUG_BIN_LP
 			printf("row[%d] weight sum: %d (violate: %f)\n", row, sum, delta);
 #endif
-			if (delta > max_delta) {
-				max_delta = delta;
-				max_row = row;
-			}
+		if (delta > max_delta) {
+			max_delta = delta;
+			max_row = row;
 		}
+	}
 
-		/* if this problem does not satisfy all of our constraints */
-		if (max_row >= 0) {
-			/* solve sub-problems */
-			int max_col = row_max_column(blp, max_row);
+	/* if this problem does not satisfy all of our constraints */
+	if (max_row >= 0) {
+		/* solve sub-problems */
+		int max_col = row_max_column(blp, max_row);
 #ifdef DEBUG_BIN_LP
 			printf("most violating row = %d, col = %d\n", max_row, max_col);
 #endif
-			struct bin_lp lp1, lp2;
-			lp1 = bin_lp_alloc(blp->height, blp->width);
-			lp2 = bin_lp_alloc(blp->height, blp->width);
+		struct bin_lp lp1, lp2;
+		lp1 = bin_lp_alloc(blp->height, blp->width);
+		lp2 = bin_lp_alloc(blp->height, blp->width);
 
-			bin_lp_copy(&lp1, blp);
-			bin_lp_copy(&lp2, blp);
+		bin_lp_copy(&lp1, blp);
+		bin_lp_copy(&lp2, blp);
 
-			column_swap(&lp1, lp1.zero_pivot ++, max_col);
-			bin_lp_solve_r(&lp1, threshold, max, sol, upp, args, level + 1);
+		column_swap(&lp1, lp1.zero_pivot ++, max_col);
+		bin_lp_solve_r(&lp1, threshold, max, sol, upp, args, level + 1);
 
-			column_swap(&lp2, -- lp2.one_pivot, max_col);
-			bin_lp_solve_r(&lp2, threshold, max, sol, upp, args, level + 1);
+//		column_swap(&lp2, -- lp2.one_pivot, max_col);
+//		bin_lp_solve_r(&lp2, threshold, max, sol, upp, args, level + 1);
 
-			bin_lp_free(lp1);
-			bin_lp_free(lp2);
-			return;
+		bin_lp_free(lp1);
+		bin_lp_free(lp2);
+		return;
 #ifdef DEBUG_BIN_LP
-		} else {
-			printf("this is feasible solution.\n");
+	} else {
+		printf("this is feasible solution.\n");
 #endif
-		}
 	}
 
 #ifdef DEBUG_BIN_LP
