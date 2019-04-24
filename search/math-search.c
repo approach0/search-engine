@@ -539,6 +539,7 @@ int math_l2_postlist_next(void *po_)
 
 		// math_pruner_print(pruner);
 
+		/* if there is no element in requirement set */
 		if (pruner->postlist_pivot < 0) {
 			po->candidate = UINT64_MAX;
 			po->cur_doc_id = UINT32_MAX;
