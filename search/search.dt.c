@@ -102,6 +102,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 		root_pm.n_po += 1;
 	}
 
+	/* math score threshold to make into top-K results */
+	float math_theta = 0.f;
+
 	// Insert math posting list iterators
 	for (int k = 0; k < qry->len; k++) {
 		struct query_keyword *kw = query_keyword(qry, k);
@@ -114,7 +117,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 			/* construct level-2 postlist */
 			if (0 == math_qry_prepare(indices, kw_str, ms)) {
-				mpo[j] = math_l2_postlist(indices, ms, &rk_res /* top-K */);
+				mpo[j] = math_l2_postlist(indices, ms, &rk_res, &math_theta);
 
 				root_pm.po[i] = postmerger_math_l2_postlist(mpo + j);
 			} else {
@@ -172,118 +175,129 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 	/* merge top-level posting lists here */
 	foreach (iter, postmerger, &root_pm) {
-		int h = 0; /* number of hit lists */
+		int h = 0; /* number of hit keywords */
 		uint64_t cur;
-		float max_math_score = 0.f;
-		float tf_idf_score = 0.f;
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
 		printf("min docID: %u\n", iter->min);
 #endif
 
-#ifndef IGNORE_TERM_INDEX
 		/* document length */
+#ifndef IGNORE_TERM_INDEX
 		uint32_t l = term_index_get_docLen(indices->ti, iter->min);
 #else
 		uint32_t l = 1;
 #endif
 
-		for (int i = 0; i < iter->size; i++) {
-			uint32_t pid = iter->map[i];
-			cur = postmerger_iter_call(&root_pm, iter, cur, i);
+		/* calculate term scores */
+		float tf_idf_score = 0.f;
+		for (int pid = 0; pid < sep; pid++) {
 
-#ifdef PRINT_RECUR_MERGING_ITEMS
-			printf("iter[%u] po[%u] = %u\n", i, pid, cur);
-#endif
+			cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
 			if (cur != UINT64_MAX && cur == iter->min) {
-				if (pid < sep) {
-					const int j = i;
-					struct term_posting_item *ti = term_item + j;
+				const int j = pid;
+				struct term_posting_item *ti = term_item + j;
 
-					POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
-						ti, sizeof(struct term_posting_item));
+				/* read term posting list item */
+				POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
+					ti, sizeof(struct term_posting_item));
 
-					/* accumulate term score */
-					tf_idf_score += BM25_tf_partial_score(&bm25, j, ti->tf, l);
+				/* accumulate term score */
+				tf_idf_score += BM25_tf_partial_score(&bm25, j, ti->tf, l);
+
+#ifdef ENABLE_PROXIMITY_SCORE
+				/* add term occurs into proximity array */
+				P_CAST(ti_occurs, hit_occur_t, term_pos + j);
+				for (int k = 0; k < ti->n_occur; k++)
+					ti_occurs[k].pos = ti->pos_arr[k];
+				prox_set_input(prox + (h++), ti_occurs, ti->n_occur);
+#endif
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
-					printf("hit term po[%u]: ", iter->map[i]);
-					printf("%s=%u, ", STRVAR_PAIR(ti->doc_id));
-					printf("%s=%u, ", STRVAR_PAIR(ti->tf));
-					printf("%s=%u: ", STRVAR_PAIR(ti->n_occur));
-					for (int k = 0; k < ti->n_occur; k++)
-						printf("%u ", ti->pos_arr[k]);
-					printf("\n");
+				printf("hit term po[%u]: ", pid);
+				printf("%s=%u, ", STRVAR_PAIR(ti->doc_id));
+				printf("%s=%u, ", STRVAR_PAIR(ti->tf));
+				printf("%s=%u: ", STRVAR_PAIR(ti->n_occur));
+				for (int k = 0; k < ti->n_occur; k++)
+					printf("%u ", ti->pos_arr[k]);
+				printf("\n");
 #endif
-#ifdef ENABLE_PROXIMITY_SCORE
-					P_CAST(ti_occurs, hit_occur_t, term_pos + j);
-					for (int k = 0; k < ti->n_occur; k++)
-						ti_occurs[k].pos = ti->pos_arr[k];
-					prox_set_input(prox + h, ti_occurs, ti->n_occur);
-#endif
-
-				} else {
-					const int j = i - sep;
-					struct math_l2_postlist_item *mi = math_item + j;
-
-					POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
-						mi, sizeof(struct math_l2_postlist_item));
-
-//					if (mi->doc_id == 150175) {
-//						printf("doc#%u, exp#%u score = %f\n", mi->doc_id,  mi->occurs[0].pos, mi->part_score);
-//					}
-
-					/* find math best score */
-					if (mi->part_score > max_math_score)
-						max_math_score = mi->part_score;
-
-#ifdef PRINT_RECUR_MERGING_ITEMS
-					printf("hit math po[%u]: ", iter->map[i]);
-					printf("%s=%u, ",   STRVAR_PAIR(mi->doc_id));
-					printf("%s=%.3f, ", STRVAR_PAIR(mi->part_score));
-					printf("%s=%u: ",   STRVAR_PAIR(mi->n_occurs));
-					for (int k = 0; k < mi->n_occurs; k++)
-						printf("%u ", mi->occurs[k].pos);
-					printf("\n");
-#endif
-#ifdef ENABLE_PROXIMITY_SCORE
-					prox_set_input(prox + h, mi->occurs, mi->n_occurs);
-#endif
-				}
-
-				/* count the number of hits in this iteration */
-				h ++;
 				/* advance posting iterators */
-				postmerger_iter_call(&root_pm, iter, next, i);
+				POSTMERGER_POSTLIST_CALL(&root_pm, next, pid);
 			}
+		}
 
+		float prox_score = 0.f;
+#ifdef ENABLE_PROXIMITY_SCORE
+		/* calculate (term) proximity score */
+		if (h > 0)
+			prox_score = proximity_score(prox, h);
+#endif
+
+		/* calculate math threshold score inversely from term scores. */
+		if (h > 0) {
+			float doc_score = 0.f;
+			if (priority_Q_full(&rk_res))
+				doc_score = priority_Q_min_score(&rk_res);
+			float math_score = (doc_score - prox_score) / (1.f + tf_idf_score);
+			math_theta = math_score * 2.f - 1.f;
+		} else {
+			math_theta = 0.f;
+		}
+
+		/* calculate math scores */
+		float max_math_score = 0.f;
+		for (int pid = sep; pid < root_pm.n_po; pid++) {
+
+			cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
+			if (cur != UINT64_MAX && cur == iter->min) {
+				const int j = pid - sep;
+				struct math_l2_postlist_item *mi = math_item + j;
+
+				POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
+					mi, sizeof(struct math_l2_postlist_item));
+
+				/* find math score from maximum math part score */
+				if (mi->part_score > max_math_score)
+					max_math_score = mi->part_score;
+
+#ifdef ENABLE_PROXIMITY_SCORE
+				prox_set_input(prox + (h++), mi->occurs, mi->n_occurs);
+#endif
+
+#ifdef PRINT_RECUR_MERGING_ITEMS
+				printf("hit math po[%u]: ", pid);
+				printf("%s=%u, ",   STRVAR_PAIR(mi->doc_id));
+				printf("%s=%.3f, ", STRVAR_PAIR(mi->part_score));
+				printf("%s=%u: ",   STRVAR_PAIR(mi->n_occurs));
+				for (int k = 0; k < mi->n_occurs; k++)
+					printf("%u ", mi->occurs[k].pos);
+				printf("\n");
+#endif
+				/* advance posting iterators */
+				POSTMERGER_POSTLIST_CALL(&root_pm, next, pid);
+			}
 		}
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
 		printf("\n");
 #endif
 
+		if (h > 0) {
+			/* now, calculate the overall score for ranking */
+			float math_score = (1.f + max_math_score) / 2.f;
+			float text_score = 1.f + tf_idf_score;
+			float doc_score = prox_score + math_score * text_score;
+
 #ifdef ENABLE_PROXIMITY_SCORE
-		/* calculate proximity score */
-		float prox_score = proximity_score(prox, h);
-		prox_reset_inputs(prox, h); /* reset */
+			prox_reset_inputs(prox, h); /* reset */
 #endif
-
-		/* now, calculate the overall score for ranking */
-#if 0
-		float math_score = (1.f + max_math_score) / 2.f;
-		float text_score = 1.f + tf_idf_score;
-		float doc_score = prox_score + math_score * text_score;
-#else
-		float doc_score = max_math_score; /* math-only search */
-#endif
-
-		/* if anything scored, consider as top-K candidate */
-		if (doc_score > 0) {
-			// printf("push doc#%u score = %f\n", cur, doc_score);
-			topk_candidate(&rk_res, (doc_id_t)cur, doc_score, prox, h);
-			h = 0;
+			/* if anything scored, consider as top-K candidate */
+			if (doc_score > 0.f) {
+				topk_candidate(&rk_res, (doc_id_t)cur, doc_score, prox, h);
+			}
 		}
+
 
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 		if (cnt ++ > DEBUG_MERGE_LIMIT_ITERS) {

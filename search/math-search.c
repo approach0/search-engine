@@ -127,7 +127,8 @@ struct math_l2_postlist
 math_l2_postlist(
 	struct indices *indices,
 	struct math_qry_struct* mqs,
-	ranked_results_t *rk_res)
+	ranked_results_t *rk_res,
+	float *theta)
 {
 	struct math_l2_postlist po;
 	struct add_path_postings_args args = {indices, &po};

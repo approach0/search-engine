@@ -22,6 +22,7 @@ struct math_l2_postlist {
 	struct math_qry_struct *mqs;
 	struct indices *indices /* for debug */;
 	ranked_results_t *rk_res;
+	float *math_theta; /* math top-k threshold */
 
 	/* current doc-level item recorder */
 	uint32_t    cur_doc_id, future_doc_id;
@@ -46,7 +47,8 @@ struct math_l2_postlist_item {
 void math_l2_postlist_print(struct math_l2_postlist*);
 
 struct math_l2_postlist
-math_l2_postlist(struct indices*, struct math_qry_struct*, ranked_results_t*);
+math_l2_postlist(struct indices*, struct math_qry_struct*,
+                 ranked_results_t*, float*);
 
 struct postmerger_postlist
 postmerger_math_l2_postlist(struct math_l2_postlist*);
