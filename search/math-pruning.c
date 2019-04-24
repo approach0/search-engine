@@ -99,7 +99,6 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		}
 	}
 
-#ifdef MATH_PRUNING_SECTR_DROP_ENABLE
 	/* sort sector tree in each node by their upperbounds */
 	for (int k = 0; k < pruner->n_nodes; k++) {
 		struct pruner_node *n = pruner->nodes + k;
@@ -117,7 +116,6 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 					n->postlist_id[j] = t2;
 				}
 	}
-#endif
 
 	/* calculate the width for each node. */
 	for (int i = 0; i < pruner->n_nodes; i++) {

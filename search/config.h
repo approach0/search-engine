@@ -27,9 +27,6 @@
 // #define DEBUG_MATH_SCORE_INSPECT /* particular expID scoring inspect */
 // #define DEBUG_PRINT_QRY_STRUCT
 
-#define MATH_PRUNING_EARLY_DROP_ENABLE
-#define MATH_PRUNING_SECTR_DROP_ENABLE
-
 #define WILDCARD_PATH_QUERY_EXPAND_ENABLE
 
 // #define MATH_SKIP_SET_FAST_SELECTION
@@ -76,7 +73,6 @@
 
 /* prefix search */
 #define MAX_NODE_IDS 4096
-#define MAX_CELL_CNT 512
 
 //#define MATH_PREFIX_QRY_DEBUG_PRINT
 
