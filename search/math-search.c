@@ -521,10 +521,10 @@ int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 	struct math_pruner *pruner = &po->pruner;
-	float threshold = pruner->init_threshold;
+	float threshold = pruner->init_threshold, theta = *po->math_theta;
 
 	if (priority_Q_full(po->rk_res))
-		threshold = MAX(priority_Q_min_score(po->rk_res), threshold);
+		threshold = MAX(theta, threshold);
 
 	if (threshold != pruner->prev_threshold) {
 		drop_small_nodes(po, threshold);
