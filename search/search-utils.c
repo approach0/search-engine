@@ -256,7 +256,7 @@ print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
 #else
 	hit_occur_t pos[1] = {{expID}};
 #endif
-	struct rank_hit mock_hit = {docID, 0, 1, pos};
+	struct rank_hit mock_hit = {docID, 0, 0, 0, 1, pos};
 
 	printf("expr#%u @ doc#%u:\n", expID, docID);
 

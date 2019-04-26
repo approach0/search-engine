@@ -13,28 +13,55 @@
 #include "proximity.h"
 #include "bm25-score.h"
 
+struct overall_scores {
+	float math_score, text_score, doc_score;
+};
+
+#ifdef DEBUG_HIT_SCORE_INSPECT
+doc_id_t debug_hit_doc;
+#endif
+
+void calc_overall_scores(struct overall_scores *s,
+	float max_math_score, float tf_idf_score, float prox_score)
+{
+#if 1
+	float fm = 0.5f + max_math_score * 10.f;
+	float ft = (1.f + tf_idf_score + prox_score) / 2.f;
+	s->math_score = max_math_score;
+	s->text_score = (ft > 0.f) ? ft : max_math_score;
+	s->doc_score = max_math_score * 100.f + prox_score + fm * ft;
+#else
+	s->math_score = max_math_score;
+	s->text_score = max_math_score;
+	s->doc_score = max_math_score;
+#endif
+
+#ifdef DEBUG_HIT_SCORE_INSPECT
+	if (debug_hit_doc == 54047 || debug_hit_doc == 0 || debug_hit_doc == 73859 || debug_hit_doc == 85243)
+	printf("doc#%u, t%f, m%f, x%f = %f + %f = %f\n", debug_hit_doc,
+		s->text_score, s->math_score, prox_score, max_math_score * 100.f, fm * ft, s->doc_score);
+#endif
+}
+
+//float
+//calc_math_max_score(float doc_score, float tf_idf_score, float prox_score)
+//{
+//	float math_score = (doc_score - prox_score) / (1.f + tf_idf_score);
+//	return math_score * 4.f - 1.f;
+//}
+
 static struct rank_hit
-*new_hit(doc_id_t hitID, float score, prox_input_t *prox, int n)
+*new_hit(doc_id_t hitID, struct overall_scores *s, prox_input_t *prox, int n)
 {
 	struct rank_hit *hit;
 	hit = malloc(sizeof(struct rank_hit));
 	hit->docID = hitID;
-	hit->score = score;
+	hit->math_score = s->math_score;
+	hit->text_score = s->text_score;
+	hit->score = s->doc_score;
 	hit->occurs = malloc(sizeof(hit_occur_t) * MAX_TOTAL_OCCURS);
 	hit->n_occurs = prox_sort_occurs(hit->occurs, prox, n);
 	return hit;
-}
-
-static void
-topk_candidate(ranked_results_t *rk_res,
-               doc_id_t docID, float score,
-               prox_input_t *prox, uint32_t n)
-{
-	if (!priority_Q_full(rk_res) ||
-	    score > priority_Q_min_score(rk_res)) {
-		struct rank_hit *hit = new_hit(docID, score, prox, n);
-		priority_Q_add_or_replace(rk_res, hit);
-	}
 }
 
 ranked_results_t
@@ -103,7 +130,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	}
 
 	/* math score threshold to make into top-K results */
-	float math_theta = 0.f;
+	float theta = 0.f;
 
 	// Insert math posting list iterators
 	for (int k = 0; k < qry->len; k++) {
@@ -117,7 +144,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 			/* construct level-2 postlist */
 			if (0 == math_qry_prepare(indices, kw_str, ms)) {
-				mpo[j] = math_l2_postlist(indices, ms, &rk_res, &math_theta);
+				mpo[j] = math_l2_postlist(indices, ms, &rk_res, &theta);
 
 				root_pm.po[i] = postmerger_math_l2_postlist(mpo + j);
 			} else {
@@ -155,10 +182,8 @@ indices_run_query(struct indices* indices, struct query* qry)
 	// fprintf(mergetime_fh, "checkpoint-init %ld msec.\n", timer_tot_msec(&timer));
 #endif
 
-#ifdef ENABLE_PROXIMITY_SCORE
 	/* proximity score data structure */
 	prox_input_t prox[qry->len];
-#endif
 
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 	uint64_t cnt = 0;
@@ -176,7 +201,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 	/* merge top-level posting lists here */
 	foreach (iter, postmerger, &root_pm) {
 		int h = 0; /* number of hit keywords */
-		uint64_t cur;
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
 		printf("min docID: %u\n", iter->min);
@@ -193,7 +217,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		float tf_idf_score = 0.f;
 		for (int pid = 0; pid < sep; pid++) {
 
-			cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
+			uint64_t cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
 			if (cur != UINT64_MAX && cur == iter->min) {
 				const int j = pid;
 				struct term_posting_item *ti = term_item + j;
@@ -205,13 +229,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 				/* accumulate term score */
 				tf_idf_score += BM25_tf_partial_score(&bm25, j, ti->tf, l);
 
-#ifdef ENABLE_PROXIMITY_SCORE
 				/* add term occurs into proximity array */
 				P_CAST(ti_occurs, hit_occur_t, term_pos + j);
 				for (int k = 0; k < ti->n_occur; k++)
 					ti_occurs[k].pos = ti->pos_arr[k];
 				prox_set_input(prox + (h++), ti_occurs, ti->n_occur);
-#endif
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
 				printf("hit term po[%u]: ", pid);
@@ -227,29 +249,28 @@ indices_run_query(struct indices* indices, struct query* qry)
 			}
 		}
 
+		/* calculate (term) proximity score */
 		float prox_score = 0.f;
 #ifdef ENABLE_PROXIMITY_SCORE
-		/* calculate (term) proximity score */
 		if (h > 0)
 			prox_score = proximity_score(prox, h);
 #endif
 
-		/* calculate math threshold score inversely from term scores. */
-		if (h > 0) {
-			float doc_score = 0.f;
-			if (priority_Q_full(&rk_res))
-				doc_score = priority_Q_min_score(&rk_res);
-			float math_score = (doc_score - prox_score) / (1.f + tf_idf_score);
-			math_theta = math_score * 2.f - 1.f;
-		} else {
-			math_theta = 0.f;
-		}
+		/* calculate math threshold score inversely given term scores. */
+//		if (h > 0) {
+//			float doc_score = 0.f;
+//			if (priority_Q_full(&rk_res))
+//				doc_score = priority_Q_min_score(&rk_res);
+//			theta = calc_math_max_score(doc_score, tf_idf_score, prox_score);
+//		} else {
+//			theta = 0.f;
+//		}
 
 		/* calculate math scores */
 		float max_math_score = 0.f;
 		for (int pid = sep; pid < root_pm.n_po; pid++) {
 
-			cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
+			uint64_t cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
 			if (cur != UINT64_MAX && cur == iter->min) {
 				const int j = pid - sep;
 				struct math_l2_postlist_item *mi = math_item + j;
@@ -261,9 +282,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 				if (mi->part_score > max_math_score)
 					max_math_score = mi->part_score;
 
-#ifdef ENABLE_PROXIMITY_SCORE
 				prox_set_input(prox + (h++), mi->occurs, mi->n_occurs);
-#endif
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
 				printf("hit math po[%u]: ", pid);
@@ -284,17 +303,21 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 		if (h > 0) {
-			/* now, calculate the overall score for ranking */
-			float math_score = (1.f + max_math_score) / 2.f;
-			float text_score = 1.f + tf_idf_score;
-			float doc_score = prox_score + math_score * text_score;
-
-#ifdef ENABLE_PROXIMITY_SCORE
-			prox_reset_inputs(prox, h); /* reset */
+			doc_id_t hit_doc = (doc_id_t)iter->min;
+#ifdef DEBUG_HIT_SCORE_INSPECT
+			debug_hit_doc = hit_doc;
 #endif
-			/* if anything scored, consider as top-K candidate */
-			if (doc_score > 0.f) {
-				topk_candidate(&rk_res, (doc_id_t)cur, doc_score, prox, h);
+			/* now, calculate the overall score for ranking */
+			struct overall_scores s;
+			calc_overall_scores(&s, max_math_score, tf_idf_score, prox_score);
+
+			prox_reset_inputs(prox, h); /* reset */
+
+			/* consider as top-K candidate */
+			if (!priority_Q_full(&rk_res) ||
+			    s.doc_score > priority_Q_min_score(&rk_res)) {
+				struct rank_hit *hit = new_hit(hit_doc, &s, prox, h);
+				priority_Q_add_or_replace(&rk_res, hit);
 			}
 		}
 

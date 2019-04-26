@@ -35,6 +35,12 @@ float priority_Q_min_score(struct priority_Q *Q)
 	return ((struct rank_hit *)top)->score;
 }
 
+struct rank_hit *priority_Q_top(struct priority_Q *Q)
+{
+	void *top = heap_top(&Q->heap);
+	return (struct rank_hit *)top;
+}
+
 bool priority_Q_add_or_replace(struct priority_Q *Q, struct rank_hit *hit)
 {
 	/* insert this element or replace the top one in Q */

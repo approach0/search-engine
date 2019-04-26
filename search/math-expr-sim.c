@@ -42,9 +42,9 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 //	if (NULL != strstr(url, "/179098/")) {
 
-//	if (doc_id == 28965 || doc_id == 253275) {
+	if (doc_id == 203109 || doc_id == 203368) {
 
-	if (doc_id == 150175) {
+//	if (doc_id == 150175) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -299,8 +299,7 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 ////////////////////  pruning functions ////////////////////////////////
 void math_l2_cur_print(struct math_l2_postlist *po)
 {
-	float threshold = *po->math_theta;
-
+	float threshold = *po->theta;
 	uint64_t candidate = po->candidate;
 	struct math_pruner *pruner = &po->pruner;
 	printf("doc#%lu, pivot = %d/%u, threshold = %.3f.\n",

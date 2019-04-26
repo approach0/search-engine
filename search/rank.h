@@ -13,7 +13,7 @@ typedef struct hit_occur {
 
 struct rank_hit {
 	doc_id_t     docID;
-	float        score;
+	float        math_score, text_score, score;
 	uint32_t     n_occurs;
 	hit_occur_t *occurs; /* occur positions */
 };
@@ -30,8 +30,8 @@ bool  priority_Q_add_or_replace(struct priority_Q*, struct rank_hit*);
 void  priority_Q_sort(struct priority_Q*);
 void  priority_Q_print(struct priority_Q*);
 void  priority_Q_free(struct priority_Q*);
-
-uint32_t priority_Q_len(struct priority_Q*);
+struct rank_hit *priority_Q_top(struct priority_Q*);
+uint32_t         priority_Q_len(struct priority_Q*);
 
 /* a conceptually more descriptive name */
 #define free_ranked_results(_Q) \

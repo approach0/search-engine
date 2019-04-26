@@ -145,6 +145,7 @@ math_l2_postlist(
 	po.mqs = mqs;
 	po.indices = indices;
 	po.rk_res = rk_res;
+	po.theta = theta;
 
 #ifdef DEBUG_MATH_MERGE
 	timer_reset(&g_debug_timer);
@@ -521,12 +522,24 @@ int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 	struct math_pruner *pruner = &po->pruner;
-	float threshold = pruner->init_threshold, theta = *po->math_theta;
+	float threshold = pruner->init_threshold;
 
-	if (priority_Q_full(po->rk_res))
-		threshold = MAX(theta, threshold);
+	if (priority_Q_full(po->rk_res)) {
+		struct rank_hit *rh = priority_Q_top(po->rk_res);
+		float top = MIN(rh->math_score, rh->text_score);
+		threshold = MAX(top, threshold);
+	}
 
 	if (threshold != pruner->prev_threshold) {
+#if defined(DEBUG_MATH_PRUNING)
+		struct rank_hit *rh = priority_Q_top(po->rk_res);
+		if (priority_Q_full(po->rk_res)) {
+			printf("heap is full, math_score=%f, text_score=%f\n",
+				rh->math_score, rh->text_score);
+		}
+		printf("threshold changed: %f -> %f.\n",
+			pruner->prev_threshold, threshold);
+#endif
 		drop_small_nodes(po, threshold);
 		drop_useless_postlist_iters(po);
 
