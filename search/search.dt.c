@@ -37,9 +37,10 @@ void calc_overall_scores(struct overall_scores *s,
 #endif
 
 #ifdef DEBUG_HIT_SCORE_INSPECT
-	if (debug_hit_doc == 54047 || debug_hit_doc == 0 || debug_hit_doc == 73859 || debug_hit_doc == 85243)
-	printf("doc#%u, t%f, m%f, x%f = %f + %f = %f\n", debug_hit_doc,
-		s->text_score, s->math_score, prox_score, max_math_score * 100.f, fm * ft, s->doc_score);
+	if (s->doc_score > 0.25f)
+//	if (debug_hit_doc == 54047 || debug_hit_doc == 73859 || debug_hit_doc == 85243)
+	printf("doc#%u, ft%f, fm%f, max_math%f, prox%f, doc%f\n", debug_hit_doc,
+		ft, fm, max_math_score, prox_score, s->doc_score);
 #endif
 }
 
