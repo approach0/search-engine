@@ -51,16 +51,16 @@
 #define MATH_OCCUR_ONLY_ONE
 
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.30f /* aggressive */
-//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .15f  /* conservative */
-#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
+#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .15f  /* conservative */
+//#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
 
 #ifdef DEBUG_MATH_PRUNING
 	#define DEBUG_MERGE_LIMIT_ITERS UINT64_MAX
 	#define RANK_SET_DEFAULT_VOL 200
 #else
-	// #define RANK_SET_DEFAULT_VOL 100
+	#define RANK_SET_DEFAULT_VOL 100
 	// #define RANK_SET_DEFAULT_VOL 200
-	#define RANK_SET_DEFAULT_VOL 1000
+	// #define RANK_SET_DEFAULT_VOL 1000
 #endif
 
 #define DEFAULT_RES_PER_PAGE 10
