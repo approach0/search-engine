@@ -30,7 +30,7 @@ void calc_overall_scores(struct overall_scores *s,
 	s->math_score = max_math_score;
 	s->text_score = (ft > 0.f) ? ft : max_math_score;
 	s->doc_score = max_math_score * 100.f + prox_score + fm * ft;
-#else
+#else /* math only scoring */
 	s->math_score = max_math_score;
 	s->text_score = max_math_score;
 	s->doc_score = max_math_score;

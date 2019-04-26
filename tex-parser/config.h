@@ -9,4 +9,4 @@
 
 #define OPTR_TREE_NODE_COLOR_CSS_PREFIX "optr_color_"
 
-#define TEX_PARSER_USE_LATEXML
+#define TEX_PARSER_USE_LATEXML /* use LaTeXML as fallback parser */
