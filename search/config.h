@@ -1,6 +1,9 @@
 /* for MAX_TXT_SEG_BYTES & MAX_TXT_SEG_LEN */
 #include "txt-seg/config.h"
 
+/* for MAX_TERM_ITEM_POSITIONS */
+#include "term-index/config.h"
+
 /* consider both math & term */
 #define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
@@ -25,6 +28,7 @@
 // #define DEBUG_MERGE_SKIPPING /* show all the jumping/skipping points */
 
 // #define DEBUG_MATH_SCORE_INSPECT /* particular expID scoring inspect */
+// #define DEBUG_HIT_SCORE_INSPECT /* particular docID scoring inspect */
 // #define DEBUG_PRINT_QRY_STRUCT
 
 #define WILDCARD_PATH_QUERY_EXPAND_ENABLE
@@ -36,7 +40,7 @@
 
 // #define MERGE_TIME_LOG "merge.runtime.dat"
 
-//#define DEBUG_MATH_PRUNING
+// #define DEBUG_MATH_PRUNING
 
 //#define DEBUG_MATH_MERGE
 
@@ -64,9 +68,9 @@
 //#define DEBUG_PROXIMITY
 #define ENABLE_PROXIMITY_SCORE
 
-#define MAX_MATH_OCCURS 16
+#define MAX_MATH_OCCURS MAX_TERM_ITEM_POSITIONS
 
-#define MAX_TOTAL_OCCURS 32
+#define MAX_TOTAL_OCCURS (MAX_TERM_ITEM_POSITIONS * 2)
 
 //#define DEBUG_HILIGHT_SEG_OFFSET
 //#define DEBUG_HILIGHT_SEG
