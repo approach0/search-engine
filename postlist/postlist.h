@@ -82,4 +82,5 @@ int   postlist_empty(struct postlist*);
 int   postlist_iter_next(struct postlist_iterator*);
 void* postlist_iter_cur_item(struct postlist_iterator*);
 int   postlist_iter_jump(struct postlist_iterator*, uint64_t);
+int   postlist_iter_jump32(struct postlist_iterator*, uint32_t);
 void  postlist_iter_free(struct postlist_iterator*);

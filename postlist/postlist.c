@@ -28,8 +28,8 @@ void postlist_print_info(struct postlist *po)
 	printf("%u blocks (%.2f KB).\n", po->n_blk,
 	       (float)po->tot_sz / 1024.f);
 	printf("item size: %u B\n", po->item_sz);
-	printf("buffer size: %u B\n", po->buf_sz);
-	printf("(%u items)\n", po->buf_sz / po->item_sz);
+	printf("buffer size: %u B ", po->buf_sz);
+	printf("(%u items / buffer)\n", po->buf_sz / po->item_sz);
 
 	skippy_print(&po->skippy, 0);
 }
@@ -244,7 +244,6 @@ bool postlist_jump(void *po_, uint64_t target)
 #ifdef DEBUG_POSTLIST
 	int debug_cnt = 0;
 #endif
-
 	endID = (uint64_t*)(po->buf + po->buf_end - po->item_sz);
 
 #ifdef DEBUG_POSTLIST
@@ -280,7 +279,7 @@ glide:
 		/* docID must be the first member of structure */
 		curID = (uint64_t*)postlist_cur_item(po);
 #ifdef DEBUG_POSTLIST
-		printf("glide to: %u\n", (*curID) >> 32);
+		printf("glide to: %lu (%u)\n", *curID, (*curID) >> 32);
 #endif
 		if (*curID >= target) {
 #ifdef DEBUG_POSTLIST
@@ -382,6 +381,32 @@ int postlist_iter_next(struct postlist_iterator* iter)
 void* postlist_iter_cur_item(struct postlist_iterator* iter)
 {
 	return iter->buf + iter->buf_idx;
+}
+
+int
+postlist_iter_jump32(struct postlist_iterator* iter, uint32_t target)
+{
+	struct skippy_node *jump_to;
+	uint32_t            id;
+
+	id = *(uint32_t*)(iter->buf + iter->buf_end - iter->item_sz);
+	if (target <= id)
+		goto glide;
+
+	jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
+
+	/* this is a new block, update pointer and rebuf. */
+	iter->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
+	postlist_iter_rebuf(iter);
+
+glide:
+	do {
+		id = *(uint32_t*)postlist_iter_cur_item(iter);
+		if (id >= target) return 1;
+
+	} while (postlist_iter_next(iter));
+
+	return 0;
 }
 
 int

@@ -20,24 +20,25 @@ enum test_option {
 };
 
 static struct term_posting_item
-*test_gen_item(const doc_id_t docID)
+*test_gen_item(doc_id_t prev_doc_id)
 {
 	struct term_posting_item *pi;
 	position_t *pos;
-	uint32_t i, n;
+	uint32_t i, n, tf;
 
 	n = 1 + rand() % 4; /* number of positions */
+	tf = n + rand() % 4; /* term frequency */
 
-	pi = malloc(TERM_POSTLIST_ITEM_SZ);
+	pi = malloc(sizeof (struct term_posting_item));
 
-	pi->doc_id = docID;
-	pi->tf = n;
+	pi->doc_id = prev_doc_id + 1 + rand() % 3;
+	pi->tf = tf;
 	pi->n_occur = n;
 
-	printf("(docID=%u, tf=%u) ", docID, n);
+	printf("(docID=%u, tf=%u) ", pi->doc_id, n);
 
 	{
-		pos = (position_t *)(pi + 1);
+		pos = pi->pos_arr;
 		pos[0] = rand() % 10;
 		for (i = 1; i < n; i++)
 			pos[i] = pos[i - 1] + rand() % 100;
@@ -55,24 +56,27 @@ static struct term_posting_item
 
 static void test_gen_data(struct postlist *po)
 {
-	struct   term_posting_item *pi;
+	struct   term_posting_item *pi = NULL;
 	size_t   fl_sz;
-	doc_id_t i;
+	doc_id_t i, prev = 1;
 
 	for (i = 1; i < N; i++) {
-		pi = test_gen_item(i);
+		pi = test_gen_item(prev);
 
-		// printf("writing %lu bytes...\n", TERM_POSTLIST_ITEM_SZ);
 		fl_sz = postlist_write(po, pi, TERM_POSTLIST_ITEM_SZ);
 
 		if (fl_sz)
 			printf("flush %lu bytes.\n", fl_sz);
 
+		prev = pi->doc_id;
 		free(pi);
 	}
 
 	fl_sz = postlist_write_complete(po);
-	printf("flush %lu bytes.\n", fl_sz);
+
+	printf("Generated %u items ... (linear size: %.2f KB)\n",
+		N, N * TERM_POSTLIST_ITEM_SZ / 1024.f);
+	postlist_print_info(po);
 }
 
 static void test_iterator(struct postlist *po)
@@ -82,38 +86,33 @@ static void test_iterator(struct postlist *po)
 	uint32_t i;
 	uint32_t fromID;
 	uint64_t jumpID;
-	int      jumped = 0;
 
 	printf("Please input (from, jump_to) IDs:\n");
 	(void)scanf("%u, %lu", &fromID, &jumpID);
 
-	postlist_start(po);
-
+	postlist_iter_t iter = postlist_iterator(po);
 	do {
-print_current:
-		pi = postlist_cur_item(po);
+		pi = (struct term_posting_item*)postlist_iter_cur_item(iter);
 
-		printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
-
-		{
+		{ /* print current item */
+			printf("[docID=%u, tf=%u] ", pi->doc_id, pi->tf);
 			pos_arr = pi->pos_arr;
 			printf("positions: [");
 			for (i = 0; i < pi->n_occur; i++)
 				printf("%u ", pos_arr[i]);
 			printf("] ");
+			printf("\n");
 		}
-		printf("\n");
 
-		if (!jumped && pi->doc_id == fromID) {
+		if (pi->doc_id == fromID) {
 			printf("trying to jump to %lu...\n", jumpID);
-			jumped = postlist_jump(po, jumpID);
-			printf("jump: %s.\n", jumped ? "successful" : "failed");
-			goto print_current;
+			int res = postlist_iter_jump32(iter, jumpID);
+			printf("jump: %s.\n", res ? "successful" : "failed");
+			continue;
 		}
+	} while (postlist_iter_next(iter));
 
-	} while (!jumped && postlist_next(po));
-
-	postlist_finish(po);
+	postlist_iter_free(iter);
 	printf("\n");
 }
 
@@ -135,8 +134,6 @@ static void run_testcase(enum test_option opt)
 
 	test_gen_data(po);
 
-	postlist_print_info(po);
-
 	//print_postlist(po);
 	test_iterator(po);
 
@@ -151,9 +148,6 @@ int main()
 
 	printf("{{{ TEST_CODEC_POSTING }}}\n");
 	run_testcase(TEST_CODEC_POSTING);
-
-	printf("Theoretical compact list size: %.2f KB\n",
-	       (N * sizeof(int) * (2 + 5)) / 1024.f);
 
 	mhook_print_unfree();
 	return 0;
