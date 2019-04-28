@@ -50,7 +50,7 @@ struct term_posting_item {
 	doc_id_t doc_id;
 	uint32_t tf;
 	uint32_t n_occur;
-	uint32_t pos_arr[MAX_TERM_ITEM_POSITIONS];
+	position_t pos_arr[MAX_TERM_ITEM_POSITIONS];
 };
 
 bool term_posting_start(void *);
