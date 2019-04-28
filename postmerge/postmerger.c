@@ -2,19 +2,13 @@
 #include <stdlib.h>
 #include "postmerger.h"
 
-void postmerger_init(struct postmerger *pm)
-{
-	pm->n_po = 0;
-}
-
 int postmerger_empty(struct postmerger *pm)
 {
 	return (pm->n_po == 0);
 }
 
 static uint64_t
-postmerger_iter_min(struct postmerger *pm,
-                    struct postmerger_iterator *iter)
+postmerger_iter_min(struct postmerger *iter)
 {
 	uint64_t min = UINT64_MAX;
 	for (int i = 0; i < iter->size; i++) {

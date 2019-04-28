@@ -12,24 +12,6 @@
  * Math in-memory posting list calls
  */
 
-static uint64_t math_memo_postlist_cur(void *po)
-{
-	if (postlist_terminates(po))
-		return UINT64_MAX;
-	else
-		return *(uint64_t*)postlist_cur_item(po);
-}
-
-static int math_memo_postlist_next(void *po)
-{
-	return (int)postlist_next(po);
-}
-
-static int math_memo_postlist_jump(void *po, uint64_t target)
-{
-	return (int)postlist_jump(po, target);
-}
-
 static size_t math_memo_postlist_read(void *po, void *dest, size_t sz)
 {
 	memcpy(dest, postlist_cur_item(po), sizeof(struct math_postlist_item));
@@ -56,10 +38,10 @@ struct postmerger_postlist
 math_memo_postlist(void *po)
 {
 	struct postmerger_postlist ret = {
-		po,
-		&math_memo_postlist_cur,
-		&math_memo_postlist_next,
-		&math_memo_postlist_jump,
+		iter,
+		&postlist_iter_cur,
+		&postlist_iter_next,
+		&postlist_iter_jump,
 		&math_memo_postlist_read,
 		&math_memo_postlist_init,
 		&math_memo_postlist_uninit
@@ -71,10 +53,10 @@ struct postmerger_postlist
 math_memo_postlist_gener(void *po)
 {
 	struct postmerger_postlist ret = {
-		po,
-		&math_memo_postlist_cur,
-		&math_memo_postlist_next,
-		&math_memo_postlist_jump,
+		iter,
+		&postlist_iter_cur,
+		&postlist_iter_next,
+		&postlist_iter_jump,
 		&math_memo_postlist_read_gener,
 		&math_memo_postlist_init,
 		&math_memo_postlist_uninit
