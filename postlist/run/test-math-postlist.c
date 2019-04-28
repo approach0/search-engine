@@ -7,18 +7,9 @@
 #include "postlist.h"
 #include "math-postlist.h"
 
-static void test_iterator(struct postlist *po, struct postlist_codec_fields fields)
+static void test_iterator(struct postlist *po)
 {
-	struct math_postlist_item *pi;
-	postlist_start(po);
-
-	do {
-		pi = postlist_cur_item(po);
-		postlist_print(pi, 1, fields);
-
-	} while (postlist_next(po));
-
-	postlist_finish(po);
+	print_postlist(po);
 	printf("\n");
 }
 
@@ -33,7 +24,7 @@ static void test(struct postlist *po, int test_n)
 
 	/* print fields and items */
 	postlist_print_fields(codec->fields);
-	//postlist_print(items, test_n, codec->fields);
+	postlist_print(items, test_n, codec->fields);
 
 	/* append items to posting list */
 	for (int i = 0; i < test_n; i++) {
@@ -51,7 +42,7 @@ static void test(struct postlist *po, int test_n)
 
 	/* test posting list iterator */
 	printf("=== test iterator ===\n");
-	test_iterator(po, codec->fields);
+	test_iterator(po);
 	//print_postlist(po);
 
 	/* free random items */
