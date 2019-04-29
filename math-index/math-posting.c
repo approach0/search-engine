@@ -318,15 +318,6 @@ uint64_t math_posting_cur_id_v2(math_posting_t po_)
 	return id64 & 0xffffffff000fffff;
 }
 
-uint64_t math_posting_cur_id_v2_2(math_posting_t po_)
-{
-	struct _math_posting *po = (struct _math_posting*)po_;
-	if (po->buf_end == 0)
-		return UINT64_MAX;
-	else
-		return math_posting_cur_id_v2(po_);
-}
-
 /* 2nd generation iterators (yet to be placed in ./postmerge/postcalls.c) */
 
 #include <unistd.h>
@@ -367,7 +358,11 @@ void math_posting_iter_free(math_posting_t po)
 
 uint64_t math_posting_iter_cur(math_posting_t po_)
 {
-	return math_posting_cur_id_v2_2(po_);
+	struct _math_posting *po = (struct _math_posting*)po_;
+	if (po->buf_end == 0)
+		return UINT64_MAX;
+	else
+		return math_posting_cur_id_v2(po_);
 }
 
 int math_posting_iter_next(math_posting_t po_)

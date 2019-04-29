@@ -2,17 +2,17 @@
 #include <stdlib.h>
 #include "postmerger.h"
 
-int postmerger_empty(struct postmerger *pm)
+int postmerger_empty(struct postmerger_postlists *pols)
 {
-	return (pm->n_po == 0);
+	return (pols->n == 0);
 }
 
 static uint64_t
-postmerger_iter_min(struct postmerger *iter)
+postmerger_min(struct postmerger *pm)
 {
-	uint64_t min = UINT64_MAX;
-	for (int i = 0; i < iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(pm, iter, cur, i);
+	uint64_t cur, min = UINT64_MAX;
+	for (int i = 0; i < pm->n_po; i++) {
+		cur = postmerger_iter_call(pm, cur, i);
 		if (cur < min) min = cur;
 	}
 
@@ -20,42 +20,43 @@ postmerger_iter_min(struct postmerger *iter)
 }
 
 postmerger_iter_t
-postmerger_iterator(struct postmerger *pm)
+postmerger_iterator(struct postmerger_postlists *pols)
 {
-	struct postmerger_iterator *iter;
-	iter = malloc(sizeof(struct postmerger_iterator));
-	iter->size = pm->n_po;
-	for (int i = 0; i < iter->size; i++) {
-		iter->map[i] = i;
+	struct postmerger *pm;
+	pm = malloc(sizeof(struct postmerger));
+	pm->n_po = pols->n;
+	for (int i = 0; i < pols->n; i++) {
+		pm->po[i]   = pols->po[i];
+		pm->map[i]  = i;
+		pm->iter[i] = POSTMERGER_POSTLIST_FUN(pm, get_iter, i, pols->po[i].po);
 	}
-	iter->pm  = pm;
-	/* iter->min should be the last one after other
-	 * members of `postmerger_iterator' are ready. */
-	iter->min = postmerger_iter_min(iter->pm, iter);
-	return iter;
+	/* set `min' when iterators are ready to read. */
+	pm->min = postmerger_min(pm);
+	return pm;
 }
 
-void postmerger_iter_free(postmerger_iter_t iter)
+void postmerger_iter_free(struct postmerger *pm)
 {
-	free(iter);
+	for (int i = 0; i < pm->n_po; i++)
+		POSTMERGER_POSTLIST_CALL(pm, del_iter, i);
+	free(pm);
 }
 
-int postmerger_iter_next(postmerger_iter_t iter)
+int postmerger_iter_next(struct postmerger *pm)
 {
-	int last_round = (iter->min == UINT64_MAX);
-	if (last_round) {
+	if (pm->min == UINT64_MAX) {
 		return 0;
 	} else {
-		iter->min = postmerger_iter_min(iter->pm, iter);
+		/* actual forwarding left to explict calls,
+		 * here only update the min value. */
+		pm->min = postmerger_min(pm);
 		return 1;
 	}
 }
 
-void
-postmerger_iter_remove(struct postmerger_iterator *iter, int i)
+void postmerger_iter_remove(struct postmerger *pm, int i)
 {
-	for (int j = i; j < iter->size - 1; j++) {
-		iter->map[j] = iter->map[j + 1];
-	}
-	iter->size -= 1;
+	pm->n_po -= 1;
+	for (int j = i; j < pm->n_po; j++)
+		pm->map[j] = pm->map[j + 1];
 }
