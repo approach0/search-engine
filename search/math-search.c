@@ -93,11 +93,10 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			//printf("#%u (in memo) %s\n", n, base_paths[i]);
 
 		} else if (math_posting_exits(full_paths[i])) {
-			po = math_posting_new_reader(full_paths[i]);
 			if (path_type == MATH_PATH_TYPE_PREFIX)
-				l2po->pols.po[n] = math_disk_postlist(po);
+				l2po->pols.po[n] = math_disk_postlist(full_paths[i]);
 			else
-				l2po->pols.po[n] = math_disk_postlist_gener(po);
+				l2po->pols.po[n] = math_disk_postlist_gener(full_paths[i]);
 
 			args->po->medium[n] = MATH_POSTLIST_ONDISK;
 			args->po->path_type[n] = path_type;
