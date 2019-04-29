@@ -75,8 +75,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 	/* merger */
-	struct postmerger root_pm;
-	postmerger_init(&root_pm);
+	struct postmerger_postlists root_pols = {0};
 
 	/* search result heap */
 	ranked_results_t rk_res;
@@ -120,14 +119,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 	// Insert term posting list iterators
 	for (int i = 0; i < sep; i++) {
 		if (tqs[i].term_id == 0)
-			root_pm.po[i] = empty_postlist();
+			root_pols.po[i] = empty_postlist();
 		else
-			root_pm.po[i] = postmerger_term_postlist(indices, tqs + i);
+			root_pols.po[i] = postmerger_term_postlist(indices, tqs + i);
 
 		/* BM25 per-term global arguments */
 		bm25.idf[i] = BM25_idf(&bm25, tqs[i].df);
 
-		root_pm.n_po += 1;
+		root_pols.n += 1;
 	}
 
 	/* math score threshold to make into top-K results */
@@ -139,7 +138,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 		if (kw->type == QUERY_KEYWORD_TEX) {
 			char *kw_str = wstr2mbstr(kw->wstr);
-			const int i = root_pm.n_po;
+			const int i = root_pols.n;
 			const int j = i - sep;
 			struct math_qry_struct *ms = mqs + j;
 
@@ -147,26 +146,26 @@ indices_run_query(struct indices* indices, struct query* qry)
 			if (0 == math_qry_prepare(indices, kw_str, ms)) {
 				mpo[j] = math_l2_postlist(indices, ms, &rk_res, &theta);
 
-				root_pm.po[i] = postmerger_math_l2_postlist(mpo + j);
+				root_pols.po[i] = postmerger_math_l2_postlist(mpo + j);
 			} else {
 				/* math parse error */
-				root_pm.po[i] = empty_postlist();
+				root_pols.po[i] = empty_postlist();
 			}
 
-			root_pm.n_po += 1;
+			root_pols.n += 1;
 		}
 	}
 
 	// Print processed query
 	//(void)math_postlist_cache_list(indices->ci.math_cache, true);
-	for (int i = 0; i < root_pm.n_po; i++) {
+	for (int i = 0; i < root_pols.n; i++) {
 		if (i < sep) { /* term query */
 			printf("po[%u] `%s' (id=%u, qf=%u, df=%u)\n", i, tqs[i].kw_str,
 			       tqs[i].term_id, tqs[i].qf, tqs[i].df);
 		} else { /* math query */
 			const int j = i - sep;
 			printf("po[%u] `%s'\n", i, mqs[j].kw_str);
-			if (NULL == root_pm.po[i].po)
+			if (NULL == root_pols.po[i].po)
 				printf("\t[] empty posting list. (parser error)\n");
 			else
 				math_l2_postlist_print(mpo + j); /* print sub-level posting lists */
@@ -174,11 +173,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 	}
 	printf("\n");
 
-	// Initialize merger iterators
-	for (int j = 0; j < root_pm.n_po; j++) {
-		/* calling math_l2_postlist_init() */
-		POSTMERGER_POSTLIST_CALL(&root_pm, init, j);
-	}
 #ifdef MERGE_TIME_LOG
 	// fprintf(mergetime_fh, "checkpoint-init %ld msec.\n", timer_tot_msec(&timer));
 #endif
@@ -200,7 +194,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 	/* merge top-level posting lists here */
-	foreach (iter, postmerger, &root_pm) {
+	foreach (iter, postmerger, &root_pols) {
 		int h = 0; /* number of hit keywords */
 
 #ifdef PRINT_RECUR_MERGING_ITEMS
@@ -218,13 +212,13 @@ indices_run_query(struct indices* indices, struct query* qry)
 		float tf_idf_score = 0.f;
 		for (int pid = 0; pid < sep; pid++) {
 
-			uint64_t cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
+			uint64_t cur = POSTMERGER_POSTLIST_CALL(iter, cur, pid);
 			if (cur != UINT64_MAX && cur == iter->min) {
 				const int j = pid;
 				struct term_posting_item *ti = term_item + j;
 
 				/* read term posting list item */
-				POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
+				POSTMERGER_POSTLIST_CALL(iter, read, pid,
 					ti, sizeof(struct term_posting_item));
 
 				/* accumulate term score */
@@ -246,7 +240,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 				printf("\n");
 #endif
 				/* advance posting iterators */
-				POSTMERGER_POSTLIST_CALL(&root_pm, next, pid);
+				POSTMERGER_POSTLIST_CALL(iter, next, pid);
 			}
 		}
 
@@ -269,14 +263,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 		/* calculate math scores */
 		float max_math_score = 0.f;
-		for (int pid = sep; pid < root_pm.n_po; pid++) {
+		for (int pid = sep; pid < root_pols.n; pid++) {
 
-			uint64_t cur = POSTMERGER_POSTLIST_CALL(&root_pm, cur, pid);
+			uint64_t cur = POSTMERGER_POSTLIST_CALL(iter, cur, pid);
 			if (cur != UINT64_MAX && cur == iter->min) {
 				const int j = pid - sep;
 				struct math_l2_postlist_item *mi = math_item + j;
 
-				POSTMERGER_POSTLIST_CALL(&root_pm, read, pid,
+				POSTMERGER_POSTLIST_CALL(iter, read, pid,
 					mi, sizeof(struct math_l2_postlist_item));
 
 				/* find math score from maximum math part score */
@@ -295,7 +289,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 				printf("\n");
 #endif
 				/* advance posting iterators */
-				POSTMERGER_POSTLIST_CALL(&root_pm, next, pid);
+				POSTMERGER_POSTLIST_CALL(iter, next, pid);
 			}
 		}
 
@@ -340,14 +334,8 @@ skip_search:
 #endif
 
 	// Destroy merger iterators
-	for (int j = 0; j < root_pm.n_po; j++) {
-		/* calling math_l2_postlist_uninit() */
-		POSTMERGER_POSTLIST_CALL(&root_pm, uninit, j);
-	}
-
-	// Free math query structure
-	for (int j = sep; j < root_pm.n_po; j++) {
-		math_qry_free(mqs + (j - sep));
+	for (int i = sep; i < root_pols.n; i++) {
+		math_qry_free(mqs + (i - sep)); // free math query structure
 	}
 
 #ifdef MERGE_TIME_LOG
