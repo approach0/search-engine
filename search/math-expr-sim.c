@@ -164,68 +164,10 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 #endif
 }
 
-//int string_longest_common_substring(enum symbol_id *str1, enum symbol_id *str2)
-//{
-//	int (*DP)[MAX_LEAVES] = calloc(MAX_LEAVES, MAX_LEAVES * sizeof(int));
-//	int lcs = 0;
-//	int i, j;
-//	for (i = 0; i < MAX_LEAVES; i++) {
-//		for (j = 0; j < MAX_LEAVES; j++) {
-//			if (i == 0 || j == 0) {
-//				DP[i][j] = 0;
-//			} else if (str1[i-1] == str2[j-1] &&
-//					   str1[i-1] != 0) {
-//				DP[i][j] = DP[i-1][j-1] + 1;
-//				if (DP[i][j] > lcs)
-//					lcs = DP[i][j];
-//			} else {
-//				DP[i][j] = 0;
-//			}
-//		}
-//	}
-//	free(DP);
-//
-//	return lcs;
-//}
-//static int
-//prefix_symbolseq_similarity(uint64_t cur_min, struct postmerge* pm)
-//{
-//	int i, j, k;
-//
-//	enum symbol_id querystr[MAX_LEAVES] = {0};
-//	enum symbol_id candistr[MAX_LEAVES] = {0};
-//
-//	for (i = 0; i < pm->n_postings; i++) {
-//		PTR_CAST(item, struct math_postlist_item, POSTMERGE_CUR(pm, i));
-//		PTR_CAST(mepa, struct math_extra_posting_arg, pm->posting_args[i]);
-//
-//		if (pm->curIDs[i] == cur_min) {
-//			for (j = 0; j <= mepa->ele->dup_cnt; j++) {
-//				uint32_t qn = mepa->ele->dup[j]->leaf_id; /* use leaf_id for order ID */
-//				enum symbol_id qs = mepa->ele->dup[j]->lf_symbol_id;
-//				querystr[qn - 1] = qs;
-//
-//				for (k = 0; k < item->n_paths; k++) {
-//					candistr[item->leaf_id[k] - 1] = item->lf_symb[k];
-//				}
-//			}
-//		} /* end if */
-//	} /* end for */
-//
-//	return string_longest_common_substring(querystr, candistr);
-//////	for (i = 0; i < MAX_LEAVES; i++) {
-//////		printf("%s ", trans_symbol(querystr[i]));
-//////	} printf("\n");
-//////	for (i = 0; i < MAX_LEAVES; i++) {
-//////		printf("%s ", trans_symbol(candistr[i]));
-//////	} printf("\n");
-//////	printf("lcs = %u\n", lcs);
-//}
-
 void math_l2_postlist_print_cur(struct math_l2_postlist *po)
 {
 	for (int i = 0; i < po->iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 		uint32_t docID = (uint32_t)(cur >> 32);
 		uint32_t expID = (uint32_t)(cur >> 0);
 
@@ -250,7 +192,7 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 	mnc_reset_docs();
 
 	for (int i = 0; i < po->iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 
 		if (cur == po->candidate) {
 			uint32_t orig = po->iter->map[i];
@@ -261,7 +203,7 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 				uint32_t qr = ele->rid[j];
 				uint32_t ql = ele->dup[j]->path_id; /* use path_id for mnc_score */
 				if (qr == ar->qr) {
-					postmerger_iter_call(&po->pm, po->iter, read, i,
+					postmerger_iter_call(po->iter, read, i,
 					                     &item, sizeof(item));
 					for (uint32_t k = 0; k < item.n_paths; k++) {
 						uint32_t dr = item.subr_id[k];
@@ -306,7 +248,7 @@ void math_l2_cur_print(struct math_l2_postlist *po)
 		candidate >> 32, pruner->postlist_pivot, po->iter->size, threshold);
 	for (int i = 0; i < po->iter->size; i++) {
 		uint32_t pid = po->iter->map[i];
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 		if (i > pruner->postlist_pivot || cur == candidate) {
 			printf("%s ", (cur == candidate) ? "hit: " : "skip:");
 			printf("iter[%u] ", i);
