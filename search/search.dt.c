@@ -333,9 +333,18 @@ indices_run_query(struct indices* indices, struct query* qry)
 skip_search:
 #endif
 
-	// Destroy merger iterators
-	for (int i = sep; i < root_pols.n; i++) {
-		math_qry_free(mqs + (i - sep)); // free math query structure
+	// Destroy allocated posting lists
+	for (int i = 0; i < root_pols.n; i++) {
+		if (NULL == root_pols.po[i].po)
+			continue;
+
+		if (i < sep) { /* term query */
+			term_postlist_free(root_pols.po[i]);
+
+		} else { /* math query */
+			const int j = i - sep;
+			math_qry_free(mqs + j); // free math query structure
+		}
 	}
 
 #ifdef MERGE_TIME_LOG

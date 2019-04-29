@@ -17,13 +17,13 @@ uint64_t math_memo_postlist_cur(void *iter_)
 	return postlist_iter_cur(iter);
 }
 
-int math_memo_postlist_next(void *iter_)
+static int math_memo_postlist_next(void *iter_)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	return postlist_iter_next(iter);
 }
 
-int math_memo_postlist_jump(void *iter_, uint64_t target)
+static int math_memo_postlist_jump(void *iter_, uint64_t target)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	return postlist_iter_jump(iter, target);
@@ -41,13 +41,13 @@ static size_t math_memo_postlist_read_gener(void *iter, void *dest, size_t sz)
 	return sz;
 }
 
-void *math_memo_postlist_get_iter(void *po_)
+static void *math_memo_postlist_get_iter(void *po_)
 {
 	P_CAST(po, struct postlist, po_);
 	return postlist_iterator(po);
 }
 
-void math_memo_postlist_del_iter(void *iter_)
+static void math_memo_postlist_del_iter(void *iter_)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	postlist_iter_free(iter);
@@ -96,7 +96,7 @@ static size_t math_disk_postlist_read_gener(void *iter, void *dest, size_t sz)
 	return math_posting_read_gener(iter, dest);
 }
 
-void *math_disk_postlist_get_iter(void *po_)
+static void *math_disk_postlist_get_iter(void *po_)
 {
 	P_CAST(po, char, po_);
 	return math_posting_iterator(po);
@@ -135,19 +135,19 @@ math_disk_postlist_gener(void *postlist)
 /*
  * Term in-memory posting list calls
  */
-uint64_t term_memo_postlist_cur(void *iter_)
+static uint64_t term_memo_postlist_cur(void *iter_)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	return postlist_iter_cur(iter);
 }
 
-int term_memo_postlist_next(void *iter_)
+static int term_memo_postlist_next(void *iter_)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	return postlist_iter_next(iter);
 }
 
-int term_memo_postlist_jump(void *iter_, uint64_t target)
+static int term_memo_postlist_jump(void *iter_, uint64_t target)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	return postlist_iter_jump32(iter, target);
@@ -159,13 +159,13 @@ static size_t term_memo_postlist_read(void *iter, void *dest, size_t sz)
 	return sz;
 }
 
-void *term_memo_postlist_get_iter(void *po_)
+static void *term_memo_postlist_get_iter(void *po_)
 {
 	P_CAST(po, struct postlist, po_);
 	return postlist_iterator(po);
 }
 
-void term_memo_postlist_del_iter(void *iter_)
+static void term_memo_postlist_del_iter(void *iter_)
 {
 	P_CAST(iter, struct postlist_iterator, iter_);
 	postlist_iter_free(iter);
@@ -210,15 +210,21 @@ static size_t term_disk_postlist_read(void *po, void *dest, size_t sz)
 	return term_posting_read(po, dest);
 }
 
-static void* term_disk_postlist_init(void *po)
+static void* term_disk_postlist_get_iter(void *po)
 {
 	if (term_posting_start(po)) return po;
 	else return NULL;
 }
 
-static void term_disk_postlist_uninit(void *po)
+static void term_disk_postlist_del_iter(void *po)
 {
-	term_posting_finish(po);
+	return;
+}
+
+void term_postlist_free(struct postmerger_postlist po)
+{
+	if (po.get_iter == &term_disk_postlist_get_iter)
+		term_posting_finish(po.po);
 }
 
 struct postmerger_postlist
@@ -230,8 +236,8 @@ term_disk_postlist(void *po)
 		&term_disk_postlist_next,
 		&term_disk_postlist_jump,
 		&term_disk_postlist_read,
-		&term_disk_postlist_init,
-		&term_disk_postlist_uninit
+		&term_disk_postlist_get_iter,
+		&term_disk_postlist_del_iter
 	};
 	return ret;
 }
