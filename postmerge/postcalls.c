@@ -96,17 +96,17 @@ static size_t math_disk_postlist_read_gener(void *iter, void *dest, size_t sz)
 	return math_posting_read_gener(iter, dest);
 }
 
-static void *math_disk_postlist_get_iter(void *po_)
+static void *math_disk_postlist_get_iter(void *path_)
 {
-	P_CAST(po, char, po_);
-	return math_posting_iterator(po);
+	P_CAST(path, char, path_);
+	return math_posting_iterator(path);
 }
 
 struct postmerger_postlist
-math_disk_postlist(void *postlist)
+math_disk_postlist(void *path)
 {
 	struct postmerger_postlist ret = {
-		postlist,
+		path,
 		&math_posting_iter_cur,
 		&math_posting_iter_next,
 		&math_posting_iter_jump,
@@ -118,10 +118,10 @@ math_disk_postlist(void *postlist)
 }
 
 struct postmerger_postlist
-math_disk_postlist_gener(void *postlist)
+math_disk_postlist_gener(void *path)
 {
 	struct postmerger_postlist ret = {
-		postlist,
+		path,
 		&math_posting_iter_cur,
 		&math_posting_iter_next,
 		&math_posting_iter_jump,
@@ -246,32 +246,32 @@ term_disk_postlist(void *po)
  * Empty posting list calls
  */
 
-static uint64_t empty_postlist_cur(void *po)
+static uint64_t empty_postlist_cur(void *iter)
 {
 	return UINT64_MAX;
 }
 
-static int empty_postlist_next(void *po)
+static int empty_postlist_next(void *iter)
 {
 	return 0;
 }
 
-static int empty_postlist_jump(void *po, uint64_t target)
+static int empty_postlist_jump(void *iter, uint64_t target)
 {
 	return 0;
 }
 
-static size_t empty_postlist_read(void *po, void *dest, size_t sz)
+static size_t empty_postlist_read(void *iter, void *dest, size_t sz)
 {
 	assert(0);
 }
 
-static void *empty_postlist_init(void *po)
+static void *empty_postlist_init(void *iter)
 {
 	return NULL;
 }
 
-static void empty_postlist_uninit(void *po)
+static void empty_postlist_uninit(void *iter)
 {
 	return;
 }
