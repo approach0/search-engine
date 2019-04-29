@@ -20,7 +20,7 @@ void math_l2_postlist_print(struct math_l2_postlist* po)
 	char path_str[MAX_DIR_PATH_NAME_LEN];
 	char medium_str[1024];
 	char pathtype_str[1024];
-	for (int i = 0; i < po->pm.n_po; i++) {
+	for (int i = 0; i < po->pols.n; i++) {
 		struct subpath_ele *ele = po->ele[i];
 		if (ele == NULL)
 			strcpy(path_str, "<empty>");
@@ -53,7 +53,7 @@ void math_l2_postlist_print(struct math_l2_postlist* po)
 		printf("\t [%u] %s %s: ./%s\n", i, medium_str, pathtype_str, path_str);
 #if 0
 		if (po->medium[i] == MATH_POSTLIST_INMEMO)
-			postlist_print_info(po->pm.po[i].po);
+			postlist_print_info(po->pols.po[i].po);
 #endif
 	}
 }
@@ -80,12 +80,12 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 
 		/* map posting list from cache or create on-disk posting list. */
 		void *po = math_postlist_cache_find(ci.math_cache, base_paths[i]);
-		int n = l2po->pm.n_po;
+		int n = l2po->pols.n;
 		if (po) {
 			if (path_type == MATH_PATH_TYPE_PREFIX)
-				l2po->pm.po[n] = math_memo_postlist(po);
+				l2po->pols.po[n] = math_memo_postlist(po);
 			else
-				l2po->pm.po[n] = math_memo_postlist_gener(po);
+				l2po->pols.po[n] = math_memo_postlist_gener(po);
 
 			args->po->medium[n] = MATH_POSTLIST_INMEMO;
 			args->po->path_type[n] = path_type;
@@ -95,9 +95,9 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 		} else if (math_posting_exits(full_paths[i])) {
 			po = math_posting_new_reader(full_paths[i]);
 			if (path_type == MATH_PATH_TYPE_PREFIX)
-				l2po->pm.po[n] = math_disk_postlist(po);
+				l2po->pols.po[n] = math_disk_postlist(po);
 			else
-				l2po->pm.po[n] = math_disk_postlist_gener(po);
+				l2po->pols.po[n] = math_disk_postlist_gener(po);
 
 			args->po->medium[n] = MATH_POSTLIST_ONDISK;
 			args->po->path_type[n] = path_type;
@@ -105,7 +105,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			//printf("#%u (on disk) %s\n", n, base_paths[i]);
 
 		} else {
-			l2po->pm.po[n] = empty_postlist();
+			l2po->pols.po[n] = empty_postlist();
 
 			args->po->medium[n] = MATH_POSTLIST_EMPTYMEM;
 			args->po->path_type[n] = MATH_PATH_TYPE_UNKNOWN;
@@ -113,7 +113,7 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			//printf("#%u (empty) %s\n", n, base_paths[i]);
 
 		}
-		l2po->pm.n_po += 1;
+		l2po->pols.n += 1;
 	}
 
 	return DIR_MERGE_RET_CONTINUE;
@@ -130,11 +130,10 @@ math_l2_postlist(
 	ranked_results_t *rk_res,
 	float *theta)
 {
-	struct math_l2_postlist po;
+	struct math_l2_postlist po = {0};
 	struct add_path_postings_args args = {indices, &po};
 
 	/* add path postings */
-	postmerger_init(&po.pm);
 	math_index_dir_merge(
 		indices->mi, DIR_MERGE_DIRECT,
 		DIR_PATHSET_PREFIX_PATH, mqs->subpath_set, mqs->n_uniq_paths,
@@ -183,7 +182,7 @@ inline static uint32_t set_doc_candidate(struct math_l2_postlist *po)
 {
 	uint64_t candidate = UINT64_MAX;
 	for (int i = 0; i <= po->pruner.postlist_pivot; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 		if (cur < candidate) candidate = cur;
 	}
 	po->candidate = candidate;
@@ -195,9 +194,9 @@ inline static uint32_t read_num_doc_lr_paths(struct math_l2_postlist *po)
 	struct math_postlist_gener_item item;
 
 	for (int i = 0; i < po->iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 		if (cur != UINT64_MAX && cur == po->candidate) {
-			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
+			postmerger_iter_call(po->iter, read, i, &item, sizeof(item));
 			return (item.n_lr_paths) ? item.n_lr_paths : MAX_MATH_PATHS;
 		}
 	}
@@ -223,7 +222,7 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 	char medium_str[1024];
 	char state_str[1024];
 
-	for (int i = 0; i < po->pm.n_po; i++) {
+	for (int i = 0; i < po->pols.n; i++) {
 		int j = get_postlist_iter_idx(po, i);
 		struct subpath_ele *ele = po->ele[i];
 
@@ -432,7 +431,7 @@ get_hit_nodes(struct math_l2_postlist *po, int *save_idx)
 	u16_ht_reset(&pruner->q_hit_nodes_ht, 0);
 
 	for (int i = 0; i <= pruner->postlist_pivot; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 
 		if (cur == candidate) {
 			uint32_t pid = po->iter->map[i];
@@ -469,12 +468,12 @@ vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 
 	for (int i = 0; i < q_node->n; i++) {
 		int pid = q_node->postlist_id[i];
-		uint64_t cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
+		uint64_t cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
 		int qsw = q_node->secttr[i].width;
 
 		if (cur < candidate) {
-			POSTMERGER_POSTLIST_CALL(&po->pm, jump, pid, candidate);
-			cur = POSTMERGER_POSTLIST_CALL(&po->pm, cur, pid);
+			POSTMERGER_POSTLIST_CALL(po->iter, jump, pid, candidate);
+			cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
 		}
 
 		leftover -= qsw; /* must precede `continue' */
@@ -482,7 +481,7 @@ vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 		if (cur != candidate) goto estimate;
 
 		struct math_postlist_gener_item item;
-		POSTMERGER_POSTLIST_CALL(&po->pm, read, pid, &item, sizeof(item));
+		POSTMERGER_POSTLIST_CALL(po->iter, read, pid, &item, sizeof(item));
 
 		u16_ht_reset(&pruner->sect_ht, 0);
 
@@ -576,7 +575,7 @@ int math_l2_postlist_next(void *po_)
 	}
 	if (math_next_pause) delay(1, 0, 5); else delay(0, 0, 1);
 	for (int i = 0; i < po->iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 		uint32_t pid = po->iter->map[i];
 		current[pid] = cur;
 		if (i <= pruner->postlist_pivot)
@@ -636,9 +635,9 @@ int math_l2_postlist_next(void *po_)
 		}
 
 		for (int i = 0; i <= pruner->postlist_pivot; i++) {
-			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+			uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 			if (cur == po->candidate)
-				postmerger_iter_call(&po->pm, po->iter, next, i);
+				postmerger_iter_call(po->iter, next, i);
 		}
 
 	} while (true);
@@ -661,7 +660,7 @@ int math_l2_postlist_one_by_one_through(void *po_)
 		printf("Going through posting list #%u (%s) ...\n", pid,
 			(pt == MATH_PATH_TYPE_PREFIX) ? "prefix" : "gener");
 		while (1) {
-			uint64_t cur = postmerger_iter_call(&po->pm, po->iter, cur, i);
+			uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 			if ((cur >> 32) == UINT32_MAX) break;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
@@ -672,11 +671,11 @@ int math_l2_postlist_one_by_one_through(void *po_)
 #else
 			/* print math postlist item */
 			struct math_postlist_gener_item item;
-			postmerger_iter_call(&po->pm, po->iter, read, i, &item, sizeof(item));
+			postmerger_iter_call(po->iter, read, i, &item, sizeof(item));
 			math_postlist_print_item(&item, pt == MATH_PATH_TYPE_GENER, trans_symbol);
 #endif
 
-			postmerger_iter_call(&po->pm, po->iter, next, i);
+			postmerger_iter_call(po->iter, next, i);
 		}
 
 		printf("\n");
@@ -686,82 +685,73 @@ int math_l2_postlist_one_by_one_through(void *po_)
 	return 0;
 }
 
-int math_l2_postlist_init(void *po_)
+void *math_l2_postlist_get_iter(void *l2po_)
 {
-	/* initialize inner pm */
-	PTR_CAST(po, struct math_l2_postlist, po_);
-	for (int i = 0; i < po->pm.n_po; i++) {
-		POSTMERGER_POSTLIST_CALL(&po->pm, init, i);
-	}
+	PTR_CAST(l2po, struct math_l2_postlist, l2po_);
 
-	/* allocate iterator for each posting list */
-	po->iter = postmerger_iterator(&po->pm);
+	/* setup iterator for each posting list */
+	l2po->iter = postmerger_iterator(&l2po->pols);
 
 	/* setup current doc-level item */
-	po->cur_doc_id = 0;
-	po->future_doc_id = 0;
-	po->max_exp_score = 0;
-	po->n_occurs = 0;
+	l2po->cur_doc_id = 0;
+	l2po->future_doc_id = 0;
+	l2po->max_exp_score = 0;
+	l2po->n_occurs = 0;
 
 	/* initialize candidate */
-	po->candidate = 0;
+	l2po->candidate = 0;
 
 	/* setup pruning structures */
-	uint32_t n_qnodes = po->mqs->n_qry_nodes;
-	uint32_t n_postings = po->pm.n_po;
-	uint32_t qw = po->mqs->subpaths.n_lr_paths;
-	math_pruner_init(&po->pruner, n_qnodes, po->ele, n_postings);
-	math_pruner_init_threshold(&po->pruner, qw);
-	math_pruner_precalc_upperbound(&po->pruner, qw);
+	uint32_t n_postlists = l2po->pols.n;
+	uint32_t n_qnodes = l2po->mqs->n_qry_nodes;
+	uint32_t qw = l2po->mqs->subpaths.n_lr_paths;
+	math_pruner_init(&l2po->pruner, n_qnodes, l2po->ele, n_postlists);
+	math_pruner_init_threshold(&l2po->pruner, qw);
+	math_pruner_precalc_upperbound(&l2po->pruner, qw);
 
 #ifdef MATH_SKIP_SET_FAST_SELECTION
 	/* sort path posting lists by max values */
-	math_l2_postlist_sort_by_refmax(po);
+	math_l2_postlist_sort_by_refmax(l2po);
 #else
-	po->pruner.blp = bin_lp_alloc(n_qnodes, po->pm.n_po);
+	l2po->pruner.blp = bin_lp_alloc(n_qnodes, n_postlists);
 #endif
 
 #ifdef DEBUG_PRINT_QRY_STRUCT
-	math_pruner_print(&po->pruner);
-	math_l2_postlist_print_cur(po);
+	math_pruner_print(&l2po->pruner);
+	math_l2_postlist_print_cur(l2po);
 #endif
 
-	// printf("%u postings.\n", po->iter->size);
-	return 0;
+	// printf("%u postings.\n", l2po->iter->size);
+	return l2po->iter;
 }
 
-void math_l2_postlist_uninit(void *po_)
+void math_l2_postlist_del_iter(void *l2po_)
 {
-	PTR_CAST(po, struct math_l2_postlist, po_);
-
-	/* release inner pm */
-	for (int i = 0; i < po->pm.n_po; i++) {
-		POSTMERGER_POSTLIST_CALL(&po->pm, uninit, i);
-	}
+	PTR_CAST(l2po, struct math_l2_postlist, l2po_);
 
 	/* release iterator */
-	postmerger_iter_free(po->iter);
+	postmerger_iter_free(l2po->iter);
 
 #ifndef MATH_SKIP_SET_FAST_SELECTION
-	bin_lp_free(po->pruner.blp);
+	bin_lp_free(l2po->pruner.blp);
 #endif
 
 	/* release pruning structures */
-	math_pruner_free(&po->pruner);
+	math_pruner_free(&l2po->pruner);
 }
 
 struct postmerger_postlist
-postmerger_math_l2_postlist(struct math_l2_postlist *po)
+postmerger_math_l2_postlist(struct math_l2_postlist *l2po)
 {
 	struct postmerger_postlist ret = {
-		po,
+		l2po,
 		math_l2_postlist_cur,
 		math_l2_postlist_next,
 		// math_l2_postlist_one_by_one_through, /* for debug */
 		NULL /* jump */,
 		math_l2_postlist_read,
-		math_l2_postlist_init,
-		math_l2_postlist_uninit
+		math_l2_postlist_get_iter,
+		math_l2_postlist_del_iter
 	};
 
 	return ret;

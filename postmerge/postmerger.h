@@ -26,7 +26,7 @@ struct postmerger_postlists {
 };
 
 typedef struct postmerger {
-	int       n_po;
+	int       size; /* dynamical number of active iterators */
 	pm_po_t   po[MAX_MERGE_POSTINGS];
 	int       map[MAX_MERGE_POSTINGS]; /* iter[i] --> po[pid] */
 	void*     iter[MAX_MERGE_POSTINGS];

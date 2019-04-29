@@ -77,7 +77,7 @@ int recur_postlist_next(void *iter_)
 		else
 			prev_docID = min_docID;
 
-		for (int i = 0; i < iter->n_po; i++) {
+		for (int i = 0; i < iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(iter, cur, i);
 			uint32_t docID = (uint32_t)(cur >> 0);
 			uint32_t expID = (uint32_t)(cur >> 32);
@@ -152,7 +152,7 @@ int main()
 	root_pols.po[root_pols.n ++] = recur_postlist(&low_pols);
 
 	foreach (iter, postmerger, &root_pols) {
-		for (int i = 0; i < iter->n_po; i++) {
+		for (int i = 0; i < iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(iter, cur, i);
 			printf("top-post[%u]: %u\n", iter->map[i], (uint32_t)cur);
 

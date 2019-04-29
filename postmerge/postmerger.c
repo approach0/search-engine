@@ -11,7 +11,7 @@ static uint64_t
 postmerger_min(struct postmerger *pm)
 {
 	uint64_t cur, min = UINT64_MAX;
-	for (int i = 0; i < pm->n_po; i++) {
+	for (int i = 0; i < pm->size; i++) {
 		cur = postmerger_iter_call(pm, cur, i);
 		if (cur < min) min = cur;
 	}
@@ -24,7 +24,7 @@ postmerger_iterator(struct postmerger_postlists *pols)
 {
 	struct postmerger *pm;
 	pm = malloc(sizeof(struct postmerger));
-	pm->n_po = pols->n;
+	pm->size = pols->n;
 	for (int i = 0; i < pols->n; i++) {
 		pm->po[i]   = pols->po[i];
 		pm->map[i]  = i;
@@ -37,7 +37,7 @@ postmerger_iterator(struct postmerger_postlists *pols)
 
 void postmerger_iter_free(struct postmerger *pm)
 {
-	for (int i = 0; i < pm->n_po; i++)
+	for (int i = 0; i < pm->size; i++)
 		POSTMERGER_POSTLIST_CALL(pm, del_iter, i);
 	free(pm);
 }
@@ -56,7 +56,7 @@ int postmerger_iter_next(struct postmerger *pm)
 
 void postmerger_iter_remove(struct postmerger *pm, int i)
 {
-	pm->n_po -= 1;
-	for (int j = i; j < pm->n_po; j++)
+	pm->size -= 1;
+	for (int j = i; j < pm->size; j++)
 		pm->map[j] = pm->map[j + 1];
 }

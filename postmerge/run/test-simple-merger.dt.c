@@ -66,7 +66,7 @@ int main()
 	pols.po[pols.n ++] = postmerger_simple_postlist(&c);
 	
 	foreach (iter, postmerger, &pols) {
-		for (int i = 0; i < iter->n_po; i++) {
+		for (int i = 0; i < iter->size; i++) {
 			uint64_t cur = postmerger_iter_call(iter, cur, i);
 
 			if (cur == UINT64_MAX) {
