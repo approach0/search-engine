@@ -93,10 +93,11 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			//printf("#%u (in memo) %s\n", n, base_paths[i]);
 
 		} else if (math_posting_exits(full_paths[i])) {
+			char *path = strdup(full_paths[i]);
 			if (path_type == MATH_PATH_TYPE_PREFIX)
-				l2po->pols.po[n] = math_disk_postlist(full_paths[i]);
+				l2po->pols.po[n] = math_disk_postlist(path);
 			else
-				l2po->pols.po[n] = math_disk_postlist_gener(full_paths[i]);
+				l2po->pols.po[n] = math_disk_postlist_gener(path);
 
 			args->po->medium[n] = MATH_POSTLIST_ONDISK;
 			args->po->path_type[n] = path_type;
@@ -152,7 +153,7 @@ math_l2_postlist(
 	return po;
 }
 
-uint64_t math_l2_postlist_cur(void *po_)
+static uint64_t math_l2_postlist_cur(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 	if (po->cur_doc_id == UINT32_MAX)
@@ -161,7 +162,7 @@ uint64_t math_l2_postlist_cur(void *po_)
 		return po->cur_doc_id;
 }
 
-size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
+static size_t math_l2_postlist_read(void *po_, void *dest, size_t sz)
 {
 	PTR_CAST(item, struct math_l2_postlist_item, dest);
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -516,7 +517,7 @@ int math_search_pause_toggle()
 	return math_next_pause;
 }
 
-int math_l2_postlist_next(void *po_)
+static int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 	struct math_pruner *pruner = &po->pruner;
@@ -644,7 +645,7 @@ int math_l2_postlist_next(void *po_)
 	return 1;
 }
 
-int math_l2_postlist_one_by_one_through(void *po_)
+static int math_l2_postlist_one_by_one_through(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
 
@@ -684,7 +685,7 @@ int math_l2_postlist_one_by_one_through(void *po_)
 	return 0;
 }
 
-void *math_l2_postlist_get_iter(void *l2po_)
+static void *math_l2_postlist_get_iter(void *l2po_)
 {
 	PTR_CAST(l2po, struct math_l2_postlist, l2po_);
 
@@ -721,10 +722,21 @@ void *math_l2_postlist_get_iter(void *l2po_)
 #endif
 
 	// printf("%u postings.\n", l2po->iter->size);
-	return l2po->iter;
+	return l2po;
 }
 
-void math_l2_postlist_del_iter(void *l2po_)
+void math_l2_postlist_free(struct postmerger_postlist po)
+{
+	PTR_CAST(l2po, struct math_l2_postlist, po.po);
+
+	/* delete math posting lists in this l2 postlist. */
+	if (po.get_iter == &math_l2_postlist_get_iter)
+		for (int i = 0; i < l2po->pols.n; i++)
+			/* free allocated path string */
+			free(l2po->pols.po[i].po);
+}
+
+static void math_l2_postlist_del_iter(void *l2po_)
 {
 	PTR_CAST(l2po, struct math_l2_postlist, l2po_);
 

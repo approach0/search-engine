@@ -343,6 +343,8 @@ skip_search:
 
 		} else { /* math query */
 			const int j = i - sep;
+
+			math_l2_postlist_free(root_pols.po[i]);
 			math_qry_free(mqs + j); // free math query structure
 		}
 	}
