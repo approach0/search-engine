@@ -29,13 +29,27 @@ uint64_t simple_postlist_cur(void *po_)
 	}
 }
 
+static void *simple_postlist_get_iter(void *po)
+{
+	return po;
+}
+
+static void simple_postlist_del_iter(void *po)
+{
+	return;
+}
+
 struct postmerger_postlist
 postmerger_simple_postlist(struct simple_postlist *po)
 {
 	struct postmerger_postlist ret = {
 		po,
 		&simple_postlist_cur,
-		&simple_postlist_next
+		&simple_postlist_next,
+		NULL /* jump */,
+		NULL /* read */,
+		simple_postlist_get_iter,
+		simple_postlist_del_iter
 	};
 	return ret;
 }
@@ -46,15 +60,14 @@ int main()
 	struct simple_postlist b = {{3, 5, 6, 7, 9, 11}, 6, 0};
 	struct simple_postlist c = {{4, 6, 7, 9, 11, 12}, 6, 0};
 
-	struct postmerger pm;
-	postmerger_init(&pm);
-	pm.po[pm.n_po ++] = postmerger_simple_postlist(&a);
-	pm.po[pm.n_po ++] = postmerger_simple_postlist(&b);
-	pm.po[pm.n_po ++] = postmerger_simple_postlist(&c);
+	struct postmerger_postlists pols = {0};
+	pols.po[pols.n ++] = postmerger_simple_postlist(&a);
+	pols.po[pols.n ++] = postmerger_simple_postlist(&b);
+	pols.po[pols.n ++] = postmerger_simple_postlist(&c);
 	
-	foreach (iter, postmerger, &pm) {
-		for (int i = 0; i < iter->size; i++) {
-			uint64_t cur = postmerger_iter_call(&pm, iter, cur, i);
+	foreach (iter, postmerger, &pols) {
+		for (int i = 0; i < iter->n_po; i++) {
+			uint64_t cur = postmerger_iter_call(iter, cur, i);
 
 			if (cur == UINT64_MAX) {
 				printf("removing [%d]\n", iter->map[i]);
@@ -64,7 +77,7 @@ int main()
 			} else {
 				printf("%u: %lu \n", iter->map[i], cur);
 				if (cur == iter->min)
-					postmerger_iter_call(&pm, iter, next, i);
+					postmerger_iter_call(iter, next, i);
 			}
 		}
 		printf("\n");
