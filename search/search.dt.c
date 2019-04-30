@@ -251,15 +251,17 @@ indices_run_query(struct indices* indices, struct query* qry)
 			prox_score = proximity_score(prox, h);
 #endif
 
+#if 0
 		/* calculate math threshold score inversely given term scores. */
-//		if (h > 0) {
-//			float doc_score = 0.f;
-//			if (priority_Q_full(&rk_res))
-//				doc_score = priority_Q_min_score(&rk_res);
-//			theta = calc_math_max_score(doc_score, tf_idf_score, prox_score);
-//		} else {
-//			theta = 0.f;
-//		}
+		if (h > 0) {
+			float doc_score = 0.f;
+			if (priority_Q_full(&rk_res))
+				doc_score = priority_Q_min_score(&rk_res);
+			theta = calc_math_max_score(doc_score, tf_idf_score, prox_score);
+		} else {
+			theta = 0.f;
+		}
+#endif
 
 		/* calculate math scores */
 		float max_math_score = 0.f;

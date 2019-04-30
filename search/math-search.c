@@ -719,6 +719,7 @@ static void *math_l2_postlist_get_iter(void *l2po_)
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	math_pruner_print(&l2po->pruner);
 	math_l2_postlist_print_cur(l2po);
+	// math_pruner_print(&l2po->pruner);
 #endif
 
 	// printf("%u postings.\n", l2po->iter->size);

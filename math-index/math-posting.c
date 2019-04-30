@@ -352,6 +352,8 @@ math_posting_t math_posting_iterator(const char *fullpath)
 
 void math_posting_iter_free(math_posting_t po)
 {
+//	P_CAST(mpo, struct _math_posting, po);
+//	printf("math_posting_iter_free: %s\n", mpo->fullpath);
 	math_posting_finish(po);
 	math_posting_free_reader(po);
 }

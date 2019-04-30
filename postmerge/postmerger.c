@@ -38,7 +38,7 @@ postmerger_iterator(struct postmerger_postlists *pols)
 void postmerger_iter_free(struct postmerger *pm)
 {
 	for (int i = 0; i < pm->size; i++)
-		POSTMERGER_POSTLIST_CALL(pm, del_iter, i);
+		postmerger_iter_call(pm, del_iter, i);
 	free(pm);
 }
 
@@ -56,6 +56,10 @@ int postmerger_iter_next(struct postmerger *pm)
 
 void postmerger_iter_remove(struct postmerger *pm, int i)
 {
+	/* dynamic free iterator */
+	postmerger_iter_call(pm, del_iter, i);
+
+	/* fill the empty */
 	pm->size -= 1;
 	for (int j = i; j < pm->size; j++)
 		pm->map[j] = pm->map[j + 1];
