@@ -337,18 +337,17 @@ skip_search:
 
 	// Destroy allocated posting lists
 	for (int i = 0; i < root_pols.n; i++) {
+		/* free math query structure */
+		if (i >= sep)
+			math_qry_free(mqs + (i - sep));
+
 		if (NULL == root_pols.po[i].po)
 			continue;
 
-		if (i < sep) { /* term query */
+		if (i < sep) /* free term postlist */
 			term_postlist_free(root_pols.po[i]);
-
-		} else { /* math query */
-			const int j = i - sep;
-
+		else /* free math level 2 postlist */
 			math_l2_postlist_free(root_pols.po[i]);
-			math_qry_free(mqs + j); // free math query structure
-		}
 	}
 
 #ifdef MERGE_TIME_LOG
