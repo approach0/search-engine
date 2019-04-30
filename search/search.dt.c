@@ -318,7 +318,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 			}
 		}
 
-
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 		if (cnt ++ > DEBUG_MERGE_LIMIT_ITERS) {
 			printf("abort (DEBUG_MERGE_LIMIT_ITERS).\n");

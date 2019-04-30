@@ -31,8 +31,6 @@
 // #define DEBUG_HIT_SCORE_INSPECT /* particular docID scoring inspect */
 // #define DEBUG_PRINT_QRY_STRUCT
 
-#define WILDCARD_PATH_QUERY_EXPAND_ENABLE
-
 // #define MATH_SKIP_SET_FAST_SELECTION
 // #define DEBUG_MATH_SKIP_SET_SELECTION
 
@@ -49,6 +47,9 @@
 //#define HIGHLIGHT_MATH_W_DEGREE
 
 #define MATH_OCCUR_ONLY_ONE
+
+/* wildcards paths expand as single symbol */
+// #define WILDCARD_PATH_QUERY_EXPAND_ENABLE
 
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.30f /* aggressive */
 #define MATH_PRUNING_MIN_THRESHOLD_FACTOR .15f  /* conservative */
