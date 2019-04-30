@@ -588,7 +588,7 @@ static int math_l2_postlist_next(void *po_)
 	po->cur_doc_id = po->future_doc_id;
 	do {
 		po->cur_doc_id = set_doc_candidate(po);
-//		printf("%u, %u\n", po->cur_doc_id, po->candidate >> 32);
+		//printf("%u, %u\n", po->cur_doc_id, po->candidate >> 32);
 
 		if (po->cur_doc_id == UINT32_MAX) {
 			po->future_doc_id = UINT32_MAX;
@@ -693,7 +693,7 @@ static void *math_l2_postlist_get_iter(void *l2po_)
 	l2po->iter = postmerger_iterator(&l2po->pols);
 
 	/* setup current doc-level item */
-	l2po->cur_doc_id = 0;
+	l2po->cur_doc_id = 0; /* doc#0 */
 	l2po->future_doc_id = 0;
 	l2po->max_exp_score = 0;
 	l2po->n_occurs = 0;
@@ -723,6 +723,13 @@ static void *math_l2_postlist_get_iter(void *l2po_)
 #endif
 
 	// printf("%u postings.\n", l2po->iter->size);
+
+	/* run level-2 next() **twice** to forward the cur()
+	 * ID from zero to future_doc_id (also zero) and then
+	 * to the first item docID. */
+	if (0 != math_l2_postlist_next(l2po))
+		math_l2_postlist_next(l2po);
+
 	return l2po;
 }
 
