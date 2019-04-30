@@ -42,10 +42,13 @@ struct postlist {
 };
 
 typedef struct postlist_iterator {
-	/* subject pointer */
-	struct postlist        *po;
 	/* current block */
 	struct postlist_node   *cur;
+
+	/* decompress function */
+	postlist_rebuf_callbk   on_rebuf;
+	void                    *buf_arg; /* codec */
+
 	/* iterator buffer */
 	char                   *buf;
 	uint32_t                buf_idx;

@@ -171,33 +171,49 @@ static void
 postlist_iter_rebuf(struct postlist_iterator *iter)
 {
 	struct postlist_node *cur = iter->cur;
-	struct postlist *po = iter->po;
-	if (cur) { /* when forward_cur not hitting NULL */
+	if (cur) {
+		/* refill buffer */
 		memcpy(iter->buf, cur->blk, cur->blk_sz);
 		iter->buf_end = cur->blk_sz;
 
-		po->on_rebuf(iter->buf, &iter->buf_end, po->buf_arg);
+		/* invoke decompression */
+		iter->on_rebuf(iter->buf, &iter->buf_end, iter->buf_arg);
 	} else {
+		/* reset buffer variables anyway */
 		iter->buf_end = 0;
 	}
 
 	iter->buf_idx = 0;
 }
 
+/*
+ * Postlist iterators (reentrant version)
+ */
+
 postlist_iter_t postlist_iterator(struct postlist *po)
 {
 	struct postlist_iterator *iter;
 	iter = malloc(sizeof(struct postlist_iterator));
-	iter->po = po;
 	iter->cur = po->head;
+
+	iter->on_rebuf = po->on_rebuf;
+	iter->buf_arg = po->buf_arg;
 
 	iter->buf = malloc(po->buf_sz);
 	iter->buf_idx = 0;
 	iter->buf_end = 0;
 	iter->item_sz = po->item_sz;
 
+	/* initial buffer filling */
 	postlist_iter_rebuf(iter);
+
 	return iter;
+}
+
+void postlist_iter_free(struct postlist_iterator* iter)
+{
+	free(iter->buf);
+	free(iter);
 }
 
 int postlist_empty(struct postlist* po)
@@ -207,9 +223,8 @@ int postlist_empty(struct postlist* po)
 
 int postlist_iter_next(struct postlist_iterator* iter)
 {
-	struct postlist *po = iter->po;
-	if (iter->buf_idx + po->item_sz < iter->buf_end) {
-		iter->buf_idx += po->item_sz;
+	if (iter->buf_idx + iter->item_sz < iter->buf_end) {
+		iter->buf_idx += iter->item_sz;
 		return 1;
 
 	} else if (iter->buf_end != 0) {
@@ -288,22 +303,15 @@ glide:
 	return 0;
 }
 
-void postlist_iter_free(struct postlist_iterator* iter)
-{
-	free(iter->buf);
-	free(iter);
-}
-
 #include "postlist-codec/postlist-codec.h"
 
 void print_postlist(struct postlist *po)
 {
-	struct math_postlist_item *pi;
 	PTR_CAST(codec, struct postlist_codec, po->buf_arg);
 
 	postlist_iter_t iter = postlist_iterator(po);
 	do {
-		pi = (struct term_posting_item*)postlist_iter_cur_item(iter);
+		void *pi = postlist_iter_cur_item(iter);
 		postlist_print(pi, 1, codec->fields);
 	} while (postlist_iter_next(iter));
 	postlist_iter_free(iter);
