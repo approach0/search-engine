@@ -28,7 +28,7 @@ with open(fname) as f:
         run = run_name
         key = query + docid;
         if key in d:
-            # print('duplicate:', key)
+            print('duplicate:%s @ %s' % (key, query), file=sys.stderr)
             continue
         else:
             d[key] = True
