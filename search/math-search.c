@@ -87,9 +87,9 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			else
 				l2po->pols.po[n] = math_memo_postlist_gener(po);
 
-			args->po->medium[n] = MATH_POSTLIST_INMEMO;
-			args->po->path_type[n] = path_type;
-			args->po->ele[n] = eles[i];
+			l2po->medium[n] = MATH_POSTLIST_INMEMO;
+			l2po->path_type[n] = path_type;
+			l2po->ele[n] = eles[i];
 			//printf("#%u (in memo) %s\n", n, base_paths[i]);
 
 		} else if (math_posting_exits(full_paths[i])) {
@@ -99,17 +99,17 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 			else
 				l2po->pols.po[n] = math_disk_postlist_gener(path);
 
-			args->po->medium[n] = MATH_POSTLIST_ONDISK;
-			args->po->path_type[n] = path_type;
-			args->po->ele[n] = eles[i];
+			l2po->medium[n] = MATH_POSTLIST_ONDISK;
+			l2po->path_type[n] = path_type;
+			l2po->ele[n] = eles[i];
 			//printf("#%u (on disk) %s\n", n, base_paths[i]);
 
 		} else {
 			l2po->pols.po[n] = empty_postlist();
 
-			args->po->medium[n] = MATH_POSTLIST_EMPTYMEM;
-			args->po->path_type[n] = MATH_PATH_TYPE_UNKNOWN;
-			args->po->ele[n] = NULL;
+			l2po->medium[n] = MATH_POSTLIST_EMPTYMEM;
+			l2po->path_type[n] = MATH_PATH_TYPE_UNKNOWN;
+			l2po->ele[n] = NULL;
 			//printf("#%u (empty) %s\n", n, base_paths[i]);
 
 		}
@@ -731,10 +731,15 @@ void math_l2_postlist_free(struct postmerger_postlist po)
 	PTR_CAST(l2po, struct math_l2_postlist, po.po);
 
 	/* delete math posting lists in this l2 postlist. */
-	if (po.get_iter == &math_l2_postlist_get_iter)
-		for (int i = 0; i < l2po->pols.n; i++)
+	for (int i = 0; i < l2po->pols.n; i++) {
+		if (MATH_POSTLIST_ONDISK == l2po->medium[i]) {
+			pm_po_t p = l2po->pols.po[i];
+			//printf("free %s\n", p.po);
+
 			/* free allocated path string */
-			free(l2po->pols.po[i].po);
+			free(p.po);
+		}
+	}
 }
 
 static void math_l2_postlist_del_iter(void *l2po_)
