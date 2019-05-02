@@ -18,8 +18,8 @@ void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
 void math_l2_postlist_print(struct math_l2_postlist* po)
 {
 	char path_str[MAX_DIR_PATH_NAME_LEN];
-	char medium_str[1024];
-	char pathtype_str[1024];
+	char medium_str[MAX_MERGE_POSTINGS];
+	char pathtype_str[MAX_MERGE_POSTINGS];
 	for (int i = 0; i < po->pols.n; i++) {
 		struct subpath_ele *ele = po->ele[i];
 		if (ele == NULL)
@@ -209,8 +209,8 @@ static void
 print_math_merge_state(struct math_l2_postlist *po, uint64_t *cur, int *state)
 {
 	char path_str[MAX_DIR_PATH_NAME_LEN];
-	char medium_str[1024];
-	char state_str[1024];
+	char medium_str[MAX_MERGE_POSTINGS];
+	char state_str[MAX_MERGE_POSTINGS];
 
 	printf("[merge state of `%s']\n", po->mqs->kw_str);
 
