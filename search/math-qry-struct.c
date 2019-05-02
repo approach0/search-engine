@@ -9,7 +9,6 @@
 #include "tex-parser/head.h"
 
 #include "config.h"
-#include "mnc-score.h"
 #include "math-qry-struct.h"
 
 static LIST_CMP_CALLBK(compare_qry_path)
@@ -124,23 +123,6 @@ static LIST_IT_CALLBK(assign_conjugacy)
 	LIST_GO_OVER;
 }
 
-static LIST_IT_CALLBK(push_query_path)
-{
-	LIST_OBJ(struct subpath, sp, ln);
-	struct mnc_ref mnc_ref;
-
-	mnc_ref.sym = sp->lf_symbol_id;
-	mnc_ref.fnp = sp->fingerprint;
-
-	mnc_push_qry(
-		mnc_ref,
-		sp->type == SUBPATH_TYPE_WILDCARD,
-		sp->conjugacy
-	);
-
-	LIST_GO_OVER;
-}
-
 static void
 expand_as(struct subpaths *subpaths, struct optr_node *p,
           enum subpath_type type, enum token_id token)
@@ -238,10 +220,6 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 
 	/* assign conjugacy bitmap */
 	list_foreach(&subpaths.li, &assign_conjugacy, NULL);
-
-	/* prepare symbolic scoring structure */
-	mnc_reset_qry();
-	list_foreach(&subpaths.li, &push_query_path, NULL);
 
 #ifdef DEBUG_PRINT_QRY_STRUCT
 	printf("Leaf-root paths (path_id sorted by bond-vars):\n");

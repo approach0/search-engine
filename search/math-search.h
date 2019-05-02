@@ -14,6 +14,7 @@ enum math_postlist_medium {
 struct math_l2_postlist {
 	struct postmerger_postlists pols /* math posting lists */;
 	postmerger_iter_t iter /* math posting lists iterators */;
+	struct mnc *mnc /* mark-and-cross math scoring pointer */;
 
 	enum math_postlist_medium medium[MAX_MERGE_POSTINGS];
 	enum math_posting_type path_type[MAX_MERGE_POSTINGS];

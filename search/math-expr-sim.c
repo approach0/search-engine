@@ -37,12 +37,12 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 	char *url = get_blob_string(indices->url_bi, doc_id, 0, &url_sz);
 	char *txt = get_blob_string(indices->txt_bi, doc_id, 1, &url_sz);
 
-//	if (NULL != strstr(url, "/2542668/") ||
-//	    NULL != strstr(url, "/932112/")) {
+//	if (NULL != strstr(url, "/480364/" /* bad */) ||
+//	    NULL != strstr(url, "/879729/" /* good but missed */)) {
 
 //	if (NULL != strstr(url, "/179098/")) {
 
-	if (doc_id == 203109 || doc_id == 203368) {
+	if (doc_id == 58337 || doc_id == 248554) {
 
 //	if (doc_id == 150175) {
 
@@ -189,7 +189,8 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 	struct mnc_match_t match;
 	struct math_postlist_gener_item item;
 	struct math_postlist_item *_item;
-	mnc_reset_docs();
+	mnc_ptr_t mnc = po->mnc;
+	mnc_reset_docs(mnc);
 
 	for (int i = 0; i < po->iter->size; i++) {
 		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
@@ -201,7 +202,7 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 
 			for (uint32_t j = 0; j <= ele->dup_cnt; j++) {
 				uint32_t qr = ele->rid[j];
-				uint32_t ql = ele->dup[j]->path_id; /* use path_id for mnc_score */
+				uint32_t ql = ele->dup[j]->path_id; /* use path_id for mnc */
 				if (qr == ar->qr) {
 					postmerger_iter_call(po->iter, read, i,
 					                     &item, sizeof(item));
@@ -217,10 +218,10 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 							if (MATH_PATH_TYPE_PREFIX == pt) {
 								_item = (struct math_postlist_item*)&item;
 								uint32_t dl = _item->leaf_id[k];
-								mnc_doc_add_rele(ql - 1, dl - 1, ref);
+								mnc_doc_add_rele(mnc, ql - 1, dl - 1, ref);
 							} else {
 								uint64_t dls = item.wild_leaves[k];
-								mnc_doc_add_reles(ql - 1, dls, ref);
+								mnc_doc_add_reles(mnc, ql - 1, dls, ref);
 							}
 						}
 					}
@@ -230,11 +231,11 @@ math_l2_postlist_cur_match(struct math_l2_postlist *po,
 	} /* end for */
 #ifdef DEBUG_MATH_SCORE_INSPECT
 	if (inspect) {
-		match = mnc_match_debug();
+		match = mnc_match_debug(mnc);
 	} else
 #endif
 
-	match = mnc_match();
+	match = mnc_match(mnc);
 	return match;
 }
 

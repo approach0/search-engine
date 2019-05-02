@@ -670,12 +670,36 @@ static int math_l2_postlist_one_by_one_through(void *po_)
 	return 0;
 }
 
+static LIST_IT_CALLBK(push_mnc_path)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(mnc, struct mnc, pa_extra);
+	struct mnc_ref mnc_ref;
+
+	mnc_ref.sym = sp->lf_symbol_id;
+	mnc_ref.fnp = sp->fingerprint;
+
+	mnc_push_qry(mnc, mnc_ref,
+		sp->type == SUBPATH_TYPE_WILDCARD,
+		sp->conjugacy
+	);
+
+	LIST_GO_OVER;
+}
+
 static void *math_l2_postlist_get_iter(void *l2po_)
 {
 	PTR_CAST(l2po, struct math_l2_postlist, l2po_);
+	struct math_qry_struct *mqs = l2po->mqs;
 
 	/* setup iterator for each posting list */
 	l2po->iter = postmerger_iterator(&l2po->pols);
+
+	/* allocate mnc instance */
+	l2po->mnc = mnc_alloc();
+
+	/* prepare symbolic scoring structure */
+	list_foreach(&mqs->subpaths.li, &push_mnc_path, l2po->mnc);
 
 	/* setup current doc-level item */
 	l2po->cur_doc_id = 0; /* doc#0 */
@@ -688,8 +712,8 @@ static void *math_l2_postlist_get_iter(void *l2po_)
 
 	/* setup pruning structures */
 	uint32_t n_postlists = l2po->pols.n;
-	uint32_t n_qnodes = l2po->mqs->n_qry_nodes;
-	uint32_t qw = l2po->mqs->subpaths.n_lr_paths;
+	uint32_t n_qnodes = mqs->n_qry_nodes;
+	uint32_t qw = mqs->subpaths.n_lr_paths;
 	math_pruner_init(&l2po->pruner, n_qnodes, l2po->ele, n_postlists);
 	math_pruner_init_threshold(&l2po->pruner, qw);
 	math_pruner_precalc_upperbound(&l2po->pruner, qw);
@@ -740,6 +764,9 @@ static void math_l2_postlist_del_iter(void *l2po_)
 
 	/* release iterator */
 	postmerger_iter_free(l2po->iter);
+
+	/* free mnc instance */
+	mnc_free(l2po->mnc);
 
 #ifndef MATH_SKIP_SET_FAST_SELECTION
 	bin_lp_free(l2po->pruner.blp);
