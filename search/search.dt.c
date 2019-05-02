@@ -92,7 +92,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 	uint32_t sep = 0; /* term / math postlist separator */
 	struct BM25_score_args  bm25; /* Okapi BM25 arguments */
-	struct term_qry_struct  tqs[qry->n_term]; /* term TF-IDF information */
+	struct term_qry_struct  tqs[qry->n_term]; /* term qtf, idf information */
 	struct math_qry_struct  mqs[qry->n_math]; /* "TeX" tree/path structure */
 	struct math_l2_postlist mpo[qry->n_math]; /* math level-2 posting list */
 
