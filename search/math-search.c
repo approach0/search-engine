@@ -212,7 +212,7 @@ print_math_merge_state(struct math_l2_postlist *po, uint64_t *cur, int *state)
 	char medium_str[1024];
 	char state_str[1024];
 
-	printf("merge state of `%s':\n", po->mqs->kw_str);
+	printf("[merge state of `%s']\n", po->mqs->kw_str);
 
 	printf("required set: %u/%u of %u posting lists.\n",
 		po->pruner.postlist_pivot + 1, po->iter->size, po->pols.n);
@@ -263,6 +263,27 @@ print_math_merge_state(struct math_l2_postlist *po, uint64_t *cur, int *state)
 
 	printf("\n");
 	fflush(stdout);
+}
+
+void math_l2_postlist_print_merge_state(void* po_)
+{
+	PTR_CAST(po, struct math_l2_postlist, po_);
+	struct math_pruner *pruner = &po->pruner;
+
+	/* print merge state on sample request */
+	uint64_t current[MAX_MERGE_POSTINGS] = {0};
+	int      state[MAX_MERGE_POSTINGS]   = {0};
+	for (int i = 0; i < po->iter->size; i++) {
+		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
+		uint32_t pid = po->iter->map[i];
+		current[pid] = cur;
+		if (i <= pruner->postlist_pivot)
+			state[pid] = 0;
+		else
+			state[pid] = 1;
+	}
+
+	print_math_merge_state(po, current, state);
 }
 
 static int postlist_less_than(int max_i, int len_i, int max_j, int len_j)
@@ -548,25 +569,6 @@ static int math_l2_postlist_next(void *po_)
 
 		pruner->prev_threshold = threshold;
 	}
-
-#ifdef DEBUG_MATH_MERGE
-	/* print merge state on sample request */
-	if (g_debug_print) {
-		uint64_t current[MAX_MERGE_POSTINGS] = {0};
-		int      state[MAX_MERGE_POSTINGS]   = {0};
-		for (int i = 0; i < po->iter->size; i++) {
-			uint64_t cur = postmerger_iter_call(po->iter, cur, i);
-			uint32_t pid = po->iter->map[i];
-			current[pid] = cur;
-			if (i <= pruner->postlist_pivot)
-				state[pid] = 0;
-			else
-				state[pid] = 1;
-		}
-
-		print_math_merge_state(po, current, state);
-	}
-#endif
 
 	po->cur_doc_id = po->future_doc_id;
 	do {

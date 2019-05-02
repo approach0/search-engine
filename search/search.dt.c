@@ -24,7 +24,7 @@ doc_id_t debug_hit_doc;
 #ifdef DEBUG_MATH_MERGE
 static struct timer debug_timer;
 static int debug_slowdown;
-int g_debug_print;
+int debug_print;
 
 int debug_search_slowdown()
 {
@@ -283,7 +283,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 		/* calculate math scores */
 		float max_math_score = 0.f;
 		for (int pid = sep; pid < root_pols.n; pid++) {
-
+#ifdef DEBUG_MATH_MERGE
+			if (debug_print)
+				math_l2_postlist_print_merge_state(iter->po[pid].po);
+#endif
 			uint64_t cur = POSTMERGER_POSTLIST_CALL(iter, cur, pid);
 			if (cur != UINT64_MAX && cur == iter->min) {
 				const int j = pid - sep;
@@ -337,11 +340,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 #ifdef DEBUG_MATH_MERGE
 		long msec = timer_tot_msec(&debug_timer);
-		g_debug_print = 0;
+		debug_print = 0;
 		if (msec > 100 /* sample every 100 msec */) {
 			printf(ES_RESET_CONSOLE);
 			timer_reset(&debug_timer);
-			g_debug_print = 1;
+			debug_print = 1;
 		}
 		if (debug_slowdown) delay(3, 0, 0); else delay(0, 0, 1);
 #endif
