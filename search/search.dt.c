@@ -34,25 +34,25 @@ int debug_search_slowdown()
 #endif
 
 void calc_overall_scores(struct overall_scores *s,
-	float max_math_score, float tf_idf_score, float prox_score)
+	float math_score, float tf_idf_score, float prox_score)
 {
 #if 1
-	float fm = 0.5f + max_math_score * 10.f;
+	float fm = 0.5f + math_score * 10.f;
 	float ft = (1.f + tf_idf_score + prox_score) / 2.f;
-	s->math_score = max_math_score;
-	s->text_score = (ft > 0.f) ? ft : max_math_score;
-	s->doc_score = max_math_score * 100.f + prox_score + fm * ft;
+	s->math_score = math_score;
+	s->text_score = (ft > 0.f) ? ft : math_score;
+	s->doc_score = math_score * 100.f + prox_score + fm * ft;
 #else /* math only scoring */
-	s->math_score = max_math_score;
-	s->text_score = max_math_score;
-	s->doc_score = max_math_score;
+	s->math_score = math_score;
+	s->text_score = math_score;
+	s->doc_score = math_score;
 #endif
 
 #ifdef DEBUG_HIT_SCORE_INSPECT
 	if (s->doc_score > 0.25f)
 //	if (debug_hit_doc == 54047 || debug_hit_doc == 73859 || debug_hit_doc == 85243)
 	printf("doc#%u, ft%f, fm%f, max_math%f, prox%f, doc%f\n", debug_hit_doc,
-		ft, fm, max_math_score, prox_score, s->doc_score);
+		ft, fm, math_score, prox_score, s->doc_score);
 #endif
 }
 
@@ -281,7 +281,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 		/* calculate math scores */
-		float max_math_score = 0.f;
+		float math_score = 0.f;
 		for (int pid = sep; pid < root_pols.n; pid++) {
 #ifdef DEBUG_MATH_MERGE
 			if (debug_print)
@@ -296,8 +296,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 					mi, sizeof(struct math_l2_postlist_item));
 
 				/* find math score from maximum math part score */
-				if (mi->part_score > max_math_score)
-					max_math_score = mi->part_score;
+				math_score += mi->part_score;
 
 				prox_set_input(prox + (h++), mi->occurs, mi->n_occurs);
 
@@ -326,7 +325,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 			/* now, calculate the overall score for ranking */
 			struct overall_scores s;
-			calc_overall_scores(&s, max_math_score, tf_idf_score, prox_score);
+			calc_overall_scores(&s, math_score, tf_idf_score, prox_score);
 
 			prox_reset_inputs(prox, h); /* reset */
 
