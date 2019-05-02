@@ -119,10 +119,6 @@ add_path_postings( /* add (l1) path posting lists into l2 posting list */
 	return DIR_MERGE_RET_CONTINUE;
 }
 
-#ifdef DEBUG_MATH_MERGE
-static struct timer g_debug_timer;
-#endif
-
 struct math_l2_postlist
 math_l2_postlist(
 	struct indices *indices,
@@ -145,10 +141,6 @@ math_l2_postlist(
 	po.indices = indices;
 	po.rk_res = rk_res;
 	po.theta = theta;
-
-#ifdef DEBUG_MATH_MERGE
-	timer_reset(&g_debug_timer);
-#endif
 
 	return po;
 }
@@ -214,13 +206,16 @@ static int get_postlist_iter_idx(struct math_l2_postlist *po, int pid)
 }
 
 static void
-print_math_merge_state(struct math_l2_postlist *po, long msec,
-	uint64_t *current, uint64_t *forward, uint64_t *skipped, int *state)
+print_math_merge_state(struct math_l2_postlist *po, uint64_t *cur, int *state)
 {
-	printf(ES_RESET_CONSOLE);
 	char path_str[MAX_DIR_PATH_NAME_LEN];
 	char medium_str[1024];
 	char state_str[1024];
+
+	printf("merge state of `%s':\n", po->mqs->kw_str);
+
+	printf("required set: %u/%u of %u posting lists.\n",
+		po->pruner.postlist_pivot + 1, po->iter->size, po->pols.n);
 
 	for (int i = 0; i < po->pols.n; i++) {
 		int j = get_postlist_iter_idx(po, i);
@@ -259,15 +254,14 @@ print_math_merge_state(struct math_l2_postlist *po, long msec,
 		}
 
 		if (j < 0) printf("      "); else printf("[%3d] ", j);
-		printf("po#%-3u@%7u,%4u ", i, current[i] >> 32, current[i] & (~0U));
-		printf("step+skip:%7u+%7u %10s ", forward[i], skipped[i], state_str);
+		printf("po#%-3u@%7u,%4u ", i, cur[i] >> 32, cur[i] & (~0U));
+		printf("%10s ", state_str);
 		printf("%s: %s ", medium_str, path_str);
 		math_pruner_print_postlist(&po->pruner, i);
 		printf(C_RST "\n");
 	}
 
-	const int n = po->iter->size;
-	printf("required set: %u/%u\n", po->pruner.postlist_pivot + 1, n);
+	printf("\n");
 	fflush(stdout);
 }
 
@@ -509,14 +503,6 @@ estimate:
 	return ret;
 }
 
-static int math_next_pause = 0;
-
-int math_search_pause_toggle()
-{
-	math_next_pause = !math_next_pause;
-	return math_next_pause;
-}
-
 static int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -564,24 +550,21 @@ static int math_l2_postlist_next(void *po_)
 	}
 
 #ifdef DEBUG_MATH_MERGE
-	static uint64_t current[MAX_MERGE_POSTINGS] = {0};
-	static uint64_t forward[MAX_MERGE_POSTINGS] = {0};
-	static uint64_t skipped[MAX_MERGE_POSTINGS] = {0};
-	static int      state[MAX_MERGE_POSTINGS]   = {0};
-	long msec = timer_tot_msec(&g_debug_timer);
-	if (msec > 100) {
-		print_math_merge_state(po, msec, current, forward, skipped, state);
-		timer_reset(&g_debug_timer);
-	}
-	if (math_next_pause) delay(1, 0, 5); else delay(0, 0, 1);
-	for (int i = 0; i < po->iter->size; i++) {
-		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
-		uint32_t pid = po->iter->map[i];
-		current[pid] = cur;
-		if (i <= pruner->postlist_pivot)
-			state[pid] = 0;
-		else
-			state[pid] = 1;
+	/* print merge state on sample request */
+	if (g_debug_print) {
+		uint64_t current[MAX_MERGE_POSTINGS] = {0};
+		int      state[MAX_MERGE_POSTINGS]   = {0};
+		for (int i = 0; i < po->iter->size; i++) {
+			uint64_t cur = postmerger_iter_call(po->iter, cur, i);
+			uint32_t pid = po->iter->map[i];
+			current[pid] = cur;
+			if (i <= pruner->postlist_pivot)
+				state[pid] = 0;
+			else
+				state[pid] = 1;
+		}
+
+		print_math_merge_state(po, current, state);
 	}
 #endif
 

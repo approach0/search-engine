@@ -54,5 +54,3 @@ struct postmerger_postlist
 postmerger_math_l2_postlist(struct math_l2_postlist*);
 
 void math_l2_postlist_free(struct postmerger_postlist);
-
-int math_search_pause_toggle(); /* for debug */

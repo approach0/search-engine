@@ -11,8 +11,6 @@
 #include "search.h"
 #include "search-utils.h"
 
-#include "math-search.h" /* for math_search_pause_toggle() */
-
 void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
 {
 	char  *str;
@@ -75,8 +73,10 @@ print_res(struct indices *indices, ranked_results_t *rk_res, int page)
 
 static void signal_handler(int sig) {
 	if (sig == SIGINT) {
-		int pause = math_search_pause_toggle();
-		printf("SIGINT received, pause = %d.\n", pause);
+#ifdef DEBUG_MATH_MERGE
+		debug_search_slowdown();
+		printf("SIGINT received, slowdown.\n");
+#endif
 	}
 }
 

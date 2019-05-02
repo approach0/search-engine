@@ -21,6 +21,18 @@ struct overall_scores {
 doc_id_t debug_hit_doc;
 #endif
 
+#ifdef DEBUG_MATH_MERGE
+static struct timer debug_timer;
+static int debug_slowdown;
+int g_debug_print;
+
+int debug_search_slowdown()
+{
+	debug_slowdown = !debug_slowdown;
+	return debug_slowdown;
+}
+#endif
+
 void calc_overall_scores(struct overall_scores *s,
 	float max_math_score, float tf_idf_score, float prox_score)
 {
@@ -193,6 +205,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 	goto skip_search;
 #endif
 
+#ifdef DEBUG_MATH_MERGE
+	printf(ES_RESET_CONSOLE);
+	timer_reset(&debug_timer);
+#endif
+
 	/* merge top-level posting lists here */
 	foreach (iter, postmerger, &root_pols) {
 		int h = 0; /* number of hit keywords */
@@ -317,6 +334,17 @@ indices_run_query(struct indices* indices, struct query* qry)
 				priority_Q_add_or_replace(&rk_res, hit);
 			}
 		}
+
+#ifdef DEBUG_MATH_MERGE
+		long msec = timer_tot_msec(&debug_timer);
+		g_debug_print = 0;
+		if (msec > 100 /* sample every 100 msec */) {
+			printf(ES_RESET_CONSOLE);
+			timer_reset(&debug_timer);
+			g_debug_print = 1;
+		}
+		if (debug_slowdown) delay(3, 0, 0); else delay(0, 0, 1);
+#endif
 
 #if defined(DEBUG_MERGE_LIMIT_ITERS) || defined (DEBUG_MATH_PRUNING)
 		if (cnt ++ > DEBUG_MERGE_LIMIT_ITERS) {
