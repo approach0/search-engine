@@ -576,8 +576,8 @@ struct subpaths optr_subpaths(struct optr_node* optr, int lr_only)
 	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
 
 	arg.sp = &subpaths;
-	arg.n_lr_paths_limit = MAX_SUBPATH_ID - 1;
-	arg.n_subpaths_limit = MAX_SUBPATHS - 1;
+	arg.n_lr_paths_limit = MAX_SUBPATH_ID;
+	arg.n_subpaths_limit = MAX_SUBPATHS;
 	arg.lr_only = lr_only;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
 	             0 /* including root */, &arg);
