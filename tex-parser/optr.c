@@ -686,7 +686,7 @@ static LIST_IT_CALLBK(subpath_nodeid_at)
 	}
 }
 
-uint32_t get_subpath_nodeid_at(struct subpath *sp, uint32_t height)
+uint32_t get_subpath_nodeid(struct subpath *sp, uint32_t height)
 {
 	struct _get_subpath_nodeid_at args = {height, 0, 0};
 	list_foreach(&sp->path_nodes, &subpath_nodeid_at, &args);

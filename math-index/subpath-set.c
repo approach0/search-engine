@@ -1,17 +1,14 @@
 #include <stdlib.h>
 
-#include "tex-parser/config.h"
-#include "tex-parser/gen-token.h"  /* for token_id */
-#include "tex-parser/gen-symbol.h" /* for symbol_id */
-#include "tex-parser/trans.h"      /* for trans_token() */
+#include "tex-parser/head.h"
 #include "head.h"
 
 struct add_subpaths_args {
-	uint32_t new_uniq;
-	uint32_t new_dups;
-	list    *set;
-	uint32_t prefix_len;
-	uint32_t keep_going;
+	uint32_t *new_uniq;
+	uint32_t *new_dups;
+	list     *set;
+	uint32_t  prefix_len;
+	uint32_t  keep_going;
 };
 
 static void _print_subpath(struct subpath *sp, uint32_t prefix_len);
@@ -73,15 +70,20 @@ static LIST_IT_CALLBK(add_subpaths)
 		LIST_GO_OVER;
 	}
 
-	added = subpath_set_add(args->set, sp, args->prefix_len);
-	args->new_uniq += added.new_uniq;
-	args->new_dups += added.new_dups;
+	/* put a limit on the number of subpaths */
+	if (*args->new_uniq >= MAX_SUBPATHS)
+		added = subpath_set_add(args->set, sp, args->prefix_len, 1);
+	else
+		added = subpath_set_add(args->set, sp, args->prefix_len, 0);
+
+	(*args->new_uniq) += added.new_uniq;
+	(*args->new_dups) += added.new_dups;
 
 #ifdef DEBUG_SUBPATH_SET
 	if (args->prefix_len <= sp->n_nodes) {
 		fprintf(stdout, "adding subpath (prefix_len=%u, n_nodes=%u):\n",
 		        args->prefix_len, sp->n_nodes);
-		printf("r#%u~l#%u,p#%u: ", get_subpath_nodeid_at(sp, args->prefix_len),
+		printf("r#%u~l#%u,p#%u: ", get_subpath_nodeid(sp, args->prefix_len),
 		       sp->leaf_id, sp->path_id);
 		_print_subpath(sp, args->prefix_len);
 		printf("\n");
@@ -104,12 +106,16 @@ prefix_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 	struct subpath_ele_added ret = {0, 0};
 
 	for (uint32_t l = 2;; l++) {
-		struct add_subpaths_args args = {0, 0, set, l, 0};
-		list_foreach(&subpaths->li, &add_subpaths, &args);
-		ret.new_uniq += args.new_uniq;
-		ret.new_dups += args.new_dups;
+		struct add_subpaths_args args = {
+			&ret.new_uniq, &ret.new_dups, set, l, 0
+		};
+		struct subpath_ele_added last = ret;
 
-		if (args.new_dups == 0 && !args.keep_going)
+		list_foreach(&subpaths->li, &add_subpaths, &args);
+
+		if (ret.new_uniq == last.new_uniq &&
+		    ret.new_dups == last.new_dups &&
+		    !args.keep_going)
 			break;
 	}
 
@@ -120,7 +126,9 @@ struct subpath_ele_added
 lr_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 {
 	struct subpath_ele_added ret = {0, 0};
-	struct add_subpaths_args args = {0, 0, set, 0, 0};
+	struct add_subpaths_args args = {
+		&ret.new_uniq, &ret.new_dups, set, 0, 0
+	};
 
 	if (NULL == subpaths ||
 	    subpaths->n_lr_paths > MAX_MATH_PATHS)
@@ -128,8 +136,6 @@ lr_subpath_set_from_subpaths(struct subpaths* subpaths, list *set)
 
 	list_foreach(&subpaths->li, &add_subpaths, &args);
 
-	ret.new_uniq = args.new_uniq;
-	ret.new_dups = args.new_dups;
 	return ret;
 }
 
@@ -293,7 +299,7 @@ static struct subpath_ele *new_ele(struct subpath *sp, uint32_t prefix_len)
 	LIST_NODE_CONS(newele->ln);
 	newele->dup_cnt = 0;
 	newele->dup[0] = sp;
-	newele->rid[0] = get_subpath_nodeid_at(sp, prefix_len);
+	newele->rid[0] = get_subpath_nodeid(sp, prefix_len);
 	newele->prefix_len = prefix_len;
 
 	return newele;
@@ -302,7 +308,9 @@ static struct subpath_ele *new_ele(struct subpath *sp, uint32_t prefix_len)
 struct _subpath_set_add_args {
 	struct subpath *subpath;
 	uint32_t        prefix_len;
-	uint32_t        new_uniq_inserted;
+	uint32_t        fixed_sz;
+	uint32_t        new_dup_insert;
+	uint32_t        new_uniq_insert;
 };
 
 static LIST_IT_CALLBK(set_add)
@@ -318,17 +326,22 @@ static LIST_IT_CALLBK(set_add)
 		if (ele->dup_cnt + 1 < MAX_MATH_PATHS) {
 			ele->dup_cnt ++;
 			ele->dup[ele->dup_cnt] = sp;
-			ele->rid[ele->dup_cnt] = get_subpath_nodeid_at(sp, ele->prefix_len);
+			ele->rid[ele->dup_cnt] = get_subpath_nodeid(sp, ele->prefix_len);
+			args->new_dup_insert = 1;
 		}
 		return LIST_RET_BREAK;
 	}
 
 	if (pa_now->now == pa_head->last) {
-		newele = new_ele(sp, args->prefix_len);
-		list_insert_one_at_tail(&newele->ln, pa_head, pa_now, pa_fwd);
 
-		/* indicate we inserted one into set */
-		args->new_uniq_inserted = 1;
+		/* as long as it allows new unique element to be inserted */
+		if (!args->fixed_sz) {
+			newele = new_ele(sp, args->prefix_len);
+			list_insert_one_at_tail(&newele->ln, pa_head, pa_now, pa_fwd);
+
+			/* indicate we inserted one into set */
+			args->new_uniq_insert = 1;
+		}
 
 		return LIST_RET_BREAK;
 	} else {
@@ -338,7 +351,7 @@ static LIST_IT_CALLBK(set_add)
 }
 
 struct subpath_ele_added
-subpath_set_add(list *set, struct subpath *sp, int prefix_len)
+subpath_set_add(list *set, struct subpath *sp, int prefix_len, int fixed_sz)
 {
 	struct subpath_ele_added ret = {0, 0};
 	struct subpath_ele *newele;
@@ -347,22 +360,20 @@ subpath_set_add(list *set, struct subpath *sp, int prefix_len)
 		return ret;
 	else if (prefix_len == 0)
 		prefix_len = sp->n_nodes;
-	/* if prefix_len is zero, indicating it is the full leaf-root path */
+	/* if prefix_len is zero, then it is the full leaf-root path */
 
 	if (set->now == NULL) {
 		newele = new_ele(sp, prefix_len);
 		list_insert_one_at_tail(&newele->ln, set, NULL, NULL);
-		ret.new_uniq ++;
-		ret.new_dups ++;
+		ret.new_uniq = 1;
 	} else {
-		struct _subpath_set_add_args args = {sp, prefix_len, 0};
+		struct _subpath_set_add_args args = {sp, prefix_len, fixed_sz, 0, 0};
 		list_foreach(set, &set_add, &args);
 
-		if (args.new_uniq_inserted) {
-			/* we just inserted an unique element */
-			ret.new_uniq ++;
-		}
-		ret.new_dups ++;
+		if (args.new_uniq_insert)
+			ret.new_uniq = 1;
+		else if (args.new_dup_insert)
+			ret.new_dups = 1;
 	}
 
 	return ret;

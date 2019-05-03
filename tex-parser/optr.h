@@ -55,3 +55,5 @@ fingerpri_t subpath_fingerprint(struct subpath*, uint32_t);
 #include "sds/sds.h"
 int
 optr_graph_print(struct optr_node*, char **, uint32_t*, int, sds*);
+
+uint32_t get_subpath_nodeid(struct subpath*, uint32_t);

@@ -235,7 +235,7 @@ int math_qry_prepare(struct indices *indices, char *tex, struct math_qry_struct*
 		DIR_PATHSET_PREFIX_PATH, &subpaths, &s->n_uniq_paths
 	);
 #ifdef DEBUG_PRINT_QRY_STRUCT
-	printf("Search path set:\n");
+	printf("Search path set: (%u unique paths)\n", s->n_uniq_paths);
 	subpath_set_print(&s->subpath_set, stdout);
 #endif
 

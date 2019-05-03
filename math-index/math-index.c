@@ -368,7 +368,7 @@ static LIST_IT_CALLBK(mkdir_and_setify)
 #endif
 	mkdir_p(path);
 
-	subpath_set_add(&arg->subpath_set, sp, arg->prefix_len);
+	(void)subpath_set_add(&arg->subpath_set, sp, arg->prefix_len, 0);
 
 	LIST_GO_OVER;
 }

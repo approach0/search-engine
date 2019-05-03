@@ -21,7 +21,7 @@ struct subpath_ele_added {
 LIST_DECL_FREE_FUN(subpath_set_free);
 
 struct subpath_ele_added
-subpath_set_add(list*, struct subpath*, int);
+subpath_set_add(list*, struct subpath*, int, int);
 
 void subpath_set_print(list*, FILE*);
 void subpath_set_print_ele(struct subpath_ele*);
