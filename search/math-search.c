@@ -20,6 +20,7 @@ void math_l2_postlist_print(struct math_l2_postlist* po)
 	char path_str[MAX_DIR_PATH_NAME_LEN];
 	char medium_str[MAX_MERGE_POSTINGS];
 	char pathtype_str[MAX_MERGE_POSTINGS];
+
 	for (int i = 0; i < po->pols.n; i++) {
 		struct subpath_ele *ele = po->ele[i];
 		if (ele == NULL)
@@ -63,10 +64,13 @@ struct add_path_postings_args {
 	struct math_l2_postlist *po;
 };
 
+/* add (l1) path posting lists into l2 posting list */
 static enum dir_merge_ret
-add_path_postings( /* add (l1) path posting lists into l2 posting list */
-	char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
-	struct subpath_ele **eles, uint32_t n_eles, uint32_t level, void *_args)
+add_path_postings(
+	char (*full_paths)[MAX_DIR_PATH_NAME_LEN],
+	char (*base_paths)[MAX_DIR_PATH_NAME_LEN],
+	struct subpath_ele **eles, uint32_t n_eles,
+	uint32_t level, void *_args)
 {
 	PTR_CAST(args, struct add_path_postings_args, _args);
 	struct postlist_cache ci = args->indices->ci;

@@ -10,7 +10,8 @@ struct subpath_ele *out_eles[MAX_MERGE_POSTINGS];
 
 static enum dir_merge_ret
 test( /* add (l1) path posting lists into l2 posting list */
-	char (*full_paths)[MAX_MERGE_DIRS], char (*base_paths)[MAX_MERGE_DIRS],
+	char (*full_paths)[MAX_DIR_PATH_NAME_LEN],
+	char (*base_paths)[MAX_DIR_PATH_NAME_LEN],
 	struct subpath_ele **eles, uint32_t n_eles, uint32_t level, void *_args)
 {
 	for (uint32_t i = 0; i < n_eles; i++) {
