@@ -7,6 +7,8 @@
 #define TYPE_MAP_STR_MAX             128
 //#define OPTR_HASH_DEBUG
 
+#define MAX_SUBPATHS                 128
+
 #define OPTR_TREE_NODE_COLOR_CSS_PREFIX "optr_color_"
 
 //#define TEX_PARSER_USE_LATEXML /* use LaTeXML as fallback parser */

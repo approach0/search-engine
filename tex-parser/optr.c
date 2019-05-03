@@ -430,7 +430,8 @@ fingerpri_t subpath_fingerprint(struct subpath *sp, uint32_t prefix_len)
 
 struct _gen_subpaths_arg {
 	struct subpaths *sp;
-	uint32_t n_paths_limit;      /* constrain the number of paths */
+	uint32_t n_lr_paths_limit; /* limit of generated leaf-root paths */
+	uint32_t n_subpaths_limit; /* limit of generated prefix subpaths */
 	int lr_only; /* if only generate leaf-root paths */
 };
 
@@ -488,17 +489,19 @@ static TREE_IT_CALLBK(gen_subpaths)
 	uint32_t          bitmap_idx;
 	bool              is_leaf;
 
+	/* reached the limit of maximum leaf-root paths we can generate */
+	if (arg->sp->n_lr_paths >= arg->n_lr_paths_limit)
+		return LIST_RET_BREAK;
+
 	if (p->tnd.sons.now == NULL /* is leaf */) {
 		is_leaf = true;
 
-		/* reached the limit of maximum paths we can generate */
-		if (arg->sp->n_lr_paths >= arg->n_paths_limit)
-			return LIST_RET_BREAK;
-		else
-			arg->sp->n_lr_paths ++; /* count leaf-root paths */
-
 		do {
 			f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+
+			/* reached the limit of maximum subpaths we can generate */
+			if (arg->sp->n_subpaths >= arg->n_subpaths_limit)
+				return LIST_RET_BREAK;
 
 			/* create a subpath from each node through bottom to top node */
 			if (is_leaf || (!arg->lr_only &&
@@ -514,7 +517,7 @@ static TREE_IT_CALLBK(gen_subpaths)
 
 				/* insert only when not inserted before */
 				if (!gen_subpaths_bitmap[bitmap_idx]) {
-					/* start create and generate a subpath */
+					/* start to create and generate a subpath */
 					subpath = create_subpath(p, is_leaf);
 					/* generate nodes of this subpath */
 					insert_subpath_nodes(subpath, p, p->token_id);
@@ -525,8 +528,9 @@ static TREE_IT_CALLBK(gen_subpaths)
 					                        NULL, NULL);
 					/* stop enter this if again */
 					gen_subpaths_bitmap[bitmap_idx] = 1;
-					/* count total subpaths generated. */
-					arg->sp->n_subpaths ++;
+
+					arg->sp->n_subpaths ++; /* count total subpaths generated. */
+					if (is_leaf) arg->sp->n_lr_paths ++; /* count leaf-root paths */
 				}
 			}
 
@@ -572,7 +576,8 @@ struct subpaths optr_subpaths(struct optr_node* optr, int lr_only)
 	memset(gen_subpaths_bitmap, 0, sizeof(bool) * (MAX_SUBPATH_ID << 1));
 
 	arg.sp = &subpaths;
-	arg.n_paths_limit = MAX_SUBPATH_ID; /* generate limit number of paths */
+	arg.n_lr_paths_limit = MAX_SUBPATH_ID - 1;
+	arg.n_subpaths_limit = MAX_SUBPATHS - 1;
 	arg.lr_only = lr_only;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
 	             0 /* including root */, &arg);

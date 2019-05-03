@@ -147,7 +147,7 @@ static TREE_IT_CALLBK(_expand_path)
 	TREE_OBJ(struct optr_node, p, tnd);
 
 	/* reached the limit of maximum paths we can generate */
-	if (subpaths->n_lr_paths >= MAX_SUBPATH_ID)
+	if (subpaths->n_subpaths + 1 >= MAX_SUBPATHS)
 		return LIST_RET_BREAK;
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
