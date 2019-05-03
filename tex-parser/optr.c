@@ -112,7 +112,7 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 	fprintf(fh, "#%u, ", p->node_id);
 
 	fprintf(fh, "token=%s, ", trans_token(p->token_id));
-	//fprintf(fh, "path_id=%u, ", p->path_id);
+	// fprintf(fh, "path_id=%u, ", p->path_id); /* optional */
 	fprintf(fh, "subtr_hash=" C_GRAY "%s" C_RST ", ",
 #if 0
 		optr_hash_str(p->subtr_hash)
