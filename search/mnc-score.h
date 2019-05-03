@@ -1,6 +1,10 @@
 #pragma once
 
+#include "postmerge/config.h"
 #include "config.h"
+
+/* define max number of query paths */
+#define MAX_MNC_QRY_PATHS MAX_MERGE_POSTINGS
 
 /* define max number of slots (bound variables) */
 #define MAX_DOC_UNIQ_SYM MAX_SUBPATH_ID
@@ -21,10 +25,10 @@ typedef uint16_t mnc_finpr_t;
 
 typedef struct mnc {
 	/* query expression ordered subpaths/symbols list */
-	symbol_id_t     qry_sym[MAX_SUBPATH_ID];
-	mnc_finpr_t     qry_fnp[MAX_SUBPATH_ID];
-	int             qry_wil[MAX_SUBPATH_ID];
-	uint64_t        qry_cnj[MAX_SUBPATH_ID];
+	symbol_id_t     qry_sym[MAX_MNC_QRY_PATHS];
+	mnc_finpr_t     qry_fnp[MAX_MNC_QRY_PATHS];
+	int             qry_wil[MAX_MNC_QRY_PATHS];
+	uint64_t        qry_cnj[MAX_MNC_QRY_PATHS];
 	uint32_t        n_qry_syms;
 
 	/* document expression unique symbols list */
@@ -36,7 +40,7 @@ typedef struct mnc {
 	/* query / document bitmaps */
 	mnc_slot_t      doc_mark_bitmap[MAX_DOC_UNIQ_SYM];
 	mnc_slot_t      doc_cross_bitmap;
-	mnc_slot_t      relevance_bitmap[MAX_SUBPATH_ID][MAX_DOC_UNIQ_SYM];
+	mnc_slot_t      relevance_bitmap[MAX_MNC_QRY_PATHS][MAX_DOC_UNIQ_SYM];
 } *mnc_ptr_t;
 
 struct mnc_match_t {
