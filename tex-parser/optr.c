@@ -505,7 +505,7 @@ static TREE_IT_CALLBK(gen_subpaths)
 
 			/* create a subpath from each node through bottom to top node */
 			if (is_leaf || (!arg->lr_only &&
-			    f != NULL && meaningful_gener(f->token_id))) {
+			    f != NULL && meaningful_gener(p->token_id))) {
 				/* calculate bitmap index */
 				if (is_leaf)
 					bitmap_idx = p->path_id;

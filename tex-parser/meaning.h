@@ -17,7 +17,6 @@ static __inline__ int meaningful_gener(enum token_id id)
 	case T_SEP:
 
 	case T_BASE:
-	case T_HANGER:
 	case T_SUBSCRIPT:
 	case T_SUPSCRIPT:
 	case T_PRE_SUBSCRIPT:
