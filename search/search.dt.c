@@ -76,7 +76,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 {
 #ifdef MERGE_TIME_LOG
 	struct timer timer;
-	timer_reset(&timer);
 	FILE *mergetime_fh = fopen(MERGE_TIME_LOG, "a");
 #endif
 
@@ -87,9 +86,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 	ranked_results_t rk_res;
 	priority_Q_init(&rk_res, RANK_SET_DEFAULT_VOL);
 
-#ifdef MERGE_TIME_LOG
-	// fprintf(mergetime_fh, "checkpoint-a %ld msec.\n", timer_tot_msec(&timer));
-#endif
 	uint32_t sep = 0; /* term / math postlist separator */
 	struct BM25_score_args  bm25; /* Okapi BM25 arguments */
 	struct term_qry_struct  tqs[qry->n_term]; /* term qtf, idf information */
@@ -180,7 +176,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	printf("\n");
 
 #ifdef MERGE_TIME_LOG
-	// fprintf(mergetime_fh, "checkpoint-init %ld msec.\n", timer_tot_msec(&timer));
+	timer_reset(&timer);
 #endif
 
 	/* proximity score data structure */
@@ -378,16 +374,11 @@ skip_search:
 			math_l2_postlist_free(root_pols.po[i]);
 	}
 
-#ifdef MERGE_TIME_LOG
-	// fprintf(mergetime_fh, "checkpoint-unit %ld msec.\n", timer_tot_msec(&timer));
-#endif
-
 	// Sort min-heap
 	priority_Q_sort(&rk_res);
 	//////////fflush(stdout);
 
 #ifdef MERGE_TIME_LOG
-	// fprintf(mergetime_fh, "checkpoint-Q %ld msec.\n", timer_tot_msec(&timer));
 	fclose(mergetime_fh);
 #endif
 	return rk_res;
