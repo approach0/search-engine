@@ -153,4 +153,3 @@ with open(input_tsv) as fd:
         index = row[5]
         replace_source_code(replaces)
         do_evaluation('./tmp/' + run_name, medium, index)
-        break;
