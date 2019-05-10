@@ -49,8 +49,9 @@ with open(input_tsv) as fd:
         with open(stats_file) as in_fh:
             content = in_fh.read()
             j = json.loads(content)
-            res += [("%.2f" % j[f]) for f in ['mean', 'median', 'max', 'min', 'variance']]
+            res += [("%.2f" % j[f]) for f in ['mean20', 'median20', 'max20', 'min20', 'std20']]
+            res += [("%.2f" % j[f]) for f in ['mean', 'median', 'max', 'min', 'std']]
             res += [("%.3f" % t) for t in j['runtime']]
-        indat=row[0:4]
+        indat=row[0:6] # how many columns are input data?
         print('\t'.join(indat), '\t', '\t'.join(res))
         # break
