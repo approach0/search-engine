@@ -363,7 +363,10 @@ math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 #ifdef STRATEGY_GBP_LEN
 		int pid = blp->po[i];
 		float l = (float)pruner->postlist_len[pid];
-		blp->weight[i] = (int)(1000.f / (l * l));
+		float ll = l * l - 1.f;
+		if (ll <= 0.5f) ll = 1.f;
+		blp->weight[i] = (int)(20100.f / ll);
+		if (blp->weight[i] == 0) blp->weight[i] = 1;
 #elif defined(STRATEGY_GBP_NUM)
 		blp->weight[i] = 1;
 #else
