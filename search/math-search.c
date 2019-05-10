@@ -360,9 +360,9 @@ math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 
 	/* set objective weights */
 	for (int i = 0; i < blp->n_po; i++) {
+#ifdef STRATEGY_GBP_LEN
 		int pid = blp->po[i];
 		float l = (float)pruner->postlist_len[pid];
-#ifdef STRATEGY_GBP_LEN
 		blp->weight[i] = (int)(1000.f / (l * l));
 #elif defined(STRATEGY_GBP_NUM)
 		blp->weight[i] = 1;
