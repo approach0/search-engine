@@ -51,6 +51,6 @@ with open(input_tsv) as fd:
             j = json.loads(content)
             res += [("%.2f" % j[f]) for f in ['mean', 'median', 'max', 'min', 'variance']]
             res += [("%.3f" % t) for t in j['runtime']]
-        indat=row[0:5]
+        indat=row[0:4]
         print('\t'.join(indat), '\t', '\t'.join(res))
         # break
