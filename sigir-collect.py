@@ -37,10 +37,13 @@ with open(input_tsv) as fd:
         else:
             with open(eval_file) as in_fh:
                 a = parse_evaluation_results(in_fh.readlines())
-                fullrel = a[0]
-                partrel = a[5]
-                res.append(fullrel)
-                res.append(partrel)
+                if len(a) + 1 >= 5:
+                    fullrel = a[0]
+                    partrel = a[5]
+                    res.append(fullrel)
+                    res.append(partrel)
+                else:
+                    res += ["-1.f", "-1.f"] # placeholder
         # Read stats file
         stats_file = './tmp/' + run_name + '.stats.dat'
         if not os.path.exists(stats_file):
