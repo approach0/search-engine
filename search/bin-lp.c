@@ -175,34 +175,26 @@ static int objective_weight_sum(struct bin_lp *blp)
 	return sum;
 }
 
-struct heuristic_value {
-	int mat_coeff;
-	int obj_coeff;
-};
-
-static int
-heuristic_better(struct heuristic_value *v1, struct heuristic_value *v2)
+static int row_max_column(struct bin_lp *blp, int r)
 {
-	if (v1->obj_coeff != v2->obj_coeff)
-		return v1->obj_coeff < v2->obj_coeff;
-	else
-		return v1->mat_coeff > v2->mat_coeff;
+	int max_column = 0, max = 0;
+	for (int column = blp->zero_pivot; column < blp->one_pivot; column++)
+		if (blp->matrix[r * blp->width + column] > max) {
+			max = blp->matrix[r * blp->width + column];
+			max_column = column;
+		}
+	return max_column;
 }
 
-static int heuristic_column(struct bin_lp *blp, int r)
+static int row_min_objective_col(struct bin_lp *blp, int r)
 {
-	int sel_col = 0;
-	struct heuristic_value cur, best = {0, INT_MAX};
-	for (int column = blp->zero_pivot; column < blp->one_pivot; column++) {
-		cur.mat_coeff = blp->matrix[r * blp->width + column];
-		cur.obj_coeff = blp->weight[column];
-		if (heuristic_better(&cur, &best)) {
-			best = cur;
-			sel_col = column;
+	int min_column = 0, min = INT_MAX;
+	for (int column = blp->zero_pivot; column < blp->one_pivot; column++)
+		if (blp->matrix[r * blp->width + column] > 0 && blp->weight[column] < min) {
+			min = blp->weight[column];
+			min_column = column;
 		}
-	}
-
-	return sel_col;
+	return min_column;
 }
 
 /*
@@ -247,9 +239,10 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 	/* if this problem does not satisfy all of our constraints */
 	if (max_row >= 0) {
 		/* solve sub-problems */
-		int heu_col = heuristic_column(blp, max_row);
+		// int max_col = row_max_column(blp, max_row);
+		int max_col = row_min_objective_col(blp, max_row);
 #ifdef DEBUG_BIN_LP
-			printf("most violating row = %d, col = %d\n", max_row, heu_col);
+			printf("most violating row = %d, col = %d\n", max_row, max_col);
 #endif
 		struct bin_lp lp1, lp2;
 		lp1 = bin_lp_alloc(blp->height, blp->width);
@@ -258,10 +251,10 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 		bin_lp_copy(&lp1, blp);
 		bin_lp_copy(&lp2, blp);
 
-		column_swap(&lp1, lp1.zero_pivot ++, heu_col);
+		column_swap(&lp1, lp1.zero_pivot ++, max_col);
 		bin_lp_solve_r(&lp1, threshold, max, sol, upp, args, level + 1);
 
-//		column_swap(&lp2, -- lp2.one_pivot, heu_col);
+//		column_swap(&lp2, -- lp2.one_pivot, max_col);
 //		bin_lp_solve_r(&lp2, threshold, max, sol, upp, args, level + 1);
 
 		bin_lp_free(lp1);
