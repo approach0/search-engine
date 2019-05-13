@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "common/common.h"
 #include "bin-lp.h"
@@ -9,6 +10,17 @@
 /*
  * Printing functions
  */
+void bin_lp_brief_print(struct bin_lp blp)
+{
+	for (int column = 0; column < blp.n_po; column++) {
+		if (column < blp.zero_pivot) printf(C_BLUE);
+		else if (column >= blp.one_pivot) printf(C_GREEN);
+		printf("%u ", blp.po[column]);
+		printf(C_RST);
+	}
+	printf("\n");
+}
+
 void bin_lp_print(struct bin_lp blp, int level)
 {
 	printf("%*c", level * 2, ' ');
@@ -174,6 +186,17 @@ static int row_max_column(struct bin_lp *blp, int r)
 	return max_column;
 }
 
+static int row_min_objective_col(struct bin_lp *blp, int r)
+{
+	int min_column = 0, min = INT_MAX;
+	for (int column = blp->zero_pivot; column < blp->one_pivot; column++)
+		if (blp->matrix[r * blp->width + column] > 0 && blp->weight[column] < min) {
+			min = blp->weight[column];
+			min_column = column;
+		}
+	return min_column;
+}
+
 /*
  * Solver functions
  */
@@ -216,7 +239,8 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 	/* if this problem does not satisfy all of our constraints */
 	if (max_row >= 0) {
 		/* solve sub-problems */
-		int max_col = row_max_column(blp, max_row);
+		// int max_col = row_max_column(blp, max_row);
+		int max_col = row_min_objective_col(blp, max_row);
 #ifdef DEBUG_BIN_LP
 			printf("most violating row = %d, col = %d\n", max_row, max_col);
 #endif
@@ -236,11 +260,12 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 		bin_lp_free(lp1);
 		bin_lp_free(lp2);
 		return;
-#ifdef DEBUG_BIN_LP
-	} else {
-		printf("this is feasible solution.\n");
-#endif
 	}
+
+#if 0
+	printf("feasible solution.\n");
+	bin_lp_brief_print(*blp);
+#endif
 
 #ifdef DEBUG_BIN_LP
 	printf(C_RED "%*cUpdate result, max: %d\n" C_RST, level * 2, ' ', cur_max);

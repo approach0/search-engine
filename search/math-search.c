@@ -340,7 +340,7 @@ static int lift_up_pivot(struct math_l2_postlist *po, float threshold)
 }
 
 /* === newer pruning next === */
-
+#if defined(STRATEGY_GBP_LEN) || defined(STRATEGY_GBP_NUM)
 inline static void
 math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 {
@@ -360,9 +360,18 @@ math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 
 	/* set objective weights */
 	for (int i = 0; i < blp->n_po; i++) {
+#ifdef STRATEGY_GBP_LEN
 		int pid = blp->po[i];
 		float l = (float)pruner->postlist_len[pid];
-		blp->weight[i] = (int)(1000.f / (l * l));
+		float ll = l * l - 1.f;
+		if (ll <= 0.5f) ll = 1.f;
+		blp->weight[i] = (int)(20100.f / ll);
+		if (blp->weight[i] == 0) blp->weight[i] = 1;
+#elif defined(STRATEGY_GBP_NUM)
+		blp->weight[i] = 1;
+#else
+#error("unexpected!")
+#endif
 	}
 
 #ifdef DEBUG_MATH_SKIP_SET_SELECTION
@@ -370,6 +379,7 @@ math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 	bin_lp_print(*blp, 0);
 #endif
 }
+#endif
 
 static float get_upperbound(int i, void *po_)
 {
@@ -528,6 +538,69 @@ estimate:
 	return ret;
 }
 
+#ifdef STRATEGY_NONE
+static int math_l2_postlist_next(void *po_)
+{
+	PTR_CAST(po, struct math_l2_postlist, po_);
+	struct math_pruner *pruner = &po->pruner;
+
+	po->cur_doc_id = po->future_doc_id;
+	do {
+		po->cur_doc_id = set_doc_candidate(po);
+
+		if (po->cur_doc_id == UINT32_MAX) {
+			po->future_doc_id = UINT32_MAX;
+			return 0;
+
+		} else if (po->cur_doc_id != po->future_doc_id) {
+			/* cur is now even future than future. */
+			uint32_t save = po->cur_doc_id;
+			po->cur_doc_id = po->future_doc_id;
+			po->future_doc_id = save;
+			return 1;
+		}
+
+		int save_idx[MAX_NODE_IDS];
+		int n_save = get_hit_nodes(po, save_idx);
+
+		struct pq_align_res widest = {0};
+		struct vec_match_res mr;
+		for (int i = 0; i < n_save; i++) {
+			struct pruner_node *q_node = pruner->nodes + save_idx[i];
+
+			mr = vec_match(po, q_node, widest.width, 0);
+			if (mr.w > widest.width) {
+				widest.width = mr.w;
+				widest.qr = q_node->secttr[0].rnode;
+				widest.dr = mr.dr;
+			}
+		}
+
+		if (widest.width > 0) {
+			uint32_t n_doc_lr_paths = read_num_doc_lr_paths(po);
+
+			struct math_expr_score_res expr =
+				math_l2_postlist_precise_score(po, &widest, n_doc_lr_paths);
+
+			if (expr.score > po->max_exp_score) {
+				hit_occur_t *ho = po->occurs + 0;
+				po->max_exp_score = expr.score;
+				po->n_occurs = 1;
+				ho->pos = expr.exp_id;
+			}
+		}
+
+		for (int i = 0; i <= pruner->postlist_pivot; i++) {
+			uint64_t cur = postmerger_iter_call(po->iter, cur, i);
+			if (cur == po->candidate)
+				postmerger_iter_call(po->iter, next, i);
+		}
+
+	} while (true);
+
+	return 1;
+}
+#else
 static int math_l2_postlist_next(void *po_)
 {
 	PTR_CAST(po, struct math_l2_postlist, po_);
@@ -553,7 +626,7 @@ static int math_l2_postlist_next(void *po_)
 		drop_small_nodes(po, threshold);
 		drop_useless_postlist_iters(po);
 
-#ifdef MATH_SKIP_SET_FAST_SELECTION
+#ifdef STRATEGY_MAXREF
 		math_l2_postlist_sort_by_refmax(po);
 		pruner->postlist_pivot = lift_up_pivot(po, threshold);
 #else
@@ -633,6 +706,7 @@ static int math_l2_postlist_next(void *po_)
 
 	return 1;
 }
+#endif
 
 static int math_l2_postlist_one_by_one_through(void *po_)
 {
@@ -722,7 +796,7 @@ static void *math_l2_postlist_get_iter(void *l2po_)
 	math_pruner_init_threshold(&l2po->pruner, qw);
 	math_pruner_precalc_upperbound(&l2po->pruner, qw);
 
-#ifdef MATH_SKIP_SET_FAST_SELECTION
+#ifdef STRATEGY_MAXREF
 	/* sort path posting lists by max values */
 	math_l2_postlist_sort_by_refmax(l2po);
 #else
@@ -772,7 +846,7 @@ static void math_l2_postlist_del_iter(void *l2po_)
 	/* free mnc instance */
 	mnc_free(l2po->mnc);
 
-#ifndef MATH_SKIP_SET_FAST_SELECTION
+#ifndef STRATEGY_MAXREF
 	bin_lp_free(l2po->pruner.blp);
 #endif
 
