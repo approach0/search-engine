@@ -55,7 +55,6 @@ with open(input_tsv) as fd:
             res += [("%.2f" % j[f]) for f in ['avg-02', 'std-02', 'med-02', 'min-02', 'max-02']]
             res += [("%.2f" % j[f]) for f in ['avg-24', 'std-24', 'med-24', 'min-24', 'max-24']]
             res += [("%.2f" % j[f]) for f in ['avg-04', 'std-04', 'med-04', 'min-04', 'max-04']]
-            res += [("%.3f" % t) for t in j['runtime']]
         indat=row[0:6] # how many columns are input data?
         print('\t'.join(indat), '\t', '\t'.join(res))
         # break
