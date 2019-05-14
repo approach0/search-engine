@@ -10,7 +10,7 @@ import os
 input_tsv = "eff.tsv"
 index_dir = "/home/tk/nvme0n1/mnt-%s.img"
 cache_lst = "~/nvme0n1/cache-list.tmp"
-repeats = 12
+repeats = 5
 
 # setup python script signal handler
 def signal_handler(sig, _):
