@@ -98,7 +98,8 @@ int httpd_run(unsigned short port,
 	struct http_cb_arg *copy_args;
 
 	/* initialization */
-	signal(SIGINT, signal_handler);
+	signal(SIGINT, signal_handler);  /* Ctrl-C   */
+	signal(SIGTERM, signal_handler); /* MPI quit */
 	event_init();
 
 	/* binding */
