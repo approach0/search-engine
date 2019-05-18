@@ -5,9 +5,9 @@
 #include "term-index/term-index.h" /* for doc_id_t */
 #include "rank.h"
 
-void test_print_res(struct rank_hit* hit, uint32_t cnt, void*arg)
+void test_print_res(struct rank_hit* hit, int cnt, void*arg)
 {
-	printf("#%u: doc#%u (score=%f)\n", cnt, hit->docID, hit->score);
+	printf("#%d: doc#%u (score=%f)\n", cnt, hit->docID, hit->score);
 }
 
 void test_add(struct priority_Q *Q, doc_id_t id, float score)
@@ -40,7 +40,7 @@ int main(void)
 {
 	struct priority_Q  queue;
 	struct rank_window window;
-	uint32_t           page, tot_pages;
+	int                page, tot_pages;
 	const uint32_t     res_per_page = 3;
 	const uint32_t     max_num_res = 5;
 
@@ -60,7 +60,7 @@ int main(void)
 
 	page = 0;
 	do {
-		printf("page#%u:\n", page + 1);
+		printf("page#%d:\n", page + 1);
 		window = rank_window_calc(&queue, page, res_per_page, &tot_pages);
 		rank_window_foreach(&window, &test_print_res, NULL);
 		page ++;

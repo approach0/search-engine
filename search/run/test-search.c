@@ -11,14 +11,14 @@
 #include "search.h"
 #include "search-utils.h"
 
-void print_res_item(struct rank_hit* hit, uint32_t cnt, void* arg_)
+void print_res_item(struct rank_hit* hit, int cnt, void* arg_)
 {
 	char  *str;
 	size_t str_sz;
 	list   highlight_list;
 	PTR_CAST(indices, struct indices, arg_);
 
-	printf("page result#%u: doc#%u score=%.3f\n",
+	printf("page result#%d: doc#%u score=%.3f\n",
 	        cnt + 1, hit->docID, hit->score);
 
 	/* get URL */
@@ -54,7 +54,7 @@ print_res(struct indices *indices, ranked_results_t *rk_res, int page)
 {
 	struct rank_window wind;
 	int i, from_page = page, to_page = page;
-	uint32_t tot_pages = 1;
+	int tot_pages = 1;
 	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
 
 	/* show all pages */
