@@ -88,6 +88,7 @@ httpd_on_recv(const char *req, void *arg_)
 
 	/* is there a cluster? */
 	if (args->n_nodes > 1) {
+
 		/*  and this is the master node? */
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* broadcast to slave nodes */
@@ -127,6 +128,8 @@ httpd_on_recv(const char *req, void *arg_)
 		MPI_Gather(ret, MAX_SEARCHD_RESPONSE_JSON_SZ, MPI_BYTE,
 		           gather_buf, MAX_SEARCHD_RESPONSE_JSON_SZ, MPI_BYTE,
 		           CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
+		/* blocks until all nodes have reached here */
+		MPI_Barrier(MPI_COMM_WORLD);
 
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* merge gather results and return */
