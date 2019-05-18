@@ -28,7 +28,7 @@ enum parse_json_kw_res {
 /* append_result() callback function arguments */
 struct append_result_args {
 	struct indices *indices;
-	uint32_t        n_results;
+	int n_results;
 };
 
 /*
@@ -99,12 +99,12 @@ parse_json_kw_ele(JSON_Object *obj, size_t idx,
 	return PARSE_JSON_KW_SUCC;
 }
 
-uint32_t
+int
 parse_json_qry(const char* req, struct query *qry)
 {
 	JSON_Object *parson_obj;
 	JSON_Array *parson_arr;
-	uint32_t page = 0; /* page == zero indicates error */
+	int page = 0; /* page == zero indicates error */
 	size_t i;
 
 	JSON_Value *parson_val = json_parse_string(req);
@@ -122,7 +122,7 @@ parse_json_qry(const char* req, struct query *qry)
 		goto free;
 	}
 
-	page = (uint32_t)json_object_get_number(parson_obj, "page");
+	page = (int)json_object_get_number(parson_obj, "page");
 
 	/* get query keywords array (key `kw' in JSON) */
 	if (!json_object_has_value_of_type(parson_obj, "kw",
@@ -168,7 +168,7 @@ free:
  */
 static const char
 *response_head_str(enum searchd_ret_code code,
-                   uint32_t tot_pages)
+                   int tot_pages)
 {
 	static char head_str[MAX_SEARCHD_RESPONSE_JSON_SZ];
 
@@ -247,7 +247,7 @@ static char *extract_title_string(const char *doc)
 }
 
 static void
-append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
+append_result(struct rank_hit* hit, int cnt, void* arg)
 {
 	char       *url, *doc, *title;
 	const char *snippet, *hit_json;
@@ -264,7 +264,7 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 
 	printf("occurs: ");
 	{
-		uint32_t i;
+		int i;
 		for (i = 0; i < hit->n_occurs; i++)
 			printf("%u ", hit->occurs[i]);
 		printf("\n");
@@ -344,10 +344,11 @@ const char *
 search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 {
 	struct rank_window wind;
-	uint32_t tot_pages;
+	int tot_pages;
 
 	/* calculate result "window" for a specified page number */
 	wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
+	printf("i = %d, total pages: %u\n", i, tot_pages);
 
 	/* check requested page number legality */
 	if (tot_pages == 0)
@@ -358,7 +359,7 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 	/* check window calculation validity */
 	if (wind.to > 0) {
 		/* valid window, append search results in response */
-		uint32_t n_results = wind.to - wind.from;
+		int n_results = wind.to - wind.from;
 		struct append_result_args app_args = {
 			indices,
 			n_results
@@ -398,7 +399,7 @@ json_results_merge(char *gather_buf, int n)
 static FILE *fh_trec_output = NULL;
 
 static void
-log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
+log_trec_res(struct rank_hit* hit, int _, void* args)
 {
 	P_CAST(app_args, struct append_result_args, args);
 	struct indices *indices = app_args->indices;
@@ -429,7 +430,7 @@ log_trec_res(struct rank_hit* hit, uint32_t cnt, void* args)
 int search_results_trec_log(ranked_results_t *rk_res, struct indices *indices)
 {
 	struct rank_window wind;
-	uint32_t tot_pages;
+	int tot_pages;
 	
 	fh_trec_output = fopen("trec-format-results.tmp", "w");
 	if (fh_trec_output == NULL)
@@ -446,7 +447,7 @@ int search_results_trec_log(ranked_results_t *rk_res, struct indices *indices)
 
 	struct append_result_args app_args = {indices, 0};
 
-	for (uint32_t i = 0; i < tot_pages; i++) {
+	for (int i = 0; i < tot_pages; i++) {
 		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
 		rank_window_foreach(&wind, &log_trec_res, &app_args);
 	}

@@ -27,7 +27,7 @@ static const char searchd_ret_str_map[][128] = {
 void log_json_qry_ip(FILE*, const char*);
 
 /* parse query JSON into our query structure */
-uint32_t parse_json_qry(const char*, struct query*);
+int parse_json_qry(const char*, struct query*);
 
 /* encode a C string into JSON string */
 void json_encode_str(char*, const char*);

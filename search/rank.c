@@ -79,11 +79,10 @@ void priority_Q_free(struct priority_Q *Q)
 	heap_destory(&Q->heap);
 }
 
-static void print(void* ele, uint32_t i, uint32_t depth)
+static void print(void* ele, unsigned int i, unsigned int depth)
 {
 	struct rank_hit *hit = (struct rank_hit*)ele;
-	uint32_t j;
-	for (j = 0; j < depth; j++)
+	for (unsigned int j = 0; j < depth; j++)
 		printf("  ");
 
 	printf("[%d]:doc#%u(%.2f) ", i, hit->docID, hit->score);
@@ -100,9 +99,9 @@ void priority_Q_print(struct priority_Q *Q)
 }
 
 static __inline
-uint32_t div_ceil(uint32_t a, uint32_t b)
+int div_ceil(int a, int b)
 {
-	uint32_t ret = a / b;
+	int ret = a / b;
 	if (a % b)
 		return ret + 1;
 	else
@@ -111,7 +110,7 @@ uint32_t div_ceil(uint32_t a, uint32_t b)
 
 struct rank_window
 rank_window_calc(ranked_results_t *r, int wind_start,
-	uint32_t res_per_wind, uint32_t *n_wind)
+	int res_per_wind, int *n_wind)
 {
 	struct rank_window wind = {r, 0, 0};
 	*n_wind = 0;
@@ -140,11 +139,11 @@ rank_window_calc(ranked_results_t *r, int wind_start,
 	return wind;
 }
 
-uint32_t
+int
 rank_window_foreach(struct rank_window *wind,
                     rank_window_it_callbk fun, void *arg)
 {
-	uint32_t i, cnt = 0;
+	int i, cnt = 0;
 	struct heap *h = &wind->results->heap;
 
 	for (i = wind->from; i < wind->to; i++) {
@@ -155,14 +154,13 @@ rank_window_foreach(struct rank_window *wind,
 	return cnt;
 }
 
-uint32_t
+int
 rank_window_foreach2(struct rank_window *wind,
                     rank_window_it_callbk2 fun, void *arg)
 {
-	uint32_t i;
 	struct heap *h = &wind->results->heap;
 
-	for (i = wind->from; i < wind->to; i++) {
+	for (int i = wind->from; i < wind->to; i++) {
 		(*fun)((struct rank_hit*)h->array[i], i, wind->to, arg);
 	}
 

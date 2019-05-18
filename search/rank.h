@@ -40,18 +40,18 @@ uint32_t         priority_Q_len(struct priority_Q*);
 /* ranking window */
 struct rank_window {
 	ranked_results_t *results;
-	uint32_t          from, to;
+	int              from, to;
 };
 
 struct rank_window
-rank_window_calc(ranked_results_t*, int, uint32_t, uint32_t*);
+rank_window_calc(ranked_results_t*, int, int, int*);
 
-typedef void (*rank_window_it_callbk)(struct rank_hit*, uint32_t, void*);
+typedef void (*rank_window_it_callbk)(struct rank_hit*, int, void*);
 
-uint32_t
+int
 rank_window_foreach(struct rank_window*, rank_window_it_callbk, void*);
 
-typedef void (*rank_window_it_callbk2)(struct rank_hit*, uint32_t, uint32_t, void*);
+typedef void (*rank_window_it_callbk2)(struct rank_hit*, int, int, void*);
 
-uint32_t
+int
 rank_window_foreach2(struct rank_window*, rank_window_it_callbk2, void*);
