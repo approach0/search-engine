@@ -385,7 +385,7 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 	return response;
 }
 
-int hit_array_len(JSON_Array *arr)
+static int hit_array_len(JSON_Array *arr)
 {
 	if (NULL == arr)
 		return 0;
@@ -393,7 +393,7 @@ int hit_array_len(JSON_Array *arr)
 		return json_array_get_count(arr);
 }
 
-float hit_array_score(JSON_Array *arr, int idx)
+static float hit_array_score(JSON_Array *arr, int idx)
 {
 	if (NULL == arr ||
 	    idx >= json_array_get_count(arr))
@@ -448,9 +448,22 @@ json_results_merge(char *gather_buf, int n, int page)
 		n_total_res += hit_array_len(hit_arr[i]);
 	}
 
+	/* calculate page range */
 	rk_res.n_elements = n_total_res;
 	wind = rank_window_calc(&rk_res, page, DEFAULT_RES_PER_PAGE,
 	                        &tot_pages);
+
+	/* check requested page number legality */
+	if (tot_pages == 0 || page >= tot_pages)
+		goto free;
+
+	/* overwrite the response buffer */
+	sprintf(
+		response, "{%s, \"hits\": [", response_head_str(
+			SEARCHD_RET_SUCC, tot_pages
+		)
+	);
+
 	/* merge hit arrays */
 	do {
 		float min_score = MAX_FLOAT_SCORE;
@@ -467,7 +480,7 @@ json_results_merge(char *gather_buf, int n, int page)
 			float s = hit_array_score(hit_arr[i], cur[i]);
 			if (s == min_score) {
 				if (wind.from <= cnt && cnt < wind.to) {
-					printf("%f, ", s);
+					// append_result
 				}
 
 				cur[i] ++;
@@ -476,8 +489,10 @@ json_results_merge(char *gather_buf, int n, int page)
 		}
 	} while (cnt < CLUSTER_MAX_RET_RESULTS);
 
-	fflush(stdout);
+	/* finish writing response buffer */
+	strcat(response, "]}\n");
 
+free:
 	/* free allocated JSON values */
 	for (int i = 0; i < n; i++) {
 		json_value_free(parson_vals[i]);
@@ -489,7 +504,14 @@ json_results_merge(char *gather_buf, int n, int page)
 	free(cur);
 
 	//mhook_print_unfree();
-	return response;
+
+	/* response JSON message */
+	if (tot_pages == 0)
+		return search_errcode_json(SEARCHD_RET_NO_HIT_FOUND);
+	else if (page >= tot_pages)
+		return search_errcode_json(SEARCHD_RET_ILLEGAL_PAGENUM);
+	else
+		return response;
 }
 
 /*
