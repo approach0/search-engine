@@ -386,7 +386,9 @@ json_results_merge(char *gather_buf, int n)
 {
 	char (*gather_res)[MAX_SEARCHD_RESPONSE_JSON_SZ];
 	gather_res = (char(*)[MAX_SEARCHD_RESPONSE_JSON_SZ])gather_buf;
-	gather_res[1][3] = 'c';
+
+	for (int i = 0; i < n; i++)
+		printf("result[%d]: \n%s\n", i, gather_res[i]);
 
 	return response;
 }

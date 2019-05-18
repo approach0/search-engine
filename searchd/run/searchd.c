@@ -179,6 +179,9 @@ int main(int argc, char *argv[])
 	struct searchd_args   searchd_args;
 	int                   trec_log = 0;
 
+	/* initialize MPI */
+	MPI_Init(&argc, &argv);
+
 	/* parse program arguments */
 	while ((opt = getopt(argc, argv, "hTi:j:t:p:c:")) != -1) {
 		switch (opt) {
@@ -223,15 +226,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* initialize MPI */
-	MPI_Init(&argc, &argv);
+	/* get cluster information */
 	MPI_Comm_size(MPI_COMM_WORLD, &searchd_args.n_nodes);
 	MPI_Comm_rank(MPI_COMM_WORLD, &searchd_args.node_rank);
 
 	/* check number of cluster nodes */
 	if (searchd_args.n_nodes > 2) {
 		printf("Cluster: Too many nodes!\n");
-		goto final;
+		goto exit;
 	}
 
 	/* choose index path if there is a slave node */
@@ -251,7 +253,7 @@ int main(int argc, char *argv[])
 	/* check index path argument */
 	if (index_path == NULL) {
 		fprintf(stderr, "indices path not specified.\n");
-		goto final;
+		goto exit;
 	}
 
 	/* open indices */
@@ -290,10 +292,6 @@ close:
 	printf("closing index...\n");
 	indices_close(&indices);
 
-final:
-	/* close MPI  */
-	MPI_Finalize();
-
 exit:
 	/*
 	 * free program arguments
@@ -303,5 +301,8 @@ exit:
 
 	mhook_print_unfree();
 	fflush(stdout);
+
+	/* close MPI  */
+	MPI_Finalize();
 	return 0;
 }
