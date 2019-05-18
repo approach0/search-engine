@@ -98,9 +98,6 @@ httpd_on_recv(const char *req, void *arg_)
 					  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 			free(send_buf);
 		}
-
-		/* ask engine to return all top K results */
-		page = 0;
 	}
 
 	/* search query */
@@ -113,8 +110,13 @@ httpd_on_recv(const char *req, void *arg_)
 	}
 	//////////////////////////
 
-	/* generate response JSON */
-	ret = search_results_json(&srch_res, page - 1, args->indices);
+	if (args->n_nodes > 1) {
+		/* ask engine to return all top K results */
+		ret = search_results_json(&srch_res, -1, args->indices);
+	} else {
+		/* generate response JSON */
+		ret = search_results_json(&srch_res, page - 1, args->indices);
+	}
 	free_ranked_results(&srch_res);
 
 	/* is there a cluster? */
@@ -134,6 +136,7 @@ httpd_on_recv(const char *req, void *arg_)
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* merge gather results and return */
 			ret = json_results_merge(gather_buf, args->n_nodes, page);
+			// printf("%s\n", ret);
 			free(gather_buf);
 		}
 	}
@@ -158,8 +161,7 @@ static void slave_run(struct searchd_args *args)
 	void *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
 	printf("slave#%d ready.\n", args->node_rank);
 
-	{
-	//while (1) {
+	while (1) {
 		/* receive query from master node */
 		MPI_Bcast(recv_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 				CLUSTER_MASTER_NODE, MPI_COMM_WORLD);

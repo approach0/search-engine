@@ -317,7 +317,7 @@ append_result(struct rank_hit* hit, int cnt, void* arg)
 	printf("getting snippet...\n");
 #endif
 	snippet = snippet_highlighted(&hl_list,
-                                  SEARCHD_HIGHLIGHT_OPEN,
+	                              SEARCHD_HIGHLIGHT_OPEN,
 	                              SEARCHD_HIGHLIGHT_CLOSE);
 
 	/* free highlight list */
@@ -408,6 +408,43 @@ static float hit_array_score(JSON_Array *arr, int idx)
 	return (float)json_object_get_number(obj, "score");
 }
 
+static const char *hit_object_to_string(JSON_Object *obj)
+{
+	static char empty[] = "";
+	static char retstr[MAX_SEARCHD_RESPONSE_JSON_SZ];
+
+	if (!json_object_has_value_of_type(obj, "docid",   JSONNumber) ||
+	    !json_object_has_value_of_type(obj, "score",   JSONNumber) ||
+	    !json_object_has_value_of_type(obj, "title",   JSONString) ||
+	    !json_object_has_value_of_type(obj, "url",     JSONString) ||
+	    !json_object_has_value_of_type(obj, "snippet", JSONString)) {
+		return empty;
+	}
+
+#define E(_str) \
+	json_encode_string(_str)
+	doc_id_t docID  = (doc_id_t)json_object_get_number(obj, "docid");
+	float score     = (float)json_object_get_number(obj, "score");
+	char *title     = E(json_object_get_string(obj, "title"));
+	const char *url = json_object_get_string(obj, "url");
+	char *snippet   = E(json_object_get_string(obj, "snippet"));
+#undef E
+
+	sprintf(retstr, "{"
+		"\"docid\": %u, "     /* hit docID */
+		"\"score\": %.3f, "   /* hit score */
+		"\"title\": %s, " /* hit title */
+		"\"url\": \"%s\", "       /* hit document URL */
+		"\"snippet\": %s"     /* hit document snippet */
+		"}",
+		docID, score, title, url, snippet
+	);
+
+	free(title);
+	free(snippet);
+	return retstr;
+}
+
 const char *
 json_results_merge(char *gather_buf, int n, int page)
 {
@@ -450,11 +487,11 @@ json_results_merge(char *gather_buf, int n, int page)
 
 	/* calculate page range */
 	rk_res.n_elements = n_total_res;
-	wind = rank_window_calc(&rk_res, page, DEFAULT_RES_PER_PAGE,
+	wind = rank_window_calc(&rk_res, page - 1, DEFAULT_RES_PER_PAGE,
 	                        &tot_pages);
 
 	/* check requested page number legality */
-	if (tot_pages == 0 || page >= tot_pages)
+	if (tot_pages == 0 || page > tot_pages)
 		goto free;
 
 	/* overwrite the response buffer */
@@ -477,17 +514,26 @@ json_results_merge(char *gather_buf, int n, int page)
 			break;
 
 		for (int i = 0; i < n; i++) {
+			JSON_Object *obj;
+			const char *json;
 			float s = hit_array_score(hit_arr[i], cur[i]);
 			if (s == min_score) {
 				if (wind.from <= cnt && cnt < wind.to) {
-					// append_result
+					/* append_result to response */
+					obj = json_array_get_object(hit_arr[i], cur[i]);
+					json = hit_object_to_string(obj);
+					strcat(response, json);
+
+					if (cnt + 1 < wind.to) {
+						strcat(response, ", ");
+					}
 				}
 
 				cur[i] ++;
 				cnt ++;
 			}
 		}
-	} while (cnt < CLUSTER_MAX_RET_RESULTS);
+	} while (cnt < wind.to);
 
 	/* finish writing response buffer */
 	strcat(response, "]}\n");
@@ -503,12 +549,12 @@ free:
 	free(hit_arr);
 	free(cur);
 
-	//mhook_print_unfree();
+	// mhook_print_unfree();
 
 	/* response JSON message */
 	if (tot_pages == 0)
 		return search_errcode_json(SEARCHD_RET_NO_HIT_FOUND);
-	else if (page >= tot_pages)
+	else if (page > tot_pages)
 		return search_errcode_json(SEARCHD_RET_ILLEGAL_PAGENUM);
 	else
 		return response;
