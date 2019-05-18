@@ -15,9 +15,6 @@
 #include "config.h"
 #include "utils.h"
 
-#define MAX_SEARCHD_RESPONSE_JSON_SZ \
-	(MAX_SNIPPET_SZ * DEFAULT_RES_PER_PAGE)
-
 /* response construction buffer */
 static char response[MAX_SEARCHD_RESPONSE_JSON_SZ];
 
@@ -343,9 +340,8 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 	free(title);
 }
 
-const char
-*search_results_json(ranked_results_t *rk_res, uint32_t i,
-                     struct indices *indices)
+const char *
+search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 {
 	struct rank_window wind;
 	uint32_t tot_pages;
@@ -385,6 +381,25 @@ const char
 	return response;
 }
 
+const char *
+all_search_results_json(ranked_results_t *rk_res, struct indices *indices)
+{
+	return response;
+}
+
+const char *
+json_results_merge(char *gather_buf, int n)
+{
+	char (*gather_res)[MAX_SEARCHD_RESPONSE_JSON_SZ];
+	gather_res = (char(*)[MAX_SEARCHD_RESPONSE_JSON_SZ])gather_buf;
+	gather_res[1][3] = 'c';
+
+	return response;
+}
+
+/*
+ * TREC releted.
+ */
 static FILE *fh_trec_output = NULL;
 
 static void

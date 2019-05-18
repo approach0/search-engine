@@ -22,7 +22,7 @@ struct searchd_args {
 };
 
 static const char *
-httpd_on_recv(const char* req, void* arg_)
+httpd_on_recv(const char *req, void *arg_)
 {
 	P_CAST(args, struct searchd_args, arg_);
 	const char      *ret = NULL;
@@ -30,6 +30,9 @@ httpd_on_recv(const char* req, void* arg_)
 	uint32_t         page;
 	ranked_results_t srch_res; /* search results */
 	struct timer     timer;
+
+	/* start timer */
+	timer_reset(&timer);
 
 #ifdef SEARCHD_LOG_ENABLE
 	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
@@ -43,21 +46,8 @@ httpd_on_recv(const char* req, void* arg_)
 	log_json_qry_ip(log_fh, req); fprintf(log_fh, "\n");
 #endif
 
-	/* start timer */
-	timer_reset(&timer);
-
-	/* is this master node? */
-	if (args->node_rank == CLUSTER_MASTER_NODE) {
-		/* broadcast to slave nodes */
-		void *send_buf = malloc(CLUSTER_NODE_MAX_BUFFER_SZ);
-		strcpy(send_buf, req);
-		MPI_Bcast(send_buf, CLUSTER_NODE_MAX_BUFFER_SZ, MPI_BYTE,
-				  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
-		free(send_buf);
-	}
-
 	/* parse JSON query into local query structure */
-	qry = query_new();
+	qry  = query_new();
 	page = parse_json_qry(req, &qry);
 
 	if (page == 0) {
@@ -96,6 +86,22 @@ httpd_on_recv(const char* req, void* arg_)
 	fprintf(log_fh, "\n");
 #endif
 
+	/* is there a cluster? */
+	if (args->n_nodes > 1) {
+		/*  and this is the master node? */
+		if (args->node_rank == CLUSTER_MASTER_NODE) {
+			/* broadcast to slave nodes */
+			void *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
+			strcpy(send_buf, req);
+			MPI_Bcast(send_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
+					  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
+			free(send_buf);
+		}
+
+		/* ask engine to return all top K results */
+		page = 0;
+	}
+
 	/* search query */
 	srch_res = indices_run_query(args->indices, &qry);
 
@@ -109,6 +115,25 @@ httpd_on_recv(const char* req, void* arg_)
 	/* generate response JSON */
 	ret = search_results_json(&srch_res, page - 1, args->indices);
 	free_ranked_results(&srch_res);
+
+	/* is there a cluster? */
+	if (args->n_nodes > 1) {
+		/* allocate results receving buffer if this is master node */
+		char *gather_buf = NULL;
+		if (args->node_rank == CLUSTER_MASTER_NODE)
+			gather_buf = malloc(args->n_nodes * MAX_SEARCHD_RESPONSE_JSON_SZ);
+
+		/* send and gather search results from each node */
+		MPI_Gather(ret, MAX_SEARCHD_RESPONSE_JSON_SZ, MPI_BYTE,
+		           gather_buf, MAX_SEARCHD_RESPONSE_JSON_SZ, MPI_BYTE,
+		           CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
+
+		if (args->node_rank == CLUSTER_MASTER_NODE) {
+			/* merge gather results and return */
+			ret = json_results_merge(gather_buf, args->n_nodes);
+			free(gather_buf);
+		}
+	}
 
 reply:
 	query_delete(qry);
@@ -125,20 +150,17 @@ reply:
 	return ret;
 }
 
-void slave_run(struct searchd_args *args)
+static void slave_run(struct searchd_args *args)
 {
-	void *recv_buf = malloc(CLUSTER_NODE_MAX_BUFFER_SZ);
+	void *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
 	printf("slave#%d ready.\n", args->node_rank);
 
-	MPI_Bcast(recv_buf, CLUSTER_NODE_MAX_BUFFER_SZ, MPI_BYTE,
+	/* receive query from master node */
+	MPI_Bcast(recv_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 	          CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 
-	printf("slave receive:\n");
-	printf("%s\n", recv_buf);
-
 	/* simulate http request */
-	httpd_on_recv(recv_buf, args);
-
+	(void)httpd_on_recv(recv_buf, args);
 	free(recv_buf);
 }
 

@@ -32,12 +32,18 @@ uint32_t parse_json_qry(const char*, struct query*);
 /* encode a C string into JSON string */
 void json_encode_str(char*, const char*);
 
-/* get response JSON with search results */
-const char
-*search_results_json(ranked_results_t*, uint32_t, struct indices*);
+/* get response JSON with search results (for given page) */
+const char *search_results_json(ranked_results_t*, int, struct indices*);
+
+/* get response JSON with search results (all) */
+const char *all_search_results_json(ranked_results_t*, struct indices*);
 
 /* get response JSON to indicate an error */
 const char *search_errcode_json(enum searchd_ret_code);
+
+/* merge json results array into one with top K results */
+const char *
+json_results_merge(char*, int);
 
 /* generate TREC-formated results log */
 int search_results_trec_log(ranked_results_t*, struct indices*);
