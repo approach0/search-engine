@@ -133,7 +133,7 @@ httpd_on_recv(const char *req, void *arg_)
 
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* merge gather results and return */
-			ret = json_results_merge(gather_buf, args->n_nodes);
+			ret = json_results_merge(gather_buf, args->n_nodes, page);
 			free(gather_buf);
 		}
 	}

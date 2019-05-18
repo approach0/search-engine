@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h> /* for FLT_MAX */
+
+#define MAX_FLOAT_SCORE FLT_MAX
+
+#include "mhook/mhook.h"
 
 #include "txt-seg/config.h"
 #include "txt-seg/txt-seg.h"
@@ -127,7 +132,7 @@ parse_json_qry(const char* req, struct query *qry)
 	/* get query keywords array (key `kw' in JSON) */
 	if (!json_object_has_value_of_type(parson_obj, "kw",
 	                                   JSONArray)) {
-		fprintf(stderr, "JSON query does not contain hits.\n");
+		fprintf(stderr, "JSON query does not contain kw.\n");
 		page = 0;
 		goto free;
 	}
@@ -348,7 +353,6 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 
 	/* calculate result "window" for a specified page number */
 	wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
-	printf("i = %d, total pages: %u\n", i, tot_pages);
 
 	/* check requested page number legality */
 	if (tot_pages == 0)
@@ -381,15 +385,110 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 	return response;
 }
 
+int hit_array_len(JSON_Array *arr)
+{
+	if (NULL == arr)
+		return 0;
+	else
+		return json_array_get_count(arr);
+}
+
+float hit_array_score(JSON_Array *arr, int idx)
+{
+	if (NULL == arr ||
+	    idx >= json_array_get_count(arr))
+		return MAX_FLOAT_SCORE;
+
+	JSON_Object *obj = json_array_get_object(arr, idx);
+
+	if (!json_object_has_value_of_type(obj, "score", JSONNumber)) {
+		return MAX_FLOAT_SCORE;
+	}
+
+	return (float)json_object_get_number(obj, "score");
+}
+
 const char *
-json_results_merge(char *gather_buf, int n)
+json_results_merge(char *gather_buf, int n, int page)
 {
 	char (*gather_res)[MAX_SEARCHD_RESPONSE_JSON_SZ];
 	gather_res = (char(*)[MAX_SEARCHD_RESPONSE_JSON_SZ])gather_buf;
 
-	for (int i = 0; i < n; i++)
-		printf("result[%d]: \n%s\n", i, gather_res[i]);
+	/* space to store JSON values */
+	JSON_Value **parson_vals = calloc(n, sizeof(JSON_Value *));
 
+	/* merge arrays */
+	JSON_Array **hit_arr = calloc(n, sizeof(JSON_Array *));
+	int *cur = calloc(n, sizeof(int));
+
+	/* results window */
+	int cnt = 0, n_total_res = 0;
+	int tot_pages;
+	ranked_results_t rk_res;
+	struct rank_window wind;
+
+	/* parse and get hit arrays */
+	for (int i = 0; i < n; i++) {
+		// printf("result[%d]: \n%s\n", i, gather_res[i]);
+		parson_vals[i] = json_parse_string(gather_res[i]);
+
+		if (parson_vals[i] == NULL) {
+			fprintf(stderr, "Parson fails to parse JSON query.\n");
+			continue;
+		}
+
+		JSON_Object *parson_obj = json_value_get_object(parson_vals[i]);
+
+		if (!json_object_has_value_of_type(parson_obj, "hits", JSONArray)) {
+			continue;
+		}
+
+		hit_arr[i] = json_object_get_array(parson_obj, "hits");
+		/* count the number of total results */
+		n_total_res += hit_array_len(hit_arr[i]);
+	}
+
+	rk_res.n_elements = n_total_res;
+	wind = rank_window_calc(&rk_res, page, DEFAULT_RES_PER_PAGE,
+	                        &tot_pages);
+	/* merge hit arrays */
+	do {
+		float min_score = MAX_FLOAT_SCORE;
+		for (int i = 0; i < n; i++) {
+			float s = hit_array_score(hit_arr[i], cur[i]);
+			if (s < min_score)
+				min_score = s;
+		}
+
+		if (min_score == MAX_FLOAT_SCORE)
+			break;
+
+		for (int i = 0; i < n; i++) {
+			float s = hit_array_score(hit_arr[i], cur[i]);
+			if (s == min_score) {
+				if (wind.from <= cnt && cnt < wind.to) {
+					printf("%f, ", s);
+				}
+
+				cur[i] ++;
+				cnt ++;
+			}
+		}
+	} while (cnt < CLUSTER_MAX_RET_RESULTS);
+
+	fflush(stdout);
+
+	/* free allocated JSON values */
+	for (int i = 0; i < n; i++) {
+		json_value_free(parson_vals[i]);
+	}
+	free(parson_vals);
+
+	/* free merge arrays */
+	free(hit_arr);
+	free(cur);
+
+	//mhook_print_unfree();
 	return response;
 }
 
