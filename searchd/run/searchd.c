@@ -27,7 +27,7 @@ httpd_on_recv(const char *req, void *arg_)
 	P_CAST(args, struct searchd_args, arg_);
 	const char      *ret = NULL;
 	struct query     qry;
-	uint32_t         page;
+	int              page;
 	ranked_results_t srch_res; /* search results */
 	struct timer     timer;
 
@@ -80,7 +80,7 @@ httpd_on_recv(const char *req, void *arg_)
 	}
 
 #ifdef SEARCHD_LOG_ENABLE
-	fprintf(log_fh, "requested page: %u\n", page);
+	fprintf(log_fh, "requested page: %d\n", page);
 	fprintf(log_fh, "parsed query: \n");
 	query_print(qry, log_fh);
 	fprintf(log_fh, "\n");

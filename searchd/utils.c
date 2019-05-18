@@ -343,15 +343,15 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 const char *
 search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 {
-	struct rank_window wind;
+	struct rank_window wind = {rk_res, 0, rk_res->n_elements};
 	uint32_t tot_pages;
 
 	/* calculate result "window" for a specified page number */
-	wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE,
-	                        &tot_pages);
+	if (i >= 0)
+		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
 
 	/* check requested page number legality */
-	if ((i | tot_pages) == 0)
+	if (tot_pages == 0)
 		return search_errcode_json(SEARCHD_RET_NO_HIT_FOUND);
 	else if (i >= tot_pages)
 		return search_errcode_json(SEARCHD_RET_ILLEGAL_PAGENUM);
@@ -378,12 +378,6 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 		return search_errcode_json(SEARCHD_RET_WIND_CALC_ERR);
 	}
 
-	return response;
-}
-
-const char *
-all_search_results_json(ranked_results_t *rk_res, struct indices *indices)
-{
 	return response;
 }
 
