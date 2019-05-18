@@ -158,7 +158,8 @@ static void slave_run(struct searchd_args *args)
 	void *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
 	printf("slave#%d ready.\n", args->node_rank);
 
-	while (1) {
+	{
+	//while (1) {
 		/* receive query from master node */
 		MPI_Bcast(recv_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 				CLUSTER_MASTER_NODE, MPI_COMM_WORLD);

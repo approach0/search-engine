@@ -109,10 +109,9 @@ uint32_t div_ceil(uint32_t a, uint32_t b)
 		return ret;
 }
 
-struct rank_window rank_window_calc(ranked_results_t *r,
-                                    uint32_t wind_start,
-                                    uint32_t res_per_wind,
-                                    uint32_t *n_wind)
+struct rank_window
+rank_window_calc(ranked_results_t *r, int wind_start,
+	uint32_t res_per_wind, uint32_t *n_wind)
 {
 	struct rank_window wind = {r, 0, 0};
 	*n_wind = 0;
@@ -125,8 +124,15 @@ struct rank_window rank_window_calc(ranked_results_t *r,
 	if (wind_start >= *n_wind)
 		return wind;
 
-	wind.from = wind_start * res_per_wind;
-	wind.to   = (wind_start + 1) * res_per_wind;
+	if (wind_start < 0) {
+		/* return all results */
+		wind.from = 0;
+		wind.to   = r->n_elements;
+	} else {
+		/* return results at the range of a page */
+		wind.from = wind_start * res_per_wind;
+		wind.to   = (wind_start + 1) * res_per_wind;
+	}
 
 	if (wind.to > r->n_elements)
 		wind.to = r->n_elements;

@@ -343,12 +343,11 @@ append_result(struct rank_hit* hit, uint32_t cnt, void* arg)
 const char *
 search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 {
-	struct rank_window wind = {rk_res, 0, rk_res->n_elements};
+	struct rank_window wind;
 	uint32_t tot_pages;
 
 	/* calculate result "window" for a specified page number */
-	if (i >= 0)
-		wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
+	wind = rank_window_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
 
 	/* check requested page number legality */
 	if (tot_pages == 0)

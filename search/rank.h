@@ -44,7 +44,7 @@ struct rank_window {
 };
 
 struct rank_window
-rank_window_calc(ranked_results_t*, uint32_t, uint32_t, uint32_t*);
+rank_window_calc(ranked_results_t*, int, uint32_t, uint32_t*);
 
 typedef void (*rank_window_it_callbk)(struct rank_hit*, uint32_t, void*);
 
