@@ -42,6 +42,6 @@ typedef struct {
 
 void print_math_expr_at(struct indices*, doc_id_t, exp_id_t);
 
-void print_search_results(ranked_results_t*, uint32_t, struct indices*);
+void print_search_results(ranked_results_t*, int, struct indices*);
 
 char *get_expr_by_pos(char*, size_t, uint32_t);

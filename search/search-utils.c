@@ -270,7 +270,7 @@ print_math_expr_at(struct indices *indices, doc_id_t docID, exp_id_t expID)
 	snippet_free_highlight_list(&highlight_list);
 }
 
-static void print_res_item(struct rank_hit* hit, uint32_t cnt, void *arg)
+static void print_res_item(struct rank_hit* hit, int cnt, void *arg)
 {
 	char  *str;
 	size_t str_sz;
@@ -301,11 +301,11 @@ static void print_res_item(struct rank_hit* hit, uint32_t cnt, void *arg)
 }
 
 void
-print_search_results(ranked_results_t *rk_res, uint32_t page,
+print_search_results(ranked_results_t *rk_res, int page,
                      struct indices *indices)
 {
 	struct rank_window wind;
-	uint32_t i, from_page = page, to_page = page, tot_pages = 1;
+	int i, from_page = page, to_page = page, tot_pages = 1;
 	wind = rank_window_calc(rk_res, 0, DEFAULT_RES_PER_PAGE, &tot_pages);
 
 	if (page == 0) {
