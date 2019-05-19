@@ -47,8 +47,8 @@ static LIST_IT_CALLBK(qry_keyword_print)
 void query_print(struct query qry, FILE* fh)
 {
 	list_foreach(&qry.keywords, &qry_keyword_print, fh);
-	fprintf(fh, "query length = %u (math) + %u (term) = %u.",
-	        qry.n_math, qry.n_term, qry.len);
+//	fprintf(fh, "query length = %u (math) + %u (term) = %u.",
+//	        qry.n_math, qry.n_term, qry.len);
 }
 
 struct query_keyword_arg {
