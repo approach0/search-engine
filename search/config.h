@@ -49,20 +49,20 @@
 // #define STRATEGY_NONE
 // #define STRATEGY_MAXREF
 // #define STRATEGY_GBP_NUM
-#define STRATEGY_GBP_LEN
+   #define STRATEGY_GBP_LEN
 
 /* wildcards paths expand as single symbol */
-// #define WILDCARD_PATH_QUERY_EXPAND_ENABLE
+//#define WILDCARD_PATH_QUERY_EXPAND_ENABLE
 
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR 0.30f /* aggressive */
-#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .20f  /* conservative */
+  #define MATH_PRUNING_MIN_THRESHOLD_FACTOR .20f  /* conservative */
 //#define MATH_PRUNING_MIN_THRESHOLD_FACTOR .00f  /* rank-safe */
 
 #ifdef DEBUG_MATH_PRUNING
 	#define DEBUG_MERGE_LIMIT_ITERS UINT64_MAX
 	#define RANK_SET_DEFAULT_VOL 200
 #else
-	#define RANK_SET_DEFAULT_VOL 100
+	   #define RANK_SET_DEFAULT_VOL 100
 	// #define RANK_SET_DEFAULT_VOL 200
 	// #define RANK_SET_DEFAULT_VOL 1000
 #endif
