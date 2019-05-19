@@ -12,11 +12,11 @@ def send_json(json_obj):
 	j = json.loads(r.content.decode("utf-8"))
 	return j['docid']
 
-def each_json_file(corpus, maxcnt):
+def each_json_file(corpus, endat):
 	cnt = 0
 	for dirname, dirs, files in os.walk(corpus):
 		for f in files:
-			if cnt >= maxcnt and maxcnt > 0:
+			if cnt >= endat and endat > 0:
 				return
 			yield (dirname, f)
 			cnt += 1
@@ -31,14 +31,14 @@ def get_n_files(corpus):
 # main #
 parser = argparse.ArgumentParser(description='Approach0 indexd json feeder.')
 parser.add_argument('--begin-from', help='begin from specified count of files.', type=int)
-parser.add_argument('--maxfiles', help='limit the max number of files to be indexed.', type=int)
+parser.add_argument('--end-at', help='stop at specified count of files.', type=int)
 parser.add_argument('--corpus-path', help='corpus path. (required)', type=str)
 parser.add_argument('--indexd-url', help='indexd URL.', type=str)
 args = parser.parse_args()
 
 url= args.indexd_url if args.indexd_url else 'http://localhost:8934/index'
 corpus = args.corpus_path if args.corpus_path else ''
-maxfiles = args.maxfiles if args.maxfiles else -1
+endat = args.end_at if args.end_at else -1
 begin = args.begin_from if args.begin_from else 0
 
 print('Indexd URL: ' + url)
@@ -48,7 +48,7 @@ N = get_n_files(corpus)
 print('%u files in total.' % N)
 
 cnt = 0
-for dirname, basename in each_json_file(corpus, maxfiles):
+for dirname, basename in each_json_file(corpus, endat):
 	cnt += 1
 	if cnt < begin:
 		continue
