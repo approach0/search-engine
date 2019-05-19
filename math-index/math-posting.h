@@ -99,6 +99,8 @@ void *math_posting_cur_item_v1(math_posting_t);
 
 int math_posting_exits(const char*);
 
+size_t math_posting_size(const char*);
+
 /* 2nd generation iterator */
 typedef void* math_posting_iter_t;
 math_posting_iter_t math_posting_iterator(const char*);

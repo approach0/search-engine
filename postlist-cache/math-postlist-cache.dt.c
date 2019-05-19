@@ -54,6 +54,7 @@ fork_math_postlist(math_posting_t *disk_po)
 
 struct math_postlist_cache_arg {
 	struct math_postlist_cache *cache;
+	uint64_t miss_cnt;
 	uint64_t tot_cnt;
 };
 
@@ -64,6 +65,7 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	enum ds_ret ret = DS_RET_CONTINUE;
 	struct postlist *mem_po;
 	math_posting_t *disk_po;
+	size_t size = math_posting_size(path);
 
 	if (level > MAX_MATH_CACHE_DIR_LEVEL)
 		return ret;
@@ -77,7 +79,16 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	if (!math_posting_start(disk_po)) {
 		/* this directory does not have index file */
 		goto next;
+	} else if (size <= cache->cache_threshold_sz) {
+		/* this posting list is below cache threshold */
+		mpca->miss_cnt ++;
+
+//		printf("%lu <= %lu: %s\n", size, cache->cache_threshold_sz, path);
+//		if (mpca->miss_cnt > 1000)
+//			ret = DS_RET_STOP_ALLDIR;
+		goto next;
 	}
+	mpca->miss_cnt = 0;
 
 	mem_po = fork_math_postlist(disk_po);
 	mpca->tot_cnt ++;
@@ -102,9 +113,9 @@ dir_srch_callbk(const char* path, const char *srchpath,
 #ifndef NO_CACHING_PROGRESS
 	/* print progress */
 		printf(ES_RESET_LINE);
-		printf("[Cached %8lu lists, %.3f/%.3f MB] %s",
+		printf("[Cached %5lu lists, %.3f/%.3f MB] [%lu KB] %s",
 			mpca->tot_cnt, (float)cache->postlist_sz / __1MB__,
-			(float)cache->limit_sz / __1MB__, key);
+			(float)cache->limit_sz / __1MB__, size / (1 KB), key);
 		fflush(stdout);
 #endif
 
@@ -133,6 +144,7 @@ math_postlist_cache_new()
 	struct math_postlist_cache cache = {NULL, 0, 0};
 	cache.path_dict = strmap_new();
 	cache.limit_sz = DEFAULT_MATH_CACHE_SZ;
+	cache.cache_threshold_sz = DEFAULT_CACHE_THRESHOLD;
 	return cache;
 }
 
@@ -152,7 +164,7 @@ int
 math_postlist_cache_add(struct math_postlist_cache *cache, const char *dir)
 {
 	size_t postlist_sz = cache->postlist_sz;
-	struct math_postlist_cache_arg args = {cache, 0};
+	struct math_postlist_cache_arg args = {cache, 0, 0};
 	dir_search_bfs(dir, &dir_srch_callbk, &args);
 	printf("\n");
 

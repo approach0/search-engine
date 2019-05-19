@@ -7,6 +7,8 @@
 #include "common/common.h"
 #include "timer/timer.h"
 
+#include "postlist-cache/config.h"
+
 #include "query.h"
 #include "search.h"
 #include "search-utils.h"
@@ -153,7 +155,8 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	printf("caching index (%lu MB)...\n", cache_sz);
-	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0 KB);
+	postlist_cache_set_parameters(&indices.ci, cache_sz MB, 0,
+		DEFAULT_PREFIX_RATIO, DEFAULT_CACHE_THRESHOLD KB);
 	indices_cache(&indices);
 
 	/* search query */

@@ -5,6 +5,9 @@
 #define DEFAULT_MATH_CACHE_SZ (256 MB)
 #define DEFAULT_TERM_CACHE_SZ (16 MB)
 
+#define DEFAULT_CACHE_THRESHOLD (0 KB) // (400 KB)
+#define DEFAULT_PREFIX_RATIO 0.6f
+
 #define MAX_MATH_CACHE_DIR_LEVEL 32
 
 #define PROPHET_CACHE_LIST "./cache-list.tmp"

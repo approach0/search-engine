@@ -5,6 +5,7 @@ struct math_postlist_cache {
 	strmap_t path_dict;
 	size_t   limit_sz;
 	size_t   postlist_sz;
+	size_t   cache_threshold_sz;
 };
 
 struct math_postlist_cache math_postlist_cache_new(void);

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "common/common.h"
 #include "postlist/math-postlist.h" /* for math_postlist_item */
@@ -381,4 +382,16 @@ int math_posting_iter_jump(math_posting_t po_, uint64_t target)
 int math_posting_empty(const char *fullpath)
 {
 	return !math_posting_exits(fullpath);
+}
+
+size_t math_posting_size(const char* fullpath)
+{
+	struct stat st;
+	char filepath[MAX_DIR_PATH_NAME_LEN];
+	sprintf(filepath, "%s/%s", fullpath, MATH_POSTING_FNAME);
+
+	if (stat(filepath, &st))
+		return 0;
+	else
+		return st.st_size;
 }

@@ -8,6 +8,7 @@
 #include "mhook/mhook.h"
 #include "timer/timer.h"
 
+#include "postlist-cache/config.h"
 #include "search/config.h"
 #include "search/search.h"
 #include "httpd/httpd.h"
@@ -204,6 +205,8 @@ int main(int argc, char *argv[])
 	char                 *index_path_j = NULL;
 	struct indices        indices;
 	size_t                cache_sz = SEARCHD_DEFAULT_CACHE_MB;
+	size_t                cache_threshold_sz = DEFAULT_CACHE_THRESHOLD;
+	float                 prefix_path_ratio  = DEFAULT_PREFIX_RATIO;
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	struct searchd_args   searchd_args;
 	int                   trec_log = 0;
@@ -212,7 +215,7 @@ int main(int argc, char *argv[])
 	MPI_Init(&argc, &argv);
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:j:t:p:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:j:t:r:p:c:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -224,6 +227,8 @@ int main(int argc, char *argv[])
 			       " -i <index path> |"
 			       " -j <index path> |"
 			       " -c <cache size (MB)> | "
+			       " -t <cache threshold (KB)> | "
+			       " -r <prefix cache ratio> | "
 			       " -T (TREC log) |"
 			       "\n", argv[0]);
 			printf("\n");
@@ -239,6 +244,15 @@ int main(int argc, char *argv[])
 
 		case 'j':
 			index_path_j = strdup(optarg);
+			break;
+
+		case 't':
+			sscanf(optarg, "%lu", &cache_threshold_sz);
+			cache_threshold_sz = cache_threshold_sz * __1KB__;
+			break;
+
+		case 'r':
+			sscanf(optarg, "%f", &prefix_path_ratio);
 			break;
 
 		case 'p':
@@ -293,8 +307,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* setup cache */
-	printf("setup cache size: %lu MB\n", cache_sz);
-	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0);;
+	printf("setup cache: size: %lu MB, prefix ratio: %.3f, threshold: %lu KB\n",
+		cache_sz, prefix_path_ratio, cache_threshold_sz / (1 KB));
+	postlist_cache_set_parameters(&indices.ci, cache_sz MB, 0,
+		prefix_path_ratio, cache_threshold_sz);
 	indices_cache(&indices);
 
 	/* set searchd args */

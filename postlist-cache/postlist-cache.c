@@ -11,6 +11,7 @@ struct postlist_cache postlist_cache_new()
 	c.term_cache = term_postlist_cache_new();
 	c.tot_used = 0;
 	c.tot_limit = c.math_cache.limit_sz + c.term_cache.limit_sz;
+	c.prefix_path_ratio  = DEFAULT_PREFIX_RATIO;
 
 	return c;
 }
@@ -26,9 +27,9 @@ int postlist_cache_fork(struct postlist_cache *cache,
 	(void)math_postlist_cache_add_list(&cache->math_cache, mi->dir);
 
 	/* caching from index w/ memory limit, cache size for normal path
-	 * and gener path follows 3:2 ratio. */
+	 * and gener path follows 3:2 ratio by default. */
 	size_t size = cache->math_cache.limit_sz;
-	cache->math_cache.limit_sz = size * 0.6f;
+	cache->math_cache.limit_sz = size * cache->prefix_path_ratio;
 	res |= math_postlist_cache_add(&cache->math_cache, prefix_path);
 	cache->math_cache.limit_sz = size;
 	res |= math_postlist_cache_add(&cache->math_cache, gener_path);
@@ -63,12 +64,17 @@ void postlist_cache_free(struct postlist_cache cache)
 	term_postlist_cache_free(cache.term_cache);
 }
 
-void postlist_cache_set_limit(
+void postlist_cache_set_parameters(
 	struct postlist_cache *cache,
 	size_t math_cache_limit,
-	size_t term_cache_limit)
+	size_t term_cache_limit,
+	float  prefix_path_ratio,
+	size_t cache_threshold_sz)
 {
 	cache->math_cache.limit_sz = math_cache_limit;
 	cache->term_cache.limit_sz = term_cache_limit;
 	cache->tot_limit = math_cache_limit + term_cache_limit;
+
+	cache->prefix_path_ratio = prefix_path_ratio;
+	cache->math_cache.cache_threshold_sz = cache_threshold_sz;
 }
