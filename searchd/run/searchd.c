@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <signal.h>
 #include <mpi.h>
 
 #include "common/common.h"
@@ -156,20 +157,43 @@ reply:
 	return ret;
 }
 
+static void slave_die()
+{
+	/* broadcast to slave nodes */
+	void *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
+	strcpy(send_buf, "");
+	MPI_Bcast(send_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
+			  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
+	free(send_buf);
+}
+
 static void slave_run(struct searchd_args *args)
 {
-	void *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
-	printf("slave#%d ready.\n", args->node_rank);
+	char *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
+	printf("Slave#%d ready.\n", args->node_rank);
 
 	while (1) {
 		/* receive query from master node */
 		MPI_Bcast(recv_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 				CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 
+		/* master quits */
+		if (recv_buf[0] == '\0')
+			break;
+
 		/* simulate http request */
 		(void)httpd_on_recv(recv_buf, args);
 	}
 	free(recv_buf);
+}
+
+static void signal_handler(int sig)
+{
+	/* slience USR1 signal */
+	switch (sig) {
+		case SIGUSR1:
+			break;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -287,14 +311,16 @@ int main(int argc, char *argv[])
 		if (0 != httpd_run(port, uri_handlers, 1, &searchd_args))
 			printf("port %hu is occupied\n", port);
 
+		slave_die();
 	} else {
 		/* slave node */
+		signal(SIGUSR1, signal_handler);
 		slave_run(&searchd_args);
 	}
 
 close:
 	/* close indices */
-	printf("closing index...\n");
+	printf("node[%d] closing index...\n", searchd_args.node_rank);
 	indices_close(&indices);
 
 exit:

@@ -11,8 +11,10 @@ struct http_cb_arg {
 	void *arg;
 };
 
-static void signal_handler(int sig) {
+static void signal_handler(int sig)
+{
 	switch (sig) {
+		case SIGUSR1:
 		case SIGTERM:
 		case SIGHUP:
 		case SIGQUIT:
@@ -100,6 +102,7 @@ int httpd_run(unsigned short port,
 	/* initialization */
 	signal(SIGINT, signal_handler);  /* Ctrl-C   */
 	signal(SIGTERM, signal_handler); /* MPI quit */
+	signal(SIGUSR1, signal_handler); /* MPI-safe signal */
 	event_init();
 
 	/* binding */
