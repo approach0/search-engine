@@ -82,12 +82,14 @@ dir_srch_callbk(const char* path, const char *srchpath,
 	} else if (size <= cache->cache_threshold_sz) {
 		/* this posting list is below cache threshold */
 		mpca->miss_cnt ++;
-
-//		printf("%lu <= %lu: %s\n", size, cache->cache_threshold_sz, path);
-//		if (mpca->miss_cnt > 1000)
-//			ret = DS_RET_STOP_ALLDIR;
-		goto next;
+		// printf("%lu\n", mpca->miss_cnt);
+		if (mpca->miss_cnt > MAX_MATH_CACHE_MISS_CNT)
+			ret = DS_RET_STOP_ALLDIR;
+		else
+			goto next;
 	}
+
+	/* reset miss counter */
 	mpca->miss_cnt = 0;
 
 	mem_po = fork_math_postlist(disk_po);
