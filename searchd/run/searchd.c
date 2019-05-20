@@ -201,8 +201,6 @@ int main(int argc, char *argv[])
 {
 	int                   opt;
 	char                 *index_path = NULL;
-	char                 *index_path_i = NULL;
-	char                 *index_path_j = NULL;
 	struct indices        indices;
 	size_t                cache_sz = SEARCHD_DEFAULT_CACHE_MB;
 	size_t                cache_threshold_sz = DEFAULT_CACHE_THRESHOLD;
@@ -215,7 +213,7 @@ int main(int argc, char *argv[])
 	MPI_Init(&argc, &argv);
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:j:t:r:p:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:t:r:p:c:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -225,7 +223,6 @@ int main(int argc, char *argv[])
 			printf("%s -h |"
 			       " -p <port> | "
 			       " -i <index path> |"
-			       " -j <index path> |"
 			       " -c <cache size (MB)> | "
 			       " -t <cache threshold (KB)> | "
 			       " -r <prefix cache ratio> | "
@@ -239,11 +236,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'i':
-			index_path_i = strdup(optarg);
-			break;
-
-		case 'j':
-			index_path_j = strdup(optarg);
+			index_path = strdup(optarg);
 			break;
 
 		case 't':
@@ -272,26 +265,6 @@ int main(int argc, char *argv[])
 	/* get cluster information */
 	MPI_Comm_size(MPI_COMM_WORLD, &searchd_args.n_nodes);
 	MPI_Comm_rank(MPI_COMM_WORLD, &searchd_args.node_rank);
-
-	/* check number of cluster nodes */
-	if (searchd_args.n_nodes > 2) {
-		printf("Cluster: Too many nodes!\n");
-		goto exit;
-	}
-
-	/* choose index path if there is a slave node */
-	switch (searchd_args.node_rank) {
-	case CLUSTER_MASTER_NODE + 0:
-		index_path = index_path_i;
-		break;
-
-	case CLUSTER_MASTER_NODE + 1:
-		index_path = index_path_j;
-		break;
-
-	default:
-		break;
-	}
 
 	/* check index path argument */
 	if (index_path == NULL) {
@@ -343,8 +316,7 @@ exit:
 	/*
 	 * free program arguments
 	 */
-	free(index_path_i);
-	free(index_path_j);
+	free(index_path);
 
 	mhook_print_unfree();
 	fflush(stdout);
