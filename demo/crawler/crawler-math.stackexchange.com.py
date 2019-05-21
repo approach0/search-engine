@@ -16,6 +16,8 @@ from io import BytesIO
 from bs4 import BeautifulSoup
 
 root_url = "http://math.stackexchange.com"
+file_prefix = 'mse'
+
 vt100_BLUE = '\033[94m'
 vt100_WARNING = '\033[93m'
 vt100_RESET = '\033[0m'
@@ -85,7 +87,7 @@ def crawl_post_page(sub_url, c):
 	# get title
 	question_header = s.find(id='question-header')
 	if question_header is None:
-		raise
+		raise Exception("question header is None")
 	title = str(question_header.h1.string)
 	post_txt = title + '\n\n'
 	# get question
@@ -128,7 +130,7 @@ def save_preview(path, post_txt, url):
 	preview = fmt_str.replace("{PREVIEW}", post_txt)
 	preview = preview.replace("{URL}", url)
 	# save preview
-	f = open(path, "w")
+	f = open(path, "w", encoding="utf8")
 	f.write(preview)
 	f.close()
 
@@ -184,7 +186,7 @@ def list_post_links(page, sortby, c):
 
 def get_file_path(post_id):
 	directory = './tmp/' + str(post_id % DIVISIONS)
-	return directory + '/' + str(post_id)
+	return directory + '/' + file_prefix + str(post_id)
 
 def process_post(post_id, post_txt, url):
 	# decide sub-directory
@@ -203,8 +205,8 @@ def process_post(post_id, post_txt, url):
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
 		print('[exists]' + jsonfile)
-		save_json('/tmp/tmp.json', post_txt, url)
-		if filecmp.cmp('/tmp/tmp.json', jsonfile):
+		save_json(file_prefix + '.tmp', post_txt, url)
+		if filecmp.cmp(file_prefix + '.tmp', jsonfile):
 			# two files are identical, do not touch
 			print('[identical, no touch]')
 			return
@@ -257,7 +259,7 @@ def crawl_pages(sortby, start, end, extra_opt):
 			time.sleep(1.5)
 
 		# log crawled page number
-		page_log = open("page.log", "a")
+		page_log = open(file_prefix + ".log", "a")
 		page_log.write('page %s: %d posts successful.\n' %
 		               (page, succ_posts))
 		page_log.close()

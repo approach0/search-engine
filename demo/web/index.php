@@ -63,6 +63,9 @@ div.stick-bottom {
 	bottom: 0;
 	width: 100%;
 }
+li.hit {
+	margin-bottom: 26px;
+}
 </style>
 </head>
 
@@ -244,22 +247,24 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Footer -->
 <div v-show="ret_code == 0"
-style="padding-top: 20px; height: 30px; background: #fbfefe;
-box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+style="padding-top: 15px; background: #fbfefe;
+box-shadow: 0 0 4px rgba(0,0,0,0.25); text-align: center;">
 
 <!-- Left Footer -->
-	<div style="float: left; padding-left: 20px;">
+	<div style="display: inline-block; padding-bottom: 15px;">
 		<span v-if="prev != ''">
-			← <a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
+			<b style="font-size:1.5em">←</b>
+			<a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
 		</span>
-		<span class="mainfont">[page {{cur_page}}/{{tot_pages}}]</span>
+		<span class="mainfont">Page {{cur_page}}/{{tot_pages}}</span>
 		<span v-if="next != ''">
-			<a class="page-navi" v-bind:onclick="next" href="#">next</a> →
+			<a class="page-navi" v-bind:onclick="next" href="#">next</a>
+			<b style="font-size:1.5em">→</b>
 		</span>
 	</div>
 
 <!-- Right Footer -->
-	<div style="float: right;">
+	<div style="float: right; margin-top: 15px;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>
