@@ -90,9 +90,11 @@ httpd_on_recv(const char *req, void *arg_)
 
 		/*  and this is the master node? */
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
+			/* allocate send buffer for MPI to store req JSON */
+			char *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
+			strncpy(send_buf, req, CLUSTER_MAX_QRY_BUF_SZ);
+			send_buf[CLUSTER_MAX_QRY_BUF_SZ - 1] = '\0';
 			/* broadcast to slave nodes */
-			void *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
-			strcpy(send_buf, req);
 			MPI_Bcast(send_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 					  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 			free(send_buf);
@@ -157,8 +159,8 @@ reply:
 static void slave_die()
 {
 	/* broadcast to slave nodes */
-	void *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
-	strcpy(send_buf, "");
+	char *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
+	send_buf[0] = '\0'; /* send an empty message */
 	MPI_Bcast(send_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 			  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 	free(send_buf);
