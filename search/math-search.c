@@ -545,14 +545,15 @@ static int math_l2_postlist_next(void *po_)
 	struct math_pruner *pruner = &po->pruner;
 
 	po->cur_doc_id = po->future_doc_id;
+
+	/* test merge termination */
+	if (po->cur_doc_id  == UINT32_MAX)
+		return 0;
+
 	do {
 		po->cur_doc_id = set_doc_candidate(po);
 
-		if (po->cur_doc_id == UINT32_MAX) {
-			po->future_doc_id = UINT32_MAX;
-			return 0;
-
-		} else if (po->cur_doc_id != po->future_doc_id) {
+		if (po->cur_doc_id != po->future_doc_id) {
 			/* cur is now even future than future. */
 			uint32_t save = po->cur_doc_id;
 			po->cur_doc_id = po->future_doc_id;
@@ -648,15 +649,16 @@ static int math_l2_postlist_next(void *po_)
 	}
 
 	po->cur_doc_id = po->future_doc_id;
+
+	/* test merge termination */
+	if (po->cur_doc_id  == UINT32_MAX)
+		return 0;
+
 	do {
 		po->cur_doc_id = set_doc_candidate(po);
 		//printf("%u, %u\n", po->cur_doc_id, po->candidate >> 32);
 
-		if (po->cur_doc_id == UINT32_MAX) {
-			po->future_doc_id = UINT32_MAX;
-			return 0;
-
-		} else if (po->cur_doc_id != po->future_doc_id) {
+		if (po->cur_doc_id != po->future_doc_id) {
 			/* cur is now even future than future. */
 			uint32_t save = po->cur_doc_id;
 			po->cur_doc_id = po->future_doc_id;

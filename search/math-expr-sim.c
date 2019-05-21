@@ -42,7 +42,7 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 //	if (NULL != strstr(url, "/179098/")) {
 
-	if (doc_id == 58337 || doc_id == 248554) {
+	if (doc_id == 1 || doc_id == 2) {
 
 //	if (doc_id == 150175) {
 
@@ -257,7 +257,7 @@ void math_l2_cur_print(struct math_l2_postlist *po)
 		}
 #ifdef DEBUG_MATH_SCORE_INSPECT
 		else {
-			printf("pass: [%u] ", i);
+			printf("pass: iter[%u] ", i);
 			math_pruner_print_postlist(pruner, pid);
 			uint32_t docID = (uint32_t)(cur >> 32);
 			uint32_t expID = (uint32_t)(cur >> 0);
@@ -316,7 +316,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 		printf("alignment: qry: 0x%lx, doc: 0x%lx.\n",
 		       widest->qmask, widest->dmask);
 #endif
-		printf("doc#%u, exp#%u, final score: %f\n",
+		printf("doc#%u, exp#%u, final expr score: %f\n",
 		       expr.doc_id, expr.exp_id, expr.score);
 		printf("\n");
 	}
