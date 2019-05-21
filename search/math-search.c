@@ -11,7 +11,7 @@
 #include "math-search.h"
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-int score_inspect_filter(doc_id_t, struct indices*);
+int score_inspect_filter(doc_id_t, exp_id_t, struct indices*);
 #endif
 void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
 
@@ -729,7 +729,7 @@ static int math_l2_postlist_one_by_one_through(void *po_)
 			if ((cur >> 32) == UINT32_MAX) break;
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-			if (score_inspect_filter(cur >> 32, po->indices)) {
+			if (score_inspect_filter(cur >> 32, cur, po->indices)) {
 				printf("it is in po#%u iter[%d]\n", pid, i);
 				break;
 			}

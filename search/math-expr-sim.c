@@ -29,7 +29,7 @@ void math_expr_sim_factors_print(struct math_expr_sim_factors *factor)
 }
 
 #ifdef DEBUG_MATH_SCORE_INSPECT
-int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
+int score_inspect_filter(doc_id_t doc_id, exp_id_t exp_id, struct indices *indices)
 {
 	size_t url_sz;
 	int ret = 0;
@@ -42,7 +42,8 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 
 //	if (NULL != strstr(url, "/179098/")) {
 
-	if (doc_id == 1 || doc_id == 2) {
+	if ((doc_id == 1 && exp_id == 63) ||
+	    (doc_id == 2 && exp_id == 70)) {
 
 //	if (doc_id == 150175) {
 
@@ -285,7 +286,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 
 	/* get symbolic score */
 #ifdef DEBUG_MATH_SCORE_INSPECT
-	int inspect = score_inspect_filter(p->doc_id, po->indices);
+	int inspect = score_inspect_filter(p->doc_id, p->exp_id, po->indices);
 	match = math_l2_postlist_cur_match(po, widest, inspect);
 #else
 	match = math_l2_postlist_cur_match(po, widest);
