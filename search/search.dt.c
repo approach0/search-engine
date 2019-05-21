@@ -43,6 +43,9 @@ calc_overall_scores(struct overall_scores *s, float terms_score,
 	s->text_score = (ft > 0.f) ? ft : max_math_partial_score;
 	s->doc_score = math_sum_score * 100.f + fm * ft;
 
+//	print_var("%f\n", fm);
+//	print_var("%f\n", ft);
+
 #ifdef DEBUG_HIT_SCORE_INSPECT
 	if (debug_hit_doc == 1 || debug_hit_doc == 2)
 	printf("doc#%u, term:%f, math_max:%f, math_sum:%f\n", debug_hit_doc,
