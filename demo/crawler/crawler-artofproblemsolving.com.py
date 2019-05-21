@@ -345,7 +345,7 @@ def crawl_category_topics(category, newest, oldest, extra_opt):
         # log crawled topics
         page_log = open(file_prefix + ".log", "a")
         page_log.write('category %d, topic_id: %s \n' %
-		               (category, post['topic_id']))
+                       (category, post['topic_id']))
         page_log.close()
     return 'finish'
 
