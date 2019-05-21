@@ -20,6 +20,7 @@
 struct searchd_args {
 	int  n_nodes, node_rank;
 	struct indices *indices;
+	FILE *log_fh;
 	int trec_log;
 };
 
@@ -32,20 +33,19 @@ httpd_on_recv(const char *req, void *arg_)
 	int              page;
 	ranked_results_t srch_res; /* search results */
 	struct timer     timer;
+	FILE            *log_fh = args->log_fh;
 
 	/* start timer */
 	timer_reset(&timer);
 
 #ifdef SEARCHD_LOG_ENABLE
-	FILE *log_fh = fopen(SEARCHD_LOG_FILE, "a");
+	fprintf(log_fh, "%s\n", req);
 
-	if (log_fh == NULL) {
-		fprintf(stderr, "cannot open %s.\n", SEARCHD_LOG_FILE);
-		log_fh = fopen("/dev/null", "a");
-	}
+	fprintf(log_fh, "IP: ");
+	log_json_qry_ip(log_fh, req);
+	fprintf(log_fh, "\n");
 
-	fprintf(log_fh, "%s\n", req); fflush(log_fh);
-	log_json_qry_ip(log_fh, req); fprintf(log_fh, "\n");
+	fflush(log_fh);
 #endif
 
 	/* parse JSON query into local query structure */
@@ -82,10 +82,7 @@ httpd_on_recv(const char *req, void *arg_)
 	}
 
 #ifdef SEARCHD_LOG_ENABLE
-	fprintf(log_fh, "requested page: %d\n", page);
-	fprintf(log_fh, "parsed query: \n");
 	query_print(qry, log_fh);
-	fprintf(log_fh, "\n");
 #endif
 
 	/* is there a cluster? */
@@ -138,7 +135,6 @@ httpd_on_recv(const char *req, void *arg_)
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* merge gather results and return */
 			ret = json_results_merge(gather_buf, args->n_nodes, page);
-			// printf("%s\n", ret);
 			free(gather_buf);
 		}
 	}
@@ -147,12 +143,12 @@ reply:
 	query_delete(qry);
 
 #ifdef SEARCHD_LOG_ENABLE
-	fprintf(log_fh, "query handle time cost: %ld msec.\n",
+	fprintf(log_fh, "query handle cost: %ld msec.\n",
 	        timer_tot_msec(&timer));
 	fprintf(log_fh, "unfree allocs: %ld.\n", mhook_unfree());
 
 	fprintf(log_fh, "\n");
-	fclose(log_fh);
+	fflush(log_fh);
 #endif
 
 	return ret;
@@ -171,10 +167,12 @@ static void slave_die()
 static void slave_run(struct searchd_args *args)
 {
 	char *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
-	printf("Slave#%d ready.\n", args->node_rank);
+
+	fprintf(args->log_fh, "Slave[%d] ready.\n", args->node_rank);
+	fflush(args->log_fh);
 
 	while (1) {
-		/* receive query from master node */
+		/* receive req JSON from master node */
 		MPI_Bcast(recv_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 				CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 
@@ -185,14 +183,16 @@ static void slave_run(struct searchd_args *args)
 		/* simulate http request */
 		(void)httpd_on_recv(recv_buf, args);
 	}
+
 	free(recv_buf);
 }
 
 static void signal_handler(int sig)
 {
-	/* slience USR1 signal */
+	/* slave USR1 signal handler */
 	switch (sig) {
 		case SIGUSR1:
+			/* nothing here */
 			break;
 	}
 }
@@ -208,9 +208,17 @@ int main(int argc, char *argv[])
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	struct searchd_args   searchd_args;
 	int                   trec_log = 0;
+	FILE                 *log_fh = NULL;
 
 	/* initialize MPI */
 	MPI_Init(&argc, &argv);
+
+	/* open searchd log file */
+	log_fh = fopen(SEARCHD_LOG_FILE, "a");
+	if (log_fh == NULL) {
+		fprintf(stderr, "cannot open %s.\n", SEARCHD_LOG_FILE);
+		log_fh = fopen("/dev/null", "a");
+	}
 
 	/* parse program arguments */
 	while ((opt = getopt(argc, argv, "hTi:t:r:p:c:")) != -1) {
@@ -289,6 +297,7 @@ int main(int argc, char *argv[])
 	/* set searchd args */
 	searchd_args.indices  = &indices;
 	searchd_args.trec_log = trec_log;
+	searchd_args.log_fh   = log_fh;
 
 	/* master node should wait everyone before serving */
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -299,6 +308,8 @@ int main(int argc, char *argv[])
 
 		printf("listening on port %hu ...\n", port);
 		fflush(stdout); /* notify others (expect script) */
+
+		fprintf(log_fh, "master node ready.\n"); fflush(log_fh);
 
 		if (0 != httpd_run(port, uri_handlers, 1, &searchd_args))
 			printf("port %hu is occupied\n", port);
@@ -326,5 +337,9 @@ exit:
 
 	/* close MPI  */
 	MPI_Finalize();
+
+	/* final log */
+	fprintf(log_fh, "Exit, unfree allocs: %ld.\n\n", mhook_unfree());
+	fclose(log_fh);
 	return 0;
 }
