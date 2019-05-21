@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <float.h> /* for FLT_MAX */
-
-#define MAX_FLOAT_SCORE FLT_MAX
 
 #include "mhook/mhook.h"
 
@@ -385,24 +382,19 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 	return response;
 }
 
-static int hit_array_len(JSON_Array *arr)
-{
-	if (NULL == arr)
-		return 0;
-	else
-		return json_array_get_count(arr);
-}
-
+/*
+ * MPI related functions.
+ */
 static float hit_array_score(JSON_Array *arr, int idx)
 {
 	if (NULL == arr ||
 	    idx >= json_array_get_count(arr))
-		return MAX_FLOAT_SCORE;
+		return 0.f;
 
 	JSON_Object *obj = json_array_get_object(arr, idx);
 
 	if (!json_object_has_value_of_type(obj, "score", JSONNumber)) {
-		return MAX_FLOAT_SCORE;
+		return 0.f;
 	}
 
 	return (float)json_object_get_number(obj, "score");
@@ -421,20 +413,19 @@ static const char *hit_object_to_string(JSON_Object *obj)
 		return empty;
 	}
 
-#define E(_str) \
-	json_encode_string(_str)
+#define ENC(_str) json_encode_string(_str)
 	doc_id_t docID  = (doc_id_t)json_object_get_number(obj, "docid");
 	float score     = (float)json_object_get_number(obj, "score");
-	char *title     = E(json_object_get_string(obj, "title"));
+	char *title     = ENC(json_object_get_string(obj, "title"));
 	const char *url = json_object_get_string(obj, "url");
-	char *snippet   = E(json_object_get_string(obj, "snippet"));
-#undef E
+	char *snippet   = ENC(json_object_get_string(obj, "snippet"));
+#undef ENC
 
 	sprintf(retstr, "{"
 		"\"docid\": %u, "     /* hit docID */
 		"\"score\": %.3f, "   /* hit score */
-		"\"title\": %s, " /* hit title */
-		"\"url\": \"%s\", "       /* hit document URL */
+		"\"title\": %s, "     /* hit title */
+		"\"url\": \"%s\", "   /* hit document URL */
 		"\"snippet\": %s"     /* hit document snippet */
 		"}",
 		docID, score, title, url, snippet
@@ -458,10 +449,10 @@ json_results_merge(char *gather_buf, int n, int page)
 	JSON_Array **hit_arr = calloc(n, sizeof(JSON_Array *));
 	int *cur = calloc(n, sizeof(int));
 
-	/* results window */
+	/* calculate results window */
 	int cnt = 0, n_total_res = 0;
 	int tot_pages;
-	ranked_results_t rk_res;
+	ranked_results_t rk_res; /* mock-up */
 	struct rank_window wind;
 
 	/* parse and get hit arrays */
@@ -482,7 +473,8 @@ json_results_merge(char *gather_buf, int n, int page)
 
 		hit_arr[i] = json_object_get_array(parson_obj, "hits");
 		/* count the number of total results */
-		n_total_res += hit_array_len(hit_arr[i]);
+		if (hit_arr[i])
+			n_total_res += json_array_get_count(hit_arr[i]);
 	}
 
 	/* calculate page range */
@@ -503,30 +495,29 @@ json_results_merge(char *gather_buf, int n, int page)
 
 	/* merge hit arrays */
 	do {
-		float min_score = MAX_FLOAT_SCORE;
+		float max_score = 0.f;
 		for (int i = 0; i < n; i++) {
 			float s = hit_array_score(hit_arr[i], cur[i]);
-			if (s < min_score)
-				min_score = s;
+			if (s > max_score)
+				max_score = s;
 		}
 
-		if (min_score == MAX_FLOAT_SCORE)
+		if (max_score == 0.f)
 			break;
 
 		for (int i = 0; i < n; i++) {
 			JSON_Object *obj;
 			const char *json;
 			float s = hit_array_score(hit_arr[i], cur[i]);
-			if (s == min_score) {
+			if (s == max_score) {
 				if (wind.from <= cnt && cnt < wind.to) {
 					/* append_result to response */
 					obj = json_array_get_object(hit_arr[i], cur[i]);
 					json = hit_object_to_string(obj);
 					strcat(response, json);
 
-					if (cnt + 1 < wind.to) {
+					if (cnt + 1 < wind.to)
 						strcat(response, ", ");
-					}
 				}
 
 				cur[i] ++;
