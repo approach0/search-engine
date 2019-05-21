@@ -44,9 +44,9 @@ calc_overall_scores(struct overall_scores *s, float terms_score,
 	s->doc_score = math_sum_score * 100.f + fm * ft;
 
 #ifdef DEBUG_HIT_SCORE_INSPECT
-	if (s->doc_score > 0.25f)
-//	if (debug_hit_doc == 54047 || debug_hit_doc == 73859 || debug_hit_doc == 85243)
-	printf("doc#%u, ft%f, fm%f, doc%f\n", debug_hit_doc, ft, fm, s->doc_score);
+	if (debug_hit_doc == 1 || debug_hit_doc == 2)
+	printf("doc#%u, term:%f, math_max:%f, math_sum:%f\n", debug_hit_doc,
+		terms_score, max_math_partial_score, math_sum_score);
 #endif
 }
 
@@ -159,7 +159,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	}
 
 	// Print processed query
-	//(void)math_postlist_cache_list(indices->ci.math_cache, true);
+#ifdef PRINT_QUERY
 	for (int i = 0; i < root_pols.n; i++) {
 		if (i < sep) { /* term query */
 			printf("po[%u] `%s' (id=%u, qf=%u, df=%u)\n", i, tqs[i].kw_str,
@@ -174,6 +174,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 	}
 	printf("\n");
+#endif
 
 #ifdef MERGE_TIME_LOG
 	timer_reset(&timer);
@@ -214,7 +215,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 #else
 		uint32_t l = 1;
 #endif
-
 		/* calculate term scores */
 		float tf_idf_score = 0.f;
 		for (int pid = 0; pid < sep; pid++) {

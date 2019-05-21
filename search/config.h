@@ -14,6 +14,8 @@
 
 //#define DEBUG_SNIPPET
 
+//#define PRINT_QUERY
+
 /* max mark score, type of mnc_score_t */
 #define MNC_MARK_BASE_SCORE 90
 #define MNC_MARK_FULL_SCORE 100
