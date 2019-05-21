@@ -290,6 +290,9 @@ int main(int argc, char *argv[])
 	searchd_args.indices  = &indices;
 	searchd_args.trec_log = trec_log;
 
+	/* master node should wait everyone before serving */
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	if (searchd_args.node_rank == CLUSTER_MASTER_NODE) {
 		/* master node, run httpd */
 		struct uri_handler uri_handlers[] = {{SEARCHD_DEFAULT_URI, &httpd_on_recv}};
