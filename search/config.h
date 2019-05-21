@@ -17,9 +17,10 @@
 //#define PRINT_QUERY
 
 /* max mark score, type of mnc_score_t */
-#define MNC_MARK_BASE_SCORE 90
+#define MNC_MARK_BASE_SCORE 80
 #define MNC_MARK_FULL_SCORE 100
-#define MNC_MARK_MID_SCORE ((MNC_MARK_BASE_SCORE + MNC_MARK_FULL_SCORE) / 2)
+/* exact math except fingerprint */
+#define MNC_MARK_MID_SCORE (MNC_MARK_FULL_SCORE - 1)
 
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
