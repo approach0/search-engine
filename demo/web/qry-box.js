@@ -81,9 +81,18 @@ $(document).ready(function() {
 		query.raw_str = raw_str_arr.slice(0, -1).join(", ");
 	};
 
+	var correct_math = function (str) {
+		str = str.replace(/_\{ \}/g, " ");
+		str = str.replace(/\^\{ \}/g, " ");
+		return str;
+	}
+
 	/* keyword push/edit */
 	var fix_input = function (type, str, then) {
 		query.items.pop();
+		/* simple rules to correct most common bad-math */
+		if (type === "tex")
+			str = correct_math(str);
 		query.items.push({
 			"type": type,
 			"str": str
