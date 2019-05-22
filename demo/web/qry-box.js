@@ -7,10 +7,11 @@ $(document).ready(function() {
 		"items": [
 			{"type": "term-input", "str": ""}
 		],
-		"pad": math_pad /* from pad.js */
+		"pad": math_pad, /* from pad.js */
+		'mouse_on_teddy': false
 	};
 
-	var tex_charset = ".'+-*/\\!^_%()[]:;{}=<>";
+	var tex_charset = "+*/\\!^_%()[]:;{}=<>";
 
 	/* query variable <--> raw query string convert */
 	var raw_str_2_query = function() {
@@ -90,9 +91,11 @@ $(document).ready(function() {
 	/* keyword push/edit */
 	var fix_input = function (type, str, then) {
 		query.items.pop();
+
 		/* simple rules to correct most common bad-math */
 		if (type === "tex")
 			str = correct_math(str);
+
 		query.items.push({
 			"type": type,
 			"str": str
@@ -172,6 +175,27 @@ $(document).ready(function() {
 		return 0;
 	}
 
+	var input_box_on_finish_math = function () {
+		var mq = render_mq_edit();
+		fix_input("tex", mq.latex(), function() {
+			tex_render_fast("div.qry-div-fix");
+			setTimeout(function () {
+				$("#qry-input-box").focus();
+			}, 500);
+		});
+	};
+
+	var input_box_on_del = function (ev) {
+		/* on backspace or delete key */
+		var arr = query.items;
+		var input_box = arr[arr.length - 1];
+
+		/* delete the most-recent chip */
+		const l = query.items.length
+		if (l > 1 && input_box.str.length == 0)
+			query.items.splice(l - 2, 1);
+	};
+
 	var input_box_on_keyup = function (ev) {
 		var arr = query.items;
 		var input_box = arr[arr.length - 1];
@@ -189,13 +213,22 @@ $(document).ready(function() {
 					$("#qry-input-box").focus();
 				});
 			}
-		} else if (contains(input_box.str, "$")) {
-			/* user input a '$' signe */
-
-			/* split by this '$', assume it is the last char */
+		} else if (ev.which == 32 /* space */) {
+			/* split by this space, assuming it is the last char */
 			if (input_box.str.length > 1) {
-				var head_str = input_box.str.slice(0, -2);
-				fix_input("term", head_str,function() {});
+				var head_str = input_box.str.slice(0, -1);
+				fix_input("term", head_str, function() {
+					$("#qry-input-box").focus();
+				});
+			}
+
+		} else if (contains(input_box.str, "$")) {
+			/* user input a '$' sign */
+
+			/* split by this '$', assuming it is the last char */
+			if (input_box.str.length > 1) {
+				var head_str = input_box.str.slice(0, -1);
+				fix_input("term", head_str, function() {});
 			}
 
 			switch_to_mq("");
@@ -255,6 +288,8 @@ $(document).ready(function() {
 				$("#qry-input-box").focus();
 			},
 			on_input: input_box_on_keyup,
+			on_del: input_box_on_del,
+			on_finish_math_edit: input_box_on_finish_math,
 			on_paste: input_box_on_paste,
 			on_rawinput: function () {
 				raw_str_2_query();

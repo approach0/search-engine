@@ -93,13 +93,14 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 			</div>
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-on:paste="on_paste" v-model="i.str"
+			<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
 			type="text" id="qry-input-box" class="pl_holder"
 			placeholder="Enter keywords here, type $ for math keyword."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
-			<span class="pl_holder">When you finish editing this math, press enter.</span>
+			<span class="pl_holder">You are editing a <b>math keyword</b> now.
+			When you finish, press enter or click <a @click="on_finish_math_edit" href="#">here</a>.</span>
 		</li>
 </template></ul>
 </div>
@@ -107,7 +108,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="margin-top: 8px;">
+<div style="padding-top: 18px; padding-bottom: 5px">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
@@ -144,8 +145,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
-		<p>If you know TeX, it is faster to edit the equivalent raw query
-		(separate keywords by commas):</p>
+		<p>Know TeX? You are an expert! Try to edit the raw query below (separate keywords by commas).</p>
 		<input id="qry" style="padding-left: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
 		placeholder="empty"/>
 
@@ -155,7 +155,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<input id="p" type="hidden" value=
 		"<?php if (isset($_GET['p']) && is_scalar($_GET['p'])) echo htmlentities($_GET['p'], ENT_QUOTES,'UTF-8'); ?>"/>
 
-		<p>WEB API (for developers):</p>
+		<p>Copy and paste to your command line to make this query:</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
 		curl -v '{{url_root}}search-relay.php?p={{page}}&amp;q={{enc_uri}}'
 		<p>
@@ -163,9 +163,17 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 	</div>
 
 	<a style="text-decoration: none; color: blue; font-size: 14px;"
-	href="/guide" target="_blank">
+	href="/guide" target="_blank"
+	v-on:mouseover="mouse_on_teddy = true" v-on:mouseleave="mouse_on_teddy = false">
 	<img src="images/link.png" style="vertical-align: middle;"/>
-	user guide</a>
+	user guide
+	</a>
+	<span v-on:mouseover="mouse_on_teddy = true" v-on:mouseleave="mouse_on_teddy = false">
+		<span v-if="mouse_on_teddy" style="font-size: 14px">ヾ(Θ_Θ；)ﾉ
+			When I have a question, user guide is my friend!
+		</span>
+		<span v-else style="font-size: 14px">┌(*Θ_Θ)┐</span>
+	</span>
 
 </div>
 <!-- Search button and options END -->
@@ -264,14 +272,10 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25); text-align: center;">
 	</div>
 
 <!-- Right Footer -->
-	<div style="float: right; margin-top: 15px;">
+	<div style="float: right;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>
-
-		<a href="https://plus.google.com/share?url=https%3A%2F%2Fwww.approach0.xyz"
-		target="_blank" title="Share on Google+">
-		<img class="social" src="images/social/Google+.svg"></a>
 
 		<a href="http://www.reddit.com/submit?url=https%3A%2F%2Fwww.approach0.xyz&title=Check%20out%20this%20math-aware%20search%20engine!"
 		target="_blank" title="Submit to Reddit">

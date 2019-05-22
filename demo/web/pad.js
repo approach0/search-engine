@@ -83,7 +83,7 @@ var math_pad = [
 		{'desc': 'arccos', 'cmd': '\\\\arccos', 'disp': '\\arccos'},
 		{'desc': 'arctan', 'cmd': '\\\\arctan', 'disp': '\\arctan'}
 	]},
-	{"tab_name": "Greek/Letter", "buttons": [
+	{"tab_name": "Greek/Symbols", "buttons": [
 		{'desc': 'alpha', 'cmd': '\\\\alpha', 'disp': '\\alpha'},
 		{'desc': 'beta', 'cmd': '\\\\beta', 'disp': '\\beta'},
 		{'desc': 'gamma', 'cmd': '\\\\gamma', 'disp': '\\gamma'},

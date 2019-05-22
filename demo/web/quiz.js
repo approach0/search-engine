@@ -23,8 +23,8 @@ $(function () {
 		strings: quiz.hints,
 		contentType: 'html',
 		cursorChar: "|",
-		typeSpeed: 0,
-		startDelay: 5000,
+		typeSpeed: 10,
+		startDelay: 3000,
 		backDelay: 1200,
 		callback: function() {
 			$("#quiz-hint").children("a").on("click", function () {
