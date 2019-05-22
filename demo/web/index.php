@@ -230,7 +230,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <!-- Search Results -->
 <div v-if="ret_code == 0">
 	<ol>
-	<li v-for="hit in hits">
+	<li v-for="hit in hits" class="hit">
 		<span class="docid">{{hit.docid}}</span>
 		<span class="score">{{hit.score}}</span>
 		<a class="title" target="_blank" v-bind:href="hit.url"
