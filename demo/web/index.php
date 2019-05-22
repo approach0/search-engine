@@ -272,7 +272,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25); text-align: center;">
 	</div>
 
 <!-- Right Footer -->
-	<div style="float: right;">
+	<div style="float: right; margin-top: 15px;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>
