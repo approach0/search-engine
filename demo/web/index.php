@@ -43,9 +43,9 @@ mathjax_init();
 <script type="text/javascript" src="vendor/typed/typed.js"></script>
 <script type="text/javascript" src="search.js"></script>
 <script type="text/javascript" src="quiz-list.js"></script>
-<script type="text/javascript" src="quiz.js"></script>
-<script type="text/javascript" src="pad.js"></script>
-<script type="text/javascript" src="qry-box.js"></script>
+<script type="text/javascript" src="quiz.js?hash=f06500e"></script>
+<script type="text/javascript" src="pad.js?hash=f06500e"></script>
+<script type="text/javascript" src="qry-box.js?hash=f06500e"></script>
 <script type="text/javascript" src="footer.js"></script>
 <style>
 img.social {
