@@ -1,15 +1,15 @@
 function katex_tex_render(scope_select) {
-	tex_tag_open  = '<span class="imath-to-render">';
-	tex_tag_close = '</span>';
+	var tex_tag_open  = '<span class="imath-to-render">';
+	var tex_tag_close = '</span>';
 
-	replace_regex = /\[imath\]([\s\S]+?)\[\/imath\]/g;
-	render_select = "span.imath-to-render";
-	remove_class = "imath-to-render";
-	replace_class = "imath-rendered";
+	var replace_regex = /\[imath\]([\s\S]+?)\[\/imath\]/g;
+	var render_select = "span.imath-to-render";
+	var remove_class = "imath-to-render";
+	var replace_class = "imath-rendered";
 
-	err_tag_open_0  = '<span class="imath-err" title="';
-	err_tag_open_1  = '">';
-	err_tag_close = '</span>';
+	var err_tag_open_0  = '<span class="imath-err" title="';
+	var err_tag_open_1  = '">';
+	var err_tag_close = '</span>';
 
 	$(scope_select).each(function() {
 		repl = $(this).html().replace(
@@ -42,6 +42,15 @@ function katex_tex_render(scope_select) {
 }
 
 function mathjax_tex_render(scope_select) {
+	var replace_regex = /\[imath\]([\s\S]+?)\[\/imath\]/g;
+	var tex_tag_open  = '<span class="imathjax">';
+	var tex_tag_close = '</span>';
+	var render_select = "span.imathjax";
+
+	var err_tag_open_0  = '<span class="imath-err" title="';
+	var err_tag_open_1  = '">';
+	var err_tag_close = '</span>';
+
 	$(scope_select).each(function() {
 		repl = $(this).html().replace(
 			replace_regex,
@@ -51,16 +60,23 @@ function mathjax_tex_render(scope_select) {
 		$(this).html(repl);
 	});
 
-	//MathJax.texReset();
+	MathJax.texReset();
 
 	$(render_select).each(function() {
 		var tex = $(this).text();
 		ele = $(this).get(0);
-		const math_ele = MathJax.tex2chtml(tex, {
-			display: false
-		});
-		ele.innerHTML = '';
-		ele.appendChild(math_ele);
+		try {
+			const math_ele = MathJax.tex2chtml(tex, {
+				display: false
+			});
+			ele.innerHTML = '';
+			ele.appendChild(math_ele);
+		} catch(err) {
+			$(this).html(
+				err_tag_open_0 + err + err_tag_open_1 +
+				tex + err_tag_close
+			);
+		}
 	});
 
 	MathJax.startup.document.clear();

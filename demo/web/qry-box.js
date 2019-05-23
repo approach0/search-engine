@@ -293,11 +293,17 @@ $(document).ready(function() {
 			on_del: input_box_on_del,
 			on_finish_math_edit: input_box_on_finish_math,
 			on_paste: input_box_on_paste,
-			on_rawinput: function () {
-				raw_str_2_query();
-				Vue.nextTick(function () {
-					tex_render_fast("div.qry-div-fix");
-				});
+			on_rawinput: function (ev) {
+				var arr = query.items;
+				input_box = arr[arr.length - 1];
+				if (ev.which == 13 /* enter */) {
+						click_search(1, true);
+				} else {
+					raw_str_2_query();
+					Vue.nextTick(function () {
+						tex_render_fast("div.qry-div-fix");
+					});
+				}
 			}
 		}
 	});
@@ -332,6 +338,9 @@ $(document).ready(function() {
 			head.text(t);
 
 			$('#init-footer').stickToBottom();
+			Vue.nextTick(function () {
+				tex_render_fast("#handy-pad");
+			});
 		});
 	}
 	$("span.collapse").next().hide();
@@ -407,7 +416,7 @@ $(document).ready(function() {
 
 	/* render math pad */
 	Vue.nextTick(function () {
-		tex_render("#handy-pad");
+		tex_render_fast("#handy-pad");
 		//console.log('rendered');
 	});
 

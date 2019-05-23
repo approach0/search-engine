@@ -1,6 +1,12 @@
 /**/
 em.hl {
 	background-color: #FF9;
+	font-style: normal;
+}
+
+li.hit {
+	list-style-type: none;
+	margin-bottom: 26px;
 }
 
 span.docid,

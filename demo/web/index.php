@@ -20,20 +20,20 @@ if ($detect->isMobile()) {
 <meta name="description" content="Approach Zero: A math-aware search engine. Search millions of math formulas.">
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
-<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=16acb2c" type="text/css"/>
-<link rel="stylesheet" href="search.css?hash=16acb2c" type="text/css"/>
-<link rel="stylesheet" href="qry-box.css?hash=16acb2c" type="text/css"/>
-<link rel="stylesheet" href="font.css?hash=16acb2c" type="text/css"/>
-<link rel="stylesheet" href="quiz.css?hash=16acb2c" type="text/css"/>
+<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=f73a75a" type="text/css"/>
+<link rel="stylesheet" href="search.css?hash=f73a75a" type="text/css"/>
+<link rel="stylesheet" href="qry-box.css?hash=f73a75a" type="text/css"/>
+<link rel="stylesheet" href="font.css?hash=f73a75a" type="text/css"/>
+<link rel="stylesheet" href="quiz.css?hash=f73a75a" type="text/css"/>
 
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?hash=16acb2c"></script>
-<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=16acb2c"></script>
-<script type="text/javascript" src="vendor/vue/vue.min.js?hash=16acb2c"></script>
-<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=16acb2c"></script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?hash=f73a75a"></script>
+<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=f73a75a"></script>
+<script type="text/javascript" src="vendor/vue/vue.min.js?hash=f73a75a"></script>
+<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=f73a75a"></script>
 
 <!-- Math render vendor scripts -->
-<script type="text/javascript" src="vendor/katex/katex.min.js?hash=16acb2c"></script>
-<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=16acb2c" type="text/css"/>
+<script type="text/javascript" src="vendor/katex/katex.min.js?hash=f73a75a"></script>
+<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=f73a75a" type="text/css"/>
 
 <script>
 MathJax = {
@@ -45,16 +45,16 @@ MathJax = {
 	}
 };
 </script>
-<script src="https://rawcdn.githack.com/mathjax/mj3-demos/3.0.0-beta.4/mathjax3/tex-chtml.js?hash=16acb2c"></script>
+<script src="https://mathjax.github.io/mj3-demos/mathjax3/tex-chtml.js"></script>
 
-<script type="text/javascript" src="tex-render.js?hash=16acb2c"></script>
-<script type="text/javascript" src="vendor/typed/typed.js?hash=16acb2c"></script>
-<script type="text/javascript" src="search.js?hash=16acb2c"></script>
-<script type="text/javascript" src="quiz-list.js?hash=16acb2c"></script>
-<script type="text/javascript" src="quiz.js?hash=16acb2c"></script>
-<script type="text/javascript" src="pad.js?hash=16acb2c"></script>
-<script type="text/javascript" src="qry-box.js?hash=16acb2c"></script>
-<script type="text/javascript" src="footer.js?hash=16acb2c"></script>
+<script type="text/javascript" src="tex-render.js?hash=f73a75a"></script>
+<script type="text/javascript" src="vendor/typed/typed.js?hash=f73a75a"></script>
+<script type="text/javascript" src="search.js?hash=f73a75a"></script>
+<script type="text/javascript" src="quiz-list.js?hash=f73a75a"></script>
+<script type="text/javascript" src="quiz.js?hash=f73a75a"></script>
+<script type="text/javascript" src="pad.js?hash=f73a75a"></script>
+<script type="text/javascript" src="qry-box.js?hash=f73a75a"></script>
+<script type="text/javascript" src="footer.js?hash=f73a75a"></script>
 <style>
 img.social {
 	height: 16px;
@@ -66,13 +66,14 @@ div.center-horiz {
 	margin: 0 auto;
 	text-align: center;
 }
+.toleft {
+	width: 932px;
+	margin: auto;
+}
 div.stick-bottom {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
-}
-li.hit {
-	margin-bottom: 26px;
 }
 </style>
 </head>
@@ -80,11 +81,11 @@ li.hit {
 <body style="margin: 0; border-top: 2px solid #46ece5;">
 
 <!-- Query Box App -->
-<div id="qry-input-vue-app" style="padding: 8px 8px 10px 8px;
-box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+<div id="qry-input-vue-app" style="background: #fbfefe;
+	padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
-<div>
+<div class="toleft">
 <div id="qry-input-area" style="width:100%;" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
@@ -116,7 +117,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="padding-top: 18px; padding-bottom: 5px">
+<div style="padding-top: 18px; padding-bottom: 5px" class="toleft">
 	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
@@ -191,7 +192,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Quiz App -->
 <div id="quiz-vue-app" v-show="!hide">
-	<div id="quiz">
+	<div id="quiz" class="toleft">
 		<div class="center-v-pad"></div>
 		<div class="center-horiz">
 			<p id="quiz-question">
@@ -204,22 +205,24 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 	</div>
 
 	<!-- Initial Footer -->
-	<div v-show="!hide" id="init-footer" class="center-horiz"
+	<div v-show="!hide" id="init-footer"
 	style="font-size: small; margin-top: 40px; width: 100%;
 	bottom: 0px; position: absolute; background: #fbfefe;
 	padding-bottom: 15px; padding-top: 15px;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
-	<a target="_blank" href="https://twitter.com/approach0">
-	<img style="vertical-align:middle"
-	src="images/logo32.png"/></a>
-	+
-	<a target="_blank" href="http://math.stackexchange.com/">
-	<img style="vertical-align:middle"
-	src="images/math-stackexchange.png"/></a>
-	+
-	<span style="color: red;">♡ </span>
-	=
-	<p>A math-aware search engine for Mathematics Stack Exchange.</p>
+		<div class="toleft" style="text-align: center;">
+			<a target="_blank" href="https://twitter.com/approach0">
+			<img style="vertical-align:middle"
+			src="images/logo32.png"/></a>
+			+
+			<a target="_blank" href="http://math.stackexchange.com/">
+			<img style="vertical-align:middle"
+			src="images/math-stackexchange.png"/></a>
+			+
+			<span style="color: red;">♡ </span>
+			=
+			<p>A math-aware search engine for Mathematics Stack Exchange.</p>
+		</div>
 	</div>
 	<!-- Initial Footer END -->
 
@@ -246,7 +249,7 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 <!-- Search Results -->
 <div v-if="ret_code == 0">
 	<ol>
-	<li v-for="hit in hits" class="hit">
+	<li v-for="hit in hits" class="hit toleft">
 		<span class="docid">{{hit.docid}}</span>
 		<span class="score">{{hit.score}}</span>
 		<a class="title" target="_blank" v-bind:href="hit.url"
@@ -261,26 +264,25 @@ box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 </div>
 <!-- Search Results END -->
 
+<!-- Navigator -->
+<div v-show="ret_code == 0"
+	style="text-align: center; margin-bottom: 26px;" class="toleft">
+	<span v-if="prev != ''">
+		<b style="font-size:1.5em">←</b>
+		<a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
+	</span>
+	<span class="mainfont">Page {{cur_page}}/{{tot_pages}}</span>
+	<span v-if="next != ''">
+		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
+		<b style="font-size:1.5em">→</b>
+	</span>
+</div>
+
 <!-- Footer -->
 <div v-show="ret_code == 0"
-style="padding-top: 15px; background: #fbfefe;
-box-shadow: 0 0 4px rgba(0,0,0,0.25); text-align: center;">
-
-<!-- Left Footer -->
-	<div style="display: inline-block; padding-bottom: 15px;">
-		<span v-if="prev != ''">
-			<b style="font-size:1.5em">←</b>
-			<a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
-		</span>
-		<span class="mainfont">Page {{cur_page}}/{{tot_pages}}</span>
-		<span v-if="next != ''">
-			<a class="page-navi" v-bind:onclick="next" href="#">next</a>
-			<b style="font-size:1.5em">→</b>
-		</span>
-	</div>
-
-<!-- Right Footer -->
-	<div style="float: right; margin-top: 15px;">
+	style="padding-top: 15px; background: #fbfefe;
+	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+	<div style="text-align: right;" class="toleft">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>

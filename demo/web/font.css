@@ -18,7 +18,8 @@ a {
 
 p, button, input, h3, li, .mainfont {
 	font-family: 'Source Serif Pro', serif;
-	font-size: 90%;
+	font-size: small;
+	line-height: 1.54;
 	color: #454545;
 }
 
