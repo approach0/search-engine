@@ -1,3 +1,4 @@
+/* stylelint-disable font-family-no-missing-generic-family-keyword */
 @font-face {
   font-family: 'KaTeX_AMS';
   src: url(fonts/KaTeX_AMS-Regular.woff2) format('woff2'), url(fonts/KaTeX_AMS-Regular.woff) format('woff'), url(fonts/KaTeX_AMS-Regular.ttf) format('truetype');
@@ -118,36 +119,6 @@
   font-weight: normal;
   font-style: normal;
 }
-@media screen {
-  .katex .mtable .vertical-separator {
-    min-width: 1px;
-  }
-  .katex .mfrac .frac-line,
-  .katex .overline .overline-line,
-  .katex .underline .underline-line,
-  .katex .hline,
-  .katex .hdashline,
-  .katex .rule {
-    min-height: 1px;
-  }
-}
-.katex-display {
-  display: block;
-  margin: 1em 0;
-  text-align: center;
-}
-.katex-display > .katex {
-  display: block;
-  text-align: center;
-  white-space: nowrap;
-}
-.katex-display > .katex > .katex-html {
-  display: block;
-}
-.katex-display > .katex > .katex-html > .tag {
-  position: absolute;
-  right: 0px;
-}
 .katex {
   font: normal 1.21em KaTeX_Main, Times New Roman, serif;
   line-height: 1.2;
@@ -156,6 +127,9 @@
 }
 .katex * {
   -ms-high-contrast-adjust: none !important;
+}
+.katex .katex-version::after {
+  content: "0.10.2";
 }
 .katex .katex-mathml {
   position: absolute;
@@ -196,8 +170,12 @@
 .katex .texttt {
   font-family: KaTeX_Typewriter;
 }
-.katex .mathit {
+.katex .mathdefault {
   font-family: KaTeX_Math;
+  font-style: italic;
+}
+.katex .mathit {
+  font-family: KaTeX_Main;
   font-style: italic;
 }
 .katex .mathrm {
@@ -237,8 +215,14 @@
 .katex .textsf {
   font-family: KaTeX_SansSerif;
 }
-.katex .mainit {
-  font-family: KaTeX_Main;
+.katex .mathboldsf,
+.katex .textboldsf {
+  font-family: KaTeX_SansSerif;
+  font-weight: bold;
+}
+.katex .mathitsf,
+.katex .textitsf {
+  font-family: KaTeX_SansSerif;
   font-style: italic;
 }
 .katex .mainrm {
@@ -289,6 +273,14 @@
   display: inline-block;
   width: 100%;
   border-bottom-style: solid;
+}
+.katex .mfrac .frac-line,
+.katex .overline .overline-line,
+.katex .underline .underline-line,
+.katex .hline,
+.katex .hdashline,
+.katex .rule {
+  min-height: 1px;
 }
 .katex .mspace {
   display: inline-block;
@@ -869,11 +861,11 @@
 .katex .accent > .vlist-t {
   text-align: center;
 }
-.katex .accent .accent-body:not(.accent-full) {
-  width: 0;
-}
 .katex .accent .accent-body {
   position: relative;
+}
+.katex .accent .accent-body:not(.accent-full) {
+  width: 0;
 }
 .katex .overlay {
   display: block;
@@ -882,6 +874,7 @@
   display: inline-block;
   margin: 0 -0.025em;
   border-right: 0.05em solid;
+  min-width: 1px;
 }
 .katex .mtable .vs-dashed {
   border-right: 0.05em dashed;
@@ -921,14 +914,21 @@
 .katex svg path {
   stroke: none;
 }
+.katex img {
+  border-style: none;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+}
 .katex .stretchy {
   width: 100%;
   display: block;
   position: relative;
   overflow: hidden;
 }
-.katex .stretchy:before,
-.katex .stretchy:after {
+.katex .stretchy::before,
+.katex .stretchy::after {
   content: "";
 }
 .katex .hide-tail {
@@ -977,10 +977,7 @@
 .katex .boxpad {
   padding: 0 0.3em 0 0.3em;
 }
-.katex .fbox {
-  box-sizing: border-box;
-  border: 0.04em solid black;
-}
+.katex .fbox,
 .katex .fcolorbox {
   box-sizing: border-box;
   border: 0.04em solid;
@@ -995,5 +992,30 @@
 .katex .sout {
   border-bottom-style: solid;
   border-bottom-width: 0.08em;
+}
+.katex-display {
+  display: block;
+  margin: 1em 0;
+  text-align: center;
+}
+.katex-display > .katex {
+  display: block;
+  text-align: center;
+  white-space: nowrap;
+}
+.katex-display > .katex > .katex-html {
+  display: block;
+  position: relative;
+}
+.katex-display > .katex > .katex-html > .tag {
+  position: absolute;
+  right: 0;
+}
+.katex-display.leqno > .katex > .katex-html > .tag {
+  left: 0;
+  right: auto;
+}
+.katex-display.fleqn > .katex {
+  text-align: left;
 }
 
