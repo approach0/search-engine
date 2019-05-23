@@ -105,10 +105,8 @@ httpd_on_recv(const char *req, void *arg_)
 	srch_res = indices_run_query(args->indices, &qry);
 
 	//////// TREC LOG ////////
-	if (args->trec_log) {
-		printf("generating TREC log ...\n");
+	if (args->trec_log)
 		search_results_trec_log(&srch_res, args->indices);
-	}
 	//////////////////////////
 
 	if (args->n_nodes > 1) {
