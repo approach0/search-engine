@@ -41,73 +41,30 @@ function katex_tex_render(scope_select) {
 	});
 }
 
-var tex_err_map = {};
-
-function mathjax_print_errmsg (ele) {
-	/*
-	 * after rendering element 'ele', if there is
-	 * parse error (with "span.noError" class), then
-	 * report error message by setting span title.
-	 */
-	$(ele).find("span.noError").each(function() {
-		var err_tex = $(this).text();
-
-		/*
-		 * jQuery text() may convert &nbsp; to ASCII
-		 * char (160). Here we replace it to regular
-		 * space.
-		 */
-		err_tex = err_tex.replace(/\s/g, ' ');
-
-//		console.log(err_tex);
-//		console.log(tex_err_map[err_tex]);
-
-		var err_msg = tex_err_map[err_tex];
-		if (err_msg) {
-			$(this).attr('title', err_msg);
-			$(this).addClass('imath-err');
-		}
-	});
-}
-
 function mathjax_tex_render(scope_select) {
 	$(scope_select).each(function() {
+		repl = $(this).html().replace(
+			replace_regex,
+			function (_, tex) {
+				return tex_tag_open + tex + tex_tag_close;
+		});
+		$(this).html(repl);
+	});
+
+	//MathJax.texReset();
+
+	$(render_select).each(function() {
+		var tex = $(this).text();
 		ele = $(this).get(0);
-		MathJax.Hub.Queue(
-			["Typeset", MathJax.Hub, ele],
-			[mathjax_print_errmsg, ele]
-		);
-	});
-}
-
-function mathjax_init() {
-	MathJax.Hub.Config({
-		tex2jax: {
-			inlineMath: [['[imath]','[/imath]']],
-			displayMath: [['[dmath]','[/dmath]']]
-		},
-		TeX: {
-			noErrors: {disabled: false},
-			Macros: {
-				qvar: ['{\\color{blue}{#1}}',1]
-			}
-		},
-		showMathMenu: true /* false */,
-		menuSettings: {CHTMLpreview: false}
+		const math_ele = MathJax.tex2chtml(tex, {
+			display: false
+		});
+		ele.innerHTML = '';
+		ele.appendChild(math_ele);
 	});
 
-	MathJax.Hub.Register.MessageHook("TeX Jax - parse error",function (err) {
-		var tex_str = err[2];
-		var err_msg = err[1];
-//		console.log('TeX string: ' + tex_str);
-//		console.log('TeX error: ' + err_msg);
-		tex_err_map[tex_str] = err_msg;
-	});
-
-	MathJax.Hub.Register.StartupHook("End Jax",function () {
-		var jax = "SVG";
-		return MathJax.Hub.setRenderer(jax);
-	});
+	MathJax.startup.document.clear();
+	MathJax.startup.document.updateDocument();
 }
 
 function tex_render(scope_select) {

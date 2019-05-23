@@ -26,6 +26,7 @@ if ($detect->isMobile()) {
 <link rel="stylesheet" href="font.css" type="text/css"/>
 <link rel="stylesheet" href="quiz.css" type="text/css"/>
 
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js"></script>
 <script type="text/javascript" src="vendor/vue/vue.min.js"></script>
 <script type="text/javascript" src="vendor/mathquill/mathquill.min.js"></script>
@@ -34,10 +35,17 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="vendor/katex/katex.min.js"></script>
 <link rel="stylesheet" href="vendor/katex/katex.min.css" type="text/css"/>
 
-<script type="text/javascript" src="vendor/mathjax/MathJax.js?config=TeX-AMS-MML_SVG"></script>
-<script type="text/x-mathjax-config">
-mathjax_init();
+<script>
+MathJax = {
+	tex: {
+		inlineMath: [['[imath]','[/imath]']],
+		macros: {
+			qvar: ['{\\color{blue}{#1}}', 1]
+		}
+	}
+};
 </script>
+<script src="https://rawcdn.githack.com/mathjax/mj3-demos/3.0.0-beta.4/mathjax3/tex-chtml.js"></script>
 
 <script type="text/javascript" src="tex-render.js"></script>
 <script type="text/javascript" src="vendor/typed/typed.js"></script>
