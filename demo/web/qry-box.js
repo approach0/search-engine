@@ -191,7 +191,7 @@ $(document).ready(function() {
 		var input_box = arr[arr.length - 1];
 
 		/* delete the most-recent chip */
-		const l = query.items.length
+		const l = query.items.length;
 		if (l > 1 && input_box.str.length == 0) {
 			arr.splice(l - 2, 1);
 			query_2_raw_str();
