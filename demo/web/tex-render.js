@@ -69,8 +69,11 @@ function mathjax_tex_render(scope_select) {
 			const math_ele = MathJax.tex2chtml(tex, {
 				display: false
 			});
-			ele.innerHTML = '';
-			ele.appendChild(math_ele);
+
+			$(this).html(math_ele);
+			MathJax.startup.document.clear();
+			MathJax.startup.document.updateDocument();
+
 		} catch(err) {
 			$(this).html(
 				err_tag_open_0 + err + err_tag_open_1 +
@@ -78,9 +81,6 @@ function mathjax_tex_render(scope_select) {
 			);
 		}
 	});
-
-	MathJax.startup.document.clear();
-	MathJax.startup.document.updateDocument();
 }
 
 function tex_render(scope_select) {

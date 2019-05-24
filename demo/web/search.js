@@ -42,7 +42,7 @@ function handle_search_res(res, enc_qry, page) {
 		response.next = '';
 
 	setTimeout(function(){
-		tex_render("a.title");
+		tex_render_fast("a.title");
 		tex_render("p.snippet");
 	}, 500);
 
