@@ -83,8 +83,11 @@ $(document).ready(function() {
 	};
 
 	var correct_math = function (str) {
+		/* help user correct some common mistakes in mathquill */
 		str = str.replace(/_\{ \}/g, " ");
 		str = str.replace(/\^\{ \}/g, " ");
+		str = str.replace(/\{_/g, "{");
+		//console.log(str);
 		return str;
 	}
 
