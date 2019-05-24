@@ -20,20 +20,20 @@ if ($detect->isMobile()) {
 <meta name="description" content="Approach Zero: A math-aware search engine. Search millions of math formulas.">
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
-<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=f73a75a" type="text/css"/>
-<link rel="stylesheet" href="search.css?hash=f73a75a" type="text/css"/>
-<link rel="stylesheet" href="qry-box.css?hash=f73a75a" type="text/css"/>
-<link rel="stylesheet" href="font.css?hash=f73a75a" type="text/css"/>
-<link rel="stylesheet" href="quiz.css?hash=f73a75a" type="text/css"/>
+<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=a10b9be" type="text/css"/>
+<link rel="stylesheet" href="search.css?hash=a10b9be" type="text/css"/>
+<link rel="stylesheet" href="qry-box.css?hash=a10b9be" type="text/css"/>
+<link rel="stylesheet" href="font.css?hash=a10b9be" type="text/css"/>
+<link rel="stylesheet" href="quiz.css?hash=a10b9be" type="text/css"/>
 
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?hash=f73a75a"></script>
-<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=f73a75a"></script>
-<script type="text/javascript" src="vendor/vue/vue.min.js?hash=f73a75a"></script>
-<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=f73a75a"></script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?hash=a10b9be"></script>
+<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=a10b9be"></script>
+<script type="text/javascript" src="vendor/vue/vue.min.js?hash=a10b9be"></script>
+<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=a10b9be"></script>
 
 <!-- Math render vendor scripts -->
-<script type="text/javascript" src="vendor/katex/katex.min.js?hash=f73a75a"></script>
-<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=f73a75a" type="text/css"/>
+<script type="text/javascript" src="vendor/katex/katex.min.js?hash=a10b9be"></script>
+<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=a10b9be" type="text/css"/>
 
 <script>
 MathJax = {
@@ -47,14 +47,14 @@ MathJax = {
 </script>
 <script src="https://mathjax.github.io/mj3-demos/mathjax3/tex-chtml.js"></script>
 
-<script type="text/javascript" src="tex-render.js?hash=f73a75a"></script>
-<script type="text/javascript" src="vendor/typed/typed.js?hash=f73a75a"></script>
-<script type="text/javascript" src="search.js?hash=f73a75a"></script>
-<script type="text/javascript" src="quiz-list.js?hash=f73a75a"></script>
-<script type="text/javascript" src="quiz.js?hash=f73a75a"></script>
-<script type="text/javascript" src="pad.js?hash=f73a75a"></script>
-<script type="text/javascript" src="qry-box.js?hash=f73a75a"></script>
-<script type="text/javascript" src="footer.js?hash=f73a75a"></script>
+<script type="text/javascript" src="tex-render.js?hash=a10b9be"></script>
+<script type="text/javascript" src="vendor/typed/typed.js?hash=a10b9be"></script>
+<script type="text/javascript" src="search.js?hash=a10b9be"></script>
+<script type="text/javascript" src="quiz-list.js?hash=a10b9be"></script>
+<script type="text/javascript" src="quiz.js?hash=a10b9be"></script>
+<script type="text/javascript" src="pad.js?hash=a10b9be"></script>
+<script type="text/javascript" src="qry-box.js?hash=a10b9be"></script>
+<script type="text/javascript" src="footer.js?hash=a10b9be"></script>
 <style>
 img.social {
 	height: 16px;
