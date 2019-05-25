@@ -108,7 +108,7 @@ div.stick-bottom {
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
-			<span class="pl_holder">You are editing a <b>math keyword</b> now.
+			<span class="pl_holder"><b>You are editing a math keyword</b>.
 			When you finish, press enter or click <a @click="on_finish_math_edit" href="#">here</a>.</span>
 		</li>
 </template></ul>

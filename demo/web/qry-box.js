@@ -144,11 +144,19 @@ $(document).ready(function() {
 	var render_mq_edit = function () {
 		var ele = document.getElementById("math-input");
 		var mq = MQ.MathField(ele, {
+			supSubsRequireOperand: true, /* avoid _{_a} */
 			handlers: {
 				edit: function() {
 					var arr = query.items;
 					input_box = arr[arr.length - 1];
-					input_box.str = mq.latex();
+					var latex = mq.latex();
+					/* if user finish with a dollar, it is OKay */
+					if (-1 != latex.indexOf("$")) {
+						latex = latex.replace(/\\\$/g, ' ');
+						mq.latex(latex);
+						this.enter();
+					}
+					input_box.str = latex;
 				},
 				enter: function() {
 					if (mq.latex() == '')
