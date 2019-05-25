@@ -82,22 +82,9 @@ $(document).ready(function() {
 		query.raw_str = raw_str_arr.slice(0, -1).join(", ");
 	};
 
-	var correct_math = function (str) {
-		/* help user correct some common mistakes in mathquill */
-		str = str.replace(/_\{ \}/g, " ");
-		str = str.replace(/\^\{ \}/g, " ");
-		str = str.replace(/\{_/g, "{");
-		//console.log(str);
-		return str;
-	}
-
 	/* keyword push/edit */
 	var fix_input = function (type, str, then) {
 		query.items.pop();
-
-		/* simple rules to correct most common bad-math */
-		if (type === "tex")
-			str = correct_math(str);
 
 		query.items.push({
 			"type": type,
@@ -360,10 +347,21 @@ $(document).ready(function() {
 	});
 
 	/* search related */
+	function correct_math(str) {
+		/* simple rules to correct most common bad-math */
+		str = str.replace(/_\{ \}/g, " ");
+		str = str.replace(/\^\{ \}/g, " ");
+		str = str.replace(/\{_/g, "{");
+		//console.log(str);
+		return str;
+	}
+
 	function click_search(page, is_pushState) {
 		query.page = page;
 		arr = query.items;
 		input_box = arr[arr.length - 1];
+
+		qry = correct_math($("#qry").val());
 
 		if (input_box.str != '') {
 			/* push the last query to UI */
@@ -372,7 +370,6 @@ $(document).ready(function() {
 					tex_render_fast("div.qry-div-fix");
 
 					/* perform search */
-					qry = $("#qry").val();
 					srch_qry(qry, page, is_pushState);
 				});
 
@@ -380,13 +377,11 @@ $(document).ready(function() {
 				fix_input("term", input_box.str, function() {
 
 					/* perform search */
-					qry = $("#qry").val();
 					srch_qry(qry, page, is_pushState);
 				});
 			}
 		} else {
 			/* perform search */
-			qry = $("#qry").val();
 			srch_qry(qry, page, is_pushState);
 		}
 
