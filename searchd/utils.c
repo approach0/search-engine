@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 #include "mhook/mhook.h"
 
@@ -495,15 +496,12 @@ json_results_merge(char *gather_buf, int n, int page)
 
 	/* merge hit arrays */
 	do {
-		float max_score = 0.f;
+		float max_score = -FLT_MAX;
 		for (int i = 0; i < n; i++) {
 			float s = hit_array_score(hit_arr[i], cur[i]);
 			if (s > max_score)
 				max_score = s;
 		}
-
-		if (max_score == 0.f)
-			break;
 
 		for (int i = 0; i < n; i++) {
 			JSON_Object *obj;
