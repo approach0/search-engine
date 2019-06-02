@@ -21,3 +21,13 @@ index_mse 0        1 264362
 index_mse 1   264363 528726
 index_mse 2   528727 793088
 index_mse 3   793089 1057449
+
+# monitor the progress
+while true; do
+	clear;
+	for i in 0 1 2 3;
+		do echo "$i: $(tmux capture-pane -pt feeder-$i -E 2)"
+		echo "";
+	done
+	sleep 1;
+done
