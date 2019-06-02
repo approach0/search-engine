@@ -2,7 +2,7 @@
 typedef const char *(*httpd_on_recv_cb)(const char*, void*);
 
 struct uri_handler {
-	const char       uri[1024];
+	char             uri[1024];
 	httpd_on_recv_cb handler;
 };
 

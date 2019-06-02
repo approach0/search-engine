@@ -3,6 +3,7 @@
 #include <evhttp.h>
 #include <signal.h>
 #include <getopt.h>
+#include <string.h>
 
 #include "common/common.h"
 #include "mhook/mhook.h"
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
 	};
 	unsigned int len = sizeof(uri_handlers) / sizeof(struct uri_handler);
 
-	while ((opt = getopt(argc, argv, "ho:p:d:")) != -1) {
+	while ((opt = getopt(argc, argv, "ho:u:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -75,7 +76,8 @@ int main(int argc, char* argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h | "
-			       "-o <output path> (default is ./tmp)"
+			       "-o <output path> (default is ./tmp) |"
+			       "-u <index uri> (default is /index)"
 			       "\n", argv[0]);
 			printf("\n");
 			printf("EXAMPLE:\n");
@@ -84,6 +86,13 @@ int main(int argc, char* argv[])
 
 		case 'o':
 			output_path = strdup(optarg);
+			break;
+
+		case 'u':
+			if (optarg[0] != '/')
+				prerr("Error: URI should start with a slash.\n", 0);
+			else
+				strcpy(uri_handlers[0].uri, optarg);
 			break;
 
 		default:
@@ -112,7 +121,7 @@ int main(int argc, char* argv[])
 
 	on_tex_index_exception = &parser_tex_exception_handler;
 
-	printf("listening at port %u ...\n", port);
+	printf("listening at port %u (URI: %s)...\n", port, uri_handlers[0].uri);
 	httpd_run(port, uri_handlers, len, &lex);
 
 close:
