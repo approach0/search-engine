@@ -46,6 +46,7 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 }
 
 #ifdef INDEXD_PARSER_ERROR_LOG
+const char err_output_file[] = "./indexd-parser-error.tmp";
 static FILE *fh_err_output = NULL;
 #endif
 
@@ -65,7 +66,6 @@ int main(int argc, char* argv[])
 	doc_id_t max_doc_id;
 	text_lexer lex = lex_eng_file;
 	char *output_path = NULL;
-	const char err_output_file[] = "./indexd-parser-error.tmp";
 	unsigned short port = 8934;
 	struct uri_handler uri_handlers[] = {
 		{INDEXD_DEFAULT_URI, httpd_on_recv}
@@ -107,19 +107,19 @@ int main(int argc, char* argv[])
 
 	if (output_path == NULL)
 		output_path = strdup("./tmp");
-	
+
+#ifdef INDEXD_PARSER_ERROR_LOG
+	fh_err_output = fopen(err_output_file, "a");
+	if (fh_err_output == NULL) {
+		goto exit;
+	}
+#endif
+
 	printf("opening output dir: %s\n", output_path);
 	if (indices_open(&indices, output_path, INDICES_OPEN_RW)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto exit;
 	}
-	
-#ifdef INDEXD_PARSER_ERROR_LOG
-	fh_err_output = fopen(err_output_file, "a");
-	if (fh_err_output == NULL) {
-		goto close;
-	}
-#endif
 	
 	max_doc_id = indexer_assign(&indices);
 	printf("previous max docID = %u.\n", max_doc_id);
@@ -130,17 +130,16 @@ int main(int argc, char* argv[])
 	printf("listening at port %u (URI: %s)...\n", port, uri_handlers[0].uri);
 	httpd_run(port, uri_handlers, len, &lex);
 
-close:
 	printf("closing index...\n");
 	indices_close(&indices);
-
-#ifdef INDEXD_PARSER_ERROR_LOG
-	fclose(fh_err_output);
-#endif
 	
 exit:
 	if (output_path)
 		free(output_path);
+
+#ifdef INDEXD_PARSER_ERROR_LOG
+	fclose(fh_err_output);
+#endif
 
 	mhook_print_unfree();
 	return 0;
