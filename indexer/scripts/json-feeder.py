@@ -29,14 +29,15 @@ def get_n_files(corpus):
 	return cnt
 
 # main #
+default_url = 'http://localhost:8934/index'
 parser = argparse.ArgumentParser(description='Approach0 indexd json feeder.')
 parser.add_argument('--begin-from', help='begin from specified count of files.', type=int)
 parser.add_argument('--end-at', help='stop at specified count of files.', type=int)
 parser.add_argument('--corpus-path', help='corpus path. (required)', type=str)
-parser.add_argument('--indexd-url', help='indexd URL.', type=str)
+parser.add_argument('--indexd-url', help='indexd URL. Default: ' + default_url, type=str)
 args = parser.parse_args()
 
-url= args.indexd_url if args.indexd_url else 'http://localhost:8934/index'
+url= args.indexd_url if args.indexd_url else default_url
 corpus = args.corpus_path if args.corpus_path else ''
 endat = args.end_at if args.end_at else -1
 begin = args.begin_from if args.begin_from else 0
