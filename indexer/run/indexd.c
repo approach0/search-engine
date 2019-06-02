@@ -45,12 +45,16 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 	return retjson;
 }
 
+#ifdef INDEXD_PARSER_ERROR_LOG
 static FILE *fh_err_output = NULL;
+#endif
 
 int parser_tex_exception_handler(char *tex, char *msg, uint64_t n_err, uint64_t total)
 {
+#ifdef INDEXD_PARSER_ERROR_LOG
 	fprintf(fh_err_output, "%s \n", tex);
 	fprintf(fh_err_output, "parsing error: %s (%lu/%lu) \n", msg, n_err, total);
+#endif
 	return 0;
 }
 
@@ -76,7 +80,7 @@ int main(int argc, char* argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h | "
-			       "-o <output path> (default is ./tmp) |"
+			       "-o <output path> (default is ./tmp) | "
 			       "-u <index uri> (default is /index)"
 			       "\n", argv[0]);
 			printf("\n");
@@ -110,10 +114,12 @@ int main(int argc, char* argv[])
 		goto exit;
 	}
 	
+#ifdef INDEXD_PARSER_ERROR_LOG
 	fh_err_output = fopen(err_output_file, "a");
 	if (fh_err_output == NULL) {
 		goto close;
 	}
+#endif
 	
 	max_doc_id = indexer_assign(&indices);
 	printf("previous max docID = %u.\n", max_doc_id);
@@ -128,7 +134,9 @@ close:
 	printf("closing index...\n");
 	indices_close(&indices);
 
+#ifdef INDEXD_PARSER_ERROR_LOG
 	fclose(fh_err_output);
+#endif
 	
 exit:
 	if (output_path)
