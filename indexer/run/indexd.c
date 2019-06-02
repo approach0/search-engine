@@ -11,8 +11,6 @@
 #include "config.h"
 #include "index.h"
 
-#define INDEXD_DEFAULT_URI  "/index"
-
 static const char *httpd_on_recv(const char* req, void* arg_)
 {
 	static char retjson[1024];
@@ -66,13 +64,13 @@ int main(int argc, char* argv[])
 	doc_id_t max_doc_id;
 	text_lexer lex = lex_eng_file;
 	char *output_path = NULL;
-	unsigned short port = 8934;
+	unsigned short port = INDEXD_DEFAULT_PORT;
 	struct uri_handler uri_handlers[] = {
 		{INDEXD_DEFAULT_URI, httpd_on_recv}
 	};
 	unsigned int len = sizeof(uri_handlers) / sizeof(struct uri_handler);
 
-	while ((opt = getopt(argc, argv, "ho:u:")) != -1) {
+	while ((opt = getopt(argc, argv, "ho:u:p:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -80,9 +78,10 @@ int main(int argc, char* argv[])
 			printf("\n");
 			printf("USAGE:\n");
 			printf("%s -h | "
-			       "-o <output path> (default is ./tmp) | "
-			       "-u <index uri> (default is /index)"
-			       "\n", argv[0]);
+			       "-o <output> (default: " DEFAULT_INDEXER_OUTPUT_DIR ") | "
+			       "-p <port> (default is %hu) | "
+			       "-u <index uri> (default is " INDEXD_DEFAULT_URI ")"
+			       "\n", argv[0], INDEXD_DEFAULT_PORT);
 			printf("\n");
 			printf("EXAMPLE:\n");
 			printf("%s -o ./some/where\n", argv[0]);
@@ -90,6 +89,10 @@ int main(int argc, char* argv[])
 
 		case 'o':
 			output_path = strdup(optarg);
+			break;
+
+		case 'p':
+			sscanf(optarg, "%hu", &port);
 			break;
 
 		case 'u':
