@@ -123,7 +123,8 @@ def mkdir_p(path):
 
 def save_preview(path, post_txt, url):
 	# put preview into HTML template
-	f = open("template.html", "r")
+	script_dir = os.path.dirname(__file__)
+	f = open(script_dir + "/template.html", "r")
 	fmt_str = f.read()
 	f.close()
 	post_txt = post_txt.replace("\n", "</br>")
@@ -188,7 +189,7 @@ def get_file_path(post_id):
 	directory = './tmp/' + str(post_id % DIVISIONS)
 	return directory + '/' + file_prefix + str(post_id)
 
-def process_post(post_id, post_txt, url):
+def process_post(post_id, post_txt, url, if_save_preview):
 	# decide sub-directory
 	file_path = get_file_path(post_id)
 	try:
@@ -216,7 +217,8 @@ def process_post(post_id, post_txt, url):
 
 	# two files are different, save files
 	save_json(jsonfile, post_txt, url)
-	save_preview(file_path + '.html', post_txt, url)
+	if if_save_preview:
+		save_preview(file_path + '.html', post_txt, url)
 
 def crawl_pages(sortby, start, end, extra_opt):
 	c = get_curl()
@@ -244,12 +246,12 @@ def crawl_pages(sortby, start, end, extra_opt):
 			try:
 				url = root_url + sub_url
 				post_txt = crawl_post_page(sub_url, get_curl())
-				process_post(ID, post_txt, url)
+				process_post(ID, post_txt, url, extra_opt["save-preview"])
 			except (KeyboardInterrupt, SystemExit):
 				print('[abort]')
 				return 'abort'
-			except:
-				print_err("post %s" % url)
+			except Exception as err:
+				print_err("post %s: %s" % (url, err))
 				continue
 
 			# count on success
@@ -273,6 +275,7 @@ def help(arg0):
 	      '[-e | --end-page <page>] ' \
 	      '[--no-overwrite] ' \
 	      '[--patrol] ' \
+	      '[--save-preview] ' \
 	      '[--hook-script <script name>] ' \
 	      '[-p | --post <post id>] ' \
 	      '\n' % (arg0))
@@ -288,6 +291,7 @@ def main(args):
 				'post=',
 				'no-overwrite',
 				'patrol',
+				'save-preview',
 				'hook-script='
 			]
 		)
@@ -298,7 +302,8 @@ def main(args):
 	extra_opt = {
 		"overwrite": True,
 		"hookscript": "",
-		"patrol": False
+		"patrol": False,
+		"save-preview": False
 	}
 	begin_page = 1
 	end_page = -1
@@ -314,12 +319,14 @@ def main(args):
 			sub_url = "/questions/" + arg
 			full_url = root_url + sub_url
 			post_txt = crawl_post_page(sub_url, get_curl())
-			process_post(int(arg), post_txt, full_url)
+			process_post(int(arg), post_txt, full_url, True)
 			exit(0)
 		elif opt in ("--no-overwrite"):
 			extra_opt["overwrite"] = False
 		elif opt in ("--patrol"):
 			extra_opt["patrol"] = True
+		elif opt in ("--save-preview"):
+			extra_opt["save-preview"] = True
 		elif opt in ("--hook-script"):
 			extra_opt["hookscript"] = arg
 		else:
