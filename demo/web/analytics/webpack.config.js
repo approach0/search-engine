@@ -33,7 +33,14 @@ module.exports = {
 						outputPath: 'fonts/'
 					}
 				}]
-			}
+			},
+      {
+        test: /\.(jpe?g|png|gif|svg)$/i,
+				use: [{
+					loader: 'file-loader',
+					options: {}
+				}]
+      }
 		]
 	},
 	resolve: {
