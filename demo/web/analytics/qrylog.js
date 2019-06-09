@@ -1,10 +1,4 @@
 function push_query(db, qry_json) {
-	db.prepare(`CREATE TABLE IF NOT EXISTS
-		query (time TEXT, ip STRING, page INT, id INTEGER PRIMARY KEY)`).run();
-	db.prepare(`CREATE TABLE IF NOT EXISTS
-		keyword (str STRING, type STRING, op STRING, qryID INTEGER,
-		FOREIGN KEY(qryID) REFERENCES query(id))`).run();
-
 	const now = new Date();
 
 	const info = db.prepare(
@@ -87,7 +81,16 @@ function test() {
 	db.close();
 }
 
+function initialize(db) {
+	db.prepare(`CREATE TABLE IF NOT EXISTS
+		query (time TEXT, ip STRING, page INT, id INTEGER PRIMARY KEY)`).run();
+	db.prepare(`CREATE TABLE IF NOT EXISTS
+		keyword (str STRING, type STRING, op STRING, qryID INTEGER,
+		FOREIGN KEY(qryID) REFERENCES query(id))`).run();
+}
+
 module.exports = {
+	initialize,
 	push_query,
 	pull_query_items,
 	pull_query_IPs,

@@ -1,0 +1,8 @@
+{	
+	"page": 1,
+	"ip": "192.168.1.1",
+	"kw": [
+		{"type": "tex", "str": "f(x)"},
+		{"type": "term", "str": "such that"}
+	]
+}
