@@ -46,9 +46,14 @@
     <v-timeline dense clipped v-show="results.length > 0">
       <v-timeline-item class="mb-3" small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
-          <v-flex xs6>{{show_desc(item, i)}}</v-flex>
+          <v-flex xs6>{{show_desc(item)}}</v-flex>
           <v-flex xs6>{{item.location}}</v-flex>
           <v-flex xs12 text-xs-left>{{show_time(item)}}</v-flex>
+          <v-flex xs12>
+            <v-chip v-for="(kw, j) in item.kw" v-bind:key="j">
+              {{kw}}
+            </v-chip>
+          </v-flex>
         </v-layout>
       </v-timeline-item>
     </v-timeline>
@@ -84,6 +89,16 @@ export default {
         type: 'GET',
         success: (data) => {
           vm.results = data['res'];
+          for (var i = 0; i < vm.results.length; i++) {
+            var item = vm.results[i];
+            vm.$set(vm.results[i], 'location',  'Unknown location');
+            ((i) => {
+              this.get_geo_info(item.ip, (info) => {
+                const loc = `${info.city}, ${info.country_name}`;
+                vm.$set(vm.results[i], 'location', loc);
+              })
+            })(i);
+          }
         },
         error: (req, err) => {
           console.log(err);
@@ -102,18 +117,13 @@ export default {
         }
       });
     },
-    show_desc(item, index) {
+    show_desc(item) {
       var vm = this;
-      this.get_geo_info(item.ip, (info) => {
-        const loc = `${info.city}, ${info.country_name}`;
-        vm.$set(vm.results[index], 'location', loc);
-        console.log(vm.results);
-      })
       return `IP: ${item.ip}`
     },
     show_time(item) {
       var m = moment(item.time);
-      const format = m.format('MMMM Do YYYY, h:mm:ss a');
+      const format = m.format('MMMM Do YYYY, H:mm:ss');
       const fromNow = m.fromNow();
       return `${format} (${fromNow})`;
     }
