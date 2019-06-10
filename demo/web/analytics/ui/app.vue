@@ -46,13 +46,13 @@
       <v-timeline-item class="mb-3"
        small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
-          <v-flex xs6><b>{{show_desc(item)}}</b></v-flex>
+          <v-flex xs6><b>IP: {{item.ip}}</b></v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
-          <v-flex xs10 text-xs-left>
+          <v-flex xs12 text-xs-left>
             <span v-if="!showQueries">
-              Query times: {{item.counter}}, most recent:
+              Queries: {{item.counter}}, most recent:
             </span>
-            {{show_time(item, true)}}
+            {{show_time(item.time, true)}}
           </v-flex>
         </v-layout>
         <div v-if="showQueries">
@@ -170,18 +170,14 @@ export default {
         }
       });
     },
-    show_desc(item) {
-      var vm = this;
-      return `IP: ${item.ip}`;
-    },
     show_keyword(kw, type) {
       if (type == 'tex')
         return `$$ ${kw} $$`;
       else
         return `${kw}`;
     },
-    show_time(item, detail) {
-      var m = moment(item.time);
+    show_time(time, detail) {
+      var m = moment(time);
       if (detail) {
         const format = m.format('MMMM Do YYYY, H:mm:ss');
         const fromNow = m.fromNow();
