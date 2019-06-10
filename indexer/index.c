@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "common/common.h"
 #include "parson/parson.h"
 #include "tex-parser/vt100-color.h"
 #include "index.h"
@@ -245,7 +246,7 @@ static bool get_json_val(const char *json, const char *key, char *val)
 static int index_text_field(const char *txt, text_lexer lex)
 {
 	doc_id_t docID;
-	size_t txt_sz = strlen(txt);
+	size_t txt_sz = MIN(MAX_CORPUS_FILE_SZ, strlen(txt));
 	FILE *fh_txt = fmemopen((void *)txt, txt_sz, "r");
 	int ret;
 

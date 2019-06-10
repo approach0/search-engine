@@ -38,7 +38,7 @@ struct snippet_hi {
 };
 
 struct write_snippet_arg {
-	char *wr_cur;
+	char *wr_cur, *origin;
 	const char *open, *close;
 };
 
@@ -60,7 +60,8 @@ void snippet_push_highlight(list* hi_li, char* kw_str,
 
 	h->left_str[0]  = '\0';
 	h->right_str[0] = '\0';
-	strcpy(h->kw_str, kw_str);
+	strncpy(h->kw_str, kw_str, MAX_HIGHLIGHTED_BYTES);
+	h->kw_str[MAX_HIGHLIGHTED_BYTES - 1] = 0;
 
 	LIST_NODE_CONS(h->ln);
 	list_insert_one_at_tail(&h->ln, hi_li, NULL, NULL);
@@ -269,6 +270,17 @@ static LIST_IT_CALLBK(write_snippet)
 	LIST_OBJ(struct snippet_hi, h, ln);
 	P_CAST(arg, struct write_snippet_arg, pa_extra);
 	char *p = arg->wr_cur;
+	const char dotdotdot[] = " ... ";
+
+	/* predict buffer growth */
+	size_t sz = strlen(h->left_str) + strlen(h->right_str)
+		+ strlen(arg->open) + strlen(arg->close)
+		+ strlen(h->kw_str) + strlen(dotdotdot);
+
+	/* safe guard */
+	if ((size_t)(p + sz + 1 - arg->origin) >= MAX_SNIPPET_SZ) {
+		return LIST_RET_BREAK;
+	}
 
 	p += sprintf(p, "%s", h->left_str);
 	p += sprintf(p, "%s", arg->open);
@@ -277,7 +289,7 @@ static LIST_IT_CALLBK(write_snippet)
 	p += sprintf(p, "%s", h->right_str);
 
 	if (!h->joint_right)
-		p += sprintf(p, " ... ");
+		p += sprintf(p, dotdotdot);
 
 	/* update current writing position */
 	arg->wr_cur = p;
@@ -289,7 +301,7 @@ const char
 *snippet_highlighted(list* hi_li, const char *open, const char *close)
 {
 	static char snippet[MAX_SNIPPET_SZ];
-	struct write_snippet_arg arg = {snippet, open, close};
+	struct write_snippet_arg arg = {snippet, snippet, open, close};
 
 	list_foreach(hi_li, &write_snippet, &arg);
 

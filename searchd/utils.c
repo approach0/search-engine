@@ -301,7 +301,7 @@ append_result(struct rank_hit* hit, int cnt, void* arg)
 		printf("<<< %s \n", esc);
 		hit->n_occurs = 1;
 		free(hit->occurs);
-		hit->occurs = malloc(sizeof(position_t));
+		hit->occurs = malloc(sizeof(struct hit_occur) * 1);
 		hit->occurs[0] = 0;
 		hl_list = prepare_snippet(hit, esc, doc_sz);
 		free(esc);
