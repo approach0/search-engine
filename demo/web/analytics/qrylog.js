@@ -19,13 +19,16 @@ function pull_query_items(db, max, date_range) {
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
 	return db.prepare(
-		`SELECT id, time, ip, page, json_group_array(str) as kw
+		`SELECT id, time, ip, page,
+		json_group_array(str) as kw,
+		json_group_array(type) as type
 		FROM query INNER JOIN keyword ON query.id = keyword.qryID
 		WHERE date(time) BETWEEN ? AND ?
 		GROUP BY id ORDER BY id DESC LIMIT ?`)
 		.all(date_begin, date_end, max)
 		.map((q) => {
 			q.kw = JSON.parse(q.kw);
+			q.type = JSON.parse(q.type);
 			return q;
 		}
 	);

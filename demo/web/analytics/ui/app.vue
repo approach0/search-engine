@@ -40,19 +40,19 @@
 </v-container>
 </v-form>
 
-<v-container fill-height>
+<v-container fill-height fluid>
   <v-layout align-center justify-center>
 
     <v-timeline dense clipped v-show="results.length > 0">
       <v-timeline-item class="mb-3" small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
-          <v-flex xs6>{{show_desc(item)}}</v-flex>
-          <v-flex xs6>{{item.location}}</v-flex>
+          <v-flex xs6><b>{{show_desc(item)}}</b></v-flex>
+          <v-flex xs6><b>{{item.location}}</b></v-flex>
           <v-flex xs12 text-xs-left>{{show_time(item)}}</v-flex>
-          <v-flex xs12>
-            <v-chip v-for="(kw, j) in item.kw" v-bind:key="j">
-              {{kw}}
-            </v-chip>
+        </v-layout>
+        <v-layout justify-start wrap>
+          <v-flex v-for="(kw, j) in item.kw" v-bind:key="j">
+            <v-chip> {{show_keyword(kw, item.type[j])}} </v-chip>
           </v-flex>
         </v-layout>
       </v-timeline-item>
@@ -88,17 +88,21 @@ export default {
         url: `http://localhost/stats-api/pull/query-items/${vm.max}`,
         type: 'GET',
         success: (data) => {
+          console.log(data); /* print */
           vm.results = data['res'];
           for (var i = 0; i < vm.results.length; i++) {
             var item = vm.results[i];
             vm.$set(vm.results[i], 'location',  'Unknown location');
             ((i) => {
               this.get_geo_info(item.ip, (info) => {
-                const loc = `${info.city}, ${info.country_name}`;
+                let loc = `${info.city}, ${info.country_name}`;
+                if (info.country_name === undefined)
+                  loc = 'Unknown location';
                 vm.$set(vm.results[i], 'location', loc);
               })
             })(i);
           }
+          setTimeout(function(){ vm.render(); }, 500);
         },
         error: (req, err) => {
           console.log(err);
@@ -121,11 +125,20 @@ export default {
       var vm = this;
       return `IP: ${item.ip}`
     },
+    show_keyword(kw, type) {
+      if (type == 'tex')
+        return `$$ ${kw} $$`
+      else
+        return `${kw}`
+    },
     show_time(item) {
       var m = moment(item.time);
       const format = m.format('MMMM Do YYYY, H:mm:ss');
       const fromNow = m.fromNow();
       return `${format} (${fromNow})`;
+    },
+    render() {
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     }
   },
   data: function () {
