@@ -35,7 +35,7 @@
 </v-container>
 </v-form>
 
-<div class="pa-5">
+<div class="pa-5" v-show="results.length != 0">
   From {{show_time(from, false)}} to {{show_time(to, false)}},
   there are {{n_queries}} queries ({{n_uniq_ip}} unique IPs).
 </div>
@@ -124,7 +124,7 @@ export default {
         type: 'GET',
         success: (data) => {
           const summary = data['res'][0];
-          console.log(summary);
+          //console.log(summary);
           vm.n_uniq_ip = summary['n_uniq_ip'];
           vm.n_queries = summary['n_queries'];
         },
@@ -137,7 +137,7 @@ export default {
         url: '/stats-api/pull/' + api_uri,
         type: 'GET',
         success: (data) => {
-          console.log(data); /* print */
+          // console.log(data); /* print */
           vm.results = data['res'];
           for (var i = 0; i < vm.results.length; i++) {
             var item = vm.results[i];
