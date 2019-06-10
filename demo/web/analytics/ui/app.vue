@@ -35,15 +35,19 @@
 </v-container>
 </v-form>
 
+<div class="pa-5">
+  From {{show_time(from, false)}} to {{show_time(to, false)}},
+  there are {{n_queries}} queries ({{n_uniq_ip}} unique IPs).
+</div>
+
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
-
     <v-timeline dense v-show="results.length > 0">
       <v-timeline-item class="mb-3" small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
           <v-flex xs6><b>{{show_desc(item)}}</b></v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
-          <v-flex xs10 text-xs-left>{{show_time(item)}}</v-flex>
+          <v-flex xs10 text-xs-left>{{show_time(item, true)}}</v-flex>
         </v-layout>
         <v-layout justify-space-between wrap>
           <v-flex xs2 text-xs-right>
@@ -85,10 +89,30 @@ export default {
     this.refresh();
   },
   methods: {
+    api_compose(from, to, max, detail) {
+      if (detail)
+        return `query-items/${max}/${from}.${to}`;
+      else
+        return `query-IPs/${max}/${from}.${to}`;
+    },
     refresh() {
       var vm = this;
       $.ajax({
-        url: `http://localhost/stats-api/pull/query-items/${vm.max}`,
+        url: `/stats-api/pull/query-summary/${vm.from}.${vm.to}/`,
+        type: 'GET',
+        success: (data) => {
+          const summary = data['res'][0];
+          console.log(summary);
+          vm.n_uniq_ip = summary['n_uniq_ip'];
+          vm.n_queries = summary['n_queries'];
+        },
+        error: (req, err) => {
+          console.log(err);
+        }
+      });
+      const api_uri = vm.api_compose(vm.from, vm.to, vm.max, vm.showQueries);
+      $.ajax({
+        url: '/stats-api/pull/' + api_uri,
         type: 'GET',
         success: (data) => {
           console.log(data); /* print */
@@ -134,11 +158,16 @@ export default {
       else
         return `${kw}`;
     },
-    show_time(item) {
+    show_time(item, detail) {
       var m = moment(item.time);
-      const format = m.format('MMMM Do YYYY, H:mm:ss');
-      const fromNow = m.fromNow();
-      return `${format} (${fromNow})`;
+      if (detail) {
+        const format = m.format('MMMM Do YYYY, H:mm:ss');
+        const fromNow = m.fromNow();
+        return `${format} (${fromNow})`;
+      } else {
+        const format = m.format('MMMM Do YYYY');
+        return `${format}`;
+      }
     },
     search(index) {
       var item = this.results[index];
@@ -165,7 +194,9 @@ export default {
       from: '0000-01-01',
       to: new Date().toISOString().substr(0, 10),
       max: 30,
-      showQueries: false,
+      showQueries: true,
+      n_uniq_ip: 0,
+      n_queries: 0,
       timeRules: [
         v => /\d{4}-\d{2}-\d{2}/.test(v) || 'Invalid time format'
       ],
