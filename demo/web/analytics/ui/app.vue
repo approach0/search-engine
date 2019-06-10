@@ -32,23 +32,21 @@
   </v-flex>
 </v-layout>
 
-<v-layout justify-space-around>
-  <v-flex xs12 md3>
-  </v-flex>
-</v-layout>
-
 </v-container>
 </v-form>
 
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
 
-    <v-timeline dense clipped v-show="results.length > 0">
+    <v-timeline dense v-show="results.length > 0">
       <v-timeline-item class="mb-3" small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
           <v-flex xs6><b>{{show_desc(item)}}</b></v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
-          <v-flex xs12 text-xs-left>{{show_time(item)}}</v-flex>
+          <v-flex xs10 text-xs-left>{{show_time(item)}}</v-flex>
+          <v-flex xs2 text-xs-right>
+            <v-btn small @click="search(i)">search again</v-btn>
+          </v-flex>
         </v-layout>
         <v-layout justify-start wrap>
           <v-flex v-for="(kw, j) in item.kw" v-bind:key="j">
@@ -68,7 +66,7 @@
 <v-footer dark height="auto">
   <v-card class="flex" flat tile>
     <v-card-actions class="grey py-3 justify-center">
-      <strong>Approach0 Query log</strong>
+      <strong>Approach0</strong> &nbsp; {{new Date().getFullYear()}}
     </v-card-actions>
   </v-card>
 </v-footer>
@@ -123,19 +121,35 @@ export default {
     },
     show_desc(item) {
       var vm = this;
-      return `IP: ${item.ip}`
+      return `IP: ${item.ip}`;
     },
     show_keyword(kw, type) {
       if (type == 'tex')
-        return `$$ ${kw} $$`
+        return `$$ ${kw} $$`;
       else
-        return `${kw}`
+        return `${kw}`;
     },
     show_time(item) {
       var m = moment(item.time);
       const format = m.format('MMMM Do YYYY, H:mm:ss');
       const fromNow = m.fromNow();
       return `${format} (${fromNow})`;
+    },
+    search(index) {
+      var item = this.results[index];
+      const prefix = 'https://approach0.xyz/search/?q=';
+      var uri = '';
+      for (var i = 0; i < item.kw.length; i++) {
+        const kw   = item.kw[i];
+        const type = item.type[i];
+        if (type == 'tex')
+          uri += `$${kw}$`;
+        else
+          uri += `${kw}`;
+        if (i + 1 < item.kw.length)
+          uri += ', ';
+      }
+      window.open(prefix + encodeURIComponent(uri), '_blank');
     },
     render() {
       MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
