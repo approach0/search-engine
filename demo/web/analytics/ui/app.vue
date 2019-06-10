@@ -28,7 +28,7 @@
   </v-flex>
 
   <v-flex>
-    <v-btn color="primary" @click="show()" block>show</v-btn>
+    <v-btn color="primary" @click="refresh()" block>refresh</v-btn>
   </v-flex>
 </v-layout>
 
@@ -44,6 +44,8 @@
           <v-flex xs6><b>{{show_desc(item)}}</b></v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
           <v-flex xs10 text-xs-left>{{show_time(item)}}</v-flex>
+        </v-layout>
+        <v-layout justify-space-between wrap>
           <v-flex xs2 text-xs-right>
             <v-btn small @click="search(i)">search again</v-btn>
           </v-flex>
@@ -79,8 +81,11 @@ import $ from 'jquery' /* AJAX request lib */
 var moment = require('moment');
 
 export default {
+  mounted: function () {
+    this.refresh();
+  },
   methods: {
-    show() {
+    refresh() {
       var vm = this;
       $.ajax({
         url: `http://localhost/stats-api/pull/query-items/${vm.max}`,
