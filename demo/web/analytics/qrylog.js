@@ -39,7 +39,7 @@ function pull_query_IPs(db, max, date_range) {
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
 	return db.prepare(
-		`SELECT max(time) as most_recent, ip, COUNT(*) as counter
+		`SELECT max(time) as time, ip, COUNT(*) as counter
 		FROM query
 		WHERE date(time) BETWEEN ? AND ?
 		GROUP BY ip ORDER BY counter DESC LIMIT ?`)

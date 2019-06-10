@@ -43,12 +43,19 @@
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
     <v-timeline dense v-show="results.length > 0">
-      <v-timeline-item class="mb-3" small v-for="(item, i) in results" v-bind:key="i">
+      <v-timeline-item class="mb-3"
+       small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
           <v-flex xs6><b>{{show_desc(item)}}</b></v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
-          <v-flex xs10 text-xs-left>{{show_time(item, true)}}</v-flex>
+          <v-flex xs10 text-xs-left>
+            <span v-if="!showQueries">
+              Query times: {{item.counter}}, most recent:
+            </span>
+            {{show_time(item, true)}}
+          </v-flex>
         </v-layout>
+        <div v-if="showQueries">
         <v-layout justify-space-between wrap>
           <v-flex xs2 text-xs-right>
             <v-btn small @click="search(i)">search again</v-btn>
@@ -59,6 +66,7 @@
             <v-chip> {{show_keyword(kw, item.type[j])}} </v-chip>
           </v-flex>
         </v-layout>
+        </div>
       </v-timeline-item>
     </v-timeline>
 
@@ -85,6 +93,20 @@ import $ from 'jquery' /* AJAX request lib */
 var moment = require('moment');
 
 export default {
+  watch: {
+    'from': function (val) {
+      this.refresh();
+    },
+    'to': function (val) {
+      this.refresh();
+    },
+    'max': function (val) {
+      this.refresh();
+    },
+    'showQueries': function (val) {
+      this.refresh();
+    }
+  },
   mounted: function () {
     this.refresh();
   },
