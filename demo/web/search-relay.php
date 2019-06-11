@@ -3,6 +3,9 @@
 $searchd_port = 8921;
 $searchd_url = 'http://localhost:'.$searchd_port.'/search';
 
+$logd_port = 3207;
+$logd_url = 'http://localhost:'.$logd_port.'/push/query';
+
 /*
  * search relay: send query to searchd and return search
  * results.
@@ -91,6 +94,27 @@ function replace_interrogation($str)
 }
 
 /*
+ * Send query log to collector daemon
+ */
+function send_query_log($qry_arr)
+{
+	$qry_json = json_encode($qry_arr);
+	$req_head = array(
+		'Content-Type: application/json',
+		'Content-Length: '.strlen($qry_json)
+	);
+
+	$c = curl_init($GLOBALS['logd_url']);
+	curl_setopt($c, CURLOPT_CUSTOMREQUEST, "POST");
+	curl_setopt($c, CURLOPT_HTTPHEADER, $req_head);
+	curl_setopt($c, CURLOPT_POSTFIELDS, $qry_json);
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+
+	curl_exec($c);
+	curl_close($c);
+}
+
+/*
  * get remote IP
  */
 $remote_ip=$_SERVER['REMOTE_ADDR'];
@@ -152,6 +176,8 @@ foreach ($keywords as $kw) {
  * relay
  */
 # var_dump($qry_arr);
+send_query_log($qry_arr);
+
 try {
 	/* relay query and return searchd response */
 	$searchd_response = search_relay($qry_arr);
