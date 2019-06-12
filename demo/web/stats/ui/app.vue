@@ -272,6 +272,12 @@ img {max-width:100%;}
 
 .limitw {
   max-width: 60vw !important;
-  overflow-x: scroll;
+  overflow-x: auto;
+  height: 100%;
+}
+
+.v-chip__content {
+  height: auto !important;
+  padding: 4px 4px 4px 12px !important;
 }
 </style>
