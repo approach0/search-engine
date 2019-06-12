@@ -166,7 +166,7 @@ export default {
             ((i) => {
               this.get_geo_info(item.ip, (info) => {
                 let loc = `${info.city}, ${info.region}, ${info.country}`;
-                console.log(loc);
+                info.country = info.country || 'Unknown';
                 if (info.country == 'Unknown')
                   loc = 'Unknown location';
                 vm.$set(vm.results[i], 'location', loc);
