@@ -68,16 +68,14 @@
           </v-flex>
         </v-layout>
         <div v-if="showQueries">
-        <v-layout justify-start wrap>
           <v-flex v-for="(kw, j) in item.kw" v-bind:key="j">
-            <v-chip> {{show_keyword(kw, item.type[j])}} </v-chip>
+            <v-chip class="limitw">
+              {{show_keyword(kw, item.type[j])}}
+            </v-chip>
           </v-flex>
-        </v-layout>
-        <v-layout align-start>
           <v-flex md4>
             <v-btn flat round @click="search(i)">search again</v-btn>
           </v-flex>
-        </v-layout>
         </div>
       </v-timeline-item>
     </v-timeline>
@@ -270,5 +268,10 @@ img {max-width:100%;}
 #form {
   box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
   background-color: #e4e4e4;
+}
+
+.limitw {
+  max-width: 60vw !important;
+  overflow-x: scroll;
 }
 </style>
