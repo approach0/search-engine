@@ -46,7 +46,7 @@
       <v-timeline-item class="mb-3"
        small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
-          <v-flex xs6><b>IP: {{item.ip}}</b></v-flex>
+          <v-flex xs6><b>IP: {{mask_ip(item.ip)}}</b></v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
           <v-flex xs12 text-xs-left>
             <span v-if="!showQueries">
@@ -169,6 +169,10 @@ export default {
           console.log(err);
         }
       });
+    },
+    mask_ip(ip) {
+      const masked = ip.split('.').slice(0,2).join('.');
+      return masked + '.*.*';
     },
     show_keyword(kw, type) {
       if (type == 'tex')
