@@ -117,7 +117,47 @@ function test() {
 	db.close();
 }
 
+function get_ip_info(db, ip) {
+	const res = db.prepare(
+		`SELECT city, region, country, ip FROM ip_info WHERE ip = ?`
+	).all(ip);
+	if (res.length < 1) return {};
+	else return res[0];
+}
+
+function map_ip_info(db, ip, callbk) {
+	const info = get_ip_info(db, ip);
+	console.log(info);
+	if (info.ip) {
+		callbk(info);
+	} else {
+		var request = require('request');
+		request.get(`https://ipapi.co/${ip}/json/`,
+		(error, response, body) => {
+			if (error) callbk({
+				'city': 'Unknown',
+				'region': 'Unknown',
+				'country': 'Unknown',
+				'ip': ip
+			});
+			var response = JSON.parse(body);
+			db.prepare(
+				`INSERT INTO ip_info (city, region, country, ip)
+				VALUES (?, ?, ?, ?)`
+			).run(
+				response['city'] || 'Unknown',
+				response['state_prov'] || 'Unknown',
+				response['country_name'] || 'Unknown',
+				response['ip']
+			);
+			callbk(get_ip_info(db, ip));
+		});
+	}
+}
+
 function initialize(db) {
+	db.prepare(`CREATE TABLE IF NOT EXISTS
+		ip_info (city STRING, region STRING, country STRING, ip STRING PRIMARY KEY)`).run();
 	db.prepare(`CREATE TABLE IF NOT EXISTS
 		query (time TEXT, ip STRING, page INT, id INTEGER PRIMARY KEY)`).run();
 	db.prepare(`CREATE TABLE IF NOT EXISTS
@@ -128,6 +168,8 @@ function initialize(db) {
 module.exports = {
 	initialize,
 	push_query,
+	map_ip_info,
+	get_ip_info,
 	pull_query_items,
 	pull_query_items_of,
 	pull_query_IPs,

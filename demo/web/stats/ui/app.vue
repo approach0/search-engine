@@ -55,7 +55,7 @@
         <v-layout justify-space-between wrap>
           <v-flex xs6>
             <b>IP:</b>
-            <v-btn small @click="filter_ip(item.ip)">
+            <v-btn outline small @click="filter_ip(item.ip)">
               {{mask_ip(item.ip)}}
             </v-btn>
           </v-flex>
@@ -68,14 +68,14 @@
           </v-flex>
         </v-layout>
         <div v-if="showQueries">
-        <v-layout justify-space-between wrap>
-          <v-flex xs2 text-xs-right>
-            <v-btn small @click="search(i)">search again</v-btn>
-          </v-flex>
-        </v-layout>
         <v-layout justify-start wrap>
           <v-flex v-for="(kw, j) in item.kw" v-bind:key="j">
             <v-chip> {{show_keyword(kw, item.type[j])}} </v-chip>
+          </v-flex>
+        </v-layout>
+        <v-layout align-start>
+          <v-flex md4>
+            <v-btn flat round @click="search(i)">search again</v-btn>
           </v-flex>
         </v-layout>
         </div>
@@ -163,8 +163,9 @@ export default {
             vm.$set(vm.results[i], 'location',  'Unknown location');
             ((i) => {
               this.get_geo_info(item.ip, (info) => {
-                let loc = `${info.city}, ${info.country_name}`;
-                if (info.country_name === undefined)
+                let loc = `${info.city}, ${info.region}, ${info.country}`;
+                console.log(loc);
+                if (info.country == 'Unknown')
                   loc = 'Unknown location';
                 vm.$set(vm.results[i], 'location', loc);
               })
@@ -179,10 +180,10 @@ export default {
     },
     get_geo_info(ip, callbk) {
       $.ajax({
-        url: `https://ipapi.co/${ip}/json/`,
+        url: '/stats-api/pull/ip-info/' + ip,
         type: 'GET',
         success: (data) => {
-          callbk(data);
+          callbk(data['res']);
         },
         error: (req, err) => {
           console.log(err);

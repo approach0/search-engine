@@ -16,8 +16,21 @@ app.get('/', function (req, res) {
 	res.send('Hello World!');
 
 }).post('/push/query', (req, res) => {
-	qrylog.push_query(db, req.body);
-	res.json({'res': 'succussful'});
+	const ip = req.body.ip || '0.0.0.0';
+	qrylog.map_ip_info(db, ip, (_) => {
+		qrylog.push_query(db, req.body);
+		res.json({'res': 'succussful'});
+	});
+
+}).get('/push/ipinfo/:ip', (req, res) => {
+	const ip = req.params.ip || '0.0.0.0';
+	qrylog.map_ip_info(db, ip, (_) => {
+		res.json({'res': 'succussful'});
+	});
+
+}).get('/pull/ip-info/:ip', (req, res) => {
+	const ip = req.params.ip || '0.0.0.0';
+	res.json({'res': qrylog.get_ip_info(db, ip)});
 
 }).get('/pull/query-items/:max/:from.:to', (req, res) => {
 	const max = Math.min(max_items, req.params.max);
