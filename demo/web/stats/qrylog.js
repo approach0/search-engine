@@ -34,6 +34,27 @@ function pull_query_items(db, max, date_range) {
 	);
 }
 
+function pull_query_items_of(db, ip, max, date_range) {
+	if (date_range === undefined) date_range = {};
+	const date_begin = date_range['begin'] || '0000-01-01';
+	const date_end   = date_range['end']   || '9999-12-31';
+	console.log(ip);
+	return db.prepare(
+		`SELECT id, time, ip, page,
+		json_group_array(str) as kw,
+		json_group_array(type) as type
+		FROM query INNER JOIN keyword ON query.id = keyword.qryID
+		WHERE (date(time) BETWEEN ? AND ? AND ip = ?)
+		GROUP BY id ORDER BY id DESC LIMIT ?`)
+		.all(date_begin, date_end, ip, max)
+		.map((q) => {
+			q.kw = JSON.parse(q.kw);
+			q.type = JSON.parse(q.type);
+			return q;
+		}
+	);
+}
+
 function pull_query_IPs(db, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
@@ -44,6 +65,18 @@ function pull_query_IPs(db, max, date_range) {
 		WHERE date(time) BETWEEN ? AND ?
 		GROUP BY ip ORDER BY counter DESC LIMIT ?`)
 		.all(date_begin, date_end, max);
+}
+
+function pull_query_IPs_of(db, ip, max, date_range) {
+	if (date_range === undefined) date_range = {};
+	const date_begin = date_range['begin'] || '0000-01-01';
+	const date_end   = date_range['end']   || '9999-12-31';
+	return db.prepare(
+		`SELECT max(time) as time, ip, COUNT(*) as counter
+		FROM query
+		WHERE (date(time) BETWEEN ? AND ? AND ip = ?)
+		GROUP BY ip ORDER BY counter DESC LIMIT ?`)
+		.all(date_begin, date_end, ip, max);
 }
 
 function pull_query_summary(db, date_range) {
@@ -96,6 +129,8 @@ module.exports = {
 	initialize,
 	push_query,
 	pull_query_items,
+	pull_query_items_of,
 	pull_query_IPs,
+	pull_query_IPs_of,
 	pull_query_summary
 }

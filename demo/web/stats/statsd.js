@@ -19,11 +19,6 @@ app.get('/', function (req, res) {
 	qrylog.push_query(db, req.body);
 	res.json({'res': 'succussful'});
 
-}).get('/pull/query-items/:max', (req, res) => {
-	const max = Math.min(max_items, req.params.max);
-	const arr = qrylog.pull_query_items(db, max);
-	res.json({'res': arr});
-
 }).get('/pull/query-items/:max/:from.:to', (req, res) => {
 	const max = Math.min(max_items, req.params.max);
 	const arr = qrylog.pull_query_items(db, max, {
@@ -32,9 +27,12 @@ app.get('/', function (req, res) {
 	});
 	res.json({'res': arr});
 
-}).get('/pull/query-IPs/:max', (req, res) => {
+}).get('/pull/query-items/from-:ip/:max/:from.:to', (req, res) => {
 	const max = Math.min(max_items, req.params.max);
-	const arr = qrylog.pull_query_IPs(db, max);
+	const arr = qrylog.pull_query_items_of(db, req.params.ip, max, {
+		begin: req.params.from,
+		end: req.params.to
+	});
 	res.json({'res': arr});
 
 }).get('/pull/query-IPs/:max/:from.:to', (req, res) => {
@@ -45,8 +43,12 @@ app.get('/', function (req, res) {
 	});
 	res.json({'res': arr});
 
-}).get('/pull/query-summary', (req, res) => {
-	const arr = qrylog.pull_query_summary(db);
+}).get('/pull/query-IPs/from-:ip/:max/:from.:to', (req, res) => {
+	const max = Math.min(max_items, req.params.max);
+	const arr = qrylog.pull_query_IPs_of(db, req.params.ip, max, {
+		begin: req.params.from,
+		end: req.params.to
+	});
 	res.json({'res': arr});
 
 }).get('/pull/query-summary/:from.:to', (req, res) => {

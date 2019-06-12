@@ -5,29 +5,36 @@
 <v-container fluid>
 
 <v-layout row wrap justify-space-between>
-  <v-flex>
+  <v-flex xs4 md2>
     <v-text-field v-model="from" prepend-icon="date_range"
       :rules="timeRules" :counter="10" label="From">
     </v-text-field>
   </v-flex>
 
-  <v-flex>
+  <v-flex xs4 md2>
     <v-text-field v-model="to" prepend-icon="date_range"
       :rules="timeRules" :counter="10" label="To">
     </v-text-field>
   </v-flex>
 
-  <v-flex>
+  <v-flex xs4 md2>
+    <v-text-field v-bind:value="mask_ip(ip)" @click:clear="clear_ip_filter()"
+      prepend-icon="filter_list" :counter="15" label="Specified IP"
+      readonly clearable>
+    </v-text-field>
+  </v-flex>
+
+  <v-flex xs4 md2>
     <v-text-field v-model="max" prepend-icon="format_list_numbered"
       :rules="numberRules" :counter="3" label="Maximum items">
     </v-text-field>
   </v-flex>
 
-  <v-flex>
+  <v-flex xs4 md2>
     <v-checkbox v-model="showQueries" label="Show query detail"></v-checkbox>
   </v-flex>
 
-  <v-flex>
+  <v-flex xs4 md2>
     <v-btn color="primary" @click="refresh()" block>refresh</v-btn>
   </v-flex>
 </v-layout>
@@ -43,10 +50,15 @@
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
     <v-timeline dense v-show="results.length > 0">
-      <v-timeline-item class="mb-3"
+      <v-timeline-item class="mb-3" color="grey lighten-1"
        small v-for="(item, i) in results" v-bind:key="i">
         <v-layout justify-space-between wrap>
-          <v-flex xs6><b>IP: {{mask_ip(item.ip)}}</b></v-flex>
+          <v-flex xs6>
+            <b>IP:</b>
+            <v-btn small @click="filter_ip(item.ip)">
+              {{mask_ip(item.ip)}}
+            </v-btn>
+          </v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
           <v-flex xs12 text-xs-left>
             <span v-if="!showQueries">
@@ -103,6 +115,9 @@ export default {
     'max': function (val) {
       this.refresh();
     },
+    'ip': function (val) {
+      this.refresh();
+    },
     'showQueries': function (val) {
       this.refresh();
     }
@@ -111,11 +126,13 @@ export default {
     this.refresh();
   },
   methods: {
-    api_compose(from, to, max, detail) {
+    api_compose(from, to, max, ip, detail) {
+      var from_ip = `from-${ip}/`;
+      if (ip.trim() == '') from_ip = '';
       if (detail)
-        return `query-items/${max}/${from}.${to}`;
+        return `query-items/${from_ip}${max}/${from}.${to}`;
       else
-        return `query-IPs/${max}/${from}.${to}`;
+        return `query-IPs/${from_ip}${max}/${from}.${to}`;
     },
     refresh() {
       var vm = this;
@@ -132,7 +149,9 @@ export default {
           console.log(err);
         }
       });
-      const api_uri = vm.api_compose(vm.from, vm.to, vm.max, vm.showQueries);
+      const api_uri = vm.api_compose(
+        vm.from, vm.to, vm.max, vm.ip, vm.showQueries
+      );
       $.ajax({
         url: '/stats-api/pull/' + api_uri,
         type: 'GET',
@@ -171,8 +190,15 @@ export default {
       });
     },
     mask_ip(ip) {
+      if (ip.trim() == '') return '*';
       const masked = ip.split('.').slice(0,2).join('.');
       return masked + '.*.*';
+    },
+    filter_ip(ip) {
+      this.ip = ip;
+    },
+    clear_ip_filter() {
+      this.ip = '';
     },
     show_keyword(kw, type) {
       if (type == 'tex')
@@ -216,6 +242,7 @@ export default {
       from: '0000-01-01',
       to: new Date().toISOString().substr(0, 10),
       max: 30,
+      ip: '',
       showQueries: true,
       n_uniq_ip: 0,
       n_queries: 0,
@@ -225,6 +252,9 @@ export default {
       numberRules: [
         v => /^\d+$/.test(v) || 'Invalid number'
       ],
+//      ipRules: [
+//        v => /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(v) || 'Invalid IP format'
+//      ],
       results: []
     }
   }
