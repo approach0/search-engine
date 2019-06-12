@@ -7,7 +7,7 @@ var bodyParser = require('body-parser');
 app = express();
 app.use(bodyParser.json());
 
-const max_items = 250;
+const max_items = 120;
 
 var db = new sqlite3('qrylog.sqlite3', {verbose: console.log});
 qrylog.initialize(db);

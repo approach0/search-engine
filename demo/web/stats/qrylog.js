@@ -126,14 +126,25 @@ function get_ip_info(db, ip) {
 }
 
 function map_ip_info(db, ip, callbk) {
+//	db.prepare(
+//		'DELETE FROM ip_info'
+//	).run();
 	const info = get_ip_info(db, ip);
 	console.log(info);
 	if (info.ip) {
 		callbk(info);
 	} else {
 		var request = require('request');
-		request.get(`https://ipapi.co/${ip}/json/`,
+		const url = `http://api.ipstack.com/${ip}?access_key=7cd94fd6ca2622d0bd7d39d03dbf608a`
+		console.log(url);
+		request.get(url,
 		(error, response, body) => {
+			if (error) {
+				console.log(error);
+			} else {
+				/* can be error too here, e.g. rate limit. */
+				console.log(body);
+			}
 			if (error) callbk({
 				'city': 'Unknown',
 				'region': 'Unknown',
@@ -141,12 +152,13 @@ function map_ip_info(db, ip, callbk) {
 				'ip': ip
 			});
 			var response = JSON.parse(body);
+			console.log(response);
 			db.prepare(
 				`INSERT INTO ip_info (city, region, country, ip)
 				VALUES (?, ?, ?, ?)`
 			).run(
 				response['city'] || 'Unknown',
-				response['state_prov'] || 'Unknown',
+				response['region_name'] || 'Unknown',
 				response['country_name'] || 'Unknown',
 				response['ip']
 			);
