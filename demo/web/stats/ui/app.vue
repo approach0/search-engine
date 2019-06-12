@@ -91,6 +91,8 @@
 
 <v-footer dark height="auto">
   <v-card class="flex" flat tile>
+    &nbsp; Last update of index: {{show_time(last_index_update, true)}}.
+    <v-divider></v-divider>
     <v-card-actions class="grey py-3 justify-center">
       <strong>Approach0</strong> &nbsp; {{new Date().getFullYear()}}
     </v-card-actions>
@@ -240,6 +242,7 @@ export default {
   },
   data: function () {
     return {
+      last_index_update: '2019-06-03T19:16:00',
       from: '0000-01-01',
       to: new Date().toISOString().substr(0, 10),
       max: 30,
