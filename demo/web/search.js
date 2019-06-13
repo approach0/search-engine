@@ -42,8 +42,18 @@ function handle_search_res(res, enc_qry, page) {
 		response.next = '';
 
 	setTimeout(function(){
-		tex_render_fast("a.title");
-		tex_render("p.snippet");
+		tex_render("a.title");
+		tex_render("p.snippet", function (a, b) {
+			var percent = Math.ceil((a * 100) / b);
+			if (percent > 90) {
+				percent = 100;
+			}
+			if (percent % 10 == 0) {
+				var percent_str = "" + percent + "%";
+				// console.log(percent_str);
+				$("#progress").css("width", percent_str);
+			}
+		});
 	}, 500);
 
 //	setTimeout(function(){

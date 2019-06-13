@@ -36,14 +36,14 @@ if ($detect->isMobile()) {
 <link rel="stylesheet" href="vendor/katex/katex.min.css?hash=0427e23" type="text/css"/>
 
 <script>
-MathJax = {
-	tex: {
-		inlineMath: [['[imath]','[/imath]']],
-		macros: {
-			qvar: ['{\\color{blue}{#1}}', 1]
-		}
-	}
-};
+// MathJax = {
+// 	tex: {
+// 		inlineMath: [['[imath]','[/imath]']],
+// 		macros: {
+// 			qvar: ['{\\color{blue}{#1}}', 1]
+// 		}
+// 	}
+// };
 </script>
 <script src="https://mathjax.github.io/mj3-demos/mathjax3/tex-chtml.js"></script>
 
@@ -78,15 +78,20 @@ div.stick-bottom {
 </style>
 </head>
 
-<body style="margin: 0; border-top: 2px solid #46ece5;">
+<body style="margin: 0">
+<div id="progress" style=" border-top: 2px solid #46ece5"></div>
 
 <!-- Query Box App -->
-<div id="qry-input-vue-app" style="background: #fbfefe;
+<div id="qry-input-vue-app" style="background: white;
 	padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
-<div class="toleft">
-<div id="qry-input-area" style="width:100%;" v-on:click="area_on_click">
+<div class="toleft" style="display: flex">
+<div style="flex: 0;">
+	<img v-if="!ever_focused && raw_str.trim().length == 0" src="images/logo32.png"/>
+	<img v-else style="margin-top: 0px" src="images/logo64.png"/>
+</div>
+<div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 16px;" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
 			<div class="qry-div-fix">
@@ -117,8 +122,9 @@ div.stick-bottom {
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="padding-top: 18px; padding-bottom: 5px" class="toleft">
-	<button style="float:right; margin-right: 5px;" type="button" id="search_button">Search</button>
+<div style="padding-top: 18px; padding-bottom: 5px;" class="toleft">
+	<div style="display: inline-block; width: 5px;">
+	</div>
 
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
 	<div id="handy-pad">
@@ -172,17 +178,18 @@ div.stick-bottom {
 	</div>
 
 	<a style="text-decoration: none; color: blue; font-size: 14px;"
-	href="/guide" target="_blank"
-	v-on:mouseover="mouse_on_teddy = true" v-on:mouseleave="mouse_on_teddy = false">
+	href="/stats" target="_blank">
+	<img src="images/link.png" style="vertical-align: middle;"/>
+	query logs
+	</a>
+
+	<a style="text-decoration: none; color: blue; font-size: 14px; padding-left: 6px;"
+	href="/guide" target="_blank">
 	<img src="images/link.png" style="vertical-align: middle;"/>
 	user guide
 	</a>
-	<span v-on:mouseover="mouse_on_teddy = true" v-on:mouseleave="mouse_on_teddy = false">
-		<span v-if="mouse_on_teddy" style="font-size: 14px">ヾ(Θ_Θ；)ﾉ
-			When I have a question, user guide is my friend!
-		</span>
-		<span v-else style="font-size: 14px">┌(*Θ_Θ)┐</span>
-	</span>
+
+	<button style="float: right; margin-right: 5px;" type="button" id="search_button">Search</button>
 
 </div>
 <!-- Search button and options END -->
@@ -207,7 +214,7 @@ div.stick-bottom {
 	<!-- Initial Footer -->
 	<div v-show="!hide" id="init-footer"
 	style="font-size: small; margin-top: 40px; width: 100%;
-	bottom: 0px; position: absolute; background: #fbfefe;
+	bottom: 0px; position: absolute; background: #f4f6f8;
 	padding-bottom: 15px; padding-top: 15px;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div class="toleft" style="text-align: center;">
@@ -280,7 +287,7 @@ div.stick-bottom {
 
 <!-- Footer -->
 <div v-show="ret_code == 0"
-	style="padding-top: 15px; background: #fbfefe;
+	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 	<div style="text-align: right;" class="toleft">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"

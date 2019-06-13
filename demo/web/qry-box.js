@@ -3,6 +3,7 @@ $(document).ready(function() {
 
 	var query = {
 		"raw_str": "",
+		"ever_focused": false,
 		"page": 1,
 		"items": [
 			{"type": "term-input", "str": ""}
@@ -215,11 +216,13 @@ $(document).ready(function() {
 			}
 		} else if (ev.which == 32 /* space */) {
 			/* split by this space, assuming it is the last char */
-			if (input_box.str.length > 1) {
+			if (input_box.str.trim().length > 0) {
 				var head_str = input_box.str.slice(0, -1);
 				fix_input("term", head_str, function() {
 					$("#qry-input-box").focus();
 				});
+			} else {
+				input_box.str = input_box.str.trim();
 			}
 
 		} else if (contains(input_box.str, "$")) {
@@ -286,6 +289,7 @@ $(document).ready(function() {
 		methods: {
 			area_on_click: function (ev) {
 				$("#qry-input-box").focus();
+				this.ever_focused = true;
 			},
 			on_input: input_box_on_keyup,
 			on_del: input_box_on_del,
