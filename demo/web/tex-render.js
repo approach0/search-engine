@@ -81,7 +81,7 @@ function mathjax_tex_render(scope_select, progress_callbk) {
 			var tex = vm.text();
 			var ele = vm.get(0);
 			try {
-				const math_ele = MathJax.tex2chtml(tex, {
+				var math_ele = MathJax.tex2chtml(tex, {
 					display: false
 				});
 

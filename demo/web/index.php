@@ -21,19 +21,19 @@ if ($detect->isMobile()) {
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
 
-<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=rrppllaaccee" type="text/css"/>
-<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=rrppllaaccee" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=rrppllaaccee" type="text/css"/>
+<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=6ef63037995da1a0" type="text/css"/>
+<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=6ef63037995da1a0" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=6ef63037995da1a0" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://mathjax.github.io/mj3-demos/mathjax3/tex-chtml.js"></script>
 
-<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=rrppllaaccee"></script>
-<script type="text/javascript" src="vendor/vue/vue.min.js?hash=rrppllaaccee"></script>
-<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=rrppllaaccee"></script>
-<script type="text/javascript" src="vendor/katex/katex.min.js?hash=rrppllaaccee"></script>
-<script type="text/javascript" src="vendor/typed/typed.js?hash=rrppllaaccee"></script>
-<script type="text/javascript" src="bundle.js?hash=rrppllaaccee"></script>
+<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=6ef63037995da1a0"></script>
+<script type="text/javascript" src="vendor/vue/vue.min.js?hash=6ef63037995da1a0"></script>
+<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=6ef63037995da1a0"></script>
+<script type="text/javascript" src="vendor/katex/katex.min.js?hash=6ef63037995da1a0"></script>
+<script type="text/javascript" src="vendor/typed/typed.js?hash=6ef63037995da1a0"></script>
+<script type="text/javascript" src="bundle.min.js?hash=6ef63037995da1a0"></script>
 <style>
 img.social {
 	height: 16px;

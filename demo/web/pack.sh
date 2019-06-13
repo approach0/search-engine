@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# To install uglify-js: 
+# npm install uglify-js -g
+
 cat search.css \
 	qry-box.css \
 	font.css \
@@ -15,5 +19,7 @@ cat tex-render.js \
 	footer.js \
 	> bundle.js
 
+uglifyjs --compress --mangle -o bundle.min.js -- bundle.js
+
 new_hash=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16)
-sed -E "s/hash=([a-z0-9]+)/hash=${new_hash}/" index.php
+sed -i -E "s/hash=([a-z0-9]+)/hash=${new_hash}/" index.php
