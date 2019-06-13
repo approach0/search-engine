@@ -21,18 +21,18 @@ if ($detect->isMobile()) {
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
 
-<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=b61524b90b5db10c" type="text/css"/>
-<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=b61524b90b5db10c" type="text/css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
 <link rel="stylesheet" href="all.css?hash=b61524b90b5db10c" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
-<script src="https://mathjax.github.io/mj3-demos/mathjax3/tex-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
 
-<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=b61524b90b5db10c"></script>
-<script type="text/javascript" src="vendor/vue/vue.min.js?hash=b61524b90b5db10c"></script>
-<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=b61524b90b5db10c"></script>
-<script type="text/javascript" src="vendor/katex/katex.min.js?hash=b61524b90b5db10c"></script>
-<script type="text/javascript" src="vendor/typed/typed.js?hash=b61524b90b5db10c"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue@1.0.26/dist/vue.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
 <script type="text/javascript" src="bundle.min.js?hash=b61524b90b5db10c"></script>
 <style>
 img.social {
