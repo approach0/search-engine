@@ -15,7 +15,8 @@ module.exports = {
 		app: __dirname + '/ui/main.js'
 	},
 	output: { /* required field */
-		filename: 'bundle.js'
+		//filename: 'bundle.js'
+		filename: 'https://cdn.jsdelivr.net/gh/approach0/bundle-stats-page@master/bundle.js'
 	},
 	module: {
 		rules: [
