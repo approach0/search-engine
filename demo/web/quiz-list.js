@@ -5,7 +5,7 @@ var quiz_list = [
 			"Let me think...",
 			"It reminds me when I drop my vanilla cone to the floor last time",
 			"Can I just skip to the next question?",
-			"Or if it is possible to <a href=\"#\">search for the answer</a> on the Internet?"
+			"If it is possible to <a href=\"#\">search for the answer</a> on the Internet?"
 		],
 		"search":  "cone, $z=\\sqrt{x^2+y^2}$, plane, $z=1+y$"
 	}

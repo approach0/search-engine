@@ -15,46 +15,25 @@ if ($detect->isMobile()) {
 ?>
 
 <head>
-<title>Approach0</title>
+<title>Approach0 - Math-aware search engine</title>
 <meta charset="utf-8"/>
 <meta name="description" content="Approach Zero: A math-aware search engine. Search millions of math formulas.">
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
-<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=0427e23" type="text/css"/>
-<link rel="stylesheet" href="search.css?hash=0427e23" type="text/css"/>
-<link rel="stylesheet" href="qry-box.css?hash=0427e23" type="text/css"/>
-<link rel="stylesheet" href="font.css?hash=0427e23" type="text/css"/>
-<link rel="stylesheet" href="quiz.css?hash=0427e23" type="text/css"/>
 
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?hash=0427e23"></script>
-<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=0427e23"></script>
-<script type="text/javascript" src="vendor/vue/vue.min.js?hash=0427e23"></script>
-<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=0427e23"></script>
+<link rel="stylesheet" href="vendor/mathquill/mathquill.css?hash=rrppllaaccee" type="text/css"/>
+<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=rrppllaaccee" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=rrppllaaccee" type="text/css"/>
 
-<!-- Math render vendor scripts -->
-<script type="text/javascript" src="vendor/katex/katex.min.js?hash=0427e23"></script>
-<link rel="stylesheet" href="vendor/katex/katex.min.css?hash=0427e23" type="text/css"/>
-
-<script>
-// MathJax = {
-// 	tex: {
-// 		inlineMath: [['[imath]','[/imath]']],
-// 		macros: {
-// 			qvar: ['{\\color{blue}{#1}}', 1]
-// 		}
-// 	}
-// };
-</script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://mathjax.github.io/mj3-demos/mathjax3/tex-chtml.js"></script>
 
-<script type="text/javascript" src="tex-render.js?hash=0427e23"></script>
-<script type="text/javascript" src="vendor/typed/typed.js?hash=0427e23"></script>
-<script type="text/javascript" src="search.js?hash=0427e23"></script>
-<script type="text/javascript" src="quiz-list.js?hash=0427e23"></script>
-<script type="text/javascript" src="quiz.js?hash=0427e23"></script>
-<script type="text/javascript" src="pad.js?hash=0427e23"></script>
-<script type="text/javascript" src="qry-box.js?hash=0427e23"></script>
-<script type="text/javascript" src="footer.js?hash=0427e23"></script>
+<script type="text/javascript" src="vendor/jquery/jquery-1.12.4.min.js?hash=rrppllaaccee"></script>
+<script type="text/javascript" src="vendor/vue/vue.min.js?hash=rrppllaaccee"></script>
+<script type="text/javascript" src="vendor/mathquill/mathquill.min.js?hash=rrppllaaccee"></script>
+<script type="text/javascript" src="vendor/katex/katex.min.js?hash=rrppllaaccee"></script>
+<script type="text/javascript" src="vendor/typed/typed.js?hash=rrppllaaccee"></script>
+<script type="text/javascript" src="bundle.js?hash=rrppllaaccee"></script>
 <style>
 img.social {
 	height: 16px;
