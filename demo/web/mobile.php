@@ -20,12 +20,9 @@ p {text-align: center;}
 <body>
 <div>
 	<img style="margin: 0 auto; display: block;" src="images/logo64.png"/>
-	<h3>
-		What is Approach0?
-	</h3>
 	<p>
 	Approach0 is a math-aware search engine.
-	It can query keywords in mathematics formulas or equations.
+	It searches on millons of mathematics formulas or equations.
 	</p>
 </div>
 <div style="padding-top: 100px; font-weight: bold">
