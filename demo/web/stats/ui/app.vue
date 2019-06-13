@@ -69,7 +69,7 @@
           </v-flex>
         </v-layout>
         <div v-if="showQueries">
-          <v-flex v-for="(kw, j) in item.kw" v-bind:key="item.ip + item.time + kw + j">
+          <v-flex v-for="(kw, j) in item.kw" v-bind:key="j">
             <v-chip class="limitw">
               {{show_keyword(kw, item.type[j])}}
             </v-chip>
@@ -121,10 +121,20 @@ export default {
     },
     'showQueries': function (val) {
       this.refresh();
-    }
+    },
+    'results': function (val) {
+      var vm = this;
+      vm.$nextTick(function () {
+        vm.render();
+      });
+    },
   },
   mounted: function () {
     this.refresh();
+    var vm = this;
+    vm.$nextTick(function () {
+      vm.render();
+    });
   },
   methods: {
     api_compose(from, to, max, ip, detail) {
@@ -172,7 +182,6 @@ export default {
               })
             })(i);
           }
-          setTimeout(function(){ vm.render(); }, 500);
         },
         error: (req, err) => {
           console.log(err);
@@ -236,7 +245,16 @@ export default {
       window.open(prefix + encodeURIComponent(uri), '_blank');
     },
     render() {
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+      $('.limitw span').each(function() {
+        var ele = $(this).get(0);
+        var prefix = $(this).html().trim().slice(0, 1);
+        if (prefix == '$') {
+          console.log($(this).html());
+          MathJax.Hub.Queue(
+            ["Typeset", MathJax.Hub, ele]
+          );
+        }
+      });
     }
   },
   data: function () {
