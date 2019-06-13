@@ -9,17 +9,16 @@ cat search.css \
 	quiz.css \
 	> all.css
 
-cat tex-render.js \
+
+uglifyjs --compress --mangle -o bundle.min.js -- \
+	tex-render.js \
 	vendor/typed/typed.js \
 	search.js \
 	quiz-list.js \
 	quiz.js \
 	pad.js \
 	qry-box.js \
-	footer.js \
-	> bundle.js
-
-uglifyjs --compress --mangle -o bundle.min.js -- bundle.js
+	footer.js
 
 new_hash=$(tr -dc 'a-f0-9' < /dev/urandom | head -c16)
 sed -i -E "s/hash=([a-z0-9]+)/hash=${new_hash}/" index.php
