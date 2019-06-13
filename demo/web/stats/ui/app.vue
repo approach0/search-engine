@@ -36,6 +36,7 @@
 
   <v-flex xs4 md2>
     <v-btn color="primary" @click="refresh()" block>refresh</v-btn>
+    <!-- <v-btn color="primary" @click="render()" block>render</v-btn> -->
   </v-flex>
 </v-layout>
 
@@ -51,7 +52,7 @@
   <v-layout align-center justify-center>
     <v-timeline dense v-show="results.length > 0">
       <v-timeline-item class="mb-3" color="grey lighten-1"
-       small v-for="(item, i) in results" v-bind:key="i">
+       small v-for="(item, i) in results" v-bind:key="item.ip + item.time">
         <v-layout justify-space-between wrap>
           <v-flex xs6>
             <b>IP:</b>
@@ -68,7 +69,7 @@
           </v-flex>
         </v-layout>
         <div v-if="showQueries">
-          <v-flex v-for="(kw, j) in item.kw" v-bind:key="j">
+          <v-flex v-for="(kw, j) in item.kw" v-bind:key="item.ip + item.time + kw + j">
             <v-chip class="limitw">
               {{show_keyword(kw, item.type[j])}}
             </v-chip>

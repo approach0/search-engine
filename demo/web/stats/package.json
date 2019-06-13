@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dev": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline",
-    "watch": "./node_modules/webpack-cli/bin/cli.js -w",
+    "watch": "webpack --mode development -w",
     "build": "webpack --mode production --module-bind js=babel-loader --display-error-details"
   },
   "devDependencies": {
