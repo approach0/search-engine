@@ -1,7 +1,7 @@
 <template>
 <v-app light>
 
-<v-form id="form">
+<v-form id="form" v-model="form_valid">
 <v-container fluid>
 
 <v-layout row wrap justify-space-between>
@@ -43,7 +43,7 @@
 </v-container>
 </v-form>
 
-<div class="pa-5" v-show="results.length != 0">
+<div class="pa-5" v-if="results.length != 0">
   From {{show_time(from, false)}} to {{show_time(to, false)}},
   there are {{n_queries}} queries ({{n_uniq_ip}} unique IPs).
 </div>
@@ -107,20 +107,8 @@ var moment = require('moment');
 
 export default {
   watch: {
-    'from': function (val) {
-      this.refresh();
-    },
-    'to': function (val) {
-      this.refresh();
-    },
-    'max': function (val) {
-      this.refresh();
-    },
-    'ip': function (val) {
-      this.refresh();
-    },
-    'showQueries': function (val) {
-      this.refresh();
+    'form_valid': function (val) {
+      if (val) this.refresh();
     },
     'results': function (val) {
       var vm = this;
@@ -218,6 +206,8 @@ export default {
         return `${kw}`;
     },
     show_time(time, detail) {
+      if (true != this.timeRules[0](time))
+        return '?';
       var m = moment(time);
       if (detail) {
         const format = m.format('MMMM Do YYYY, H:mm:ss');
@@ -259,8 +249,9 @@ export default {
   },
   data: function () {
     return {
+      form_valid: false,
       last_index_update: '2019-06-03T19:16:00',
-      from: '0000-01-01',
+      from: new Date().toISOString().substr(0, 10),
       to: new Date().toISOString().substr(0, 10),
       max: 30,
       ip: '',
