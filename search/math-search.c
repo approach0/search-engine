@@ -507,17 +507,35 @@ vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 	uint64_t candidate = po->candidate;
 	int upbound, leftover = q_node->width;
 
+	/* early pruning using query-space upperbound */
+	int early_upbound = 0;
+	for (int i = 0; i < q_node->n; i++) {
+		int pid = q_node->postlist_id[i];
+		uint64_t cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
+
+		/* advance posting lists in skip set */
+		if (cur < candidate) {
+			POSTMERGER_POSTLIST_CALL(po->iter, jump, pid, candidate);
+			cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
+		}
+
+		if (cur == candidate) {
+			int qsw = q_node->secttr[i].width;
+			early_upbound += qsw;
+		}
+	}
+
+	if (early_upbound <= MAX_LEAVES &&
+	    pruner->upp[early_upbound] <= threshold)
+		return ret; /* {0} */
+
+	/* structure pruning by width calculation */
 	u16_ht_reset(&pruner->accu_ht, 0);
 
 	for (int i = 0; i < q_node->n; i++) {
 		int pid = q_node->postlist_id[i];
 		uint64_t cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
 		int qsw = q_node->secttr[i].width;
-
-		if (cur < candidate) {
-			POSTMERGER_POSTLIST_CALL(po->iter, jump, pid, candidate);
-			cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
-		}
 
 		leftover -= qsw; /* must precede `continue' */
 
