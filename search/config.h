@@ -105,4 +105,4 @@
 // #define SKIP_SEARCH /* for debug */
 // #define PRINT_RECUR_MERGING_ITEMS /* for debug */
 
-#define MERGE_TIME_LOG "merge-time.log" /* log merge stage time cost */
+// #define MERGE_TIME_LOG "merge-time.log" /* log merge stage time cost */
