@@ -3,7 +3,8 @@ import os
 import time
 import sys
 
-fname = "/home/tk/Desktop/ntcir-12/topics.txt"
+#fname = "/home/tk/Desktop/ntcir-12/topics.txt"
+fname = "/home/tk/Desktop/ntcir-12/topics-concrete.txt"
 output = 'searchd/trec-format-results.tmp'
 
 only_qry_id = None
