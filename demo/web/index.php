@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=b61524b90b5db10c" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=eff116fa95a52e10" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -33,7 +33,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=b61524b90b5db10c"></script>
+<script type="text/javascript" src="bundle.min.js?hash=eff116fa95a52e10"></script>
 <style>
 img.social {
 	height: 16px;
@@ -262,6 +262,7 @@ div.stick-bottom {
 		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
 		<b style="font-size:1.5em">→</b>
 	</span>
+	<p>This project has taken years to develop, as a side project, it now needs your <a target="_blank" href="https://opencollective.com/approach0">donation</a> to cover its online hosting cost.</p>
 </div>
 
 <!-- Footer -->
