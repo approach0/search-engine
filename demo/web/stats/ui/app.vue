@@ -44,6 +44,19 @@
 </v-form>
 
 <div class="pa-5" v-if="results.length != 0">
+  Unique IPs of past {{trend_days}} days (back from {{show_time(to, false)}}):
+</div>
+<v-layout align-center justify-center>
+  <!-- <div v-for="(e, i) in trend"> {{e}} </div> -->
+  <svg class="chart" width="500">
+    <rect width="19" v-bind:x="i * 20" v-for="(val, i) in trend"
+      v-bind:height="trend_h(val, trend, 100)"
+      v-bind:y="100 - trend_h(val, trend, 100)">
+    </rect>
+  </svg>
+</v-layout>
+
+<div class="pa-5" v-if="results.length != 0">
   From {{show_time(from, false)}} to {{show_time(to, false)}},
   there are {{n_queries}} queries ({{n_uniq_ip}} unique IPs).
 </div>
@@ -193,6 +206,7 @@ export default {
           console.log(err);
         }
       });
+      this.get_trend();
     },
     mask_ip(ip) {
       if (ip.trim() == '') return '*';
@@ -246,12 +260,44 @@ export default {
         var ele = $(this).get(0);
         var prefix = $(this).html().trim().slice(0, 1);
         if (prefix == '$') {
-          console.log($(this).html());
+          // console.log($(this).html());
           MathJax.Hub.Queue(
             ["Typeset", MathJax.Hub, ele]
           );
         }
       });
+    },
+    get_trend() {
+      this.trend = [];
+      const now = this.to;
+      const tot = this.trend_days;
+      var vm = this;
+      for (var i = 0; i < tot; i ++) {
+        this.trend.push(0);
+        ((i) => {
+          const m = moment(now).subtract(tot - i - 1, 'days');
+          const day = m.format("YYYY-MM-DD");
+          // console.log(tot - i - 1, day);
+          $.ajax({
+            url: `/stats-api/pull/query-summary/${day}.${day}/`,
+            type: 'GET',
+            success: (data) => {
+              const summary = data['res'][0];
+              vm.$set(vm.trend, i, summary['n_uniq_ip']);
+              // vm.$set(vm.trend, i, Math.floor(Math.random() * 10));
+              // vm.$set(vm.trend, i, i);
+            },
+            error: (req, err) => {
+              console.log(err);
+            }
+          });
+        })(i);
+      }
+    },
+    trend_h(val, trend, height) {
+      const max = Math.max(1, ...trend);
+      const h = Math.ceil(height * (val / max));
+      return h + 1;
     },
     uri_IP() {
       const uri_params = urlpar.parse(window.location.href, true)['query'];
@@ -279,6 +325,8 @@ export default {
 //      ipRules: [
 //        v => /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(v) || 'Invalid IP format'
 //      ],
+      trend_days: 16,
+      trend: [],
       results: []
     }
   }
@@ -301,5 +349,9 @@ img {max-width:100%;}
 .v-chip__content {
   height: auto !important;
   padding: 4px 4px 4px 12px !important;
+}
+
+.chart rect {
+  fill: blue
 }
 </style>
