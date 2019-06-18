@@ -166,12 +166,12 @@ export default {
       else
         return `query-IPs/${from_ip}${max}/${from}.${to}`;
     },
-    subname(str) {
+    subname(str, sep) {
       str = str || '';
       if (str == 'Unknown')
         str = '';
       if (str != '')
-        str = str + ', ';
+        str = str + sep;
       return str;
     },
     refresh() {
@@ -200,8 +200,8 @@ export default {
           vm.results = data['res'];
           for (var i = 0; i < vm.results.length; i++) {
             var item = vm.results[i];
-            const loc = this.subname(item.city) +
-            this.subname(item.region) + this.subname(item.country);
+            const loc = this.subname(item.city, ', ') +
+            this.subname(item.region, ', ') + this.subname(item.country, '.');
             vm.$set(vm.results[i], 'location',  (loc == '') ? 'Unknown' : loc);
           }
         },
