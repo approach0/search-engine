@@ -51,7 +51,7 @@
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
     <v-timeline dense v-show="results.length > 0">
-      <v-timeline-item class="mb-3" color="grey lighten-1"
+      <v-timeline-item class="mb-3"
        small v-for="(item, i) in results" v-bind:key="item.ip + item.time">
         <v-layout justify-space-between wrap>
           <v-flex xs6>
@@ -103,11 +103,27 @@
 
 <script>
 import $ from 'jquery' /* AJAX request lib */
+var urlpar = require('url');
 var moment = require('moment');
 
 export default {
   watch: {
-    'form_valid': function (val) {
+    'from': function () {
+      if (this.form_valid) this.refresh();
+    },
+    'to': function () {
+      if (this.form_valid) this.refresh();
+    },
+    'ip': function () {
+      if (this.form_valid) this.refresh();
+    },
+    'max': function () {
+      if (this.form_valid) this.refresh();
+    },
+    'showQueries': function () {
+      if (this.form_valid) this.refresh();
+    },
+    'form_valid': function(val) {
       if (val) this.refresh();
     },
     'results': function (val) {
@@ -132,6 +148,14 @@ export default {
         return `query-items/${from_ip}${max}/${from}.${to}`;
       else
         return `query-IPs/${from_ip}${max}/${from}.${to}`;
+    },
+    subname(str) {
+      str = str || '';
+      if (str == 'Unknown')
+        str = '';
+      if (str != '')
+        str = str + ', ';
+      return str;
     },
     refresh() {
       var vm = this;
@@ -159,29 +183,10 @@ export default {
           vm.results = data['res'];
           for (var i = 0; i < vm.results.length; i++) {
             var item = vm.results[i];
-            vm.$set(vm.results[i], 'location',  'Unknown location');
-            ((i) => {
-              this.get_geo_info(item.ip, (info) => {
-                let loc = `${info.city}, ${info.region}, ${info.country}`;
-                info.country = info.country || 'Unknown';
-                if (info.country == 'Unknown')
-                  loc = 'Unknown location';
-                vm.$set(vm.results[i], 'location', loc);
-              })
-            })(i);
+            const loc = this.subname(item.city) +
+            this.subname(item.region) + this.subname(item.country);
+            vm.$set(vm.results[i], 'location',  (loc == '') ? 'Unknown' : loc);
           }
-        },
-        error: (req, err) => {
-          console.log(err);
-        }
-      });
-    },
-    get_geo_info(ip, callbk) {
-      $.ajax({
-        url: '/stats-api/pull/ip-info/' + ip,
-        type: 'GET',
-        success: (data) => {
-          callbk(data['res']);
         },
         error: (req, err) => {
           console.log(err);
@@ -194,7 +199,8 @@ export default {
       return masked + '.*.*';
     },
     filter_ip(ip) {
-      this.ip = ip;
+      const url = urlpar.parse(window.location.href);
+      window.open(url['pathname'] + '?ip=' + ip, '_blank');
     },
     clear_ip_filter() {
       this.ip = '';
@@ -245,6 +251,10 @@ export default {
           );
         }
       });
+    },
+    uri_IP() {
+      const uri_params = urlpar.parse(window.location.href, true)['query'];
+      return uri_params['ip'] || '';
     }
   },
   data: function () {
@@ -254,7 +264,7 @@ export default {
       from: new Date().toISOString().substr(0, 10),
       to: new Date().toISOString().substr(0, 10),
       max: 30,
-      ip: '',
+      ip: this.uri_IP(),
       showQueries: true,
       n_uniq_ip: 0,
       n_queries: 0,

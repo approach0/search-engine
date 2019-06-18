@@ -24,13 +24,12 @@ app.get('/', function (req, res) {
 
 }).get('/push/ipinfo/:ip', (req, res) => {
 	const ip = req.params.ip || '0.0.0.0';
-	qrylog.map_ip_info(db, ip, (_) => {
-		res.json({'res': 'succussful'});
+	qrylog.map_ip_info(db, ip, (ipinfo) => {
+		res.json({
+			'res': 'succussful',
+			'ipinfo': ipinfo
+		});
 	});
-
-}).get('/pull/ip-info/:ip', (req, res) => {
-	const ip = req.params.ip || '0.0.0.0';
-	res.json({'res': qrylog.get_ip_info(db, ip)});
 
 }).get('/pull/query-items/:max/:from.:to', (req, res) => {
 	const max = Math.min(max_items, req.params.max);

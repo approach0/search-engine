@@ -18,11 +18,13 @@ function pull_query_items(db, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
-	return db.prepare(
-		`SELECT id, time, ip, page,
+	return db.prepare(`SELECT id,
+		time, query.ip, page, city, region, country,
 		json_group_array(str) as kw,
 		json_group_array(type) as type
-		FROM query INNER JOIN keyword ON query.id = keyword.qryID
+		FROM query
+		JOIN keyword ON query.id = keyword.qryID
+		JOIN ip_info ON query.ip = ip_info.ip
 		WHERE date(time) BETWEEN ? AND ?
 		GROUP BY id ORDER BY id DESC LIMIT ?`)
 		.all(date_begin, date_end, max)
@@ -39,12 +41,14 @@ function pull_query_items_of(db, ip, max, date_range) {
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
 	console.log(ip);
-	return db.prepare(
-		`SELECT id, time, ip, page,
+	return db.prepare(`SELECT id,
+		time, query.ip, page, city, region, country,
 		json_group_array(str) as kw,
 		json_group_array(type) as type
-		FROM query INNER JOIN keyword ON query.id = keyword.qryID
-		WHERE (date(time) BETWEEN ? AND ? AND ip = ?)
+		FROM query
+		JOIN keyword ON query.id = keyword.qryID
+		JOIN ip_info ON query.ip = ip_info.ip
+		WHERE (date(time) BETWEEN ? AND ? AND query.ip = ?)
 		GROUP BY id ORDER BY id DESC LIMIT ?`)
 		.all(date_begin, date_end, ip, max)
 		.map((q) => {
@@ -59,11 +63,12 @@ function pull_query_IPs(db, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
-	return db.prepare(
-		`SELECT max(time) as time, ip, COUNT(*) as counter
+	return db.prepare(`SELECT max(time) as time, query.ip as ip,
+		city, region, country, COUNT(*) as counter
 		FROM query
+		JOIN ip_info ON query.ip = ip_info.ip
 		WHERE date(time) BETWEEN ? AND ?
-		GROUP BY ip ORDER BY counter DESC LIMIT ?`)
+		GROUP BY query.ip ORDER BY counter DESC LIMIT ?`)
 		.all(date_begin, date_end, max);
 }
 
@@ -71,11 +76,12 @@ function pull_query_IPs_of(db, ip, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
-	return db.prepare(
-		`SELECT max(time) as time, ip, COUNT(*) as counter
+	return db.prepare(`SELECT max(time) as time, query.ip as ip,
+		city, region, country, COUNT(*) as counter
 		FROM query
-		WHERE (date(time) BETWEEN ? AND ? AND ip = ?)
-		GROUP BY ip ORDER BY counter DESC LIMIT ?`)
+		JOIN ip_info ON query.ip = ip_info.ip
+		WHERE (date(time) BETWEEN ? AND ? AND query.ip = ?)
+		GROUP BY query.ip ORDER BY counter DESC LIMIT ?`)
 		.all(date_begin, date_end, ip, max);
 }
 
