@@ -49,10 +49,13 @@
 <v-layout align-center justify-center>
   <!-- <div v-for="(e, i) in trend"> {{e}} </div> -->
   <svg class="chart" width="500">
-    <rect width="19" v-bind:x="i * 20" v-for="(val, i) in trend"
-      v-bind:height="trend_h(val, trend, 100)"
-      v-bind:y="100 - trend_h(val, trend, 100)">
-    </rect>
+    <g v-for="(val, i) in trend">
+      <title>{{trend_label[i] + ': val=' + val}}</title>
+      <rect width="19" v-bind:x="i * 20"
+        v-bind:height="trend_h(val, trend, 100)"
+        v-bind:y="100 - trend_h(val, trend, 100)">
+      </rect>
+    </g>
   </svg>
 </v-layout>
 
@@ -283,7 +286,9 @@ export default {
             type: 'GET',
             success: (data) => {
               const summary = data['res'][0];
+              vm.$set(vm.trend_label, i, day);
               vm.$set(vm.trend, i, summary['n_uniq_ip']);
+              /* below is for test purpose */
               // vm.$set(vm.trend, i, Math.floor(Math.random() * 10));
               // vm.$set(vm.trend, i, i);
             },
@@ -327,6 +332,7 @@ export default {
 //      ],
       trend_days: 16,
       trend: [],
+      trend_label: [],
       results: []
     }
   }
@@ -352,6 +358,10 @@ img {max-width:100%;}
 }
 
 .chart rect {
-  fill: blue
+  fill: grey;
+}
+
+.chart rect:hover {
+  fill: #1976d2;
 }
 </style>
