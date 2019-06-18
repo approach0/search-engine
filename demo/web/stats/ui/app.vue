@@ -45,19 +45,19 @@
 
 <div class="pa-5" v-if="results.length != 0">
   Unique IPs of past {{trend_days}} days (back from {{show_time(to, false)}}):
+  <v-layout align-center justify-center>
+    <!-- <div v-for="(e, i) in trend"> {{e}} </div> -->
+    <svg class="chart" width="500">
+      <g v-for="(val, i) in trend">
+        <title>{{trend_label[i] + ': val=' + val}}</title>
+        <rect width="19" v-bind:x="i * 20"
+          v-bind:height="trend_h(val, trend, 100)"
+          v-bind:y="100 - trend_h(val, trend, 100)">
+        </rect>
+      </g>
+    </svg>
+  </v-layout>
 </div>
-<v-layout align-center justify-center>
-  <!-- <div v-for="(e, i) in trend"> {{e}} </div> -->
-  <svg class="chart" width="500">
-    <g v-for="(val, i) in trend">
-      <title>{{trend_label[i] + ': val=' + val}}</title>
-      <rect width="19" v-bind:x="i * 20"
-        v-bind:height="trend_h(val, trend, 100)"
-        v-bind:y="100 - trend_h(val, trend, 100)">
-      </rect>
-    </g>
-  </svg>
-</v-layout>
 
 <div class="pa-5" v-if="results.length != 0">
   From {{show_time(from, false)}} to {{show_time(to, false)}},
