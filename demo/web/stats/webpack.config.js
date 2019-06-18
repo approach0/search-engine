@@ -13,7 +13,7 @@ module.exports = (env, options) => {
 	console.log(`[ this is ${mode} mode ]`);
 	return {
 		/* default is development mode, run 'yarn run build' for production. */
-		mode: 'development',
+		mode: mode,
 		entry: { /* required field */
 			app: __dirname + '/ui/main.js'
 		},
@@ -53,9 +53,7 @@ module.exports = (env, options) => {
 		},
 		plugins: [
 			new HtmlWebpackPlugin({
-				inject: (mode == 'development') ? true : false,
-				CDN: (mode == 'development') ?  '':
-					'https://cdn.jsdelivr.net/gh/approach0/bundle-stats-page@master/bundle.js',
+				inject: true,
 				favicon: 'assets/favicon.ico',
 				hash: true, /* cache busting */
 				template: __dirname + '/ui/index-template.html',
