@@ -104,6 +104,7 @@
 <script>
 import $ from 'jquery' /* AJAX request lib */
 var urlpar = require('url');
+var Base64 = require('Base64');
 var moment = require('moment');
 
 export default {
@@ -200,7 +201,7 @@ export default {
     },
     filter_ip(ip) {
       const url = urlpar.parse(window.location.href);
-      window.open(url['pathname'] + '?ip=' + ip, '_blank');
+      window.open(url['pathname'] + '?loc=' + Base64.btoa(ip), '_blank');
     },
     clear_ip_filter() {
       this.ip = '';
@@ -254,7 +255,8 @@ export default {
     },
     uri_IP() {
       const uri_params = urlpar.parse(window.location.href, true)['query'];
-      return uri_params['ip'] || '';
+      const ip_base64 = uri_params['loc'] || '';
+      return Base64.atob(ip_base64);
     }
   },
   data: function () {
