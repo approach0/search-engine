@@ -54,6 +54,11 @@ div.stick-bottom {
 	bottom: 0;
 	width: 100%;
 }
+button.sponsor {
+	text-align: left;
+	font-size: 0.8em;
+	min-width: 200px;
+}
 </style>
 </head>
 
@@ -103,6 +108,117 @@ div.stick-bottom {
 <!-- Search button and options -->
 <div style="padding-top: 18px; padding-bottom: 5px;" class="toleft">
 	<div style="display: inline-block; width: 5px;">
+	</div>
+
+	<span class="collapse" title="Donate" id="donate-expander">(+) donate</span>
+	<div id="donation">
+		<h3>Please consider to donate to this project</h3>
+		<p>This site are operating on an estimated annual cost of $690, which is necessary for website hosting and domain name cost.<br/>
+		As a side project, if it has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward. </p><p>Here are some donation options:</p>
+
+		<button class="sponsor pad" stripeid="plan_FHtUQUawetBrC8">
+		<b><span style="color: red;">♡ </span> Fibonacci Sponsor</b>
+		<p>(3.36 $ / month)</p>
+		<p>
+			Subscription support at around Reciprocal Fibonacci constant cost per month.
+		</p>
+		</button>
+
+		<button class="sponsor pad">
+		<b><span style="color: red;">♡ </span> Feigenbaum Sponsor</b>
+		<p>(4.67 $ / month)</p>
+		<p>
+			Subscription support at around Feigenbaum constant cost per month.
+		</p>
+		</button>
+
+		<button class="sponsor pad" stripeid="sku_FHszC4bhsTUNQb">
+		<b><span style="color: red;">♡ </span> Epsilon Backer</b>
+		<p>(10 $ one time)</p>
+		<p>
+			Single-time donation to encourage Approach0 to stay on non-imaginary axis.
+		</p>
+		</button>
+
+		<button class="sponsor pad">
+		<b><span style="color: red;">♡ </span> Euler Infinity Sponsor</b>
+		<p>(50 $ / month)</p>
+		<p>
+			Cover the hosting cost of this site regularly to help Approach0 exist online for arbitrary large number of sponsored time.
+		</p>
+		</button>
+
+		<button class="sponsor pad">
+		<b><span style="color: red;">♡ </span> Unity Backer</b>
+		<p>(50 $ one time)</p>
+		<p>
+			Cover the hosting cost of this site for another one month (one time donation).
+		</p>
+		</button>
+
+		<button class="sponsor pad">
+		<b><span style="color: red;">♡ </span>Ludwig Schläfli Backer</b>
+		<p>(80 $ one time)</p>
+		<p>
+			Cover the domain name cost of approach0.xyz for another year (one time donation).
+		</p>
+		</button>
+
+		<button class="sponsor pad">
+		<b><span style="color: red;">♡ </span> First-prime Backer</b>
+		<p>(100 $ one time)</p>
+		<p>
+			Cover the hosting cost of this site for another two months (one time donation).
+		</p>
+		</button>
+
+		<p>A subscribed sponsor will be billed at the beginning of each month, until <a href="https://github.com/approach0/search-engine/issues">stop request</a> or when this site no longer operates.</p>
+
+		<h3>In return ...</h3>
+		<p>Within the budget limit, this site will try to index more data sources upon <a href="https://github.com/approach0/search-engine/issues">the request</a> of any sponsor or backer.</p>
+		<p>Here are a <a href=""https://github.com/approach0/search-engine/blob/master/BACKERS.md>list of sponsors or backers</a> of this project. Thank for your donations, for letting this site stay on real axis.</p>
+
+		<script src="https://js.stripe.com/v3"></script>
+		<div id="stripe-error-message" style="color: red"></div>
+<script>
+var stripe = Stripe('pk_test_2TIdFYWCiMtR1Dt8Qg7pGczn00YUkb2ROx');
+$('#donation button').each(function() {
+	var stripe_id = $(this).attr('stripeid') || 'none_empty';
+	var type = stripe_id.split('_')[0];
+	var order = {quantity: 1};
+	order[type] = stripe_id;
+	$(this)[0].addEventListener('click', function () {
+		stripe.redirectToCheckout({
+			items: [order],
+			successUrl: 'https://approach0.xyz/search/donation_success.php',
+			cancelUrl: 'https://approach0.xyz/search/donation_canceled.php',
+		})
+		.then(function (result) {
+			if (result.error) {
+			var displayError = document.getElementById('stripe-error-message');
+			displayError.textContent = result.error.message;
+			}
+		});
+	});
+});
+
+$(document).ready(function() {
+	/* show this donate expander on #donate URI */
+	var anchor_name = window.location.href.split('#')[1] || 'none';
+	if (anchor_name == 'donate') {
+		setTimeout(function(){
+			head = $("#donate-expander");
+			below = head.next();
+			below.show(function () {
+				t = head.text();
+				t = t.replace("+", "-");
+				head.text(t);
+				$('#init-footer').stickToBottom();
+			});
+		}, 500);
+	}
+});
+</script>
 	</div>
 
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
