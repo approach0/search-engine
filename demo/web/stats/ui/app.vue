@@ -47,7 +47,8 @@
   Unique IPs of past {{trend_days}} days (back from {{show_time(to, false)}}):
   <v-layout align-center justify-center>
     <!-- <div v-for="(e, i) in trend"> {{e}} </div> -->
-    <svg class="chart" width="500">
+    <div style="overflow-x: auto;">
+    <svg class="chart">
       <g v-for="(val, i) in trend">
         <title>{{trend_label[i] + ': val=' + val}}</title>
         <rect width="19" v-bind:x="i * 20"
@@ -56,6 +57,7 @@
         </rect>
       </g>
     </svg>
+    </div>
   </v-layout>
 </div>
 
