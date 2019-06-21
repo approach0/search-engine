@@ -192,6 +192,7 @@ $('#donation button').each(function() {
 			items: [order],
 			successUrl: 'https://approach0.xyz/search/donation_success.php',
 			cancelUrl: 'https://approach0.xyz/search/donation_canceled.php',
+			submitType: 'donate'
 		})
 		.then(function (result) {
 			if (result.error) {
