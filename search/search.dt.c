@@ -342,7 +342,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 			printf(ES_RESET_CONSOLE);
 			timer_reset(&debug_timer);
 			debug_print = 1;
+
+			if (priority_Q_full(&rk_res)) {
+				struct rank_hit *rh = priority_Q_top(&rk_res);
+				printf("threshold: math = %f, text = %f\n",
+					rh->math_score, rh->text_score);
+			}
 		}
+
 		if (debug_slowdown) delay(3, 0, 0); else delay(0, 0, 1);
 #endif
 
