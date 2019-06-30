@@ -5,6 +5,7 @@ var response = {
 	'cur_page': 0,
 	'prev': '',
 	'next': '',
+	'SE_user': 0,
 	"hits": []
 };
 
@@ -15,6 +16,23 @@ function str_fmt() {
 		res_str = res_str.replace(re, arguments[i]);
 	}
 	return res_str;
+}
+
+function render_search_results() {
+	setTimeout(function(){
+		tex_render("a.title");
+		tex_render("p.snippet", function (a, b) {
+			var percent = Math.ceil((a * 100) / b);
+			if (percent > 90) {
+				percent = 100;
+			}
+			if (percent % 10 == 0) {
+				var percent_str = "" + percent + "%";
+				// console.log(percent_str);
+				$("#progress").css("width", percent_str);
+			}
+		});
+	}, 500);
 }
 
 function handle_search_res(res, enc_qry, page) {
@@ -41,20 +59,7 @@ function handle_search_res(res, enc_qry, page) {
 	else
 		response.next = '';
 
-	setTimeout(function(){
-		tex_render("a.title");
-		tex_render("p.snippet", function (a, b) {
-			var percent = Math.ceil((a * 100) / b);
-			if (percent > 90) {
-				percent = 100;
-			}
-			if (percent % 10 == 0) {
-				var percent_str = "" + percent + "%";
-				// console.log(percent_str);
-				$("#progress").css("width", percent_str);
-			}
-		});
-	}, 500);
+	render_search_results();
 
 //	setTimeout(function(){
 //		$("p.snippet > em.hl").each(function() {
@@ -134,6 +139,58 @@ $(document).ready(function() {
 		el: '#search-vue-app',
 		data: response,
 		methods: {
+			SE_auth: function() {
+				// console.log('Reqest for SE OAuth2 ...');
+				var vm = this;
+				onSucc = function (data) {
+					var user = data['networkUsers'][0]['account_id'];
+					vm.SE_user = user;
+				};
+
+				/* for test */
+				setTimeout(function () {
+					onSucc({
+						"accessToken": "foo",
+						"expirationDate": "2019-07-01T06:33:43.878Z",
+						"networkUsers": [{
+							"badge_counts": {
+							"bronze": 15,
+							"silver": 5,
+							"gold": 0
+							},
+							"question_count": 5,
+							"answer_count": 3,
+							"last_access_date": 1561876269,
+							"creation_date": 1378003935,
+							"account_id": 3244601,
+							"reputation": 338,
+							"user_id": 2736576,
+							"site_url": "https://stackoverflow.com",
+							"site_name": "Stack Overflow"
+						}]
+					});
+				}, 2000);
+
+				SE.authenticate({
+					success: function(data) { onSucc(data); },
+					error: function(data) { console.log('error', data); },
+					scope: [],
+					networkUsers: true
+				});
+			},
+			blur_this: function(idx) {
+				if (vm.SE_user > 0) return false;
+				var l = this.hits.length;
+				if (idx == Math.min(2, l - 1))
+					return true;
+				else if (idx == Math.min(6, l - 1))
+					return true;
+				else
+					return false;
+			},
+			mess_up: function(text) {
+				return text.replace(/[a-z<>]/gi, 'b');
+			},
 			surround_special_html: function(text) {
 				/*
 				 * This function makes sure $a<b$ is converted into $a < b$, otherwise
@@ -146,6 +203,10 @@ $(document).ready(function() {
 			}
 		}
 	});
+
+	vm.$watch('SE_user', function (newVal, oldVal) {
+		render_search_results();
+	})
 
 	/* push a initial history state (clear forward states) */
 	history.pushState({"qry": "", "page": -1}, '');

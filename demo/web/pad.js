@@ -88,6 +88,7 @@ var math_pad = [
 		{'desc': 'beta', 'cmd': '\\\\beta', 'disp': '\\beta'},
 		{'desc': 'gamma', 'cmd': '\\\\gamma', 'disp': '\\gamma'},
 		{'desc': 'delta', 'cmd': '\\\\delta', 'disp': '\\delta'},
+		{'desc': 'epsilon', 'cmd': '\\\\epsilon', 'disp': '\\epsilon'},
 		{'desc': 'zeta', 'cmd': '\\\\zeta', 'disp': '\\zeta'},
 		{'desc': 'eta', 'cmd': '\\\\eta', 'disp': '\\eta'},
 		{'desc': 'theta', 'cmd': '\\\\theta', 'disp': '\\theta'},

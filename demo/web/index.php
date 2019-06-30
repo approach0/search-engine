@@ -23,17 +23,19 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=d27b24db9060bb19" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=13c8a83c5bb27124" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
+
+<script type='text/javascript' src='vendor/stackexchange/oauth.js'></script>
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue@1.0.26/dist/vue.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=d27b24db9060bb19"></script>
+<script type="text/javascript" src="bundle.min.js?hash=13c8a83c5bb27124"></script>
 <style>
 img.social {
 	height: 16px;
@@ -59,11 +61,26 @@ button.sponsor {
 	font-size: 0.8em;
 	min-width: 200px;
 }
+div.blur {
+	-webkit-filter: blur(4px);
+	-moz-filter: blur(4px);
+	-o-filter: blur(4px);
+	-ms-filter: blur(4px);
+	filter: blur(4px);
+	pointer-events: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+a.btn, a.btn:visited{
+	color: blue;
+}
 </style>
 </head>
 
 <body style="margin: 0">
-<div id="progress" style=" border-top: 2px solid #46ece5"></div>
+<div id="progress" style="position: fixed; border-top: 2px solid #46ece5"></div>
 
 <!-- Query Box App -->
 <div id="qry-input-vue-app" style="background: white;
@@ -110,120 +127,12 @@ button.sponsor {
 	<div style="display: inline-block; width: 5px;">
 	</div>
 
-	<span class="collapse" title="Donate" id="donate-expander">(+) donate</span>
-	<div id="donation">
-		<h3>Please consider to donate to this project</h3>
-		<p>This site are operating on an estimated annual cost of $690, which is necessary for website hosting and domain name cost.<br/>
-		As a side project, if it has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward. </p><p>Here are some donation options:</p>
-
-		<button class="sponsor pad" stripeid="plan_FHtUQUawetBrC8">
-		<b><span style="color: red;">♡ </span> Fibonacci Sponsor</b>
-		<p>(3.36 $ / month)</p>
-		<p>
-			Subscription support at around Reciprocal Fibonacci constant cost per month.
-		</p>
-		</button>
-
-		<button class="sponsor pad">
-		<b><span style="color: red;">♡ </span> Feigenbaum Sponsor</b>
-		<p>(4.67 $ / month)</p>
-		<p>
-			Subscription support at around Feigenbaum constant cost per month.
-		</p>
-		</button>
-
-		<button class="sponsor pad" stripeid="sku_FHszC4bhsTUNQb">
-		<b><span style="color: red;">♡ </span> Epsilon Backer</b>
-		<p>(10 $ one time)</p>
-		<p>
-			Single-time donation to encourage Approach0 to stay on non-imaginary axis.
-		</p>
-		</button>
-
-		<button class="sponsor pad">
-		<b><span style="color: red;">♡ </span> Euler Infinity Sponsor</b>
-		<p>(50 $ / month)</p>
-		<p>
-			Cover the hosting cost of this site regularly to help Approach0 exist online for arbitrary large number of sponsored time.
-		</p>
-		</button>
-
-		<button class="sponsor pad">
-		<b><span style="color: red;">♡ </span> Unity Backer</b>
-		<p>(50 $ one time)</p>
-		<p>
-			Cover the hosting cost of this site for another one month (one time donation).
-		</p>
-		</button>
-
-		<button class="sponsor pad">
-		<b><span style="color: red;">♡ </span>Ludwig Schläfli Backer</b>
-		<p>(80 $ one time)</p>
-		<p>
-			Cover the domain name cost of approach0.xyz for another year (one time donation).
-		</p>
-		</button>
-
-		<button class="sponsor pad">
-		<b><span style="color: red;">♡ </span> First-prime Backer</b>
-		<p>(100 $ one time)</p>
-		<p>
-			Cover the hosting cost of this site for another two months (one time donation).
-		</p>
-		</button>
-
-		<p>A subscribed sponsor will be billed at the beginning of each month, until <a href="https://github.com/approach0/search-engine/issues">stop request</a> or when this site no longer operates.</p>
-
-		<h3>In return ...</h3>
-		<p>Within the budget limit, this site will try to index more data sources upon <a href="https://github.com/approach0/search-engine/issues">the request</a> of any sponsor or backer.</p>
-		<p>Here are a <a href=""https://github.com/approach0/search-engine/blob/master/BACKERS.md>list of sponsors or backers</a> of this project. Thank for your donations, for letting this site stay on real axis.</p>
-
-		<script src="https://js.stripe.com/v3"></script>
-		<div id="stripe-error-message" style="color: red"></div>
-<script>
-var stripe = Stripe('pk_test_2TIdFYWCiMtR1Dt8Qg7pGczn00YUkb2ROx');
-$('#donation button').each(function() {
-	var stripe_id = $(this).attr('stripeid') || 'none_empty';
-	var type = stripe_id.split('_')[0];
-	var order = {quantity: 1};
-	order[type] = stripe_id;
-	$(this)[0].addEventListener('click', function () {
-		stripe.redirectToCheckout({
-			items: [order],
-			successUrl: 'https://approach0.xyz/search/donation_success.php',
-			cancelUrl: 'https://approach0.xyz/search/donation_canceled.php',
-			submitType: 'donate'
-		})
-		.then(function (result) {
-			if (result.error) {
-			var displayError = document.getElementById('stripe-error-message');
-			displayError.textContent = result.error.message;
-			}
-		});
-	});
-});
-
-$(document).ready(function() {
-	/* show this donate expander on #donate URI */
-	var anchor_name = window.location.href.split('#')[1] || 'none';
-	if (anchor_name == 'donate') {
-		setTimeout(function(){
-			head = $("#donate-expander");
-			below = head.next();
-			below.show(function () {
-				t = head.text();
-				t = t.replace("+", "-");
-				head.text(t);
-				$('#init-footer').stickToBottom();
-			});
-		}, 500);
-	}
-});
-</script>
-	</div>
-
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
 	<div id="handy-pad">
+		<p>If you are not familiar with TeX and math symbol names, we would suggest to use
+		<a target="_blank" href="https://webdemo.myscript.com/views/math/index.html">
+		a hand written math recognizer</a> to assist your math keyword input.</p>
+		<p> Alternatively, we provide some commonly used math symbols below for you to pick. </p>
 		<div v-for="p in pad">
 		<h3>{{p.tab_name}}</h3>
 		<ul class="pad-li-warp"><template v-for="b in p.buttons">
@@ -256,7 +165,7 @@ $(document).ready(function() {
 
 	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
-		<p>Know TeX? You are an expert! Try to edit the raw query below (separate keywords by commas).</p>
+		<p>Know TeX? You are an expert! Try to edit directly the raw query below (separate keywords by commas).</p>
 		<input id="qry" style="padding-left: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
 		placeholder="empty"/>
 
@@ -266,12 +175,156 @@ $(document).ready(function() {
 		<input id="p" type="hidden" value=
 		"<?php if (isset($_GET['p']) && is_scalar($_GET['p'])) echo htmlentities($_GET['p'], ENT_QUOTES,'UTF-8'); ?>"/>
 
-		<p>Copy and paste to your command line to make this query:</p>
+		<p>You can also make a query in command line. Copy and issue the command below:</p>
 		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
 		curl -v '{{url_root}}search-relay.php?p={{page}}&amp;q={{enc_uri}}'
 		<p>
 
 	</div>
+
+	<span class="collapse" title="Donate" id="donate-expander">(+) sponsors / backers</span>
+	<div>
+		<h3>Please consider to back this project</h3>
+		<p>If this project has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward.</p>
+		<div v-show="SE_user == 0">
+			<p><a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
+			Get authenticated</a> as StackExchange user to proceed to donation options
+			(<a class="btn" href="blank.html" target="_blank">why?</a>).
+		</div>
+
+		<div id="donation" v-else>
+
+		<p>Here are some donation options:</p>
+
+		<button class="sponsor pad" stripeid="plan_FHtUQUawetBrC8" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span> Fibonacci Sponsor</b>
+		<p>(3.36 $ / month)</p>
+		<p>
+			Subscription support at around Reciprocal Fibonacci constant cost per month.
+		</p>
+		</button>
+
+		<button class="sponsor pad" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span> Feigenbaum Sponsor</b>
+		<p>(4.67 $ / month)</p>
+		<p>
+			Subscription support at around Feigenbaum constant cost per month.
+		</p>
+		</button>
+
+		<button class="sponsor pad" stripeid="sku_FHszC4bhsTUNQb" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span> Epsilon Backer</b>
+		<p>(10 $ one time)</p>
+		<p>
+			Single-time donation to encourage Approach0 to stay on non-imaginary axis.
+		</p>
+		</button>
+
+		<button class="sponsor pad" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span> Euler Infinity Sponsor</b>
+		<p>(50 $ / month)</p>
+		<p>
+			Cover the hosting cost of this site regularly to help Approach0 exist online for arbitrary large number of sponsored time.
+		</p>
+		</button>
+
+		<button class="sponsor pad" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span> Unity Backer</b>
+		<p>(50 $ one time)</p>
+		<p>
+			Cover the hosting cost of this site for another one month (one time donation).
+		</p>
+		</button>
+
+		<button class="sponsor pad" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span>Ludwig Schläfli Backer</b>
+		<p>(80 $ one time)</p>
+		<p>
+			Cover the domain name cost of approach0.xyz for another year (one time donation).
+		</p>
+		</button>
+
+		<button class="sponsor pad" v-bind:account="SE_user">
+		<b><span style="color: red;">♡ </span> First-prime Backer</b>
+		<p>(100 $ one time)</p>
+		<p>
+			Cover the hosting cost of this site for another two months (one time donation).
+		</p>
+		</button>
+
+<p>
+	Your payment details will be processed by Stripe (for credit/debit cards) and a record of your donation will be stored in the database of this site. A (subscribed) sponsor will be billed at the beginning of each month, until <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">a request</a> is received or when this site no longer operates. Refunds can be provided up to one month after a donation is processed.
+</p>
+<p>
+Although not recommended, you can also donate to this project via bitcoin, Paypal, Alipay or WeChat. Please also send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a> afterwards about your donation time and amount, since we need to manually record donations if it is not through Stripe.
+</p>
+	<h3>In return</h3>
+	<ul>
+		<li>Complete search results are provided to all sponsors or backers.</li>
+		<li>Sponsor can <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">request</a> to place a logo image in the name of a private entity or company, at the footer area of this website.
+		<li>Within the budget limit, this site will try to index more data sources upon <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">the request</a> of any sponsor or backer.</li>
+		<li>Your StackExchange flair will be shown in our <a href="/backers" target="_blank">list of sponsors or backers</a> and your support will always be remembered.</li>
+		<li>You will receive email updates about this project, I will also response on any email reply.</li>
+	</ul>
+	</div>  <!-- END v-else -->
+		<script src="https://js.stripe.com/v3"></script>
+		<div id="stripe-error-message" style="color: red"></div>
+<script>
+var stripe = Stripe('pk_test_2TIdFYWCiMtR1Dt8Qg7pGczn00YUkb2ROx');
+$('#donation button').each(function() {
+	var stripe_id = $(this).attr('stripeid') || 'none_empty';
+	var SE_account = $(this).attr('account') || 0;
+	var type = stripe_id.split('_')[0];
+	var order = {quantity: 1};
+	order[type] = stripe_id;
+	var options = {
+		items: [order],
+		successUrl: 'https://approach0.xyz/backer/?id={CHECKOUT_SESSION_ID}',
+		cancelUrl: 'https://approach0.xyz/backer/?id=0',
+		clientReferenceId: '' + SE_account
+	};
+	if (type !== 'plan') options['submitType'] = 'donate';
+
+	$(this)[0].addEventListener('click', function () {
+		stripe.redirectToCheckout(options).then(function (result) {
+			if (result.error) {
+			var displayError = document.getElementById('stripe-error-message');
+			displayError.textContent = result.error.message;
+			}
+		});
+	});
+});
+
+$(document).ready(function() {
+	/* show this donate expander on #donate URI */
+	var anchor_name = window.location.href.split('#')[1] || 'none';
+	if (anchor_name == 'donate') {
+		setTimeout(function(){
+			head = $("#donate-expander");
+			below = head.next();
+			below.show(function () {
+				t = head.text();
+				t = t.replace("+", "-");
+				head.text(t);
+				$('#init-footer').stickToBottom();
+			});
+		}, 500);
+	}
+});
+
+/* StackExchange OAuth2 initialization */
+SE.init({
+	clientId: 15681,
+	key: 'tEI8QC487ZIN5Pu9I1nY4A((',
+	//channelUrl: 'https://approach0.xyz/search/blank.html',
+	channelUrl: 'http://localhost/a0/blank.html',
+	complete: function (data) {
+		// console.log('[SE OAuth2]', data);
+	}
+});
+</script>
+	</div>
+
 
 	<a style="text-decoration: none; color: blue; font-size: 14px;"
 	href="/stats" target="_blank">
@@ -352,15 +405,35 @@ $(document).ready(function() {
 <!-- Search Results -->
 <div v-if="ret_code == 0" style="margin-top: 30px;">
 	<ol>
-	<li v-for="hit in hits" class="hit toleft">
-		<span class="docid">{{hit.docid}}</span>
-		<span class="score">{{hit.score}}</span>
-		<a class="title" target="_blank" v-bind:href="hit.url"
-		style="text-decoration: none; font-size: 120%;">
-		{{hit.title}}</a><br/>
-		<span style="color:#006d21">{{hit.url}}</span>
-		<div style="overflow-x: hidden;">
-		<p class="snippet">{{{ surround_special_html(hit.snippet) }}}</p>
+	<li v-for="(idx, hit) in hits" class="hit toleft">
+		<div v-if="blur_this(idx)" style="position: relative;">
+			<div class="blur">
+				<a class="title" target="_blank" v-bind:href="mess_up(hit.url)"
+				style="text-decoration: none; font-size: 120%;">
+				{{mess_up(hit.title)}}</a><br/>
+				<span style="color:#006d21">{{mess_up(hit.url)}}</span>
+				<div style="overflow-x: hidden;">
+					<p class="snippet">{{{ mess_up(hit.snippet) }}}</p>
+				</div>
+			</div>
+			<div style="position: absolute; top: 10px; width: 100%; top: 50%;
+			text-align: center; text-shadow: 0.5px 0.5px white;">
+			<p>Please <a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
+			get authenticated</a> as StackExchange user to see blurred search result.
+			(<a class="btn" href="blank.html" target="_blank">why?</a>)
+			</p>
+			</div>
+		</div>
+		<div v-else>
+			<span class="docid">{{hit.docid}}</span>
+			<span class="score">{{hit.score}}</span>
+			<a class="title" target="_blank" v-bind:href="hit.url"
+			style="text-decoration: none; font-size: 120%;">
+			{{hit.title}}</a><br/>
+			<span style="color:#006d21">{{hit.url}}</span>
+			<div style="overflow-x: hidden;">
+				<p class="snippet">{{{ surround_special_html(hit.snippet) }}}</p>
+			</div>
 		</div>
 	</li>
 	</ol>
@@ -379,13 +452,23 @@ $(document).ready(function() {
 		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
 		<b style="font-size:1.5em">→</b>
 	</span>
-	<p class="toleft" style="padding-top: 20px; color: grey">Thank you <a href="https://math.stackexchange.com/users/8297">Martin Sleziak</a> for your donation, for letting this site stay on real axis.</p>
 </div>
 
 <!-- Footer -->
 <div v-show="ret_code == 0"
 	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+
+	<p class="toleft" style="color: grey; text-align: center;" v-if="SE_user > 0">
+		<a v-bind:href="'https://stackexchange.com/users/' + SE_user">
+		<img v-bind:src="'https://stackexchange.com/users/flair/' + SE_user + '.png'" width="208" height="58"/>
+		</a>
+		<br/>
+		<span>
+		Once becoming a backer or sponsor of this website, your flair will be shown in our backers list.
+		</span>
+	</p>
+
 	<div style="text-align: right;" class="toleft">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
