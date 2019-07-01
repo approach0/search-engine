@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=f9194751a2a647c0" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=ec48b151911f393e" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=f9194751a2a647c0"></script>
+<script type="text/javascript" src="bundle.min.js?hash=ec48b151911f393e"></script>
 <style>
 img.social {
 	height: 16px;
@@ -196,64 +196,64 @@ a.btn, a.btn:visited{
 
 		<p>Here are some donation options:</p>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 stripeid="plan_FHtUQUawetBrC8">
 		<b><span style="color: red;">♡ </span> Fibonacci Sponsor</b>
-		<p>(3.36 $ / month)</p>
+		<p>($ 3.36 / month)</p>
 		<p>
 			Subscription support at around Reciprocal Fibonacci constant cost per month.
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 >
 		<b><span style="color: red;">♡ </span> Feigenbaum Sponsor</b>
-		<p>(4.67 $ / month)</p>
+		<p>($ 4.67 / month)</p>
 		<p>
 			Subscription support at around Feigenbaum constant cost per month.
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 stripeid="sku_FHszC4bhsTUNQb">
 		<b><span style="color: red;">♡ </span> Epsilon Backer</b>
-		<p>(10 $ one time)</p>
+		<p>($ 10 one time)</p>
 		<p>
 			Single-time donation to encourage Approach0 to stay on non-imaginary axis.
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 >
 		<b><span style="color: red;">♡ </span> Euler Infinity Sponsor</b>
-		<p>(50 $ / month)</p>
+		<p>($ 50 / month)</p>
 		<p>
 			Cover the hosting cost of this site regularly to help Approach0 exist online for arbitrary large number of sponsored time.
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 >
 		<b><span style="color: red;">♡ </span> Unity Backer</b>
-		<p>(50 $ one time)</p>
+		<p>($ 50 one time)</p>
 		<p>
 			Cover the hosting cost of this site for another one month (one time donation).
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 >
 		<b><span style="color: red;">♡ </span>Ludwig Schläfli Backer</b>
-		<p>(80 $ one time)</p>
+		<p>($ 80 one time)</p>
 		<p>
 			Cover the domain name cost of approach0.xyz for another year (one time donation).
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site" v-bind:netid="SE_netID"
 		 >
 		<b><span style="color: red;">♡ </span> First-prime Backer</b>
-		<p>(100 $ one time)</p>
+		<p>($ 100 one time)</p>
 		<p>
 			Cover the hosting cost of this site for another two months (one time donation).
 		</p>
@@ -265,7 +265,7 @@ a.btn, a.btn:visited{
 <p>
 You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If you choose these methods, please also send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a> about your donation time and amount afterwards, in order to update our list of sponsor/backers.
 </p>
-	<h3>In return</h3>
+	<h3>Benefits of being a Sponsor or Backer</h3>
 	<ul>
 		<li>Complete search results are provided to all sponsors or backers.</li>
 		<li>Sponsor can <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">request</a> to place a logo image on this site, in the name of a private entity or company.
@@ -281,6 +281,7 @@ $('#donation button').each(function() {
 	$(this)[0].addEventListener('click', function () {
 		var stripe_id = $(this).attr('stripeid') || 'none_empty';
 		var SE_account = $(this).attr('account') || 0;
+		var SE_netID = $(this).attr('netid') || 0;
 		var SE_site = $(this).attr('site') || 'https://stackexchange.com';
 		var type = stripe_id.split('_')[0];
 		var order = {quantity: 1};
@@ -290,7 +291,7 @@ $('#donation button').each(function() {
 			items: [order],
 			successUrl: 'https://approach0.xyz/backers/?id={CHECKOUT_SESSION_ID}',
 			cancelUrl: 'https://approach0.xyz/backers/?id=0',
-			clientReferenceId: '' + SE_account + '@' + SE_site
+			clientReferenceId: '' + SE_netID + '@' + SE_site + '@' + SE_account
 		};
 		if (type !== 'plan') options['submitType'] = 'donate';
 		// console.log(options);

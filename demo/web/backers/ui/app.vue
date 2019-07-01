@@ -5,7 +5,7 @@
   <v-layout row>
     <img style="margin-top: 8px; height: 32px; width: 32px" src="./images/logo32.png"/>
     <div class="headline pa-2" style="color: #828282">
-    Shout out to the contributors
+    Shout out to you!
     </div>
   </v-layout>
   <div style="margin-top: 3em;"></div>
@@ -18,7 +18,8 @@
         <v-icon v-else-if="s.badges.join().includes('Backer')" color="white">favorite_border</v-icon>
         <v-icon v-else color="white">build</v-icon>
       </template>
-      <a v-bind:href="s.site + '/users/' + s.account" target="_blank">
+      <a v-bind:href="s.site + '/users/' + s.account" target="_blank"
+         v-bind:title="'SE net ID: ' + s.net_id">
       <img v-bind:src="s.site + '/users/flair/' + s.account + '.png'"
         width="208" height="58"/>
       </a>
@@ -55,7 +56,7 @@ export default {
     pulldata() {
       const vm = this;
       $.ajax({
-        url: `/backers/query`,
+        url: `/backers/join_rows`,
         type: 'GET',
         success: (data) => {
           const arr = data['res'];

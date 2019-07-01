@@ -4,6 +4,7 @@ $(document).ready(function() {
 	var query = {
 		"raw_str": "",
 		'SE_user': 0,
+		'SE_netID': 0,
 		'SE_site': 'https://stackexchange.com',
 		"ever_focused": false,
 		"page": 1,
@@ -294,6 +295,7 @@ $(document).ready(function() {
 				var vm = this;
 				onSucc = function (data) {
 					var accounts = data['networkUsers'];
+					var net_id = data['networkUsers'][0]['account_id'];
 					var max_rep = 0;
 					var save_idx = 0;
 					for (var i = 0; i < accounts.length; i++) {
@@ -303,6 +305,7 @@ $(document).ready(function() {
 							save_idx = i;
 						}
 					}
+					vm.SE_netID = net_id;
 					vm.SE_user = accounts[save_idx]['user_id'];
 					vm.SE_site = accounts[save_idx]['site_url'];
 				};
