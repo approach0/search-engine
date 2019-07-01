@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=13c8a83c5bb27124" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=f9194751a2a647c0" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=13c8a83c5bb27124"></script>
+<script type="text/javascript" src="bundle.min.js?hash=f9194751a2a647c0"></script>
 <style>
 img.social {
 	height: 16px;
@@ -123,7 +123,7 @@ a.btn, a.btn:visited{
 <!-- Query input area END -->
 
 <!-- Search button and options -->
-<div style="padding-top: 18px; padding-bottom: 5px;" class="toleft">
+<div style="padding-top: 18px; padding-bottom: 5px; position: relative" class="toleft">
 	<div style="display: inline-block; width: 5px;">
 	</div>
 
@@ -196,7 +196,8 @@ a.btn, a.btn:visited{
 
 		<p>Here are some donation options:</p>
 
-		<button class="sponsor pad" stripeid="plan_FHtUQUawetBrC8" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 stripeid="plan_FHtUQUawetBrC8">
 		<b><span style="color: red;">♡ </span> Fibonacci Sponsor</b>
 		<p>(3.36 $ / month)</p>
 		<p>
@@ -204,7 +205,8 @@ a.btn, a.btn:visited{
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 >
 		<b><span style="color: red;">♡ </span> Feigenbaum Sponsor</b>
 		<p>(4.67 $ / month)</p>
 		<p>
@@ -212,7 +214,8 @@ a.btn, a.btn:visited{
 		</p>
 		</button>
 
-		<button class="sponsor pad" stripeid="sku_FHszC4bhsTUNQb" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 stripeid="sku_FHszC4bhsTUNQb">
 		<b><span style="color: red;">♡ </span> Epsilon Backer</b>
 		<p>(10 $ one time)</p>
 		<p>
@@ -220,7 +223,8 @@ a.btn, a.btn:visited{
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 >
 		<b><span style="color: red;">♡ </span> Euler Infinity Sponsor</b>
 		<p>(50 $ / month)</p>
 		<p>
@@ -228,7 +232,8 @@ a.btn, a.btn:visited{
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 >
 		<b><span style="color: red;">♡ </span> Unity Backer</b>
 		<p>(50 $ one time)</p>
 		<p>
@@ -236,7 +241,8 @@ a.btn, a.btn:visited{
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 >
 		<b><span style="color: red;">♡ </span>Ludwig Schläfli Backer</b>
 		<p>(80 $ one time)</p>
 		<p>
@@ -244,7 +250,8 @@ a.btn, a.btn:visited{
 		</p>
 		</button>
 
-		<button class="sponsor pad" v-bind:account="SE_user">
+		<button class="sponsor pad" v-bind:account="SE_user" v-bind:site="SE_site"
+		 >
 		<b><span style="color: red;">♡ </span> First-prime Backer</b>
 		<p>(100 $ one time)</p>
 		<p>
@@ -271,20 +278,23 @@ You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If yo
 <script>
 var stripe = Stripe('pk_test_2TIdFYWCiMtR1Dt8Qg7pGczn00YUkb2ROx');
 $('#donation button').each(function() {
-	var stripe_id = $(this).attr('stripeid') || 'none_empty';
-	var SE_account = $(this).attr('account') || 0;
-	var type = stripe_id.split('_')[0];
-	var order = {quantity: 1};
-	order[type] = stripe_id;
-	var options = {
-		items: [order],
-		successUrl: 'https://approach0.xyz/backers/?id={CHECKOUT_SESSION_ID}',
-		cancelUrl: 'https://approach0.xyz/backers/?id=0',
-		clientReferenceId: '' + SE_account
-	};
-	if (type !== 'plan') options['submitType'] = 'donate';
-
 	$(this)[0].addEventListener('click', function () {
+		var stripe_id = $(this).attr('stripeid') || 'none_empty';
+		var SE_account = $(this).attr('account') || 0;
+		var SE_site = $(this).attr('site') || 'https://stackexchange.com';
+		var type = stripe_id.split('_')[0];
+		var order = {quantity: 1};
+		order[type] = stripe_id;
+
+		var options = {
+			items: [order],
+			successUrl: 'https://approach0.xyz/backers/?id={CHECKOUT_SESSION_ID}',
+			cancelUrl: 'https://approach0.xyz/backers/?id=0',
+			clientReferenceId: '' + SE_account + '@' + SE_site
+		};
+		if (type !== 'plan') options['submitType'] = 'donate';
+		// console.log(options);
+
 		stripe.redirectToCheckout(options).then(function (result) {
 			if (result.error) {
 			var displayError = document.getElementById('stripe-error-message');
@@ -337,7 +347,8 @@ SE.init({
 	user guide
 	</a>
 
-	<button style="float: right; margin-right: 5px;" type="button" id="search_button">Search</button>
+	<button style="position: absolute; right: 5px; top: 15px;"
+	type="button" id="search_button">Search</button>
 
 </div>
 <!-- Search button and options END -->

@@ -303,7 +303,7 @@ $(document).ready(function() {
 							save_idx = i;
 						}
 					}
-					vm.SE_user = accounts[save_idx]['account_id'];
+					vm.SE_user = accounts[save_idx]['user_id'];
 					vm.SE_site = accounts[save_idx]['site_url'];
 				};
 
@@ -360,6 +360,10 @@ $(document).ready(function() {
 			}
 		}
 	});
+
+	qry_vm.$watch('SE_user', function (newVal, oldVal) {
+		$('#init-footer').stickToBottom();
+	})
 
 	/* on keyword editing */
 	window.dele_kw = function (idx) {

@@ -154,7 +154,7 @@ $(document).ready(function() {
 							save_idx = i;
 						}
 					}
-					vm.SE_user = accounts[save_idx]['account_id'];
+					vm.SE_user = accounts[save_idx]['user_id'];
 					vm.SE_site = accounts[save_idx]['site_url'];
 				};
 
