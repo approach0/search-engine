@@ -185,8 +185,8 @@ a.btn, a.btn:visited{
 	<span class="collapse" title="Donate" id="donate-expander">(+) sponsors / backers</span>
 	<div>
 		<h3>Please consider to back this project</h3>
-		<p>If this project has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward.</p>
 		<div v-show="SE_user == 0">
+			<p>If this project has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward.</p>
 			<p><a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
 			Get authenticated</a> as StackExchange user to proceed to donation options
 			(<a class="btn" href="blank.html" target="_blank">why?</a>).
@@ -253,18 +253,17 @@ a.btn, a.btn:visited{
 		</button>
 
 <p>
-	Your payment details will be processed by Stripe (for credit/debit cards) and a record of your donation will be stored in the database of this site. A (subscribed) sponsor will be billed at the beginning of each month, until <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">a request</a> is received or when this site no longer operates. Refunds can be provided up to one month after a donation is processed.
+	Your payment details will be processed by Stripe (for credit/debit cards) and a record of your donation will be stored in the database of this site. A (subscribed) sponsor will be billed at the beginning of each month, until <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">a request</a> is received or when this site no longer operates. Refunds can be provided up to 1 month.
 </p>
 <p>
-Although not recommended, you can also donate to this project via bitcoin, Paypal, Alipay or WeChat. Please also send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a> afterwards about your donation time and amount, since we need to manually record donations if it is not through Stripe.
+You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If you choose these methods, please also send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a> about your donation time and amount afterwards, in order to update our list of sponsor/backers.
 </p>
 	<h3>In return</h3>
 	<ul>
 		<li>Complete search results are provided to all sponsors or backers.</li>
-		<li>Sponsor can <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">request</a> to place a logo image in the name of a private entity or company, at the footer area of this website.
+		<li>Sponsor can <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">request</a> to place a logo image on this site, in the name of a private entity or company.
 		<li>Within the budget limit, this site will try to index more data sources upon <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">the request</a> of any sponsor or backer.</li>
-		<li>Your StackExchange flair will be shown in our <a href="/backers" target="_blank">list of sponsors or backers</a> and your support will always be remembered.</li>
-		<li>You will receive email updates about this project, I will also response on any email reply.</li>
+		<li>Your StackExchange flair will be shown in our <a href="/backers" target="_blank">list of sponsors or backers</a> and your support will always be appreciated!</li>
 	</ul>
 	</div>  <!-- END v-else -->
 		<script src="https://js.stripe.com/v3"></script>
@@ -458,16 +457,6 @@ SE.init({
 <div v-show="ret_code == 0"
 	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
-
-	<p class="toleft" style="color: grey; text-align: center;" v-if="SE_user > 0">
-		<a v-bind:href="'https://stackexchange.com/users/' + SE_user">
-		<img v-bind:src="'https://stackexchange.com/users/flair/' + SE_user + '.png'" width="208" height="58"/>
-		</a>
-		<br/>
-		<span>
-		Once becoming a backer or sponsor of this website, your flair will be shown in our backers list.
-		</span>
-	</p>
 
 	<div style="text-align: right;" class="toleft">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"

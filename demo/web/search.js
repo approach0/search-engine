@@ -6,6 +6,7 @@ var response = {
 	'prev': '',
 	'next': '',
 	'SE_user': 0,
+	'SE_site': 'https://stackexchange.com',
 	"hits": []
 };
 
@@ -143,8 +144,18 @@ $(document).ready(function() {
 				// console.log('Reqest for SE OAuth2 ...');
 				var vm = this;
 				onSucc = function (data) {
-					var user = data['networkUsers'][0]['account_id'];
-					vm.SE_user = user;
+					var accounts = data['networkUsers'];
+					var max_rep = 0;
+					var save_idx = 0;
+					for (var i = 0; i < accounts.length; i++) {
+						var reputation = accounts[i]['reputation'];
+						if (reputation > max_rep) {
+							max_rep = reputation;
+							save_idx = i;
+						}
+					}
+					vm.SE_user = accounts[save_idx]['account_id'];
+					vm.SE_site = accounts[save_idx]['site_url'];
 				};
 
 				/* for test */

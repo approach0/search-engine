@@ -1,0 +1,214 @@
+{
+  "accessToken": "Ax4xA(zm(q6wP3vXGiOreA))",
+  "expirationDate": "2019-07-02T10:40:59.520Z",
+  "networkUsers": [
+    {
+      "badge_counts": {
+        "bronze": 15,
+        "silver": 5,
+        "gold": 0
+      },
+      "question_count": 5,
+      "answer_count": 3,
+      "last_access_date": 1561973819,
+      "creation_date": 1378003935,
+      "account_id": 3244601,
+      "reputation": 338,
+      "user_id": 2736576,
+      "site_url": "https://stackoverflow.com",
+      "site_name": "Stack Overflow"
+    },
+    {
+      "badge_counts": {
+        "bronze": 2,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1561821708,
+      "creation_date": 1547804319,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 505904,
+      "site_url": "https://serverfault.com",
+      "site_name": "Server Fault"
+    },
+    {
+      "badge_counts": {
+        "bronze": 2,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1561821708,
+      "creation_date": 1440296486,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 487199,
+      "site_url": "https://superuser.com",
+      "site_name": "Super User"
+    },
+    {
+      "badge_counts": {
+        "bronze": 1,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1561961986,
+      "creation_date": 1480868459,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 345491,
+      "site_url": "https://meta.stackexchange.com",
+      "site_name": "Meta Stack Exchange"
+    },
+    {
+      "badge_counts": {
+        "bronze": 3,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 1,
+      "answer_count": 1,
+      "last_access_date": 1561384907,
+      "creation_date": 1533854307,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 217210,
+      "site_url": "https://stats.stackexchange.com",
+      "site_name": "Cross Validated"
+    },
+    {
+      "badge_counts": {
+        "bronze": 13,
+        "silver": 4,
+        "gold": 1
+      },
+      "question_count": 8,
+      "answer_count": 2,
+      "last_access_date": 1561966597,
+      "creation_date": 1385354249,
+      "account_id": 3244601,
+      "reputation": 228,
+      "user_id": 111262,
+      "site_url": "https://math.stackexchange.com",
+      "site_name": "Mathematics Stack Exchange"
+    },
+    {
+      "badge_counts": {
+        "bronze": 2,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1558419803,
+      "creation_date": 1537393705,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 170780,
+      "site_url": "https://tex.stackexchange.com",
+      "site_name": "TeX - LaTeX Stack Exchange"
+    },
+    {
+      "badge_counts": {
+        "bronze": 2,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1561823916,
+      "creation_date": 1561821704,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 61446,
+      "site_url": "https://stackapps.com",
+      "site_name": "Stack Apps"
+    },
+    {
+      "badge_counts": {
+        "bronze": 2,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1561450655,
+      "creation_date": 1523145113,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 284964,
+      "site_url": "https://unix.stackexchange.com",
+      "site_name": "Unix &amp; Linux Stack Exchange"
+    },
+    {
+      "badge_counts": {
+        "bronze": 1,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1557235182,
+      "creation_date": 1523636712,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 87186,
+      "site_url": "https://cs.stackexchange.com",
+      "site_name": "Computer Science Stack Exchange"
+    },
+    {
+      "badge_counts": {
+        "bronze": 3,
+        "silver": 1,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 1,
+      "last_access_date": 1561821708,
+      "creation_date": 1385353406,
+      "account_id": 3244601,
+      "reputation": 151,
+      "user_id": 43227,
+      "site_url": "https://mathoverflow.net",
+      "site_name": "MathOverflow"
+    },
+    {
+      "badge_counts": {
+        "bronze": 1,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1552118704,
+      "creation_date": 1550665977,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 68043,
+      "site_url": "https://datascience.stackexchange.com",
+      "site_name": "Data Science Stack Exchange"
+    },
+    {
+      "badge_counts": {
+        "bronze": 1,
+        "silver": 0,
+        "gold": 0
+      },
+      "question_count": 0,
+      "answer_count": 0,
+      "last_access_date": 1532359313,
+      "creation_date": 1528942955,
+      "account_id": 3244601,
+      "reputation": 101,
+      "user_id": 17867,
+      "site_url": "https://vi.stackexchange.com",
+      "site_name": "Vi and Vim Stack Exchange"
+    }
+  ]
+}
