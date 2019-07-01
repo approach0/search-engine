@@ -1,0 +1,64 @@
+{
+  "id": "evt_1ErOJeKPjU8IcdaJZGGPiYcv",
+  "object": "event",
+  "api_version": "2019-05-16",
+  "created": 1561982942,
+  "data": {
+    "object": {
+      "id": "cs_test_vT7mNSid4xeEPft6eb2rojsWNhwFvYUGxqtiAbeMb5rOpCusqe2Z7fWe",
+      "object": "checkout.session",
+      "billing_address_collection": null,
+      "cancel_url": "https://approach0.xyz/pay/canceled.php",
+      "client_reference_id": "jiajia@https://checkout.stripe.com",
+      "customer": "cus_FM6WUJNqWBptBl",
+      "customer_email": null,
+      "display_items": [
+        {
+          "amount": 1000,
+          "currency": "usd",
+          "quantity": 1,
+          "sku": {
+            "id": "sku_FHszC4bhsTUNQb",
+            "object": "sku",
+            "active": true,
+            "attributes": {
+              "name": "Epsilon Backer"
+            },
+            "created": 1561010057,
+            "currency": "usd",
+            "image": "https://files.stripe.com/links/fl_test_VkatiwQ299zn0SfBLj7EzOY4",
+            "inventory": {
+              "quantity": null,
+              "type": "infinite",
+              "value": null
+            },
+            "livemode": false,
+            "metadata": {
+            },
+            "package_dimensions": null,
+            "price": 1000,
+            "product": "prod_FGllYTwet7KuUf",
+            "updated": 1561010057
+          },
+          "type": "sku"
+        }
+      ],
+      "livemode": false,
+      "locale": null,
+      "payment_intent": "pi_1ErOJNKPjU8IcdaJSFWt1EYU",
+      "payment_method_types": [
+        "card"
+      ],
+      "submit_type": null,
+      "subscription": null,
+      "success_url": "https://approach0.xyz/pay/success.php"
+    }
+  },
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "checkout.session.completed"
+}
