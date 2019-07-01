@@ -279,8 +279,8 @@ $('#donation button').each(function() {
 	order[type] = stripe_id;
 	var options = {
 		items: [order],
-		successUrl: 'https://approach0.xyz/backer/?id={CHECKOUT_SESSION_ID}',
-		cancelUrl: 'https://approach0.xyz/backer/?id=0',
+		successUrl: 'https://approach0.xyz/backers/?id={CHECKOUT_SESSION_ID}',
+		cancelUrl: 'https://approach0.xyz/backers/?id=0',
 		clientReferenceId: '' + SE_account
 	};
 	if (type !== 'plan') options['submitType'] = 'donate';
