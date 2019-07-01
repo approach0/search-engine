@@ -3,7 +3,7 @@
 
 <v-container>
   <v-layout row>
-	  <img style="margin-top: 8px; height: 32px; width: 32px" src="./images/logo32.png"/>
+    <img style="margin-top: 8px; height: 32px; width: 32px" src="./images/logo32.png"/>
     <div class="headline pa-2" style="color: #828282">
     Shout out to the contributors
     </div>
@@ -14,17 +14,17 @@
     <v-flex v-for="(s, i) in supporters" xs10 sm6 md4>
       <v-badge left bottom overlap color="cyan">
       <template v-slot:badge>
-        <v-icon v-if="s.badges.length == 0" color="white">build</v-icon>
-        <v-icon v-else color="white">favorite_border</v-icon>
+        <v-icon v-if="s.badges.join().includes('Sponsor')" color="white">monetization_on</v-icon>
+        <v-icon v-else-if="s.badges.join().includes('Backer')" color="white">favorite_border</v-icon>
+        <v-icon v-else color="white">build</v-icon>
       </template>
-      <a v-bind:href="'https://' + s.site + '/users/' + s.account" target="_blank">
-      <img v-bind:src="'https://' + s.site + '/users/flair/' + s.account + '.png'"
+      <a v-bind:href="s.site + '/users/' + s.account" target="_blank">
+      <img v-bind:src="s.site + '/users/flair/' + s.account + '.png'"
         width="208" height="58"/>
       </a>
       </v-badge>
       <div class="badges grey--text" style="text-align: center; max-width: 208px">
-      <p v-if="s.badges.length > 0"> {{s.badges.join(', ')}} </p>
-      <p v-else> Code contributor</p>
+      <p> {{s.badges.join(', ')}} </p>
       </div>
     </v-flex>
   </v-layout>
@@ -53,28 +53,23 @@ export default {
   },
   methods: {
     pulldata() {
-      console.log('test');
+      const vm = this;
+      $.ajax({
+        url: `/backers/query`,
+        type: 'GET',
+        success: (data) => {
+          const arr = data['res'];
+          vm.supporters = arr;
+        },
+        error: (req, err) => {
+          console.log(err);
+        }
+      });
     }
   },
   data: function () {
     return {
-      supporters: [
-        {
-          account: 3244601,
-          site: 'stackexchange.com',
-          badges: []
-        },
-        {
-          account: 290240,
-          site: 'math.stackexchange.com',
-          badges: []
-        },
-        {
-          account: 267077,
-          site: 'stackexchange.com',
-          badges: ['First-prime Backer']
-        }
-      ]
+      supporters: []
     }
   }
 }
