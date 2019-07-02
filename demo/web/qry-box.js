@@ -308,6 +308,10 @@ $(document).ready(function() {
 					vm.SE_netID = net_id;
 					vm.SE_user = accounts[save_idx]['user_id'];
 					vm.SE_site = accounts[save_idx]['site_url'];
+
+					window.srch_vm.SE_netID = vm.SE_netID;
+					window.srch_vm.SE_user = vm.SE_user;
+					window.srch_vm.SE_site = vm.SE_site;
 				};
 
 				/* for test */
@@ -367,6 +371,8 @@ $(document).ready(function() {
 	qry_vm.$watch('SE_user', function (newVal, oldVal) {
 		$('#init-footer').stickToBottom();
 	})
+
+	window.qry_vm = qry_vm;
 
 	/* on keyword editing */
 	window.dele_kw = function (idx) {

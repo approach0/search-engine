@@ -159,6 +159,10 @@ $(document).ready(function() {
 					vm.SE_netID = net_id;
 					vm.SE_user = accounts[save_idx]['user_id'];
 					vm.SE_site = accounts[save_idx]['site_url'];
+
+					window.qry_vm.SE_netID = vm.SE_netID;
+					window.qry_vm.SE_user = vm.SE_user;
+					window.qry_vm.SE_site = vm.SE_site;
 				};
 
 				/* for test */
@@ -230,6 +234,8 @@ $(document).ready(function() {
 	vm.$watch('SE_user', function (newVal, oldVal) {
 		render_search_results();
 	})
+
+	window.srch_vm = vm;
 
 	/* push a initial history state (clear forward states) */
 	history.pushState({"qry": "", "page": -1}, '');
