@@ -83,7 +83,11 @@ function reset_db() {
 	donate.run(267077, 'First-prime Backer', 'cus_MartinSleziak');
 }
 
-// reset_db(); /* uncomment to reset backers' database */
+const arg_len = process.argv.length
+if (process.argv[arg_len - 1] == '--reset') {
+	reset_db(); /* reset backers' database */
+	process.exit();
+}
 
 function collect_usr(data) {
 	const login = db.prepare(`INSERT OR REPLACE INTO login
