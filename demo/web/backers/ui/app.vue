@@ -5,7 +5,7 @@
   <v-layout row>
     <img style="margin-top: 8px; height: 32px; width: 32px" src="./images/logo32.png"/>
     <div class="headline pa-2" style="color: #828282">
-    Shout out to you!
+    {{title}}
     </div>
   </v-layout>
   <div style="margin-top: 3em;"></div>
@@ -37,7 +37,7 @@
     <v-flex xs10 sm6 md3>
       <div style="margin-top: 2em;"></div>
       <v-icon color="red">favorite_border</v-icon>
-      <p> Thank you!</p>
+      <p> Shout out to you!</p>
       <p><strong>You are the integral part of this site.</strong></p>
     </v-flex>
   </v-layout>
@@ -47,10 +47,30 @@
 
 <script>
 import $ from 'jquery' /* AJAX request lib */
+var urlpar = require('url'); /* URL parser */
 
 export default {
   mounted: function () {
-    this.pulldata();
+    const url = urlpar.parse(window.location.href, true);
+
+    /* test URI to show collected login users */
+    if (url.hash == '#logins') {
+      this.pulllogin();
+    } else {
+      this.pulldata();
+    }
+
+    /* Webhook redirection handler */
+    const uri_params = url['query'];
+    const session_id = uri_params['id'];
+    if (session_id === '0') {
+      this.title = `For some reason, your payment didn't go through.
+        Please try it again later, I am really sorry.`;
+    } else if (session_id !== undefined) {
+      this.title = `
+        You are listed as our new contributor below, can you see that?
+        Thank you so much for your support!`;
+    }
   },
   methods: {
     pulldata() {
@@ -66,10 +86,25 @@ export default {
           console.log(err);
         }
       });
+    },
+    pulllogin() {
+      const vm = this;
+      $.ajax({
+        url: `/backers/logins`,
+        type: 'GET',
+        success: (data) => {
+          const arr = data['res'];
+          vm.supporters = arr;
+        },
+        error: (req, err) => {
+          console.log(err);
+        }
+      });
     }
   },
   data: function () {
     return {
+      title: "Sponsors and Backers",
       supporters: []
     }
   }
@@ -77,7 +112,7 @@ export default {
 </script>
 <style>
 .badges p {
-  text-shadow: -1px -1px 1px #d4d4d4, 1px 1px 1px #fafafa;
-  color: #9c8468;
+  text-shadow: 0 0 0 #94fffa, 1px 1px 1px #70ffee;
+  color: #6e53b9;
 }
 </style>

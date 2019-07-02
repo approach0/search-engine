@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=478c952188ae797e" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=d9780947d1c3bfa8" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=478c952188ae797e"></script>
+<script type="text/javascript" src="bundle.min.js?hash=d9780947d1c3bfa8"></script>
 <style>
 img.social {
 	height: 16px;
@@ -193,7 +193,7 @@ a.btn, a.btn:visited{
 			<p>Interested to donate?
 			<a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
 			Get authenticated</a> as StackExchange user to proceed to donation options
-			(<a class="btn" href="blank.html" target="_blank">why?</a>).
+			(<a class="btn" href="/backers/letter" target="_blank">why?</a>).
 
 		</div>
 
@@ -265,10 +265,10 @@ a.btn, a.btn:visited{
 		</button>
 
 <p>
-	Your payment details will be processed by Stripe (for credit/debit cards) and a record of your donation will be stored in the database of this site. A (subscribed) sponsor will be billed at the beginning of each month, until <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">a request</a> is received or when this site no longer operates. Refunds can be provided up to 1 month.
+	Your payment details will be processed by <a href="https://stripe.com" target="_blank">Stripe</a> (for credit/debit cards) and a record of your donation will be stored in the database of this site. A (subscribed) sponsor will be billed at the beginning of each month, until <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">a request</a> is received or when this site no longer operates. Refunds can be provided up to 1 month.
 </p>
 <p>
-You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If you choose these methods, please also send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a> about your donation time and amount afterwards, in order to update our list of sponsor/backers.
+You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If you choose these methods, please leave a message afterwards (for example, send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a>) about your donation time and amount, in order to update your sponsor/backer membership.
 </p>
 
 	<h3>Benefits of being a Sponsor or Backer</h3>
@@ -313,20 +313,28 @@ $('#donation button').each(function() {
 	});
 });
 
+function expand_donation_options() {
+	/* expand */
+	setTimeout(function(){
+		head = $("#donate-expander");
+		below = head.next();
+		below.show(function () {
+			t = head.text();
+			t = t.replace("+", "-");
+			head.text(t);
+			$('#init-footer').stickToBottom();
+		});
+	}, 500);
+
+	/* scroll to the top */
+	$("html, body").animate({ scrollTop: 0 }, "fast");
+}
+
 $(document).ready(function() {
 	/* show this donate expander on #donate URI */
 	var anchor_name = window.location.href.split('#')[1] || 'none';
 	if (anchor_name == 'donate') {
-		setTimeout(function(){
-			head = $("#donate-expander");
-			below = head.next();
-			below.show(function () {
-				t = head.text();
-				t = t.replace("+", "-");
-				head.text(t);
-				$('#init-footer').stickToBottom();
-			});
-		}, 500);
+		expand_donation_options();
 	}
 });
 
@@ -334,8 +342,8 @@ $(document).ready(function() {
 SE.init({
 	clientId: 15681,
 	key: 'tEI8QC487ZIN5Pu9I1nY4A((',
-	//channelUrl: 'https://approach0.xyz/search/blank.html',
-	channelUrl: 'http://localhost/a0/blank.html',
+	channelUrl: 'https://approach0.xyz/backers/letter',
+	//channelUrl: 'http://localhost/a0/backers/letter', /* for test */
 	complete: function (data) {
 		// console.log('[SE OAuth2]', data);
 	}
@@ -437,10 +445,23 @@ SE.init({
 			</div>
 			<div style="position: absolute; top: 10px; width: 100%; top: 50%;
 			text-align: center; text-shadow: 0.5px 0.5px white;">
-			<p>Please <a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
-			get authenticated</a> as StackExchange user to see blurred search result.
-			(<a class="btn" href="blank.html" target="_blank">why?</a>)
+			<template v-if="SE_user == 0">
+			<p>
+				Please <a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
+				get authenticated</a> as StackExchange user to see blurred search result.
+				(<a class="btn" href="/backers/letter" target="_blank">why?</a>)
 			</p>
+			</template>
+			<template v-else>
+			<p v-if="!unlock">
+				View complete search results by
+				<a class="btn" href="javascript: void(0)"
+				onclick="expand_donation_options()"> supporting</a>
+				this project.
+				(<a class="btn" v-on:click="SE_verify()" href="javascript: void(0)">refresh</a>)
+			</p>
+			</template>
+			<p v-if="verifying">verifying ...</p>
 			</div>
 		</div>
 		<div v-else>
@@ -477,13 +498,15 @@ SE.init({
 <div v-show="ret_code == 0"
 	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+	<!--
 	<div style="text-align: center; display: inline-block;" class="toleft">
 		<span class="mainfont" style="font-size: 12px; vertical-align: text-top;">
 			This site can stay on the real axis thanks to our
 			<a style="btn" target="_blank" href="/backers">sponsors and backers</a>.
 		</span>
 	</div>
-	<div style="text-align: right; display: inline-block;">
+	-->
+	<div style="text-align: right;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>

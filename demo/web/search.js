@@ -8,6 +8,8 @@ var response = {
 	'SE_user': 0,
 	'SE_netID': 0,
 	'SE_site': 'https://stackexchange.com',
+	'unlock': false,
+	'verifying': false,
 	"hits": []
 };
 
@@ -141,6 +143,37 @@ $(document).ready(function() {
 		el: '#search-vue-app',
 		data: response,
 		methods: {
+			SE_verify: function () {
+				this.verifying = true;
+				var SE_netID = this.SE_netID;
+				var vm = this;
+				$.ajax({
+					url: '/backers/verify/' + SE_netID,
+					type: 'GET',
+					dataType: 'json'
+				}).done(function(res) {
+					var arr = res['res'];
+					vm.unlock = (arr.length > 0);
+					setTimeout(function () { vm.verifying = false; }, 1000);
+				}).fail(function(res, ajax_err_str) {
+					console.log(ajax_err_str);
+					setTimeout(function () { vm.verifying = false; }, 1000);
+				});
+			},
+			SE_collect_usr: function () {
+				var vm = this;
+				$.ajax({
+					type: 'POST',
+					url: '/backers/login',
+					contentType: "application/json",
+					dataType: 'json',
+					data: JSON.stringify({
+						'user_id': vm.SE_user,
+						'site': vm.SE_site,
+						'net_id': vm.SE_netID
+					})
+				});
+			},
 			SE_auth: function() {
 				// console.log('Reqest for SE OAuth2 ...');
 				var vm = this;
@@ -163,31 +196,34 @@ $(document).ready(function() {
 					window.qry_vm.SE_netID = vm.SE_netID;
 					window.qry_vm.SE_user = vm.SE_user;
 					window.qry_vm.SE_site = vm.SE_site;
+
+					vm.SE_verify();
+					vm.SE_collect_usr();
 				};
 
 				/* for test */
-				setTimeout(function () {
-					onSucc({
-						"accessToken": "foo",
-						"expirationDate": "2019-07-01T06:33:43.878Z",
-						"networkUsers": [{
-							"badge_counts": {
-							"bronze": 15,
-							"silver": 5,
-							"gold": 0
-							},
-							"question_count": 5,
-							"answer_count": 3,
-							"last_access_date": 1561876269,
-							"creation_date": 1378003935,
-							"account_id": 3244601,
-							"reputation": 338,
-							"user_id": 2736576,
-							"site_url": "https://stackoverflow.com",
-							"site_name": "Stack Overflow"
-						}]
-					});
-				}, 2000);
+//				setTimeout(function () {
+//					onSucc({
+//						"accessToken": "foo",
+//						"expirationDate": "2019-07-01T06:33:43.878Z",
+//						"networkUsers": [{
+//							"badge_counts": {
+//							"bronze": 15,
+//							"silver": 5,
+//							"gold": 0
+//							},
+//							"question_count": 5,
+//							"answer_count": 3,
+//							"last_access_date": 1561876269,
+//							"creation_date": 1378003935,
+//							"account_id": 3244601 + 1,
+//							"reputation": 338,
+//							"user_id": 2736576 - 3,
+//							"site_url": "https://stackoverflow.com",
+//							"site_name": "Stack Overflow"
+//						}]
+//					});
+//				}, 2000);
 
 				SE.authenticate({
 					success: function(data) { onSucc(data); },
@@ -197,7 +233,7 @@ $(document).ready(function() {
 				});
 			},
 			blur_this: function(idx) {
-				if (vm.SE_user > 0) return false;
+				if (vm.unlock) return false;
 				var l = this.hits.length;
 				if (idx == Math.min(2, l - 1))
 					return true;
@@ -231,8 +267,8 @@ $(document).ready(function() {
 		}
 	});
 
-	vm.$watch('SE_user', function (newVal, oldVal) {
-		render_search_results();
+	vm.$watch('unlock', function (newVal, oldVal) {
+		if (newVal) render_search_results();
 	})
 
 	window.srch_vm = vm;

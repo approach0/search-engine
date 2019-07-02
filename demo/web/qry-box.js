@@ -290,6 +290,20 @@ $(document).ready(function() {
 			}
 		},
 		methods: {
+			SE_collect_usr: function () {
+				var vm = this;
+				$.ajax({
+					type: 'POST',
+					url: '/backers/login',
+					contentType: "application/json",
+					dataType: 'json',
+					data: JSON.stringify({
+						'user_id': vm.SE_user,
+						'site': vm.SE_site,
+						'net_id': vm.SE_netID
+					})
+				});
+			},
 			SE_auth: function() {
 				// console.log('Reqest for SE OAuth2 ...');
 				var vm = this;
@@ -312,31 +326,33 @@ $(document).ready(function() {
 					window.srch_vm.SE_netID = vm.SE_netID;
 					window.srch_vm.SE_user = vm.SE_user;
 					window.srch_vm.SE_site = vm.SE_site;
+
+					vm.SE_collect_usr();
 				};
 
 				/* for test */
-				setTimeout(function () {
-					onSucc({
-						"accessToken": "foo",
-						"expirationDate": "2019-07-01T06:33:43.878Z",
-						"networkUsers": [{
-							"badge_counts": {
-							"bronze": 15,
-							"silver": 5,
-							"gold": 0
-							},
-							"question_count": 5,
-							"answer_count": 3,
-							"last_access_date": 1561876269,
-							"creation_date": 1378003935,
-							"account_id": 3244601,
-							"reputation": 338,
-							"user_id": 2736576,
-							"site_url": "https://stackoverflow.com",
-							"site_name": "Stack Overflow"
-						}]
-					});
-				}, 2000);
+//				setTimeout(function () {
+//					onSucc({
+//						"accessToken": "foo",
+//						"expirationDate": "2019-07-01T06:33:43.878Z",
+//						"networkUsers": [{
+//							"badge_counts": {
+//							"bronze": 15,
+//							"silver": 5,
+//							"gold": 0
+//							},
+//							"question_count": 5,
+//							"answer_count": 3,
+//							"last_access_date": 1561876269,
+//							"creation_date": 1378003935,
+//							"account_id": 3244601,
+//							"reputation": 338,
+//							"user_id": 2736576,
+//							"site_url": "https://stackoverflow.com",
+//							"site_name": "Stack Overflow"
+//						}]
+//					});
+//				}, 2000);
 
 				SE.authenticate({
 					success: function(data) { onSucc(data); },
