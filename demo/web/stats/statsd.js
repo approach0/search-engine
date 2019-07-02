@@ -70,6 +70,13 @@ app.get('/', function (req, res) {
 	});
 	res.json({'res': arr});
 
+}).get('/pull/query-trend/:from.:to', (req, res) => {
+	const arr = qrylog.pull_query_trend(db, {
+		begin: req.params.from,
+		end: req.params.to
+	});
+	res.json({'res': arr});
+
 });
 
 const port = 3207;

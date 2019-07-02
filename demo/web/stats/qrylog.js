@@ -96,6 +96,18 @@ function pull_query_summary(db, date_range) {
 		.all(date_begin, date_end);
 }
 
+function pull_query_trend(db, date_range) {
+	if (date_range === undefined) date_range = {};
+	const date_begin = date_range['begin'] || '0000-01-01';
+	const date_end   = date_range['end']   || '9999-12-31';
+	const date_limit = date_range['limit'] || 32;
+	return db.prepare(
+		`SELECT COUNT(DISTINCT IP) as n_uniq_ip, date(time) as date
+		FROM query WHERE date(time) BETWEEN ? AND ?
+		GROUP BY date(time) LIMIT ?`)
+		.all(date_begin, date_end, date_limit);
+}
+
 function test() {
 	var sqlite3 = require('better-sqlite3');
 	var db = new sqlite3('test.sqlite3', {verbose__: console.log});
@@ -192,5 +204,6 @@ module.exports = {
 	pull_query_items_of,
 	pull_query_IPs,
 	pull_query_IPs_of,
-	pull_query_summary
+	pull_query_summary,
+	pull_query_trend
 }

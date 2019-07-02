@@ -44,16 +44,18 @@
 </v-form>
 
 <div class="pa-5" v-if="results.length != 0">
-  Unique IPs of past {{trend_days}} days (back from {{show_time(to, false)}}):
+  <p>Unique IPs of past {{trend_days}} days (back from {{show_time(to, false)}}):</p>
   <v-layout align-center justify-center>
-    <!-- <div v-for="(e, i) in trend"> {{e}} </div> -->
-    <div style="overflow-x: auto;">
-    <svg class="chart">
-      <g v-for="(val, i) in trend">
-        <title>{{trend_label[i] + ': val=' + val}}</title>
-        <rect width="19" v-bind:x="i * 20"
-          v-bind:height="trend_h(val, trend, 100)"
-          v-bind:y="100 - trend_h(val, trend, 100)">
+    <div style="overflow-x: auto">
+    <svg class="chart"
+      v-bind:style="{width: trend_days * (trend_bar_w + 1) + 'px'}">
+      <g v-for="(val, i) in trend_value">
+        <title>{{trend_label[i] + ': ' + val}}</title>
+        <rect
+          v-bind:width="trend_bar_w - 1"
+          v-bind:x="i * trend_bar_w"
+          v-bind:height="trend_h(val, 100)"
+          v-bind:y="100 - trend_h(val, 100)">
         </rect>
       </g>
     </svg>
@@ -69,7 +71,7 @@
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
     <v-timeline dense v-show="results.length > 0">
-      <v-timeline-item class="mb-3"
+      <v-timeline-item class="mb-3" color="grey" fill-dot
        small v-for="(item, i) in results" v-bind:key="item.ip + item.time">
         <v-layout justify-space-between wrap>
           <v-flex xs6>
@@ -142,7 +144,7 @@ export default {
     'showQueries': function () {
       if (this.form_valid) this.refresh();
     },
-    'form_valid': function(val) {
+    'form_valid': function(val, oldVal) {
       if (val) this.refresh();
     },
     'results': function (val) {
@@ -153,7 +155,6 @@ export default {
     },
   },
   mounted: function () {
-    this.refresh();
     var vm = this;
     vm.$nextTick(function () {
       vm.render();
@@ -212,6 +213,12 @@ export default {
         }
       });
       this.get_trend();
+    },
+    trend_h(val, height) {
+      const trend = this.trend_value;
+      const max = Math.max(1, ...trend);
+      const h = Math.ceil(height * (val / max));
+      return h + 1;
     },
     mask_ip(ip) {
       if (ip.trim() == '') return '*';
@@ -273,38 +280,37 @@ export default {
       });
     },
     get_trend() {
-      this.trend = [];
-      const now = this.to;
-      const tot = this.trend_days;
       var vm = this;
-      for (var i = 0; i < tot; i ++) {
-        this.trend.push(0);
-        ((i) => {
-          const m = moment(now).subtract(tot - i - 1, 'days');
-          const day = m.format("YYYY-MM-DD");
-          // console.log(tot - i - 1, day);
-          $.ajax({
-            url: `/stats-api/pull/query-summary/${day}.${day}/`,
-            type: 'GET',
-            success: (data) => {
-              const summary = data['res'][0];
-              vm.$set(vm.trend_label, i, day);
-              vm.$set(vm.trend, i, summary['n_uniq_ip']);
-              /* below is for test purpose */
-              // vm.$set(vm.trend, i, Math.floor(Math.random() * 10));
-              // vm.$set(vm.trend, i, i);
-            },
-            error: (req, err) => {
-              console.log(err);
-            }
-          });
-        })(i);
-      }
-    },
-    trend_h(val, trend, height) {
-      const max = Math.max(1, ...trend);
-      const h = Math.ceil(height * (val / max));
-      return h + 1;
+      this.trend_label = [];
+      this.trend_value = [];
+      const tot = this.trend_days;
+      const m = moment(this.to).subtract(tot, 'days');
+      const from = m.format("YYYY-MM-DD");
+      const to = this.to;
+
+      $.ajax({
+        url: `/stats-api/pull/query-trend/${from}.${to}/`,
+        type: 'GET',
+        success: (data) => {
+          const trend = data['res'];
+          const map = trend.reduce((o, cur) => ({
+            ...o,
+            [cur['date']]: cur['n_uniq_ip']
+          }), {});
+
+          for (var i = 0; i <= tot; i ++) {
+            const m = moment(to).subtract(tot - i, 'days');
+            const day = m.format("YYYY-MM-DD");
+            this.trend_label.push(day);
+            this.trend_value.push(map[day] || 0);
+          }
+          // console.log(this.trend_label);
+          // console.log(this.trend_value);
+        },
+        error: (req, err) => {
+          console.log(err);
+        }
+      });
     },
     uri_IP() {
       const uri_params = urlpar.parse(window.location.href, true)['query'];
@@ -316,7 +322,7 @@ export default {
     return {
       form_valid: false,
       last_index_update: '2019-06-03T19:16:00',
-      from: new Date().toISOString().substr(0, 10),
+      from: '2019-06-01',
       to: new Date().toISOString().substr(0, 10),
       max: 30,
       ip: this.uri_IP(),
@@ -332,8 +338,9 @@ export default {
 //      ipRules: [
 //        v => /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(v) || 'Invalid IP format'
 //      ],
-      trend_days: 16,
-      trend: [],
+      trend_days: 32,
+      trend_bar_w: 15,
+      trend_value: [],
       trend_label: [],
       results: []
     }
@@ -360,7 +367,7 @@ img {max-width:100%;}
 }
 
 .chart rect {
-  fill: grey;
+  fill: #9e9e9e;
 }
 
 .chart rect:hover {
