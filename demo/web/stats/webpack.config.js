@@ -8,6 +8,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 /* vue-loader 15 requires a webpack plugin to function */
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
+/* Keeping track of all the components Vuetify is using */
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
+
 module.exports = (env, options) => {
 	const mode = options.mode;
 	console.log(`[ this is ${mode} mode ]`);
@@ -27,6 +30,9 @@ module.exports = (env, options) => {
 					'style-loader', 'css-loader'
 					/* need both here to both inject the CSS and
 					 * convert CSS to JavaScript module. */
+				]},
+				{ test: /\.styl$/, use: [
+					'style-loader', 'css-loader', 'stylus-loader'
 				]},
 				{
 					test: /\.(eot|woff|woff2|svg|ttf)([\?]?.*)$/,
@@ -59,7 +65,8 @@ module.exports = (env, options) => {
 				template: __dirname + '/ui/index-template.html',
 				filename: 'index.html' /* default goes to ./dist */
 			}),
-			new VueLoaderPlugin()
+			new VueLoaderPlugin(),
+			new VuetifyLoaderPlugin()
 		],
 		devServer: {
 			contentBase: __dirname + '/dist',

@@ -9,9 +9,14 @@ import Vue from 'vue'
 Vue.config.productionTip = false
 
 /* vuetify */
-import Vuetify from 'vuetify'
+// import Vuetify from 'vuetify'
+// import 'vuetify/dist/vuetify.min.css'
+
+/* vuetify (A la carte) */
+import Vuetify from 'vuetify/lib'
+import 'vuetify/src/stylus/app.styl'
+
 import 'material-icons/iconfont/material-icons.css'
-import 'vuetify/dist/vuetify.min.css'
 Vue.use(Vuetify)
 
 import App from './app.vue'

@@ -16,8 +16,11 @@
     "html-webpack-plugin": "^3.2.0",
     "material-icons": "^0.2.3",
     "style-loader": "^0.23.1",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
     "vue-loader": "^15.4.2",
     "vue-template-compiler": "^2.5.17",
+    "vuetify-loader": "^1.2.2",
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10"
