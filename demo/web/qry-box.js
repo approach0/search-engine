@@ -6,6 +6,7 @@ $(document).ready(function() {
 		'SE_user': 0,
 		'SE_netID': 0,
 		'SE_site': 'https://stackexchange.com',
+		'en_donation': false,
 		"ever_focused": false,
 		"page": 1,
 		"items": [
@@ -277,6 +278,101 @@ $(document).ready(function() {
 		}
 	};
 
+	/* expander */
+	function toggle_expander(obj) {
+		head = obj;
+		below = head.next();
+		below.toggle("fast", function () {
+			t = head.text();
+			if (below.is(":visible"))
+				t = t.replace("+", "-");
+			else
+				t = t.replace("-", "+");
+			head.text(t);
+
+			$('#init-footer').stickToBottom();
+			Vue.nextTick(function () {
+				tex_render_fast("#handy-pad");
+			});
+		});
+	}
+
+	$("span.collapse").next().hide();
+	$("span.collapse").click(function () {
+		toggle_expander($(this));
+	});
+
+	/* search related */
+	function correct_math(str) {
+		/* simple rules to correct most common bad-math */
+		str = str.replace(/_\{ \}/g, " ");
+		str = str.replace(/\^\{ \}/g, " ");
+		str = str.replace(/\{_/g, "{");
+		//console.log(str);
+		return str;
+	}
+
+	function click_search(page, is_pushState) {
+		query.page = page;
+		arr = query.items;
+		input_box = arr[arr.length - 1];
+
+		qry = correct_math($("#qry").val());
+
+		if (input_box.str != '') {
+			/* push the last query to UI */
+			if (input_box.type == 'tex-input') {
+				fix_input("tex", input_box.str, function() {
+					tex_render_fast("div.qry-div-fix");
+
+					/* perform search */
+					srch_qry(qry, page, is_pushState);
+				});
+
+			} else if (input_box.type == 'term-input') {
+				fix_input("term", input_box.str, function() {
+
+					/* perform search */
+					srch_qry(qry, page, is_pushState);
+				});
+			}
+		} else {
+			/* perform search */
+			srch_qry(qry, page, is_pushState);
+		}
+
+		/* hide quiz */
+		quiz_hide();
+
+		/* hide "handy pad" */
+		if ($("#handy-pad").is(":visible")) {
+			toggle_expander($("#handy-pad-expander"));
+		}
+	}
+
+	window.type_and_click_search =
+	function (qry, page, is_pushState) {
+//		console.log('search: ' + raw_qry_str);
+		query.raw_str = qry;
+		raw_str_2_query();
+		Vue.nextTick(function () {
+			tex_render_fast("div.qry-div-fix");
+			click_search(page, is_pushState);
+		});
+	};
+
+	/* go to URI-specified query, if any */
+	var q = $("#q").val();
+	var p = $("#p").val();
+	if (q != "") {
+		var page = 1;
+		if (p != "")
+			page = parseInt(p, 10);
+
+		type_and_click_search(q, page, true);
+	}
+
+
 	/* Vue instance */
 	var qry_vm = new Vue({
 		el: "#qry-input-vue-app",
@@ -390,6 +486,27 @@ $(document).ready(function() {
 
 	window.qry_vm = qry_vm;
 
+	/* not ready to deploy until backers' database is non-empty */
+	$.ajax({
+		url: '/backers/join_rows',
+		type: 'GET',
+		success: function (data) {
+			var arr = data['res'];
+			if (arr.length > 0 && q == '$1.23$, test') {
+				window.qry_vm.en_donation = true;
+				window.srch_vm.unlock = false;
+				Vue.nextTick(function () {
+					$("span.collapse").next().hide();
+				});
+			} else {
+				console.log('donation disabled.');
+			}
+		},
+		error: function (req, err) {
+			console.log('donation disabled.');
+		}
+	});
+
 	/* on keyword editing */
 	window.dele_kw = function (idx) {
 		query.items.splice(idx, 1);
@@ -407,102 +524,9 @@ $(document).ready(function() {
 		switch_to_mq(save_str);
 	};
 
-	/* expander */
-	function toggle_expander(obj) {
-		head = obj;
-		below = head.next();
-		below.toggle("fast", function () {
-			t = head.text();
-			if (below.is(":visible"))
-				t = t.replace("+", "-");
-			else
-				t = t.replace("-", "+");
-			head.text(t);
-
-			$('#init-footer').stickToBottom();
-			Vue.nextTick(function () {
-				tex_render_fast("#handy-pad");
-			});
-		});
-	}
-	$("span.collapse").next().hide();
-	$("span.collapse").click(function () {
-		toggle_expander($(this));
-	});
-
-	/* search related */
-	function correct_math(str) {
-		/* simple rules to correct most common bad-math */
-		str = str.replace(/_\{ \}/g, " ");
-		str = str.replace(/\^\{ \}/g, " ");
-		str = str.replace(/\{_/g, "{");
-		//console.log(str);
-		return str;
-	}
-
-	function click_search(page, is_pushState) {
-		query.page = page;
-		arr = query.items;
-		input_box = arr[arr.length - 1];
-
-		qry = correct_math($("#qry").val());
-
-		if (input_box.str != '') {
-			/* push the last query to UI */
-			if (input_box.type == 'tex-input') {
-				fix_input("tex", input_box.str, function() {
-					tex_render_fast("div.qry-div-fix");
-
-					/* perform search */
-					srch_qry(qry, page, is_pushState);
-				});
-
-			} else if (input_box.type == 'term-input') {
-				fix_input("term", input_box.str, function() {
-
-					/* perform search */
-					srch_qry(qry, page, is_pushState);
-				});
-			}
-		} else {
-			/* perform search */
-			srch_qry(qry, page, is_pushState);
-		}
-
-		/* hide quiz */
-		quiz_hide();
-
-		/* hide "handy pad" */
-		if ($("#handy-pad").is(":visible")) {
-			toggle_expander($("#handy-pad-expander"));
-		}
-	}
-
 	$('#search_button').on('click', function() {
 		click_search(1, true);
 	});
-
-	window.type_and_click_search =
-	function (qry, page, is_pushState) {
-//		console.log('search: ' + raw_qry_str);
-		query.raw_str = qry;
-		raw_str_2_query();
-		Vue.nextTick(function () {
-			tex_render_fast("div.qry-div-fix");
-			click_search(page, is_pushState);
-		});
-	};
-
-	/* go to URI-specified query, if any */
-	var q = $("#q").val();
-	var p = $("#p").val();
-	if (q != "") {
-		var page = 1;
-		if (p != "")
-			page = parseInt(p, 10);
-
-		type_and_click_search(q, page, true);
-	}
 
 	/* render math pad */
 	Vue.nextTick(function () {

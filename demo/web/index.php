@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=d9780947d1c3bfa8" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=63a0fc4d38233436" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=d9780947d1c3bfa8"></script>
+<script type="text/javascript" src="bundle.min.js?hash=63a0fc4d38233436"></script>
 <style>
 img.social {
 	height: 16px;
@@ -183,12 +183,12 @@ a.btn, a.btn:visited{
 
 	</div>
 
-	<span class="collapse" title="Donate" id="donate-expander">(+) donations </span>
-	<div>
+	<span v-show="en_donation" class="collapse" title="Donate" id="donate-expander">(+) donations </span>
+	<div v-show="en_donation">
 		<h3>Please consider to donate</h3>
 		<div v-show="SE_user == 0">
-			<p>If this project has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward.</p>
-
+			<p>If this project has ever helped you in anyway, please consider to
+			sponsor me to keep maintaining and pushing forward.</p>
 
 			<p>Interested to donate?
 			<a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
@@ -445,23 +445,19 @@ SE.init({
 			</div>
 			<div style="position: absolute; top: 10px; width: 100%; top: 50%;
 			text-align: center; text-shadow: 0.5px 0.5px white;">
-			<template v-if="SE_user == 0">
-			<p>
+			<p v-if="SE_user == 0">
 				Please <a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
 				get authenticated</a> as StackExchange user to see blurred search result.
 				(<a class="btn" href="/backers/letter" target="_blank">why?</a>)
 			</p>
-			</template>
-			<template v-else>
-			<p v-if="!unlock">
+			<p v-if="SE_user != 0 && !unlock">
 				View complete search results by
 				<a class="btn" href="javascript: void(0)"
 				onclick="expand_donation_options()"> supporting</a>
 				this project.
 				(<a class="btn" v-on:click="SE_verify()" href="javascript: void(0)">refresh</a>)
+				<p v-if="verifying">verifying ...</p>
 			</p>
-			</template>
-			<p v-if="verifying">verifying ...</p>
 			</div>
 		</div>
 		<div v-else>
@@ -492,20 +488,15 @@ SE.init({
 		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
 		<b style="font-size:1.5em">→</b>
 	</span>
+
+	<p class="toleft" style="padding-top: 20px; color: grey">Thank you <a href="https://math.stackexchange.com/users/8297">Martin Sleziak</a> for your donation, for letting this site stay on real axis.</p>
 </div>
 
 <!-- Footer -->
 <div v-show="ret_code == 0"
 	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
-	<!--
-	<div style="text-align: center; display: inline-block;" class="toleft">
-		<span class="mainfont" style="font-size: 12px; vertical-align: text-top;">
-			This site can stay on the real axis thanks to our
-			<a style="btn" target="_blank" href="/backers">sponsors and backers</a>.
-		</span>
-	</div>
-	-->
+
 	<div style="text-align: right;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">

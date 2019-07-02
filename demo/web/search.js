@@ -8,7 +8,7 @@ var response = {
 	'SE_user': 0,
 	'SE_netID': 0,
 	'SE_site': 'https://stackexchange.com',
-	'unlock': false,
+	'unlock': true, /* disable donation as default */
 	'verifying': false,
 	"hits": []
 };
