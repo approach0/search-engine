@@ -168,6 +168,7 @@ a.btn, a.btn:visited{
 		<p>Know TeX? You are an expert! Try to edit directly the raw query below (separate keywords by commas).</p>
 		<input id="qry" style="padding-left: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
 		placeholder="empty"/>
+		(<b style="font-size: small">please separate math and non-math keywords by commas</b>)
 
 		<!-- hidden URI parameters -->
 		<input id="q" type="hidden" value=
@@ -182,14 +183,18 @@ a.btn, a.btn:visited{
 
 	</div>
 
-	<span class="collapse" title="Donate" id="donate-expander">(+) sponsors / backers</span>
+	<span class="collapse" title="Donate" id="donate-expander" style="color: #a22b22">(+) donations </span>
 	<div>
-		<h3>Please consider to back this project</h3>
+		<h3>Please consider to donate</h3>
 		<div v-show="SE_user == 0">
 			<p>If this project has ever helped you in anyway, please consider to sponsor me to keep maintaining and pushing forward.</p>
-			<p><a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
+
+
+			<p>Interested to donate?
+			<a class="btn" v-on:click="SE_auth()" href="javascript: void(0)">
 			Get authenticated</a> as StackExchange user to proceed to donation options
 			(<a class="btn" href="blank.html" target="_blank">why?</a>).
+
 		</div>
 
 		<div id="donation" v-else>
@@ -265,14 +270,17 @@ a.btn, a.btn:visited{
 <p>
 You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If you choose these methods, please also send a notice <a href="https://github.com/approach0/search-engine/issues/new" target="_blank">here</a> about your donation time and amount afterwards, in order to update our list of sponsor/backers.
 </p>
+
 	<h3>Benefits of being a Sponsor or Backer</h3>
 	<ul>
 		<li>Complete search results are provided to all sponsors or backers.</li>
 		<li>Sponsor can <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">request</a> to place a logo image on this site, in the name of a private entity or company.
-		<li>Within the budget limit, this site will try to index more data sources upon <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">the request</a> of any sponsor or backer.</li>
+		<li>Within the budget limit, this site will try to index more data sources upon any <a target="_blank" href="https://github.com/approach0/search-engine/issues/new">request</a> from sponsor or backer.</li>
 		<li>Your StackExchange flair will be shown in our <a href="/backers" target="_blank">list of sponsors or backers</a> and your support will always be appreciated!</li>
 	</ul>
+
 	</div>  <!-- END v-else -->
+
 		<script src="https://js.stripe.com/v3"></script>
 		<div id="stripe-error-message" style="color: red"></div>
 <script>
@@ -469,8 +477,13 @@ SE.init({
 <div v-show="ret_code == 0"
 	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
-
-	<div style="text-align: right;" class="toleft">
+	<div style="text-align: center; display: inline-block;" class="toleft">
+		<span class="mainfont" style="font-size: 12px; vertical-align: text-top;">
+			This site can stay on the real axis thanks to our
+			<a style="btn" target="_blank" href="/backers">sponsors and backers</a>.
+		</span>
+	</div>
+	<div style="text-align: right; display: inline-block;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
 		target="_blank" title="Tweet" class="twitter-share-button">
 		<img class="social" src="images/social/Twitter.svg"></a>
