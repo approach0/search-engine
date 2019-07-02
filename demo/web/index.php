@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=ec48b151911f393e" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=478c952188ae797e" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=ec48b151911f393e"></script>
+<script type="text/javascript" src="bundle.min.js?hash=478c952188ae797e"></script>
 <style>
 img.social {
 	height: 16px;
@@ -183,7 +183,7 @@ a.btn, a.btn:visited{
 
 	</div>
 
-	<span class="collapse" title="Donate" id="donate-expander" style="color: #a22b22">(+) donations </span>
+	<span class="collapse" title="Donate" id="donate-expander">(+) donations </span>
 	<div>
 		<h3>Please consider to donate</h3>
 		<div v-show="SE_user == 0">

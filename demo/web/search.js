@@ -203,7 +203,16 @@ $(document).ready(function() {
 					return false;
 			},
 			mess_up: function(text) {
-				return text.replace(/[a-z<>]/gi, 'b');
+				var list = text.split('em');
+				var out_li = [];
+				for (var i = 0; i < list.length; i++) {
+					var word = list[i];
+					if (word[word.length - 1] != '/') {
+						word = word.replace(/[a-z]/g, 'b');
+					}
+					out_li.push(word);
+				};
+				return out_li.join('em');
 			},
 			surround_special_html: function(text) {
 				/*
