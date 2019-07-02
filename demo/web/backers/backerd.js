@@ -1,5 +1,5 @@
-const stripe_apikey = 'pk_test_2TIdFYWCiMtR1Dt8Qg7pGczn00YUkb2ROx';
-const stripe_secret = 'sk_test_MVy8dD4kjCgYcVY4ThZJ8myI001jEJZMsv';
+const stripe_apikey = 'sk_test_MVy8dD4kjCgYcVY4ThZJ8myI001jEJZMsv';
+const stripe_secret = 'whsec_YB64LYACSPLbEhyFBp6ytueD5hTaKbwN';
 
 var stripe = require('stripe')(stripe_apikey);
 var sqlite3 = require('better-sqlite3');
@@ -10,7 +10,15 @@ var path = require('path');
 app = express();
 
 app.use(express.static('./dist'))
-app.use(bodyParser.json());
+
+app.use(bodyParser.json({
+	verify: function (req, res, buf) {
+		var url = req.originalUrl;
+		if (url.startsWith('/webhook')) {
+			req.my_rawBody = buf;
+		}
+	}
+}));
 
 var db = new sqlite3('backers.sqlite3', {verbose: console.log});
 db.prepare(`CREATE TABLE IF NOT EXISTS
@@ -24,12 +32,12 @@ db.prepare(`CREATE TABLE IF NOT EXISTS
  * Write functions
  */
 
-function save_donate(donate) {
-	const reference_id = donate.client_reference_id;
-	const user_id = reference_id.split('@')[0];
+function save_donate(donate_info) {
+	const reference_id = donate_info.client_reference_id;
+	const net_id = reference_id.split('@')[0];
 	const site    = reference_id.split('@')[1];
-	const net_id  = reference_id.split('@')[2];
-	const dispi = donate.display_items[0];
+	const user_id  = reference_id.split('@')[2];
+	const dispi = donate_info.display_items[0];
 	let badge;
 	if (dispi.type == 'plan') {
 		if (dispi.amount == 336)
@@ -54,6 +62,8 @@ function save_donate(donate) {
 function reset_db() {
 	db.prepare(`DELETE FROM flair`).run();
 	db.prepare(`DELETE FROM donate`).run();
+	db.prepare(`DELETE FROM login`).run();
+
 	const flair = db.prepare(`INSERT OR REPLACE INTO flair (user_id, site, net_id)
 		VALUES (?, ?, ?)`);
 	const donate = db.prepare(`INSERT INTO donate (net_id, badge, donate_id)
@@ -135,16 +145,17 @@ function get_login_records() {
 	return {'res': arr};
 }
 
-app.post('/webhook', function (request, response) {
+app.post('/webhook', (request, response) => {
 	const sig = request.headers['stripe-signature'];
 	let ev;
 	try {
-		ev = stripe.webhooks.constructEvent(request.body, sig, stripe_secret);
+		ev = stripe.webhooks.constructEvent(request.my_rawBody, sig, stripe_secret);
 	} catch (err) {
+		console.log(`Webhook Error: ${err.message}`);
 		return response.status(400).send(`Webhook Error: ${err.message}`);
 	}
-	if (event.type === 'checkout.session.completed') {
-		const donate = event.data.object;
+	if (ev.type === 'checkout.session.completed') {
+		const donate = ev.data.object;
 		save_donate(donate);
 	}
 	response.send('Webhook OK. Hooray!');
