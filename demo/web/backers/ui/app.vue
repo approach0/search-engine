@@ -68,7 +68,7 @@ export default {
         Please try it again later, I am really sorry.`;
     } else if (session_id !== undefined) {
       this.title = `
-        You are listed as our new contributor below, can you see that?
+        Your contribution will always be remembered.
         Thank you so much for your support!`;
     }
   },
