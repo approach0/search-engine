@@ -89,16 +89,17 @@ int main()
 	postlist_print_fields(c->fields);
 
 	/* create a test posting list */
+	printf("creating a buffer of %lu bytes...\n", 5 * c->fields.tot_size);
 	struct A *doc = postlist_random(5, c->fields);
 	postlist_print(doc, 5, c->fields);
 
 	/* compress the posting into a buffer */
-	char encoded[256];
+	char encoded[2048];
 	sz = postlist_compress(encoded, doc, 5, c);
 	printf("%lu bytes compressed into %lu bytes. \n", 5 * sizeof(struct A), sz);
 
 	/* decompress back to original posting list */
-	char decoded[215];
+	char decoded[2048];
 	sz = postlist_decompress(decoded, encoded, 5, c);
 	printf("%lu bytes compressed data decoded. \n", sz);
 
