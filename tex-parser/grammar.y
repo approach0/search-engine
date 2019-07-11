@@ -27,7 +27,7 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 	}
 } <nd>
 
-%error-verbose
+%define parse.error verbose
 
 /* ====================
  * token definitions

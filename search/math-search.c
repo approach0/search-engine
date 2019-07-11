@@ -352,9 +352,9 @@ math_l2_binlp_assignment_upate(struct math_l2_postlist *po)
 	for (int i = 0; i < po->iter->size; i++) {
 		uint32_t pid = po->iter->map[i];
 		for (int k = 0; k < pruner->postlist_nodes[pid].sz; k++) {
-			int rid = pruner->postlist_nodes[pid].rid[k];
+			int idx = pruner->postlist_nodes[pid].idx[k];
 			int ref = pruner->postlist_nodes[pid].ref[k];
-			(void)bin_lp_assign(blp, rid - 1, pid, ref);
+			(void)bin_lp_assign(blp, idx, pid, ref);
 		}
 	}
 
@@ -467,12 +467,11 @@ get_hit_nodes(struct math_l2_postlist *po, int *save_idx)
 			struct node_set ns = pruner->postlist_nodes[pid];
 
 			for (int j = 0; j < ns.sz; j++) {
-				int qid = ns.rid[j];
+				int q_idx = ns.idx[j];
 
-				if (-1 == u16_ht_lookup(&pruner->q_hit_nodes_ht, qid)) {
-					int qid_idx = pruner->nodeID2idx[qid];
-					save_idx[n_save++] = qid_idx;
-					u16_ht_incr(&pruner->q_hit_nodes_ht, qid, 1);
+				if (-1 == u16_ht_lookup(&pruner->q_hit_nodes_ht, q_idx)) {
+					save_idx[n_save++] = q_idx;
+					u16_ht_incr(&pruner->q_hit_nodes_ht, q_idx, 1);
 				}
 			}
 		}
@@ -506,7 +505,7 @@ vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 		}
 
 		if (cur == candidate) {
-			int qsw = q_node->secttr[i].width;
+			int qsw = q_node->secttr_w[i];
 			early_upbound += qsw;
 		}
 	}
@@ -521,7 +520,7 @@ vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 	for (int i = 0; i < q_node->n; i++) {
 		int pid = q_node->postlist_id[i];
 		uint64_t cur = POSTMERGER_POSTLIST_CALL(po->iter, cur, pid);
-		int qsw = q_node->secttr[i].width;
+		int qsw = q_node->secttr_w[i];
 
 		leftover -= qsw; /* must precede `continue' */
 
@@ -697,7 +696,7 @@ static int math_l2_postlist_next(void *po_)
 			mr = vec_match(po, q_node, widest.width, threshold);
 			if (mr.w > widest.width) {
 				widest.width = mr.w;
-				widest.qr = q_node->secttr[0].rnode;
+				widest.qr = q_node->id;
 				widest.dr = mr.dr;
 			}
 		}

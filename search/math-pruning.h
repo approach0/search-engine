@@ -1,20 +1,17 @@
 #pragma once
-struct sector_tr {
-	int rnode;
-	int width;
-};
-
 #include "postmerge/config.h" // for MAX_MERGE_POSTINGS
 #include <stdint.h>
+
 struct pruner_node {
 	int width;
 	int n; // number of sector trees
-	struct sector_tr secttr[MAX_MERGE_POSTINGS]; // each sect rnode is the same
+	int id;
+	int secttr_w[MAX_MERGE_POSTINGS];
 	int postlist_id[MAX_MERGE_POSTINGS];
 };
 
 struct node_set {
-	int *rid; /* root of reference sector tree */
+	int *idx; /* reference sector tree node index */
 	int *ref; /* width of reference sector tree */
 	int  sz;
 };
@@ -32,7 +29,7 @@ struct math_pruner {
 	int postlist_pivot; // advance-skip seperator
 	struct node_set postlist_nodes[MAX_MERGE_POSTINGS]; // back-references
 	int postlist_ref[MAX_MERGE_POSTINGS]; // reference counter
-	int postlist_max[MAX_MERGE_POSTINGS]; // max sector width
+	int postlist_max[MAX_MERGE_POSTINGS]; // max sector width (MaxRef)
 	int postlist_len[MAX_MERGE_POSTINGS]; // postlist path prefix-length
 
 	/* upperbound pre-calculations */

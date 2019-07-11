@@ -14,13 +14,6 @@
 
 void math_pruner_update(struct math_pruner *pruner)
 {
-	/* first, update nodeID2idx */
-	for (int i = 0; i < pruner->n_nodes; i++) {
-		struct pruner_node *node = pruner->nodes + i;
-		int node_id = node->secttr[0].rnode;
-		pruner->nodeID2idx[node_id] = i;
-	}
-
 	/* clear back-reference */
 	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
 		pruner->postlist_nodes[i].sz = 0;
@@ -30,10 +23,9 @@ void math_pruner_update(struct math_pruner *pruner)
 	memset(pruner->postlist_max, 0, MAX_MERGE_POSTINGS * sizeof(int));
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
-		int rid = node->secttr[0].rnode;
 
 		for (int j = 0; j < node->n; j++) {
-			int ref = node->secttr[j].width;
+			int ref = node->secttr_w[j];
 
 			/* update postlist_ref */
 			int pid = node->postlist_id[j];
@@ -41,12 +33,12 @@ void math_pruner_update(struct math_pruner *pruner)
 
 			/* update postlist_nodes */
 			int k = pruner->postlist_nodes[pid].sz;
-			pruner->postlist_nodes[pid].rid[k] = rid;
+			pruner->postlist_nodes[pid].idx[k] = i;
 			pruner->postlist_nodes[pid].ref[k] = ref;
 			pruner->postlist_nodes[pid].sz += 1;
 
 			/* update postlist_max */
-			int width = node->secttr[j].width;
+			int width = node->secttr_w[j];
 			if (pruner->postlist_max[pid] < width)
 				pruner->postlist_max[pid] = width;
 		}
@@ -66,19 +58,23 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 
 		int dirty_r[n_nodes];
 		memset(dirty_r, 0, sizeof(dirty_r));
+		/* for each path of the same token sequence */
 		for (int j = 0; j < ele->dup_cnt + 1; j++) {
 			uint32_t r = ele->rid[j];
 			struct pruner_node *node = pruner->nodes + (r - 1);
-			if (!dirty_r[r - 1]) {
-				dirty_r[r - 1] = 1;
-				/* allocate new sector tree */
-				node->n += 1;
-				node->secttr[node->n - 1].rnode = r;
-				node->postlist_id[node->n - 1] = i;
-			}
 
-			/* increment sector tree width */
-			node->secttr[node->n - 1].width += 1;
+			/* sector tree width increment */
+			node->secttr_w[node->n] += 1;
+
+			if (!dirty_r[r - 1]) {
+				/* run this scope only once for a node */
+				dirty_r[r - 1] = 1;
+				/* set node id */
+				node->id = r;
+				/* allocate new sector tree */
+				node->postlist_id[node->n] = i;
+				node->n += 1;
+			}
 		}
 
 		pruner->postlist_len[i] = ele->prefix_len;
@@ -89,7 +85,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 	for (int i = 0; i < n_nodes; i++) {
 		struct pruner_node *ni = pruner->nodes + i;
 
-		if (ni->secttr[0].rnode > 0) {
+		if (ni->id > 0) {
 			struct pruner_node *nj = pruner->nodes + pruner->n_nodes;
 			struct pruner_node tmp;
 			tmp = *nj;
@@ -105,14 +101,14 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 
 		for (int i = 0; i < n->n; i++)
 			for (int j = i + 1; j < n->n; j++)
-				if (n->secttr[i].width < n->secttr[j].width) {
-					struct sector_tr t1 = n->secttr[i];
+				if (n->secttr_w[i] < n->secttr_w[j]) {
+					int t1 = n->secttr_w[i];
 					int t2 = n->postlist_id[i];
 
-					n->secttr[i] = n->secttr[j];
+					n->secttr_w[i] = n->secttr_w[j];
 					n->postlist_id[i] = n->postlist_id[j];
 
-					n->secttr[j] = t1;
+					n->secttr_w[j] = t1;
 					n->postlist_id[j] = t2;
 				}
 	}
@@ -122,7 +118,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		struct pruner_node *node = pruner->nodes + i;
 		int sum = 0;
 		for (int j = 0; j < node->n; j++) {
-			sum += node->secttr[j].width;
+			sum += node->secttr_w[j];
 		}
 		node->width = sum;
 	}
@@ -160,14 +156,11 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 			}
 		}
 		/* allocate memory only */
-		pruner->postlist_nodes[i].rid = malloc(cnt * sizeof(int));
+		pruner->postlist_nodes[i].idx = malloc(cnt * sizeof(int));
 		pruner->postlist_nodes[i].ref = malloc(cnt * sizeof(int));
 	}
 
-	/* allocate nodeID2idx table */
-	pruner->nodeID2idx = calloc(1 + n_nodes, sizeof(uint16_t));
-
-	/* nodeID2idx is allocated, setup dynamical data structures */
+	/* setup dynamical data structures */
 	math_pruner_update(pruner);
 
 	/* hashtable initialization */
@@ -188,14 +181,10 @@ void math_pruner_free(struct math_pruner* pruner)
 	free(pruner->nodes);
 
 	/* free back-references to nodes */
-	for (int i = 0; i < MAX_MERGE_POSTINGS; i++)
-		if (pruner->postlist_nodes[i].rid) {
-			free(pruner->postlist_nodes[i].rid);
-			free(pruner->postlist_nodes[i].ref);
-		}
-
-	/* free nodeID2idx table */
-	free(pruner->nodeID2idx);
+	for (int i = 0; i < MAX_MERGE_POSTINGS; i++) {
+		free(pruner->postlist_nodes[i].idx);
+		free(pruner->postlist_nodes[i].ref);
+	}
 
 	/* free hashtables */
 	u16_ht_free(&pruner->accu_ht);
@@ -224,10 +213,9 @@ void math_pruner_print_postlist(struct math_pruner *pruner, int pid)
 	// printf("(ref: %d) ", pruner->postlist_ref[pid]);
 	if (pruner->postlist_ref[pid] > 0) printf("<= ");
 	for (int k = 0; k < pruner->postlist_nodes[pid].sz; k++) {
-		int rid = pruner->postlist_nodes[pid].rid[k];
-		int idx = pruner->nodeID2idx[rid];
+		int idx = pruner->postlist_nodes[pid].idx[k];
 		struct pruner_node *qnode = pruner->nodes + idx;
-		printf("node#%d/%d ", rid, qnode->width);
+		printf("node#%d/%d ", qnode->id, qnode->width);
 	}
 }
 
@@ -236,17 +224,17 @@ void math_pruner_print(struct math_pruner *pruner)
 	printf("math pruner: (pivot = %d)\n", pruner->postlist_pivot);
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
-		int rid = node->secttr[0].rnode;
-		printf("[%d] node#%d / %d: \n", pruner->nodeID2idx[rid], rid,
+		printf("[%d] node#%d / %d: \n", i, node->id,
 		       node->width);
 		for (int j = 0; j < node->n; j++) {
 			int pid = node->postlist_id[j];
 			printf("\t sector tree: #%d / %d ---> po#%d, ",
-				node->secttr[j].rnode, node->secttr[j].width, pid);
+				node->id, node->secttr_w[j], pid);
 			printf("max: %d, len: %d, ref: %d [", pruner->postlist_max[pid],
 				pruner->postlist_len[pid], pruner->postlist_ref[pid]);
 			for (int k = 0; k < pruner->postlist_nodes[pid].sz; k++) {
-				printf("node#%d ", pruner->postlist_nodes[pid].rid[k]);
+				int idx = pruner->postlist_nodes[pid].idx[k];
+				printf("node#%d ", pruner->nodes[idx].id);
 			}
 			printf("]\n");
 		}
