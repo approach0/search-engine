@@ -12,6 +12,7 @@
 #include "math-expr-sim.h"
 #include "math-pruning.h"
 
+/* do update whenever a node in pruner is deleted */
 void math_pruner_update(struct math_pruner *pruner)
 {
 	/* clear back-reference */
@@ -24,11 +25,12 @@ void math_pruner_update(struct math_pruner *pruner)
 	for (int i = 0; i < pruner->n_nodes; i++) {
 		struct pruner_node *node = pruner->nodes + i;
 
+		/* for each sector tree in query node ... */
 		for (int j = 0; j < node->n; j++) {
+			int pid = node->postlist_id[j];
 			int ref = node->secttr_w[j];
 
 			/* update postlist_ref */
-			int pid = node->postlist_id[j];
 			pruner->postlist_ref[pid] += 1;
 
 			/* update postlist_nodes */
@@ -38,9 +40,8 @@ void math_pruner_update(struct math_pruner *pruner)
 			pruner->postlist_nodes[pid].sz += 1;
 
 			/* update postlist_max */
-			int width = node->secttr_w[j];
-			if (pruner->postlist_max[pid] < width)
-				pruner->postlist_max[pid] = width;
+			if (pruner->postlist_max[pid] < ref)
+				pruner->postlist_max[pid] = ref;
 		}
 	}
 }
@@ -160,7 +161,7 @@ math_pruner_init(struct math_pruner* pruner, uint32_t n_nodes,
 		pruner->postlist_nodes[i].ref = malloc(cnt * sizeof(int));
 	}
 
-	/* setup dynamical data structures */
+	/* setup dynamical posting list references (ref, nodes, max) */
 	math_pruner_update(pruner);
 
 	/* hashtable initialization */
