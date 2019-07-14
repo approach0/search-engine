@@ -50,6 +50,9 @@ static char test_payload[][1024] = {
 
 #define N (sizeof(test_payload) / 1024)
 
+#define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
+#define ON_DISK_SKIPPY_SKIPPY_SPANS 6
+
 // ---
 
 #pragma pack(push, 1)
@@ -86,7 +89,7 @@ int skippy_fopen(struct skippy_fh *sfh, const char *path,
 			fail_cnt ++;
 			sfh->len[i] = 0L;
 		}
-	
+
 		fseek(fh, 0, SEEK_END);
 		sfh->len[i] = ftell(fh) / sizeof(struct skippy_data);
 		rewind(fh);
@@ -117,7 +120,7 @@ fappend_level(struct skippy_fh *sfh, int level, uint64_t key, long pay_offset)
 	long len, child_offset;
 	if (level == 0) {
 		/* bottom level will always be appended */
-		len = 1;
+		len = ON_DISK_SKIPPY_MIN_N_BLOCKS;
 		child_offset = pay_offset;
 	} else {
 		/* other levels depend on lower level */
@@ -125,7 +128,7 @@ fappend_level(struct skippy_fh *sfh, int level, uint64_t key, long pay_offset)
 		child_offset = (len - 1) * sizeof(struct skippy_data);
 	}
 
-	if (len % sfh->n_spans == 1) {
+	if (len % sfh->n_spans == ON_DISK_SKIPPY_MIN_N_BLOCKS) {
 		struct skippy_data sd = {key, child_offset};
 		return fwrite(&sd, sizeof(struct skippy_data), 1, sfh->fh[level]);
 	} else {
@@ -207,7 +210,7 @@ int main()
 		skippy_node_init(&blk->sn, i);
 		skippy_append(&skippy, &blk->sn);
 	}
-	
+
 	skippy_print(&skippy, true);
 
 	struct skippy_node *cur, *save;
@@ -218,7 +221,7 @@ int main()
 
 	do {
 		struct skippy_fh sfh;
-		if (skippy_fopen(&sfh, "test", "a+", DEFAULT_SKIPPY_SPANS))
+		if (skippy_fopen(&sfh, "test", "a+", ON_DISK_SKIPPY_SKIPPY_SPANS))
 			break;
 
 		skippy_fappend(&sfh, skippy.head[0], test_block_payload_hook);
