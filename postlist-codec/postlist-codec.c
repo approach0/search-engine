@@ -123,6 +123,7 @@ static void _print_codec_arrays(struct postlist_codec *c)
 size_t
 postlist_compress(void *dest, void *src, uint n, struct postlist_codec *c)
 {
+	/* separate values by fields, put into corresponding field array */
 	for (uint i = 0; i < n; i++) {
 		void *cur = (char *)src + i * c->fields.tot_size;
 		for (uint j = 0; j < c->fields.n_fields; j++) {
