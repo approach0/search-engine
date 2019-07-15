@@ -12,24 +12,18 @@ struct test_block {
 	size_t sz;
 };
 
-static long test_block_payload_hook(char *path, void *blk_)
+static long test_block_payload_hook(void *blk_, size_t *sz, void *args)
 {
-	char fullname[MAX_DIR_PATH_NAME_LEN];
-	size_t n;
-	FILE *fh;
-
+	size_t offset;
 	P_CAST(blk, struct test_block, blk_);
-	sprintf(fullname, "%s.bin", path);
-	fh = fopen(fullname, "a");
+	P_CAST(fh, FILE, args);
 
-	n = fwrite(&blk->sz, sizeof(blk->sz), 1, fh);
-	if (n != 1) return 0;
+	*sz = fwrite(&blk->sz, 1, sizeof(blk->sz), fh);
+	*sz += fwrite(blk->payload, 1, blk->sz, fh);
 
-	fwrite(blk->payload, sizeof(blk->sz), 1, fh);
-	n = ftell(fh);
-	fclose(fh);
+	offset = ftell(fh);
 
-	return n;
+	return offset;
 }
 
 static char test_payload[][1024] = {
@@ -70,7 +64,7 @@ struct skippy_fh {
 	long   len[SKIPPY_TOTAL_LEVELS];
 };
 
-typedef long (*skippy_payload_hook)(char *, void *);
+typedef long (*skippy_payload_hook)(void *, size_t *, void *);
 
 int skippy_fopen(struct skippy_fh *sfh, const char *path,
                  const char *mode, int n_spans)
@@ -98,6 +92,12 @@ int skippy_fopen(struct skippy_fh *sfh, const char *path,
 	return fail_cnt;
 }
 
+void skippy_fclose(struct skippy_fh *sfh)
+{
+	for (int i = 0; i < SKIPPY_TOTAL_LEVELS; i++)
+		if (sfh->fh[i]) fclose(sfh->fh[i]);
+}
+
 void skippy_fseek_end(struct skippy_fh *sfh)
 {
 	for (int i = 0; i < SKIPPY_TOTAL_LEVELS; i++) {
@@ -112,6 +112,17 @@ void skippy_frewind(struct skippy_fh *sfh)
 		FILE *fh = sfh->fh[i];
 		rewind(fh);
 	}
+}
+
+long skippy_fnext(struct skippy_fh *sfh)
+{
+	FILE *fh = sfh->fh[0];
+	struct skippy_data sd;
+	if (fread(&sd, sizeof(struct skippy_data), 1, fh)) {
+		return sd.child_offset;
+	}
+
+	return 0;
 }
 
 static int
@@ -137,7 +148,7 @@ fappend_level(struct skippy_fh *sfh, int level, uint64_t key, long pay_offset)
 }
 
 int skippy_fappend(struct skippy_fh *sfh, struct skippy_node *from,
-                   skippy_payload_hook payload_hook)
+                   skippy_payload_hook payload_hook, void *args)
 {
 	struct skippy_node *cur = from;
 
@@ -146,12 +157,13 @@ int skippy_fappend(struct skippy_fh *sfh, struct skippy_node *from,
 
 	for (; cur != NULL; cur = cur->next[0]) {
 		/* get last payload writing position */
-		long pay_offset = payload_hook(sfh->path, cur);
+		size_t wr_sz;
+		long pay_offset = payload_hook(cur, &wr_sz, args);
 		if (pay_offset == 0)
 			break;
 
 		for (int i = 0; i < SKIPPY_TOTAL_LEVELS; i++) {
-			int incr = fappend_level(sfh, i, cur->key, pay_offset);
+			int incr = fappend_level(sfh, i, cur->key, pay_offset - wr_sz);
 			sfh->len[i] += incr;
 			if (incr == 0) break;
 		}
@@ -189,13 +201,6 @@ void skippy_fprint(struct skippy_fh *sfh)
 	}
 }
 
-void skippy_fclose(struct skippy_fh *sfh)
-{
-	for (int i = 0; i < SKIPPY_TOTAL_LEVELS; i++) {
-		fclose(sfh->fh[i]);
-	}
-}
-
 int main()
 {
 	struct skippy skippy;
@@ -219,16 +224,42 @@ int main()
 		printf("[%u] %s\n", cur->key, p->payload);
 	}
 
+
+	FILE *fh = fopen("postinglist.bin", "a+");
+
 	do {
 		struct skippy_fh sfh;
+
+		// writer test
 		if (skippy_fopen(&sfh, "test", "a+", ON_DISK_SKIPPY_SKIPPY_SPANS))
 			break;
 
-		skippy_fappend(&sfh, skippy.head[0], test_block_payload_hook);
+		skippy_fappend(&sfh, skippy.head[0], test_block_payload_hook, fh);
 		skippy_fprint(&sfh);
 
 		skippy_fclose(&sfh);
+
+		// reader test
+		if (skippy_fopen(&sfh, "test", "r", ON_DISK_SKIPPY_SKIPPY_SPANS))
+			break;
+
+		size_t offset;
+		rewind(fh);
+		while ((offset = skippy_fnext(&sfh))) {
+			size_t sz;
+			char buf[1024];
+			fseek(fh, offset, SEEK_SET);
+			fread(&sz, sizeof(size_t), 1, fh);
+			if ((sz = fread(buf, 1, sz, fh))) {
+				buf[sz] = '\0';
+				printf("<<%s>>\n", buf);
+			}
+		}
+
+		skippy_fclose(&sfh);
 	} while (0);
+
+	fclose(fh);
 
 	skippy_free(&skippy, struct test_block, sn, free(p->payload); free(p));
 
