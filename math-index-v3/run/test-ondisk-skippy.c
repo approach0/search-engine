@@ -46,6 +46,7 @@ static char test_payload[][1024] = {
 
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
 #define ON_DISK_SKIPPY_SKIPPY_SPANS 6
+#define ON_DISK_SKIPPY_BUF_LEN 3
 
 // ---
 
@@ -62,9 +63,60 @@ struct skippy_fh {
 
 	FILE   *fh[SKIPPY_TOTAL_LEVELS];
 	long   len[SKIPPY_TOTAL_LEVELS];
+
+	struct skippy_data buf[SKIPPY_TOTAL_LEVELS][ON_DISK_SKIPPY_BUF_LEN];
+	size_t buf_cur[SKIPPY_TOTAL_LEVELS];
+	size_t buf_end[SKIPPY_TOTAL_LEVELS]; /* final available position */
+	long   cur_offset[SKIPPY_TOTAL_LEVELS];
 };
 
 typedef long (*skippy_payload_hook)(void *, size_t *, void *);
+
+static long frebuf(struct skippy_fh *sfh, int level)
+{
+	FILE *fh = sfh->fh[level];
+	size_t *cur = sfh->buf_cur + level;
+	size_t *end = sfh->buf_end + level;
+	struct skippy_data *buf = sfh->buf[level];
+	long cur_offset = ftell(fh) - sizeof(struct skippy_data);
+
+	buf[0] = buf[*cur];
+	*end = fread(buf + 1, sizeof(struct skippy_data),
+	             ON_DISK_SKIPPY_BUF_LEN - 1, fh);
+	return cur_offset;
+}
+
+static void frst_buf(struct skippy_fh *sfh, int level)
+{
+	sfh->buf[level][0].key = 0;
+	sfh->buf[level][0].child_offset = 0;
+	sfh->buf_cur[level] = 0;
+	sfh->buf_end[level] = 0;
+	sfh->cur_offset[level] = frebuf(sfh, level);
+}
+
+static void level_buf_print(struct skippy_fh *sfh, int level)
+{
+	size_t cur = sfh->buf_cur[level];
+	size_t end = sfh->buf_end[level];
+	struct skippy_data *buf = sfh->buf[level];
+
+	for (int i = 0; i <= end; i++)
+		if (i == cur)
+			printf("[#%lu,@%lu] ", buf[i].key, buf[i].child_offset);
+		else
+			printf(" #%lu,@%lu  ", buf[i].key, buf[i].child_offset);
+}
+
+void skippy_fh_buf_print(struct skippy_fh *sfh)
+{
+	for (int i = SKIPPY_TOTAL_LEVELS - 1; i >= 0; i--) {
+		printf("level[%d] (@%ld): ", i, sfh->cur_offset[i]);
+
+		level_buf_print(sfh, i);
+		printf("\n");
+	}
+}
 
 int skippy_fopen(struct skippy_fh *sfh, const char *path,
                  const char *mode, int n_spans)
@@ -72,21 +124,28 @@ int skippy_fopen(struct skippy_fh *sfh, const char *path,
 	char fullname[SKIPPY_TOTAL_LEVELS][MAX_DIR_PATH_NAME_LEN];
 	int fail_cnt = 0;
 
+	memset(sfh, 0, sizeof(struct skippy_fh));
+
 	sfh->n_spans = n_spans;
 	strcpy(sfh->path, path);
 	for (int i = 0; i < SKIPPY_TOTAL_LEVELS; i++) {
+		/* set fh */
 		FILE *fh;
 		sprintf(fullname[i], "%s.skp-l%d.bin", path, i);
 		fh = fopen(fullname[i], mode);
 		sfh->fh[i] = fh;
 		if (fh == NULL) {
 			fail_cnt ++;
-			sfh->len[i] = 0L;
+			continue;
 		}
 
+		/* set len */
 		fseek(fh, 0, SEEK_END);
 		sfh->len[i] = ftell(fh) / sizeof(struct skippy_data);
 		rewind(fh);
+
+		/* reset reader buf */
+		frst_buf(sfh, i);
 	}
 
 	return fail_cnt;
@@ -114,12 +173,69 @@ void skippy_frewind(struct skippy_fh *sfh)
 	}
 }
 
-long skippy_fnext(struct skippy_fh *sfh)
+struct skippy_data skippy_fnext(struct skippy_fh *sfh, int level)
 {
-	FILE *fh = sfh->fh[0];
-	struct skippy_data sd;
-	if (fread(&sd, sizeof(struct skippy_data), 1, fh)) {
-		return sd.child_offset;
+	size_t *cur = sfh->buf_cur + level;
+	size_t *end = sfh->buf_end + level;
+	long   *cur_offset = sfh->cur_offset + level;
+	struct skippy_data *buf = sfh->buf[level];
+
+	(*cur) += 1;
+	(*cur_offset) += sizeof(struct skippy_data);
+
+	if (*cur > *end) {
+		/* passed the final one */
+		return ((struct skippy_data){0, 0});
+	} else if (*cur == *end) {
+		/* unstable state (next one unavailable) */
+		frebuf(sfh, level);
+		*cur = 0;
+	}
+
+	return buf[*cur];
+}
+
+static long peek_next_key(struct skippy_fh *sfh, int level)
+{
+	size_t cur = sfh->buf_cur[level];
+	size_t end = sfh->buf_end[level];
+	struct skippy_data *buf = sfh->buf[level];
+
+	if (cur + 1 > end)
+		return LONG_MAX;
+	else
+		return buf[cur + 1].key;
+}
+
+static long fbuf_seek(struct skippy_fh *sfh, int level, long offset)
+{
+	FILE *fh = sfh->fh[level];
+	fseek(fh, offset, SEEK_SET);
+
+	frst_buf(sfh, level);
+	skippy_fnext(sfh, level);
+	return 0;
+}
+
+long skippy_fskip_to(struct skippy_fh *sfh, uint64_t key)
+{
+	int level = SKIPPY_TOTAL_LEVELS - 1;
+
+	while (level >= 0) {
+		long next = peek_next_key(sfh, level);
+
+		if (next <= key) {
+			skippy_fnext(sfh, level);
+		} else {
+			size_t cur = sfh->buf_cur[level];
+			struct skippy_data *buf = sfh->buf[level];
+			long offset = buf[cur].child_offset;
+
+			if (offset != sfh->cur_offset[level])
+				fbuf_seek(sfh, level, offset);
+
+			level --;
+		}
 	}
 
 	return 0;
@@ -212,7 +328,7 @@ int main()
 		blk->sz = strlen(test_payload[i]) + 1;
 		blk->payload = malloc(blk->sz);
 		strcpy(blk->payload, test_payload[i]);
-		skippy_node_init(&blk->sn, i);
+		skippy_node_init(&blk->sn, i + 1);
 		skippy_append(&skippy, &blk->sn);
 	}
 
@@ -230,31 +346,34 @@ int main()
 	do {
 		struct skippy_fh sfh;
 
-		// writer test
+		/* writing test */
 		if (skippy_fopen(&sfh, "test", "a+", ON_DISK_SKIPPY_SKIPPY_SPANS))
 			break;
-
 		skippy_fappend(&sfh, skippy.head[0], test_block_payload_hook, fh);
 		skippy_fprint(&sfh);
-
+		printf("\n");
 		skippy_fclose(&sfh);
 
-		// reader test
+		/* reading test */
 		if (skippy_fopen(&sfh, "test", "r", ON_DISK_SKIPPY_SKIPPY_SPANS))
 			break;
 
-		size_t offset;
-		rewind(fh);
-		while ((offset = skippy_fnext(&sfh))) {
+		struct skippy_data sd;
+		do {
+			sd = skippy_fnext(&sfh, 0);
+			if (0 == sd.key) break;
+			// printf("---\n");
+			skippy_fh_buf_print(&sfh);
+
 			size_t sz;
 			char buf[1024];
-			fseek(fh, offset, SEEK_SET);
+			fseek(fh, sd.child_offset, SEEK_SET);
 			fread(&sz, sizeof(size_t), 1, fh);
 			if ((sz = fread(buf, 1, sz, fh))) {
 				buf[sz] = '\0';
 				printf("<<%s>>\n", buf);
 			}
-		}
+		} while (1);
 
 		skippy_fclose(&sfh);
 	} while (0);
