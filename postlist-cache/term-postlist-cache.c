@@ -4,9 +4,6 @@
 
 #include "common/common.h"
 
-#include "list/list.h"
-#include "tree/bintr.h"
-
 #include "term-index/term-index.h"
 
 #include "postlist-codec/postlist-codec.h"

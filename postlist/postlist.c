@@ -164,7 +164,7 @@ static void forward_cur(struct postlist_node **cur)
 	struct skippy_node *next = (*cur)->sn.next[0];
 
 	/* forward one step */
-	*cur = MEMBER_2_STRUCT(next, struct postlist_node, sn);
+	*cur = container_of(next, struct postlist_node, sn);
 }
 
 static void
@@ -264,7 +264,7 @@ postlist_iter_jump32(struct postlist_iterator* iter, uint32_t target)
 	jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
 
 	/* this is a new block, update pointer and rebuf. */
-	iter->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
+	iter->cur = container_of(jump_to, struct postlist_node, sn);
 	postlist_iter_rebuf(iter);
 
 glide:
@@ -290,7 +290,7 @@ postlist_iter_jump(struct postlist_iterator* iter, uint64_t target)
 	jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
 
 	/* this is a new block, update pointer and rebuf. */
-	iter->cur = MEMBER_2_STRUCT(jump_to, struct postlist_node, sn);
+	iter->cur = container_of(jump_to, struct postlist_node, sn);
 	postlist_iter_rebuf(iter);
 
 glide:

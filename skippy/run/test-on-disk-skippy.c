@@ -6,7 +6,7 @@
 #include "ondisk-skippy.h"
 
 #include "mhook/mhook.h"
-#include "common/common.h" /* P_CAST */
+#include "common/common.h" /* PTR_CAST */
 
 #define N (sizeof(test_payload) / 1024)
 
@@ -20,8 +20,8 @@ static struct skippy_data
 test_block_write_hook(struct skippy_node *blk_, void *args)
 {
 	struct skippy_data sd;
-	P_CAST(fh, FILE, args);
-	P_CAST(blk, struct test_block, blk_);
+	PTR_CAST(fh, FILE, args);
+	PTR_CAST(blk, struct test_block, blk_);
 
 	fseek(fh, 0, SEEK_END);
 	sd.child_offset = ftell(fh);
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 
 			struct skippy_node *cur, *save;
 			skippy_foreach(cur, save, &skippy, 0) {
-				P_CAST(p, struct test_block, cur);
+				PTR_CAST(p, struct test_block, cur);
 				printf("[%u] %s\n", cur->key, p->payload);
 			}
 

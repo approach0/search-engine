@@ -2,7 +2,6 @@
 /*
  * indices structures
  */
-#include "list/list.h"
 #include "term-index/term-index.h"
 #include "math-index/math-index.h"
 #include "blob-index/blob-index.h"

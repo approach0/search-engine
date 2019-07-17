@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include "list/list.h"
 
-#define MAX_QRY_MATHS 32
-
 struct subpath_ele {
 	struct list_node ln;
 	uint32_t         dup_cnt;

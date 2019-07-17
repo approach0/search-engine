@@ -409,7 +409,7 @@ void math_postlist_print_item(struct math_postlist_gener_item *item,
 				item->wild_leaves[i]
 			);
 		} else {
-			P_CAST(_item, struct math_postlist_item, item);
+			PTR_CAST(_item, struct math_postlist_item, item);
 			if (trans == NULL)
 				printf("\t normal pathinfo %u, 0x%x, 0x%x, %u \n",
 					_item->subr_id[i],

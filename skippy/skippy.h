@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <limits.h>
-#include "list/list.h"
+#include "common/common.h" /* for container_of */
 
 #define SKIPPY_SKIP_LEVELS 2
 #define SKIPPY_TOTAL_LEVELS (SKIPPY_SKIP_LEVELS + 1)
@@ -34,7 +34,7 @@
 		struct skippy_node *cur, *save; \
 		_type* p; \
 		skippy_foreach(cur, save, _sk, 0) { \
-			p = MEMBER_2_STRUCT(cur, _type, _member); \
+			p = container_of(cur, _type, _member); \
 			_stmt; \
 		} \
 	} do {} while(0)
