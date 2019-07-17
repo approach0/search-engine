@@ -207,26 +207,20 @@ long skippy_fskip_to(struct skippy_fh *sfh, uint64_t key)
 	int level = SKIPPY_TOTAL_LEVELS - 1;
 
 	while (level >= 0) {
-		printf("[skipping] level= %d\n", level);
-		skippy_fh_buf_print(sfh);
+		// printf("[skipping] level= %d\n", level);
+		// skippy_fh_buf_print(sfh);
+
 		long next = peek_next_key(sfh, level);
-		printf("peek next: %ld\n", next);
 
 		if (next <= key) {
 			skippy_fnext(sfh, level);
-			printf("go next.\n");
 		} else {
 			size_t cur = sfh->buf_cur[level];
 			struct skippy_data *buf = sfh->buf[level];
 			long offset = buf[cur].child_offset;
-			printf("child please goto %ld...\n", offset);
 
-			if (level > 0 && offset != sfh->cur_offset[level - 1]) {
-				printf("okay...\n");
+			if (level > 0 && offset > sfh->cur_offset[level - 1])
 				fbuf_seek(sfh, level - 1, offset);
-			} else {
-				printf("already there.\n");
-			}
 
 			level --;
 		}
@@ -381,7 +375,7 @@ int main()
 		skippy_fprint(&sfh);
 		printf("\n");
 
-		uint64_t from = 916, to = 2491;
+		uint64_t from = 916, to = 2500;
 
 //		printf("enter from, to ...\n");
 //		scanf("%lu, %lu", &from, &to);
@@ -392,11 +386,15 @@ int main()
 			if (0 == sd.key) break;
 
 			if (sd.key == from) {
+				printf("\n FROM \n");
 				skippy_fh_buf_print(&sfh);
+
 				skippy_fskip_to(&sfh, to);
-				printf("\n AGAIN \n");
+				printf("\n AFTER JUMP \n");
+				skippy_fh_buf_print(&sfh);
+
+				printf("\n REPEAT \n");
 				skippy_fskip_to(&sfh, to);
-				printf("\n FINAL \n");
 				skippy_fh_buf_print(&sfh);
 			}
 		} while (1);
