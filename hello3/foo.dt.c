@@ -12,21 +12,43 @@ void list_demo()
 
 	struct person a[] = {{"Tim", 23, 200}, {"Denny", 35, 982}, {"Wei", 28, 0}};
 
-	list_t li = NULL;
-	list_append_array(li, a);
+	linkli_t l = NULL;
+	li_append_array(l, a);
 
-	foreach (iter, list, li) {
-		struct person *a = list_element(a, iter->cur);
+	printf("  BEFORE DELETION (size = %lu) \n", li_size(l));
+	foreach (iter, li, l) {
+		struct person *a = li_element(a, iter->cur);
 		printf("name: %s, age: %d, salary: %d\n", a->name, a->age, a->salary);
 	}
 
-	foreach (iter, list, li) {
-		struct person *a = list_element(a, iter->cur);
-		printf("free %s\n", a->name);
-		list_free_entry(struct person, iter);
+	foreach (iter, li, l) {
+		struct person *a = li_element(a, iter->cur);
+		if (a->name[0] == 'W') {
+			li_remove(&l, iter->cur);
+			printf("free %s\n", a->name);
+			free(a);
+			break;
+		}
 	}
 
-	printf("list empty? %d\n", list_empty(li));
+	printf("  AFTER DELETION (size = %lu) \n", li_size(l));
+	foreach (iter, li, l) {
+		struct person *a = li_element(a, iter->cur);
+		printf("name: %s, age: %d, salary: %d\n", a->name, a->age, a->salary);
+	}
+
+	foreach (iter, li, l) {
+		struct person *a = li_element(a, iter->cur);
+		li_remove(&l, iter->cur);
+
+		printf("free %s\n", a->name);
+		free(a);
+
+		if (li_empty(l))
+			break;
+	}
+
+	printf("list empty? %d\n", li_empty(l));
 }
 
 void dict_demo()
