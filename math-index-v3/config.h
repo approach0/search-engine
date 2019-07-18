@@ -1,0 +1,5 @@
+#define MAX_WILDCARD_LEVEL 2
+#define MAX_MATH_PATHS MAX_SUBPATH_ID
+
+#define GENER_PATH_NAME  "gener"
+#define PREFIX_PATH_NAME "prefix"
