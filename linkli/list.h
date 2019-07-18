@@ -81,6 +81,7 @@ li_insert_front(linkli_t *li, struct li_node *_new)
 
 typedef struct li_iterator {
 	struct li_node *cur;
+	struct li_node *next; /* to safely free the current */
 	linkli_t        li;
 } *li_iter_t;
 
@@ -89,8 +90,9 @@ li_iterator(linkli_t li)
 {
 	struct li_iterator *iter;
 	iter = malloc(sizeof(struct li_iterator));
-	iter->cur = li;
 	iter->li  = li;
+	iter->cur  = li;
+	iter->next = iter->cur->next;
 	return iter;
 }
 
@@ -106,7 +108,8 @@ li_iter_next(li_iter_t iter)
 	if (iter->cur == NULL)
 		return 0;
 
-	iter->cur = iter->cur->next;
+	iter->cur  = iter->next;
+	iter->next = iter->cur->next;
 
 	if (iter->cur == iter->li)
 		return 0;
@@ -135,3 +138,11 @@ li_iter_next(li_iter_t iter)
 #define li_element(_entry, _node_addr) \
 	(_node_addr == NULL) ? NULL : \
 	(__typeof__(_entry))((uintptr_t)(_node_addr) - sizeof(__typeof__(*_entry)))
+
+#define li_free(_list, _type, _ln, _stmt) \
+	if (!li_empty(_list)) { li_iter_t iter = li_iterator(_list); do { \
+		_type *e = li_entry(e, iter->cur, _ln); \
+		li_remove(&_list, iter->cur); \
+		_stmt; \
+		if (li_empty(_list)) break; \
+	} while (li_iter_next(iter)); li_iter_free(iter); } do {} while (0)

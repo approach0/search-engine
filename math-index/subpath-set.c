@@ -13,6 +13,35 @@ struct add_subpaths_args {
 
 static void _print_subpath(struct subpath *sp, uint32_t prefix_len);
 
+struct _get_subpath_nodeid_at {
+	uint32_t height;
+	uint32_t cnt;
+	uint32_t ret_node_id;
+};
+
+static LIST_IT_CALLBK(subpath_nodeid_at)
+{
+	LIST_OBJ(struct subpath_node, sp_nd, ln);
+	P_CAST(args, struct _get_subpath_nodeid_at, pa_extra);
+
+	args->cnt ++;
+	args->ret_node_id = sp_nd->node_id;
+
+	if (args->height == args->cnt) {
+		return LIST_RET_BREAK;
+	} else {
+		LIST_GO_OVER;
+	}
+}
+
+static uint32_t get_subpath_nodeid(struct subpath *sp, uint32_t height)
+{
+	struct _get_subpath_nodeid_at args = {height, 0, 0};
+	list_foreach(&sp->path_nodes, &subpath_nodeid_at, &args);
+
+	return args.ret_node_id;
+}
+
 struct test_interest_args {
 	uint32_t interest;
 	uint32_t cnt, max;

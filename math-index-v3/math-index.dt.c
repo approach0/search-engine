@@ -9,14 +9,7 @@
 
 #include "config.h"
 #include "math-index.h"
-
-struct math_index_args {
-	int prefix_len;
-	math_index_t index;
-	struct subpaths subpaths;
-	linkli_t *li;
-	int n_added;
-};
+#include "subpath-set.h"
 
 struct mk_path_str_arg {
 	char **dest;
@@ -51,14 +44,6 @@ math_index_open(const char *path, const char *mode)
 void math_index_close(math_index_t index)
 {
 	free(index);
-}
-
-static int prefix_path_level(struct subpath *sp, int prefix_len)
-{
-	if (prefix_len > sp->n_nodes)
-		return 1;
-
-	return sp->n_nodes - prefix_len;
 }
 
 static LIST_IT_CALLBK(_mk_path_str)
@@ -107,44 +92,52 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
-static LIST_IT_CALLBK(mkdir_and_setify)
-{
-	LIST_OBJ(struct subpath, sp, ln);
-	P_CAST(args, struct math_index_args, pa_extra);
-
-	char path[MAX_DIR_PATH_NAME_LEN] = "";
-	char *append = path;
-	append += sprintf(append, "%s/", args->index->dir);
-
-	/* sanity check */
-	if (sp->type != SUBPATH_TYPE_NORMAL &&
-	    sp->type != SUBPATH_TYPE_GENERNODE) {
-		LIST_GO_OVER;
-	}
-
-	if (sp->type == SUBPATH_TYPE_GENERNODE) {
-		int level = prefix_path_level(sp, args->prefix_len);
-
-		/* since gener paths are plenty, only index high subtrees here */
-		if (level > MAX_WILDCARD_LEVEL) {
-			LIST_GO_OVER;
-		}
-	}
-
-	if (0 != mk_path_str(sp, args->prefix_len, append)) {
-		/* specified prefix_len is greater than actual path length */
-		LIST_GO_OVER;
-	}
-
-	/* make directory */
-	printf("%s\n", path);
-	mkdir_p(path);
-
-	/* add into subpath set */
-//	(void)subpath_set_add(&arg->subpath_set, sp, arg->prefix_len, 0);
-
-	LIST_GO_OVER;
-}
+//
+//static int prefix_path_level(struct subpath *sp, int prefix_len)
+//{
+//	if (prefix_len > sp->n_nodes)
+//		return 1;
+//
+//	return sp->n_nodes - prefix_len;
+//}
+//static LIST_IT_CALLBK(mkdir_and_setify)
+//{
+//	LIST_OBJ(struct subpath, sp, ln);
+//	P_CAST(args, struct math_index_args, pa_extra);
+//
+//	char path[MAX_DIR_PATH_NAME_LEN] = "";
+//	char *append = path;
+//	append += sprintf(append, "%s/", args->index->dir);
+//
+//	/* sanity check */
+//	if (sp->type != SUBPATH_TYPE_NORMAL &&
+//	    sp->type != SUBPATH_TYPE_GENERNODE) {
+//		LIST_GO_OVER;
+//	}
+//
+//	if (sp->type == SUBPATH_TYPE_GENERNODE) {
+//		int level = prefix_path_level(sp, args->prefix_len);
+//
+//		/* since gener paths are plenty, only index high subtrees here */
+//		if (level > MAX_GENERPATH_INDEX_LEVEL) {
+//			LIST_GO_OVER;
+//		}
+//	}
+//
+//	if (0 != mk_path_str(sp, args->prefix_len, append)) {
+//		/* specified prefix_len is greater than actual path length */
+//		LIST_GO_OVER;
+//	}
+//
+//	/* make directory */
+//	printf("%s\n", path);
+//	mkdir_p(path);
+//
+//	/* add into subpath set */
+//	// subpath_set_add(arg->subpath_set, sp, arg->prefix_len, 0);
+//
+//	LIST_GO_OVER;
+//}
 
 int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
                    struct subpaths subpaths)
@@ -155,16 +148,10 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 		return 1;
 	}
 
-	linkli_t subpath_set = NULL;
-	struct math_index_args args = {0, index, subpaths, &subpath_set, 0};
-	for (args.prefix_len = 2;; args.prefix_len ++) {
-		list_foreach(&subpaths.li, &mkdir_and_setify, &args);
+	linkli_t set = subpath_set(subpaths, SUBPATH_SET_DOC);	
 
-		if (subpath_set == NULL) break;
+	printf("size: %d\n", li_size(set));
 
-//		list_foreach(&arg.subpath_set, &set_write_to_index, &arg);
-//		subpath_set_free(&arg.subpath_set);
-	}
-
+	li_free(set, struct subpath_ele, ln, printf("free %d\n", e->n_sects);free(e));
 	return 0;
 }
