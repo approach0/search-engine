@@ -423,7 +423,7 @@ halt:
 
 fingerpri_t subpath_fingerprint(struct subpath *sp, uint32_t prefix_len)
 {
-	struct _gen_fingerprint_arg arg = {0};
+	struct _gen_fingerprint_arg arg = {0, 0, prefix_len};
 	list_foreach(&sp->path_nodes, &_gen_fingerprint, &arg);
 	return arg.fp;
 }

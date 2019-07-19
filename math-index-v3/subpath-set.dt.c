@@ -1,3 +1,4 @@
+#include "hashtable/u16-ht.h"
 #include "tex-parser/head.h"
 #include "math-index.h"
 #include "subpath-set.h"
@@ -222,6 +223,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 	linkli_t set = NULL;
 	struct add_subpath_args args = {&set, 0, 0};
 
+	/* group by prefix path tokens */
 	for (args.prefix_len = 2;; args.prefix_len ++) {
 		args.added = 0;	
 		list_foreach(&subpaths.li, &add_into_set, &args);
@@ -245,6 +247,33 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		}
 	}
 
+	/* find sector trees in each element */
+	foreach (iter, li, set) {
+		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+		struct u16_ht ht_sect = u16_ht_new(2);
+		struct u16_ht ht_hash = u16_ht_new(2);
+		for (int i = 0; i <= ele->dup_cnt; i++) {
+			struct subpath *sp = ele->dup[i];
+			uint32_t rootID    = ele->rid[i];
+			if (-1 == u16_ht_lookup(&ht_sect, rootID)) {
+				uint16_t ophash = subpath_fingerprint(sp, ele->prefix_len);
+				u16_ht_update(&ht_hash, rootID, ophash);
+			}
+			u16_ht_incr(&ht_sect, rootID, 1);
+		}
+		for (int i = 0; i < ht_sect.sz; i++) {
+			if (ht_sect.table[i].occupied) {
+				uint32_t n = ele->n_sects;
+				uint16_t h = u16_ht_lookup(&ht_hash, ht_sect.table[i].key);
+				ele->secttr[n].rootID = ht_sect.table[i].key;
+				ele->secttr[n].width  = ht_sect.table[i].val;
+				ele->secttr[n].ophash = h;
+				ele->n_sects ++;
+			}
+		}
+		u16_ht_free(&ht_sect);
+	}
+
 	return set;
 }
 
@@ -259,6 +288,14 @@ void print_subpath_set(linkli_t set)
 		printf("(%u duplicates: ", ele->dup_cnt);
 		for (int i = 0; i <= ele->dup_cnt; i++)
 			printf("r%u~l%u ", ele->rid[i], ele->dup[i]->leaf_id);
-		printf(")\n");
+		printf(")");
+
+		printf("(%u sector trees: ", ele->n_sects);
+		for (int i = 0; i < ele->n_sects; i++)
+			printf("%u/%u-%s ", ele->secttr[i].rootID, ele->secttr[i].width,
+				optr_hash_str(ele->secttr[i].ophash));
+		printf(")");
+
+		printf("\n");
 	}
 }

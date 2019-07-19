@@ -92,7 +92,6 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
-//
 //static int prefix_path_level(struct subpath *sp, int prefix_len)
 //{
 //	if (prefix_len > sp->n_nodes)
