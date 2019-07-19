@@ -1,3 +1,5 @@
+#include "tex-parser/head.h"
+#include "math-index.h"
 #include "subpath-set.h"
 
 struct cmp_subpath_nodes_arg {
@@ -164,7 +166,6 @@ static void ele_add_dup(struct subpath_ele *ele, struct subpath *sp)
 	if (n_dup < MAX_MATH_PATHS) {
 		ele->dup[n_dup]  = sp;
 		ele->rid[n_dup]  = root->node_id;
-		ele->rtok[n_dup] = root->token_id;
 	}
 }
 
@@ -208,6 +209,14 @@ next:
 	LIST_GO_OVER;
 }
 
+static int interesting_token(enum token_id tokid)
+{
+	enum token_id rank_base = T_MAX_RANK - OPTR_INDEX_RANK_MAX;
+	if (rank_base < tokid && tokid < T_MAX_RANK)
+		return 0; /* not interested at RANK token */
+	return 1;
+}
+
 linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 {
 	linkli_t set = NULL;
@@ -216,12 +225,40 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 	for (args.prefix_len = 2;; args.prefix_len ++) {
 		args.added = 0;	
 		list_foreach(&subpaths.li, &add_into_set, &args);
-
+#ifdef DEBUG_SUBPATH_SET
 		printf("%d paths added at prefix length = %u... \n",
 			args.added, args.prefix_len);
+#endif
 
 		if (!args.added) break;
 	}
 
+	/* remove non-interesing paths */
+	foreach (iter, li, set) {
+		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+		struct subpath *sp = ele->dup[0];
+		struct subpath_node *root = prefix_path_root(sp, ele->prefix_len);
+		if (!interesting_token(root->token_id)) {
+			li_remove(&set, iter->cur); \
+			free(ele);
+			if (li_empty(set)) break;
+		}
+	}
+
 	return set;
+}
+
+void print_subpath_set(linkli_t set)
+{
+	foreach (iter, li, set) {
+		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+		char path[MAX_DIR_PATH_NAME_LEN] = "";
+		mk_path_str(ele->dup[0], ele->prefix_len, path);
+		printf("%s ", path);
+
+		printf("(%u duplicates: ", ele->dup_cnt);
+		for (int i = 0; i <= ele->dup_cnt; i++)
+			printf("r%u~l%u ", ele->rid[i], ele->dup[i]->leaf_id);
+		printf(")\n");
+	}
 }

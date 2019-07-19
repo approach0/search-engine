@@ -16,7 +16,6 @@ struct subpath_ele {
 	uint32_t           dup_cnt;
 	struct subpath    *dup[MAX_MATH_PATHS];
 	uint32_t           rid[MAX_MATH_PATHS];  /* root node ID */
-	uint32_t           rtok[MAX_MATH_PATHS]; /* root token */
 	uint32_t           prefix_len;
 
 	uint32_t           n_sects;
@@ -34,3 +33,5 @@ enum subpath_set_opt {
 };
 
 linkli_t subpath_set(struct subpaths, enum subpath_set_opt);
+
+void print_subpath_set(linkli_t);

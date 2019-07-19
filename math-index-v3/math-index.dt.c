@@ -149,9 +149,8 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 	}
 
 	linkli_t set = subpath_set(subpaths, SUBPATH_SET_DOC);	
+	print_subpath_set(set);
 
-	printf("size: %d\n", li_size(set));
-
-	li_free(set, struct subpath_ele, ln, printf("free %d\n", e->n_sects);free(e));
+	li_free(set, struct subpath_ele, ln, free(e));
 	return 0;
 }
