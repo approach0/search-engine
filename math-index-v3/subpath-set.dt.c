@@ -274,6 +274,39 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		u16_ht_free(&ht_sect);
 	}
 
+	/* find symbol splits in each element */
+	foreach (iter, li, set) {
+		int i, j, k;
+		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+		for (i = 0; i < ele->n_sects; i++) {
+			ele->n_splits[i] = 0;
+			uint32_t rootID = ele->secttr[i].rootID;
+
+			for (j = 0; j <= ele->dup_cnt; j++) {
+				if (ele->rid[j] == rootID) {
+					/* this path belongs to this sector tree */
+					uint32_t path_id = ele->dup[j]->path_id;
+					uint16_t lf_symb = ele->dup[j]->lf_symbol_id;
+
+					for (k = 0; k < ele->n_splits[i]; k++) {
+						if (lf_symb == ele->symbol[i][k]) {
+							ele->splt_w[i][k] += 1;
+							ele->leaves[i][k] |= 1L << (path_id - 1);
+							break;
+						}
+					}
+					if (k == ele->n_splits[i]) {
+						uint32_t n = ele->n_splits[i];
+						ele->symbol[i][n] = lf_symb;
+						ele->splt_w[i][n] = 1;
+						ele->leaves[i][n] = 0L;
+						ele->n_splits[i] ++;
+					}
+				}
+			}
+		}
+	}
+
 	return set;
 }
 
