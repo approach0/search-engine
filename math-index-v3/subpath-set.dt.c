@@ -299,7 +299,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 						uint32_t n = ele->n_splits[i];
 						ele->symbol[i][n] = lf_symb;
 						ele->splt_w[i][n] = 1;
-						ele->leaves[i][n] = 0L;
+						ele->leaves[i][n] = 1L << (path_id - 1);
 						ele->n_splits[i] ++;
 					}
 				}
@@ -324,9 +324,18 @@ void print_subpath_set(linkli_t set)
 		printf(")");
 
 		printf("(%u sector trees: ", ele->n_sects);
-		for (int i = 0; i < ele->n_sects; i++)
-			printf("%u/%u-%s ", ele->secttr[i].rootID, ele->secttr[i].width,
+		for (int i = 0; i < ele->n_sects; i++) {
+			printf("%u/%u-%s{ ", ele->secttr[i].rootID, ele->secttr[i].width,
 				optr_hash_str(ele->secttr[i].ophash));
+			//printf("%u\n", ele->n_splits[i]);
+			for (int j = 0; j < ele->n_splits[i]; j++) {
+				uint16_t symbol = ele->symbol[i][j];
+				uint16_t splt_w = ele->splt_w[i][j];
+				uint64_t leaves = ele->leaves[i][j];
+				printf("%s/%u 0x%lx ", trans_symbol(symbol), splt_w, leaves);
+			}
+			printf("}");
+		}
 		printf(")");
 
 		printf("\n");
