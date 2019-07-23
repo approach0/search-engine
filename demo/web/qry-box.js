@@ -492,7 +492,7 @@ $(document).ready(function() {
 		type: 'GET',
 		success: function (data) {
 			var arr = data['res'];
-			if (arr.length > 0 && q == '$1.23$, test') {
+			if (arr.length > 0) {
 				window.qry_vm.en_donation = true;
 				window.srch_vm.unlock = false;
 				Vue.nextTick(function () {
