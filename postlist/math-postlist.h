@@ -28,7 +28,7 @@ struct math_invlist_item {
 	uint16_t symbol[MAX_EXP_SYMBOL_SPLITS]; /* leaf symbol */
 	uint16_t splt_w[MAX_EXP_SYMBOL_SPLITS]; /* split width */
 	/* 32 bytes */
-	//uint64_t leaves[MAX_EXP_SYMBOL_SPLITS]; /* bit mask signature (for wildcards) */
+	uint64_t leaves[MAX_EXP_SYMBOL_SPLITS]; /* bit mask signature (for wildcards) */
 };
 
 struct math_postlist_gener_item {

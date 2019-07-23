@@ -334,7 +334,7 @@ void print_subpath_set(linkli_t set)
 				uint64_t leaves = ele->leaves[i][j];
 				printf("%s/%u 0x%lx ", trans_symbol(symbol), splt_w, leaves);
 			}
-			printf("}");
+			printf("} ");
 		}
 		printf(")");
 

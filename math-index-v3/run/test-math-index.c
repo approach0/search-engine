@@ -16,7 +16,7 @@ int main()
 
 	/* prefix match test */
 	const char *test[] = {
-		"a+bc+ef +\\sqrt z + g/h + (ij + k) \\le 0"
+		"a+ba+ab +\\sqrt z + g/h + (ij + k) \\le 0"
 	};
 
 	/* joint node constraints test */
