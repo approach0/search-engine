@@ -32,7 +32,7 @@ li_detach(struct li_node *prev, struct li_node *next)
 	prev->next = next;
 }
 
-static inline struct li_node *
+static inline linkli_t
 li_remove(linkli_t *li, struct li_node *entry)
 {
 	li_detach(entry->prev, entry->next);
@@ -43,7 +43,7 @@ li_remove(linkli_t *li, struct li_node *entry)
 			*li = entry->next;
 	}
 
-	return entry;
+	return *li;
 }
 
 static inline int li_empty(linkli_t li)
@@ -105,7 +105,7 @@ li_iter_free(li_iter_t iter)
 static inline int
 li_iter_next(li_iter_t iter)
 {
-	if (iter->cur == NULL)
+	if (iter->li == NULL)
 		return 0;
 
 	iter->cur  = iter->next;
@@ -142,7 +142,6 @@ li_iter_next(li_iter_t iter)
 #define li_free(_list, _type, _ln, _stmt) \
 	if (!li_empty(_list)) { li_iter_t iter = li_iterator(_list); do { \
 		_type *e = li_entry(e, iter->cur, _ln); \
-		li_remove(&_list, iter->cur); \
+		iter->li = li_remove(&_list, iter->cur); \
 		_stmt; \
-		if (li_empty(_list)) break; \
 	} while (li_iter_next(iter)); li_iter_free(iter); } do {} while (0)

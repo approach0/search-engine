@@ -24,7 +24,7 @@ void list_demo()
 	foreach (iter, li, l) {
 		struct person *a = li_element(a, iter->cur);
 		if (a->name[0] == 'W') {
-			li_remove(&l, iter->cur);
+			iter->li = li_remove(&l, iter->cur);
 			printf("free %s\n", a->name);
 			free(a);
 			break;
@@ -39,13 +39,10 @@ void list_demo()
 
 	foreach (iter, li, l) {
 		struct person *a = li_element(a, iter->cur);
-		li_remove(&l, iter->cur);
+		iter->li = li_remove(&l, iter->cur);
 
 		printf("free %s\n", a->name);
 		free(a);
-
-		if (li_empty(l))
-			break;
 	}
 
 	printf("list empty? %d\n", li_empty(l));
