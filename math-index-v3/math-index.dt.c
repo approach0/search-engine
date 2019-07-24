@@ -103,7 +103,7 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
-static void make_dir(linkli_t set, const char *root_name)
+static void make_dirs(linkli_t set, const char *root_name)
 {
 	foreach (iter, li, set) {
 		char path[MAX_DIR_PATH_NAME_LEN] = "";
@@ -139,10 +139,12 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 	remove_wildcards(&set);
 
 	/* guarantee the corresponding directory is created */
-	make_dir(set, index->dir);
+	make_dirs(set, index->dir);
 
+#ifdef DEBUG_SUBPATH_SET
 	printf("subpath set (size=%d)\n", li_size(set));
 	print_subpath_set(set);
+#endif
 
 	li_free(set, struct subpath_ele, ln, free(e));
 	return 0;
