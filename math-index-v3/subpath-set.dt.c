@@ -1,5 +1,7 @@
 #include "hashtable/u16-ht.h"
 #include "tex-parser/head.h"
+
+#include "config.h"
 #include "math-index.h"
 #include "subpath-set.h"
 
@@ -170,12 +172,29 @@ static void ele_add_dup(struct subpath_ele *ele, struct subpath *sp)
 	}
 }
 
+static int prefix_path_level(struct subpath *sp, int prefix_len)
+{
+	if (prefix_len > sp->n_nodes)
+		return 1;
+
+	return sp->n_nodes - prefix_len;
+}
+
 static LIST_IT_CALLBK(add_into_set)
 {
 	LIST_OBJ(struct subpath, sp, ln);
 	P_CAST(args, struct add_subpath_args, pa_extra);
 
+	/* path too short to be selected */
 	if (args->prefix_len > sp->n_nodes) {
+		LIST_GO_OVER;
+	}
+
+	/* since gener paths are plenty, only index high subtrees here */
+	int level = prefix_path_level(sp, args->prefix_len);
+	if (sp->type == SUBPATH_TYPE_GENERNODE &&
+	    level > MAX_GENERPATH_INDEX_LEVEL) {
+		args->added ++; /* pretend it is added so that loop will go on */
 		LIST_GO_OVER;
 	}
 
@@ -241,9 +260,8 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		struct subpath *sp = ele->dup[0];
 		struct subpath_node *root = prefix_path_root(sp, ele->prefix_len);
 		if (!interesting_token(root->token_id)) {
-			li_remove(&set, iter->cur); \
+			iter->li = li_remove(&set, iter->cur); \
 			free(ele);
-			if (li_empty(set)) break;
 		}
 	}
 

@@ -15,9 +15,10 @@ int main()
 //	};
 
 	/* prefix match test */
-	const char *test[] = {
-		"a+ba+ab +\\sqrt z + g/h + (ij + k) \\le 0"
-	};
+//	const char *test[] = {
+//		"\\qvar{a} + \\qvar{b}"
+//		"a+ba+ab +\\sqrt z + g/h + (ij + k) \\le 0"
+//	};
 
 	/* joint node constraints test */
 //	const char *test[] = {
@@ -34,9 +35,9 @@ int main()
 //	};
 
 	/* joint node constraints test 2 */
-//	const char *test[] = {
-//"2+\\cfrac{3}{4+\\cfrac{5}{6+\\cfrac{7}{8 +\\ddots}}}"
-//	};
+	const char *test[] = {
+		"2+\\cfrac{3}{4+\\cfrac{5}{6+\\cfrac{7}{8 +\\ddots}}}"
+	};
 
 	doc_id_t docID = 1;
 	exp_id_t expID = 0;
