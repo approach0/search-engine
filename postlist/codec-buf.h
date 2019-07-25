@@ -11,6 +11,9 @@
 		codec_new(_codec, CODEC_DEFAULT_ARGS) \
 	}); })
 
+#define CODEC_BUF_GET(_entry, _buf, _field, _i, _info) \
+	(_entry) = *(__typeof__(_entry)*)(_buf[_field] + (_i << (_info)->field_info[_field].logsz));
+
 struct codec;
 
 struct field_info {

@@ -10,16 +10,24 @@
 struct math_invlist_item {
 	uint32_t docID;
 	uint32_t secID;
-	uint16_t sect_width;
-	uint16_t orig_width;
+	uint32_t sect_width;
+	uint32_t orig_width;
 	uint32_t symbinfo_offset;
 };
 
-#define FI_DOCID           0
-#define FI_SECID           1
-#define FI_SECT_WIDTH      2
-#define FI_ORIG_WIDTH      3
-#define FI_SYMBINFO_OFFSET 4
+enum {
+	FI_DOCID,
+	FI_SECID,
+	FI_SECT_WIDTH,
+	FI_ORIG_WIDTH,
+	FI_OFFSET
+};
+
+static void print_item(struct math_invlist_item *item)
+{
+	printf("#%u, #%u, w%u, w%u, o%u\n", item->docID, item->secID,
+		item->sect_width, item->orig_width, item->symbinfo_offset);
+}
 
 int main()
 {
@@ -33,7 +41,7 @@ int main()
 	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
 	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR);
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR);
-	SET_FIELD_INFO(FI_SYMBINFO_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
 
 #define N 64
 	/* create a buffer to be compressed */
@@ -48,6 +56,8 @@ int main()
 		item.orig_width = rand() % 64;
 		item.symbinfo_offset += rand() % 128;
 
+		printf("writing ");
+		print_item(&item);
 		codec_buf_set(buf, i, &item, info);
 	}
 
@@ -60,9 +70,21 @@ int main()
 	/* decompressing */
 	void **buf_same = codec_buf_alloc(N, info);
 	out_sz = codec_buf_decode(buf_same, block, N, info);
-	codec_buf_free(buf_same, info);
 	printf("decoded sz = %lu\n", out_sz);
 	free(block);
+
+	/* checking decompressed data */
+	for (int i = 0; i < N; i++) {
+		CODEC_BUF_GET(item.docID, buf_same, FI_DOCID, i, info);
+		CODEC_BUF_GET(item.secID, buf_same, FI_SECID, i, info);
+		CODEC_BUF_GET(item.sect_width, buf_same, FI_SECT_WIDTH, i, info);
+		CODEC_BUF_GET(item.orig_width, buf_same, FI_ORIG_WIDTH, i, info);
+		CODEC_BUF_GET(item.symbinfo_offset, buf_same, FI_OFFSET, i, info);
+
+		printf("read ");
+		print_item(&item);
+	}
+	codec_buf_free(buf_same, info);
 
 	/* free resources */
 	codec_buf_free(buf, info);

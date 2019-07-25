@@ -84,8 +84,8 @@ size_t codec_buf_decode(void **dest, void *src, uint n,
 	/* decoding */
 	for (int j = 0; j < info->n_fields; j++) {
 		struct field_info f_info = info->field_info[j];
-		size_t m = (l << f_info.logsz) >> 2;
-		s += codec_decompress_ints(f_info.codec, s, (uint32_t*)dest[j], m);
+		// size_t m = (l << f_info.logsz) >> 2; /* hard code for efficiency */
+		s += codec_decompress_ints(f_info.codec, s, (uint32_t*)dest[j], l);
 	}
 
 	return (uintptr_t)((void*)s - src);
