@@ -21,10 +21,10 @@ struct field_info {
 	struct codec *codec;
 };
 
-struct codec_buf_struct_info {
+typedef struct codec_buf_struct_info {
 	uint              n_fields;
 	struct field_info field_info[];
-};
+} codec_buf_struct_info_t;
 
 void** codec_buf_alloc(uint, struct codec_buf_struct_info*);
 void codec_buf_free(void **, struct codec_buf_struct_info*);
