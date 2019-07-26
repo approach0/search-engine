@@ -213,7 +213,7 @@ size_t for_decompress(uint32_t* in, uint32_t* out, size_t len, size_t *b_)
 	size_t   l;
 	uint8_t *head = (uint8_t*)in; /* points to b info */
 
-	uint32_t *tmp = malloc((len + 15) << 2);
+	uint32_t tmp[len + 15];
 	/* for_decompress() function in some cases, may output
 	 * more than `len' 32bits integers. In worst case, where
 	 * only one 32bits integer is encoded (len=1) with b=2,
@@ -245,7 +245,6 @@ size_t for_decompress(uint32_t* in, uint32_t* out, size_t len, size_t *b_)
 
 	/* copy tmp content */
 	memcpy(out, tmp, len << 2);
-	free(tmp);
 
 	*b_ = *head;
 	return sizeof(uint8_t) + (l << 2);
@@ -256,14 +255,12 @@ for_delta_compress(const uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 {
 	size_t for_sz, b, i;
 
-	uint32_t *delta_buf;
+	uint32_t delta_buf[len - 1];
 	uint32_t *head = out;
 
 	/* safe guard */
 	if (len == 0)
 		return 0;
-	else
-		delta_buf = malloc((len - 1) * sizeof(uint32_t));
 
 	/* len is greater than zero, write the first number (initial value) */
 	*head = in[0];
@@ -283,7 +280,6 @@ for_delta_compress(const uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 	}
 
 	*b_ = b;
-	free(delta_buf);
 	return sizeof(uint32_t) + for_sz;
 }
 
@@ -292,14 +288,12 @@ for_delta_decompress(const uint32_t *in, uint32_t *out, size_t len, size_t *b_)
 {
 	size_t for_sz, b, i;
 
-	uint32_t *delta_buf;
+	uint32_t delta_buf[len - 1];
 	uint32_t *head = (uint32_t*)in;
 
 	/* safe guard */
 	if (len == 0)
 		return 0;
-	else
-		delta_buf = malloc((len - 1) * sizeof(uint32_t));
 
 	/* len is greater than zero, get and write initial value to output */
 	out[0] = *head;
@@ -319,6 +313,5 @@ for_delta_decompress(const uint32_t *in, uint32_t *out, size_t len, size_t *b_)
 	}
 
 	*b_ = b;
-	free(delta_buf);
 	return sizeof(uint32_t) + for_sz;
 }

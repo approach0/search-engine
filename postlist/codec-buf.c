@@ -65,8 +65,7 @@ size_t codec_buf_encode(void *dest, void **src, uint n,
 	/* encoding */
 	for (int j = 0; j < info->n_fields; j++) {
 		struct field_info f_info = info->field_info[j];
-		size_t m = (n << f_info.logsz) >> log2(sizeof(uint32_t));
-		d += codec_compress_ints(f_info.codec, (uint32_t*)src[j], m, d);
+		d += codec_compress_ints(f_info.codec, (uint32_t*)src[j], n, d);
 	}
 
 	return (uintptr_t)((void*)d - dest);
@@ -84,7 +83,6 @@ size_t codec_buf_decode(void **dest, void *src, uint n,
 	/* decoding */
 	for (int j = 0; j < info->n_fields; j++) {
 		struct field_info f_info = info->field_info[j];
-		// size_t m = (l << f_info.logsz) >> 2; /* hard code for efficiency */
 		s += codec_decompress_ints(f_info.codec, s, (uint32_t*)dest[j], l);
 	}
 
