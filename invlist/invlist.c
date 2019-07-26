@@ -8,165 +8,115 @@
 #include "common/common.h"
 #include "invlist.h"
 
-///* buffer setup/free macro */
-#define SETUP_BUFFER(_po) \
-	if (_po->buf == NULL) { \
-		_po->buf = malloc(_po->buf_sz); \
-		_po->tot_sz += _po->buf_sz; \
-	} do {} while (0)
-
-#define FREE_BUFFER(_po) \
-	if (_po->buf) { \
-		free(_po->buf); \
-		_po->buf = NULL; \
-		_po->tot_sz -= _po->buf_sz; \
-	} do {} while (0)
-
 //void postlist_print_info(struct postlist *po)
 //{
 //	printf("==== memory posting list info ====\n");
 //	printf("%u blocks (%.2f KB).\n", po->n_blk,
 //	       (float)po->tot_sz / 1024.f);
 //	printf("item size: %u B\n", po->item_sz);
-//	printf("buffer size: %u B ", po->buf_sz);
-//	printf("(%u items / buffer)\n", po->buf_sz / po->item_sz);
+//	printf("buffer size: %u B ", po->buf_max_sz);
+//	printf("(%u items / buffer)\n", po->buf_max_sz / po->item_sz);
 //
 //	skippy_print(&po->skippy, 0);
 //}
 
-struct invlist *
-invlist_create(uint32_t buf_sz, codec_buf_struct_info_t *st_info, struct invlist_callbks calls)
+struct invlist *invlist_create(uint32_t n, codec_buf_struct_info_t* c_info)
 {
 	struct invlist *ret = malloc(sizeof *ret);
 
 	/* skippy book keeping */
-	ret->head = ret->tail = NULL;
+	ret->head = NULL;
 	ret->tot_sz = sizeof *ret;
 	ret->n_blk = 0;
-	skippy_init(&ret->skippy, 64);
-	ret->buf_sz = buf_sz;
+	skippy_init(&ret->skippy, n);
+	ret->buf_max_len = n;
+	ret->buf_max_sz = 0;
+	ret->c_info = c_info;
 
-	/* callback functions */
-	ret->calls = calls;
-
-	/* write buffer/iterator */
-	ret->wr_buf.cur = NULL;
-	ret->wr_buf.buf = codec_buf_alloc(64, st_info);
-	ret->wr_buf.buf_idx = 0;
-	ret->wr_buf.buf_end = 0;
-	ret->wr_buf.st_info = st_info;
+	for (int i = 0; i < c_info->n_fields; i++) {
+		struct field_info info = c_info->field_info[i];
+		ret->buf_max_sz += n * info.sz;
+	}
 
 	return ret;
 }
 
-//	ret->buf = NULL;
-//	ret->buf_sz = buf_sz;
-//	ret->buf_end = 0;
-//	ret->buf_arg = buf_arg;
-//
-//	/* leave iterator-related initializations to postlist_start() */
-//	ret->item_sz = item_sz;
-//
-//	return ret;
-//}
-//
-//static struct postlist_node *create_node(uint64_t key, size_t size)
-//{
-//	struct postlist_node *ret;
-//	ret = malloc(sizeof(struct postlist_node));
-//
-//	/* assign initial values */
-//	skippy_node_init(&ret->sn, key);
-//	ret->blk = malloc(size);
-//	ret->blk_sz = size;
-//
-//	return ret;
-//}
-//
-//static void
-//append_node(struct postlist *po, struct postlist_node *node)
-//{
-//	if (po->head == NULL)
-//		po->head = node;
-//
-//	po->tail = node;
-//	po->tot_sz += node->blk_sz;
-//	po->n_blk ++;
-//
-//#ifdef DEBUG_POSTLIST
-//	//printf("appending skippy node...\n");
-//#endif
-//	skippy_append(&po->skippy, &node->sn);
-//}
-//
-//static uint32_t postlist_flush(struct postlist *po)
-//{
-//	uint64_t flush_key;
-//	uint32_t flush_sz;
-//	struct postlist_node *node;
-//
-//	/* invoke flush callback and get flush size */
-//	flush_key = po->on_flush(po->buf, &po->buf_end, po->buf_arg);
-//	flush_sz = po->buf_end;
-//
-//	/* append new node with copy of current buffer */
-//	node = create_node(flush_key, flush_sz);
-//	append_node(po, node);
-//
-//	/* flush to new tail node */
-//	memcpy(node->blk, po->buf, flush_sz);
-//
-//	/* reset buffer */
-//	po->buf_end = 0;
-//
-//	return flush_sz;
-//}
-//
-//size_t
-//postlist_write(struct postlist *po, const void *in, size_t size)
-//{
-//	size_t flush_sz = 0;
-//
-//	/* setup buffer for writting */
-//	SETUP_BUFFER(po);
-//
-//	/* flush buffer under inefficient buffer space */
-//	if (po->buf_end + size > po->buf_sz)
-//		flush_sz = postlist_flush(po);
-//
-//	/* write into buffer */
-//	assert(po->buf_end + size <= po->buf_sz);
-//	memcpy(po->buf + po->buf_end, in, size);
-//	po->buf_end += size;
-//
-//#ifdef DEBUG_POSTLIST
-//	printf("buffer after writting: [%u/%u]\n",
-//	       po->buf_end, po->buf_sz);
-//#endif
-//
-//	return flush_sz;
-//}
-//
-//size_t postlist_write_complete(struct postlist *po)
-//{
-//	size_t flush_sz = 0;
-//
-//	if (po->buf)
-//		flush_sz = postlist_flush(po);
-//
-//	FREE_BUFFER(po);
-//	return flush_sz;
-//}
-//
-//void postlist_free(struct postlist *po)
-//{
-//	po->on_free(po->buf_arg);
-//	skippy_free(&po->skippy, struct postlist_node, sn,
-//	            free(p->blk); free(p));
-//	free(po->buf);
-//	free(po);
-//}
-//
+static struct invlist_node *create_node(uint64_t key, size_t size)
+{
+	struct invlist_node *ret = malloc(sizeof *ret);
+
+	/* assign initial values */
+	skippy_node_init(&ret->sn, key);
+	ret->blk = malloc(size);
+	ret->blk_sz = size;
+
+	return ret;
+}
+
+static void append_node(struct invlist *invlist, struct invlist_node *node)
+{
+	if (invlist->head == NULL)
+		invlist->head = node;
+	invlist->tot_sz += node->blk_sz;
+	invlist->n_blk ++;
+	skippy_append(&invlist->skippy, &node->sn);
+}
+
+size_t invlist_iter_flush(struct invlist_iterator *iter)
+{
+	struct invlist *invlist = iter->invlist;
+	size_t sz;
+
+	/* encode current buffer integers */
+	char enc_buf[invlist->buf_max_sz];
+	sz = codec_buf_encode(enc_buf, iter->buf, iter->buf_len, iter->c_info);
+
+	/* append new node with copy of current buffer */
+	uint64_t key = *(uint64_t *)(iter->buf[0]);
+	struct invlist_node *node = create_node(key, sz);
+	append_node(invlist, node);
+	memcpy(node->blk, enc_buf, sz);
+
+	/* reset iterator pointers/buffer */
+	iter->cur = node;
+	iter->buf_idx = 0;
+	iter->buf_len = 0;
+
+	return sz;
+}
+
+size_t invlist_iter_write(struct invlist_iterator *iter, const void *in)
+{
+	struct invlist *invlist = iter->invlist;
+
+	/* setup buffer for writting */
+	if (iter->buf == NULL)
+		iter->buf = codec_buf_alloc(invlist->buf_max_len, iter->c_info);
+
+	/* flush buffer on inefficient buffer space */
+	if (iter->buf_idx + 1 > invlist->buf_max_len)
+		invlist_iter_flush(iter);
+
+	/* append to buffer */
+	codec_buf_set(iter->buf, iter->buf_idx, (void*)in, iter->c_info);
+	iter->buf_idx ++;
+	iter->buf_len ++;
+
+	return 0;
+}
+
+void invlist_free(struct invlist *invlist)
+{
+	skippy_free(&invlist->skippy, struct invlist_node, sn, free(p->blk); free(p));
+	free(invlist);
+}
+
+void invlist_iter_free(struct invlist_iterator *iter)
+{
+	if (iter->buf)
+		codec_buf_free(iter->buf, iter->c_info);
+}
+
 //static void forward_cur(struct postlist_node **cur)
 //{
 //	struct skippy_node *next = (*cur)->sn.next[0];
@@ -207,7 +157,7 @@ invlist_create(uint32_t buf_sz, codec_buf_struct_info_t *st_info, struct invlist
 //	iter->on_rebuf = po->on_rebuf;
 //	iter->buf_arg = po->buf_arg;
 //
-//	iter->buf = malloc(po->buf_sz);
+//	iter->buf = malloc(po->buf_max_sz);
 //	iter->buf_idx = 0;
 //	iter->buf_end = 0;
 //	iter->item_sz = po->item_sz;

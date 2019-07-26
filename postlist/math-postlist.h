@@ -23,6 +23,7 @@ struct math_invlist_item {
 
 	/* --- in two separate files --- */
 	uint16_t splits; /* how many different symbol values, appended by operator signature */
+	uint16_t ophash; /* how many different symbol values, appended by operator signature */
 	/* 16 bytes */
 
 	uint16_t symbol[MAX_EXP_SYMBOL_SPLITS]; /* leaf symbol */
