@@ -18,6 +18,16 @@ for_compress(uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 		= {2, 4, 5, 6, 8, 10, 16, 32};
 	/* b candidates are selected such that (32 bits / b) will
 	 * result in as many as different integers.  */
+	/*
+	 * 2 * 16 = 32
+	 * 4 * 8  = 32
+	 * 5 * 6  = 32
+	 * 6 * 5  = 32
+	 * 8 * 4  = 32
+	 * 10 * 3 = 32
+	 * 16 * 2 = 32
+	 * 32 * 1 = 32
+	 */
 
 	/* output buffer header */
 	uint8_t *head = (uint8_t*)out;

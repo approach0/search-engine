@@ -98,7 +98,7 @@ codec_compress_ints(struct codec *codec, const void *in, size_t len, void *out)
 		return for_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
 
 	case CODEC_FOR8:
-		return for8_compress((uint8_t*)in, len, (uint32_t*)out, &args->b);
+		return for8_compress((uint8_t*)in, len, (uint8_t*)out, &args->b);
 
 	case CODEC_FOR_DELTA:
 		return for_delta_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
@@ -129,7 +129,7 @@ codec_decompress_ints(struct codec *codec, const void *in, void *out, size_t len
 		return for_decompress((uint32_t*)in, (uint32_t*)out, len, &args->b);
 
 	case CODEC_FOR8:
-		return for8_decompress((uint32_t*)in, (uint8_t*)out, len, &args->b);
+		return for8_decompress((uint8_t*)in, (uint8_t*)out, len, &args->b);
 
 	case CODEC_FOR_DELTA:
 		return for_delta_decompress((uint32_t*)in, (uint32_t*)out, len, &args->b);

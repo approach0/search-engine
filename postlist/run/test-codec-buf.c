@@ -15,6 +15,7 @@ struct math_invlist_item {
 	uint32_t symbinfo_offset;
 };
 
+/* field index for math_invlist_item */
 enum {
 	FI_DOCID,
 	FI_SECID,
@@ -49,16 +50,21 @@ int main()
 
 	srand(time(0));
 	struct math_invlist_item item[N] = {0};
+	uint last_docID = 1;
+	uint last_offset = 0;
 	for (int i = 0; i < N; i++) {
-		item[i].docID += rand() % 10;
+		item[i].docID = last_docID + rand() % 10;
 		item[i].secID = rand() % 10;
-		item[i].sect_width = rand() % 255;
-		item[i].orig_width = rand() % 255;
-		item[i].symbinfo_offset += rand() % 128;
+		item[i].sect_width = rand() % 6;
+		item[i].orig_width = rand() % 64;
+		item[i].symbinfo_offset = last_offset + rand() % 128;
 
 		printf("writing ");
 		print_item(item + i);
 		codec_buf_set(buf, i, item + i, info);
+
+		last_docID = item[i].docID;
+		last_offset = item[i].symbinfo_offset;
 	}
 
 	/* compressing */
@@ -86,9 +92,9 @@ int main()
 		print_item(&item_check);
 
 		if (memcmp(item + i, &item_check, sizeof item_check) == 0)
-			prinfo("pass.\n");
+			prinfo("pass.");
 		else
-			prerr("failed.\n");
+			prerr("failed.");
 	}
 	codec_buf_free(buf_check, info);
 

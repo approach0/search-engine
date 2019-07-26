@@ -20,11 +20,11 @@ void print_int8_arr(uint8_t *arr, size_t len)
 void test(uint8_t *input_arr, size_t len)
 {
 	size_t res, b, i;
-	uint32_t enc_arr[1024];
+	uint8_t enc_arr[1024];
 	uint8_t check_arr[1024];
 
 	printf("input_arr (total %lu bytes): ",
-	       len * sizeof(uint32_t));
+	       len * sizeof input_arr[0]);
 	print_int8_arr(input_arr, len);
 
 	res = for8_compress(input_arr, len, enc_arr, &b);
