@@ -6,7 +6,7 @@
 #include <assert.h>
 
 #include "common/common.h"
-//#include "postlist.h"
+#include "invlist.h"
 
 ///* buffer setup/free macro */
 #define SETUP_BUFFER(_po) \
@@ -33,28 +33,36 @@
 //
 //	skippy_print(&po->skippy, 0);
 //}
-//
-//struct postlist *
-//postlist_create(uint32_t skippy_spans, uint32_t buf_sz, uint32_t item_sz,
-//                void *buf_arg, struct postlist_callbks calls)
-//{
-//	struct postlist *ret;
-//	ret = malloc(sizeof(struct postlist));
-//
-//	/* assign initial values */
-//	ret->head = ret->tail = NULL;
-//	ret->tot_sz = sizeof(struct postlist);
-//	ret->n_blk  = 0;
-//	skippy_init(&ret->skippy, skippy_spans);
-//
+
+struct invlist *
+invlist_create(uint32_t buf_sz, codec_buf_struct_info_t *st_info, struct invlist_callbks calls)
+{
+	struct invlist *ret = malloc(sizeof *ret);
+
+	/* skippy book keeping */
+	ret->head = ret->tail = NULL;
+	ret->tot_sz = sizeof *ret;
+	ret->n_blk = 0;
+	skippy_init(&ret->skippy, 64);
+	ret->buf_sz = buf_sz;
+
+	/* callback functions */
+	ret->calls = calls;
+
+	/* write buffer/iterator */
+	ret->wr_buf.cur = NULL;
+	ret->wr_buf.buf = codec_buf_alloc(64, st_info);
+	ret->wr_buf.buf_idx = 0;
+	ret->wr_buf.buf_end = 0;
+	ret->wr_buf.st_info = st_info;
+
+	return ret;
+}
+
 //	ret->buf = NULL;
 //	ret->buf_sz = buf_sz;
 //	ret->buf_end = 0;
 //	ret->buf_arg = buf_arg;
-//
-//	ret->on_flush = calls.on_flush;
-//	ret->on_rebuf = calls.on_rebuf;
-//	ret->on_free  = calls.on_free;
 //
 //	/* leave iterator-related initializations to postlist_start() */
 //	ret->item_sz = item_sz;

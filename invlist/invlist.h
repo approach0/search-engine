@@ -1,4 +1,6 @@
 #pragma once
+/* in memory inverted list implementation */
+
 #include <stdint.h>
 #include "skippy/skippy.h"
 #include "codec-buf.h"
@@ -26,7 +28,7 @@ typedef struct invlist_node_codec_buf {
 	void                   **buf;
 	uint32_t                 buf_idx;
 	uint32_t                 buf_end; /* in bytes */
-	codec_buf_struct_info_t *struct_info; /* codec info */
+	codec_buf_struct_info_t *st_info; /* codec info */
 } invlist_node_codec_buf_t;
 
 struct invlist {
@@ -44,18 +46,17 @@ struct invlist {
 	invlist_node_codec_buf_t wr_buf;
 };
 
-typedef struct postlist_iterator {
+typedef struct invlist_iterator {
 	/* decompress function */
-	postlist_rebuf_callbk    on_rebuf;
+	invlist_rebuf_callbk     on_rebuf;
 	/* iterator read buffer */
 	invlist_node_codec_buf_t rd_buf;
-} *postlist_iter_t;
+} *invlist_iter_t;
 
-///* main functions */
-//struct postlist *
-//postlist_create(uint32_t, uint32_t, uint32_t, void *,
-//                struct postlist_callbks);
-//
+/* invlist functions */
+struct invlist *
+invlist_create(uint32_t, codec_buf_struct_info_t *, struct invlist_callbks);
+
 //void postlist_free(struct postlist*);
 //
 //void postlist_print_info(struct postlist*);
