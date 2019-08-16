@@ -155,21 +155,15 @@ function map_ip_info(db, ip, callbk) {
 		var request = require('request');
 		const url = `http://api.ipstack.com/${ip}?access_key=7cd94fd6ca2622d0bd7d39d03dbf608a`
 		console.log(url);
-		request.get(url,
-		(error, response, body) => {
+		request.get(url, (error, response, body) => {
+			var response = {};
 			if (error) {
 				console.log(error);
 			} else {
 				/* can be error too here, e.g. rate limit. */
 				console.log(body);
+				response = JSON.parse(body);
 			}
-			if (error) callbk({
-				'city': 'Unknown',
-				'region': 'Unknown',
-				'country': 'Unknown',
-				'ip': ip
-			});
-			var response = JSON.parse(body);
 			console.log(response);
 			db.prepare(
 				`INSERT INTO ip_info (city, region, country, ip)
