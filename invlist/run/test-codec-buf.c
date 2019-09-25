@@ -12,8 +12,19 @@ struct math_invlist_item {
 	uint32_t secID;
 	uint8_t  sect_width;
 	uint8_t  orig_width;
-	uint32_t symbinfo_offset;
+	uint32_t symbinfo_offset; /* pointing to symbinfo file offset */
 };
+
+/* -----------------
+#define MAX_EXP_SYMBOL_SPLITS 8
+
+struct symbinfo {
+	uint32_t ophash:24;
+	uint32_t n_splits:8;
+	uint16_t symbol[MAX_EXP_SYMBOL_SPLITS];
+	uint8_t  splt_w[MAX_EXP_SYMBOL_SPLITS];
+};
+------------------ */
 
 /* field index for math_invlist_item */
 enum {
@@ -33,7 +44,8 @@ static void print_item(struct math_invlist_item *item)
 int main()
 {
 	/* register structure info for codec algorithm */
-	struct codec_buf_struct_info *info = codec_buf_struct_info_alloc(5);
+	struct codec_buf_struct_info *info;
+	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
 
 #define SET_FIELD_INFO(_idx, _name, _codec) \
 	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)

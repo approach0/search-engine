@@ -25,11 +25,13 @@ void codec_buf_free(void **buf, struct codec_buf_struct_info *info)
 	free(buf);
 }
 
-struct codec_buf_struct_info *codec_buf_struct_info_alloc(int n_fields)
+struct codec_buf_struct_info
+*codec_buf_struct_info_alloc(int n_fields, size_t size)
 {
 	struct codec_buf_struct_info *p =
 		malloc(sizeof *p + n_fields * sizeof(p->field_info[0]));
 	p->n_fields = n_fields;
+	p->align_sz = size;
 	return p;
 }
 

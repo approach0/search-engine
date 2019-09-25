@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "mhook/mhook.h"
+
+#include "codec/codec.h"
+#include "invlist.h"
+
+#include <assert.h>
+
+struct math_invlist_item {
+	uint32_t docID;
+	uint32_t secID;
+	uint8_t  sect_width;
+	uint8_t  orig_width;
+	uint32_t symbinfo_offset; /* pointing to symbinfo file offset */
+};
+
+/* field index for math_invlist_item */
+enum {
+	FI_DOCID,
+	FI_SECID,
+	FI_SECT_WIDTH,
+	FI_ORIG_WIDTH,
+	FI_OFFSET
+};
+
+static void print_item(struct math_invlist_item *item)
+{
+	printf("#%u, #%u, w%u, w%u, o%u\n", item->docID, item->secID,
+		item->sect_width, item->orig_width, item->symbinfo_offset);
+}
+
+int main()
+{
+	/* fill in structure field information */
+	struct codec_buf_struct_info *info;
+	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
+
+	printf("structure size: %lu\n", info->align_sz);
+
+#define SET_FIELD_INFO(_idx, _name, _codec) \
+	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
+
+	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
+	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
+	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
+	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
+
+	/* create invert list and iterator */
+	struct invlist *invlist = invlist_create(8, info);
+	invlist_iter_t iter = invlist_iterator(invlist);
+
+	assert(invlist_empty(invlist));
+
+	/* write a sequence of random items */
+	size_t flush_sz;
+	srand(time(0));
+
+#define N 20
+	struct math_invlist_item items[N] = {0};
+	uint last_docID = 1;
+	uint last_offset = 0;
+	for (int i = 0; i < N; i++) {
+		items[i].docID = last_docID + rand() % 10;
+		items[i].secID = rand() % 10;
+		items[i].sect_width = rand() % 6;
+		items[i].orig_width = rand() % 64;
+		items[i].symbinfo_offset = last_offset + rand() % 128;
+
+		flush_sz = invlist_iter_write(iter, items + i);
+		printf("write items[%d] (flush size = %lu) \n", i, flush_sz);
+		print_item(items + i);
+		printf("\n");
+
+		last_docID = items[i].docID;
+		last_offset = items[i].symbinfo_offset;
+	}
+
+	flush_sz = invlist_iter_flush(iter);
+	printf("final flush ... (flush size = %lu) \n", flush_sz);
+
+	/* test utility reader */
+	invlist_print_as_decoded_ints(invlist);
+
+	/* test iterator reader */
+	int i = 0;
+	foreach (iter, invlist, invlist) {
+		size_t rd_sz;
+		struct math_invlist_item item;
+
+		rd_sz = invlist_iter_read(iter, &item);
+		printf("read %lu bytes, ", rd_sz);
+		print_item(&item);
+
+		if (memcmp(items + i, &item, sizeof item) == 0)
+			prinfo("pass.");
+		else
+			prerr("failed.");
+
+		i++;
+	}
+
+	/* free invert list and iterator */
+	invlist_iter_free(iter);
+	invlist_free(invlist);
+
+	/* free structure field information */
+	codec_buf_struct_info_free(info);
+
+	mhook_print_unfree();
+	return 0;
+}

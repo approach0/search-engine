@@ -17,7 +17,8 @@ RUN_DIR := run
 CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 
 # reset CFLAGS
-CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE -O2 -fno-builtin
+CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE -O2 \
+	-fno-builtin -fno-strict-aliasing
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
 # target color print
