@@ -51,7 +51,7 @@ int main()
 
 	/* create invert list and iterator */
 	struct invlist *invlist = invlist_create(8, info);
-	invlist_iter_t iter = invlist_iterator(invlist);
+	invlist_iter_t writer = invlist_writer(invlist);
 
 	assert(invlist_empty(invlist));
 
@@ -70,7 +70,7 @@ int main()
 		items[i].orig_width = rand() % 64;
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
-		flush_sz = invlist_iter_write(iter, items + i);
+		flush_sz = invlist_iter_write(writer, items + i);
 		printf("write items[%d] (flush size = %lu) \n", i, flush_sz);
 		print_item(items + i);
 		printf("\n");
@@ -79,7 +79,7 @@ int main()
 		last_offset = items[i].symbinfo_offset;
 	}
 
-	flush_sz = invlist_iter_flush(iter);
+	flush_sz = invlist_iter_flush(writer);
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 
 	/* test utility reader */
@@ -104,7 +104,7 @@ int main()
 	}
 
 	/* free invert list and iterator */
-	invlist_iter_free(iter);
+	invlist_iter_free(writer);
 	invlist_free(invlist);
 
 	/* free structure field information */
