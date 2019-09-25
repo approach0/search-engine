@@ -9,7 +9,8 @@
 struct invlist_node {
 	struct skippy_node  sn;
 	char               *blk;
-	unsigned int        len;
+	uint16_t            len;
+	uint16_t            size;
 };
 
 struct invlist {

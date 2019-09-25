@@ -29,13 +29,15 @@ void invlist_free(struct invlist *inv)
 	free(inv);
 }
 
-static struct invlist_node *create_node(uint64_t key, size_t size, uint len)
+static struct invlist_node
+*create_node(uint64_t key, uint16_t size, uint16_t len)
 {
 	struct invlist_node *ret = malloc(sizeof *ret);
 
 	skippy_node_init(&ret->sn, key);
 	ret->blk = malloc(size);
 	ret->len = len;
+	ret->size = size;
 
 	return ret;
 }
