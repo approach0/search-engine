@@ -32,25 +32,11 @@ static void print_item(struct math_invlist_item *item)
 		item->sect_width, item->orig_width, item->symbinfo_offset);
 }
 
-int main()
+static struct invlist *
+gen_random_items(const char *path, struct codec_buf_struct_info *info)
 {
-	/* fill in structure field information */
-	struct codec_buf_struct_info *info;
-	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
-
-	printf("structure size: %lu\n", info->align_sz);
-
-#define SET_FIELD_INFO(_idx, _name, _codec) \
-	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
-
-	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
-	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
-	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
-	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
-	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
-
 	/* create invert list and iterator */
-	struct invlist *invlist = invlist_create(8, info);
+	struct invlist *invlist = invlist_open(path, 8, info);
 	invlist_iter_t writer = invlist_writer(invlist);
 
 	assert(invlist_empty(invlist));
@@ -70,7 +56,7 @@ int main()
 		items[i].orig_width = rand() % 64;
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
-		flush_sz = invlist_iter_write(writer, items + i);
+		flush_sz = invlist_writer_write(writer, items + i);
 		printf("write items[%d] (flush size = %lu) \n", i, flush_sz);
 		print_item(items + i);
 		printf("\n");
@@ -79,37 +65,63 @@ int main()
 		last_offset = items[i].symbinfo_offset;
 	}
 
-	flush_sz = invlist_iter_flush(writer);
+	flush_sz = invlist_writer_flush(writer);
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 
-	/* test utility reader */
-	invlist_print_as_decoded_ints(invlist);
+	invlist_writer_free(writer);
+	return invlist;
+}
 
-	/* test iterator reader */
-	int i = 0;
-	foreach (iter, invlist, invlist) {
-		size_t rd_sz;
-		struct math_invlist_item item;
+static void test_in_memo_invlist(struct codec_buf_struct_info *info)
+{
 
-		rd_sz = invlist_iter_read(iter, &item);
-		printf("read %lu bytes, ", rd_sz);
-		print_item(&item);
+//	/* test utility reader */
+//	invlist_print_as_decoded_ints(invlist);
+//
+//	/* test iterator reader */
+//	int i = 0;
+//	foreach (iter, invlist, invlist) {
+//		size_t rd_sz;
+//		struct math_invlist_item item;
+//
+//		rd_sz = invlist_iter_read(iter, &item);
+//		printf("read %lu bytes, ", rd_sz);
+//		print_item(&item);
+//
+//		if (memcmp(items + i, &item, sizeof item) == 0)
+//			prinfo("pass.");
+//		else
+//			prerr("failed.");
+//
+//		i++;
+//	}
+//
+//	/* free invert list and iterator */
+}
 
-		if (memcmp(items + i, &item, sizeof item) == 0)
-			prinfo("pass.");
-		else
-			prerr("failed.");
+int main()
+{
+	/* fill in structure field information */
+	struct codec_buf_struct_info *info;
+	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
 
-		i++;
-	}
+	printf("structure size: %lu\n", info->align_sz);
 
-	/* free invert list and iterator */
-	invlist_iter_free(writer);
+#define SET_FIELD_INFO(_idx, _name, _codec) \
+	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
+
+	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
+	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
+	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
+	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
+
+	struct invlist *invlist;
+	invlist = gen_random_items("run/invlist", info);
 	invlist_free(invlist);
 
 	/* free structure field information */
 	codec_buf_struct_info_free(info);
-
 	mhook_print_unfree();
 	return 0;
 }

@@ -12,6 +12,7 @@
 *.out
 *.log
 *.ln
+*.bin
 *.session
 gen-*
 y.output

@@ -1,7 +1,14 @@
-#define ON_DISK_SKIPPY_LEVELS 3
+/* test config */
+// #define ON_DISK_SKIPPY_LEVELS 3
+// #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
+// #define ON_DISK_SKIPPY_SKIPPY_SPANS 6
+// #define ON_DISK_SKIPPY_BUF_LEN 3
+
+/* deploy config */
+#define ON_DISK_SKIPPY_LEVELS 2
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
-#define ON_DISK_SKIPPY_SKIPPY_SPANS 6
-#define ON_DISK_SKIPPY_BUF_LEN 3
+#define ON_DISK_SKIPPY_SKIPPY_SPANS 64
+#define ON_DISK_SKIPPY_BUF_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
 
 #pragma pack(push, 1)
 struct skippy_data {

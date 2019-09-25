@@ -8,11 +8,19 @@
 #include "common/common.h"
 #include "invlist.h"
 
-struct invlist *invlist_create(uint32_t n, codec_buf_struct_info_t* c_info)
+struct invlist
+*invlist_open(const char *path, uint32_t n, codec_buf_struct_info_t* c_info)
 {
 	struct invlist *ret = malloc(sizeof *ret);
 
-	ret->head = NULL;
+	if (path == NULL) {
+		ret->head = NULL;
+		ret->type = INVLIST_TYPE_INMEMO;
+	} else {
+		strcpy(ret->path, path);
+		ret->type = INVLIST_TYPE_ONDISK;
+	}
+
 	ret->tot_sz = sizeof *ret;
 	ret->n_blk = 0;
 	skippy_init(&ret->skippy, n);
@@ -53,13 +61,32 @@ static void append_node(struct invlist *invlist,
 	skippy_append(&invlist->skippy, &node->sn);
 }
 
-void invlist_iter_free(struct invlist_iterator *iter)
+static struct skippy_data
+ondisk_invlist_block_writer(struct skippy_node *blk_, void *args_)
 {
-	codec_buf_free(iter->buf, iter->c_info);
-	free(iter);
+	struct skippy_data sd;
+	struct invlist_node *node;
+
+	/* get node pointer address */
+	node = container_of(blk_, struct invlist_node, sn);
+	sd.key = node->sn.key; /* return key */
+
+	/* get other arguments */
+	PTR_CAST(fh, FILE, args_);
+
+	/* record the current file offset */
+	fseek(fh, 0, SEEK_END);
+	sd.child_offset = ftell(fh);
+
+	/* write the invlist_node onto disk */
+	fwrite(&node->len, 1, sizeof node->len, fh);
+	fwrite(&node->size, 1, sizeof node->size, fh);
+	fwrite(node->blk, 1, node->size, fh);
+
+	return sd;
 }
 
-size_t invlist_iter_flush(struct invlist_iterator *iter)
+size_t invlist_writer_flush(struct invlist_iterator *iter)
 {
 	struct invlist *invlist = iter->invlist;
 	size_t payload_sz;
@@ -80,11 +107,26 @@ size_t invlist_iter_flush(struct invlist_iterator *iter)
 #error("big-indian CPU is not supported yet.")
 #endif
 
-	/* append new node with encoded buffer */
-	struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
-	memcpy(node->blk, enc_buf, payload_sz);
-	append_node(invlist, node, sizeof *node + payload_sz);
-	iter->cur = node;
+	/* flush to memory or disk depending on open type */
+	if (iter->lfh == NULL) {
+
+		/* append new in-memory node with encoded buffer */
+		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
+		memcpy(node->blk, enc_buf, payload_sz);
+		append_node(invlist, node, sizeof *node + payload_sz);
+		iter->cur = node;
+	} else {
+
+		/* write new on-disk block with encoded buffer */
+		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
+		memcpy(node->blk, enc_buf, payload_sz);
+
+		skippy_fwrite(&iter->sfh, &node->sn,
+			ondisk_invlist_block_writer, iter->lfh);
+
+		free(node->blk);
+		free(node);
+	}
 
 	/* reset iterator pointers/buffer */
 	iter->buf_idx = 0;
@@ -93,13 +135,13 @@ size_t invlist_iter_flush(struct invlist_iterator *iter)
 	return payload_sz;
 }
 
-size_t invlist_iter_write(struct invlist_iterator *iter, const void *in)
+size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 {
-	size_t flush_sz = 0; 
+	size_t flush_sz = 0;
 
 	/* flush buffer on inefficient buffer space */
 	if (iter->buf_idx + 1 > iter->invlist->buf_max_len)
-		flush_sz = invlist_iter_flush(iter);
+		flush_sz = invlist_writer_flush(iter);
 
 	/* append to buffer */
 	codec_buf_set(iter->buf, iter->buf_idx, (void*)in, iter->c_info);
@@ -109,9 +151,34 @@ size_t invlist_iter_write(struct invlist_iterator *iter, const void *in)
 	return flush_sz;
 }
 
+#include <unistd.h> /* for dup() */
+static FILE *invlist_fopen(const char *path, const char *mode, long *len)
+{
+	char invlist_path[MAX_PATH_LEN];
+	sprintf(invlist_path, "%s" ".bin", path);
+
+	FILE *fh = fopen(invlist_path, mode);
+
+	if (len != NULL) {
+		int fd = fileno(fh);
+		FILE *fh_dup = fdopen(dup(fd), "r");
+		fseek(fh_dup, 0, SEEK_END);
+		*len = ftell(fh_dup);
+		fclose(fh_dup);
+	}
+
+	return fh;
+}
+
 int invlist_empty(struct invlist* invlist)
 {
-	return (invlist->head == NULL);
+	if (invlist->type == INVLIST_TYPE_INMEMO) {
+		return (invlist->head == NULL);
+	} else {
+		long len;
+		fclose(invlist_fopen(invlist->path, "r", &len));
+		return (len == 0);
+	}
 }
 
 static struct invlist_node *next_blk(struct invlist_node *cur)
@@ -137,24 +204,80 @@ static size_t refill_buffer(struct invlist_iterator *iter)
 	return out_sz;
 }
 
-invlist_iter_t invlist_writer(struct invlist *invlist)
+static invlist_iter_t base_iterator(struct invlist *invlist)
 {
 	invlist_iter_t iter = malloc(sizeof *iter);
 
-	iter->cur = invlist->head;
 	iter->buf = codec_buf_alloc(invlist->buf_max_len, invlist->c_info);
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 	iter->invlist = invlist;
 	iter->c_info = invlist->c_info;
 
+	/* undermined type */
+	iter->cur = NULL;
+	iter->lfh = NULL;
+
 	return iter;
 }
 
+static void
+iter_persistent_open(invlist_iter_t iter, const char *path, const char *mode)
+{
+	if (skippy_fopen(&iter->sfh, path, mode, iter->invlist->buf_max_len)) {
+		prerr("failed to open on-disk skippy");
+		return;
+	}
+
+	iter->lfh = invlist_fopen(path, mode, NULL);
+}
+
+void invlist_iter_free(struct invlist_iterator *iter)
+{
+	if (iter->lfh) {
+		fclose(iter->lfh);
+		skippy_fclose(&iter->sfh);
+	}
+
+	codec_buf_free(iter->buf, iter->c_info);
+	free(iter);
+}
+
+void invlist_writer_free(struct invlist_iterator *iter)
+{
+	invlist_iter_free(iter);
+}
+
+/* an inverted list writer */
+invlist_iter_t invlist_writer(struct invlist *invlist)
+{
+	invlist_iter_t iter = base_iterator(invlist);
+
+	if (invlist->type == INVLIST_TYPE_INMEMO) {
+		/* a in-memo invlist */
+		iter->cur = invlist->head;
+	} else {
+		/* a on-disk invlist */
+		iter_persistent_open(iter, invlist->path, "a");
+	}
+
+	return iter;
+}
+
+/* an inverted list reader */
 invlist_iter_t invlist_iterator(struct invlist *invlist)
 {
-	invlist_iter_t iter = invlist_writer(invlist);
-	refill_buffer(iter);
+	invlist_iter_t iter = base_iterator(invlist);
+
+	if (invlist->type == INVLIST_TYPE_INMEMO) {
+		/* a in-memo invlist */
+		iter->cur = invlist->head;
+		refill_buffer(iter);
+	} else {
+		/* a on-disk invlist */
+		iter_persistent_open(iter, invlist->path, "r");
+	}
+
 	return iter;
 }
 
