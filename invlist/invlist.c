@@ -83,7 +83,6 @@ size_t invlist_iter_flush(struct invlist_iterator *iter)
 	memcpy(node->blk, enc_buf, payload_sz);
 	append_node(invlist, node, sizeof *node + payload_sz);
 	iter->cur = node;
-	printf("flush key: %lu\n", key);
 
 	/* reset iterator pointers/buffer */
 	iter->buf_idx = 0;
