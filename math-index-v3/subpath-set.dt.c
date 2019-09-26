@@ -290,6 +290,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 			}
 		}
 		u16_ht_free(&ht_sect);
+		u16_ht_free(&ht_hash);
 	}
 
 	/* find symbol splits in each element */
