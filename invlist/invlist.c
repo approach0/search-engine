@@ -128,6 +128,52 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	return out_sz;
 }
 
+static uint64_t
+invlist_iter_bufkey__64(struct invlist_iterator* iter, uint32_t idx)
+{
+	uint32_t key[2];
+
+	if (iter->lfh != NULL) {
+		/* return max ID if iterator terminated on-disk */
+		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
+	} else {
+		/* return max ID if iterator terminated in-memory */
+		if (iter->cur == NULL) return UINT64_MAX;
+	}
+
+	codec_buf_struct_info_t *c_info = iter->c_info;
+
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+	/* assume the order is little-indian */
+	CODEC_BUF_GET(key[1], iter->buf, 0, idx, c_info);
+	CODEC_BUF_GET(key[0], iter->buf, 1, idx, c_info);
+#else
+#error("big-indian CPU is not supported yet.")
+#endif
+
+	return *(uint64_t*)key;
+}
+
+static uint64_t
+invlist_iter_bufkey__32(struct invlist_iterator* iter, uint32_t idx)
+{
+	uint32_t key;
+
+	if (iter->lfh != NULL) {
+		/* return max ID if iterator terminated on-disk */
+		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
+	} else {
+		/* return max ID if iterator terminated in-memory */
+		if (iter->cur == NULL) return UINT64_MAX;
+	}
+
+	codec_buf_struct_info_t *c_info = iter->c_info;
+
+	CODEC_BUF_GET(key, iter->buf, 0, idx, c_info);
+
+	return key;
+}
+
 static invlist_iter_t base_iterator(struct invlist *invlist)
 {
 	invlist_iter_t iter = malloc(sizeof *iter);
@@ -138,10 +184,17 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 	iter->invlist = invlist;
 	iter->c_info = invlist->c_info;
 
+	iter->bufkey = invlist_iter_bufkey__64; /* use 64 bit key by default */
+
 	iter->cur = NULL;
 	iter->lfh = NULL;
 
 	return iter;
+}
+
+void iterator_set_bufkey_to_32(invlist_iter_t iter)
+{
+	iter->bufkey = invlist_iter_bufkey__32;
 }
 
 static void
@@ -273,15 +326,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		iter->buf, iter->buf_len, iter->c_info);
 
 	/* get the key for this flushed block */
-#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-	uint32_t key_[2];
-	/* assume the order is little-indian */
-	CODEC_BUF_GET(key_[1], iter->buf, 0, 0, iter->c_info);
-	CODEC_BUF_GET(key_[0], iter->buf, 1, 0, iter->c_info);
-	uint64_t key = *(uint64_t*)key_;
-#else
-#error("big-indian CPU is not supported yet.")
-#endif
+	uint64_t key = iter->bufkey(iter, 0);
 
 	/* do flushing */
 	if (iter->lfh == NULL) {
@@ -329,6 +374,21 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
  * Iterator core functions
  */
 
+size_t invlist_iter_read(struct invlist_iterator* iter, void *dest)
+{
+	uint32_t idx = iter->buf_idx;
+	size_t out_sz = 0;
+	codec_buf_struct_info_t *c_info = iter->c_info;
+
+	for (int j = 0; j < c_info->n_fields; j++) {
+		void *field_dest = (char *)dest + c_info->field_info[j].offset;
+		CODEC_BUF_CPY(field_dest, iter->buf, j, idx, c_info);
+		out_sz += c_info->field_info[j].sz;
+	}
+
+	return out_sz;
+}
+
 static struct invlist_node *next_blk(struct invlist_node *cur)
 {
 	struct skippy_node *next = cur->sn.next[0];
@@ -359,43 +419,43 @@ int invlist_iter_next(struct invlist_iterator* iter)
 	return 0;
 }
 
-uint64_t invlist_iter_curkey(struct invlist_iterator* iter)
+int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 {
-	if (iter->lfh != NULL) {
-		/* return max ID if iterator terminated on-disk */
-		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
-	} else {
-		/* return max ID if iterator terminated in-memory */
-		if (iter->cur == NULL) return UINT64_MAX;
+	struct skippy_node *jump_to;
+	uint64_t            id;
+
+	/* safe guard for buf_len */
+	if (iter->buf_len == 0) goto step;
+
+	/* if buffer end ID is greater, no need to jump */
+	id = iter->bufkey(iter, iter->buf_len - 1);
+	if (target <= id)
+		goto step;
+
+	/* jump according to iterator type */
+	if (iter->cur != NULL) {
+		/* in-memory jump */
+		jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
+
+		/* this is a new block, update pointer and refill buffer. */
+		iter->cur = container_of(jump_to, struct invlist_node, sn);
+		refill_buffer__memo(iter);
+	} else if (iter->lfh != NULL) {
+		/* on-disk jump */
+		skippy_fskip_to(&iter->sfh, target);
+
+		/* refill buffer from disk data after skipping. */
+		refill_buffer__disk(iter, 0);
 	}
 
-	uint32_t key[2], idx = iter->buf_idx;
-	codec_buf_struct_info_t *c_info = iter->c_info;
+step: /* step-by-step advance */
+	do {
+		id = iter->bufkey(iter, iter->buf_idx);
+		if (id >= target) return 1;
 
-#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-	/* assume the order is little-indian */
-	CODEC_BUF_GET(key[1], iter->buf, 0, idx, c_info);
-	CODEC_BUF_GET(key[0], iter->buf, 1, idx, c_info);
-#else
-#error("big-indian CPU is not supported yet.")
-#endif
+	} while (invlist_iter_next(iter));
 
-	return *(uint64_t*)key;
-}
-
-size_t invlist_iter_read(struct invlist_iterator* iter, void *dest)
-{
-	uint32_t idx = iter->buf_idx;
-	size_t out_sz = 0;
-	codec_buf_struct_info_t *c_info = iter->c_info;
-
-	for (int j = 0; j < c_info->n_fields; j++) {
-		void *field_dest = (char *)dest + c_info->field_info[j].offset;
-		CODEC_BUF_CPY(field_dest, iter->buf, j, idx, c_info);
-		out_sz += c_info->field_info[j].sz;
-	}
-
-	return out_sz;
+	return 0;
 }
 
 /*
@@ -409,7 +469,7 @@ void invlist_print_as_decoded_ints(struct invlist* invlist)
 
 	int cnt = 0;
 	do {
-		uint64_t key = invlist_iter_curkey(iter);
+		uint64_t key = iter->bufkey(iter, iter->buf_idx);
 		uint32_t idx = iter->buf_idx;
 		printf("[%14lu]: ", key);
 
@@ -439,55 +499,3 @@ void invlist_print_as_decoded_ints(struct invlist* invlist)
 
 	invlist_iter_free(iter);
 }
-
-//int
-//postlist_iter_jump32(struct postlist_iterator* iter, uint32_t target)
-//{
-//	struct skippy_node *jump_to;
-//	uint32_t            id;
-//
-//	id = *(uint32_t*)(iter->buf + iter->buf_end - iter->item_sz);
-//	if (target <= id)
-//		goto glide;
-//
-//	jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
-//
-//	/* this is a new block, update pointer and rebuf. */
-//	iter->cur = container_of(jump_to, struct postlist_node, sn);
-//	postlist_iter_rebuf(iter);
-//
-//glide:
-//	do {
-//		id = *(uint32_t*)postlist_iter_cur_item(iter);
-//		if (id >= target) return 1;
-//
-//	} while (postlist_iter_next(iter));
-//
-//	return 0;
-//}
-//
-//int
-//postlist_iter_jump(struct postlist_iterator* iter, uint64_t target)
-//{
-//	struct skippy_node *jump_to;
-//	uint64_t            id;
-//
-//	id = *(uint64_t*)(iter->buf + iter->buf_end - iter->item_sz);
-//	if (target <= id)
-//		goto glide;
-//
-//	jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
-//
-//	/* this is a new block, update pointer and rebuf. */
-//	iter->cur = container_of(jump_to, struct postlist_node, sn);
-//	postlist_iter_rebuf(iter);
-//
-//glide:
-//	do {
-//		id = *(uint64_t*)postlist_iter_cur_item(iter);
-//		if (id >= target) return 1;
-//
-//	} while (postlist_iter_next(iter));
-//
-//	return 0;
-//}

@@ -40,7 +40,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	struct math_invlist_item items[], int N)
 {
 	/* create invert list and iterator */
-	struct invlist *invlist = invlist_open(path, 128, info);
+	struct invlist *invlist = invlist_open(path, 8, info);
 	invlist_iter_t writer = invlist_writer(invlist);
 
 	assert(invlist_empty(invlist));
@@ -59,9 +59,8 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
 		flush_sz = invlist_writer_write(writer, items + i);
-		// printf("write items[%d] (flush size = %lu) \n", i, flush_sz);
-		// print_item(items + i);
-		// printf("\n");
+		printf("write items[%d] (flush %lu): ", i, flush_sz);
+		print_item(items + i);
 
 		last_docID = items[i].docID;
 		last_offset = items[i].symbinfo_offset;
@@ -88,19 +87,21 @@ test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 
 		rd_sz = invlist_iter_read(iter, &item);
 		(void)rd_sz;
-		// printf("read %lu bytes, ", rd_sz);
-		// print_item(&item);
+		printf("read %lu bytes, ", rd_sz);
+		print_item(&item);
 
 		if (memcmp(items + i, &item, sizeof item) != 0) {
 			err_cnt ++;
 			prerr("failed.");
+		} else {
+			prinfo("pass.");
 		}
 
 		i++;
 	}
 
 	if (0 == err_cnt)
-		prinfo("all passed.");
+		prinfo("all pass.");
 }
 
 int main()
@@ -118,7 +119,7 @@ int main()
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
 
-#define N (123456)
+#define N (30)
 	struct invlist *invlist;
 	struct math_invlist_item items[N] = {0};
 

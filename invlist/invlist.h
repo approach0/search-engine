@@ -35,6 +35,9 @@ struct invlist {
 	codec_buf_struct_info_t *c_info;
 };
 
+struct invlist_iterator;
+typedef uint64_t (*buf_key_callbk)(struct invlist_iterator*, uint32_t);
+
 typedef struct invlist_iterator {
 	void                   **buf;
 	uint32_t                 buf_idx;
@@ -44,6 +47,8 @@ typedef struct invlist_iterator {
 	codec_buf_struct_info_t *c_info;
 	/* we need c_info here so that we can free
 	 * iterator buf even after invlist gets destroyed. */
+
+	buf_key_callbk           bufkey; /* key value map */
 
 	struct invlist_node     *cur; /* in-memo invlist */
 	FILE                    *lfh; /* on-disk invlist */
@@ -68,11 +73,10 @@ invlist_iter_t invlist_iterator(struct invlist*);
 void           invlist_iter_free(struct invlist_iterator*);
 
 int      invlist_iter_next(struct invlist_iterator*);
-uint64_t invlist_iter_curkey(struct invlist_iterator*);
 size_t   invlist_iter_read(struct invlist_iterator*, void*);
 
-/* test function */
-void invlist_print_as_decoded_ints(struct invlist*);
+int invlist_iter_jump(struct invlist_iterator*, uint64_t);
 
-//int postlist_iter_jump(struct postlist_iterator*, uint64_t);
-//int postlist_iter_jump32(struct postlist_iterator*, uint32_t);
+/* misc function */
+void invlist_print_as_decoded_ints(struct invlist*);
+void iterator_set_bufkey_to_32(invlist_iter_t);
