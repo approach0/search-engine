@@ -451,6 +451,8 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 step: /* step-by-step advance */
 	do {
 		id = iter->bufkey(iter, iter->buf_idx);
+		printf("step-by-step key: %lu\n", id);
+
 		if (id >= target) return 1;
 
 	} while (invlist_iter_next(iter));

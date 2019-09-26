@@ -76,9 +76,6 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 static void
 test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 {
-	/* test utility reader */
-	// invlist_print_as_decoded_ints(invlist);
-
 	/* test iterator reader */
 	int i = 0, err_cnt = 0;
 	foreach (iter, invlist, invlist) {
@@ -104,6 +101,34 @@ test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 		prinfo("all pass.");
 }
 
+static void
+test_skipping(struct invlist *invlist)
+{
+	/* test utility reader */
+	invlist_print_as_decoded_ints(invlist);
+
+	uint64_t from, to;
+	printf("enter from, to ...\n");
+	scanf("%lu, %lu", &from, &to);
+
+	foreach (iter, invlist, invlist) {
+		uint64_t key = iter->bufkey(iter, iter->buf_idx);
+		if (key == from) {
+			struct math_invlist_item item;
+
+			printf("\n FROM \n");
+			invlist_iter_read(iter, &item);
+			print_item(&item);
+
+			printf("\n JUMP \n");
+			invlist_iter_jump(iter, to);
+
+			invlist_iter_read(iter, &item);
+			print_item(&item);
+		}
+	}
+}
+
 int main()
 {
 	/* fill in structure field information */
@@ -125,12 +150,14 @@ int main()
 
 	/* test for in-memory inverted list */
 	invlist = gen_random_items(NULL, info, items, N);
-	test_iterator(invlist, items);
+	// test_iterator(invlist, items);
+	test_skipping(invlist);
 	invlist_free(invlist);
 
 	/* test for on-disk inverted list */
 	invlist = gen_random_items("run/invlist", info, items, N);
-	test_iterator(invlist, items);
+//	test_iterator(invlist, items);
+	test_skipping(invlist);
 	invlist_free(invlist);
 
 	/* free structure field information */
