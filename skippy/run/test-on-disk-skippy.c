@@ -128,12 +128,12 @@ void test_jump_iterator()
 				printf("\n FROM \n");
 				skippy_fh_buf_print(&sfh);
 
-				skippy_fskip_to(&sfh, to);
+				skippy_fskip(&sfh, to);
 				printf("\n AFTER JUMP \n");
 				skippy_fh_buf_print(&sfh);
 
 				printf("\n REPEAT \n");
-				skippy_fskip_to(&sfh, to);
+				skippy_fskip(&sfh, to);
 				skippy_fh_buf_print(&sfh);
 			}
 		} while (1);

@@ -1,7 +1,7 @@
 /* test config */
 #define ON_DISK_SKIPPY_LEVELS 3
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
-#define ON_DISK_SKIPPY_SKIPPY_SPANS 6
+#define ON_DISK_SKIPPY_SKIPPY_SPANS 3
 #define ON_DISK_SKIPPY_BUF_LEN 3
 
 /* deploy config */
@@ -40,7 +40,7 @@ int skippy_fwrite(struct skippy_fh*, struct skippy_node*, skippy_fwrite_hook, vo
 int skippy_fend(struct skippy_fh*);
 
 struct skippy_data skippy_fnext(struct skippy_fh*, int);
-long skippy_fskip_to(struct skippy_fh*, uint64_t);
+struct skippy_data skippy_fskip(struct skippy_fh*, uint64_t);
 
 void skippy_fh_buf_print(struct skippy_fh*);
 void skippy_fprint(struct skippy_fh*);

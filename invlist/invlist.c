@@ -7,6 +7,7 @@
 
 #include "common/common.h"
 #include "invlist.h"
+#include "config.h"
 
 /*
  * inverted list functions
@@ -425,12 +426,21 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 	uint64_t            id;
 
 	/* safe guard for buf_len */
-	if (iter->buf_len == 0) goto step;
-
-	/* if buffer end ID is greater, no need to jump */
-	id = iter->bufkey(iter, iter->buf_len - 1);
-	if (target <= id)
+	if (iter->buf_len == 0) {
+#ifdef INVLIST_DEBUG
+		printf("buf_len == 0 when skipping\n");
+#endif
 		goto step;
+	}
+
+	/* if buffer block-end ID is greater, no need to jump */
+	id = iter->bufkey(iter, iter->buf_len - 1);
+	if (target <= id) {
+#ifdef INVLIST_DEBUG
+		printf("target <= block-end id, no need to jump\n");
+#endif
+		goto step;
+	}
 
 	/* jump according to iterator type */
 	if (iter->cur != NULL) {
@@ -442,17 +452,19 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 		refill_buffer__memo(iter);
 	} else if (iter->lfh != NULL) {
 		/* on-disk jump */
-		skippy_fskip_to(&iter->sfh, target);
+		struct skippy_data sd;
+		sd = skippy_fskip(&iter->sfh, target);
 
 		/* refill buffer from disk data after skipping. */
-		refill_buffer__disk(iter, 0);
+		refill_buffer__disk(iter, sd.child_offset);
 	}
 
 step: /* step-by-step advance */
 	do {
 		id = iter->bufkey(iter, iter->buf_idx);
+#ifdef INVLIST_DEBUG
 		printf("step-by-step key: %lu\n", id);
-
+#endif
 		if (id >= target) return 1;
 
 	} while (invlist_iter_next(iter));

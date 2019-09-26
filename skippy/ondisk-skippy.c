@@ -143,7 +143,7 @@ static long fbuf_seek(struct skippy_fh *sfh, int level, long offset)
 	return 0;
 }
 
-long skippy_fskip_to(struct skippy_fh *sfh, uint64_t key)
+struct skippy_data skippy_fskip(struct skippy_fh *sfh, uint64_t key)
 {
 	int level = ON_DISK_SKIPPY_LEVELS - 1;
 
@@ -167,7 +167,8 @@ long skippy_fskip_to(struct skippy_fh *sfh, uint64_t key)
 		}
 	}
 
-	return 0;
+	size_t cur = sfh->buf_cur[0];
+	return sfh->buf[0][cur];
 }
 
 static int

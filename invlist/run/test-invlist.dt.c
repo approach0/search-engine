@@ -116,14 +116,17 @@ test_skipping(struct invlist *invlist)
 		if (key == from) {
 			struct math_invlist_item item;
 
-			printf("\n FROM \n");
 			invlist_iter_read(iter, &item);
+			printf("\n FROM \n");
+			printf("[%14lu]: ", key);
 			print_item(&item);
 
-			printf("\n JUMP \n");
 			invlist_iter_jump(iter, to);
 
 			invlist_iter_read(iter, &item);
+			printf("\n JUMP TO \n");
+			key = iter->bufkey(iter, iter->buf_idx);
+			printf("[%14lu]: ", key);
 			print_item(&item);
 		}
 	}
@@ -148,11 +151,11 @@ int main()
 	struct invlist *invlist;
 	struct math_invlist_item items[N] = {0};
 
-	/* test for in-memory inverted list */
-	invlist = gen_random_items(NULL, info, items, N);
-	// test_iterator(invlist, items);
-	test_skipping(invlist);
-	invlist_free(invlist);
+//	/* test for in-memory inverted list */
+//	invlist = gen_random_items(NULL, info, items, N);
+//	// test_iterator(invlist, items);
+//	test_skipping(invlist);
+//	invlist_free(invlist);
 
 	/* test for on-disk inverted list */
 	invlist = gen_random_items("run/invlist", info, items, N);
