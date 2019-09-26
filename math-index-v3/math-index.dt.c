@@ -51,7 +51,7 @@ static void remove_wildcards(linkli_t *set)
 	foreach (iter, li, *set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		if (ele->dup[0]->type == SUBPATH_TYPE_WILDCARD) {
-			iter->li = li_remove(set, iter->cur);
+			*iter = li_remove(set, iter->cur);
 			free(ele);
 		}
 	}
@@ -119,7 +119,9 @@ static void make_dirs(linkli_t set, const char *root_name)
 		}
 
 		/* make directory */
+#ifdef DEBUG_SUBPATH_SET
 		printf("mkdir -p %s\n", path);
+#endif
 		mkdir_p(path);
 	}
 }
@@ -141,10 +143,10 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 	/* guarantee the corresponding directory is created */
 	make_dirs(set, index->dir);
 
-#ifdef DEBUG_SUBPATH_SET
+//#ifdef DEBUG_SUBPATH_SET
 	printf("subpath set (size=%d)\n", li_size(set));
 	print_subpath_set(set);
-#endif
+//#endif
 
 	li_free(set, struct subpath_ele, ln, free(e));
 	return 0;

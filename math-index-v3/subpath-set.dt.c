@@ -244,7 +244,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 
 	/* group by prefix path tokens */
 	for (args.prefix_len = 2;; args.prefix_len ++) {
-		args.added = 0;	
+		args.added = 0;
 		list_foreach(&subpaths.li, &add_into_set, &args);
 #ifdef DEBUG_SUBPATH_SET
 		printf("%d paths added at prefix length = %u... \n",
@@ -260,7 +260,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		struct subpath *sp = ele->dup[0];
 		struct subpath_node *root = prefix_path_root(sp, ele->prefix_len);
 		if (!interesting_token(root->token_id)) {
-			iter->li = li_remove(&set, iter->cur); \
+			*iter = li_remove(&set, iter->cur);
 			free(ele);
 		}
 	}

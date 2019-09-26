@@ -34,9 +34,14 @@ int main()
 //		"abcdefghijkl" /* 64 */
 //	};
 
-	/* joint node constraints test 2 */
+//	/* joint node constraints test 2 */
+//	const char *test[] = {
+//		"2+\\cfrac{3}{4+\\cfrac{5}{6+\\cfrac{7}{8 +\\ddots}}}"
+//	};
+
+	/* sector trees */
 	const char *test[] = {
-		"2+\\cfrac{3}{4+\\cfrac{5}{6+\\cfrac{7}{8 +\\ddots}}}"
+		"x + x + x +z + z + (a + a + b) c"
 	};
 
 	doc_id_t docID = 1;
