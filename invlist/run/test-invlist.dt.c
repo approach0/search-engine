@@ -40,7 +40,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	struct math_invlist_item items[], int N)
 {
 	/* create invert list and iterator */
-	struct invlist *invlist = invlist_open(path, 8, info);
+	struct invlist *invlist = invlist_open(path, 128, info);
 	invlist_iter_t writer = invlist_writer(invlist);
 
 	assert(invlist_empty(invlist));
@@ -59,9 +59,9 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
 		flush_sz = invlist_writer_write(writer, items + i);
-		printf("write items[%d] (flush size = %lu) \n", i, flush_sz);
-		print_item(items + i);
-		printf("\n");
+		// printf("write items[%d] (flush size = %lu) \n", i, flush_sz);
+		// print_item(items + i);
+		// printf("\n");
 
 		last_docID = items[i].docID;
 		last_offset = items[i].symbinfo_offset;
@@ -78,25 +78,29 @@ static void
 test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 {
 	/* test utility reader */
-	invlist_print_as_decoded_ints(invlist);
+	// invlist_print_as_decoded_ints(invlist);
 
 	/* test iterator reader */
-	int i = 0;
+	int i = 0, err_cnt = 0;
 	foreach (iter, invlist, invlist) {
 		size_t rd_sz;
 		struct math_invlist_item item;
 
 		rd_sz = invlist_iter_read(iter, &item);
-		printf("read %lu bytes, ", rd_sz);
-		print_item(&item);
+		(void)rd_sz;
+		// printf("read %lu bytes, ", rd_sz);
+		// print_item(&item);
 
-		if (memcmp(items + i, &item, sizeof item) == 0)
-			prinfo("pass.");
-		else
+		if (memcmp(items + i, &item, sizeof item) != 0) {
+			err_cnt ++;
 			prerr("failed.");
+		}
 
 		i++;
 	}
+
+	if (0 == err_cnt)
+		prinfo("all passed.");
 }
 
 int main()
@@ -104,8 +108,6 @@ int main()
 	/* fill in structure field information */
 	struct codec_buf_struct_info *info;
 	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
-
-	printf("structure size: %lu\n", info->align_sz);
 
 #define SET_FIELD_INFO(_idx, _name, _codec) \
 	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
@@ -116,7 +118,7 @@ int main()
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
 
-#define N 20
+#define N (123456)
 	struct invlist *invlist;
 	struct math_invlist_item items[N] = {0};
 
