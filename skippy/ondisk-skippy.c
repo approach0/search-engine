@@ -92,6 +92,13 @@ void skippy_fclose(struct skippy_fh *sfh)
 		if (sfh->fh[i]) fclose(sfh->fh[i]);
 }
 
+int skippy_fend(struct skippy_fh *sfh)
+{
+	size_t cur = sfh->buf_cur[0];
+	size_t end = sfh->buf_end[0];
+	return (cur > end);
+}
+
 struct skippy_data skippy_fnext(struct skippy_fh *sfh, int level)
 {
 	size_t *cur = sfh->buf_cur + level;

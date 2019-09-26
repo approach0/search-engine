@@ -37,6 +37,8 @@ void skippy_fclose(struct skippy_fh*);
 
 int skippy_fwrite(struct skippy_fh*, struct skippy_node*, skippy_fwrite_hook, void*);
 
+int skippy_fend(struct skippy_fh*);
+
 struct skippy_data skippy_fnext(struct skippy_fh*, int);
 long skippy_fskip_to(struct skippy_fh*, uint64_t);
 

@@ -9,6 +9,8 @@
 
 #include <assert.h>
 
+/* for memcmp to work as expected, we have to avoid optimal alignment */
+#pragma pack(push, 1)
 struct math_invlist_item {
 	uint32_t docID;
 	uint32_t secID;
@@ -16,6 +18,7 @@ struct math_invlist_item {
 	uint8_t  orig_width;
 	uint32_t symbinfo_offset; /* pointing to symbinfo file offset */
 };
+#pragma pack(pop)
 
 /* field index for math_invlist_item */
 enum {
@@ -33,7 +36,8 @@ static void print_item(struct math_invlist_item *item)
 }
 
 static struct invlist *
-gen_random_items(const char *path, struct codec_buf_struct_info *info)
+gen_random_items(const char *path, struct codec_buf_struct_info *info,
+	struct math_invlist_item items[], int N)
 {
 	/* create invert list and iterator */
 	struct invlist *invlist = invlist_open(path, 8, info);
@@ -45,8 +49,6 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info)
 	size_t flush_sz;
 	srand(time(0));
 
-#define N 20
-	struct math_invlist_item items[N] = {0};
 	uint last_docID = 1;
 	uint last_offset = 0;
 	for (int i = 0; i < N; i++) {
@@ -72,31 +74,29 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info)
 	return invlist;
 }
 
-static void test_in_memo_invlist(struct codec_buf_struct_info *info)
+static void
+test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 {
+	/* test utility reader */
+	invlist_print_as_decoded_ints(invlist);
 
-//	/* test utility reader */
-//	invlist_print_as_decoded_ints(invlist);
-//
-//	/* test iterator reader */
-//	int i = 0;
-//	foreach (iter, invlist, invlist) {
-//		size_t rd_sz;
-//		struct math_invlist_item item;
-//
-//		rd_sz = invlist_iter_read(iter, &item);
-//		printf("read %lu bytes, ", rd_sz);
-//		print_item(&item);
-//
-//		if (memcmp(items + i, &item, sizeof item) == 0)
-//			prinfo("pass.");
-//		else
-//			prerr("failed.");
-//
-//		i++;
-//	}
-//
-//	/* free invert list and iterator */
+	/* test iterator reader */
+	int i = 0;
+	foreach (iter, invlist, invlist) {
+		size_t rd_sz;
+		struct math_invlist_item item;
+
+		rd_sz = invlist_iter_read(iter, &item);
+		printf("read %lu bytes, ", rd_sz);
+		print_item(&item);
+
+		if (memcmp(items + i, &item, sizeof item) == 0)
+			prinfo("pass.");
+		else
+			prerr("failed.");
+
+		i++;
+	}
 }
 
 int main()
@@ -116,8 +116,18 @@ int main()
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
 
+#define N 20
 	struct invlist *invlist;
-	invlist = gen_random_items("run/invlist", info);
+	struct math_invlist_item items[N] = {0};
+
+	/* test for in-memory inverted list */
+	invlist = gen_random_items(NULL, info, items, N);
+	test_iterator(invlist, items);
+	invlist_free(invlist);
+
+	/* test for on-disk inverted list */
+	invlist = gen_random_items("run/invlist", info, items, N);
+	test_iterator(invlist, items);
 	invlist_free(invlist);
 
 	/* free structure field information */

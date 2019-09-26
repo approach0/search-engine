@@ -53,6 +53,7 @@ typedef struct invlist_iterator {
 /* invlist functions */
 struct invlist
 *invlist_open(const char*, uint32_t, codec_buf_struct_info_t*);
+int  invlist_empty(struct invlist*);
 void invlist_free(struct invlist*);
 
 /* writer functions */
@@ -66,11 +67,11 @@ size_t invlist_writer_write(struct invlist_iterator*, const void*);
 invlist_iter_t invlist_iterator(struct invlist*);
 void           invlist_iter_free(struct invlist_iterator*);
 
-int      invlist_empty(struct invlist*);
 int      invlist_iter_next(struct invlist_iterator*);
 uint64_t invlist_iter_curkey(struct invlist_iterator*);
 size_t   invlist_iter_read(struct invlist_iterator*, void*);
 
+/* test function */
 void invlist_print_as_decoded_ints(struct invlist*);
 
 //int postlist_iter_jump(struct postlist_iterator*, uint64_t);
