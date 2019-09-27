@@ -219,7 +219,7 @@ void math_pruner_precalc_upperbound(struct math_pruner* pruner, uint32_t qw)
 
 void math_pruner_print_postlist(struct math_pruner *pruner, int pid)
 {
-	printf("po#%d/%d ", pid, pruner->postlist_max[pid]);
+	printf("po#%d maxref=%d ", pid, pruner->postlist_max[pid]);
 	// printf("len=%d ", pruner->postlist_len[pid]);
 	// printf("(ref: %d) ", pruner->postlist_ref[pid]);
 	if (pruner->postlist_ref[pid] > 0) printf("<= ");

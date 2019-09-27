@@ -17,7 +17,8 @@
 /* max mark score, type of mnc_score_t */
 #define MNC_MARK_BASE_SCORE 90
 #define MNC_MARK_FULL_SCORE 100
-#define MNC_MARK_MID_SCORE ((MNC_MARK_BASE_SCORE + MNC_MARK_FULL_SCORE) / 2)
+//#define MNC_MARK_MID_SCORE ((MNC_MARK_BASE_SCORE + MNC_MARK_FULL_SCORE) / 2)
+#define MNC_MARK_MID_SCORE 100
 
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
 #define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
@@ -63,7 +64,7 @@
 	#define DEBUG_MERGE_LIMIT_ITERS UINT64_MAX
 	#define RANK_SET_DEFAULT_VOL 200
 #else
-	#define RANK_SET_DEFAULT_VOL 100
+	#define RANK_SET_DEFAULT_VOL 1000
 #endif
 
 #define DEFAULT_RES_PER_PAGE 10

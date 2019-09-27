@@ -40,11 +40,11 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //	if (NULL != strstr(url, "/480364/" /* bad */) ||
 //	    NULL != strstr(url, "/879729/" /* good but missed */)) {
 
-//	if (NULL != strstr(url, "/179098/")) {
+//	if (NULL != strstr(url, "Bias_of_an_estimator:9")) {
 
-	if (doc_id == 58337 || doc_id == 248554) {
+//	if (doc_id == 58337 || doc_id == 248554) {
 
-//	if (doc_id == 150175) {
+	if (doc_id == 351136) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
@@ -249,20 +249,20 @@ void math_l2_cur_print(struct math_l2_postlist *po)
 		uint64_t cur = postmerger_iter_call(po->iter, cur, i);
 		if (i > pruner->postlist_pivot || cur == candidate) {
 			printf("%s ", (cur == candidate) ? "hit: " : "skip:");
-			printf("iter[%u] ", i);
+			printf("[%u] ", i);
 			math_pruner_print_postlist(pruner, pid);
 			uint32_t docID = (uint32_t)(cur >> 32);
 			uint32_t expID = (uint32_t)(cur >> 0);
 			printf(" [doc#%u, exp#%u]\n", docID, expID);
 		}
 #ifdef DEBUG_MATH_SCORE_INSPECT
-		else {
-			printf("pass: [%u] ", i);
-			math_pruner_print_postlist(pruner, pid);
-			uint32_t docID = (uint32_t)(cur >> 32);
-			uint32_t expID = (uint32_t)(cur >> 0);
-			printf(" [doc#%u, exp#%u]\n", docID, expID);
-		}
+//		else {
+//			printf("pass: [%u] ", i);
+//			math_pruner_print_postlist(pruner, pid);
+//			uint32_t docID = (uint32_t)(cur >> 32);
+//			uint32_t expID = (uint32_t)(cur >> 0);
+//			printf(" [doc#%u, exp#%u]\n", docID, expID);
+//		}
 #endif
 	}
 	printf("\n");
@@ -292,7 +292,8 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 #endif
 
 	/* get precise structure match width */
-	widest->width = __builtin_popcountll(match.qry_paths);
+	// widest->width = __builtin_popcountll(match.qry_paths);
+
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 	widest->qmask = match.qry_paths;
 	widest->dmask = match.doc_paths;
@@ -310,6 +311,7 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 	if (inspect) {
 		/* print posting list hits */
 		math_l2_cur_print(po);
+		math_pruner_print(&po->pruner);
 
 		math_expr_sim_factors_print(&factors);
 #ifdef HIGHLIGHT_MATH_ALIGNMENT

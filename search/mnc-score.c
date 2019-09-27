@@ -65,7 +65,7 @@ mnc_push_qry(mnc_ptr_t p, struct mnc_ref qry_path_ref,
 	p->qry_fnp[p->n_qry_syms] = qry_path_ref.fnp;
 	p->qry_wil[p->n_qry_syms] = is_wildcard;
 	p->qry_cnj[p->n_qry_syms] = conjugacy;
-	return (++ p->n_qry_syms);
+	return (p->n_qry_syms ++);
 }
 
 /* return slot index that this document path belongs */

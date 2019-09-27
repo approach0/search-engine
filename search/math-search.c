@@ -420,13 +420,13 @@ drop_small_nodes(struct math_l2_postlist *po, float threshold)
 		float q_node_upperbound = pruner->upp[q_node->width];
 
 		if (q_node_upperbound <= threshold) {
-#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
-#ifdef DEBUG_MATH_SCORE_INSPECT
-	//if (inspect)
-#endif
-	printf("drop node#%d width %u upperbound %f <= threshold %f\n",
-		q_node->secttr[0].rnode, q_node->width, q_node_upperbound, threshold);
-#endif
+//#if defined(DEBUG_MATH_PRUNING) || defined(DEBUG_MATH_SCORE_INSPECT)
+//#ifdef DEBUG_MATH_SCORE_INSPECT
+//	//if (inspect)
+//#endif
+//	printf("drop node#%d width %u upperbound %f <= threshold %f\n",
+//		q_node->secttr[0].rnode, q_node->width, q_node_upperbound, threshold);
+//#endif
 			math_pruner_dele_node(pruner, i--);
 			math_pruner_update(pruner);
 			/* although postlists may need to reorder here, we can defer the
