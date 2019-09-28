@@ -529,13 +529,19 @@ vec_match(struct math_l2_postlist *po, struct pruner_node *q_node,
 
 estimate:
 		upbound = ret.w + leftover;
-		if (upbound <= widest || pruner->upp[upbound] <= threshold) {
+		if (upbound < widest || pruner->upp[upbound] < threshold) {
 			ret.w = 0;
 			break;
 		}
 	}
 
 	return ret;
+}
+
+inline int uniq_gt(int w1, int r1, int w2, int r2)
+{
+	if (w1 != w2) return w1 > w2;
+	else return r1 > r2;
 }
 
 #ifdef STRATEGY_NONE
@@ -569,7 +575,9 @@ static int math_l2_postlist_next(void *po_)
 			struct pruner_node *q_node = pruner->nodes + save_idx[i];
 
 			mr = vec_match(po, q_node, widest.width, 0);
-			if (mr.w > widest.width) {
+			if (uniq_gt(mr.w, q_node->secttr[0].rnode,
+			            widest.width, widest.qr)) {
+			// if (mr.w > widest.width) {
 				widest.width = mr.w;
 				widest.qr = q_node->secttr[0].rnode;
 				widest.dr = mr.dr;
@@ -675,7 +683,9 @@ static int math_l2_postlist_next(void *po_)
 				continue;
 
 			mr = vec_match(po, q_node, widest.width, threshold);
-			if (mr.w > widest.width) {
+			if (uniq_gt(mr.w, q_node->secttr[0].rnode,
+			            widest.width, widest.qr)) {
+			// if (mr.w > widest.width) {
 				widest.width = mr.w;
 				widest.qr = q_node->secttr[0].rnode;
 				widest.dr = mr.dr;
