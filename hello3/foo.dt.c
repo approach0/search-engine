@@ -10,7 +10,12 @@ void list_demo()
 		int age, salary;
 	};
 
-	struct person a[] = {{"Tim", 23, 200}, {"Denny", 35, 982}, {"Wei", 28, 0}};
+	struct person a[] = {
+		{"Tim", 23, 200},
+		{"Huk", 30, 9900},
+		{"Denny", 35, 982},
+		{"Wei", 28, 0}
+	};
 
 	linkli_t l = NULL;
 	li_append_array(l, a);
@@ -24,7 +29,7 @@ void list_demo()
 	foreach (iter, li, l) {
 		struct person *a = li_element(a, iter->cur);
 		if (a->name[0] == 'W') {
-			*iter = li_remove(&l, iter->cur);
+			li_iter_remove(iter, &l);
 			printf("free %s\n", a->name);
 			free(a);
 			break;
@@ -39,9 +44,9 @@ void list_demo()
 
 	foreach (iter, li, l) {
 		struct person *a = li_element(a, iter->cur);
-		*iter = li_remove(&l, iter->cur);
+		unsigned int rounds = li_iter_remove(iter, &l);
 
-		printf("free %s\n", a->name);
+		printf("free %s, left rounds: %u\n", a->name, rounds);
 		free(a);
 	}
 

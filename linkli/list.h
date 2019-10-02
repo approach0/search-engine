@@ -9,6 +9,7 @@ typedef struct li_node *linkli_t;
 typedef struct li_iterator {
 	struct li_node *cur;
 	linkli_t        li;
+	unsigned int    rounds; /* going through list for how many rounds */
 } *li_iter_t;
 
 #define li_node_init(_ln) \
@@ -37,9 +38,7 @@ li_detach(struct li_node *prev, struct li_node *next)
 	prev->next = next;
 }
 
-/* li_remove is designed to detach list element when used with iterator */
-static inline struct li_iterator
-li_remove(linkli_t *li, struct li_node *entry)
+static inline struct li_node *li_remove(linkli_t *li, struct li_node *entry)
 {
 	li_detach(entry->prev, entry->next);
 
@@ -49,15 +48,14 @@ li_remove(linkli_t *li, struct li_node *entry)
 		if (entry->next == entry) {
 			/* list is empty now */
 			*li = NULL;
-			/* return iterator so that it will stop in the next iteration */
-			return ((struct li_iterator){entry->prev, NULL});
+			return NULL;
 		}
 
+		/* set the next entry as list head */
 		*li = entry->next;
 	}
 
-	/* return iterator so that it will NEVER stop */
-	return ((struct li_iterator){entry->prev, (struct li_node*)0x1});
+	return entry->prev;
 }
 
 static inline int li_empty(linkli_t li)
@@ -99,6 +97,7 @@ li_iterator(linkli_t li)
 	struct li_iterator *iter;
 	iter = malloc(sizeof(struct li_iterator));
 	iter->li = iter->cur = li;
+	iter->rounds = 1;
 	return iter;
 }
 
@@ -117,9 +116,21 @@ li_iter_next(li_iter_t iter)
 	iter->cur = iter->cur->next;
 
 	if (iter->cur == iter->li)
-		return 0;
+		return --iter->rounds;
 	else
 		return 1;
+}
+
+static inline int
+li_iter_remove(li_iter_t iter, linkli_t *li /* list head */)
+{
+	iter->cur = li_remove(li, iter->cur);
+	iter->li  = *li;
+
+	if (NULL == iter->cur)
+		return 0;
+	else
+		return iter->rounds++;
 }
 
 #include "common/util-macro.h"
@@ -147,6 +158,6 @@ li_iter_next(li_iter_t iter)
 #define li_free(_list, _type, _ln, _stmt) \
 	if (!li_empty(_list)) { li_iter_t iter = li_iterator(_list); do { \
 		_type *e = li_entry(e, iter->cur, _ln); \
-		*iter = li_remove(&_list, iter->cur); \
+		li_iter_remove(iter, &_list); \
 		_stmt; \
 	} while (li_iter_next(iter)); li_iter_free(iter); } do {} while (0)

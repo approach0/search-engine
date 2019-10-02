@@ -51,7 +51,7 @@ static void remove_wildcards(linkli_t *set)
 	foreach (iter, li, *set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		if (ele->dup[0]->type == SUBPATH_TYPE_WILDCARD) {
-			*iter = li_remove(set, iter->cur);
+			li_iter_remove(iter, set);
 			free(ele);
 		}
 	}
