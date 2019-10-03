@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "common/common.h"
 #include "linkli/list.h"
@@ -18,6 +19,23 @@ struct mk_path_str_arg {
 	int cnt;
 };
 
+struct codec_buf_struct_info *math_codec_info()
+{
+	struct codec_buf_struct_info *info;
+	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
+
+#define SET_FIELD_INFO(_idx, _name, _codec) \
+	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
+
+	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
+	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
+	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
+	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
+
+	return info;
+}
+
 math_index_t
 math_index_open(const char *path, const char *mode)
 {
@@ -28,6 +46,9 @@ math_index_open(const char *path, const char *mode)
 	sprintf(index->dir, "%s", path);
 	sprintf(index->mode, "%s", mode);
 
+	index->dict = strmap_new();
+	index->cinfo = math_codec_info();
+
 	if (mode[0] == 'w') {
 		mkdir_p(path);
 		return index;
@@ -37,12 +58,31 @@ math_index_open(const char *path, const char *mode)
 			return index;
 	}
 
+	/* return NULL for invalid mode string */
 	free(index);
 	return NULL;
 }
 
 void math_index_close(math_index_t index)
 {
+	foreach (iter, strmap, index->dict) {
+		struct invlist_entry *entry = iter->cur->value;
+
+		if (index->mode[0] == 'w') /* flush only in write mode */
+			(void)invlist_writer_flush(entry->iterator);
+
+		if (entry->fh_symbinfo)
+			fclose(entry->fh_symbinfo);
+
+		/* free dictionary entry */
+		invlist_writer_free(entry->iterator);
+		invlist_free(entry->invlist);
+		free(entry);
+	}
+
+	/* free member structure */
+	strmap_free(index->dict);
+	codec_buf_struct_info_free(index->cinfo);
 	free(index);
 }
 
@@ -103,17 +143,85 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
-static void make_dirs(linkli_t set, const char *root_name)
+static void cache_append_invlist(math_index_t index, char *path,
+	struct subpath_ele *ele, doc_id_t docID, exp_id_t expID, uint32_t width)
 {
+	struct invlist_entry *entry = NULL;
+	strmap_t dict = index->dict;
+
+	printf("path: %s\n", path);
+
+	/* add path into dictionary if this path does not exist */
+	if (NULL == (entry = strmap_lookup(dict, path))) {
+		/* make path names */
+		char invlist_path[MAX_PATH_LEN];
+		char symbinfo_path[MAX_PATH_LEN];
+		sprintf(invlist_path, "%s/%s", path, MINVLIST_FNAME);
+		sprintf(symbinfo_path, "%s/%s.bin", path, SYMBINFO_FNAME);
+
+		/* create dictionary entry */
+		entry = malloc(sizeof *entry);
+		dict[[path]] = entry;
+
+		/* open inverted list on disk */
+		entry->invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN,
+		                              index->cinfo);
+		/* open invlist writer */
+		entry->iterator = invlist_writer(entry->invlist);
+
+		/* open symbinfo file */
+		entry->fh_symbinfo = fopen(symbinfo_path, "a");
+		assert(entry->fh_symbinfo != NULL);
+		entry->offset = 0;
+	}
+
+	/* append invert list item */
+	struct math_invlist_item item;
+	struct symbinfo symbinfo;
+
+	for (int i = 0; i < ele->n_sects; i++) {
+		/* prepare sector tree structure */
+		struct sector_tree secttr = ele->secttr[i];
+		item.docID = docID;
+
+		item.expID = expID;
+		item.sect_root = secttr.rootID;
+
+		item.sect_width = secttr.width;
+		item.orig_width = width;
+		item.symbinfo_offset = entry->offset;
+
+		/* write sector tree structure */
+		size_t flush_sz = invlist_writer_write(entry->iterator, &item);
+		(void)flush_sz;
+
+		/* prepare symbinfo structure */
+		symbinfo.ophash = secttr.ophash;
+		symbinfo.n_splits = MIN(ele->n_splits[i], MAX_INDEX_EXP_SYMBOL_SPLITS);
+		for (int j = 0; j < symbinfo.n_splits; j++) {
+			symbinfo.symbol[j] = ele->symbol[i][j];
+			symbinfo.splt_w[j] = ele->splt_w[i][j];
+		}
+
+		/* write symbinfo structure, update offset by written bytes */
+		entry->offset += fwrite(&symbinfo, 1, sizeof symbinfo,
+		                        entry->fh_symbinfo);
+	}
+}
+
+static void add_subpath_set(math_index_t index, linkli_t set,
+                            doc_id_t docID, exp_id_t expID, uint32_t width)
+{
+	const char *root_path = index->dir;
 	foreach (iter, li, set) {
 		char path[MAX_DIR_PATH_NAME_LEN] = "";
-		char *append = path;
-		append += sprintf(append, "%s/", root_name);
+		char *p = path;
+		p += sprintf(p, "%s/", root_path);
 
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		struct subpath *sp = ele->dup[0];
 
-		if (0 != mk_path_str(sp, ele->prefix_len, append)) {
+		if (0 != mk_path_str(sp, ele->prefix_len, p)) {
 			/* specified prefix_len is greater than actual path length */
 			continue;
 		}
@@ -123,6 +231,8 @@ static void make_dirs(linkli_t set, const char *root_name)
 		printf("mkdir -p %s\n", path);
 #endif
 		mkdir_p(path);
+
+		cache_append_invlist(index, path, ele, docID, expID, width);
 	}
 }
 
@@ -135,18 +245,17 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 		return 1;
 	}
 
-	linkli_t set = subpath_set(subpaths, SUBPATH_SET_DOC);	
+	linkli_t set = subpath_set(subpaths, SUBPATH_SET_DOC);
 
 	/* for indexing, we do not accept wildcards */
 	remove_wildcards(&set);
 
-	/* guarantee the corresponding directory is created */
-	make_dirs(set, index->dir);
-
-//#ifdef DEBUG_SUBPATH_SET
+#ifdef DEBUG_SUBPATH_SET
 	printf("subpath set (size=%d)\n", li_size(set));
 	print_subpath_set(set);
-//#endif
+#endif
+
+	add_subpath_set(index, set, docID, expID, subpaths.n_lr_paths);
 
 	li_free(set, struct subpath_ele, ln, free(e));
 	return 0;

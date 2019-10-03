@@ -15,17 +15,6 @@ struct math_invlist_item {
 	uint32_t symbinfo_offset; /* pointing to symbinfo file offset */
 };
 
-/* -----------------
-#define MAX_EXP_SYMBOL_SPLITS 8
-
-struct symbinfo {
-	uint32_t ophash:24;
-	uint32_t n_splits:8;
-	uint16_t symbol[MAX_EXP_SYMBOL_SPLITS];
-	uint8_t  splt_w[MAX_EXP_SYMBOL_SPLITS];
-};
------------------- */
-
 /* field index for math_invlist_item */
 enum {
 	FI_DOCID,

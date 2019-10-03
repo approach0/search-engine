@@ -40,7 +40,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	struct math_invlist_item items[], int N)
 {
 	/* create invert list and iterator */
-	struct invlist *invlist = invlist_open(path, 8, info);
+	struct invlist *invlist = invlist_open(path, MATH_INDEX_BLK_LEN, info);
 	invlist_iter_t writer = invlist_writer(invlist);
 
 	assert(invlist_empty(invlist));

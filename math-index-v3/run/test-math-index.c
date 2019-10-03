@@ -41,6 +41,7 @@ int main()
 
 	/* sector trees */
 	const char *test[] = {
+		"pq + 1",
 		"x + x + x +z + z + (a + a + b) c"
 	};
 

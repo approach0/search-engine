@@ -1,14 +1,16 @@
+#if 0
 /* test config */
 #define ON_DISK_SKIPPY_LEVELS 3
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
 #define ON_DISK_SKIPPY_SKIPPY_SPANS 3
 #define ON_DISK_SKIPPY_BUF_LEN 3
-
+#else
 /* deploy config */
-// #define ON_DISK_SKIPPY_LEVELS 2
-// #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
-// #define ON_DISK_SKIPPY_SKIPPY_SPANS 128
-// #define ON_DISK_SKIPPY_BUF_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
+#define ON_DISK_SKIPPY_LEVELS 2
+#define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
+#define ON_DISK_SKIPPY_SKIPPY_SPANS 128
+#define ON_DISK_SKIPPY_BUF_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
+#endif
 
 #pragma pack(push, 1)
 struct skippy_data {
