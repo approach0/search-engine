@@ -32,6 +32,8 @@ typedef struct math_index {
 } *math_index_t;
 
 math_index_t math_index_open(const char*, const char*);
+math_index_t math_index_load(const char*, size_t);
+
 void         math_index_flush(math_index_t);
 void         math_index_close(math_index_t);
 

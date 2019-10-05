@@ -264,11 +264,6 @@ void invlist_iter_free(struct invlist_iterator *iter)
 	free(iter);
 }
 
-void invlist_writer_free(struct invlist_iterator *iter)
-{
-	invlist_iter_free(iter);
-}
-
 /*
  * writer / flush functions
  */

@@ -53,7 +53,6 @@ math_index_open(const char *path, const char *mode)
 	{  /* read the previous N value */
 		char path[MAX_PATH_LEN];
 		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
-		printf("%s\n", path);
 		FILE *fh_N = fopen(path, "r");
 		if (NULL == fh_N) {
 			index->N = 0;
@@ -82,7 +81,8 @@ void math_index_flush(math_index_t index)
 	foreach (iter, strmap, index->dict) {
 		struct math_invlist_entry *entry = iter->cur->value;
 
-		if (index->mode[0] == 'w') /* flush only in write mode */
+		if (entry->iterator &&
+		    index->mode[0] == 'w') /* flush only in write mode */
 			(void)invlist_writer_flush(entry->iterator);
 
 		if (entry->fh_symbinfo)
@@ -106,10 +106,14 @@ void math_index_flush(math_index_t index)
 
 void math_index_close(math_index_t index)
 {
-	math_index_flush(index);
+	if (index->mode[0] == 'w')
+		math_index_flush(index);
 
 	foreach (iter, strmap, index->dict) {
 		struct math_invlist_entry *entry = iter->cur->value;
+
+		if (entry->iterator)
+			invlist_iter_free(entry->iterator);
 
 		if (entry->fh_symbinfo)
 			fclose(entry->fh_symbinfo);
@@ -117,9 +121,9 @@ void math_index_close(math_index_t index)
 		if (entry->fh_pf)
 			fclose(entry->fh_pf);
 
-		/* free dictionary entry */
-		invlist_writer_free(entry->iterator);
-		invlist_free(entry->invlist);
+		if (entry->invlist)
+			invlist_free(entry->invlist);
+
 		free(entry);
 	}
 
@@ -137,11 +141,10 @@ void math_index_print(math_index_t index)
 	int max = 100, cnt = 0;
 	foreach (iter, strmap, index->dict) {
 		struct math_invlist_entry *entry = iter->cur->value;
-		printf("[dict entry] ");
 		if (entry->invlist->type == INVLIST_TYPE_ONDISK) {
-			printf("on-disk %s ", entry->invlist->path);
+			printf("[on-disk] %s ", iter->cur->keystr);
 		} else {
-			printf("in-memo %p ", entry->invlist->head);
+			printf("[in-memo] %p ", iter->cur->keystr);
 		}
 		printf(" (pf = %u)\n", entry->pf);
 
@@ -209,57 +212,75 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
+static void read_invlist_entry(struct math_invlist_entry *entry,
+	struct codec_buf_struct_info *cinfo, const char *path)
+{
+	/* make path names */
+	char invlist_path[MAX_PATH_LEN];
+	char symbinfo_path[MAX_PATH_LEN];
+	char pf_path[MAX_PATH_LEN];
+	sprintf(invlist_path, "%s/%s", path, MINVLIST_FNAME);
+	sprintf(symbinfo_path, "%s/%s.bin", path, SYMBINFO_FNAME);
+	sprintf(pf_path, "%s/%s.bin", path, PATHFREQ_FNAME);
+
+	/* open inverted list on disk */
+	entry->invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
+
+	/* open symbinfo file */
+	entry->fh_symbinfo = fopen(symbinfo_path, "a");
+	assert(entry->fh_symbinfo != NULL);
+	entry->offset = 0;
+
+	/* set path frequency */
+	{ /* first read out value if there exists a file */
+		FILE *fh = fopen(pf_path, "r");
+		if (NULL != fh) {
+			fread(&entry->pf, 1, sizeof entry->pf, fh);
+			fclose(fh);
+		} else {
+			entry->pf = 0; /* first-time touch base */
+		}
+	}
+	/* then open for writing for later value updation */
+	entry->fh_pf = fopen(pf_path, "w");
+}
+
+static size_t
+memo_usage_per_entry(struct codec_buf_struct_info *cinfo, size_t str_len)
+{
+	size_t tot_sz = 0;
+
+	tot_sz += sizeof(struct strmap_entry) + str_len;
+	tot_sz += sizeof(datrie_state_t) * 2;
+
+	tot_sz += sizeof(struct math_invlist_entry);
+	tot_sz += sizeof(struct invlist_iterator);
+	tot_sz += codec_buf_space(MATH_INDEX_BLK_LEN, cinfo);
+
+	return tot_sz;
+}
+
 static void cache_append_invlist(math_index_t index, char *path,
 	struct subpath_ele *ele, doc_id_t docID, exp_id_t expID, uint32_t width)
 {
 	struct math_invlist_entry *entry = NULL;
 	strmap_t dict = index->dict;
+	char *key_path = path + strlen(index->dir);
 
 	/* add path into dictionary if this path does not exist */
-	if (NULL == (entry = strmap_lookup(dict, path))) {
-		/* make path names */
-		char invlist_path[MAX_PATH_LEN];
-		char symbinfo_path[MAX_PATH_LEN];
-		char pf_path[MAX_PATH_LEN];
-		sprintf(invlist_path, "%s/%s", path, MINVLIST_FNAME);
-		sprintf(symbinfo_path, "%s/%s.bin", path, SYMBINFO_FNAME);
-		sprintf(pf_path, "%s/%s.bin", path, PATHFREQ_FNAME);
-
+	if (NULL == (entry = strmap_lookup(dict, key_path))) {
 		/* create dictionary entry */
 		entry = malloc(sizeof *entry);
-		dict[[path]] = entry;
+		dict[[key_path]] = entry;
 
-		/* open inverted list on disk */
-		entry->invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN,
-		                              index->cinfo);
+		/* open invlist and entry metadata */
+		read_invlist_entry(entry, index->cinfo, path);
+
 		/* open invlist writer */
 		entry->iterator = invlist_writer(entry->invlist);
 
-		/* open symbinfo file */
-		entry->fh_symbinfo = fopen(symbinfo_path, "a");
-		assert(entry->fh_symbinfo != NULL);
-		entry->offset = 0;
-
-		/* set path frequency */
-		{ /* first read out value if there exists a file */
-			FILE *fh = fopen(pf_path, "r");
-			if (NULL != fh) {
-				fread(&entry->pf, 1, sizeof entry->pf, fh);
-				fclose(fh);
-			} else {
-				entry->pf = 0; /* first-time touch base */
-			}
-		}
-		/* then open for writing for later value updation */
-		entry->fh_pf = fopen(pf_path, "w");
-
 		/* update memory usage */
-		index->memo_usage += sizeof(struct strmap_entry) + strlen(path);
-		index->memo_usage += sizeof(datrie_state_t) * 2;
-
-		index->memo_usage += sizeof(struct math_invlist_entry);
-		index->memo_usage += sizeof(struct invlist_iterator);
-		index->memo_usage += codec_buf_space(MATH_INDEX_BLK_LEN, index->cinfo);
+		index->memo_usage += memo_usage_per_entry(index->cinfo, strlen(path));
 	}
 
 	/* append invert list item */
@@ -358,4 +379,63 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 
 	li_free(set, struct subpath_ele, ln, free(e));
 	return 0;
+}
+
+struct math_index_load_arg {
+	math_index_t index;
+	size_t       limit_sz;
+};
+
+static enum ds_ret
+dir_search_callbk(const char* path, const char *srchpath,
+                  uint32_t level, void *args_)
+{
+	/* read arguments and cast */
+	P_CAST(args, struct math_index_load_arg, args_);
+	struct math_index *index = args->index;
+	strmap_t dict = index->dict;
+	char *key_path = (char *)srchpath + 1; /* omit the "." */
+
+	/* is this directory empty? */
+	char test_path[MAX_PATH_LEN];
+	sprintf(test_path, "%s/%s.bin", path, MINVLIST_FNAME);
+	if (!file_exists(test_path) /* no inverted list here */)
+		return DS_RET_CONTINUE;
+
+	/* unexpected duplication check */
+	if (NULL != strmap_lookup(dict, key_path)) {
+		prerr("key `%s' already exists when loading math index.", key_path);
+		return DS_RET_CONTINUE;
+	}
+
+	/* allocate entry */
+	struct math_invlist_entry *entry;
+	entry = malloc(sizeof *entry);
+	dict[[key_path]] = entry;
+
+	/* open invlist and entry metadata */
+	read_invlist_entry(entry, index->cinfo, path);
+	entry->iterator = NULL;
+
+	/* uncomment to test */
+	//invlist_print_as_decoded_ints(entry->invlist);
+
+	if (index->memo_usage > args->limit_sz) {
+		prinfo("math index cache size reaches limit, stop caching.");
+		return DS_RET_STOP_ALLDIR;
+	} else {
+		return DS_RET_CONTINUE;
+	}
+}
+
+math_index_t math_index_load(const char *path, size_t limit_sz)
+{
+	math_index_t index = math_index_open(path, "r");
+	if (NULL == index)
+		return NULL;
+
+	struct math_index_load_arg args = {index, limit_sz};
+	dir_search_bfs(path, &dir_search_callbk, &args);
+
+	return index;
 }

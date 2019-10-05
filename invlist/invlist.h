@@ -65,7 +65,7 @@ void invlist_free(struct invlist*);
 
 /* writer functions */
 invlist_iter_t invlist_writer(struct invlist*);
-void           invlist_writer_free(struct invlist_iterator*);
+// Note: Use invlist_iter_free() to free writer.
 
 size_t invlist_writer_flush(struct invlist_iterator*);
 size_t invlist_writer_write(struct invlist_iterator*, const void*);

@@ -69,7 +69,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	flush_sz = invlist_writer_flush(writer);
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 
-	invlist_writer_free(writer);
+	invlist_iter_free(writer);
 	return invlist;
 }
 
