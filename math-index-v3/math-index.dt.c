@@ -144,7 +144,7 @@ void math_index_print(math_index_t index)
 		if (entry->invlist->type == INVLIST_TYPE_ONDISK) {
 			printf("[on-disk] %s ", iter->cur->keystr);
 		} else {
-			printf("[in-memo] %p ", iter->cur->keystr);
+			printf("[in-memo] %s ", iter->cur->keystr);
 		}
 		printf(" (pf = %u)\n", entry->pf);
 
@@ -286,7 +286,8 @@ static void cache_append_invlist(math_index_t index, char *path,
 		entry->writer = invlist_writer(entry->invlist);
 
 		/* update memory usage */
-		index->memo_usage += memo_usage_per_entry(index->cinfo, strlen(path));
+		index->memo_usage +=
+			memo_usage_per_entry(index->cinfo, strlen(key_path));
 	}
 
 	/* append invert list item */
@@ -387,6 +388,28 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 	return 0;
 }
 
+static struct invlist *fork_invlist(struct invlist *disk)
+{
+	codec_buf_struct_info_t *c_info = disk->c_info;
+
+	struct invlist *memo = invlist_open(NULL, MATH_INDEX_BLK_LEN, c_info);
+	invlist_iter_t  memo_writer = invlist_writer(memo);
+
+	foreach (iter, invlist, disk) {
+		/* read item from disk */
+		struct math_invlist_item item;
+		invlist_iter_read(iter, &item);
+		/* write item to memory */
+		invlist_writer_write(memo_writer, &item);
+	}
+
+	invlist_writer_flush(memo_writer);
+
+	invlist_iter_free(memo_writer);
+	invlist_free(disk);
+	return memo;
+}
+
 struct math_index_load_arg {
 	math_index_t index;
 	size_t       limit_sz;
@@ -422,8 +445,17 @@ dir_search_callbk(const char* path, const char *srchpath,
 	/* open invlist and entry metadata */
 	*entry = read_invlist_entry(index->cinfo, path);
 
-	/* uncomment to test */
+	/* uncomment to test on-disk inverted list */
 	//invlist_print_as_decoded_ints(entry->invlist);
+
+	/* fork on-disk inverted list into memory */
+	entry->invlist = fork_invlist(entry->invlist);
+
+	/* memory usage update */
+	index->memo_usage += memo_usage_per_entry(index->cinfo, strlen(key_path));
+
+	printf("memory usage: %.2f %%\n",
+		100.f * index->memo_usage / args->limit_sz);
 
 	if (index->memo_usage > args->limit_sz) {
 		prinfo("math index cache size reaches limit, stop caching.");
