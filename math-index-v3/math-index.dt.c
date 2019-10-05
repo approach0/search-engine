@@ -212,9 +212,10 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
-static void read_invlist_entry(struct math_invlist_entry *entry,
-	struct codec_buf_struct_info *cinfo, const char *path)
+static struct math_invlist_entry
+read_invlist_entry(struct codec_buf_struct_info *cinfo, const char *path)
 {
+	struct math_invlist_entry entry = {0};
 	/* make path names */
 	char invlist_path[MAX_PATH_LEN];
 	char symbinfo_path[MAX_PATH_LEN];
@@ -224,25 +225,30 @@ static void read_invlist_entry(struct math_invlist_entry *entry,
 	sprintf(pf_path, "%s/%s.bin", path, PATHFREQ_FNAME);
 
 	/* open inverted list on disk */
-	entry->invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
+	entry.invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
+
+	/* set writer to NULL initially */
+	entry.writer = NULL; /* only needed to cache writing */
 
 	/* open symbinfo file */
-	entry->fh_symbinfo = fopen(symbinfo_path, "a");
-	assert(entry->fh_symbinfo != NULL);
-	entry->offset = 0;
+	entry.fh_symbinfo = fopen(symbinfo_path, "a");
+	assert(entry.fh_symbinfo != NULL);
+	entry.offset = 0;
 
 	/* set path frequency */
 	{ /* first read out value if there exists a file */
 		FILE *fh = fopen(pf_path, "r");
 		if (NULL != fh) {
-			fread(&entry->pf, 1, sizeof entry->pf, fh);
+			fread(&entry.pf, 1, sizeof entry.pf, fh);
 			fclose(fh);
 		} else {
-			entry->pf = 0; /* first-time touch base */
+			entry.pf = 0; /* first-time touch base */
 		}
 	}
 	/* then open for writing for later value updation */
-	entry->fh_pf = fopen(pf_path, "w");
+	entry.fh_pf = fopen(pf_path, "w");
+
+	return entry;
 }
 
 static size_t
@@ -274,7 +280,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		dict[[key_path]] = entry;
 
 		/* open invlist and entry metadata */
-		read_invlist_entry(entry, index->cinfo, path);
+		*entry = read_invlist_entry(index->cinfo, path);
 
 		/* open invlist writer */
 		entry->writer = invlist_writer(entry->invlist);
@@ -414,8 +420,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	dict[[key_path]] = entry;
 
 	/* open invlist and entry metadata */
-	read_invlist_entry(entry, index->cinfo, path);
-	entry->writer = NULL; /* only needed to cache writing */
+	*entry = read_invlist_entry(index->cinfo, path);
 
 	/* uncomment to test */
 	//invlist_print_as_decoded_ints(entry->invlist);
