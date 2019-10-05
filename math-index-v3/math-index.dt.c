@@ -288,6 +288,11 @@ static void add_subpath_set(math_index_t index, linkli_t set,
 int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
                    struct subpaths subpaths)
 {
+	if (index->mode[0] != 'w') {
+		prerr("math_index_add needs writing permission.\n");
+		return 1;
+	}
+
 	if (subpaths.n_lr_paths > MAX_MATH_PATHS) {
 		prerr("too many subpaths (%lu > %lu), abort.\n",
 			subpaths.n_lr_paths, MAX_MATH_PATHS);
