@@ -49,6 +49,19 @@ math_index_open(const char *path, const char *mode)
 	index->dict = strmap_new();
 	index->cinfo = math_codec_info();
 
+	{  /* read the previous N value */
+		char path[MAX_PATH_LEN];
+		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
+		printf("%s\n", path);
+		FILE *fh_N = fopen(path, "r");
+		if (NULL == fh_N) {
+			index->N = 0;
+		} else {
+			fread(&index->N, 1, sizeof index->N, fh_N);
+			fclose(fh_N);
+		}
+	}
+
 	if (mode[0] == 'w') {
 		mkdir_p(path);
 		return index;
@@ -66,7 +79,7 @@ math_index_open(const char *path, const char *mode)
 void math_index_close(math_index_t index)
 {
 	foreach (iter, strmap, index->dict) {
-		struct invlist_entry *entry = iter->cur->value;
+		struct math_invlist_entry *entry = iter->cur->value;
 
 		if (index->mode[0] == 'w') /* flush only in write mode */
 			(void)invlist_writer_flush(entry->iterator);
@@ -74,10 +87,24 @@ void math_index_close(math_index_t index)
 		if (entry->fh_symbinfo)
 			fclose(entry->fh_symbinfo);
 
+		if (entry->fh_pf)
+			fclose(entry->fh_pf);
+
 		/* free dictionary entry */
 		invlist_writer_free(entry->iterator);
 		invlist_free(entry->invlist);
 		free(entry);
+	}
+
+	/* write the current N value if it is in write mode */
+	if (index->mode[0] == 'w') {
+		char path[MAX_PATH_LEN];
+		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
+		FILE *fh_N = fopen(path, "w");
+		if (fh_N) {
+			fwrite(&index->N, 1, sizeof index->N, fh_N);
+			fclose(fh_N);
+		}
 	}
 
 	/* free member structure */
@@ -146,7 +173,7 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 static void cache_append_invlist(math_index_t index, char *path,
 	struct subpath_ele *ele, doc_id_t docID, exp_id_t expID, uint32_t width)
 {
-	struct invlist_entry *entry = NULL;
+	struct math_invlist_entry *entry = NULL;
 	strmap_t dict = index->dict;
 
 	printf("path: %s\n", path);
@@ -156,8 +183,10 @@ static void cache_append_invlist(math_index_t index, char *path,
 		/* make path names */
 		char invlist_path[MAX_PATH_LEN];
 		char symbinfo_path[MAX_PATH_LEN];
+		char pf_path[MAX_PATH_LEN];
 		sprintf(invlist_path, "%s/%s", path, MINVLIST_FNAME);
 		sprintf(symbinfo_path, "%s/%s.bin", path, SYMBINFO_FNAME);
+		sprintf(pf_path, "%s/%s.bin", path, PATHFREQ_FNAME);
 
 		/* create dictionary entry */
 		entry = malloc(sizeof *entry);
@@ -173,6 +202,19 @@ static void cache_append_invlist(math_index_t index, char *path,
 		entry->fh_symbinfo = fopen(symbinfo_path, "a");
 		assert(entry->fh_symbinfo != NULL);
 		entry->offset = 0;
+
+		/* set path frequency */
+		{ /* first read out value if there exists a file */
+			FILE *fh = fopen(pf_path, "r");
+			if (NULL != fh) {
+				fread(&entry->pf, 1, sizeof entry->pf, fh);
+				fclose(fh);
+			} else {
+				entry->pf = 0; /* first-time touch base */
+			}
+		}
+		/* then open for writing for later value updation */
+		entry->fh_pf = fopen(pf_path, "w");
 	}
 
 	/* append invert list item */
@@ -206,6 +248,13 @@ static void cache_append_invlist(math_index_t index, char *path,
 		/* write symbinfo structure, update offset by written bytes */
 		entry->offset += fwrite(&symbinfo, 1, sizeof symbinfo,
 		                        entry->fh_symbinfo);
+
+		/* update frequency statistics */
+		entry->pf ++;
+		rewind(entry->fh_pf);
+		fwrite(&entry->pf, 1, sizeof entry->pf, entry->fh_pf);
+
+		index->N ++;
 	}
 }
 

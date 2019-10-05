@@ -1,3 +1,4 @@
+#include "common/types.h"
 #include "strmap/strmap.h"
 #include "codec/codec.h"
 #include "invlist/invlist.h"
@@ -10,12 +11,15 @@ typedef position_t exp_id_t;
 #define MAX_EXP_ID UINT_MAX
 
 /* invlist entry stored in dictionary */
-struct invlist_entry {
+struct math_invlist_entry {
 	struct invlist *invlist;
 	invlist_iter_t iterator;
 
 	FILE *fh_symbinfo; /* used by writer */
 	long  offset; /* symbol info offset, used by writer */
+
+	FILE *fh_pf; /* used by writer */
+	uint  pf; /* token path frequency of this entry */
 };
 
 typedef struct math_index {
@@ -23,6 +27,8 @@ typedef struct math_index {
 	char mode[8];
 	struct strmap *dict; /* dictionary */
 	struct codec_buf_struct_info *cinfo;
+
+	uint N; /* number of token paths in the collection */
 } *math_index_t;
 
 math_index_t math_index_open(const char*, const char*);
