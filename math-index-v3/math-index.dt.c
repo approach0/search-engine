@@ -81,9 +81,9 @@ void math_index_flush(math_index_t index)
 	foreach (iter, strmap, index->dict) {
 		struct math_invlist_entry *entry = iter->cur->value;
 
-		if (entry->iterator &&
+		if (entry->writer &&
 		    index->mode[0] == 'w') /* flush only in write mode */
-			(void)invlist_writer_flush(entry->iterator);
+			(void)invlist_writer_flush(entry->writer);
 
 		if (entry->fh_symbinfo)
 			fflush(entry->fh_symbinfo);
@@ -112,8 +112,8 @@ void math_index_close(math_index_t index)
 	foreach (iter, strmap, index->dict) {
 		struct math_invlist_entry *entry = iter->cur->value;
 
-		if (entry->iterator)
-			invlist_iter_free(entry->iterator);
+		if (entry->writer)
+			invlist_iter_free(entry->writer);
 
 		if (entry->fh_symbinfo)
 			fclose(entry->fh_symbinfo);
@@ -277,7 +277,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		read_invlist_entry(entry, index->cinfo, path);
 
 		/* open invlist writer */
-		entry->iterator = invlist_writer(entry->invlist);
+		entry->writer = invlist_writer(entry->invlist);
 
 		/* update memory usage */
 		index->memo_usage += memo_usage_per_entry(index->cinfo, strlen(path));
@@ -300,7 +300,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		item.symbinfo_offset = entry->offset;
 
 		/* write sector tree structure */
-		size_t flush_sz = invlist_writer_write(entry->iterator, &item);
+		size_t flush_sz = invlist_writer_write(entry->writer, &item);
 		(void)flush_sz;
 
 		/* prepare symbinfo structure */
@@ -415,7 +415,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 	/* open invlist and entry metadata */
 	read_invlist_entry(entry, index->cinfo, path);
-	entry->iterator = NULL;
+	entry->writer = NULL; /* only needed to cache writing */
 
 	/* uncomment to test */
 	//invlist_print_as_decoded_ints(entry->invlist);

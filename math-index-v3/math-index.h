@@ -13,7 +13,7 @@ typedef position_t exp_id_t;
 /* invlist entry stored in dictionary */
 struct math_invlist_entry {
 	struct invlist *invlist;
-	invlist_iter_t iterator;
+	invlist_iter_t  writer;
 
 	FILE *fh_symbinfo; /* used by writer */
 	long  offset; /* symbol info offset, used by writer */
