@@ -48,6 +48,7 @@ math_index_open(const char *path, const char *mode)
 
 	index->dict = strmap_new();
 	index->cinfo = math_codec_info();
+	index->memo_usage = sizeof(struct math_index);
 
 	{  /* read the previous N value */
 		char path[MAX_PATH_LEN];
@@ -130,8 +131,8 @@ void math_index_close(math_index_t index)
 
 void math_index_print(math_index_t index)
 {
-	printf("[math index] %s (N=%u, open mode: %s)\n", index->dir,
-		index->N, index->mode);
+	printf("[math index] %s (memo_usage=%luKB, N=%u, open mode: %s)\n",
+		index->dir, index->memo_usage / 1024, index->N, index->mode);
 
 	int max = 100, cnt = 0;
 	foreach (iter, strmap, index->dict) {
@@ -251,6 +252,14 @@ static void cache_append_invlist(math_index_t index, char *path,
 		}
 		/* then open for writing for later value updation */
 		entry->fh_pf = fopen(pf_path, "w");
+
+		/* update memory usage */
+		index->memo_usage += sizeof(struct strmap_entry) + strlen(path);
+		index->memo_usage += sizeof(datrie_state_t) * 2;
+
+		index->memo_usage += sizeof(struct math_invlist_entry);
+		index->memo_usage += sizeof(struct invlist_iterator);
+		index->memo_usage += codec_buf_space(MATH_INDEX_BLK_LEN, index->cinfo);
 	}
 
 	/* append invert list item */

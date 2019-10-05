@@ -27,8 +27,10 @@ struct invlist {
 		struct invlist_node *head; /* in-memo invlist */
 		char   path[MAX_PATH_LEN]; /* on-disk invlist */
 	};
-	size_t                   tot_sz;
-	uint32_t                 n_blk;
+
+	size_t                   tot_sz; /* total size in memory in bytes */
+	uint32_t                 n_blk; /* total number of blocks */
+
 	struct skippy            skippy;
 	uint32_t                 buf_max_len;
 	uint32_t                 buf_max_sz;

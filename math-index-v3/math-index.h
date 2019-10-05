@@ -27,7 +27,7 @@ typedef struct math_index {
 	char mode[8];
 	struct strmap *dict; /* dictionary */
 	struct codec_buf_struct_info *cinfo;
-
+	size_t memo_usage; /* of all caching buffers */
 	uint N; /* number of token paths in the collection */
 } *math_index_t;
 

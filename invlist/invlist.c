@@ -363,6 +363,8 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 
 		free(node->blk);
 		free(node);
+
+		invlist->n_blk ++;
 	}
 
 	/* reset iterator pointers/buffer */
