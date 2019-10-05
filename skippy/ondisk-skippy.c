@@ -213,6 +213,13 @@ int skippy_fwrite(struct skippy_fh *sfh, struct skippy_node *from,
 	return 0;
 }
 
+void skippy_fflush(struct skippy_fh *sfh)
+{
+	for (int i = 0; i < ON_DISK_SKIPPY_LEVELS; i++) {
+		fflush(sfh->fh[i]);
+	}
+}
+
 static void level_fprint(long len, FILE *fh)
 {
 	long offset = 0;

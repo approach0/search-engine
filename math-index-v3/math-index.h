@@ -32,7 +32,10 @@ typedef struct math_index {
 } *math_index_t;
 
 math_index_t math_index_open(const char*, const char*);
+void         math_index_flush(math_index_t);
 void         math_index_close(math_index_t);
+
+void math_index_print(math_index_t);
 
 int math_index_add(math_index_t, doc_id_t, exp_id_t, struct subpaths);
 

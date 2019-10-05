@@ -109,6 +109,12 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	iter->buf_len = 0;
 
 	rd_sz = fread(&head, 1, sizeof head, fh);
+
+#ifdef INVLIST_DEBUG
+	printf("seek to %lu, read [len=%u, sz=%u + %lu]\n", offset,
+		head.len, head.size, sizeof head);
+#endif
+
 	if (rd_sz != sizeof head) {
 		prerr("refill_buffer__disk head read: %u", rd_sz);
 		return 0;
@@ -308,6 +314,12 @@ ondisk_invlist_block_writer(struct skippy_node *blk_, void *args_)
 	fseek(fh, 0, SEEK_END);
 	sd.child_offset = ftell(fh);
 
+#ifdef INVLIST_DEBUG
+	printf("seek to %lu, write [len=%u, sz=%u + %lu]\n",
+		sd.child_offset, node->len, node->size,
+		sizeof node->len + sizeof node->size);
+#endif
+
 	/* write the invlist_node onto disk */
 	fwrite(&node->len, 1, sizeof node->len, fh);
 	fwrite(&node->size, 1, sizeof node->size, fh);
@@ -320,6 +332,9 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 {
 	struct invlist *invlist = iter->invlist;
 	size_t payload_sz;
+
+	if (iter->buf_len == 0)
+		return 0;
 
 	/* encode current buffer integers */
 	char enc_buf[invlist->buf_max_sz];
@@ -343,6 +358,8 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 
 		skippy_fwrite(&iter->sfh, &node->sn,
 			ondisk_invlist_block_writer, iter->lfh);
+		skippy_fflush(&iter->sfh);
+		fflush(iter->lfh);
 
 		free(node->blk);
 		free(node);

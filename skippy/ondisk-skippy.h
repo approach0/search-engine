@@ -38,6 +38,7 @@ int skippy_fopen(struct skippy_fh*, const char*, const char*, int);
 void skippy_fclose(struct skippy_fh*);
 
 int skippy_fwrite(struct skippy_fh*, struct skippy_node*, skippy_fwrite_hook, void*);
+void skippy_fflush(struct skippy_fh*);
 
 int skippy_fend(struct skippy_fh*);
 

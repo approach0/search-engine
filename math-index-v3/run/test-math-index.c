@@ -77,6 +77,9 @@ int main()
 		}
 	}
 
+	math_index_flush(index);
+	math_index_print(index);
+
 	math_index_close(index);
 
 	mhook_print_unfree();

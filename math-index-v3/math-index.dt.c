@@ -27,11 +27,11 @@ struct codec_buf_struct_info *math_codec_info()
 #define SET_FIELD_INFO(_idx, _name, _codec) \
 	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
 
-	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR); // CODEC_FOR_DELTA);
 	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
 	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
-	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR); // CODEC_FOR_DELTA);
 
 	return info;
 }
@@ -76,13 +76,39 @@ math_index_open(const char *path, const char *mode)
 	return NULL;
 }
 
-void math_index_close(math_index_t index)
+void math_index_flush(math_index_t index)
 {
 	foreach (iter, strmap, index->dict) {
 		struct math_invlist_entry *entry = iter->cur->value;
 
 		if (index->mode[0] == 'w') /* flush only in write mode */
 			(void)invlist_writer_flush(entry->iterator);
+
+		if (entry->fh_symbinfo)
+			fflush(entry->fh_symbinfo);
+
+		if (entry->fh_pf)
+			fflush(entry->fh_pf);
+	}
+
+	/* write the current N value if it is in write mode */
+	if (index->mode[0] == 'w') {
+		char path[MAX_PATH_LEN];
+		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
+		FILE *fh_N = fopen(path, "w");
+		if (fh_N) {
+			fwrite(&index->N, 1, sizeof index->N, fh_N);
+			fclose(fh_N);
+		}
+	}
+}
+
+void math_index_close(math_index_t index)
+{
+	math_index_flush(index);
+
+	foreach (iter, strmap, index->dict) {
+		struct math_invlist_entry *entry = iter->cur->value;
 
 		if (entry->fh_symbinfo)
 			fclose(entry->fh_symbinfo);
@@ -96,21 +122,33 @@ void math_index_close(math_index_t index)
 		free(entry);
 	}
 
-	/* write the current N value if it is in write mode */
-	if (index->mode[0] == 'w') {
-		char path[MAX_PATH_LEN];
-		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
-		FILE *fh_N = fopen(path, "w");
-		if (fh_N) {
-			fwrite(&index->N, 1, sizeof index->N, fh_N);
-			fclose(fh_N);
-		}
-	}
-
 	/* free member structure */
 	strmap_free(index->dict);
 	codec_buf_struct_info_free(index->cinfo);
 	free(index);
+}
+
+void math_index_print(math_index_t index)
+{
+	printf("[math index] %s (N=%u, open mode: %s)\n", index->dir,
+		index->N, index->mode);
+
+	int max = 100, cnt = 0;
+	foreach (iter, strmap, index->dict) {
+		struct math_invlist_entry *entry = iter->cur->value;
+		printf("[dict entry] ");
+		if (entry->invlist->type == INVLIST_TYPE_ONDISK) {
+			printf("on-disk %s ", entry->invlist->path);
+		} else {
+			printf("in-memo %p ", entry->invlist->head);
+		}
+		printf(" (pf = %u)\n", entry->pf);
+
+		invlist_print_as_decoded_ints(entry->invlist);
+
+		if (cnt > max) break;
+		cnt ++;
+	}
 }
 
 static void remove_wildcards(linkli_t *set)
@@ -175,8 +213,6 @@ static void cache_append_invlist(math_index_t index, char *path,
 {
 	struct math_invlist_entry *entry = NULL;
 	strmap_t dict = index->dict;
-
-	printf("path: %s\n", path);
 
 	/* add path into dictionary if this path does not exist */
 	if (NULL == (entry = strmap_lookup(dict, path))) {
