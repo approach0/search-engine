@@ -471,6 +471,7 @@ math_index_t math_index_load(const char *path, size_t limit_sz)
 	if (NULL == index)
 		return NULL;
 
+	/* load index from on-disk directories by BFS */
 	struct math_index_load_arg args = {index, limit_sz};
 	dir_search_bfs(path, &dir_search_callbk, &args);
 
