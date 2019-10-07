@@ -32,10 +32,26 @@ typedef struct math_index {
 } *math_index_t;
 
 math_index_t math_index_open(const char*, const char*);
-math_index_t math_index_load(const char*, size_t);
 
 void         math_index_flush(math_index_t);
 void         math_index_close(math_index_t);
+
+int math_index_load(math_index_t, size_t);
+
+enum math_reader_medium {
+	MATH_READER_MEDIUM_ONDISK,
+	MATH_READER_MEDIUM_INMEMO
+};
+
+struct math_invlist_entry_reader {
+	invlist_iter_t reader;
+	FILE *fh_symbinfo;
+	uint pf;
+	enum math_reader_medium medium;
+};
+
+struct math_invlist_entry_reader
+math_index_lookup(math_index_t, const char *);
 
 void math_index_print(math_index_t);
 

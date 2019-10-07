@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h> /* for dup() */
 #include <assert.h>
 
 #include "common/common.h"
@@ -79,7 +80,7 @@ math_index_open(const char *path, const char *mode)
 void math_index_flush(math_index_t index)
 {
 	foreach (iter, strmap, index->dict) {
-		struct math_invlist_entry *entry = iter->cur->value;
+		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
 
 		if (entry->writer &&
 		    index->mode[0] == 'w') /* flush only in write mode */
@@ -110,7 +111,7 @@ void math_index_close(math_index_t index)
 		math_index_flush(index);
 
 	foreach (iter, strmap, index->dict) {
-		struct math_invlist_entry *entry = iter->cur->value;
+		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
 
 		if (entry->writer)
 			invlist_iter_free(entry->writer);
@@ -140,7 +141,8 @@ void math_index_print(math_index_t index)
 
 	int max = 100, cnt = 0;
 	foreach (iter, strmap, index->dict) {
-		struct math_invlist_entry *entry = iter->cur->value;
+		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
+
 		if (entry->invlist->type == INVLIST_TYPE_ONDISK) {
 			printf("[on-disk] %s ", iter->cur->keystr);
 		} else {
@@ -213,7 +215,8 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 }
 
 static struct math_invlist_entry
-read_invlist_entry(struct codec_buf_struct_info *cinfo, const char *path)
+get_invlist_entry(struct codec_buf_struct_info *cinfo,
+                  const char *path, int read_only)
 {
 	struct math_invlist_entry entry = {0};
 	/* make path names */
@@ -228,12 +231,16 @@ read_invlist_entry(struct codec_buf_struct_info *cinfo, const char *path)
 	entry.invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
 
 	/* set writer to NULL initially */
-	entry.writer = NULL; /* only needed to cache writing */
+	entry.writer = NULL; /* only needed for cached writes */
 
 	/* open symbinfo file */
-	entry.fh_symbinfo = fopen(symbinfo_path, "a");
+	if (read_only)
+		entry.fh_symbinfo = fopen(symbinfo_path, "r");
+	else
+		entry.fh_symbinfo = fopen(symbinfo_path, "a");
+
 	assert(entry.fh_symbinfo != NULL);
-	entry.offset = 0;
+	entry.offset = ftell(entry.fh_symbinfo);
 
 	/* set path frequency */
 	{ /* first read out value if there exists a file */
@@ -245,8 +252,12 @@ read_invlist_entry(struct codec_buf_struct_info *cinfo, const char *path)
 			entry.pf = 0; /* first-time touch base */
 		}
 	}
+
 	/* then open for writing for later value updation */
-	entry.fh_pf = fopen(pf_path, "w");
+	if (read_only)
+		entry.fh_pf = NULL;
+	else
+		entry.fh_pf = fopen(pf_path, "w");
 
 	return entry;
 }
@@ -280,7 +291,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		dict[[key_path]] = entry;
 
 		/* open invlist and entry metadata */
-		*entry = read_invlist_entry(index->cinfo, path);
+		*entry = get_invlist_entry(index->cinfo, path, 0);
 
 		/* open invlist writer */
 		entry->writer = invlist_writer(entry->invlist);
@@ -443,7 +454,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	dict[[key_path]] = entry;
 
 	/* open invlist and entry metadata */
-	*entry = read_invlist_entry(index->cinfo, path);
+	*entry = get_invlist_entry(index->cinfo, path, 1);
 
 	/* uncomment to test on-disk inverted list */
 	//invlist_print_as_decoded_ints(entry->invlist);
@@ -454,7 +465,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	/* memory usage update */
 	index->memo_usage += memo_usage_per_entry(index->cinfo, strlen(key_path));
 
-	printf("memory usage: %.2f %%\n",
+	printf("caching %s, memory usage: %.2f %%\n", key_path,
 		100.f * index->memo_usage / args->limit_sz);
 
 	if (index->memo_usage > args->limit_sz) {
@@ -465,15 +476,54 @@ dir_search_callbk(const char* path, const char *srchpath,
 	}
 }
 
-math_index_t math_index_load(const char *path, size_t limit_sz)
+int math_index_load(math_index_t index, size_t limit_sz)
 {
-	math_index_t index = math_index_open(path, "r");
-	if (NULL == index)
-		return NULL;
-
 	/* load index from on-disk directories by BFS */
 	struct math_index_load_arg args = {index, limit_sz};
-	dir_search_bfs(path, &dir_search_callbk, &args);
+	dir_search_bfs(index->dir, &dir_search_callbk, &args);
 
-	return index;
+	return 0;
+}
+
+struct math_invlist_entry_reader
+math_index_lookup(math_index_t index, const char *key_)
+{
+	struct math_invlist_entry_reader entry_reader = {0};
+	struct math_invlist_entry *entry_ptr, entry = {0};
+	P_CAST(key_path, char, key_);
+
+	/* lookup from cache first */
+	if ((entry_ptr = strmap_lookup(index->dict, key_path))) {
+		entry_reader.reader = invlist_iterator(entry_ptr->invlist);
+		entry_reader.pf = entry_ptr->pf;
+
+		int fd = fileno(entry_ptr->fh_symbinfo);
+		entry_reader.fh_symbinfo = fdopen(dup(fd), "r");
+
+		entry_reader.medium = MATH_READER_MEDIUM_INMEMO;
+		return entry_reader;
+	}
+
+	/* if not there, look up from disk directory */
+	char path[MAX_PATH_LEN];
+	sprintf(path, "%s/%s/%s.bin", index->dir, key_, MINVLIST_FNAME);
+
+	if (file_exists(path)) {
+		sprintf(path, "%s/%s", index->dir, key_);
+		entry = get_invlist_entry(index->cinfo, path, 1);
+
+		entry_reader.reader = invlist_iterator(entry.invlist);
+		/* it is safe to free inverted list here since on-disk iterator
+		 * has only copied its path string and for reading, the invlist
+		 * pointer will not be used inside of invlist iterator. */
+		invlist_free(entry.invlist);
+
+		entry_reader.pf = entry.pf;
+		entry_reader.fh_symbinfo = entry.fh_symbinfo;
+
+		entry_reader.medium = MATH_READER_MEDIUM_ONDISK;
+		return entry_reader;
+	}
+
+	return entry_reader;
 }

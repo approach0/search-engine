@@ -6,7 +6,7 @@
 #include "skippy/ondisk-skippy.h"
 #include "codec-buf.h"
 
-#define MAX_PATH_LEN 2048
+#define MAX_PATH_LEN 4096
 
 /* structures */
 struct invlist_node {
@@ -80,5 +80,7 @@ size_t   invlist_iter_read(struct invlist_iterator*, void*);
 int invlist_iter_jump(struct invlist_iterator*, uint64_t);
 
 /* misc function */
-void invlist_print_as_decoded_ints(struct invlist*);
 void iterator_set_bufkey_to_32(invlist_iter_t);
+
+void invlist_iter_print_as_decoded_ints(invlist_iter_t);
+void invlist_print_as_decoded_ints(struct invlist*);

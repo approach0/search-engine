@@ -11,10 +11,6 @@
 #include <vector>
 #include <stdlib.h>
 
-#ifndef UINT32_MAX
-#define UINT32_MAX             (4294967295U)
-#endif
-
 using namespace std;
 
 struct term_index {

@@ -490,10 +490,9 @@ step: /* step-by-step advance */
  * test function
  */
 
-void invlist_print_as_decoded_ints(struct invlist* invlist)
+void invlist_iter_print_as_decoded_ints(invlist_iter_t iter)
 {
-	invlist_iter_t iter = invlist_iterator(invlist);
-	codec_buf_struct_info_t *c_info = invlist->c_info;
+	codec_buf_struct_info_t *c_info = iter->c_info;
 
 	int cnt = 0;
 	do {
@@ -524,6 +523,11 @@ void invlist_print_as_decoded_ints(struct invlist* invlist)
 		printf("\n");
 
 	} while (invlist_iter_next(iter));
+}
 
+void invlist_print_as_decoded_ints(struct invlist* invlist)
+{
+	invlist_iter_t iter = invlist_iterator(invlist);
+	invlist_iter_print_as_decoded_ints(iter);
 	invlist_iter_free(iter);
 }
