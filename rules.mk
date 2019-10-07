@@ -41,6 +41,7 @@ COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
        tput sgr0
 COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter %.cpp, $^) -o $@
 
+SHOW_OBJ_UNDEF_SYMBOLS = nm --undefined-only $@
 CCDH = gcc -dH
 
 # linker
@@ -131,6 +132,7 @@ $(BUILD_DIR)/%.o: %.cpp
 	$(CREAT_BUILD_DIR)
 	$(CXX_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CXX))
+	$(SHOW_OBJ_UNDEF_SYMBOLS) # to show C++ object symbols
 
 $(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
 	$(COLOR_LINK)
