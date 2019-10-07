@@ -27,7 +27,7 @@ struct codec_buf_struct_info *term_codec_info()
 	SET_FIELD_INFO(TI_DOCID, doc_id, CODEC_FOR); // CODEC_FOR_DELTA);
 	SET_FIELD_INFO(TI_TF, tf, CODEC_FOR);
 	SET_FIELD_INFO(TI_N_OCCUR, n_occur, CODEC_FOR);
-	SET_FIELD_INFO(TI_POS_ARR, n_occur, CODEC_FOR);
+	SET_FIELD_INFO(TI_POS_ARR, pos_arr, CODEC_FOR);
 
 	return info;
 }
