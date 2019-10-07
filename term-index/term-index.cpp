@@ -63,13 +63,16 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 	//printf("=%u\n", ti->avgDocLen);
 
 	/* text index cache, initially empty */
+	ti->cinfo = NULL;
 	ti->trp_root = NULL;
+	ti->memo_usage = 0;
 
 	return ti;
 }
 
 void term_index_close(void *handle)
 {
+	/* free Indri index iteself */
 	struct term_index *ti = (struct term_index*)handle;
 	ti->repo.close();
 	delete ti;

@@ -7,15 +7,6 @@
 #include "term-index.hpp"
 #include "term-index.h"
 
-using namespace std;
-
-enum {
-	TI_DOCID,
-	TI_TF,
-	TI_N_OCCUR,
-	TI_POS_ARR
-};
-
 struct codec_buf_struct_info *term_codec_info()
 {
 	struct codec_buf_struct_info *info;
@@ -68,20 +59,29 @@ int term_index_load(void *index_, size_t limit_sz)
 	term_id_t term_id, termN;
 	termN = term_index_get_termN(index_);
 
-	index->cinfo = term_codec_info();
-	index->trp_root = NULL;
-	index->memo_usage = 0;
+	uint32_t avgDocLen = term_index_get_avgDocLen(index);
+#ifdef PRINT_CACHING_TEXT_TERMS
+	printf("Term-index caching DocFreq threshold = %u\n",
+		MINIMAL_CACHE_DOC_FREQ);
+#endif
+
+	if (NULL == index->cinfo)
+		index->cinfo = term_codec_info();
 
 	for (term_id = 1; term_id <= termN; term_id++) {
+		/* only document terms with DF greater than a threshold */
+		uint32_t df = term_index_get_df(index, term_id);
+		(void)avgDocLen;
+		if (df < MINIMAL_CACHE_DOC_FREQ)
+			continue;
+
+		/* get on-disk inverted list for this term ID */
 		void *disk_invlist = term_index_get_posting(index_, term_id);
 		if (NULL == disk_invlist)
 			continue;
 
 		struct invlist *memo_invlist;
 		memo_invlist = fork_term_postlist(disk_invlist, index->cinfo);
-
-		/* get document frequency */
-		uint32_t df = term_index_get_df(index, term_id);
 
 #ifdef PRINT_CACHING_TEXT_TERMS
 		char *term = term_lookup_r(index, term_id);
@@ -131,11 +131,14 @@ free_cache_entry(struct bintr_ref *ref, uint32_t level, void *arg)
 void term_index_cache_free(void *index_)
 {
 	P_CAST(index, struct term_index, index_);
+	/* free codec info */
 	codec_buf_struct_info_free(index->cinfo);
 
+	/* free treap entries */
 	bintr_foreach((struct bintr_node **)&index->trp_root,
 	              &bintr_postorder, &free_cache_entry, index_);
 
+	/* reset memory usage */
 	index->memo_usage = 0;
 }
 
@@ -148,6 +151,7 @@ term_index_lookup(void *index_, term_id_t term_id)
 	if (index_ == NULL || term_id == 0)
 		return entry_reader;
 
+	/* find from cached index first */
 	struct bintr_ref ref;
 	ref = bintr_find((struct bintr_node**)&index->trp_root, term_id);
 
@@ -157,12 +161,14 @@ term_index_lookup(void *index_, term_id_t term_id)
 		entry = container_of(ref.this_, struct term_index_cache_entry,
 			trp_nd.bintr_nd);
 
+		/* return entry reader as iterator */
 		entry_reader.inmemo_reader = invlist_iterator(entry->invlist);
 		entry_reader.ondisk_reader = NULL;
 		entry_reader.df = entry->df;
 	} else {
 		void *ondisk_reader = term_index_get_posting(index_, term_id);
 		if (ondisk_reader) {
+			/* return entry reader directly as term_posting */
 			entry_reader.inmemo_reader = NULL;
 			entry_reader.ondisk_reader = ondisk_reader;
 			entry_reader.df = term_index_get_df(index_, term_id);

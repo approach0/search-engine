@@ -21,7 +21,7 @@ static void print_pos_arr(position_t *pos_arr, uint n)
 {
 	printf(", pos=");
 	for (uint k = 0; k < n; k++)
-		printf("%d%c", pos_arr[k], (k == n - 1) ? '.' : ',');
+		printf("%d%s", pos_arr[k], (k == n - 1) ? "" : ", ");
 }
 
 static void print_inmemo(invlist_iter_t iter)

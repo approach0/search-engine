@@ -60,6 +60,7 @@ uint64_t term_posting_cur(void*);
 size_t   term_posting_read(void*, void*);
 void     term_posting_finish(void *);
 
+/* term index cache data structures */
 #include "cache.h"
 
 #ifdef __cplusplus
