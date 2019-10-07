@@ -77,6 +77,9 @@ void           invlist_iter_free(struct invlist_iterator*);
 int      invlist_iter_next(struct invlist_iterator*);
 size_t   invlist_iter_read(struct invlist_iterator*, void*);
 
+#define invlist_iter_curkey(_iter) \
+	((_iter)->bufkey((_iter), (_iter)->buf_idx))
+
 int invlist_iter_jump(struct invlist_iterator*, uint64_t);
 
 /* misc function */

@@ -1,9 +1,3 @@
-#include "indri/Repository.hpp"
-#include "indri/Parameters.hpp"
-#include "indri/ParsedDocument.hpp"
-#include "indri/CompressedCollection.hpp"
-#include "term-index.h"
-#include "config.h"
 #include <iostream>
 #include <stdio.h>
 #include <limits.h>
@@ -11,16 +5,11 @@
 #include <vector>
 #include <stdlib.h>
 
-using namespace std;
+#include "config.h"
+#include "term-index.hpp"
+#include "term-index.h"
 
-struct term_index {
-	indri::collection::Repository  repo;
-	indri::api::Parameters         parameters;
-	indri::api::ParsedDocument     document;
-	indri::index::Index           *index;
-	uint32_t                       avgDocLen;
-	vector<char*>                  save;
-};
+using namespace std;
 
 void *term_index_open(const char *path, enum term_index_open_flag flag)
 {
@@ -57,8 +46,7 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 	ti->document.content = NULL;
 	ti->document.contentLength = 0;
 
-	/* update avgDocLen */
-	//cout<< "calculating avgDocLen..." << endl;
+	/* calculate avgDocLen */
 	docN = term_index_get_docN(ti);
 	ti->avgDocLen = 0;
 	for (doci = 1; doci <= docN; doci++) {
@@ -68,13 +56,14 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 		else
 			break;
 	}
-	//printf("avgDocLen=%u/%u", ti->avgDocLen, doci - 1);
 	if (doci > 1)
 		ti->avgDocLen = ti->avgDocLen / (doci - 1);
 	else
 		ti->avgDocLen = 0;
-
 	//printf("=%u\n", ti->avgDocLen);
+
+	/* text index cache, initially empty */
+	ti->trp_root = NULL;
 
 	return ti;
 }
@@ -85,6 +74,9 @@ void term_index_close(void *handle)
 	ti->repo.close();
 	delete ti;
 
+	/* free text index cache */
+	if (ti->trp_root)
+		term_index_cache_free(ti);
 }
 
 int term_index_maintain(void *handle)
