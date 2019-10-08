@@ -22,13 +22,18 @@ struct math_invlist_entry {
 	uint  pf; /* token path frequency of this entry */
 };
 
+struct math_index_stats {
+	uint N; /* number of token paths in the collection */
+	uint n_tex; /* total number of TeX indexed */
+};
+
 typedef struct math_index {
 	char dir[MAX_DIR_PATH_NAME_LEN];
 	char mode[8];
 	struct strmap *dict; /* dictionary */
 	struct codec_buf_struct_info *cinfo;
 	size_t memo_usage; /* of all caching buffers */
-	uint N; /* number of token paths in the collection */
+	struct math_index_stats stats;
 } *math_index_t;
 
 math_index_t math_index_open(const char*, const char*);

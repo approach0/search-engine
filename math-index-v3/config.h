@@ -3,7 +3,7 @@
 #define GENER_PATH_NAME  "gener"
 #define PREFIX_PATH_NAME "prefix"
 
-#define MINDEX_N_FNAME "mtotalpf" // math index N value
+#define MSTATS_FNAME "mstats" // math index stats
 
 #define MINVLIST_FNAME "minvlist" // math inverted list
 #define SYMBINFO_FNAME "symbinfo" // symbol information

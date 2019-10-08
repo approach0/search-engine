@@ -51,15 +51,15 @@ math_index_open(const char *path, const char *mode)
 	index->cinfo = math_codec_info();
 	index->memo_usage = sizeof(struct math_index);
 
-	{  /* read the previous N value */
+	{  /* read the stats value */
 		char path[MAX_PATH_LEN];
-		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
-		FILE *fh_N = fopen(path, "r");
-		if (NULL == fh_N) {
-			index->N = 0;
+		sprintf(path, "%s/%s.bin", index->dir, MSTATS_FNAME);
+		FILE *fh_stats = fopen(path, "r");
+		if (NULL == fh_stats) {
+			memset(&index->stats, 0, sizeof index->stats);
 		} else {
-			fread(&index->N, 1, sizeof index->N, fh_N);
-			fclose(fh_N);
+			fread(&index->stats, 1, sizeof index->stats, fh_stats);
+			fclose(fh_stats);
 		}
 	}
 
@@ -79,11 +79,13 @@ math_index_open(const char *path, const char *mode)
 
 void math_index_flush(math_index_t index)
 {
+	if (index->mode[0] != 'w')
+		return;
+
 	foreach (iter, strmap, index->dict) {
 		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
 
-		if (entry->writer &&
-		    index->mode[0] == 'w') /* flush only in write mode */
+		if (entry->writer)
 			(void)invlist_writer_flush(entry->writer);
 
 		if (entry->fh_symbinfo)
@@ -93,22 +95,19 @@ void math_index_flush(math_index_t index)
 			fflush(entry->fh_pf);
 	}
 
-	/* write the current N value if it is in write mode */
-	if (index->mode[0] == 'w') {
-		char path[MAX_PATH_LEN];
-		sprintf(path, "%s/%s.bin", index->dir, MINDEX_N_FNAME);
-		FILE *fh_N = fopen(path, "w");
-		if (fh_N) {
-			fwrite(&index->N, 1, sizeof index->N, fh_N);
-			fclose(fh_N);
-		}
+	/* write the current stats values */
+	char path[MAX_PATH_LEN];
+	sprintf(path, "%s/%s.bin", index->dir, MSTATS_FNAME);
+	FILE *fh_stats = fopen(path, "w");
+	if (fh_stats) {
+		fwrite(&index->stats, 1, sizeof index->stats, fh_stats);
+		fclose(fh_stats);
 	}
 }
 
 void math_index_close(math_index_t index)
 {
-	if (index->mode[0] == 'w')
-		math_index_flush(index);
+	math_index_flush(index);
 
 	foreach (iter, strmap, index->dict) {
 		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
@@ -136,8 +135,9 @@ void math_index_close(math_index_t index)
 
 void math_index_print(math_index_t index)
 {
-	printf("[math index] %s (memo_usage=%luKB, N=%u, open mode: %s)\n",
-		index->dir, index->memo_usage / 1024, index->N, index->mode);
+	printf("[math index] %s (memo_usage=%luKB, n_tex=%u, N=%u, mode: %s)\n",
+		index->dir, index->memo_usage / 1024,
+		index->stats.n_tex, index->stats.N, index->mode);
 
 	int max = 100, cnt = 0;
 	foreach (iter, strmap, index->dict) {
@@ -338,7 +338,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		rewind(entry->fh_pf);
 		fwrite(&entry->pf, 1, sizeof entry->pf, entry->fh_pf);
 
-		index->N ++;
+		index->stats.N ++;
 	}
 }
 
@@ -394,6 +394,8 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 #endif
 
 	add_subpath_set(index, set, docID, expID, subpaths.n_lr_paths);
+
+	index->stats.n_tex ++;
 
 	li_free(set, struct subpath_ele, ln, free(e));
 	return 0;
