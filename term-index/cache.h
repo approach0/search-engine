@@ -35,3 +35,5 @@ term_index_lookup(void *, term_id_t);
 
 /* free cache structures in term index */
 void term_index_cache_free(void*);
+
+uint32_t term_index_cache_memo_usage(void*);

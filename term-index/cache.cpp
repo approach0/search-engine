@@ -177,3 +177,9 @@ term_index_lookup(void *index_, term_id_t term_id)
 
 	return entry_reader;
 }
+
+uint32_t term_index_cache_memo_usage(void* index_)
+{
+	P_CAST(index, struct term_index, index_);
+	return index->memo_usage;
+}
