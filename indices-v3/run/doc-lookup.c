@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
 			break;
 
 		case 'i':
-			printf("%s\n", optarg);
 			sscanf(optarg, "%u", &docID);
 			break;
 
@@ -48,16 +47,9 @@ int main(int argc, char* argv[])
 	}
 
 	if (index_path) {
-		printf("corpus path: %s\n", index_path);
+		printf("index path: %s\n", index_path);
 	} else {
-		printf("no corpus path specified.\n");
-		goto exit;
-	}
-
-	if (docID > 0) {
-		printf("looking up docID: %u\n", docID);
-	} else {
-		printf("docID is zero.\n");
+		printf("no index path specified.\n");
 		goto exit;
 	}
 
@@ -67,6 +59,8 @@ int main(int argc, char* argv[])
 	}
 
 	indices_print_summary(&indices);
+	printf("\n");
+
 	uint32_t docLen = term_index_get_docLen(indices.ti, docID);
 	printf("doc#%u length: %u\n", docID, docLen);
 
