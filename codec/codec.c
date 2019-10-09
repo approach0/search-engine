@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
+
+#include "common/common.h"
 #include "codec.h"
 
 struct codec *codec_new(enum codec_method method, void* args)
@@ -95,6 +97,7 @@ codec_compress_ints(struct codec *codec, const void *in, size_t len, void *out)
 		return dummpy_copy(in, len, out);
 
 	case CODEC_FOR:
+		// prbuff_uints((uint32_t*)in, len);
 		return for_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
 
 	case CODEC_FOR8:

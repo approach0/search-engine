@@ -10,6 +10,7 @@
 		offsetof(_type, _member), \
 		sizeof p->_member, \
 		log2(sizeof p->_member), \
+		log2(MAX(1, sizeof p->_member / sizeof(int))), \
 		codec_new(_codec, CODEC_DEFAULT_ARGS) \
 	}); })
 
@@ -29,7 +30,7 @@
 struct codec;
 
 struct field_info {
-	uint offset, sz, logsz;
+	uint offset, sz, logsz, logints;
 	struct codec *codec;
 };
 
