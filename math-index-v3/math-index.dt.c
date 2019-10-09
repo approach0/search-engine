@@ -317,6 +317,11 @@ static void cache_append_invlist(math_index_t index, char *path,
 		item.orig_width = width;
 		item.symbinfo_offset = entry->offset;
 
+#ifdef MATH_INDEX_SECTTR_PRINT
+		printf("writing sector tree %u/%u: ",
+			secttr.rootID, secttr.width);
+#endif
+
 		/* write sector tree structure */
 		size_t flush_sz = invlist_writer_write(entry->writer, &item);
 		(void)flush_sz;
@@ -327,7 +332,14 @@ static void cache_append_invlist(math_index_t index, char *path,
 		for (int j = 0; j < symbinfo.n_splits; j++) {
 			symbinfo.symbol[j] = ele->symbol[i][j];
 			symbinfo.splt_w[j] = ele->splt_w[i][j];
+#ifdef MATH_INDEX_SECTTR_PRINT
+			printf("%s/%u ", trans_symbol(symbinfo.symbol[j]),
+			                 symbinfo.splt_w[j]);
+#endif
 		}
+#ifdef MATH_INDEX_SECTTR_PRINT
+		printf("\n");
+#endif
 
 		/* write symbinfo structure, update offset by written bytes */
 		entry->offset += fwrite(&symbinfo, 1, sizeof symbinfo,
@@ -353,6 +365,10 @@ static void add_subpath_set(math_index_t index, linkli_t set,
 
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		struct subpath *sp = ele->dup[0];
+
+		/* TODO: wildcards path not supported yet */
+		if (sp->type == SUBPATH_TYPE_GENERNODE)
+			continue;
 
 		if (0 != mk_path_str(sp, ele->prefix_len, p)) {
 			/* specified prefix_len is greater than actual path length */

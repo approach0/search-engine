@@ -1,6 +1,7 @@
 #include <assert.h>
 
 #include "dir-util/dir-util.h" /* for MAX_FILE_NAME_LEN */
+#include "tex-parser/head.h" /* for optr_print() */
 #include "indices.h"
 
 static void indices_update_stats(struct indices* indices)
@@ -207,19 +208,25 @@ static void eng_to_lower_case(char *str, size_t n)
 static struct tex_parse_ret
 index_tex(math_index_t mi, char *tex, doc_id_t docID, uint32_t expID)
 {
-	struct tex_parse_ret parse_ret;
+	struct tex_parse_ret ret;
 #ifdef DEBUG_INDEXER
 	printf("[parse tex] `%s'\n", tex);
 #endif
-	parse_ret = tex_parse(tex, 0, false, false);
+	ret = tex_parse(tex, 0, true, false);
 
-	if (parse_ret.code != PARSER_RETCODE_ERR) {
+	if (ret.code != PARSER_RETCODE_ERR) {
+		if (ret.operator_tree) {
+#ifdef DEBUG_INDEXER
+			optr_print((struct optr_node*)ret.operator_tree, stdout);
+#endif
+			optr_release((struct optr_node*)ret.operator_tree);
+		}
 		/* add TeX into inverted index */
-		math_index_add(mi, docID, expID, parse_ret.subpaths);
-		subpaths_release(&parse_ret.subpaths);
+		math_index_add(mi, docID, expID, ret.subpaths);
+		subpaths_release(&ret.subpaths);
 	}
 
-	return parse_ret;
+	return ret;
 }
 
 static int indexer_handle_slice(struct lex_slice *slice)
@@ -228,10 +235,10 @@ static int indexer_handle_slice(struct lex_slice *slice)
 	size_t str_sz = strlen(slice->mb_str);
 	struct tex_parse_ret tex_parse_ret;
 
-#ifdef DEBUG_INDEXER
-	printf("input slice: [%s] <%u, %lu>\n", slice->mb_str,
-		slice->offset, str_sz);
-#endif
+//#ifdef DEBUG_INDEXER
+//	printf("input slice: [%s] <%u, %lu>\n", slice->mb_str,
+//		slice->offset, str_sz);
+//#endif
 
 	switch (slice->type) {
 	case LEX_SLICE_TYPE_MATH_SEG:
