@@ -36,9 +36,18 @@ static struct invlist
 
 	do {
 		struct term_posting_item item;
+		/* for better compression */
+		memset(item.pos_arr, 0, sizeof item.pos_arr);
 		/* get docID, TF and position array */
 		term_posting_read(disk_invlist, &item);
 
+#ifdef PRINT_TERM_INDEX_CACHE_WRITES
+		printf("tf=%u, n_occur = %u\n", item.tf, item.n_occur);
+		for (int i = 0; i < MAX_TERM_ITEM_POSITIONS; i++) {
+			printf("%u ", item.pos_arr[i]);
+		}
+		printf("\n");
+#endif
 		/* copy to memory version */
 		invlist_writer_write(memo_writer, &item);
 
