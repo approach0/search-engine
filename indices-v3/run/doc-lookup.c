@@ -4,40 +4,142 @@
 #include <getopt.h>
 
 #include "mhook/mhook.h"
+#include "common/common.h"
 #include "codec/codec.h"
 #include "indices.h"
+#include "term-index/print-utils.h"
 
-int main(int argc, char* argv[])
+static void print_document(struct indices *indices, doc_id_t docID)
 {
-	struct codec   codec = {CODEC_GZ, NULL};
-	struct indices indices;
-	char  *index_path = NULL;
-
+	struct codec codec = {CODEC_GZ, NULL};
 	static char text[MAX_CORPUS_FILE_SZ + 1];
 	size_t   blob_sz, text_sz;
 	char    *blob_out = NULL;
+
+	uint32_t docLen = term_index_get_docLen(indices->ti, docID);
+	printf("doc#%u length: %u\n", docID, docLen);
+
+	blob_sz = blob_index_read(indices->url_bi, docID, (void **)&blob_out);
+	if (blob_out) {
+		memcpy(text, blob_out, blob_sz);
+		text[blob_sz] = '\0';
+		printf("URL: %s\n\n", text);
+		blob_free(blob_out);
+	} else {
+		fprintf(stderr, "URL blob read failed.\n");
+	}
+
+	blob_sz = blob_index_read(indices->txt_bi, docID, (void **)&blob_out);
+
+	if (blob_out) {
+		text_sz = codec_decompress(&codec, blob_out, blob_sz,
+		                           text, MAX_CORPUS_FILE_SZ);
+		text[text_sz] = '\0';
+		blob_free(blob_out);
+
+		printf("%s", text);
+	} else {
+		fprintf(stderr, "text blob read failed.\n");
+	}
+}
+
+static void print_term(term_index_t ti, char *term)
+{
+	term_id_t term_id = term_lookup(ti, term);
+	printf("term: `%s'\n", term);
+
+	if (term_id == 0) {
+		printf("non-existing term.\n");
+		return;
+	}
+
+	uint32_t df = term_index_get_df(ti, term_id);
+	printf("df = %u\n", df);
+
+	struct term_invlist_entry_reader entry_reader;
+	entry_reader = term_index_lookup(ti, term_id);
+
+	if (entry_reader.inmemo_reader)
+		print_inmemo_term_items(entry_reader.inmemo_reader);
+	if (entry_reader.ondisk_reader)
+		print_ondisk_term_items(entry_reader.ondisk_reader);
+}
+
+static void print_math(math_index_t index, char *path_key)
+{
+	struct math_invlist_entry_reader entry_reader;
+	printf("token path: %s\n", path_key);
+
+	entry_reader = math_index_lookup(index, path_key);
+	if (entry_reader.pf) {
+		printf("pf = %u, type = %s\n", entry_reader.pf,
+			(entry_reader.medium == MATH_READER_MEDIUM_INMEMO) ?
+			"in-memory" : "on-disk");
+		invlist_iter_print_as_decoded_ints(entry_reader.reader);
+		invlist_iter_free(entry_reader.reader);
+		fclose(entry_reader.fh_symbinfo);
+	} else {
+		printf("non-existing token path.\n");
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	struct indices indices;
+	char  *index_path = NULL;
+
 	doc_id_t docID = 0;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "hp:i:")) != -1) {
+	char term[64] = "";
+	char path[MAX_DIR_PATH_NAME_LEN] = "";
+
+	uint32_t math_cache_sz = 15 KB;
+	uint32_t term_cache_sz = 52 KB;
+
+	while ((opt = getopt(argc, argv, "hp:d:t:m:c:C:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
 			printf("Lookup document blob strings. \n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -p <index path> -i <docID>\n", argv[0]);
+			printf("%s -h | -p <index path>"
+			       " -d <docID> (show document)"
+			       " -t <term> (show term inverted list)"
+			       " -m <token_path> "
+				   "(show math inverted list, e.g. /prefix/VAR/ADD)"
+			       " -c <KB> (specify term cache size)"
+			       " -C <KB> (specify math cache size)"
+				   "\n",
+				   argv[0]);
 			printf("\n");
-			printf("EXAMPLE:\n");
-			printf("%s -p ./tmp -i 123 \n", argv[0]);
 			goto exit;
 
 		case 'p':
 			index_path = strdup(optarg);
 			break;
 
-		case 'i':
+		case 'd':
 			sscanf(optarg, "%u", &docID);
+			break;
+
+		case 't':
+			sscanf(optarg, "%s", term);
+			break;
+
+		case 'm':
+			sscanf(optarg, "%s", path);
+			break;
+
+		case 'c':
+			sscanf(optarg, "%u", &term_cache_sz);
+			term_cache_sz = term_cache_sz KB;
+			break;
+
+		case 'C':
+			sscanf(optarg, "%u", &math_cache_sz);
+			math_cache_sz = math_cache_sz KB;
 			break;
 
 		default:
@@ -58,34 +160,30 @@ int main(int argc, char* argv[])
 		goto close;
 	}
 
+	/* caching some into memory */
+	indices.mi_cache_limit = math_cache_sz;
+	indices.ti_cache_limit = term_cache_sz;
+	printf("caching (term-index %u KB, math-index %u KB)\n",
+		term_cache_sz / (1 KB), math_cache_sz / (1 KB));
+	printf("\n");
+	indices_cache(&indices);
+
+	/* print summary anyway */
+	printf("\n");
 	indices_print_summary(&indices);
 	printf("\n");
 
-	uint32_t docLen = term_index_get_docLen(indices.ti, docID);
-	printf("doc#%u length: %u\n", docID, docLen);
+	/* print document content */
+	if (docID != 0)
+		print_document(&indices, docID);
 
-	blob_sz = blob_index_read(indices.url_bi, docID, (void **)&blob_out);
-	if (blob_out) {
-		memcpy(text, blob_out, blob_sz);
-		text[blob_sz] = '\0';
-		printf("URL: %s\n\n", text);
-		blob_free(blob_out);
-	} else {
-		fprintf(stderr, "URL blob read failed.\n");
-	}
+	/* print term inverted list */
+	if (term[0] != '\0')
+		print_term(indices.ti, term);
 
-	blob_sz = blob_index_read(indices.txt_bi, docID, (void **)&blob_out);
-
-	if (blob_out) {
-		text_sz = codec_decompress(&codec, blob_out, blob_sz,
-		                           text, MAX_CORPUS_FILE_SZ);
-		text[text_sz] = '\0';
-		blob_free(blob_out);
-
-		printf("%s", text);
-	} else {
-		fprintf(stderr, "text blob read failed.\n");
-	}
+	/* print term inverted list */
+	if (path[0] != '\0')
+		print_math(indices.mi, path);
 
 close:
 	indices_close(&indices);

@@ -24,11 +24,6 @@ int main()
 		return 1;
 	}
 
-	indices.mi_cache_limit = 50 KB;
-	indices.ti_cache_limit = 5 KB;
-
-	indices_cache(&indices);
-
 	struct indexer *indexer;
 	indexer = indexer_alloc(&indices, lex_eng_file, parser_exception);
 
@@ -40,12 +35,16 @@ int main()
 	);
 	indexer_write_all_fields(indexer);
 
-indexer_spill(indexer);
-
 	strcpy(indexer->url_field, "www.bar.com");
 	strcpy(indexer->txt_field,
-		"Multiplying by [imath]2x+k[/imath] positive, [imath]x^2+kx<x(2x+k)[/imath]\n"
+		"so multiplying by [imath]2x+k[/imath] positive, [imath]x^2+kx<x(2x+k)[/imath]\n"
 		"[imath]\\frac{x^2+kx}{2x+k}-x=-\\frac{x^2}{2x+k}<0.[/imath]\n\n"
+	);
+	indexer_write_all_fields(indexer);
+
+	strcpy(indexer->url_field, "www.example.com");
+	strcpy(indexer->txt_field,
+		"so so so\n\n"
 	);
 	indexer_write_all_fields(indexer);
 

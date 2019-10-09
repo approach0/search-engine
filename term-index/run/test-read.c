@@ -12,68 +12,11 @@
 
 #include "term-index/config.h"
 #include "term-index.h"
+#include "print-utils.h"
 
 int opt, opt_any = 0;
 bool opt_summary = 0, opt_terms = 0, opt_postings = 0,
-	 opt_document = 0, opt_posting_termpos = 0, opt_all = 0;
-
-static void print_pos_arr(position_t *pos_arr, uint n)
-{
-	printf(", pos=");
-	for (uint k = 0; k < n; k++)
-		printf("%d%s", pos_arr[k], (k == n - 1) ? "" : ", ");
-}
-
-static void print_inmemo(invlist_iter_t iter)
-{
-	struct term_posting_item item;
-	iterator_set_bufkey_to_32(iter);
-	printf("in-memo: ");
-
-	do {
-		uint64_t key = invlist_iter_curkey(iter);
-		size_t rd_sz = invlist_iter_read(iter, &item);
-		(void)rd_sz;
-		assert(key == item.doc_id);
-
-		printf("[docID=%u, tf=%u", item.doc_id, item.tf);
-		if (opt_all || opt_posting_termpos) {
-			/* read term positions in this document */
-			print_pos_arr(item.pos_arr, item.n_occur);
-		}
-		printf("]");
-	} while (invlist_iter_next(iter));
-
-	invlist_iter_free(iter);
-	printf("\n");
-}
-
-static void print_ondisk(void *reader)
-{
-	printf("on-disk: ");
-	term_posting_start(reader);
-
-	do {
-		/* test both "get_cur_item" functions */
-		struct term_posting_item pi;
-		uint64_t doc_id = term_posting_cur(reader);
-		term_posting_read(reader, &pi);
-
-		assert(doc_id == pi.doc_id);
-
-		printf("[docID=%u, tf=%u", pi.doc_id, pi.tf);
-
-		if (opt_all || opt_posting_termpos) {
-			/* read term positions in this document */
-			print_pos_arr(pi.pos_arr, pi.n_occur);
-		}
-		printf("]");
-
-	} while (term_posting_next(reader));
-
-	term_posting_finish(reader);
-	printf("\n");
-}
+	 opt_document = 0, opt_all = 0;
 
 static void print_help(char *argv[])
 {
@@ -88,7 +31,6 @@ static void print_help(char *argv[])
 	       " -t (unique terms) |"
 	       " -l (posting lists) |"
 	       " -d (all document) |"
-	       " -o (term positions) |"
 	       " -a (dump all) |"
 	       " -g <df> "
 	       "(list terms whose df is greater than <df>) |"
@@ -109,7 +51,7 @@ int main(int argc, char* argv[])
 	uint32_t term_id = 0;
 	size_t cache_limit = 0;
 
-	while ((opt = getopt(argc, argv, "hstldoap:g:i:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "hstldap:g:i:c:")) != -1) {
 		opt_any = 1;
 		switch (opt) {
 		case 'h':
@@ -130,10 +72,6 @@ int main(int argc, char* argv[])
 
 		case 'd':
 			opt_document = 1;
-			break;
-
-		case 'o':
-			opt_posting_termpos = 1;
 			break;
 
 		case 'a':
@@ -219,9 +157,9 @@ int main(int argc, char* argv[])
 			entry_reader = term_index_lookup(ti, i);
 			printf("(check df=%u) ", entry_reader.df);
 			if (entry_reader.inmemo_reader)
-				print_inmemo(entry_reader.inmemo_reader);
+				print_inmemo_term_items(entry_reader.inmemo_reader);
 			if (entry_reader.ondisk_reader)
-				print_ondisk(entry_reader.ondisk_reader);
+				print_ondisk_term_items(entry_reader.ondisk_reader);
 		}
 	}
 
