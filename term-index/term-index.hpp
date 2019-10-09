@@ -20,7 +20,6 @@ struct term_index {
 	indri::api::Parameters         parameters;
 	indri::api::ParsedDocument     document;
 	indri::index::Index           *index;
-	uint32_t                       avgDocLen;
 	std::vector<char*>             save;
 
 	codec_buf_struct_info_t *cinfo;

@@ -17,11 +17,14 @@ enum indices_open_mode {
 };
 
 struct indices {
+	/* indices handlers */
 	term_index_t  ti;
 	math_index_t  mi;
-
 	blob_index_t  url_bi;
 	blob_index_t  txt_bi;
+
+	/* save a record of open mode */
+	enum indices_open_mode open_mode;
 
 	/* specified cache memory limits */
 	size_t mi_cache_limit;
@@ -34,6 +37,9 @@ struct indices {
 	uint32_t avgDocLen;
 	uint32_t n_tex;
 	uint32_t n_secttr;
+
+	/* hacky flag to avoid frequent updating avgDocLen */
+	int avgDocLen_updated;
 };
 
 int  indices_open(struct indices*, const char*, enum indices_open_mode);
@@ -46,7 +52,8 @@ void indices_print_summary(struct indices*);
  * Indexer (writer)
  */
 struct indexer;
-typedef int (*parser_exception_callbk)(struct indexer *, char *tex, char *msg);
+typedef int (*parser_exception_callbk)(
+	struct indexer *, const char *tex, char *msg);
 
 typedef int (*text_lexer)(FILE*);
 
@@ -73,3 +80,7 @@ struct indexer *indexer_alloc(struct indices*, text_lexer,
 void            indexer_free(struct indexer*);
 
 int             indexer_write_all_fields(struct indexer*);
+
+int indexer_maintain(struct indexer*);
+int indexer_should_maintain(struct indexer*);
+int indexer_spill(struct indexer*);

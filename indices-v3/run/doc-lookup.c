@@ -66,6 +66,10 @@ int main(int argc, char* argv[])
 		goto close;
 	}
 
+	indices_print_summary(&indices);
+	uint32_t docLen = term_index_get_docLen(indices.ti, docID);
+	printf("doc#%u length: %u\n", docID, docLen);
+
 	blob_sz = blob_index_read(indices.url_bi, docID, (void **)&blob_out);
 	if (blob_out) {
 		memcpy(text, blob_out, blob_sz);

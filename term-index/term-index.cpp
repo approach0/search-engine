@@ -14,7 +14,6 @@ using namespace std;
 void *term_index_open(const char *path, enum term_index_open_flag flag)
 {
 	struct term_index *ti = new struct term_index;
-	uint32_t docN, doci, doclen;
 
 	ti->parameters.set("memory", 1024 * 1024 * 512);
 	//ti->parameters.set("stemmer.name", "krovertz");
@@ -45,22 +44,6 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 	ti->document.textLength = 0;
 	ti->document.content = NULL;
 	ti->document.contentLength = 0;
-
-	/* calculate avgDocLen */
-	docN = term_index_get_docN(ti);
-	ti->avgDocLen = 0;
-	for (doci = 1; doci <= docN; doci++) {
-		doclen = ti->index->documentLength(doci);
-		if (ti->avgDocLen < UINT32_MAX - doclen)
-			ti->avgDocLen += doclen;
-		else
-			break;
-	}
-	if (doci > 1)
-		ti->avgDocLen = ti->avgDocLen / (doci - 1);
-	else
-		ti->avgDocLen = 0;
-	//printf("=%u\n", ti->avgDocLen);
 
 	/* text index cache, initially empty */
 	ti->cinfo = NULL;
@@ -175,7 +158,23 @@ uint32_t term_index_get_docLen(void *handle, doc_id_t doc_id)
 uint32_t term_index_get_avgDocLen(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->avgDocLen;
+	uint32_t docN, doci, doclen, avgDocLen = 0;
+
+	docN = term_index_get_docN(ti);
+	for (doci = 1; doci <= docN; doci++) {
+		doclen = ti->index->documentLength(doci);
+		if (avgDocLen < UINT32_MAX - doclen)
+			avgDocLen += doclen;
+		else
+			break;
+	}
+
+	if (doci > 1)
+		avgDocLen = avgDocLen / (doci - 1);
+	else
+		avgDocLen = 0;
+
+	return avgDocLen;
 }
 
 uint32_t term_index_get_df(void *handle, term_id_t term_id)

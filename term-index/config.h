@@ -11,4 +11,4 @@
 #define TERM_INDEX_BLK_LEN 32
 
 #define PRINT_CACHING_TEXT_TERMS
-#define MINIMAL_CACHE_DOC_FREQ  1 // avgDocLen
+#define MINIMAL_CACHE_DOC_FREQ  0 // avgDocLen

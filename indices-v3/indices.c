@@ -6,8 +6,11 @@
 static void indices_update_stats(struct indices* indices)
 {
 	if (indices->ti) {
-		indices->n_doc     = term_index_get_docN(indices->ti);
-		indices->avgDocLen = term_index_get_avgDocLen(indices->ti);
+		indices->n_doc = term_index_get_docN(indices->ti);
+		if (!indices->avgDocLen_updated) {
+			indices->avgDocLen = term_index_get_avgDocLen(indices->ti);
+			indices->avgDocLen_updated = 1;
+		}
 	}
 
 	if (indices->mi) {
@@ -35,6 +38,10 @@ int indices_open(struct indices* indices, const char* index_path,
 
 	/* zero all fields */
 	memset(indices, 0, sizeof(struct indices));
+
+	/* set open mode */
+	indices->open_mode = mode;
+	indices->avgDocLen_updated = 0;
 
 	/*
 	 * open term index.
@@ -131,14 +138,18 @@ void indices_close(struct indices* indices)
 
 int indices_cache(struct indices* indices)
 {
-	int res = 0;
-	res |= math_index_load(indices->mi, indices->mi_cache_limit);
-	indices->memo_usage += indices->mi->memo_usage;
+	if (indices->open_mode == INDICES_OPEN_RD) {
+		/* only do caching in read-only mode */
+		int res = 0;
+		res |= math_index_load(indices->mi, indices->mi_cache_limit);
+		indices->memo_usage += indices->mi->memo_usage;
 
-	res |= term_index_load(indices->ti, indices->ti_cache_limit);
-	indices->memo_usage += term_index_cache_memo_usage(indices->ti);
-
-	return res;
+		res |= term_index_load(indices->ti, indices->ti_cache_limit);
+		indices->memo_usage += term_index_cache_memo_usage(indices->ti);
+		return res;
+	} else {
+		return 1;
+	}
 }
 
 void indices_print_summary(struct indices* indices)
@@ -317,15 +328,35 @@ int indexer_write_all_fields(struct indexer *indexer)
 	index_blob(indices->txt_bi, indices->n_doc + 1,
 		indexer->txt_field, txt_sz, 1);
 
-	/* finishing index and update docID */
+	/* finishing index */
 	doc_id_t docID = term_index_doc_end(indices->ti);
 	assert(docID == indices->n_doc + 1);
+
+	/* update docID and indices stats */
+	indices_update_stats(indices);
+
+	/* update n_doc because it is likely to be out-of-date after
+	 * indices_update_stats() due to Indri caching mechanism. */
 	indices->n_doc = docID;
 
 	/* reset lexer position */
 	indexer->cur_position = 0;
-
-	/* update indices stats */
-	indices_update_stats(indices);
 	return ret;
+}
+
+int indexer_maintain(struct indexer *indexer)
+{
+	return term_index_should_maintain(indexer->indices->ti);
+}
+
+int indexer_should_maintain(struct indexer *indexer)
+{
+	term_index_maintain(indexer->indices->ti);
+	return 0;
+}
+
+int indexer_spill(struct indexer *indexer)
+{
+	term_index_write(indexer->indices->ti);
+	return 0;
 }
