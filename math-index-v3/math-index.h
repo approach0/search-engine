@@ -72,8 +72,8 @@ struct math_invlist_item {
 	union {
 		uint32_t secID;
 		struct {
-			uint32_t expID:20;
-			uint32_t sect_root:12;
+			uint16_t expID;
+			uint16_t sect_root;
 		};
 	}; /* 4 bytes */
 	uint8_t  sect_width;
@@ -86,10 +86,12 @@ struct math_invlist_item {
 /* field index for math_invlist_item */
 enum {
 	FI_DOCID,
-	FI_SECID,
+	FI_EXPID,
+	FI_SECT_ROOT,
 	FI_SECT_WIDTH,
 	FI_ORIG_WIDTH,
-	FI_OFFSET
+	FI_OFFSET,
+	N_MATH_INVLIST_ITEM_FIELDS
 };
 
 #define MAX_INDEX_EXP_SYMBOL_SPLITS 8

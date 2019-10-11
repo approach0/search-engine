@@ -23,13 +23,17 @@ struct mk_path_str_arg {
 struct codec_buf_struct_info *math_codec_info()
 {
 	struct codec_buf_struct_info *info;
-	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
+	info = codec_buf_struct_info_alloc(
+		N_MATH_INVLIST_ITEM_FIELDS,
+		sizeof(struct math_invlist_item)
+	);
 
 #define SET_FIELD_INFO(_idx, _name, _codec) \
 	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
 
 	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR); // CODEC_FOR_DELTA);
-	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
+	SET_FIELD_INFO(FI_EXPID, expID, CODEC_FOR16);
+	SET_FIELD_INFO(FI_SECT_ROOT, sect_root, CODEC_FOR16);
 	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR); // CODEC_FOR_DELTA);
