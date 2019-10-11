@@ -29,6 +29,18 @@ enum {
 	FI_OFFSET
 };
 
+static uint64_t
+bufkey_64(struct invlist_iterator* iter, uint32_t idx)
+{
+	uint32_t key[2];
+	codec_buf_struct_info_t *c_info = iter->c_info;
+
+	CODEC_BUF_GET(key[0], iter->buf, 1, idx, c_info);
+	CODEC_BUF_GET(key[1], iter->buf, 0, idx, c_info);
+
+	return *(uint64_t*)key;
+}
+
 static void print_item(struct math_invlist_item *item)
 {
 	printf("#%u, #%u, w%u, w%u, o%u\n", item->docID, item->secID,
@@ -41,9 +53,10 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 {
 	/* create invert list and iterator */
 	struct invlist *invlist = invlist_open(path, 128, info);
-	invlist_iter_t writer = invlist_writer(invlist);
+	invlist->bufkey = bufkey_64; /* set a 64-bit key map */
 
-	assert(invlist_empty(invlist));
+	invlist_iter_t writer = invlist_writer(invlist);
+	
 
 	/* write a sequence of random items */
 	size_t flush_sz;
@@ -139,7 +152,8 @@ int main()
 	info = codec_buf_struct_info_alloc(5, sizeof(struct math_invlist_item));
 
 #define SET_FIELD_INFO(_idx, _name, _codec) \
-	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
+	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec); \
+	strcpy(info->field_info[_idx].name, # _name)
 
 	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
 	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
@@ -159,7 +173,8 @@ int main()
 
 	/* test for on-disk inverted list */
 	invlist = gen_random_items("run/invlist", info, items, N);
-	test_iterator(invlist, items);
+	invlist_print_as_decoded_ints(invlist);
+//	test_iterator(invlist, items);
 //	test_skipping(invlist);
 	invlist_free(invlist);
 

@@ -104,16 +104,16 @@ int main(int argc, char* argv[])
 			printf("Lookup document blob strings. \n");
 			printf("\n");
 			printf("USAGE:\n");
-			printf("%s -h | -p <index path>"
-			       " -d <docID> (show document)"
-			       " -t <term> (show term inverted list)"
+			printf("%s \n"
+			       " -h (show help text) \n"
+			       " -p <index path> \n"
+			       " -d <docID> (show document) \n"
+			       " -t <term> (show term inverted list) \n"
 			       " -m <token_path> "
-				   "(show math inverted list, e.g. /prefix/VAR/ADD)"
-			       " -c <KB> (specify term cache size)"
-			       " -C <KB> (specify math cache size)"
-				   "\n",
-				   argv[0]);
-			printf("\n");
+			       "(show math inverted list, e.g. /prefix/VAR/BASE/HANGER) \n"
+			       " -c <KB> (specify term cache size) \n"
+			       " -C <KB> (specify math cache size) \n"
+			       "\n", argv[0]);
 			goto exit;
 
 		case 'p':

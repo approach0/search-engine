@@ -42,6 +42,31 @@ struct codec_buf_struct_info *math_codec_info()
 	return info;
 }
 
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+static uint64_t
+math_bufkey_64(struct invlist_iterator* iter, uint32_t idx)
+{
+	/* reversed key fields structure due to little endian */
+	struct {
+		struct {
+			uint16_t sect_root;
+			uint16_t expID;
+		};
+		uint32_t docID;
+	} key;
+
+	codec_buf_struct_info_t *c_info = iter->c_info;
+
+	CODEC_BUF_GET(key.docID, iter->buf, FI_DOCID, idx, c_info);
+	CODEC_BUF_GET(key.expID, iter->buf, FI_EXPID, idx, c_info);
+	CODEC_BUF_GET(key.sect_root, iter->buf, FI_SECT_ROOT, idx, c_info);
+
+	return *(uint64_t*)&key;
+}
+#else
+#error("big-indian CPU is not supported yet.")
+#endif
+
 math_index_t
 math_index_open(const char *path, const char *mode)
 {
@@ -234,6 +259,8 @@ get_invlist_entry(struct codec_buf_struct_info *cinfo,
 
 	/* open inverted list on disk */
 	entry.invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
+	/* change default bufkey map */
+	entry.invlist->bufkey = &math_bufkey_64;
 
 	/* set writer to NULL initially */
 	entry.writer = NULL; /* only needed for cached writes */
@@ -441,6 +468,9 @@ static struct invlist *fork_invlist(struct invlist *disk)
 
 	invlist_iter_free(memo_writer);
 	invlist_free(disk);
+
+	/* change default bufkey map */
+	memo->bufkey = &math_bufkey_64;
 	return memo;
 }
 

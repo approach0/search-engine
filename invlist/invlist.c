@@ -33,6 +33,9 @@ struct invlist
 	ret->buf_max_sz = n * c_info->struct_sz;
 	ret->c_info = c_info;
 
+	/* use default bufkey callback */
+	ret->bufkey = &invlist_iter_default_bufkey;
+
 	return ret;
 }
 
@@ -135,11 +138,9 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	return out_sz;
 }
 
-static uint64_t
-invlist_iter_bufkey__64(struct invlist_iterator* iter, uint32_t idx)
+uint64_t invlist_iter_bufkey(struct invlist_iterator* iter, uint32_t idx)
 {
-	uint32_t key[2];
-
+	/* wrap bufkey callback function with a termination check */
 	if (iter->lfh != NULL) {
 		/* return max ID if iterator terminated on-disk */
 		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
@@ -148,34 +149,14 @@ invlist_iter_bufkey__64(struct invlist_iterator* iter, uint32_t idx)
 		if (iter->cur == NULL) return UINT64_MAX;
 	}
 
-	codec_buf_struct_info_t *c_info = iter->c_info;
-
-#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-	/* assume the order is little-indian */
-	CODEC_BUF_GET(key[1], iter->buf, 0, idx, c_info);
-	CODEC_BUF_GET(key[0], iter->buf, 1, idx, c_info);
-#else
-#error("big-indian CPU is not supported yet.")
-#endif
-
-	return *(uint64_t*)key;
+	return (*iter->bufkey)(iter, idx);
 }
 
-static uint64_t
-invlist_iter_bufkey__32(struct invlist_iterator* iter, uint32_t idx)
+uint64_t
+invlist_iter_default_bufkey(struct invlist_iterator* iter, uint32_t idx)
 {
 	uint32_t key;
-
-	if (iter->lfh != NULL) {
-		/* return max ID if iterator terminated on-disk */
-		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
-	} else {
-		/* return max ID if iterator terminated in-memory */
-		if (iter->cur == NULL) return UINT64_MAX;
-	}
-
 	codec_buf_struct_info_t *c_info = iter->c_info;
-
 	CODEC_BUF_GET(key, iter->buf, 0, idx, c_info);
 
 	return key;
@@ -189,19 +170,14 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 	iter->invlist = invlist;
-	iter->c_info = invlist->c_info;
 
-	iter->bufkey = invlist_iter_bufkey__64; /* use 64 bit key by default */
+	iter->c_info = invlist->c_info;
+	iter->bufkey = invlist->bufkey;
 
 	iter->cur = NULL;
 	iter->lfh = NULL;
 
 	return iter;
-}
-
-void iterator_set_bufkey_to_32(invlist_iter_t iter)
-{
-	iter->bufkey = invlist_iter_bufkey__32;
 }
 
 static void
@@ -337,7 +313,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		iter->buf, iter->buf_len, iter->c_info);
 
 	/* get the key for this flushed block */
-	uint64_t key = iter->bufkey(iter, 0);
+	uint64_t key = invlist_iter_bufkey(iter, 0);
 
 	/* do flushing */
 	if (iter->lfh == NULL) {
@@ -448,7 +424,7 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 	}
 
 	/* if buffer block-end ID is greater, no need to jump */
-	id = iter->bufkey(iter, iter->buf_len - 1);
+	id = invlist_iter_bufkey(iter, iter->buf_len - 1);
 	if (target <= id) {
 #ifdef INVLIST_DEBUG
 		printf("target <= block-end id, no need to jump\n");
@@ -475,7 +451,7 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 
 step: /* step-by-step advance */
 	do {
-		id = iter->bufkey(iter, iter->buf_idx);
+		id = invlist_iter_bufkey(iter, iter->buf_idx);
 #ifdef INVLIST_DEBUG
 		printf("step-by-step key: %lu\n", id);
 #endif
@@ -504,7 +480,7 @@ void invlist_iter_print_as_decoded_ints(invlist_iter_t iter)
 
 	int cnt = 0;
 	do {
-		uint64_t key = iter->bufkey(iter, iter->buf_idx);
+		uint64_t key = invlist_iter_bufkey(iter, iter->buf_idx);
 		uint32_t idx = iter->buf_idx;
 		printf("[%20lu]: ", key);
 

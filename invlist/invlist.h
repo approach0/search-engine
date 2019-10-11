@@ -21,6 +21,13 @@ enum invlist_type {
 	INVLIST_TYPE_INMEMO
 };
 
+struct invlist_iterator;
+typedef uint64_t buf_key_callbk(struct invlist_iterator*, uint32_t);
+
+/* default bufkey callback */
+buf_key_callbk invlist_iter_default_bufkey;
+
+/* inverted list */
 struct invlist {
 	enum invlist_type        type;
 	union {
@@ -34,12 +41,12 @@ struct invlist {
 	struct skippy            skippy;
 	uint32_t                 buf_max_len;
 	uint32_t                 buf_max_sz;
+
 	codec_buf_struct_info_t *c_info;
+	buf_key_callbk          *bufkey;
 };
 
-struct invlist_iterator;
-typedef uint64_t (*buf_key_callbk)(struct invlist_iterator*, uint32_t);
-
+/* inverted list iterator */
 typedef struct invlist_iterator {
 	void                   **buf;
 	uint32_t                 buf_idx;
@@ -50,7 +57,7 @@ typedef struct invlist_iterator {
 	/* we need c_info here so that we can free
 	 * iterator buf even after invlist gets destroyed. */
 
-	buf_key_callbk           bufkey; /* key value map */
+	buf_key_callbk          *bufkey; /* key value callback */
 
 	struct invlist_node     *cur; /* in-memo invlist */
 	FILE                    *lfh; /* on-disk invlist */
@@ -75,6 +82,7 @@ invlist_iter_t invlist_iterator(struct invlist*);
 void           invlist_iter_free(struct invlist_iterator*);
 
 int      invlist_iter_next(struct invlist_iterator*);
+uint64_t invlist_iter_bufkey(struct invlist_iterator*, uint32_t);
 size_t   invlist_iter_read(struct invlist_iterator*, void*);
 
 #define invlist_iter_curkey(_iter) \
@@ -83,7 +91,5 @@ size_t   invlist_iter_read(struct invlist_iterator*, void*);
 int invlist_iter_jump(struct invlist_iterator*, uint64_t);
 
 /* misc function */
-void iterator_set_bufkey_to_32(invlist_iter_t);
-
 void invlist_iter_print_as_decoded_ints(invlist_iter_t);
 void invlist_print_as_decoded_ints(struct invlist*);

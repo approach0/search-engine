@@ -68,6 +68,7 @@ struct codec_buf_struct_info *math_codec_info();
 
 /* math inverted list items */
 struct math_invlist_item {
+	/* 8-byte global key */
 	uint32_t docID; /* 4 bytes */
 	union {
 		uint32_t secID;
@@ -76,6 +77,7 @@ struct math_invlist_item {
 			uint16_t sect_root;
 		};
 	}; /* 4 bytes */
+
 	uint8_t  sect_width;
 	uint8_t  orig_width;
 	/* padding 16 bits here */

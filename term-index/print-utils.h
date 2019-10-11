@@ -10,7 +10,6 @@ inline static void print_pos_arr(position_t *pos_arr, uint n)
 inline static void print_inmemo_term_items(invlist_iter_t iter)
 {
 	struct term_posting_item item;
-	iterator_set_bufkey_to_32(iter);
 	printf("in-memo: ");
 
 	do {
