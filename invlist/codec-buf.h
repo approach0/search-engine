@@ -11,6 +11,7 @@
 		sizeof p->_member, \
 		_log2_(sizeof p->_member), \
 		_log2_(MAX(1, sizeof p->_member / sizeof(int))), \
+		"unset", \
 		codec_new(_codec, CODEC_DEFAULT_ARGS) \
 	}); })
 
@@ -31,6 +32,7 @@ struct codec;
 
 struct field_info {
 	uint offset, sz, logsz, logints;
+	char name[32];
 	struct codec *codec;
 };
 

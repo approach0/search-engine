@@ -29,7 +29,8 @@ struct codec_buf_struct_info *math_codec_info()
 	);
 
 #define SET_FIELD_INFO(_idx, _name, _codec) \
-	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec)
+	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec); \
+	strcpy(info->field_info[_idx].name, # _name)
 
 	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR); // CODEC_FOR_DELTA);
 	SET_FIELD_INFO(FI_EXPID, expID, CODEC_FOR16);

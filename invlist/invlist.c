@@ -494,11 +494,19 @@ void invlist_iter_print_as_decoded_ints(invlist_iter_t iter)
 {
 	codec_buf_struct_info_t *c_info = iter->c_info;
 
+	/* print table header */
+	printf("[%8s%4s%8s]: ", "", "key", "");
+	for (int j = 0; j < c_info->n_fields; j++) {
+		const char *name = c_info->field_info[j].name;
+		printf("%6.6s ", name);
+	}
+	printf("\n");
+
 	int cnt = 0;
 	do {
 		uint64_t key = iter->bufkey(iter, iter->buf_idx);
 		uint32_t idx = iter->buf_idx;
-		printf("[%14lu]: ", key);
+		printf("[%20lu]: ", key);
 
 		for (int j = 0; j < c_info->n_fields; j++) {
 			void *addr = CODEC_BUF_ADDR(iter->buf, j, idx, c_info);
