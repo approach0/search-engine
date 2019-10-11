@@ -1,16 +1,16 @@
 #pragma once
 #include "common/common.h"
 
-/* ultility to calculate number of shift bits */
-#define log2(_n) (31 - __builtin_clz(_n))
+/* utility to calculate number of shift bits */
+#define _log2_(_n) (31 - __builtin_clz(_n))
 
 /* describe field_info by using compiler ability */
 #define FIELD_INFO(_type, _member, _codec) \
 	({ _type *p; ((struct field_info) { \
 		offsetof(_type, _member), \
 		sizeof p->_member, \
-		log2(sizeof p->_member), \
-		log2(MAX(1, sizeof p->_member / sizeof(int))), \
+		_log2_(sizeof p->_member), \
+		_log2_(MAX(1, sizeof p->_member / sizeof(int))), \
 		codec_new(_codec, CODEC_DEFAULT_ARGS) \
 	}); })
 
