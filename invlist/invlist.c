@@ -30,7 +30,7 @@ struct invlist
 	ret->n_blk = 0;
 	skippy_init(&ret->skippy, n);
 	ret->buf_max_len = n;
-	ret->buf_max_sz = n * c_info->align_sz;
+	ret->buf_max_sz = n * c_info->struct_sz;
 	ret->c_info = c_info;
 
 	return ret;

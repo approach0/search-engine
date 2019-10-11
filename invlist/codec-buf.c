@@ -42,7 +42,7 @@ struct codec_buf_struct_info
 	struct codec_buf_struct_info *p =
 		malloc(sizeof *p + n_fields * sizeof(p->field_info[0]));
 	p->n_fields = n_fields;
-	p->align_sz = size;
+	p->struct_sz = size;
 	return p;
 }
 

@@ -105,6 +105,7 @@ codec_compress_ints(struct codec *codec, const void *in, size_t len, void *out)
 		return for32_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
 
 	case CODEC_FOR16:
+		// prbuff_uints16((uint16_t*)in, len);
 		return for16_compress((uint16_t*)in, len, (uint16_t*)out, &args->b);
 
 	case CODEC_FOR8:
