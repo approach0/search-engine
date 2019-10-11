@@ -13,7 +13,8 @@ struct codec *codec_new(enum codec_method method, void* args)
 	struct codec *ret = malloc(sizeof(struct codec));
 
 	switch (method) {
-	case CODEC_FOR:
+	case CODEC_FOR32:
+	case CODEC_FOR16:
 	case CODEC_FOR8:
 	case CODEC_FOR_DELTA:
 		args_sz = sizeof(struct for_delta_args);
@@ -49,8 +50,11 @@ char *codec_method_str(enum codec_method method)
 {
 	static char ret[4096];
 	switch (method) {
-	case CODEC_FOR:
-		strcpy(ret, "Frame of Reference codec");
+	case CODEC_FOR32:
+		strcpy(ret, "Frame of Reference codec (4 byte unit)");
+		break;
+	case CODEC_FOR16:
+		strcpy(ret, "Frame of Reference codec (2 byte unit)");
 		break;
 	case CODEC_FOR8:
 		strcpy(ret, "Frame of Reference codec (1 byte unit)");
@@ -96,15 +100,18 @@ codec_compress_ints(struct codec *codec, const void *in, size_t len, void *out)
 	case CODEC_PLAIN:
 		return dummpy_copy(in, len, out);
 
-	case CODEC_FOR:
+	case CODEC_FOR32:
 		// prbuff_uints((uint32_t*)in, len);
-		return for_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
+		return for32_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
+
+	case CODEC_FOR16:
+		return for16_compress((uint16_t*)in, len, (uint16_t*)out, &args->b);
 
 	case CODEC_FOR8:
 		return for8_compress((uint8_t*)in, len, (uint8_t*)out, &args->b);
 
 	case CODEC_FOR_DELTA:
-		return for_delta_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
+		return for32_delta_compress((uint32_t*)in, len, (uint32_t*)out, &args->b);
 
 	default:
 		assert(0);
@@ -128,14 +135,17 @@ codec_decompress_ints(struct codec *codec, const void *in, void *out, size_t len
 	case CODEC_PLAIN:
 		return dummpy_copy((uint32_t*)in, len, out);
 
-	case CODEC_FOR:
-		return for_decompress((uint32_t*)in, (uint32_t*)out, len, &args->b);
+	case CODEC_FOR32:
+		return for32_decompress((uint32_t*)in, (uint32_t*)out, len, &args->b);
+
+	case CODEC_FOR16:
+		return for16_decompress((uint16_t*)in, (uint16_t*)out, len, &args->b);
 
 	case CODEC_FOR8:
 		return for8_decompress((uint8_t*)in, (uint8_t*)out, len, &args->b);
 
 	case CODEC_FOR_DELTA:
-		return for_delta_decompress((uint32_t*)in, (uint32_t*)out, len, &args->b);
+		return for32_delta_decompress((uint32_t*)in, (uint32_t*)out, len, &args->b);
 
 	default:
 		assert(0);

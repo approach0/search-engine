@@ -3,7 +3,8 @@
 #include <stddef.h>
 
 /* import frame of reference */
-#include "for.h"
+#include "for32.h"
+#include "for16.h"
 #include "for8.h"
 
 struct for_delta_args {
@@ -12,7 +13,8 @@ struct for_delta_args {
 /* import END */
 
 enum codec_method {
-	CODEC_FOR,
+	CODEC_FOR32,
+	CODEC_FOR16,
 	CODEC_FOR8,
 	CODEC_FOR_DELTA,
 	CODEC_GZ,

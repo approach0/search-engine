@@ -69,3 +69,10 @@ static inline void print_size(size_t _sz)
 		static uint64_t ct = 0; \
 		if (t1.tv_nsec - t0.tv_nsec > 0) us += (t1.tv_nsec - t0.tv_nsec) / 1000; \
 		printf("%'lu ns, %'lu times\n", us, ++ct);
+
+inline static int gen_rand_int(int max_bits)
+{
+	int bits = (rand() % max_bits) + 1;
+	int mask = ~((0L - 1) << bits);
+	return rand() & mask;
+}

@@ -13,8 +13,13 @@ for8_compress(uint8_t *in, size_t len, uint8_t *out, size_t *b_)
 	       n_val /* compressed values per 32 bits */,
 	       out_sz /* compressed stream size */;
 
-	size_t b_set[3] /* b candidates */
+	size_t b_set[] /* b candidates */
 		= {2, 4, 8};
+	/*
+	 * 2 * 4 = 8
+	 * 4 * 2 = 8
+	 * 8 * 1 = 8
+	 */
 
 	/* output buffer header */
 	uint8_t *head = (uint8_t*)out;

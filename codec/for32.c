@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include "for.h"
+#include "for32.h"
 
 size_t
-for_compress(uint32_t *in, size_t len, uint32_t *out, size_t *b_)
+for32_compress(uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 {
 	int i;
 	uint64_t max; /* made 64 bits long so that expression
@@ -14,17 +14,17 @@ for_compress(uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 	       n_val /* compressed values per 32 bits */,
 	       out_sz /* compressed stream size */;
 
-	size_t b_set[8] /* b candidates */
+	size_t b_set[] /* b candidates */
 		= {2, 4, 5, 6, 8, 10, 16, 32};
 	/* b candidates are selected such that (32 bits / b) will
 	 * result in as many as different integers.  */
 	/*
 	 * 2 * 16 = 32
 	 * 4 * 8  = 32
-	 * 5 * 6  = 32
-	 * 6 * 5  = 32
+	 * 5 * 6  ~ 32
+	 * 6 * 5  ~ 32
 	 * 8 * 4  = 32
-	 * 10 * 3 = 32
+	 * 10 * 3 ~ 32
 	 * 16 * 2 = 32
 	 * 32 * 1 = 32
 	 */
@@ -71,8 +71,8 @@ for_compress(uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 
 static uint32_t for_decompress_b2(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 16 - 1) / 16;
-	uint32_t i, block;
+	uint32_t i, l = (len + 16 - 1) / 16;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -100,8 +100,8 @@ static uint32_t for_decompress_b2(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b4(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 8 - 1) / 8;
-	uint32_t i, block;
+	uint32_t i, l = (len + 8 - 1) / 8;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -121,8 +121,8 @@ static uint32_t for_decompress_b4(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b5(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 6 - 1) / 6;
-	uint32_t i, block;
+	uint32_t i, l = (len + 6 - 1) / 6;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -140,8 +140,8 @@ static uint32_t for_decompress_b5(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b6(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 5 - 1) / 5;
-	uint32_t i, block;
+	uint32_t i, l = (len + 5 - 1) / 5;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -158,8 +158,8 @@ static uint32_t for_decompress_b6(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b8(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 4 - 1) / 4;
-	uint32_t i, block;
+	uint32_t i, l = (len + 4 - 1) / 4;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -175,8 +175,8 @@ static uint32_t for_decompress_b8(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b10(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 3 - 1) / 3;
-	uint32_t i, block;
+	uint32_t i, l = (len + 3 - 1) / 3;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -191,8 +191,8 @@ static uint32_t for_decompress_b10(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b16(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = (len + 2 - 1) / 2;
-	uint32_t i, block;
+	uint32_t i, l = (len + 2 - 1) / 2;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -206,8 +206,8 @@ static uint32_t for_decompress_b16(size_t len, uint32_t* in, uint32_t* out)
 
 static uint32_t for_decompress_b32(size_t len, uint32_t* in, uint32_t* out)
 {
-	uint32_t l = len;
-	uint32_t i, block;
+	uint32_t i, l = len;
+	uint32_t block;
 
 	for (i = 0; i < l; i++) {
 		block = in[i];
@@ -218,20 +218,19 @@ static uint32_t for_decompress_b32(size_t len, uint32_t* in, uint32_t* out)
 	return l;
 }
 
-size_t for_decompress(uint32_t* in, uint32_t* out, size_t len, size_t *b_)
+size_t for32_decompress(uint32_t* in, uint32_t* out, size_t len, size_t *b_)
 {
 	size_t   l;
 	uint8_t *head = (uint8_t*)in; /* points to b info */
 
 	uint32_t tmp[len + 15];
 	/* for_decompress() function in some cases, may output
-	 * more than `len' 32bits integers. In worst case, where
-	 * only one 32bits integer is encoded (len=1) with b=2,
-	 * according to for_decompress_b2() function, in this case,
-	 * decoding will write output buffer to the furthest at
-	 * `out[15]'. Therefore sufficient extra space is necessary.
-	 * (single 32bits can generate 16 out[], thus we need
-	 * 16 - 1 = 15 extra 32bits space in worst case)
+	 * more than `len' integers. In worst case, where only
+	 * one integer is encoded (len=1) with b=2, according
+	 * to for_decompress_b2() function, decoding will write
+	 * output buffer to the furthest at `out[15]'.
+	 * Therefore in extreme case, single integer can output
+	 * 16 out[], thus we need 16 - 1 = 15 extra slots.
 	 */
 
 #define B_CASE(_b) \
@@ -261,7 +260,7 @@ size_t for_decompress(uint32_t* in, uint32_t* out, size_t len, size_t *b_)
 }
 
 size_t
-for_delta_compress(const uint32_t *in, size_t len, uint32_t *out, size_t *b_)
+for32_delta_compress(const uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 {
 	size_t for_sz, b, i;
 
@@ -286,7 +285,7 @@ for_delta_compress(const uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 			delta_buf[i - 1] = in[i] - in[i - 1];
 
 		/* following the init value is our delta encodes */
-		for_sz = for_compress(delta_buf, len - 1, head + 1, &b);
+		for_sz = for32_compress(delta_buf, len - 1, head + 1, &b);
 	}
 
 	*b_ = b;
@@ -294,7 +293,7 @@ for_delta_compress(const uint32_t *in, size_t len, uint32_t *out, size_t *b_)
 }
 
 size_t
-for_delta_decompress(const uint32_t *in, uint32_t *out, size_t len, size_t *b_)
+for32_delta_decompress(const uint32_t *in, uint32_t *out, size_t len, size_t *b_)
 {
 	size_t for_sz, b, i;
 
@@ -315,7 +314,7 @@ for_delta_decompress(const uint32_t *in, uint32_t *out, size_t len, size_t *b_)
 	} else /* will be more than one values in decoded buffer */ {
 
 		/* following the init value is our delta encodes */
-		for_sz = for_decompress(head + 1, delta_buf, len - 1, &b);
+		for_sz = for32_decompress(head + 1, delta_buf, len - 1, &b);
 
 		/* convert `delta_buf' to `out' buffer */
 		for (i = 1; i < len; i++)
