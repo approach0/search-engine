@@ -21,6 +21,9 @@ enum codec_method {
 	CODEC_PLAIN /* do nothing */
 };
 
+/* for compatibility */
+#define CODEC_FOR CODEC_FOR32
+
 #define CODEC_DEFAULT_ARGS NULL
 
 struct codec {
