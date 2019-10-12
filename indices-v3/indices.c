@@ -309,7 +309,7 @@ void indexer_free(struct indexer *indexer)
 	free(indexer);
 }
 
-int indexer_write_all_fields(struct indexer *indexer)
+uint32_t indexer_write_all_fields(struct indexer *indexer)
 {
 	struct indices *indices = indexer->indices;
 
@@ -328,7 +328,7 @@ int indexer_write_all_fields(struct indexer *indexer)
 
 	/* invoke lexer */
 	g_indexer = indexer;
-	int ret = indexer->lexer(fh_txt);
+	indexer->lexer(fh_txt);
 	fclose(fh_txt);
 
 	/* index TEXT blob */
@@ -348,7 +348,7 @@ int indexer_write_all_fields(struct indexer *indexer)
 
 	/* reset lexer position */
 	indexer->cur_position = 0;
-	return ret;
+	return docID;
 }
 
 int indexer_maintain(struct indexer *indexer)

@@ -79,7 +79,7 @@ struct indexer *indexer_alloc(struct indices*, text_lexer,
                               parser_exception_callbk);
 void            indexer_free(struct indexer*);
 
-int             indexer_write_all_fields(struct indexer*);
+uint32_t        indexer_write_all_fields(struct indexer*);
 
 int indexer_maintain(struct indexer*);
 int indexer_should_maintain(struct indexer*);
