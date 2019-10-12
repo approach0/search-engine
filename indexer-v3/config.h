@@ -1,0 +1,2 @@
+#define INDEXD_DEFAULT_URI  "/index"
+#define INDEXD_DEFAULT_PORT 8934
