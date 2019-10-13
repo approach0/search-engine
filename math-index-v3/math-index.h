@@ -15,10 +15,8 @@ struct math_invlist_entry {
 	struct invlist *invlist;
 	invlist_iter_t  writer;
 
-	FILE *fh_symbinfo; /* used by writer */
-	long  offset; /* symbol info offset, used by writer */
-
-	FILE *fh_pf; /* used by writer */
+	char *symbinfo_path;
+	char *pf_path;
 	uint  pf; /* token path frequency of this entry */
 };
 

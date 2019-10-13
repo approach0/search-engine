@@ -46,7 +46,7 @@ struct codec_buf_struct_info *math_codec_info()
 static uint64_t
 math_bufkey_64(struct invlist_iterator* iter, uint32_t idx)
 {
-	/* reversed key fields structure due to little endian */
+	/* reversed key fields to cast to little endian 64-bit key */
 	struct {
 		struct {
 			uint16_t sect_root;
@@ -117,12 +117,6 @@ void math_index_flush(math_index_t index)
 
 		if (entry->writer)
 			(void)invlist_writer_flush(entry->writer);
-
-		if (entry->fh_symbinfo)
-			fflush(entry->fh_symbinfo);
-
-		if (entry->fh_pf)
-			fflush(entry->fh_pf);
 	}
 
 	/* write the current stats values */
@@ -142,17 +136,17 @@ void math_index_close(math_index_t index)
 	foreach (iter, strmap, index->dict) {
 		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
 
+		if (entry->invlist)
+			invlist_free(entry->invlist);
+
 		if (entry->writer)
 			invlist_iter_free(entry->writer);
 
-		if (entry->fh_symbinfo)
-			fclose(entry->fh_symbinfo);
+		if (entry->symbinfo_path)
+			free(entry->symbinfo_path);
 
-		if (entry->fh_pf)
-			fclose(entry->fh_pf);
-
-		if (entry->invlist)
-			invlist_free(entry->invlist);
+		if (entry->pf_path)
+			free(entry->pf_path);
 
 		free(entry);
 	}
@@ -165,8 +159,9 @@ void math_index_close(math_index_t index)
 
 void math_index_print(math_index_t index)
 {
-	printf("[math index] %s (memo_usage=%luKB, n_tex=%u, N=%u, mode: %s)\n",
-		index->dir, index->memo_usage / 1024,
+	printf("[math index] %s (memo_usage=%luKB, n_dict_ent=%u, "
+		"n_tex=%u, N=%u, mode: %s)\n",
+		index->dir, index->memo_usage / 1024, index->dict->length,
 		index->stats.n_tex, index->stats.N, index->mode);
 
 	int max = 100, cnt = 0;
@@ -244,11 +239,9 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 	return 0;
 }
 
-static struct math_invlist_entry
-get_invlist_entry(struct codec_buf_struct_info *cinfo,
-                  const char *path, int read_only)
+static int init_invlist_entry(struct math_invlist_entry *entry,
+	struct codec_buf_struct_info *cinfo, const char *path, int read_only)
 {
-	struct math_invlist_entry entry = {0};
 	/* make path names */
 	char invlist_path[MAX_PATH_LEN];
 	char symbinfo_path[MAX_PATH_LEN];
@@ -257,41 +250,30 @@ get_invlist_entry(struct codec_buf_struct_info *cinfo,
 	sprintf(symbinfo_path, "%s/%s.bin", path, SYMBINFO_FNAME);
 	sprintf(pf_path, "%s/%s.bin", path, PATHFREQ_FNAME);
 
+	/* create path strings */
+	entry->symbinfo_path = strdup(symbinfo_path);
+	entry->pf_path = strdup(pf_path);
+
 	/* open inverted list on disk */
-	entry.invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
+	entry->invlist = invlist_open(invlist_path, MATH_INDEX_BLK_LEN, cinfo);
 	/* change default bufkey map */
-	entry.invlist->bufkey = &math_bufkey_64;
+	entry->invlist->bufkey = &math_bufkey_64;
 
 	/* set writer to NULL initially */
-	entry.writer = NULL; /* only needed for cached writes */
-
-	/* open symbinfo file */
-	if (read_only)
-		entry.fh_symbinfo = fopen(symbinfo_path, "r");
-	else
-		entry.fh_symbinfo = fopen(symbinfo_path, "a");
-
-	assert(entry.fh_symbinfo != NULL);
-	entry.offset = ftell(entry.fh_symbinfo);
+	entry->writer = NULL; /* only needed for cached writes */
 
 	/* set path frequency */
 	{ /* first read out value if there exists a file */
 		FILE *fh = fopen(pf_path, "r");
 		if (NULL != fh) {
-			fread(&entry.pf, 1, sizeof entry.pf, fh);
+			fread(&entry->pf, 1, sizeof entry->pf, fh);
 			fclose(fh);
 		} else {
-			entry.pf = 0; /* first-time touch base */
+			entry->pf = 0; /* first-time touch base */
 		}
 	}
 
-	/* then open for writing for later value updation */
-	if (read_only)
-		entry.fh_pf = NULL;
-	else
-		entry.fh_pf = fopen(pf_path, "w");
-
-	return entry;
+	return 0;
 }
 
 static size_t
@@ -323,7 +305,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		dict[[key_path]] = entry;
 
 		/* open invlist and entry metadata */
-		*entry = get_invlist_entry(index->cinfo, path, 0);
+		init_invlist_entry(entry, index->cinfo, path, 0);
 
 		/* open invlist writer */
 		entry->writer = invlist_writer(entry->invlist);
@@ -332,6 +314,10 @@ static void cache_append_invlist(math_index_t index, char *path,
 		index->memo_usage +=
 			memo_usage_per_entry(index->cinfo, strlen(key_path));
 	}
+
+	/* open files */
+	FILE *fh_symbinfo = fopen(entry->symbinfo_path, "a");
+	FILE *fh_pf = fopen(entry->pf_path, "w");
 
 	/* append invert list item */
 	struct math_invlist_item item;
@@ -347,7 +333,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 
 		item.sect_width = secttr.width;
 		item.orig_width = width;
-		item.symbinfo_offset = entry->offset;
+		item.symbinfo_offset = ftell(fh_symbinfo);
 
 #ifdef MATH_INDEX_SECTTR_PRINT
 		printf("writing sector tree %u/%u: ",
@@ -374,16 +360,19 @@ static void cache_append_invlist(math_index_t index, char *path,
 #endif
 
 		/* write symbinfo structure, update offset by written bytes */
-		entry->offset += fwrite(&symbinfo, 1, sizeof symbinfo,
-		                        entry->fh_symbinfo);
+		fwrite(&symbinfo, 1, sizeof symbinfo, fh_symbinfo);
 
 		/* update frequency statistics */
 		entry->pf ++;
-		rewind(entry->fh_pf);
-		fwrite(&entry->pf, 1, sizeof entry->pf, entry->fh_pf);
+		rewind(fh_pf);
+		fwrite(&entry->pf, 1, sizeof entry->pf, fh_pf);
 
 		index->stats.N ++;
 	}
+
+	/* close files to save OS file descriptor space */
+	fclose(fh_symbinfo);
+	fclose(fh_pf);
 }
 
 static void add_subpath_set(math_index_t index, linkli_t set,
@@ -507,7 +496,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	dict[[key_path]] = entry;
 
 	/* open invlist and entry metadata */
-	*entry = get_invlist_entry(index->cinfo, path, 1);
+	init_invlist_entry(entry, index->cinfo, path, 1);
 
 	/* uncomment to test on-disk inverted list */
 	//invlist_print_as_decoded_ints(entry->invlist);
@@ -550,8 +539,7 @@ math_index_lookup(math_index_t index, const char *key_)
 		entry_reader.reader = invlist_iterator(entry_ptr->invlist);
 		entry_reader.pf = entry_ptr->pf;
 
-		int fd = fileno(entry_ptr->fh_symbinfo);
-		entry_reader.fh_symbinfo = fdopen(dup(fd), "r");
+		entry_reader.fh_symbinfo = fopen(entry_ptr->symbinfo_path, "r");
 
 		entry_reader.medium = MATH_READER_MEDIUM_INMEMO;
 		return entry_reader;
@@ -563,7 +551,7 @@ math_index_lookup(math_index_t index, const char *key_)
 
 	if (file_exists(path)) {
 		sprintf(path, "%s/%s", index->dir, key_);
-		entry = get_invlist_entry(index->cinfo, path, 1);
+		init_invlist_entry(&entry, index->cinfo, path, 1);
 
 		entry_reader.reader = invlist_iterator(entry.invlist);
 		/* it is safe to free inverted list here since on-disk iterator
@@ -572,9 +560,12 @@ math_index_lookup(math_index_t index, const char *key_)
 		invlist_free(entry.invlist);
 
 		entry_reader.pf = entry.pf;
-		entry_reader.fh_symbinfo = entry.fh_symbinfo;
+		entry_reader.fh_symbinfo = fopen(entry.symbinfo_path, "r");
 
 		entry_reader.medium = MATH_READER_MEDIUM_ONDISK;
+
+		if (entry.symbinfo_path) free(entry.symbinfo_path);
+		if (entry.pf_path) free(entry.pf_path);
 		return entry_reader;
 	}
 

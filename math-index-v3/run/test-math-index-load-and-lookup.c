@@ -31,14 +31,14 @@ int main()
 		return 1;
 	}
 
-	math_index_load(index, 50 KB);
+	math_index_load(index, 20 KB);
 	printf("load finished.\n");
 
 	math_index_print(index);
 
 	{
 		test_lookup(index, "/prefix/VAR/ADD");
-		test_lookup(index, "/prefix/VAR/TIMES/ADD");
+		test_lookup(index, "/prefix/VAR/ADD/GROUP/TIMES/ADD");
 		test_lookup(index, "/NON/EXISTS");
 	}
 
