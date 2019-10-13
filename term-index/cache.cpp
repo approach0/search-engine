@@ -32,7 +32,9 @@ static struct invlist
 	invlist_iter_t  memo_writer = invlist_writer(memo_invlist);
 
 	/* reset on-disk term posting list to the begining */
-	assert (0 != term_posting_start(disk_invlist));
+	int succ = term_posting_start(disk_invlist);
+	(void)succ;
+	assert(succ);
 
 	do {
 		struct term_posting_item item;

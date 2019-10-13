@@ -58,7 +58,9 @@ static struct postlist *fork_term_postlist(void *disk_po)
 	mem_po = term_postlist_create_compressed();
 	
 	/* start iterating term posting list */
-	assert (0 != term_posting_start(disk_po));
+	int succ = term_posting_start(disk_po);
+	(void)succ;
+	assert (succ);
 
 	do {
 		/* get docID, TF and position array */
