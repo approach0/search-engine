@@ -79,7 +79,6 @@ math_index_open(const char *path, const char *mode)
 
 	index->dict = strmap_new();
 	index->cinfo = math_codec_info();
-	index->memo_usage = sizeof(struct math_index);
 
 	{  /* read the stats value */
 		char path[MAX_PATH_LEN];
@@ -490,6 +489,14 @@ dir_search_callbk(const char* path, const char *srchpath,
 		return DS_RET_CONTINUE;
 	}
 
+	/* memory usage predict */
+	size_t cost = memo_usage_per_entry(index->cinfo, strlen(key_path));
+	if (index->memo_usage + cost > args->limit_sz) {
+		prinfo("math index cache size reaches limit, stop caching.");
+		return DS_RET_STOP_ALLDIR;
+	}
+	index->memo_usage += cost;
+
 	/* allocate entry */
 	struct math_invlist_entry *entry;
 	entry = malloc(sizeof *entry);
@@ -504,18 +511,10 @@ dir_search_callbk(const char* path, const char *srchpath,
 	/* fork on-disk inverted list into memory */
 	entry->invlist = fork_invlist(entry->invlist);
 
-	/* memory usage update */
-	index->memo_usage += memo_usage_per_entry(index->cinfo, strlen(key_path));
-
 	printf("caching %s, memory usage: %.2f %%\n", key_path,
 		100.f * index->memo_usage / args->limit_sz);
 
-	if (index->memo_usage > args->limit_sz) {
-		prinfo("math index cache size reaches limit, stop caching.");
-		return DS_RET_STOP_ALLDIR;
-	} else {
-		return DS_RET_CONTINUE;
-	}
+	return DS_RET_CONTINUE;
 }
 
 int math_index_load(math_index_t index, size_t limit_sz)

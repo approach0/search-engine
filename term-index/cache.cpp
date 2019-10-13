@@ -78,6 +78,9 @@ int term_index_load(void *index_, size_t limit_sz)
 		index->cinfo = term_codec_info();
 
 	for (term_id = 1; term_id <= termN; term_id++) {
+		/* break when we do not want any term being cached */
+		if (limit_sz == 0) break;
+
 		/* only document terms with DF greater than a threshold */
 		uint32_t df = term_index_get_df(index, term_id);
 		(void)avgDocLen;
