@@ -30,8 +30,7 @@ static int get_json_val(const char *json, const char *key, char *val)
 static int
 parser_exception(struct indexer *indexer, const char *tex, char *msg)
 {
-	printf("[ TeX parser ]\n");
-	printf("%s\n", tex);
+	fprintf(stderr, "%s\n", tex);
 	prerr("%s\n", msg);
 	return 0;
 }
@@ -40,25 +39,19 @@ static int consider_index_maintain(struct indexer *indexer)
 {
 	struct indices *indices = indexer->indices;
 
-	/* print maintainer related stats */
-	const int64_t unfree = mhook_unfree();
-	printf("Unfree: %ld / %u, Index segments: %lu / %u, ",
-		unfree, MAINTAIN_UNFREE_CNT,
-		term_index_size(indices->ti), MAXIMUM_INDEX_COUNT
-	);
-	fflush(stdout);
-
 	if (indexer_should_maintain(indexer)) {
-		printf(ES_RESET_LINE "[index maintaining ...]");
+		printf("\n[index maintaining ...]\n");
 		fflush(stdout);
 
 		indexer_maintain(indexer);
+		sleep(30);
 
-	} else if (unfree > MAINTAIN_UNFREE_CNT) {
-		printf(ES_RESET_LINE "[flushing index ...]");
+	} else if ((indices->n_doc + 1) % MAINTAIN_UNFREE_CNT == 0) {
+		printf("\n[flushing index ...]\n");
 		fflush(stdout);
 
 		indexer_spill(indexer);
+		sleep(2);
 	}
 	return 0;
 }
@@ -92,6 +85,12 @@ static const char *httpd_on_index(const char* req, void* arg_)
 
 	n_doc = indexer_write_all_fields(indexer);
 
+	/* print maintainer related stats */
+	const int64_t unfree = mhook_unfree();
+	printf("Unfree: %ld, Doc: %u per %u, Index segments: %lu / %u, ",
+		unfree, indexer->indices->n_doc, MAINTAIN_UNFREE_CNT,
+		term_index_size(indexer->indices->ti), MAXIMUM_INDEX_COUNT
+	);
 	printf("%lu TeX parsed, error rate: %.2f %%.", indexer->n_parse_tex,
 		100.f * indexer->n_parse_err / indexer->n_parse_tex);
 	fflush(stdout);
