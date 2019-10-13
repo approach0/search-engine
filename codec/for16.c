@@ -204,6 +204,7 @@ size_t for16_decompress(uint16_t* in, uint16_t* out, size_t len, size_t *b_)
 		B_CASE(16);
 
 	default:
+		l = 0;
 		assert(0);
 	}
 

@@ -249,6 +249,7 @@ size_t for32_decompress(uint32_t* in, uint32_t* out, size_t len, size_t *b_)
 		B_CASE(32);
 
 	default:
+		l = 0;
 		assert(0);
 	}
 

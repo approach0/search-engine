@@ -26,6 +26,7 @@ struct codec *codec_new(enum codec_method method, void* args)
 		args_sz = 0;
 		break;
 	default:
+		args_sz = 0;
 		assert(0);
 	}
 

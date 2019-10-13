@@ -21,6 +21,7 @@ bool dir_exists(const char *path)
 		return 0;
 	else
 		assert(0);
+	return 0;
 }
 
 int file_exists(const char *path)
@@ -32,6 +33,7 @@ int file_exists(const char *path)
 		return 0;
 	else
 		assert(0);
+	return 0;
 }
 
 char *filename_ext(const char *name)

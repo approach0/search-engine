@@ -126,6 +126,7 @@ size_t for8_decompress(uint8_t* in, uint8_t* out, size_t len, size_t *b_)
 		B_CASE(8);
 
 	default:
+		l = 0;
 		assert(0);
 	}
 

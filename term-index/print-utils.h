@@ -16,6 +16,7 @@ inline static void print_inmemo_term_items(invlist_iter_t iter)
 		uint64_t key = invlist_iter_curkey(iter);
 		size_t rd_sz = invlist_iter_read(iter, &item);
 		(void)rd_sz;
+		(void)key;
 		assert(key == item.doc_id);
 
 		printf("[docID=%u, tf=%u", item.doc_id, item.tf);
@@ -39,6 +40,7 @@ static void print_ondisk_term_items(void *reader)
 		uint64_t doc_id = term_posting_cur(reader);
 		term_posting_read(reader, &pi);
 
+		(void)doc_id;
 		assert(doc_id == pi.doc_id);
 
 		printf("[docID=%u, tf=%u", pi.doc_id, pi.tf);
