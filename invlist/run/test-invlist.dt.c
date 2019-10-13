@@ -9,6 +9,12 @@
 
 #include <assert.h>
 
+#define N (10)
+// #define N (1000 * 128)
+
+#define SPAN 128
+#define VERBOSE
+
 /* for memcmp to work as expected, we have to avoid optimal alignment */
 #pragma pack(push, 1)
 struct math_invlist_item {
@@ -49,11 +55,11 @@ static void print_item(struct math_invlist_item *item)
 
 static struct invlist *
 gen_random_items(const char *path, struct codec_buf_struct_info *info,
-	struct math_invlist_item items[], int N)
+	struct math_invlist_item items[], int n)
 {
 	/* create invert list and iterator */
-	struct invlist *invlist = invlist_open(path, 128, info);
-	invlist->bufkey = bufkey_64; /* set a 64-bit key map */
+	struct invlist *invlist = invlist_open(path, SPAN, info);
+	// invlist->bufkey = bufkey_64; /* set a 64-bit key map */
 
 	invlist_iter_t writer = invlist_writer(invlist);
 	
@@ -64,7 +70,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 
 	uint last_docID = 1;
 	uint last_offset = 0;
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < n; i++) {
 		items[i].docID = last_docID + rand() % 10;
 		items[i].secID = rand() % 10;
 		items[i].sect_width = rand() % 6;
@@ -72,15 +78,20 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
 		flush_sz = invlist_writer_write(writer, items + i);
+		(void)flush_sz;
+#ifdef VERBOSE
 		printf("write items[%d] (flush %lu): ", i, flush_sz);
 		print_item(items + i);
+#endif
 
 		last_docID = items[i].docID;
 		last_offset = items[i].symbinfo_offset;
 	}
 
 	flush_sz = invlist_writer_flush(writer);
+#ifdef VERBOSE
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
+#endif
 
 	invlist_iter_free(writer);
 	return invlist;
@@ -91,20 +102,23 @@ test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 {
 	/* test iterator reader */
 	int i = 0, err_cnt = 0;
+	printf("[ total number of blocks: %u ]\n", invlist->n_blk);
 	foreach (iter, invlist, invlist) {
 		size_t rd_sz;
 		struct math_invlist_item item;
 
 		rd_sz = invlist_iter_read(iter, &item);
 		(void)rd_sz;
+#ifdef VERBOSE
 		printf("read %lu bytes, ", rd_sz);
 		print_item(&item);
+#endif
 
 		if (memcmp(items + i, &item, sizeof item) != 0) {
 			err_cnt ++;
-			prerr("failed.");
+			prerr("item mismatch.");
 		} else {
-			prinfo("pass.");
+			; // prinfo("pass.");
 		}
 
 		i++;
@@ -156,26 +170,25 @@ int main()
 	strcpy(info->field_info[_idx].name, # _name)
 
 	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
-	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR);
+	SET_FIELD_INFO(FI_SECID, secID, CODEC_FOR32);
 	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
 
-#define N (30)
 	struct invlist *invlist;
 	struct math_invlist_item items[N] = {0};
 
-//	/* test for in-memory inverted list */
+	/* test for in-memory inverted list */
 //	invlist = gen_random_items(NULL, info, items, N);
-//	// test_iterator(invlist, items);
+//	test_iterator(invlist, items);
 //	test_skipping(invlist);
 //	invlist_free(invlist);
 
 	/* test for on-disk inverted list */
+	system("rm -f ./run/invlist.*");
 	invlist = gen_random_items("run/invlist", info, items, N);
-	invlist_print_as_decoded_ints(invlist);
-//	test_iterator(invlist, items);
-//	test_skipping(invlist);
+	test_iterator(invlist, items);
+	// test_skipping(invlist);
 	invlist_free(invlist);
 
 	/* free structure field information */

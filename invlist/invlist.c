@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-//#include "config.h"
-#include <assert.h>
-
 #include "common/common.h"
 #include "invlist.h"
 #include "config.h"
+#include <assert.h>
 
 /*
  * inverted list functions
@@ -98,8 +96,7 @@ static size_t refill_buffer__memo(struct invlist_iterator *iter)
 
 static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 {
-	FILE *fh = iter->lfh;
-	fseek(fh, offset, SEEK_SET);
+	fseek(iter->lfh, offset, SEEK_SET);
 
 	size_t rd_sz, out_sz;
 	struct _head {
@@ -111,7 +108,7 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 
-	rd_sz = fread(&head, 1, sizeof head, fh);
+	rd_sz = fread(&head, 1, sizeof head, iter->lfh);
 
 #ifdef INVLIST_DEBUG
 	printf("seek to %lu, read [len=%u, sz=%u + %lu]\n", offset,
@@ -124,7 +121,7 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	}
 
 	char block[head.size]; /* allocate read buffer */
-	rd_sz = fread(block, 1, head.size, fh);
+	rd_sz = fread(block, 1, head.size, iter->lfh);
 	if (rd_sz != head.size) {
 		prerr("refill_buffer__disk block read: %u", rd_sz);
 		return 0;
@@ -134,14 +131,13 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	/* decode and refill buffer */
 	out_sz = codec_buf_decode(iter->buf, block, head.len, c_info);
 	iter->buf_len = head.len;
-
 	return out_sz;
 }
 
 uint64_t invlist_iter_bufkey(struct invlist_iterator* iter, uint32_t idx)
 {
 	/* wrap bufkey callback function with a termination check */
-	if (iter->lfh != NULL) {
+	if (iter->type == INVLIST_TYPE_ONDISK) {
 		/* return max ID if iterator terminated on-disk */
 		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
 	} else {
@@ -170,40 +166,22 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 	iter->invlist = invlist;
+	iter->type = invlist->type;
+	iter->path = strdup(invlist->path);
 
 	iter->c_info = invlist->c_info;
 	iter->bufkey = invlist->bufkey;
 
-	iter->cur = NULL;
+	iter->cur = invlist->head;
 	iter->lfh = NULL;
 
 	return iter;
-}
-
-static void
-iter_persistent_open(invlist_iter_t iter, const char *path, const char *mode)
-{
-	if (skippy_fopen(&iter->sfh, path, mode, iter->invlist->buf_max_len)) {
-		prerr("failed to open on-disk skippy");
-		return;
-	}
-
-	iter->lfh = invlist_fopen(path, mode, NULL);
 }
 
 /* an inverted list writer */
 invlist_iter_t invlist_writer(struct invlist *invlist)
 {
 	invlist_iter_t iter = base_iterator(invlist);
-
-	if (invlist->type == INVLIST_TYPE_INMEMO) {
-		/* a in-memo invlist */
-		iter->cur = invlist->head;
-	} else {
-		/* a on-disk invlist */
-		iter_persistent_open(iter, invlist->path, "a");
-	}
-
 	return iter;
 }
 
@@ -214,13 +192,18 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 
 	if (invlist->type == INVLIST_TYPE_INMEMO) {
 		/* a in-memo invlist */
-		iter->cur = invlist->head;
+		assert(iter->cur != NULL);
 		refill_buffer__memo(iter);
 	} else {
 		/* a on-disk invlist */
-		iter_persistent_open(iter, invlist->path, "r");
+		iter->lfh = invlist_fopen(iter->path, "r", NULL);
+		assert(iter->lfh != NULL);
 
+		int error = skippy_fopen(&iter->sfh, iter->path, "r",
+			invlist->buf_max_len /* skippy span the same as buffer length */);
+		assert(!error); (void)error;
 		(void)skippy_fnext(&iter->sfh, 0);
+
 		refill_buffer__disk(iter, 0);
 	}
 
@@ -230,12 +213,12 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 void invlist_iter_free(struct invlist_iterator *iter)
 {
 	if (iter->lfh) {
-		/* not relying on invlist pointer to know the type of
-		 * iterator because the invlist may already be destroyed. */
-		fclose(iter->lfh);
+		/* this is a reader */
 		skippy_fclose(&iter->sfh);
+		fclose(iter->lfh);
 	}
 
+	free(iter->path);
 	codec_buf_free(iter->buf, iter->c_info);
 	free(iter);
 }
@@ -316,7 +299,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 	uint64_t key = invlist_iter_bufkey(iter, 0);
 
 	/* do flushing */
-	if (iter->lfh == NULL) {
+	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* append new in-memory block with encoded buffer */
 		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
 		memcpy(node->blk, enc_buf, payload_sz);
@@ -327,14 +310,22 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
 		memcpy(node->blk, enc_buf, payload_sz);
 
-		skippy_fwrite(&iter->sfh, &node->sn,
-			ondisk_invlist_block_writer, iter->lfh);
-		skippy_fflush(&iter->sfh);
-		fflush(iter->lfh);
+		/* write on-disk inverted list and skip structure */
+		struct skippy_fh sfh;
+		FILE *lfh = invlist_fopen(iter->path, "a", NULL);
+		assert(NULL != lfh);
+		int error = skippy_fopen(&sfh, iter->path, "a",
+			invlist->buf_max_len /* skippy span the same as buffer length */);
+		assert(!error); (void)error;
+		skippy_fwrite(&sfh, &node->sn, ondisk_invlist_block_writer, lfh);
+		skippy_fclose(&sfh);
+		fclose(lfh);
 
+		/* free temporary node */
 		free(node->blk);
 		free(node);
 
+		/* count the total number of blocks */
 		invlist->n_blk ++;
 	}
 
@@ -392,13 +383,15 @@ int invlist_iter_next(struct invlist_iterator* iter)
 		iter->buf_idx += 1;
 		return 1;
 
-	} else if (iter->cur != NULL) {
+	} else if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* refill buffer from memory */
-		iter->cur = next_blk(iter->cur);
-		refill_buffer__memo(iter);
+		if (iter->cur != NULL) {
+			iter->cur = next_blk(iter->cur);
+			refill_buffer__memo(iter);
+		}
 		return (iter->cur != NULL);
 
-	} else if (iter->lfh != NULL) {
+	} else {
 		/* refill buffer from disk */
 		struct skippy_data sd = skippy_fnext(&iter->sfh, 0);
 		if (sd.key == 0) return 0;
@@ -433,14 +426,18 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 	}
 
 	/* jump according to iterator type */
-	if (iter->cur != NULL) {
+	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* in-memory jump */
+		if (iter->cur == NULL) { return 0; }
+
+		/* perform skipping */
 		jump_to = skippy_node_lazy_jump(&iter->cur->sn, target);
 
 		/* this is a new block, update pointer and refill buffer. */
 		iter->cur = container_of(jump_to, struct invlist_node, sn);
 		refill_buffer__memo(iter);
-	} else if (iter->lfh != NULL) {
+
+	} else {
 		/* on-disk jump */
 		struct skippy_data sd;
 		sd = skippy_fskip(&iter->sfh, target);

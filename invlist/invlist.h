@@ -52,6 +52,8 @@ typedef struct invlist_iterator {
 	uint32_t                 buf_idx;
 	uint32_t                 buf_len;
 	struct invlist          *invlist;
+	enum invlist_type        type;
+	char                    *path;
 
 	codec_buf_struct_info_t *c_info;
 	/* we need c_info here so that we can free
@@ -60,8 +62,10 @@ typedef struct invlist_iterator {
 	buf_key_callbk          *bufkey; /* key value callback */
 
 	struct invlist_node     *cur; /* in-memo invlist */
-	FILE                    *lfh; /* on-disk invlist */
-	struct skippy_fh         sfh; /* on-disk skiplist */
+
+	/* below only used for reading */
+	struct skippy_fh         sfh;
+	FILE                    *lfh;
 } *invlist_iter_t;
 
 /* invlist functions */
