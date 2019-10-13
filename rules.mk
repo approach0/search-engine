@@ -82,6 +82,16 @@ DO_YACC = $(YACC) -v -d --report=itemset $< -o y.tab.c
 HIGHLIGHT_BEGIN := @ tput setaf
 HIGHLIGHT_END := @ tput sgr0
 
+# handle debug flag here, e.g., `make all debug=0'
+# (you need to rebuild all project objects when debug flag is changed.
+# Also notice that -D gets defined before the source file is parsed)
+debug ?= 0 # debug=0 by default
+ifeq ($(debug), 1)
+    CFLAGS += -g
+else
+    CFLAGS += -DNDEBUG
+endif
+
 # regular rules
 all:
 	$(HIGHLIGHT_BEGIN) 5
