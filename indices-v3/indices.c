@@ -7,8 +7,12 @@
 static void indices_update_stats(struct indices* indices)
 {
 	if (indices->ti) {
-		indices->n_doc = term_index_get_docN(indices->ti);
+		/* FIX: Uncomment below causes Indri segment fault after
+		 * indexing hundreds of documents (for unknown reason). */
+		// indices->n_doc = term_index_get_docN(indices->ti);
+
 		if (!indices->avgDocLen_updated) {
+			/* update once here for efficiency reason. */
 			indices->avgDocLen = term_index_get_avgDocLen(indices->ti);
 			indices->avgDocLen_updated = 1;
 		}
@@ -110,6 +114,8 @@ skip:
 
 	/* set index stats */
 	indices_update_stats(indices);
+	/* Ad-hoc FIX: Update n_doc only for initialization. */
+	indices->n_doc = term_index_get_docN(indices->ti);
 
 	return open_err;
 }
