@@ -19,11 +19,14 @@ filesys="$1"
 mnt_img="$2"
 mnt_dir="mnt-$(basename ${mnt_img})"
 
-if [ "$filesys" == "reiserfs" ]
-then
+if [ ! -e "$mnt_img" ]; then
+	echo "image $mnt_img not existing, abort."
+	exit
+fi
+
+if [ "$filesys" == "reiserfs" ]; then
 	mount_opts=""
-elif [ "$filesys" == "btrfs" ]
-then
+elif [ "$filesys" == "btrfs" ]; then
 	mount_opts="-o compress=lzo,ssd"
 fi
 
