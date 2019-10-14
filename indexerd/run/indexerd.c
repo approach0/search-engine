@@ -40,20 +40,23 @@ static int consider_index_maintain(struct indexer *indexer)
 {
 	struct indices *indices = indexer->indices;
 
+	printf(ES_RESET_LINE); /* clear line */
+
 	if (indexer_should_maintain(indexer)) {
-		printf("\n[index maintaining ...]\n");
+		printf("[index maintaining ...]");
 		fflush(stdout);
 
 		indexer_maintain(indexer);
 		sleep(30);
 
 	} else if ((indices->n_doc + 1) % MAINTAIN_CYCLE_CNT == 0) {
-		printf("\n[flushing index ...]\n");
+		printf("[flushing index ...]");
 		fflush(stdout);
 
 		indexer_spill(indexer);
 		sleep(2);
 	}
+
 	return 0;
 }
 
@@ -81,13 +84,13 @@ static const char *httpd_on_index(const char* req, void* arg_)
 		goto ret;
 	}
 
-	printf(ES_RESET_LINE); /* clear line */
 	consider_index_maintain(indexer);
 
 	n_doc = indexer_write_all_fields(indexer);
 
 	/* print maintainer related stats */
 	const int64_t unfree = mhook_unfree();
+	printf(ES_RESET_LINE); /* clear line */
 	printf("Unfree: %ld, Doc: %u per %u, Index segments: %lu / %u, ",
 		unfree, indexer->indices->n_doc, MAINTAIN_CYCLE_CNT,
 		term_index_size(indexer->indices->ti), MAXIMUM_INDEX_COUNT
