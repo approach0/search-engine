@@ -93,11 +93,11 @@ static const char *httpd_on_index(const char* req, void* arg_)
 	/* print maintainer related stats */
 	const int64_t unfree = mhook_unfree();
 	printf(ES_RESET_LINE); /* clear line */
-	printf("Unfree: %ld, Doc: %u per %u, Index segments: %lu / %u, ",
+	printf("Unfree: %ld, write doc %u per %u, segments: %lu / %u, ",
 		unfree, indexer->indices->n_doc, MAINTAIN_CYCLE_CNT,
 		term_index_size(indexer->indices->ti), MAXIMUM_INDEX_COUNT
 	);
-	printf("%lu TeX parsed, error rate: %.2f %%.", indexer->n_parse_tex,
+	printf("%lu TeX parsed (error rate: %.2f %%).", indexer->n_parse_tex,
 		100.f * indexer->n_parse_err / indexer->n_parse_tex);
 	fflush(stdout);
 
