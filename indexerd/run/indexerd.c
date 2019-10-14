@@ -36,20 +36,22 @@ parser_exception(struct indexer *indexer, const char *tex, char *msg)
 	return 0;
 }
 
-static int consider_index_maintain(struct indexer *indexer)
+static int consider_index_maintain(struct indexer *indexer, int force)
 {
 	struct indices *indices = indexer->indices;
 
 	printf(ES_RESET_LINE); /* clear line */
 
-	if (indexer_should_maintain(indexer)) {
+	if (indexer_should_maintain(indexer) || force) {
 		printf("[index maintaining ...]");
 		fflush(stdout);
 
 		indexer_maintain(indexer);
 		sleep(30);
 
-	} else if ((indices->n_doc + 1) % MAINTAIN_CYCLE_CNT == 0) {
+	}
+
+	if ((indices->n_doc + 1) % MAINTAIN_CYCLE_CNT == 0 || force) {
 		printf("[flushing index ...]");
 		fflush(stdout);
 
@@ -84,7 +86,7 @@ static const char *httpd_on_index(const char* req, void* arg_)
 		goto ret;
 	}
 
-	consider_index_maintain(indexer);
+	consider_index_maintain(indexer, 0);
 
 	n_doc = indexer_write_all_fields(indexer);
 
@@ -169,8 +171,10 @@ int main(int argc, char* argv[])
 
 	/* free resources */
 	printf("closing index...\n");
+	consider_index_maintain(indexer, 1);
 	indexer_free(indexer);
 	indices_close(&indices);
+	printf("\n");
 
 exit:
 	mhook_print_unfree();
