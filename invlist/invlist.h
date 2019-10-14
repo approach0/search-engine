@@ -54,6 +54,8 @@ typedef struct invlist_iterator {
 	struct invlist          *invlist;
 	enum invlist_type        type;
 	char                    *path;
+	uint32_t                 buf_max_len;
+	uint32_t                 buf_max_sz;
 
 	codec_buf_struct_info_t *c_info;
 	/* we need c_info here so that we can free

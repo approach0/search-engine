@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "common/common.h"
 #include "invlist.h"
 #include "config.h"
@@ -67,10 +70,13 @@ int invlist_empty(struct invlist* invlist)
 	}
 }
 
-void invlist_free(struct invlist *inv)
+void invlist_free(struct invlist *invlist)
 {
-	skippy_free(&inv->skippy, struct invlist_node, sn, free(p->blk); free(p));
-	free(inv);
+	skippy_free(&invlist->skippy, struct invlist_node, sn,
+		free(p->blk);
+		free(p)
+	);
+	free(invlist);
 }
 
 /*
@@ -162,12 +168,14 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 {
 	invlist_iter_t iter = malloc(sizeof *iter);
 
-	iter->buf = codec_buf_alloc(invlist->buf_max_len, invlist->c_info);
+	iter->buf = NULL;
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 	iter->invlist = invlist;
 	iter->type = invlist->type;
 	iter->path = strdup(invlist->path);
+	iter->buf_max_len = invlist->buf_max_len;
+	iter->buf_max_sz  = invlist->buf_max_sz;
 
 	iter->c_info = invlist->c_info;
 	iter->bufkey = invlist->bufkey;
@@ -182,6 +190,10 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 invlist_iter_t invlist_writer(struct invlist *invlist)
 {
 	invlist_iter_t iter = base_iterator(invlist);
+
+	if (invlist->type == INVLIST_TYPE_INMEMO)
+		iter->buf = codec_buf_alloc(invlist->buf_max_len, invlist->c_info);
+
 	return iter;
 }
 
@@ -189,6 +201,7 @@ invlist_iter_t invlist_writer(struct invlist *invlist)
 invlist_iter_t invlist_iterator(struct invlist *invlist)
 {
 	invlist_iter_t iter = base_iterator(invlist);
+	iter->buf = codec_buf_alloc(invlist->buf_max_len, invlist->c_info);
 
 	if (invlist->type == INVLIST_TYPE_INMEMO) {
 		/* a in-memo invlist */
@@ -200,7 +213,7 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 		assert(iter->lfh != NULL);
 
 		int error = skippy_fopen(&iter->sfh, iter->path, "r",
-			invlist->buf_max_len /* skippy span the same as buffer length */);
+			iter->buf_max_len /* skippy span the same as buffer length */);
 		assert(!error); (void)error;
 		(void)skippy_fnext(&iter->sfh, 0);
 
@@ -218,8 +231,10 @@ void invlist_iter_free(struct invlist_iterator *iter)
 		fclose(iter->lfh);
 	}
 
+	if (iter->buf)
+		codec_buf_free(iter->buf, iter->c_info);
+
 	free(iter->path);
-	codec_buf_free(iter->buf, iter->c_info);
 	free(iter);
 }
 
@@ -282,16 +297,15 @@ ondisk_invlist_block_writer(struct skippy_node *blk_, void *args_)
 	return sd;
 }
 
-size_t invlist_writer_flush(struct invlist_iterator *iter)
+size_t __invlist_writer_flush(struct invlist_iterator *iter)
 {
-	struct invlist *invlist = iter->invlist;
 	size_t payload_sz;
 
 	if (iter->buf_len == 0)
 		return 0;
 
 	/* encode current buffer integers */
-	char enc_buf[invlist->buf_max_sz];
+	char enc_buf[iter->buf_max_sz];
 	payload_sz = codec_buf_encode(enc_buf,
 		iter->buf, iter->buf_len, iter->c_info);
 
@@ -301,6 +315,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 	/* do flushing */
 	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* append new in-memory block with encoded buffer */
+		struct invlist *invlist = iter->invlist;
 		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
 		memcpy(node->blk, enc_buf, payload_sz);
 		append_node(invlist, node, sizeof *node + payload_sz);
@@ -314,8 +329,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		struct skippy_fh sfh;
 		FILE *lfh = invlist_fopen(iter->path, "a", NULL);
 		assert(NULL != lfh);
-		int error = skippy_fopen(&sfh, iter->path, "a",
-			invlist->buf_max_len /* skippy span the same as buffer length */);
+		int error = skippy_fopen(&sfh, iter->path, "a", iter->buf_max_len);
 		assert(!error); (void)error;
 		skippy_fwrite(&sfh, &node->sn, ondisk_invlist_block_writer, lfh);
 		skippy_fclose(&sfh);
@@ -324,9 +338,6 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		/* free temporary node */
 		free(node->blk);
 		free(node);
-
-		/* count the total number of blocks */
-		invlist->n_blk ++;
 	}
 
 	/* reset iterator pointers/buffer */
@@ -336,16 +347,71 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 	return payload_sz;
 }
 
+size_t invlist_writer_flush(struct invlist_iterator *iter)
+{
+	size_t flush_sz;
+	if (iter->type == INVLIST_TYPE_INMEMO) {
+		/* in memory */
+		flush_sz = __invlist_writer_flush(iter);
+	} else {
+		/* on disk, create a temporary codec buffer here */
+		iter->buf = codec_buf_alloc(iter->buf_max_len, iter->c_info);
+
+		/* read on-disk codec buffer into temporary codec buffer */
+		char path[MAX_PATH_LEN];
+		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+		int fd = open(path, O_CREAT | O_RDONLY, 0666);
+		assert(fd >= 0);
+
+		const size_t rd_sz = iter->c_info->struct_sz;
+		char item[rd_sz];
+		int cnt = 0;
+		while (rd_sz == read(fd, item, rd_sz)) {
+			codec_buf_set(iter->buf, cnt, item, iter->c_info);
+			cnt ++;
+		}
+		close(fd);
+
+		/* do flush (to be compressed) */
+		flush_sz = __invlist_writer_flush(iter);
+
+		/* destory temporary codec buffer */
+		codec_buf_free(iter->buf, iter->c_info);
+		iter->buf = NULL;
+	}
+
+	return flush_sz;
+}
+
 size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 {
 	size_t flush_sz = 0;
 
 	/* flush buffer on inefficient buffer space */
-	if (iter->buf_idx + 1 > iter->invlist->buf_max_len)
+	if (iter->buf_idx + 1 > iter->buf_max_len)
 		flush_sz = invlist_writer_flush(iter);
 
 	/* append to buffer */
-	codec_buf_set(iter->buf, iter->buf_idx, (void*)in, iter->c_info);
+	if (iter->type == INVLIST_TYPE_INMEMO) {
+		/* in memory */
+		codec_buf_set(iter->buf, iter->buf_idx, (void*)in, iter->c_info);
+	} else {
+		/* write against disk to save memory here */
+		char path[MAX_PATH_LEN];
+		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+
+		int fd;
+		if (iter->buf_idx == 0) 
+			fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0666);
+		else
+			fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
+		assert(fd >= 0);
+		ssize_t wr_sz = write(fd, in, iter->c_info->struct_sz);
+		(void)wr_sz;
+		assert(wr_sz == iter->c_info->struct_sz);
+		close(fd);
+	}
+
 	iter->buf_idx ++;
 	iter->buf_len ++;
 

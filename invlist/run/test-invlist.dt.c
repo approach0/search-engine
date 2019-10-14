@@ -179,10 +179,10 @@ int main()
 	struct math_invlist_item items[N] = {0};
 
 	/* test for in-memory inverted list */
-//	invlist = gen_random_items(NULL, info, items, N);
-//	test_iterator(invlist, items);
+	invlist = gen_random_items(NULL, info, items, N);
+	test_iterator(invlist, items);
 //	test_skipping(invlist);
-//	invlist_free(invlist);
+	invlist_free(invlist);
 
 	/* test for on-disk inverted list */
 	system("rm -f ./run/invlist.*");
