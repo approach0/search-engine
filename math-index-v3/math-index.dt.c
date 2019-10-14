@@ -128,26 +128,30 @@ void math_index_flush(math_index_t index)
 	}
 }
 
+static void free_invlist_entry(struct math_invlist_entry *entry)
+{
+	if (entry->invlist)
+		invlist_free(entry->invlist);
+
+	if (entry->writer)
+		invlist_iter_free(entry->writer);
+
+	if (entry->symbinfo_path)
+		free(entry->symbinfo_path);
+
+	if (entry->pf_path)
+		free(entry->pf_path);
+
+	free(entry);
+}
+
 void math_index_close(math_index_t index)
 {
 	math_index_flush(index);
 
 	foreach (iter, strmap, index->dict) {
 		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
-
-		if (entry->invlist)
-			invlist_free(entry->invlist);
-
-		if (entry->writer)
-			invlist_iter_free(entry->writer);
-
-		if (entry->symbinfo_path)
-			free(entry->symbinfo_path);
-
-		if (entry->pf_path)
-			free(entry->pf_path);
-
-		free(entry);
+		free_invlist_entry(entry);
 	}
 
 	/* free member structure */
@@ -239,7 +243,7 @@ int mk_path_str(struct subpath *sp, int prefix_len, char *dest)
 }
 
 static int init_invlist_entry(struct math_invlist_entry *entry,
-	struct codec_buf_struct_info *cinfo, const char *path, int read_only)
+	struct codec_buf_struct_info *cinfo, const char *path)
 {
 	/* make path names */
 	char invlist_path[MAX_PATH_LEN];
@@ -294,6 +298,8 @@ static void cache_append_invlist(math_index_t index, char *path,
 	struct subpath_ele *ele, doc_id_t docID, exp_id_t expID, uint32_t width)
 {
 	struct math_invlist_entry *entry = NULL;
+
+#ifndef MATH_INDEX_SAVE_MEMO_SPACE
 	strmap_t dict = index->dict;
 	char *key_path = path + strlen(index->dir);
 
@@ -304,7 +310,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 		dict[[key_path]] = entry;
 
 		/* open invlist and entry metadata */
-		init_invlist_entry(entry, index->cinfo, path, 0);
+		init_invlist_entry(entry, index->cinfo, path);
 
 		/* open invlist writer */
 		entry->writer = invlist_writer(entry->invlist);
@@ -313,6 +319,11 @@ static void cache_append_invlist(math_index_t index, char *path,
 		index->memo_usage +=
 			memo_usage_per_entry(index->cinfo, strlen(key_path));
 	}
+#else
+	entry = malloc(sizeof *entry);
+	init_invlist_entry(entry, index->cinfo, path);
+	entry->writer = invlist_writer(entry->invlist);
+#endif
 
 	/* open files */
 	FILE *fh_symbinfo = fopen(entry->symbinfo_path, "a");
@@ -368,6 +379,11 @@ static void cache_append_invlist(math_index_t index, char *path,
 
 		index->stats.N ++;
 	}
+
+#ifdef MATH_INDEX_SAVE_MEMO_SPACE
+	(void)invlist_writer_flush(entry->writer);
+	free_invlist_entry(entry);
+#endif
 
 	/* close files to save OS file descriptor space */
 	fclose(fh_symbinfo);
@@ -503,7 +519,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	dict[[key_path]] = entry;
 
 	/* open invlist and entry metadata */
-	init_invlist_entry(entry, index->cinfo, path, 1);
+	init_invlist_entry(entry, index->cinfo, path);
 
 	/* uncomment to test on-disk inverted list */
 	//invlist_print_as_decoded_ints(entry->invlist);
@@ -550,7 +566,7 @@ math_index_lookup(math_index_t index, const char *key_)
 
 	if (file_exists(path)) {
 		sprintf(path, "%s/%s", index->dir, key_);
-		init_invlist_entry(&entry, index->cinfo, path, 1);
+		init_invlist_entry(&entry, index->cinfo, path);
 
 		entry_reader.reader = invlist_iterator(entry.invlist);
 		/* it is safe to free inverted list here since on-disk iterator

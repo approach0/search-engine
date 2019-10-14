@@ -401,7 +401,7 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
 
 		int fd;
-		if (iter->buf_idx == 0) 
+		if (iter->buf_idx == 0)
 			fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0666);
 		else
 			fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
