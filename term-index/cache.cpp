@@ -99,8 +99,8 @@ int term_index_load(void *index_, size_t limit_sz)
 
 #ifdef PRINT_CACHING_TEXT_TERMS
 		char *term = term_lookup_r(index, term_id);
-		printf("caching `%s' (df=%u, size=%lu KB)\n", term, df,
-			memo_invlist->tot_sz / 1024);
+		printf("caching `%s' (df=%u, blocks=%lu)\n", term, df,
+			memo_invlist->n_blk);
 		free(term);
 #endif
 
@@ -115,11 +115,13 @@ int term_index_load(void *index_, size_t limit_sz)
 
 			inserted = treap_insert(&index->trp_root, &entry->trp_nd);
 			assert(inserted != NULL);
+			(void)inserted;
 		}
 
 		/* update term index memory usage */
 		index->memo_usage += sizeof(struct treap_node);
-		index->memo_usage += memo_invlist->tot_sz;
+		index->memo_usage += sizeof *memo_invlist;
+		index->memo_usage += memo_invlist->tot_payload_sz;
 
 		if (index->memo_usage > limit_sz)
 			break;

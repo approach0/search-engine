@@ -27,7 +27,7 @@ struct invlist
 		ret->type = INVLIST_TYPE_ONDISK;
 	}
 
-	ret->tot_sz = sizeof *ret;
+	ret->tot_payload_sz = 0;
 	ret->n_blk = 0;
 	skippy_init(&ret->skippy, n);
 	ret->buf_max_len = n;
@@ -261,8 +261,6 @@ static void append_node(struct invlist *invlist,
 	if (invlist->head == NULL)
 		invlist->head = node;
 
-	invlist->tot_sz += node_sz;
-	invlist->n_blk ++;
 	skippy_append(&invlist->skippy, &node->sn);
 }
 
@@ -284,13 +282,11 @@ ondisk_invlist_block_writer(struct skippy_node *blk_, void *args_)
 	sd.child_offset = ftell(fh);
 
 #ifdef INVLIST_DEBUG
-	printf("seek to %lu, write [len=%u, sz=%u + %lu]\n",
-		sd.child_offset, node->len, node->size,
-		sizeof node->len + sizeof node->size);
+	printf("seek to %lu, write [head=%u + size=%lu]\n", offset,
+		sizeof node->size, node->size);
 #endif
 
 	/* write the invlist_node onto disk */
-	fwrite(&node->len, 1, sizeof node->len, fh);
 	fwrite(&node->size, 1, sizeof node->size, fh);
 	fwrite(node->blk, 1, node->size, fh);
 
@@ -300,6 +296,7 @@ ondisk_invlist_block_writer(struct skippy_node *blk_, void *args_)
 size_t __invlist_writer_flush(struct invlist_iterator *iter)
 {
 	size_t payload_sz;
+	struct invlist *invlist = iter->invlist;
 
 	if (iter->buf_len == 0)
 		return 0;
@@ -320,6 +317,8 @@ size_t __invlist_writer_flush(struct invlist_iterator *iter)
 		memcpy(node->blk, enc_buf, payload_sz);
 		append_node(invlist, node, sizeof *node + payload_sz);
 		iter->cur = node;
+
+		invlist->tot_payload_sz += sizeof *node;
 	} else {
 		/* write new on-disk block with encoded buffer */
 		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
@@ -338,18 +337,23 @@ size_t __invlist_writer_flush(struct invlist_iterator *iter)
 		/* free temporary node */
 		free(node->blk);
 		free(node);
+
+		invlist->tot_payload_sz += sizeof node->size;
 	}
 
 	/* reset iterator pointers/buffer */
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 
+	/* update inverted list sizes */
+	invlist->tot_payload_sz += payload_sz;
+	invlist->n_blk ++;
 	return payload_sz;
 }
 
 size_t invlist_writer_flush(struct invlist_iterator *iter)
 {
-	size_t flush_sz;
+	size_t flush_sz = 0;
 	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* in memory */
 

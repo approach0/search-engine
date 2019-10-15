@@ -111,13 +111,6 @@ void math_index_flush(math_index_t index)
 	if (index->mode[0] != 'w')
 		return;
 
-	foreach (iter, strmap, index->dict) {
-		P_CAST(entry, struct math_invlist_entry, iter->cur->value);
-
-		if (entry->writer)
-			(void)invlist_writer_flush(entry->writer);
-	}
-
 	/* write the current stats values */
 	char path[MAX_PATH_LEN];
 	sprintf(path, "%s/%s.bin", index->dir, MSTATS_FNAME);
@@ -132,9 +125,6 @@ static void free_invlist_entry(struct math_invlist_entry *entry)
 {
 	if (entry->invlist)
 		invlist_free(entry->invlist);
-
-	if (entry->writer)
-		invlist_iter_free(entry->writer);
 
 	if (entry->symbinfo_path)
 		free(entry->symbinfo_path);
@@ -262,9 +252,6 @@ static int init_invlist_entry(struct math_invlist_entry *entry,
 	/* change default bufkey map */
 	entry->invlist->bufkey = &math_bufkey_64;
 
-	/* set writer to NULL initially */
-	entry->writer = NULL; /* only needed for cached writes */
-
 	/* set path frequency */
 	{ /* first read out value if there exists a file */
 		FILE *fh = fopen(pf_path, "r");
@@ -280,7 +267,7 @@ static int init_invlist_entry(struct math_invlist_entry *entry,
 }
 
 static size_t
-memo_usage_per_entry(struct codec_buf_struct_info *cinfo, size_t str_len)
+dict_entry_size(struct codec_buf_struct_info *cinfo, size_t str_len)
 {
 	size_t tot_sz = 0;
 
@@ -288,8 +275,8 @@ memo_usage_per_entry(struct codec_buf_struct_info *cinfo, size_t str_len)
 	tot_sz += sizeof(datrie_state_t) * 2;
 
 	tot_sz += sizeof(struct math_invlist_entry);
-	tot_sz += sizeof(struct invlist_iterator);
-	tot_sz += codec_buf_space(MATH_INDEX_BLK_LEN, cinfo);
+	tot_sz += sizeof(struct invlist);
+	tot_sz += str_len * 2; /* estimated memory for two path strings */
 
 	return tot_sz;
 }
@@ -299,31 +286,10 @@ static void cache_append_invlist(math_index_t index, char *path,
 {
 	struct math_invlist_entry *entry = NULL;
 
-#ifndef MATH_INDEX_SAVE_MEMO_SPACE
-	strmap_t dict = index->dict;
-	char *key_path = path + strlen(index->dir);
-
-	/* add path into dictionary if this path does not exist */
-	if (NULL == (entry = strmap_lookup(dict, key_path))) {
-		/* create dictionary entry */
-		entry = malloc(sizeof *entry);
-		dict[[key_path]] = entry;
-
-		/* open invlist and entry metadata */
-		init_invlist_entry(entry, index->cinfo, path);
-
-		/* open invlist writer */
-		entry->writer = invlist_writer(entry->invlist);
-
-		/* update memory usage */
-		index->memo_usage +=
-			memo_usage_per_entry(index->cinfo, strlen(key_path));
-	}
-#else
+	/* create a temporary entry */
 	entry = malloc(sizeof *entry);
 	init_invlist_entry(entry, index->cinfo, path);
-	entry->writer = invlist_writer(entry->invlist);
-#endif
+	invlist_iter_t writer = invlist_writer(entry->invlist);
 
 	/* open files */
 	FILE *fh_symbinfo = fopen(entry->symbinfo_path, "a");
@@ -351,7 +317,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 #endif
 
 		/* write sector tree structure */
-		size_t flush_sz = invlist_writer_write(entry->writer, &item);
+		size_t flush_sz = invlist_writer_write(writer, &item);
 		(void)flush_sz;
 
 		/* prepare symbinfo structure */
@@ -380,9 +346,9 @@ static void cache_append_invlist(math_index_t index, char *path,
 		index->stats.N ++;
 	}
 
-#ifdef MATH_INDEX_SAVE_MEMO_SPACE
+	/* free temporary entry */
 	free_invlist_entry(entry);
-#endif
+	invlist_iter_free(writer);
 
 	/* close files to save OS file descriptor space */
 	fclose(fh_symbinfo);
@@ -505,7 +471,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 	}
 
 	/* memory usage predict */
-	size_t cost = memo_usage_per_entry(index->cinfo, strlen(key_path));
+	size_t cost = dict_entry_size(index->cinfo, strlen(key_path));
 	if (index->memo_usage + cost > args->limit_sz) {
 		prinfo("math index cache size reaches limit, stop caching.");
 		return DS_RET_STOP_ALLDIR;
@@ -525,6 +491,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 	/* fork on-disk inverted list into memory */
 	entry->invlist = fork_invlist(entry->invlist);
+	index->memo_usage += entry->invlist->tot_payload_sz;
 
 	printf("caching %s, memory usage: %.2f %%\n", key_path,
 		100.f * index->memo_usage / args->limit_sz);

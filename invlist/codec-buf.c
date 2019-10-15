@@ -16,17 +16,6 @@ void** codec_buf_alloc(uint n, struct codec_buf_struct_info *info)
 	return buf;
 }
 
-size_t codec_buf_space(uint n, struct codec_buf_struct_info *info)
-{
-	size_t tot_sz = info->n_fields * sizeof(int *);
-
-	for (int j = 0; j < info->n_fields; j++) {
-		tot_sz += n * info->field_info[j].sz;
-	}
-
-	return tot_sz;
-}
-
 void codec_buf_free(void **buf, struct codec_buf_struct_info *info)
 {
 	for (int j = 0; j < info->n_fields; j++) {

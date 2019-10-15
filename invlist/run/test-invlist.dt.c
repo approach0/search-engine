@@ -9,7 +9,7 @@
 
 #include <assert.h>
 
-#define N (200)
+#define N (300)
 // #define N (1000 * 128)
 
 #define SPAN 128
@@ -92,6 +92,11 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 #ifdef VERBOSE
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 #endif
+	
+	size_t total_size = invlist->tot_payload_sz;
+	size_t orig_size = n * sizeof(items[0]);
+	printf("compression rate: %lu / %lu = %.2f %%\n", orig_size, total_size,
+		100.f * orig_size / total_size);
 
 	invlist_iter_free(writer);
 	return invlist;
@@ -110,7 +115,7 @@ test_iterator(struct invlist *invlist, struct math_invlist_item items[])
 		rd_sz = invlist_iter_read(iter, &item);
 		(void)rd_sz;
 #ifdef VERBOSE
-		printf("read %lu bytes, ", rd_sz);
+		printf("item#%u: read %lu bytes, ", i, rd_sz);
 		print_item(&item);
 #endif
 

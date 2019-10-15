@@ -5,8 +5,7 @@
 #include "skippy/skippy.h"
 #include "skippy/ondisk-skippy.h"
 #include "codec-buf.h"
-
-#define MAX_PATH_LEN 4096
+#include "config.h"
 
 /* structures */
 struct invlist_node {
@@ -35,7 +34,7 @@ struct invlist {
 		char   path[MAX_PATH_LEN]; /* on-disk invlist */
 	};
 
-	size_t                   tot_sz; /* total size in memory in bytes */
+	size_t                   tot_payload_sz; /* total payload size in bytes */
 	uint32_t                 n_blk; /* total number of blocks */
 
 	struct skippy            skippy;
