@@ -264,6 +264,7 @@ static int empty_postlist_jump(void *iter, uint64_t target)
 static size_t empty_postlist_read(void *iter, void *dest, size_t sz)
 {
 	assert(0);
+	return 0;
 }
 
 static void *empty_postlist_init(void *iter)
