@@ -5,11 +5,6 @@
 
 #include "config.h"
 
-#ifdef DEBUG_POSTLIST
-#undef NDEBUG
-#else
-#define NDEBUG
-#endif
 #include <assert.h>
 
 #include "term-index/term-index.h" /* for position_t */

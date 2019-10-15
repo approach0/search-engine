@@ -15,7 +15,7 @@ static __inline__ void prbuff_bytes(void *_buf, size_t sz)
 {
 	unsigned char *buf = (unsigned char*)(_buf);
 	fprintf(stderr, "debug: sz=%lu \n", sz);
-	for (int i = 0; i < sz; i++)
+	for (size_t i = 0; i < sz; i++)
 		fprintf(stderr, "%x", 0xff & buf[i]);
 	fprintf(stderr, "\n");
 }
@@ -23,7 +23,7 @@ static __inline__ void prbuff_bytes(void *_buf, size_t sz)
 static __inline__ void prbuff_uints(unsigned int *ints, size_t n)
 {
 	fprintf(stderr, "debug: n=%u \n", n);
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < n; i++)
 		fprintf(stderr, "%u ", ints[i]);
 	fprintf(stderr, "\n");
 }
@@ -31,7 +31,7 @@ static __inline__ void prbuff_uints(unsigned int *ints, size_t n)
 static __inline__ void prbuff_uints16(unsigned short *ints, size_t n)
 {
 	fprintf(stderr, "debug: n=%u \n", n);
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < n; i++)
 		fprintf(stderr, "%u ", ints[i]);
 	fprintf(stderr, "\n");
 }
