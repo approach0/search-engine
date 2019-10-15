@@ -32,12 +32,12 @@ struct codec_buf_struct_info *math_codec_info()
 	info->field_info[_idx] = FIELD_INFO(struct math_invlist_item, _name, _codec); \
 	strcpy(info->field_info[_idx].name, # _name)
 
-	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR); // CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_DOCID, docID, CODEC_FOR_DELTA);
 	SET_FIELD_INFO(FI_EXPID, expID, CODEC_FOR16);
 	SET_FIELD_INFO(FI_SECT_ROOT, sect_root, CODEC_FOR16);
 	SET_FIELD_INFO(FI_SECT_WIDTH, sect_width, CODEC_FOR8);
 	SET_FIELD_INFO(FI_ORIG_WIDTH, orig_width, CODEC_FOR8);
-	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR); // CODEC_FOR_DELTA);
+	SET_FIELD_INFO(FI_OFFSET, symbinfo_offset, CODEC_FOR_DELTA);
 
 	return info;
 }
