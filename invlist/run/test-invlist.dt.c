@@ -193,7 +193,7 @@ int main()
 	system("rm -f ./run/*.bin");
 	invlist = gen_random_items("run/invlist", info, items, N);
 	test_iterator(invlist, items);
-	// test_skipping(invlist);
+	test_skipping(invlist);
 	invlist_free(invlist);
 
 	/* free structure field information */

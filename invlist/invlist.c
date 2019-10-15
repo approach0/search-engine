@@ -180,7 +180,9 @@ uint64_t invlist_iter_bufkey(struct invlist_iterator* iter, uint32_t idx)
 	/* wrap bufkey callback function with a termination check */
 	if (iter->type == INVLIST_TYPE_ONDISK) {
 		/* return max ID if iterator terminated on-disk */
-		if (skippy_fend(&iter->sfh)) return UINT64_MAX;
+		if (skippy_fend(&iter->sfh) &&
+		    (iter->if_disk_buf_read && iter->buf_idx >= iter->buf_len))
+			return UINT64_MAX;
 	} else {
 		/* return max ID if iterator terminated in-memory */
 		if (iter->cur == NULL) return UINT64_MAX;
@@ -349,7 +351,8 @@ size_t __invlist_writer_flush(struct invlist_iterator *iter)
 	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* append new in-memory block with encoded buffer */
 		struct invlist *invlist = iter->invlist;
-		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
+		struct invlist_node *node;
+		node = create_node(key, payload_sz, iter->buf_len);
 		memcpy(node->blk, enc_buf, payload_sz);
 		append_node(invlist, node, sizeof *node + payload_sz);
 		iter->cur = node;
@@ -357,7 +360,8 @@ size_t __invlist_writer_flush(struct invlist_iterator *iter)
 		invlist->tot_payload_sz += sizeof *node;
 	} else {
 		/* write new on-disk block with encoded buffer */
-		struct invlist_node *node = create_node(key, payload_sz, iter->buf_len);
+		struct invlist_node *node;
+		node = create_node(key, payload_sz, iter->buf_len);
 		memcpy(node->blk, enc_buf, payload_sz);
 
 		/* write on-disk inverted list and skip structure */
