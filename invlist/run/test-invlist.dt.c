@@ -62,7 +62,6 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	// invlist->bufkey = bufkey_64; /* set a 64-bit key map */
 
 	invlist_iter_t writer = invlist_writer(invlist);
-	
 
 	/* write a sequence of random items */
 	size_t flush_sz;
@@ -92,7 +91,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 #ifdef VERBOSE
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 #endif
-	
+
 	size_t total_size = invlist->tot_payload_sz;
 	size_t orig_size = n * sizeof(items[0]);
 	printf("compression rate: %lu / %lu = %.2f %%\n", orig_size, total_size,
