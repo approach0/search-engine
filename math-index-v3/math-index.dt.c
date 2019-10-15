@@ -381,7 +381,6 @@ static void cache_append_invlist(math_index_t index, char *path,
 	}
 
 #ifdef MATH_INDEX_SAVE_MEMO_SPACE
-	(void)invlist_writer_flush(entry->writer);
 	free_invlist_entry(entry);
 #endif
 

@@ -352,17 +352,23 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 	size_t flush_sz;
 	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* in memory */
+
 		flush_sz = __invlist_writer_flush(iter);
 	} else {
-		/* on disk, create a temporary codec buffer here */
-		iter->buf = codec_buf_alloc(iter->buf_max_len, iter->c_info);
+		/* on disk */
 
-		/* read on-disk codec buffer into temporary codec buffer */
+		/* make path string */
 		char path[MAX_PATH_LEN];
 		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+
+		/* allocate file descriptor */
 		int fd = open(path, O_CREAT | O_RDONLY, 0666);
 		assert(fd >= 0);
 
+		/* create a temporary codec buffer here */
+		iter->buf = codec_buf_alloc(iter->buf_max_len, iter->c_info);
+
+		/* read on-disk codec buffer into temporary codec buffer */
 		const size_t rd_sz = iter->c_info->struct_sz;
 		char item[rd_sz];
 		int cnt = 0;
@@ -395,6 +401,7 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 	if (iter->type == INVLIST_TYPE_INMEMO) {
 		/* in memory */
 		codec_buf_set(iter->buf, iter->buf_idx, (void*)in, iter->c_info);
+		iter->buf_idx ++;
 	} else {
 		/* write against disk to save memory here */
 		char path[MAX_PATH_LEN];
@@ -409,11 +416,12 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 		ssize_t wr_sz = write(fd, in, iter->c_info->struct_sz);
 		(void)wr_sz;
 		assert(wr_sz == iter->c_info->struct_sz);
+
+		iter->buf_idx = lseek(fd, 0, SEEK_END) / iter->c_info->struct_sz;
 		close(fd);
 	}
 
-	iter->buf_idx ++;
-	iter->buf_len ++;
+	iter->buf_len = iter->buf_idx;
 
 	return flush_sz;
 }

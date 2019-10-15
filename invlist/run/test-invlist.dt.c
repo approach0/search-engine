@@ -9,7 +9,7 @@
 
 #include <assert.h>
 
-#define N (10)
+#define N (200)
 // #define N (1000 * 128)
 
 #define SPAN 128
@@ -185,7 +185,7 @@ int main()
 	invlist_free(invlist);
 
 	/* test for on-disk inverted list */
-	system("rm -f ./run/invlist.*");
+	system("rm -f ./run/*.bin");
 	invlist = gen_random_items("run/invlist", info, items, N);
 	test_iterator(invlist, items);
 	// test_skipping(invlist);
