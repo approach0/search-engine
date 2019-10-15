@@ -100,43 +100,78 @@ static size_t refill_buffer__memo(struct invlist_iterator *iter)
 	return out_sz;
 }
 
+static size_t refill_buffer__disk_buf(struct invlist_iterator *iter)
+{
+	/* avoid further disk buffer read */
+	if (iter->if_disk_buf_read)
+		return 0;
+	iter->if_disk_buf_read = 1;
+
+	/* open disk buffer file */
+	char path[MAX_PATH_LEN];
+	sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+
+	int fd = open(path, O_CREAT | O_RDONLY, 0666);
+	if (fd < 0)
+		return 0;
+
+	/* read the file */
+	const size_t rd_sz = iter->c_info->struct_sz;
+	char item[rd_sz];
+	uint cnt = 0;
+	while (rd_sz == read(fd, item, rd_sz)) {
+		codec_buf_set(iter->buf, cnt, item, iter->c_info);
+		cnt ++;
+	}
+	close(fd);
+
+	/* updat iterator buffer length */
+	iter->buf_len = cnt;
+	return cnt * rd_sz;
+}
+
 static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 {
-	fseek(iter->lfh, offset, SEEK_SET);
-
 	size_t rd_sz, out_sz;
+
+#pragma pack(push, 1)
 	struct _head {
-		uint16_t len;
 		uint16_t size;
 	} head;
+#pragma pack(pop)
 
 	/* reset buffer in case of error */
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
 
+	/* if only consider disk buffer */
+	if (offset < 0)
+		return refill_buffer__disk_buf(iter);
+
+	fseek(iter->lfh, offset, SEEK_SET);
 	rd_sz = fread(&head, 1, sizeof head, iter->lfh);
 
 #ifdef INVLIST_DEBUG
-	printf("seek to %lu, read [len=%u, sz=%u + %lu]\n", offset,
-		head.len, head.size, sizeof head);
+	printf("seek to %lu, read [head=%u + size=%lu]\n", offset,
+		sizeof head, head.size);
 #endif
 
-	if (rd_sz != sizeof head) {
-		prerr("refill_buffer__disk head read: %u", rd_sz);
-		return 0;
-	}
+	/* if reach the end */
+	if (rd_sz != sizeof head)
+		return refill_buffer__disk_buf(iter);
 
 	char block[head.size]; /* allocate read buffer */
 	rd_sz = fread(block, 1, head.size, iter->lfh);
 	if (rd_sz != head.size) {
 		prerr("refill_buffer__disk block read: %u", rd_sz);
-		return 0;
+		return refill_buffer__disk_buf(iter);
 	}
 
+	/* decode and refill the buffer (full) */
 	codec_buf_struct_info_t *c_info = iter->c_info;
-	/* decode and refill buffer */
-	out_sz = codec_buf_decode(iter->buf, block, head.len, c_info);
-	iter->buf_len = head.len;
+	out_sz = codec_buf_decode(iter->buf, block, iter->buf_max_len, c_info);
+
+	iter->buf_len = iter->buf_max_len;
 	return out_sz;
 }
 
@@ -182,6 +217,7 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 
 	iter->cur = invlist->head;
 	iter->lfh = NULL;
+	iter->if_disk_buf_read = 0;
 
 	return iter;
 }
@@ -361,29 +397,21 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 	} else {
 		/* on disk */
 
-		/* make path string */
-		char path[MAX_PATH_LEN];
-		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
-
-		/* allocate file descriptor */
-		int fd = open(path, O_CREAT | O_RDONLY, 0666);
-		assert(fd >= 0);
-
 		/* create a temporary codec buffer here */
 		iter->buf = codec_buf_alloc(iter->buf_max_len, iter->c_info);
 
-		/* read on-disk codec buffer into temporary codec buffer */
-		const size_t rd_sz = iter->c_info->struct_sz;
-		char item[rd_sz];
-		int cnt = 0;
-		while (rd_sz == read(fd, item, rd_sz)) {
-			codec_buf_set(iter->buf, cnt, item, iter->c_info);
-			cnt ++;
-		}
-		close(fd);
+		/* fill the temporary buffer, refuse to flush when it is not full */
+		iter->if_disk_buf_read = 0; /* force refill */
+		if (refill_buffer__disk_buf(iter) >= iter->buf_max_sz) {
+			/* truncate disk buffer file */
+			char path[MAX_PATH_LEN];
+			sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+			int res = truncate(path, 0);
+			assert(-1 != res); (void)res;
 
-		/* do flush (to be compressed) */
-		flush_sz = __invlist_writer_flush(iter);
+			/* do flush (to be compressed) */
+			flush_sz = __invlist_writer_flush(iter);
+		}
 
 		/* destory temporary codec buffer */
 		codec_buf_free(iter->buf, iter->c_info);
@@ -407,7 +435,7 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 		codec_buf_set(iter->buf, iter->buf_idx, (void*)in, iter->c_info);
 		iter->buf_idx ++;
 	} else {
-		/* write against disk to save memory here */
+		/* write against a disk buffer to save memory here */
 		char path[MAX_PATH_LEN];
 		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
 
@@ -472,7 +500,7 @@ int invlist_iter_next(struct invlist_iterator* iter)
 	} else {
 		/* refill buffer from disk */
 		struct skippy_data sd = skippy_fnext(&iter->sfh, 0);
-		if (sd.key == 0) return 0;
+		if (sd.key == 0) return refill_buffer__disk(iter, -1);
 
 		refill_buffer__disk(iter, sd.child_offset);
 		return 1;
