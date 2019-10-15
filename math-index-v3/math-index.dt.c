@@ -529,7 +529,7 @@ math_index_lookup(math_index_t index, const char *key_)
 
 	/* if not there, look up from disk directory */
 	char path[MAX_PATH_LEN];
-	sprintf(path, "%s/%s/%s.bin", index->dir, key_, MINVLIST_FNAME);
+	sprintf(path, "%s/%s/%s.bin", index->dir, key_, SYMBINFO_FNAME);
 
 	if (file_exists(path)) {
 		sprintf(path, "%s/%s", index->dir, key_);
