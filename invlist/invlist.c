@@ -107,6 +107,10 @@ static size_t refill_buffer__disk_buf(struct invlist_iterator *iter)
 		return 0;
 	iter->if_disk_buf_read = 1;
 
+	/* reset buffer first, in case of error */
+	iter->buf_idx = 0;
+	iter->buf_len = 0;
+
 	/* open disk buffer file */
 	char path[MAX_PATH_LEN];
 	sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
@@ -132,22 +136,17 @@ static size_t refill_buffer__disk_buf(struct invlist_iterator *iter)
 
 static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 {
-	size_t rd_sz, out_sz;
+	/* reset buffer first, in case of error */
+	iter->buf_idx = 0;
+	iter->buf_len = 0;
 
+	/* seek to the offset and read the block header */
+	size_t rd_sz, out_sz;
 #pragma pack(push, 1)
 	struct _head {
 		uint16_t size;
 	} head;
 #pragma pack(pop)
-
-	/* reset buffer in case of error */
-	iter->buf_idx = 0;
-	iter->buf_len = 0;
-
-	/* if only consider disk buffer */
-	if (offset < 0)
-		return refill_buffer__disk_buf(iter);
-
 	fseek(iter->lfh, offset, SEEK_SET);
 	rd_sz = fread(&head, 1, sizeof head, iter->lfh);
 
@@ -160,6 +159,7 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	if (rd_sz != sizeof head)
 		return refill_buffer__disk_buf(iter);
 
+	/* read the block payload */
 	char block[head.size]; /* allocate read buffer */
 	rd_sz = fread(block, 1, head.size, iter->lfh);
 	if (rd_sz != head.size) {
@@ -500,7 +500,7 @@ int invlist_iter_next(struct invlist_iterator* iter)
 	} else {
 		/* refill buffer from disk */
 		struct skippy_data sd = skippy_fnext(&iter->sfh, 0);
-		if (sd.key == 0) return refill_buffer__disk(iter, -1);
+		if (sd.key == 0) return refill_buffer__disk_buf(iter);
 
 		refill_buffer__disk(iter, sd.child_offset);
 		return 1;
