@@ -169,9 +169,11 @@ int main(int argc, char* argv[])
 	httpd_run(port, handlers,
 		sizeof handlers / sizeof(struct uri_handler), indexer);
 
+	/* one last maintaining */
+	consider_index_maintain(indexer, 1);
+
 	/* free resources */
 	printf("closing index...\n");
-	consider_index_maintain(indexer, 1);
 	indexer_free(indexer);
 	indices_close(&indices);
 	printf("\n");
