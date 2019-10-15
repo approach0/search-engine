@@ -429,6 +429,7 @@ static struct invlist *fork_invlist(struct invlist *disk)
 		/* read item from disk */
 		struct math_invlist_item item;
 		invlist_iter_read(iter, &item);
+
 		/* write item to memory */
 		invlist_writer_write(memo_writer, &item);
 	}
@@ -460,7 +461,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 	/* is this directory empty? */
 	char test_path[MAX_PATH_LEN];
-	sprintf(test_path, "%s/%s.bin", path, MINVLIST_FNAME);
+	sprintf(test_path, "%s/%s.bin", path, SYMBINFO_FNAME);
 	if (!file_exists(test_path) /* no inverted list here */)
 		return DS_RET_CONTINUE;
 

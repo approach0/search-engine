@@ -47,6 +47,10 @@ static FILE *invlist_fopen(const char *path, const char *mode, long *len)
 	sprintf(invlist_path, "%s" ".bin", path);
 
 	FILE *fh = fopen(invlist_path, mode);
+	if (fh == NULL) {
+		if (len != NULL) {*len = 0;}
+		return NULL;
+	}
 
 	if (len != NULL) {
 		int fd = fileno(fh);
@@ -64,9 +68,24 @@ int invlist_empty(struct invlist* invlist)
 	if (invlist->type == INVLIST_TYPE_INMEMO) {
 		return (invlist->head == NULL);
 	} else {
-		long len;
-		fclose(invlist_fopen(invlist->path, "r", &len));
-		return (len == 0);
+		char buf_path[MAX_PATH_LEN];
+		long len_main, size_buf_file = 0;
+		FILE *fh;
+
+		/* get main inverted list length */
+		fh = invlist_fopen(invlist->path, "r", &len_main);
+		if (fh) fclose(fh);
+
+		/* get on-disk buffer file length */
+		sprintf(buf_path, "%s-%s.bin", invlist->path, INVLIST_DISK_CODECBUF_NAME);
+		fh = fopen(buf_path, "r");
+		if (fh) {
+			fseek(fh, 0, SEEK_END);
+			size_buf_file = ftell(fh);
+		}
+		if (fh) fclose(fh);
+
+		return (len_main == 0 && size_buf_file == 0);
 	}
 }
 
@@ -136,6 +155,9 @@ static size_t refill_buffer__disk_buf(struct invlist_iterator *iter)
 
 static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 {
+	if (iter->lfh == NULL) /* when no main inverted list exists */
+		return refill_buffer__disk_buf(iter);
+
 	/* reset buffer first, in case of error */
 	iter->buf_idx = 0;
 	iter->buf_len = 0;
@@ -210,7 +232,7 @@ static invlist_iter_t base_iterator(struct invlist *invlist)
 	iter->buf_len = 0;
 	iter->invlist = invlist;
 	iter->type = invlist->type;
-	iter->path = strdup(invlist->path);
+	iter->path = invlist->path ? strdup(invlist->path) : NULL;
 	iter->buf_max_len = invlist->buf_max_len;
 	iter->buf_max_sz  = invlist->buf_max_sz;
 
@@ -248,12 +270,15 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 	} else {
 		/* a on-disk invlist */
 		iter->lfh = invlist_fopen(iter->path, "r", NULL);
-		assert(iter->lfh != NULL);
 
-		int error = skippy_fopen(&iter->sfh, iter->path, "r",
-			iter->buf_max_len /* skippy span the same as buffer length */);
-		assert(!error); (void)error;
-		(void)skippy_fnext(&iter->sfh, 0);
+		/* when only disk buffer file exists, we have invalid lfh and sfh */
+		if (iter->lfh == NULL) {
+			/* open skippy structure */
+			int error = skippy_fopen(&iter->sfh, iter->path, "r",
+				iter->buf_max_len /* set skippy span = block length */);
+			assert(!error); (void)error;
+			(void)skippy_fnext(&iter->sfh, 0);
+		}
 
 		refill_buffer__disk(iter, 0);
 	}
@@ -272,7 +297,9 @@ void invlist_iter_free(struct invlist_iterator *iter)
 	if (iter->buf)
 		codec_buf_free(iter->buf, iter->c_info);
 
-	free(iter->path);
+	if (iter->path) /* path can be NULL for in-memory iterator */
+		free(iter->path);
+
 	free(iter);
 }
 
