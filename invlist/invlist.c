@@ -148,6 +148,10 @@ static size_t refill_buffer__disk_buf(struct invlist_iterator *iter)
 	}
 	close(fd);
 
+#ifdef INVLIST_DEBUG
+	printf("seek to buffer file, read [size= %u * %u]\n", cnt, rd_sz);
+#endif
+
 	/* updat iterator buffer length */
 	iter->buf_len = cnt;
 	return cnt * rd_sz;
@@ -272,7 +276,7 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 		iter->lfh = invlist_fopen(iter->path, "r", NULL);
 
 		/* when only disk buffer file exists, we have invalid lfh and sfh */
-		if (iter->lfh == NULL) {
+		if (NULL != iter->lfh) {
 			/* open skippy structure */
 			int error = skippy_fopen(&iter->sfh, iter->path, "r",
 				iter->buf_max_len /* set skippy span = block length */);
@@ -347,7 +351,7 @@ ondisk_invlist_block_writer(struct skippy_node *blk_, void *args_)
 	sd.child_offset = ftell(fh);
 
 #ifdef INVLIST_DEBUG
-	printf("seek to %lu, write [head=%u + size=%lu]\n", offset,
+	printf("seek to %lu, write [head=%u + size=%lu]\n", sd.child_offset,
 		sizeof node->size, node->size);
 #endif
 
