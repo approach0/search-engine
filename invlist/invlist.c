@@ -255,8 +255,21 @@ invlist_iter_t invlist_writer(struct invlist *invlist)
 {
 	invlist_iter_t iter = base_iterator(invlist);
 
-	if (invlist->type == INVLIST_TYPE_INMEMO)
+	if (invlist->type == INVLIST_TYPE_INMEMO) {
 		iter->buf = codec_buf_alloc(invlist->buf_max_len, invlist->c_info);
+	} else {
+		/* get the size of disk buffer file */
+		char path[MAX_PATH_LEN];
+		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+		int fd = open(path, O_CREAT | O_RDONLY, 0666);
+		assert(fd >= 0);
+		off_t file_sz = lseek(fd, 0, SEEK_END);
+		close(fd);
+
+		/* set buf_idx so that invlist_writer_write() shall work correctly. */
+		iter->buf_idx = file_sz / iter->c_info->struct_sz;
+		iter->buf_len = iter->buf_idx;
+	}
 
 	return iter;
 }
@@ -437,6 +450,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 
 		/* fill the temporary buffer, refuse to flush when it is not full */
 		iter->if_disk_buf_read = 0; /* force refill */
+
 		if (refill_buffer__disk_buf(iter) >= iter->buf_max_sz) {
 			/* truncate disk buffer file */
 			char path[MAX_PATH_LEN];
@@ -445,6 +459,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 			assert(-1 != res); (void)res;
 
 			/* do flush (to be compressed) */
+			// codec_buf_print(iter->buf, iter->buf_max_len, iter->c_info);
 			flush_sz = __invlist_writer_flush(iter);
 		}
 
@@ -474,17 +489,14 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 		char path[MAX_PATH_LEN];
 		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
 
-		int fd;
-		if (iter->buf_idx == 0)
-			fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0666);
-		else
-			fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
+		int fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
 		assert(fd >= 0);
 		ssize_t wr_sz = write(fd, in, iter->c_info->struct_sz);
 		(void)wr_sz;
 		assert(wr_sz == iter->c_info->struct_sz);
 
-		iter->buf_idx = lseek(fd, 0, SEEK_END) / iter->c_info->struct_sz;
+		off_t file_sz = lseek(fd, 0, SEEK_END);
+		iter->buf_idx = file_sz / iter->c_info->struct_sz;
 		close(fd);
 	}
 
