@@ -145,7 +145,10 @@ test_skipping(struct invlist *invlist)
 			printf("\n JUMP TO \n");
 			key = invlist_iter_bufkey(iter, iter->buf_idx);
 			printf("[%14lu]: ", key);
-			print_item(&item);
+			if (key == UINT64_MAX)
+				printf(" (the end)\n");
+			else
+				print_item(&item);
 		}
 	}
 }
@@ -172,7 +175,7 @@ int main()
 	/* test for in-memory inverted list */
 	invlist = gen_random_items(NULL, info, items, N);
 	test_iterator(invlist, items);
-//	test_skipping(invlist);
+	test_skipping(invlist);
 	invlist_free(invlist);
 
 	/* test for on-disk inverted list */

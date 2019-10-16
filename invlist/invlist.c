@@ -535,7 +535,14 @@ int invlist_iter_next(struct invlist_iterator* iter)
 	} else {
 		/* refill buffer from disk */
 		struct skippy_data sd = skippy_fnext(&iter->sfh, 0);
-		if (sd.key == 0) return refill_buffer__disk_buf(iter);
+		if (sd.key == 0) {
+			if (iter->if_disk_buf_read) {
+				iter->buf_idx = iter->buf_len;
+				return 0;
+			} else {
+				return refill_buffer__disk_buf(iter);
+			}
+		}
 
 		refill_buffer__disk(iter, sd.child_offset);
 		return 1;

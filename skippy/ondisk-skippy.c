@@ -148,8 +148,8 @@ struct skippy_data skippy_fskip(struct skippy_fh *sfh, uint64_t key)
 	int level = ON_DISK_SKIPPY_LEVELS - 1;
 
 	while (level >= 0) {
-		// printf("[skipping] level= %d\n", level);
-		// skippy_fh_buf_print(sfh);
+//		printf("[skipping] level= %d\n", level);
+//		skippy_fh_buf_print(sfh);
 
 		long next = peek_next_key(sfh, level);
 
