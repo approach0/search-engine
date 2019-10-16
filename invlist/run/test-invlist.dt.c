@@ -35,18 +35,6 @@ enum {
 	FI_OFFSET
 };
 
-static uint64_t
-bufkey_64(struct invlist_iterator* iter, uint32_t idx)
-{
-	uint32_t key[2];
-	codec_buf_struct_info_t *c_info = iter->c_info;
-
-	CODEC_BUF_GET(key[0], iter->buf, 1, idx, c_info);
-	CODEC_BUF_GET(key[1], iter->buf, 0, idx, c_info);
-
-	return *(uint64_t*)key;
-}
-
 static void print_item(struct math_invlist_item *item)
 {
 	printf("#%u, #%u, w%u, w%u, o%u\n", item->docID, item->secID,
@@ -59,7 +47,6 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 {
 	/* create invert list and iterator */
 	struct invlist *invlist = invlist_open(path, SPAN, info);
-	// invlist->bufkey = bufkey_64; /* set a 64-bit key map */
 
 	invlist_iter_t writer = invlist_writer(invlist);
 
@@ -143,7 +130,7 @@ test_skipping(struct invlist *invlist)
 	scanf("%lu, %lu", &from, &to);
 
 	foreach (iter, invlist, invlist) {
-		uint64_t key = iter->bufkey(iter, iter->buf_idx);
+		uint64_t key = invlist_iter_bufkey(iter, iter->buf_idx);
 		if (key == from) {
 			struct math_invlist_item item;
 
@@ -156,7 +143,7 @@ test_skipping(struct invlist *invlist)
 
 			invlist_iter_read(iter, &item);
 			printf("\n JUMP TO \n");
-			key = iter->bufkey(iter, iter->buf_idx);
+			key = invlist_iter_bufkey(iter, iter->buf_idx);
 			printf("[%14lu]: ", key);
 			print_item(&item);
 		}
