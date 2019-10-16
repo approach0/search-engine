@@ -5,15 +5,6 @@
 
 int main()
 {
-	/* simple test */
-//	const char *test[] = {
-//		"ab",             // expID = 0
-//		"a+k(b+c)",       // expID = 1
-//		"a+bc+xy",        // expID = 2
-//		"a(b+cd)",        // expID = 3
-//		"\\sqrt{pq + m}", // expID = 4
-//	};
-
 	/* prefix match test */
 //	const char *test[] = {
 //		"\\qvar{a} + \\qvar{b}"
@@ -39,9 +30,14 @@ int main()
 //		"2+\\cfrac{3}{4+\\cfrac{5}{6+\\cfrac{7}{8 +\\ddots}}}"
 //	};
 
-	/* sector trees */
+	/* default test */
 	const char *test[] = {
-		"pq + 1",
+		"ab",             // expID = 0
+		"a+k(b+c)",       // expID = 1
+		"a+bc+xy",        // expID = 2
+		"a(b+cd)",        // expID = 3
+		"\\sqrt{pq + m}", // expID = 4
+		"pq + 1",         // expID = 5
 		"x + x + x +z + z + (a + a + b) c"
 	};
 
@@ -56,6 +52,7 @@ int main()
 		return 1;
 	}
 
+	for (int n = 0; n < 200; n++) {
 	for (int i = 0; i < sizeof(test) / sizeof(char*); i++) {
 		printf("add: `%s' as experssion#%u\n", test[i], expID);
 		parse_ret = tex_parse(test[i], 0, true, false);
@@ -69,12 +66,15 @@ int main()
 			subpaths_print(&parse_ret.subpaths, stdout);
 
 			/* index the tex */
+			size_t flush_sz =
 			math_index_add(index, docID, expID, parse_ret.subpaths);
+			prinfo("flush %lu byte(s)\n", flush_sz);
 			subpaths_release(&parse_ret.subpaths);
 			expID ++;
 		} else {
 			printf("parser error: %s\n", parse_ret.msg);
 		}
+	}
 	}
 
 	math_index_flush(index);

@@ -281,9 +281,10 @@ dict_entry_size(struct codec_buf_struct_info *cinfo, size_t str_len)
 	return tot_sz;
 }
 
-static void cache_append_invlist(math_index_t index, char *path,
+static size_t cache_append_invlist(math_index_t index, char *path,
 	struct subpath_ele *ele, doc_id_t docID, exp_id_t expID, uint32_t width)
 {
+	size_t flush_payload = 0;
 	struct math_invlist_entry *entry = NULL;
 
 	/* create a temporary entry */
@@ -317,8 +318,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 #endif
 
 		/* write sector tree structure */
-		size_t flush_sz = invlist_writer_write(writer, &item);
-		(void)flush_sz;
+		flush_payload = invlist_writer_write(writer, &item);
 
 		/* prepare symbinfo structure */
 		symbinfo.ophash = secttr.ophash;
@@ -336,7 +336,7 @@ static void cache_append_invlist(math_index_t index, char *path,
 #endif
 
 		/* write symbinfo structure, update offset by written bytes */
-		fwrite(&symbinfo, 1, sizeof symbinfo, fh_symbinfo);
+		flush_payload += fwrite(&symbinfo, 1, sizeof symbinfo, fh_symbinfo);
 
 		/* update frequency statistics */
 		entry->pf ++;
@@ -353,12 +353,16 @@ static void cache_append_invlist(math_index_t index, char *path,
 	/* close files to save OS file descriptor space */
 	fclose(fh_symbinfo);
 	fclose(fh_pf);
+
+	return flush_payload;
 }
 
-static void add_subpath_set(math_index_t index, linkli_t set,
-                            doc_id_t docID, exp_id_t expID, uint32_t width)
+static size_t
+add_subpath_set(math_index_t index, linkli_t set,
+                doc_id_t docID, exp_id_t expID, uint32_t width)
 {
 	const char *root_path = index->dir;
+	size_t flush_sz = 0;
 	foreach (iter, li, set) {
 		char path[MAX_DIR_PATH_NAME_LEN] = "";
 		char *p = path;
@@ -382,22 +386,25 @@ static void add_subpath_set(math_index_t index, linkli_t set,
 #endif
 		mkdir_p(path);
 
+		flush_sz +=
 		cache_append_invlist(index, path, ele, docID, expID, width);
 	}
+
+	return flush_sz;
 }
 
-int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
-                   struct subpaths subpaths)
+size_t math_index_add(math_index_t index,
+	doc_id_t docID, exp_id_t expID, struct subpaths subpaths)
 {
 	if (index->mode[0] != 'w') {
 		prerr("math_index_add needs writing permission.\n");
-		return 1;
+		return 0;
 	}
 
 	if (subpaths.n_lr_paths > MAX_MATH_PATHS) {
 		prerr("too many subpaths (%lu > %lu), abort.\n",
 			subpaths.n_lr_paths, MAX_MATH_PATHS);
-		return 1;
+		return 0;
 	}
 
 	linkli_t set = subpath_set(subpaths, SUBPATH_SET_DOC);
@@ -410,12 +417,13 @@ int math_index_add(math_index_t index, doc_id_t docID, exp_id_t expID,
 	print_subpath_set(set);
 #endif
 
+	size_t flush_sz =
 	add_subpath_set(index, set, docID, expID, subpaths.n_lr_paths);
 
 	index->stats.n_tex ++;
 
 	li_free(set, struct subpath_ele, ln, free(e));
-	return 0;
+	return flush_sz;
 }
 
 static struct invlist *fork_invlist(struct invlist *disk)
