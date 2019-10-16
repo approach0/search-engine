@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/common.h"
 #include "codec/codec.h"
 #include "codec-buf.h"
 
@@ -91,4 +92,38 @@ size_t codec_buf_decode(void **dest, void *src, uint n,
 	}
 
 	return (uintptr_t)((void*)s - src);
+}
+
+void codec_buf_struct_info_print(struct codec_buf_struct_info *info)
+{
+	printf("[ %s=%lu, %s=%u ]\n", STRVAR_PAIR(info->struct_sz),
+		STRVAR_PAIR(info->n_fields));
+	for (int j = 0; j < info->n_fields; j++) {
+		struct field_info f_info = info->field_info[j];
+		printf("%s, %s: %s=%u, %s=%u, %s=%u, %s=%u\n",
+			f_info.name,
+			codec_method_str(f_info.codec->method),
+			STRVAR_PAIR(f_info.offset),
+			STRVAR_PAIR(f_info.sz),
+			STRVAR_PAIR(f_info.logsz),
+			STRVAR_PAIR(f_info.logints)
+		);
+	}
+}
+
+void codec_buf_print(void **buf, uint n, struct codec_buf_struct_info *info)
+{
+	if (buf == NULL) {
+		printf("buf = NULL\n");
+		return;
+	}
+
+	for (int j = 0; j < info->n_fields; j++) {
+		struct field_info f_info = info->field_info[j];
+		printf("buf[%s] data \n", f_info.name);
+		if (buf[j])
+			prbuff_bytes(buf[j], n * f_info.sz);
+		else
+			printf("nil\n");
+	}
 }

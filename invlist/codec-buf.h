@@ -52,3 +52,6 @@ void codec_buf_set(void **, uint, void*, struct codec_buf_struct_info*);
 
 size_t codec_buf_encode(void*, void **, uint, struct codec_buf_struct_info*);
 size_t codec_buf_decode(void **, void*, uint, struct codec_buf_struct_info*);
+
+void codec_buf_struct_info_print(struct codec_buf_struct_info*);
+void codec_buf_print(void **, uint, struct codec_buf_struct_info*);
