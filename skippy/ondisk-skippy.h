@@ -1,4 +1,4 @@
-#if 0
+#if 1
 /* test config */
 #define ON_DISK_SKIPPY_LEVELS 3
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
@@ -12,12 +12,10 @@
 #define ON_DISK_SKIPPY_BUF_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
 #endif
 
-#pragma pack(push, 1)
 struct skippy_data {
 	uint64_t key;
 	long     child_offset;
 };
-#pragma pack(pop)
 
 struct skippy_fh {
 	/* book keeping */
@@ -42,6 +40,7 @@ void skippy_fflush(struct skippy_fh*);
 
 int skippy_fend(struct skippy_fh*);
 
+struct skippy_data skippy_fcur(struct skippy_fh*, int);
 struct skippy_data skippy_fnext(struct skippy_fh*, int);
 struct skippy_data skippy_fskip(struct skippy_fh*, uint64_t);
 

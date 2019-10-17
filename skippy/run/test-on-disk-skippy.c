@@ -55,11 +55,13 @@ void test_write(struct skippy *skippy)
 
 	struct skippy_fh sfh;
 	do {
+		printf("writing ...\n");
 		if (skippy_fopen(&sfh, "test", "a", ON_DISK_SKIPPY_SKIPPY_SPANS))
 			break;
 		skippy_fwrite(&sfh, skippy->head[0], test_block_write_hook, fh);
 		skippy_fclose(&sfh);
 
+		printf("read written skippy structure ...\n");
 		if (skippy_fopen(&sfh, "test", "r", ON_DISK_SKIPPY_SKIPPY_SPANS))
 			break;
 		/* print file content */
@@ -83,9 +85,8 @@ void test_next_iterator()
 		skippy_fprint(&sfh);
 		printf("\n");
 
-		do {
-			struct skippy_data sd = skippy_fnext(&sfh, 0);
-			if (0 == sd.key) break;
+		while (!skippy_fend(&sfh)) {
+			struct skippy_data sd = skippy_fcur(&sfh, 0);
 			skippy_fh_buf_print(&sfh);
 
 			size_t sz;
@@ -96,7 +97,10 @@ void test_next_iterator()
 				buf[sz] = '\0';
 				printf("<<%s>>\n", buf);
 			}
-		} while (1);
+			printf("\n");
+
+			skippy_fnext(&sfh, 0);
+		}
 
 		skippy_fclose(&sfh);
 	} while (0);
@@ -114,15 +118,16 @@ void test_jump_iterator()
 		skippy_fprint(&sfh);
 		printf("\n");
 
-		uint64_t from = 916, to = 2500;
+		//uint64_t from = 916, to = 2500; // test termination
+		uint64_t from = 81, to = 655; // test normal jump
 
 //		printf("enter from, to ...\n");
 //		scanf("%lu, %lu", &from, &to);
 		printf("\n");
 		printf("from %lu to %lu:\n", from, to);
-		do {
-			struct skippy_data sd = skippy_fnext(&sfh, 0);
-			if (0 == sd.key) break;
+
+		while (!skippy_fend(&sfh)) {
+			struct skippy_data sd = skippy_fcur(&sfh, 0);
 
 			if (sd.key == from) {
 				printf("\n FROM \n");
@@ -136,7 +141,9 @@ void test_jump_iterator()
 				skippy_fskip(&sfh, to);
 				skippy_fh_buf_print(&sfh);
 			}
-		} while (1);
+
+			skippy_fnext(&sfh, 0);
+		}
 
 		skippy_fclose(&sfh);
 	} while (0);

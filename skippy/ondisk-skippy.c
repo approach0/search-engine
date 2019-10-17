@@ -8,27 +8,39 @@
 #include "skippy.h"
 #include "ondisk-skippy.h"
 
-static long frebuf(struct skippy_fh *sfh, int level)
+/* Circular buffer of on-disk skippy, explained.
+ *
+ * The first (rebuf-ed) state:
+ *   s                   e
+ * [-1] [0] [1] [2] ... [5]
+ * where start position `s' is empty and has a negative offset
+ * to the real file beginning, and end `e' is an unstable position
+ * because the next of which is unavailable.
+ *
+ * After the next rebuf (i.e., the next frame), the state then
+ * looks like:
+ *                       e
+ * [5] [6] [7] [8] ... [11]
+ * where the first position becomes the end one in previous state.
+ */
+
+static void frebuf(struct skippy_fh *sfh, int level)
 {
 	FILE *fh = sfh->fh[level];
 	size_t *cur = sfh->buf_cur + level;
 	size_t *end = sfh->buf_end + level;
+	long   *offset = sfh->cur_offset + level;
 	struct skippy_data *buf = sfh->buf[level];
-	long cur_offset = ftell(fh) - sizeof(struct skippy_data);
 
-	buf[0] = buf[*cur];
+	/* update current pointer and offset (offset can be negative as in
+	 * the start position) */
+	*cur = 0;
+	*offset = ftell(fh) - sizeof(struct skippy_data);
+
+	/* next frame of the circular buffer */
+	buf[*cur] = buf[*end];
 	*end = fread(buf + 1, sizeof(struct skippy_data),
 	             ON_DISK_SKIPPY_BUF_LEN - 1, fh);
-	return cur_offset;
-}
-
-static void frst_buf(struct skippy_fh *sfh, int level)
-{
-	sfh->buf[level][0].key = 0;
-	sfh->buf[level][0].child_offset = 0;
-	sfh->buf_cur[level] = 0;
-	sfh->buf_end[level] = 0;
-	sfh->cur_offset[level] = frebuf(sfh, level);
 }
 
 static void level_buf_print(struct skippy_fh *sfh, int level)
@@ -42,6 +54,7 @@ static void level_buf_print(struct skippy_fh *sfh, int level)
 			printf("[#%lu,@%lu] ", buf[i].key, buf[i].child_offset);
 		else
 			printf(" #%lu,@%lu  ", buf[i].key, buf[i].child_offset);
+	printf(" [%lu / %lu] ", cur, end);
 }
 
 void skippy_fh_buf_print(struct skippy_fh *sfh)
@@ -54,15 +67,32 @@ void skippy_fh_buf_print(struct skippy_fh *sfh)
 	}
 }
 
+static long fbuf_seek(struct skippy_fh *sfh, int level, long offset)
+{
+	FILE *fh = sfh->fh[level];
+
+	/* seek to specified offset and do rebuf */
+	fseek(fh, offset, SEEK_SET);
+	frebuf(sfh, level);
+
+	/* at this point the first position is unknown. */
+	sfh->buf[level][0].key = 0;
+	sfh->buf[level][0].child_offset = 0;
+
+	/* advance one step to be positioned at a valid start.
+	 * (after advance, the first position should not be used) */
+	skippy_fnext(sfh, level);
+	return 0;
+}
+
 int skippy_fopen(struct skippy_fh *sfh, const char *path,
                  const char *mode, int n_spans)
 {
 	char fullname[ON_DISK_SKIPPY_LEVELS][MAX_DIR_PATH_NAME_LEN];
 	int fail_cnt = 0;
 
-	memset(sfh, 0, sizeof(struct skippy_fh));
+	sfh->n_spans = n_spans; /* set span */
 
-	sfh->n_spans = n_spans;
 	for (int i = 0; i < ON_DISK_SKIPPY_LEVELS; i++) {
 		/* set fh */
 		FILE *fh;
@@ -79,8 +109,11 @@ int skippy_fopen(struct skippy_fh *sfh, const char *path,
 		sfh->len[i] = ftell(fh) / sizeof(struct skippy_data);
 		rewind(fh);
 
-		/* reset reader buf */
-		frst_buf(sfh, i);
+		/* setup start position (only used for reader) */
+		if (mode[0] == 'r') {
+			sfh->buf_end[i] = 0;
+			fbuf_seek(sfh, i, 0);
+		}
 	}
 
 	return fail_cnt;
@@ -96,7 +129,7 @@ int skippy_fend(struct skippy_fh *sfh)
 {
 	size_t cur = sfh->buf_cur[0];
 	size_t end = sfh->buf_end[0];
-	return (cur > end);
+	return (cur > end); /* termination state */
 }
 
 struct skippy_data skippy_fnext(struct skippy_fh *sfh, int level)
@@ -106,19 +139,26 @@ struct skippy_data skippy_fnext(struct skippy_fh *sfh, int level)
 	long   *cur_offset = sfh->cur_offset + level;
 	struct skippy_data *buf = sfh->buf[level];
 
+	/* advance */
 	(*cur) += 1;
 	(*cur_offset) += sizeof(struct skippy_data);
 
 	if (*cur > end) {
-		/* passed the final one */
+		/* passed the final one, i.e., termination state */
 		return ((struct skippy_data){0, 0});
 	} else if (*cur == end) {
 		/* unstable state (next one unavailable) */
 		frebuf(sfh, level);
-		*cur = 0;
 	}
 
 	return buf[*cur];
+}
+
+struct skippy_data skippy_fcur(struct skippy_fh *sfh, int level)
+{
+	size_t cur = sfh->buf_cur[level];
+	struct skippy_data *buf = sfh->buf[level];
+	return buf[cur];
 }
 
 static long peek_next_key(struct skippy_fh *sfh, int level)
@@ -133,16 +173,7 @@ static long peek_next_key(struct skippy_fh *sfh, int level)
 		return buf[cur + 1].key;
 }
 
-static long fbuf_seek(struct skippy_fh *sfh, int level, long offset)
-{
-	FILE *fh = sfh->fh[level];
-	fseek(fh, offset, SEEK_SET);
-
-	frst_buf(sfh, level);
-	skippy_fnext(sfh, level);
-	return 0;
-}
-
+/* skip to the skippy data who is just less than or equal to `key' */
 struct skippy_data skippy_fskip(struct skippy_fh *sfh, uint64_t key)
 {
 	int level = ON_DISK_SKIPPY_LEVELS - 1;
@@ -160,6 +191,7 @@ struct skippy_data skippy_fskip(struct skippy_fh *sfh, uint64_t key)
 			struct skippy_data *buf = sfh->buf[level];
 			long offset = buf[cur].child_offset;
 
+			/* the lower level (child) advances to child_offset */
 			if (level > 0 && offset > sfh->cur_offset[level - 1])
 				fbuf_seek(sfh, level - 1, offset);
 
@@ -182,6 +214,7 @@ level_write(struct skippy_fh *sfh, int level, uint64_t key, long pay_offset)
 	} else {
 		/* other levels depend on lower level */
 		len = sfh->len[level - 1];
+		/* for writer, we avoid using cur_offset */
 		child_offset = (len - 1) * sizeof(struct skippy_data);
 	}
 
