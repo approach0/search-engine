@@ -9,9 +9,8 @@
 
 #include <assert.h>
 
-// #define N (30)
-#define N (300)
-// #define N (1000 * 128)
+#define N (30)
+// #define N (300)
 
 #define SPAN 128
 #define VERBOSE

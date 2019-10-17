@@ -1,4 +1,4 @@
-#if 1
+#if 0
 /* test config */
 #define ON_DISK_SKIPPY_LEVELS 3
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2

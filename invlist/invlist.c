@@ -294,7 +294,6 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 			int error = skippy_fopen(&iter->sfh, iter->path, "r",
 				iter->buf_max_len /* set skippy span = block length */);
 			assert(!error); (void)error;
-			(void)skippy_fnext(&iter->sfh, 0);
 		}
 
 		refill_buffer__disk(iter, 0);
