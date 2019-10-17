@@ -297,16 +297,20 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 	foreach (iter, li, set) {
 		int i, j, k;
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+		/* for each sector tree root of this element */
 		for (i = 0; i < ele->n_sects; i++) {
 			ele->n_splits[i] = 0;
 			uint32_t rootID = ele->secttr[i].rootID;
 
+			/* for each path root-end node of this element */
 			for (j = 0; j <= ele->dup_cnt; j++) {
+				/* if they are the same ID */
 				if (ele->rid[j] == rootID) {
 					/* this path belongs to this sector tree */
 					uint32_t path_id = ele->dup[j]->path_id;
 					uint16_t lf_symb = ele->dup[j]->lf_symbol_id;
 
+					/* find an existing slot for this symbol */
 					for (k = 0; k < ele->n_splits[i]; k++) {
 						if (lf_symb == ele->symbol[i][k]) {
 							ele->splt_w[i][k] += 1;
@@ -314,6 +318,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 							break;
 						}
 					}
+					/* if not found, append a new slot */
 					if (k == ele->n_splits[i]) {
 						uint32_t n = ele->n_splits[i];
 						ele->symbol[i][n] = lf_symb;
