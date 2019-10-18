@@ -58,11 +58,12 @@ void term_index_close(void *handle)
 	/* free Indri index iteself */
 	struct term_index *ti = (struct term_index*)handle;
 	ti->repo.close();
-	delete ti;
 
 	/* free text index cache */
-	if (ti->trp_root)
-		term_index_cache_free(ti);
+	term_index_cache_free(ti);
+
+	/* free term index structure */
+	delete ti;
 }
 
 int term_index_maintain(void *handle)

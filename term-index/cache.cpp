@@ -148,11 +148,14 @@ void term_index_cache_free(void *index_)
 {
 	P_CAST(index, struct term_index, index_);
 	/* free codec info */
-	codec_buf_struct_info_free(index->cinfo);
+	if (index->cinfo)
+		codec_buf_struct_info_free(index->cinfo);
 
 	/* free treap entries */
-	bintr_foreach((struct bintr_node **)&index->trp_root,
-	              &bintr_postorder, &free_cache_entry, index_);
+	if (index->trp_root) {
+		bintr_foreach((struct bintr_node **)&index->trp_root,
+			&bintr_postorder, &free_cache_entry, index_);
+	}
 
 	/* reset memory usage */
 	index->memo_usage = 0;
