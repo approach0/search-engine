@@ -15,6 +15,15 @@ int score_inspect_filter(doc_id_t, struct indices*);
 #endif
 void math_l2_cur_print(struct math_l2_postlist*, uint64_t, float);
 
+int math_l2_postlist_contain_wildcards(struct math_l2_postlist* po)
+{
+	for (int i = 0; i < po->pols.n; i++) {
+		if (po->path_type[i] == MATH_PATH_TYPE_GENER)
+			return 1;
+	}
+	return 0;
+}
+
 void math_l2_postlist_print(struct math_l2_postlist* po)
 {
 	char path_str[MAX_DIR_PATH_NAME_LEN];
@@ -145,6 +154,11 @@ math_l2_postlist(
 	po.indices = indices;
 	po.rk_res = rk_res;
 	po.theta = theta;
+
+	/* flag wildcards */
+	po.contain_wildcards = math_l2_postlist_contain_wildcards(&po);
+	if (po.contain_wildcards)
+		printf("wildcards math.\n");
 
 	return po;
 }

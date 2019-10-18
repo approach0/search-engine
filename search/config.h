@@ -32,10 +32,10 @@
 // #define DEBUG_HIT_SCORE_INSPECT /* particular docID scoring inspect */
 // #define DEBUG_PRINT_QRY_STRUCT
 
-#define STRATEGY_NONE
+// #define STRATEGY_NONE
 // #define STRATEGY_MAXREF
 // #define STRATEGY_GBP_NUM
-// #define STRATEGY_GBP_LEN
+#define STRATEGY_GBP_LEN
 
 // #define DEBUG_MATH_SKIP_SET_SELECTION
 

@@ -20,6 +20,8 @@ struct math_l2_postlist {
 	enum math_posting_type path_type[MAX_MERGE_POSTINGS];
 	struct subpath_ele *ele[MAX_MERGE_POSTINGS];
 
+	int contain_wildcards;
+
 	struct math_qry_struct *mqs;
 	struct indices *indices /* for debug */;
 	ranked_results_t *rk_res;

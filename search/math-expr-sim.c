@@ -292,7 +292,8 @@ math_l2_postlist_precise_score(struct math_l2_postlist *po,
 #endif
 
 	/* get precise structure match width */
-	// widest->width = __builtin_popcountll(match.qry_paths);
+	if (po->contain_wildcards)
+		widest->width = __builtin_popcountll(match.qry_paths);
 
 #ifdef HIGHLIGHT_MATH_ALIGNMENT
 	widest->qmask = match.qry_paths;
