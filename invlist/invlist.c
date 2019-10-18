@@ -206,9 +206,9 @@ uint64_t invlist_iter_bufkey(struct invlist_iterator* iter, uint32_t idx)
 	/* wrap bufkey callback function with a termination check */
 	if (iter->type == INVLIST_TYPE_ONDISK) {
 		/* return max ID if iterator terminated on-disk */
-		if (skippy_fend(&iter->sfh) &&
-		    (iter->if_disk_buf_read && iter->buf_idx >= iter->buf_len))
+		if (iter->buf_idx >= iter->buf_len && iter->if_disk_buf_read) {
 			return UINT64_MAX;
+		}
 	} else {
 		/* return max ID if iterator terminated in-memory */
 		if (iter->cur == NULL) return UINT64_MAX;
@@ -545,18 +545,24 @@ int invlist_iter_next(struct invlist_iterator* iter)
 
 	} else {
 		/* refill buffer from disk */
-		struct skippy_data sd = skippy_fnext(&iter->sfh, 0);
-		if (sd.key == 0) {
-			if (iter->if_disk_buf_read) {
-				iter->buf_idx = iter->buf_len;
-				return 0;
-			} else {
-				return refill_buffer__disk_buf(iter);
-			}
+		struct skippy_data sd;
+		if (NULL != iter->lfh) {
+			/* we have skippy list, go forward in skippy list */
+			sd = skippy_fnext(&iter->sfh, 0);
+			if (sd.key == 0)
+				goto buf_list;
+
+			refill_buffer__disk(iter, sd.child_offset);
+			return 0;
 		}
 
-		refill_buffer__disk(iter, sd.child_offset);
-		return 1;
+buf_list:
+		if (iter->if_disk_buf_read) {
+			iter->buf_idx = iter->buf_len;
+			return 0;
+		} else {
+			return refill_buffer__disk_buf(iter);
+		}
 	}
 
 	return 0;
@@ -598,11 +604,13 @@ int invlist_iter_jump(struct invlist_iterator* iter, uint64_t target)
 
 	} else {
 		/* on-disk jump */
-		struct skippy_data sd;
-		sd = skippy_fskip(&iter->sfh, target);
+		if (NULL != iter->lfh) {
+			struct skippy_data sd;
+			sd = skippy_fskip(&iter->sfh, target);
 
-		/* refill buffer from disk data after skipping. */
-		refill_buffer__disk(iter, sd.child_offset);
+			/* refill buffer from disk data after skipping. */
+			refill_buffer__disk(iter, sd.child_offset);
+		}
 	}
 
 step: /* step-by-step advance */
@@ -663,6 +671,9 @@ void invlist_iter_print_as_decoded_ints(invlist_iter_t iter)
 		printf("\n");
 
 	} while (invlist_iter_next(iter));
+
+//	printf("[%u / %u]\n", iter->buf_idx, iter->buf_len);
+//	printf("key: %lu\n", invlist_iter_bufkey(iter, iter->buf_idx));
 }
 
 void invlist_print_as_decoded_ints(struct invlist* invlist)
