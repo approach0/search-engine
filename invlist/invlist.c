@@ -552,8 +552,9 @@ int invlist_iter_next(struct invlist_iterator* iter)
 			if (sd.key == 0)
 				goto buf_list;
 
+			/* go to offset pointed by skippy data. */
 			refill_buffer__disk(iter, sd.child_offset);
-			return 0;
+			return 1;
 		}
 
 buf_list:
