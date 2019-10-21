@@ -166,7 +166,7 @@ function map_ip_info(db, ip, callbk) {
 			}
 			console.log(response);
 			db.prepare(
-				`INSERT INTO ip_info (city, region, country, ip)
+				`INSERT OR REPLACE INTO ip_info (city, region, country, ip)
 				VALUES (?, ?, ?, ?)`
 			).run(
 				response['city'] || 'Unknown',
