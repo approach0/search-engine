@@ -82,6 +82,10 @@ DO_YACC = $(YACC) -v -d --report=itemset $< -o y.tab.c
 HIGHLIGHT_BEGIN := @ tput setaf
 HIGHLIGHT_END := @ tput sgr0
 
+# set Position-independent code, so that linker can relocate
+# symbols for shared library.
+CFLAGS += -fPIC
+
 # handle debug flag here, e.g., `make all debug=0'
 # (you need to rebuild all project objects when debug flag is changed.
 # Also notice that -D gets defined before the source file is parsed)
