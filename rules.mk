@@ -108,7 +108,7 @@ new: clean all
 $(BUILD_DIR)/%.o: %.c
 	$(COLOR_CC)
 	$(CREAT_BUILD_DIR)
-	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(CC_DEP) $@ $(CFLAGS) $< > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
