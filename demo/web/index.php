@@ -488,8 +488,6 @@ SE.init({
 		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
 		<b style="font-size:1.5em">→</b>
 	</span>
-
-	<p class="toleft" style="padding-top: 20px; color: grey">Thank you <a href="https://math.stackexchange.com/users/8297">Martin Sleziak</a> for your donation, for letting this site stay on real axis.</p>
 </div>
 
 <!-- Footer -->
