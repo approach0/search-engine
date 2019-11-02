@@ -7,8 +7,6 @@ typedef int      (*merger_callbk_next)(void *);
 typedef int      (*merger_callbk_skip)(void *, uint64_t);
 typedef size_t   (*merger_callbk_read)(void *, void *, size_t);
 
-typedef float    (*upp_relax_callbk)(void *, float);
-
 typedef struct merge_set {
 	unsigned int        n; /* number of members */
 	void               *iter[MAX_MERGE_SET_SZ];
@@ -18,3 +16,5 @@ typedef struct merge_set {
 	merger_callbk_skip  skip[MAX_MERGE_SET_SZ];
 	merger_callbk_read  read[MAX_MERGE_SET_SZ];
 } merge_set_t;
+
+int merger_set_empty(struct merge_set *);

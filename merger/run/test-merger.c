@@ -1,6 +1,0 @@
-#include "mergers.h"
-
-int main()
-{
-	return 0;
-}

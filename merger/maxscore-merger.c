@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "mergers.h"
 
 float no_upp_relax(void *_, float upp)
@@ -43,24 +44,19 @@ void ms_merger_map_remove(struct ms_merger *m, int i)
 	ms_merger_update_acc_upp(m);
 }
 
-int ms_merger_skipset_follow(struct ms_merger *m)
+int ms_merger_map_follow(struct ms_merger *m, int i)
 {
-	int follows = 0;
-	for (int i = m->pivot + 1; i < m->size; i++) {
-		uint64_t cur = merger_map_call(m, cur, i);
+	uint64_t cur = merger_map_call(m, cur, i);
 
-		if (cur < m->min) {
-			int left = merger_map_call(m, skip, i, m->min);
-			if (!left) {
-				ms_merger_map_remove(m, i);
-				i --;
-			}
-
-			follows ++;
+	if (cur < m->min) {
+		int left = merger_map_call(m, skip, i, m->min);
+		if (!left) {
+			ms_merger_map_remove(m, i);
+			return i - 1;
 		}
 	}
 
-	return follows;
+	return i;
 }
 
 void ms_merger_iter_sort_by_upp(struct ms_merger *m)
@@ -101,18 +97,13 @@ struct ms_merger *ms_merger_iterator(merge_set_t* set)
 
 	for (int i = 0; i < set->n; i++)
 		m->map[i] = i;
-	ms_merger_iter_sort_by_upp(m); /* acc_upp is also updated */
 
 	m->size = set->n;
 	m->pivot = set->n - 1;
 	m->min = ms_merger_min(m);
 
+	ms_merger_iter_sort_by_upp(m); /* acc_upp is also updated */
 	return m;
-}
-
-int ms_merger_empty(struct ms_merger* m)
-{
-	return (m->pivot < 0);
 }
 
 void ms_merger_iter_free(struct ms_merger *m)
@@ -138,4 +129,21 @@ int ms_merger_iter_next(struct ms_merger *m)
 
 	m->min = ms_merger_min(m);
 	return 1;
+}
+
+void ms_merger_iter_print(struct ms_merger* m)
+{
+	for (int i = 0; i < m->size; i++) {
+		int id = m->map[i];
+		int pivot = m->pivot;
+		float acc_upp = m->acc_upp[i];
+		float upp = merger_map_upp(m, i);
+		uint64_t cur = merger_map_call(m, cur, i);
+		printf("%c %-5.2f %5.2f [%3d] #%lu ",
+			(i > pivot) ? 'S': ' ', acc_upp, upp, id, cur
+		);
+		if (cur == m->min)
+			printf("<- Candidate");
+		printf("\n");
+	}
 }
