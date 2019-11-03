@@ -346,11 +346,10 @@ void print_subpath_set(linkli_t set)
 		printf("(%u duplicates: ", ele->dup_cnt);
 		for (int i = 0; i <= ele->dup_cnt; i++)
 			printf("r%u~l%u ", ele->rid[i], ele->dup[i]->leaf_id);
-		printf(")");
+		printf(")\n");
 
-		printf("(%u sector trees: ", ele->n_sects);
 		for (int i = 0; i < ele->n_sects; i++) {
-			printf("%u/%u-%s{ ", ele->secttr[i].rootID, ele->secttr[i].width,
+			printf("\t %u/%u-%s{ ", ele->secttr[i].rootID, ele->secttr[i].width,
 				optr_hash_str(ele->secttr[i].ophash));
 			//printf("%u\n", ele->n_splits[i]);
 			for (int j = 0; j < ele->n_splits[i]; j++) {
@@ -359,10 +358,7 @@ void print_subpath_set(linkli_t set)
 				uint64_t leaves = ele->leaves[i][j];
 				printf("%s/%u 0x%lx ", trans_symbol(symbol), splt_w, leaves);
 			}
-			printf("} ");
+			printf("} \n");
 		}
-		printf(")");
-
-		printf("\n");
 	}
 }
