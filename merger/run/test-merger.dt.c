@@ -94,7 +94,7 @@ int main()
 
 		/* printing */
 		printf("theta = %.2f\n", theta);
-		ms_merger_iter_print(iter);
+		ms_merger_iter_print(iter, NULL);
 
 		if (doc_score > 0.f) {
 			/* push document into top-K and update theta */

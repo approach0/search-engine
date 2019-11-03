@@ -41,6 +41,7 @@ void         math_index_close(math_index_t);
 int math_index_load(math_index_t, size_t);
 
 enum math_reader_medium {
+	MATH_READER_MEDIUM_NONE,
 	MATH_READER_MEDIUM_ONDISK,
 	MATH_READER_MEDIUM_INMEMO
 };
@@ -82,6 +83,10 @@ struct math_invlist_item {
 	/* 4 bytes */
 }; /* 4 x 4 = 16 bytes in total */
 
+#define key2doc(_64key) (_64key >> 32)
+#define key2exp(_64key) ((_64key >> 16) & 0xffff)
+#define key2rot(_64key) (_64key & 0xffff)
+
 /* field index for math_invlist_item */
 enum {
 	FI_DOCID,
@@ -103,3 +108,8 @@ struct symbinfo {
 	uint8_t  splt_w[MAX_INDEX_EXP_SYMBOL_SPLITS];
 }; /* 28 bytes */
 #pragma pack(pop)
+
+struct math_invlist_deep_item {
+	struct math_invlist_item item;
+	struct symbinfo          info;
+};

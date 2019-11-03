@@ -1,0 +1,1 @@
+#define DEBUG_PREPARE_MATH_QRY

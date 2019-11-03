@@ -12,6 +12,7 @@ struct ms_merger {
 };
 
 typedef float (*upp_relax_callbk)(void *, float);
+typedef void  (*keyprint_fun)(uint64_t);
 
 float no_upp_relax(void*, float);
 int  ms_merger_lift_up_pivot(struct ms_merger*, float,
@@ -26,4 +27,4 @@ uint64_t ms_merger_min(struct ms_merger*);
 struct ms_merger *ms_merger_iterator(merge_set_t*);
 void              ms_merger_iter_free(struct ms_merger*);
 int               ms_merger_iter_next(struct ms_merger*);
-void              ms_merger_iter_print(struct ms_merger*);
+void              ms_merger_iter_print(struct ms_merger*, keyprint_fun);

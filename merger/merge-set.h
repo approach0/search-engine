@@ -18,3 +18,8 @@ typedef struct merge_set {
 } merge_set_t;
 
 int merger_set_empty(struct merge_set *);
+
+uint64_t empty_invlist_cur(void*);
+int      empty_invlist_next(void*);
+int      empty_invlist_skip(void*, uint64_t);
+size_t   empty_invlist_read(void*, void*, size_t);

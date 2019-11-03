@@ -131,19 +131,23 @@ int ms_merger_iter_next(struct ms_merger *m)
 	return 1;
 }
 
-void ms_merger_iter_print(struct ms_merger* m)
+void ms_merger_iter_print(struct ms_merger* m, keyprint_fun keyprint)
 {
 	for (int i = 0; i < m->size; i++) {
-		int id = m->map[i];
+		int invi = m->map[i];
 		int pivot = m->pivot;
 		float acc_upp = m->acc_upp[i];
 		float upp = merger_map_upp(m, i);
 		uint64_t cur = merger_map_call(m, cur, i);
-		printf("%c %-5.2f %5.2f [%3d] #%lu ",
-			(i > pivot) ? 'S': ' ', acc_upp, upp, id, cur
-		);
+		char flag = ' ';
+		if (i == pivot) flag = 'P'; else if (i > pivot) flag = 'S';
+		printf("%c %-5.2f %5.2f [%3d] ", flag, acc_upp, upp, invi);
+		if (NULL != keyprint)
+			keyprint(cur);
+		else
+			printf("#%lu", cur);
 		if (cur == m->min)
-			printf("<- Candidate");
+			printf(" <- Candidate");
 		printf("\n");
 	}
 }

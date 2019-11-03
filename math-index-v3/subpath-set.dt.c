@@ -336,11 +336,12 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 
 void print_subpath_set(linkli_t set)
 {
+	int cnt = 0;
 	foreach (iter, li, set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		char path[MAX_DIR_PATH_NAME_LEN] = "";
 		mk_path_str(ele->dup[0], ele->prefix_len, path);
-		printf("%s ", path);
+		printf("[%3d] %s ", cnt++, path);
 
 		printf("(%u duplicates: ", ele->dup_cnt);
 		for (int i = 0; i <= ele->dup_cnt; i++)
