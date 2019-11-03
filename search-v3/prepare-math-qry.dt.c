@@ -223,6 +223,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			free(ent);
 		}
 
+		mq->ele[mq->merge_set.n] = ele; /* save for later */
 		mq->merge_set.n += 1;
 	}
 
