@@ -168,7 +168,7 @@ validate-%.h: %.h
 # library check
 check-lib%:
 	@ $(CXX) $(LDFLAGS) -w -Xlinker \
-	--unresolved-symbols=ignore-all -l$*
+	--unresolved-symbols=ignore-all -l$* -o /dev/null
 
 FIND := @ find . -type d \( -path './.git' -o -path '*/tmp' \) -prune -o
 
