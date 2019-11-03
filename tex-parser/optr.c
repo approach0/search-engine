@@ -653,8 +653,8 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 
 	fprintf(fh, ": ");
 	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
-	fprintf(fh, " (fingerprint %s)", optr_hash_str(sp->fingerprint));
-	fprintf(fh, " (conjugacy %lx)", sp->conjugacy);
+	fprintf(fh, " (fp %s)", optr_hash_str(sp->fingerprint));
+	// fprintf(fh, " (conjugacy %lx)", sp->conjugacy);
 	fprintf(fh, "\n");
 
 	LIST_GO_OVER;
