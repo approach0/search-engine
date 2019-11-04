@@ -86,51 +86,6 @@ static LIST_IT_CALLBK(assign_pathID_by_order)
 }
 
 /*
- * path inverted list wrappers
- */
-static uint64_t path_invlist_cur(void *ent_)
-{
-	P_CAST(ent, struct math_invlist_entry_reader, ent_);
-	return invlist_iter_curkey(ent->reader);
-}
-
-static int path_invlist_next(void *ent_)
-{
-	P_CAST(ent, struct math_invlist_entry_reader, ent_);
-	return invlist_iter_next(ent->reader);
-}
-
-static int path_invlist_skip(void *ent_, uint64_t target)
-{
-	P_CAST(ent, struct math_invlist_entry_reader, ent_);
-	return invlist_iter_jump(ent->reader, target);
-}
-
-static size_t path_invlist_read(void *ent_, void *dest, size_t sz)
-{
-	P_CAST(ent, struct math_invlist_entry_reader, ent_);
-	P_CAST(ditem, struct math_invlist_deep_item, dest);
-	size_t rd_sz = 0;
-
-	switch (sz) {
-	case sizeof(struct math_invlist_item):
-		rd_sz = invlist_iter_read(ent->reader, dest);
-		break;
-
-	case sizeof(struct math_invlist_deep_item):
-		rd_sz += invlist_iter_read(ent->reader, ditem);
-		fseek(ent->fh_symbinfo, ditem->item.symbinfo_offset, SEEK_SET);
-		rd_sz += fread(&ditem->info, 1, sizeof ditem->info, ent->fh_symbinfo);
-		break;
-
-	default:
-		break;
-	}
-
-	return rd_sz;
-}
-
-/*
  * main exported functions
  */
 int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
@@ -203,27 +158,29 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			continue;
 		}
 
-		struct math_invlist_entry_reader *ent = malloc(sizeof *ent);
-		*ent = math_index_lookup(mi, path_key);
+		struct math_invlist_entry_reader *entry = malloc(sizeof *entry);
+		*entry = math_index_lookup(mi, path_key);
 
-		if (ent->pf) {
-			mq->merge_set.iter[mq->merge_set.n] = ent;
-			mq->merge_set.upp[mq->merge_set.n]  = logf(N / ent->pf);
-			mq->merge_set.cur[mq->merge_set.n]  = path_invlist_cur;
-			mq->merge_set.next[mq->merge_set.n] = path_invlist_next;
-			mq->merge_set.skip[mq->merge_set.n] = path_invlist_skip;
-			mq->merge_set.read[mq->merge_set.n] = path_invlist_read;
+		unsigned int n = mq->merge_set.n;
+		if (entry->pf) {
+			mq->merge_set.iter[n] = entry->reader;
+			mq->merge_set.upp [n] = logf(N / entry->pf);
+			mq->merge_set.cur [n] = (merger_callbk_cur)invlist_iter_curkey;
+			mq->merge_set.next[n] = (merger_callbk_next)invlist_iter_next;
+			mq->merge_set.skip[n] = (merger_callbk_skip)invlist_iter_jump;
+			mq->merge_set.read[n] = (merger_callbk_read)invlist_iter_read;
+			mq->entry[n] = entry;
 		} else {
-			mq->merge_set.iter[mq->merge_set.n] = NULL;
-			mq->merge_set.upp[mq->merge_set.n]  = 0;
-			mq->merge_set.cur[mq->merge_set.n]  = empty_invlist_cur;
-			mq->merge_set.next[mq->merge_set.n] = empty_invlist_next;
-			mq->merge_set.skip[mq->merge_set.n] = empty_invlist_skip;
-			mq->merge_set.read[mq->merge_set.n] = empty_invlist_read;
-			free(ent);
+			mq->merge_set.iter[n] = NULL;
+			mq->merge_set.upp [n] = 0;
+			mq->merge_set.cur [n] = empty_invlist_cur;
+			mq->merge_set.next[n] = empty_invlist_next;
+			mq->merge_set.skip[n] = empty_invlist_skip;
+			mq->merge_set.read[n] = empty_invlist_read;
+			free(entry);
 		}
 
-		mq->ele[mq->merge_set.n] = ele; /* save for later */
+		mq->ele[n] = ele; /* save for later */
 		mq->merge_set.n += 1;
 	}
 
@@ -247,12 +204,11 @@ void math_qry_release(struct math_qry *mq)
 	}
 
 	for (int i = 0; i < mq->merge_set.n; i++) {
-		struct math_invlist_entry_reader *ent;
-		ent = mq->merge_set.iter[i];
-		if (ent) {
-			invlist_iter_free(ent->reader);
-			fclose(ent->fh_symbinfo);
-			free(ent);
+		struct math_invlist_entry_reader *entry = mq->entry[i];
+		if (entry) {
+			invlist_iter_free(entry->reader);
+			fclose(entry->fh_symbinfo);
+			free(entry);
 		}
 	}
 }

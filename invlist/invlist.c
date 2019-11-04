@@ -217,6 +217,11 @@ uint64_t invlist_iter_bufkey(struct invlist_iterator* iter, uint32_t idx)
 	return (*iter->bufkey)(iter, idx);
 }
 
+uint64_t invlist_iter_curkey(struct invlist_iterator *iter)
+{
+	return invlist_iter_bufkey(iter, iter->buf_idx);
+}
+
 uint64_t
 invlist_iter_default_bufkey(struct invlist_iterator* iter, uint32_t idx)
 {

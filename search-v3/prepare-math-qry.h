@@ -12,6 +12,8 @@ struct math_qry {
 	linkli_t    subpath_set;
 	merge_set_t merge_set;
 
+	struct math_invlist_entry_reader *entry[MAX_MERGE_SET_SZ];
+
 	/* shortcut links to subpath set elements */
 	struct subpath_ele *ele[MAX_MERGE_SET_SZ];
 };

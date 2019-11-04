@@ -14,6 +14,13 @@ static void keyprint(uint64_t k)
 	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
 }
 
+static void print_item(struct math_invlist_item *item)
+{
+	printf("#%u, #%u (exp%u, rot%u), w%u, w%u, o%u\n", item->docID,
+		item->secID, item->expID, item->sect_root,
+		item->sect_width, item->orig_width, item->symbinfo_offset);
+}
+
 int main()
 {
 	math_index_t index = math_index_open("../math-index-v3/tmp", "r");
@@ -30,6 +37,12 @@ int main()
 	}
 
 	foreach (iter, merger_set, &mq.merge_set) {
+		struct math_invlist_item item;
+		for (int i = 0; i < iter->size; i++) {
+			merger_map_call(iter, read, i, &item, sizeof(item));
+			print_item(&item);
+		}
+
 		ms_merger_iter_print(iter, keyprint);
 		printf("\n");
 	}
