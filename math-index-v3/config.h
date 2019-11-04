@@ -1,4 +1,9 @@
+#pragma once
+
 #define MAX_GENERPATH_INDEX_LEVEL 2
+
+#include "tex-parser/tex-parser.h" /* for MAX_SUBPATH_ID */
+#define MAX_MATH_PATHS MAX_SUBPATH_ID
 
 #define GENER_PATH_NAME  "gener"
 #define PREFIX_PATH_NAME "prefix"

@@ -6,6 +6,7 @@
 struct math_qry {
 	const char *tex;
 	void       *optr;
+	int         n_qnodes;
 
 	struct subpaths subpaths;
 
@@ -13,6 +14,8 @@ struct math_qry {
 	merge_set_t merge_set;
 
 	struct math_invlist_entry_reader *entry[MAX_MERGE_SET_SZ];
+
+	float pf[MAX_MERGE_SET_SZ]; /* path freq for single path */
 
 	/* shortcut links to subpath set elements */
 	struct subpath_ele *ele[MAX_MERGE_SET_SZ];

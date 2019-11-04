@@ -1,7 +1,7 @@
 #include "mhook/mhook.h"
 
 #include "merger/mergers.h"
-#include "prepare-math-qry.h"
+#include "math-qry.h"
 
 /* use MaxScore merger */
 typedef struct ms_merger *merger_set_iter_t;

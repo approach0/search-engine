@@ -2,7 +2,7 @@
 #include <math.h>
 #include "tex-parser/head.h"
 #include "config.h"
-#include "prepare-math-qry.h"
+#include "math-qry.h"
 
 /*
  * functions to sort subpaths by bound variable size
@@ -117,6 +117,11 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 #endif
 
 	/*
+	 * calculate the number of query nodes
+	 */
+	mq->n_qnodes = optr_max_node_id(mq->optr);
+
+	/*
 	 * save subpaths and sort them by bond variable size
 	 */
 	struct subpaths subpaths = parse_res.subpaths;
@@ -164,11 +169,12 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 		unsigned int n = mq->merge_set.n;
 		if (entry->pf) {
 			mq->merge_set.iter[n] = entry->reader;
-			mq->merge_set.upp [n] = logf(N / entry->pf);
+			mq->merge_set.upp [n] = 1.f; /* determined later by maxRef */
 			mq->merge_set.cur [n] = (merger_callbk_cur)invlist_iter_curkey;
 			mq->merge_set.next[n] = (merger_callbk_next)invlist_iter_next;
 			mq->merge_set.skip[n] = (merger_callbk_skip)invlist_iter_jump;
 			mq->merge_set.read[n] = (merger_callbk_read)invlist_iter_read;
+			mq->pf[n] = logf(N / entry->pf);
 			mq->entry[n] = entry;
 		} else {
 			mq->merge_set.iter[n] = NULL;
@@ -177,13 +183,14 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			mq->merge_set.next[n] = empty_invlist_next;
 			mq->merge_set.skip[n] = empty_invlist_skip;
 			mq->merge_set.read[n] = empty_invlist_read;
+			mq->pf[n] = 0;
+			mq->entry[n] = NULL;
 			free(entry);
 		}
 
 		mq->ele[n] = ele; /* save for later */
 		mq->merge_set.n += 1;
 	}
-
 
 	return 0;
 }

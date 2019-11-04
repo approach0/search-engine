@@ -1,9 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "linkli/list.h"
-
-#include "tex-parser/tex-parser.h" /* for MAX_SUBPATH_ID */
-#define MAX_MATH_PATHS MAX_SUBPATH_ID
+#include "config.h"
 
 struct sector_tree {
 	uint32_t rootID;
