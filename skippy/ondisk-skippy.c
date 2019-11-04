@@ -96,7 +96,7 @@ int skippy_fopen(struct skippy_fh *sfh, const char *path,
 	for (int i = 0; i < ON_DISK_SKIPPY_LEVELS; i++) {
 		/* set fh */
 		FILE *fh;
-		sprintf(fullname[i], "%s.skp-l%d.bin", path, i);
+		sprintf(fullname[i], "%s.l%d.bin", path, i);
 		fh = fopen(fullname[i], mode);
 		sfh->fh[i] = fh;
 		if (fh == NULL) {

@@ -77,7 +77,7 @@ int invlist_empty(struct invlist* invlist)
 		if (fh) fclose(fh);
 
 		/* get on-disk buffer file length */
-		sprintf(buf_path, "%s-%s.bin", invlist->path, INVLIST_DISK_CODECBUF_NAME);
+		sprintf(buf_path, "%s.%s.bin", invlist->path, INVLIST_DISK_CBUF_NAME);
 		fh = fopen(buf_path, "r");
 		if (fh) {
 			fseek(fh, 0, SEEK_END);
@@ -132,7 +132,7 @@ static size_t refill_buffer__disk_buf(struct invlist_iterator *iter)
 
 	/* open disk buffer file */
 	char path[MAX_PATH_LEN];
-	sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+	sprintf(path, "%s.%s.bin", iter->path, INVLIST_DISK_CBUF_NAME);
 
 	int fd = open(path, O_CREAT | O_RDONLY, 0666);
 	if (fd < 0)
@@ -265,7 +265,7 @@ invlist_iter_t invlist_writer(struct invlist *invlist)
 	} else {
 		/* get the size of disk buffer file */
 		char path[MAX_PATH_LEN];
-		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+		sprintf(path, "%s.%s.bin", iter->path, INVLIST_DISK_CBUF_NAME);
 		int fd = open(path, O_CREAT | O_RDONLY, 0666);
 		assert(fd >= 0);
 		off_t file_sz = lseek(fd, 0, SEEK_END);
@@ -458,7 +458,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		if (refill_buffer__disk_buf(iter) >= iter->buf_max_sz) {
 			/* truncate disk buffer file */
 			char path[MAX_PATH_LEN];
-			sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+			sprintf(path, "%s.%s.bin", iter->path, INVLIST_DISK_CBUF_NAME);
 			int res = truncate(path, 0);
 			assert(-1 != res); (void)res;
 
@@ -491,7 +491,7 @@ size_t invlist_writer_write(struct invlist_iterator *iter, const void *in)
 	} else {
 		/* write against a disk buffer to save memory here */
 		char path[MAX_PATH_LEN];
-		sprintf(path, "%s-%s.bin", iter->path, INVLIST_DISK_CODECBUF_NAME);
+		sprintf(path, "%s.%s.bin", iter->path, INVLIST_DISK_CBUF_NAME);
 
 		int fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
 		assert(fd >= 0);
