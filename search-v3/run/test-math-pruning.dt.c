@@ -1,14 +1,9 @@
 #include "mhook/mhook.h"
-
 #include "merger/mergers.h"
+
+#include "config.h"
 #include "math-qry.h"
 #include "math-pruning.h"
-
-/* choose math pruning strategy */
-//#define MATH_PRUNING_STRATEGY_NONE
-  #define MATH_PRUNING_STRATEGY_MAXREF
-//#define MATH_PRUNING_STRATEGY_GBP_NUM
-//#define MATH_PRUNING_STRATEGY_GBP_LEN
 
 /* use MaxScore merger */
 typedef struct ms_merger *merger_set_iter_t;
