@@ -71,8 +71,8 @@ struct math_invlist_item {
 	union {
 		uint32_t secID;
 		struct {
-			uint16_t expID;
 			uint16_t sect_root;
+			uint16_t expID;
 		};
 	}; /* 4 bytes */
 
@@ -108,8 +108,3 @@ struct symbinfo {
 	uint8_t  splt_w[MAX_INDEX_EXP_SYMBOL_SPLITS];
 }; /* 28 bytes */
 #pragma pack(pop)
-
-struct math_invlist_deep_item {
-	struct math_invlist_item item;
-	struct symbinfo          info;
-};
