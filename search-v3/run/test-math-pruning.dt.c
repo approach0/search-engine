@@ -39,8 +39,11 @@ int main()
 	}
 
 	struct math_pruner *pruner;
+	struct math_score_factors msf;
 	float threshold = 0.f;
-	pruner = math_pruner_init(&mq, NULL, threshold);
+
+	math_score_precalc(&msf);
+	pruner = math_pruner_init(&mq, &msf, threshold);
 
 	foreach (iter, merger_set, &mq.merge_set) {
 		struct math_invlist_item item;

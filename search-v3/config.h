@@ -7,9 +7,13 @@
 
 // #define DEBUG_BIN_LP
 
+// #define DEBUG_MATH_PRUNING
 
 /* choose math pruning strategy */
 //#define MATH_PRUNING_STRATEGY_NONE
 //#define MATH_PRUNING_STRATEGY_MAXREF
 //#define MATH_PRUNING_STRATEGY_GBP_NUM
   #define MATH_PRUNING_STRATEGY_GBP_LEN
+
+
+#define MATH_SCORE_ETA 0.05f
