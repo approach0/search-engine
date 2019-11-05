@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <math.h>
 #include "tex-parser/head.h"
 #include "config.h"
 #include "math-qry.h"
+#include "math-score.h" /* for IPF calculation */
 
 /*
  * functions to sort subpaths by bound variable size
@@ -167,7 +167,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 		mq->entry[n] = math_index_lookup(mi, path_key);
 
 		if (mq->entry[n].pf) {
-			mq->ipf[n] = logf(N / mq->entry[n].pf);
+			mq->ipf[n] = math_score_ipf(N, mq->entry[n].pf);
 			mq->merge_set.iter[n] = mq->entry[n].reader;
 			mq->merge_set.upp [n] = mq->ipf[n]; /* here is single path IPF */
 			mq->merge_set.cur [n] = (merger_callbk_cur)invlist_iter_curkey;

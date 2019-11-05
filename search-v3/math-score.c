@@ -9,8 +9,14 @@ void math_score_precalc(struct math_score_factors *msf)
 
 	dn = 1.f;
 	msf->upp_sf = 1.f * ((1.f - eta) + eta * (1.f / logf(1.f + dn)));
+
 	dn = (float)MAX_MATCHED_PATHS;
 	msf->low_sf = .5f * ((1.f - eta) + eta * (1.f / logf(1.f + dn)));
+}
+
+float math_score_ipf(float N, float pf)
+{
+	return logf(N / pf);
 }
 
 float math_score_calc(struct math_score_factors *msf)

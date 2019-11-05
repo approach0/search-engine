@@ -12,6 +12,7 @@ struct math_score_factors {
 };
 
 void math_score_precalc(struct math_score_factors *);
+float math_score_ipf(float, float);
 float math_score_calc(struct math_score_factors *);
 
 float math_score_upp(void *, float);
