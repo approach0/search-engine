@@ -58,8 +58,10 @@ int main()
 		threshold += 0.5f; /* threshold update simulation */
 
 #ifndef MATH_PRUNING_STRATEGY_NONE
-		if (math_pruner_update(pruner, threshold))
+		if (math_pruner_update(pruner, threshold)) {
+			printf("[Node dropped].\n");
 			math_pruner_iters_drop(pruner, iter);
+		}
 
 #if defined(MATH_PRUNING_STRATEGY_MAXREF)
 		math_pruner_iters_sort_by_maxref(pruner, iter);
@@ -73,7 +75,6 @@ int main()
 #else
 	#error("no math pruning strategy specified.")
 #endif
-
 		/* if there is no element in requirement set */
 		if (iter->pivot < 0)
 			break;

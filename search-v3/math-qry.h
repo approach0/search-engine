@@ -13,7 +13,7 @@ struct math_qry {
 	linkli_t    subpath_set;
 	merge_set_t merge_set;
 
-	struct math_invlist_entry_reader *entry[MAX_MERGE_SET_SZ];
+	struct math_invlist_entry_reader entry[MAX_MERGE_SET_SZ];
 
 	float ipf[MAX_MERGE_SET_SZ]; /* inverted path freq for single path */
 

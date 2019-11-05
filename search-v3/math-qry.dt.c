@@ -163,19 +163,17 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			continue;
 		}
 
-		struct math_invlist_entry_reader *entry = malloc(sizeof *entry);
-		*entry = math_index_lookup(mi, path_key);
-
 		unsigned int n = mq->merge_set.n;
-		if (entry->pf) {
-			mq->merge_set.iter[n] = entry->reader;
+		mq->entry[n] = math_index_lookup(mi, path_key);
+
+		if (mq->entry[n].pf) {
+			mq->merge_set.iter[n] = mq->entry[n].reader;
 			mq->merge_set.upp [n] = 1.f; /* determined later by maxRef */
 			mq->merge_set.cur [n] = (merger_callbk_cur)invlist_iter_curkey;
 			mq->merge_set.next[n] = (merger_callbk_next)invlist_iter_next;
 			mq->merge_set.skip[n] = (merger_callbk_skip)invlist_iter_jump;
 			mq->merge_set.read[n] = (merger_callbk_read)invlist_iter_read;
-			mq->ipf[n] = logf(N / entry->pf);
-			mq->entry[n] = entry;
+			mq->ipf[n] = logf(N / mq->entry[n].pf);
 		} else {
 			mq->merge_set.iter[n] = NULL;
 			mq->merge_set.upp [n] = 0;
@@ -184,8 +182,6 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			mq->merge_set.skip[n] = empty_invlist_skip;
 			mq->merge_set.read[n] = empty_invlist_read;
 			mq->ipf[n] = 0;
-			mq->entry[n] = NULL;
-			free(entry);
 		}
 
 		mq->ele[n] = ele; /* save for later */
@@ -211,11 +207,10 @@ void math_qry_release(struct math_qry *mq)
 	}
 
 	for (int i = 0; i < mq->merge_set.n; i++) {
-		struct math_invlist_entry_reader *entry = mq->entry[i];
-		if (entry) {
-			invlist_iter_free(entry->reader);
-			fclose(entry->fh_symbinfo);
-			free(entry);
-		}
+		struct math_invlist_entry_reader entry = mq->entry[i];
+		if (entry.reader)
+			invlist_iter_free(entry.reader);
+		if (entry.fh_symbinfo)
+			fclose(entry.fh_symbinfo);
 	}
 }

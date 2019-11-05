@@ -221,8 +221,8 @@ void math_pruner_iters_sort_by_maxref(struct math_pruner *pruner,
 			int iid_j = iter->map[j];
 			int max_i = pruner->backrefs[iid_i].max;
 			int max_j = pruner->backrefs[iid_j].max;
-			int len_i = pruner->mq->entry[iid_i]->pf;
-			int len_j = pruner->mq->entry[iid_j]->pf;
+			int len_i = pruner->mq->entry[iid_i].pf;
+			int len_j = pruner->mq->entry[iid_j].pf;
 			if (maxref_compare(max_i, len_i, max_j, len_j)) {
 				/* swap */
 				iter->map[i] = iid_j;
@@ -263,7 +263,7 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 	for (int i = 0; i < blp->n_po; i++) {
 		if (full) {
 			int iid = blp->po[i];
-			int len = pruner->mq->entry[iid]->pf;
+			int len = pruner->mq->entry[iid].pf;
 			blp->weight[i] = len;
 		} else {
 			blp->weight[i] = 1;
