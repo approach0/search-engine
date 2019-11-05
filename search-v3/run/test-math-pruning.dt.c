@@ -27,6 +27,10 @@ int main()
 {
 	math_index_t index = math_index_open("../math-index-v3/tmp", "r");
 
+	struct math_pruner *pruner;
+	struct math_score_factors msf;
+	float threshold = 0.f;
+
 	if (index == NULL) {
 		printf("cannot open index.\n");
 		return 1;
@@ -38,9 +42,8 @@ int main()
 		goto skip;
 	}
 
-	struct math_pruner *pruner;
-	struct math_score_factors msf;
-	float threshold = 0.f;
+	math_qry_print(&mq, 1);
+	printf("\n");
 
 	math_score_precalc(&msf);
 	pruner = math_pruner_init(&mq, &msf, threshold);

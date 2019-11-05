@@ -214,3 +214,46 @@ void math_qry_release(struct math_qry *mq)
 			fclose(entry.fh_symbinfo);
 	}
 }
+
+void math_qry_print(struct math_qry* mq, int print_details)
+{
+	printf("[math query print] %s\n", mq->tex);
+
+	if (print_details) {
+		printf("[operator tree]\n");
+		optr_print(mq->optr, stdout);
+
+		printf("[subpaths]\n");
+		subpaths_print(&mq->subpaths, stdout);
+
+		printf("[subpath set]\n");
+		print_subpath_set(mq->subpath_set);
+	}
+
+	printf("[inverted lists]\n");
+	for (int i = 0; i < mq->merge_set.n; i++) {
+		struct subpath_ele *ele = mq->ele[i];
+		struct subpath *sp = ele->dup[0];
+		char path_key[MAX_DIR_PATH_NAME_LEN] = "";
+		if (0 != mk_path_str(sp, ele->prefix_len, path_key)) {
+			prerr("subpath too long or unexpected type.\n");
+			continue;
+		}
+
+		enum math_reader_medium medium = mq->entry[i].medium;
+		char *medium_str = NULL;
+		switch (medium) {
+		case MATH_READER_MEDIUM_INMEMO:
+			medium_str = "in-memo";
+			break;
+		case MATH_READER_MEDIUM_ONDISK:
+			medium_str = "on-disk";
+			break;
+		default:
+			medium_str = "unknown";
+		}
+
+		printf("[%3d][%s] %s ", i, medium_str, path_key);
+		printf("(pf=%u, ipf=%.2f)\n", mq->entry[i].pf, mq->ipf[i]);
+	}
+}
