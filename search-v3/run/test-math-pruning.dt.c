@@ -27,6 +27,7 @@ int main()
 {
 	math_index_t index = math_index_open("../math-index-v3/tmp", "r");
 
+	struct math_qry mq;
 	struct math_pruner *pruner;
 	struct math_score_factors msf;
 	float threshold = 0.f;
@@ -36,7 +37,6 @@ int main()
 		return 1;
 	}
 
-	struct math_qry mq;
 	if (0 != math_qry_prepare(index, "k(b+a)+ab+\\sqrt{b}+k+a", &mq)) {
 		printf("error!\n");
 		goto skip;
