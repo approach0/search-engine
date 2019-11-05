@@ -45,7 +45,7 @@ int main()
 	foreach (iter, merger_set, &mq.merge_set) {
 		struct math_invlist_item item;
 
-		printf("\n === Iteration === \n");
+		printf("=== Iteration ===\n");
 		for (int i = 0; i < iter->size; i++) {
 			merger_map_call(iter, read, i, &item, sizeof(item));
 			print_item(&item);
@@ -58,10 +58,9 @@ int main()
 		threshold += 0.5f; /* threshold update simulation */
 
 #ifndef MATH_PRUNING_STRATEGY_NONE
-		if (math_pruner_update(pruner, threshold)) {
-			printf("[Node dropped].\n");
-			math_pruner_iters_drop(pruner, iter);
-		}
+		if (math_pruner_update(pruner, threshold))
+			printf("[node dropped]\n");
+		math_pruner_iters_drop(pruner, iter);
 
 #if defined(MATH_PRUNING_STRATEGY_MAXREF)
 		math_pruner_iters_sort_by_maxref(pruner, iter);

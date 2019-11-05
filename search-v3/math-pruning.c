@@ -103,7 +103,7 @@ static void alloc_backrefs(struct math_pruner *pruner, struct math_qry *mq)
 static void update_backrefs(struct math_pruner *pruner)
 {
 	/* clear back references */
-	for (int i = 0; i < MAX_MERGE_SET_SZ; i++) {
+	for (int i = 0; i < pruner->mq->merge_set.n; i++) {
 		pruner->backrefs[i].cnt = 0;
 		pruner->backrefs[i].max = 0;
 	}
@@ -150,7 +150,7 @@ void math_pruner_free(struct math_pruner *pruner)
 {
 	free(pruner->qnodes);
 
-	for (int i = 0; i < MAX_MERGE_SET_SZ; i++) {
+	for (int i = 0; i < pruner->mq->merge_set.n; i++) {
 		if (pruner->backrefs[i].idx) {
 			free(pruner->backrefs[i].idx);
 			free(pruner->backrefs[i].ref);
@@ -195,7 +195,12 @@ void math_pruner_iters_drop(struct math_pruner *pruner, struct ms_merger *iter)
 {
 	for (int i = 0; i < iter->size; i++) {
 		int iid = iter->map[i];
+		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
+
+		/* drop unreferenced or terminated iterators */
 		if (pruner->backrefs[iid].cnt <= 0)
+			i = ms_merger_map_remove(iter, i);
+		else if (cur == UINT64_MAX)
 			i = ms_merger_map_remove(iter, i);
 	}
 }
@@ -271,7 +276,11 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 	}
 
 	/* greedily solve BP problem */
-	iter->pivot = bin_lp_solve(blp, pruner->threshold_, &calc_upp, NULL);
+	int blp_pivot = bin_lp_solve(blp, pruner->threshold_, &calc_upp, NULL);
+	iter->pivot = blp_pivot - 1;
+
+//	printf("requirement set: (new pivot = %u)\n", iter->pivot);
+//	bin_lp_print(*blp, 0);
 
 	/* reorder iterators */
 	for (int i = 0; i < iter->size; i++)
