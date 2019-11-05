@@ -79,7 +79,7 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 		for (int j = 0; j < qn->n; j++) {
 			int iid = qn->invlist_id[j];
 			qn->sum_w += qn->secttr_w[j];
-			qn->sum_ipf += (float)qn->secttr_w[j] * pruner->mq->ipf[iid];
+			qn->sum_ipf += pruner->mq->ipf[iid] * (float)qn->secttr_w[j];
 		}
 	}
 }
@@ -257,8 +257,8 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 		for (int j = 0; j < backref.cnt; j++) {
 			int idx = backref.idx[j];
 			int ref = backref.ref[j];
-			float v = ref * pruner->mq->ipf[iid];
-			(void)bin_lp_assign(blp, idx, iid, v);
+			float sum_ipf = pruner->mq->ipf[iid] * ref;
+			(void)bin_lp_assign(blp, idx, iid, sum_ipf);
 		}
 	}
 
@@ -293,13 +293,14 @@ void math_pruner_print(struct math_pruner *pruner)
 	printf("[math pruner] threshold: %.2f \n", pruner->threshold_);
 	for (int i = 0; i < pruner->n_qnodes; i++) {
 		struct math_pruner_qnode *qn = pruner->qnodes + i;
-		printf("[%d] qnode#%d/%d, upp(sum_ipf)=upp(%.2f)=%.2f: \n", i,
-			qn->root, qn->sum_w, qn->sum_ipf,
-			math_score_upp(pruner->msf, qn->sum_ipf));
+		printf("[%d] qnode#%d/%d, upp(%.2f)=%.2f: \n", i, qn->root, qn->sum_w,
+			qn->sum_ipf, math_score_upp(pruner->msf, qn->sum_ipf));
 		for (int j = 0; j < qn->n; j++) {
 			int iid = qn->invlist_id[j];
-			printf("\t secttr/%d ---> ", qn->secttr_w[j]);
-			printf("invlist[%d],ipf=%.2f <---[", iid, pruner->mq->ipf[iid]);
+			float sum_ipf = pruner->mq->ipf[iid] * qn->secttr_w[j];
+			printf("\t secttr/%d, upp(%.2f)=%.2f ---> ", qn->secttr_w[j],
+				sum_ipf, math_score_upp(pruner->msf, sum_ipf));
+			printf("invlist[%d] <---[", iid);
 			for (int k = 0; k < pruner->backrefs[iid].cnt; k++) {
 				int idx = pruner->backrefs[iid].idx[k];
 				int ref = pruner->backrefs[iid].ref[k];

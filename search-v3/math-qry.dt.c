@@ -167,21 +167,21 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 		mq->entry[n] = math_index_lookup(mi, path_key);
 
 		if (mq->entry[n].pf) {
+			mq->ipf[n] = logf(N / mq->entry[n].pf);
 			mq->merge_set.iter[n] = mq->entry[n].reader;
-			mq->merge_set.upp [n] = 1.f; /* determined later by maxRef */
+			mq->merge_set.upp [n] = mq->ipf[n]; /* here is single path IPF */
 			mq->merge_set.cur [n] = (merger_callbk_cur)invlist_iter_curkey;
 			mq->merge_set.next[n] = (merger_callbk_next)invlist_iter_next;
 			mq->merge_set.skip[n] = (merger_callbk_skip)invlist_iter_jump;
 			mq->merge_set.read[n] = (merger_callbk_read)invlist_iter_read;
-			mq->ipf[n] = logf(N / mq->entry[n].pf);
 		} else {
+			mq->ipf[n] = 0;
 			mq->merge_set.iter[n] = NULL;
 			mq->merge_set.upp [n] = 0;
 			mq->merge_set.cur [n] = empty_invlist_cur;
 			mq->merge_set.next[n] = empty_invlist_next;
 			mq->merge_set.skip[n] = empty_invlist_skip;
 			mq->merge_set.read[n] = empty_invlist_read;
-			mq->ipf[n] = 0;
 		}
 
 		mq->ele[n] = ele; /* save for later */
