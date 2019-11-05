@@ -174,7 +174,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			mq->merge_set.next[n] = (merger_callbk_next)invlist_iter_next;
 			mq->merge_set.skip[n] = (merger_callbk_skip)invlist_iter_jump;
 			mq->merge_set.read[n] = (merger_callbk_read)invlist_iter_read;
-			mq->pf[n] = logf(N / entry->pf);
+			mq->ipf[n] = logf(N / entry->pf);
 			mq->entry[n] = entry;
 		} else {
 			mq->merge_set.iter[n] = NULL;
@@ -183,7 +183,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 			mq->merge_set.next[n] = empty_invlist_next;
 			mq->merge_set.skip[n] = empty_invlist_skip;
 			mq->merge_set.read[n] = empty_invlist_read;
-			mq->pf[n] = 0;
+			mq->ipf[n] = 0;
 			mq->entry[n] = NULL;
 			free(entry);
 		}

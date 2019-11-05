@@ -40,15 +40,18 @@ int main()
 
 	struct math_pruner *pruner;
 	float threshold = 0.f;
-	pruner = math_pruner_init(&mq, NULL);
+	pruner = math_pruner_init(&mq, NULL, threshold);
 
 	foreach (iter, merger_set, &mq.merge_set) {
 		struct math_invlist_item item;
+
+		printf("\n === Iteration === \n");
 		for (int i = 0; i < iter->size; i++) {
 			merger_map_call(iter, read, i, &item, sizeof(item));
 			print_item(&item);
 		}
 
+		math_pruner_print(pruner);
 		ms_merger_iter_print(iter, keyprint);
 		printf("\n");
 

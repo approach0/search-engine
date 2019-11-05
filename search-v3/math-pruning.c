@@ -80,11 +80,11 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 	for (int i = 0; i < pruner->n_qnodes; i++) {
 		struct math_pruner_qnode *qn = pruner->qnodes + i;
 		qn->sum_w = 0;
-		qn->score_upp = 0;
+		qn->sum_ipf = 0;
 		for (int j = 0; j < qn->n; j++) {
 			int iid = qn->invlist_id[j];
 			qn->sum_w += qn->secttr_w[j];
-			qn->score_upp += qn->secttr_w[j] * pruner->mq->pf[iid];
+			qn->sum_ipf += (float)qn->secttr_w[j] * pruner->mq->ipf[iid];
 		}
 	}
 }
@@ -128,7 +128,7 @@ static void update_backrefs(struct math_pruner *pruner)
 }
 
 struct math_pruner
-*math_pruner_init(struct math_qry *mq, void *score_judger)
+*math_pruner_init(struct math_qry *mq, void *score_judger, float threshold_0)
 {
 	struct math_pruner *pruner = malloc(sizeof *pruner);
 
@@ -142,6 +142,7 @@ struct math_pruner
 
 	pruner->blp = bin_lp_alloc(mq->n_qnodes, mq->merge_set.n);
 
+	math_pruner_update(pruner, threshold_0);
 	return pruner;
 }
 
@@ -172,7 +173,7 @@ int math_pruner_update(struct math_pruner *pruner, float threshold)
 	int cnt = 0;
 	for (int i = 0; i < pruner->n_qnodes; i++) {
 		struct math_pruner_qnode *qn = pruner->qnodes + i;
-		float upp = calc_upp(pruner->score_judger, qn->score_upp);
+		float upp = calc_upp(pruner->score_judger, qn->sum_ipf);
 		if (upp <= threshold) {
 			/* delete small query node */
 			dele_qnode(pruner, i--);
@@ -233,7 +234,7 @@ void math_pruner_iters_sort_by_maxref(struct math_pruner *pruner,
 	/* overwrite upperbound using updated maxref */
 	for (int i = 0; i < iter->size; i++) {
 		int iid = iter->map[i];
-		iter->set.upp[iid] = pruner->backrefs[iid].max * pruner->mq->pf[iid];
+		iter->set.upp[iid] = pruner->backrefs[iid].max * pruner->mq->ipf[iid];
 	}
 
 	/* update accumulated sum and pivot */
@@ -275,4 +276,25 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 	/* reorder iterators */
 	for (int i = 0; i < iter->size; i++)
 		iter->map[i] = pruner->blp.po[i];
+}
+
+void math_pruner_print(struct math_pruner *pruner)
+{
+	printf("[math pruner] threshold: %.2f \n", pruner->threshold_);
+	for (int i = 0; i < pruner->n_qnodes; i++) {
+		struct math_pruner_qnode *qn = pruner->qnodes + i;
+		printf("[%d] qnode#%d/%d, sum_ipf=%.2f: \n", i,
+			qn->root, qn->sum_w, qn->sum_ipf);
+		for (int j = 0; j < qn->n; j++) {
+			int iid = qn->invlist_id[j];
+			printf("\t secttr/%d ---> ", qn->secttr_w[j]);
+			printf("invlist[%d],ipf=%.2f <---[", iid, pruner->mq->ipf[iid]);
+			for (int k = 0; k < pruner->backrefs[iid].cnt; k++) {
+				int idx = pruner->backrefs[iid].idx[k];
+				int ref = pruner->backrefs[iid].ref[k];
+				printf("#%d/%d, ", pruner->qnodes[idx].root, ref);
+			}
+			printf("max=%d] \n", pruner->backrefs[iid].max);
+		}
+	}
 }
