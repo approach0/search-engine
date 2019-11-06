@@ -183,6 +183,13 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 	}
 #endif
 
+#ifdef DEBUG_MATH_SEARCH
+	printf("[math merge iteration]\n");
+	math_pruner_print(pruner);
+	ms_merger_iter_print(iter, NULL);
+	printf("\n");
+#endif
+
 	/* safe guard */
 	if (l2_iter->future_docID == UINT32_MAX)
 		goto terminated;
@@ -208,7 +215,8 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		int n_hit_nodes = hit_nodes(pruner, n_max_nodes, iter, out);
 
 		/* calculate structural score */
-		float t, best_qnode, best_dnode, best = 0;
+		float t, best = 0;
+		int best_qnode = 0, best_dnode = 0;
 		for (int i = 0; i < n_hit_nodes; i++) {
 			struct math_pruner_qnode *qnode = pruner->qnodes + out[i];
 #ifndef MATH_PRUNING_STRATEGY_NONE
@@ -236,6 +244,10 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 				l2_iter->item.score = best;
 				l2_iter->item.n_occurs = 1;
 				l2_iter->item.occur[0] = key2exp(iter->min);
+#ifdef DEBUG_MATH_SEARCH
+				printf("[doc#%u exp#%u match %d<->%d]: %.2f\n", cur_docID,
+					key2exp(iter->min), best_qnode, best_dnode, best);
+#endif
 			}
 		}
 
