@@ -48,14 +48,11 @@ int ms_merger_map_remove(struct ms_merger *m, int i)
 int ms_merger_map_follow(struct ms_merger *m, int i)
 {
 	uint64_t cur = merger_map_call(m, cur, i);
+	int left = (cur != UINT64_MAX);
+	if (cur < m->min)
+		left = merger_map_call(m, skip, i, m->min);
 
-	if (cur < m->min) {
-		int left = merger_map_call(m, skip, i, m->min);
-		if (!left)
-			return ms_merger_map_remove(m, i);
-	}
-
-	return i;
+	return left;
 }
 
 void ms_merger_iter_sort_by_upp(struct ms_merger *m)

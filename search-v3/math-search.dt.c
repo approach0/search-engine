@@ -13,7 +13,7 @@ struct math_l2_invlist
 	}
 
 	/* allocate memory */
-	struct math_l2_invlist *ret = calloc(1, sizeof *ret);
+	struct math_l2_invlist *ret = malloc(sizeof *ret);
 
 	/* save math query structure */
 	ret->mq = mq;
@@ -34,9 +34,10 @@ void math_l2_invlist_free(struct math_l2_invlist *inv)
 
 /* use MaxScore merger */
 typedef struct ms_merger *merger_set_iter_t;
-#define merger_set_iterator  ms_merger_iterator
-#define merger_set_iter_next ms_merger_iter_next
-#define merger_set_iter_free ms_merger_iter_free
+#define merger_set_iterator   ms_merger_iterator
+#define merger_set_iter_next  ms_merger_iter_next
+#define merger_set_iter_free  ms_merger_iter_free
+#define merger_set_map_follow ms_merger_map_follow
 
 math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 {
@@ -82,25 +83,25 @@ uint64_t math_l2_invlist_iter_cur(math_l2_invlist_iter_t l2_iter)
 }
 
 static inline int
-get_hit_nodes(struct math_pruner *pruner, merger_set_iter_t iter, int *out)
+hit_nodes(struct math_pruner *pruner, int N, merger_set_iter_t iter, int *out)
 {
-	int n = 0, max_n = pruner->mq->n_qnodes;
+	int n = 0, max_n = N;
 
 	/* create a simple bitmap */
 	int hits[max_n];
-	memset(hits, 0, max_n);
+	memset(hits, 0, sizeof hits);
 
 	/* find all hit node indexs */
 	for (int i = 0; i <= iter->pivot; i++) {
 		uint64_t cur = merger_map_call(iter, cur, i);
 		if (cur == iter->min) {
-			struct math_pruner_backref back_refs;
+			struct math_pruner_backref brefs;
 			int iid = iter->map[i];
-			back_refs = pruner->backrefs[iid];
-
-			for	(int j = 0; j < back_refs.cnt; j++) {
-				int idx = back_refs.idx[j];
-				if (hits[idx] == 0) {
+			brefs = pruner->backrefs[iid];
+			/* for all nodes linked to a hit inverted list */
+			for (int j = 0; j < brefs.cnt; j++) {
+				int idx = brefs.idx[j];
+				if (!hits[idx]) {
 					hits[idx] = 1;
 					out[n++] = idx;
 				}
@@ -113,29 +114,35 @@ get_hit_nodes(struct math_pruner *pruner, merger_set_iter_t iter, int *out)
 
 static inline float
 struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
-	struct math_score_factors *msf, float *ipf, float threshold, float best)
+	struct math_score_factors *msf, float *ipf, float best, float threshold)
 {
 	float estimate, score = 0, leftover = qnode->sum_ipf;
+	/* for each sector tree under qnode */
 	for (int i = 0; i < qnode->n; i++) {
+		/* sector tree variables */
 		int iid = qnode->invlist_id[i];
-		int v   = qnode->secttr_w[i];
+		int ref = qnode->secttr_w[i];
+
+		/* skip set iterators must follow up */
+		if (i > iter->pivot)
+			if (!merger_set_map_follow(iter, i))
+				goto skip;
+
 		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
-		if (cur < iter->min)
-			MERGER_ITER_CALL(iter, skip, iid, iter->min);
-
-		struct math_invlist_item item;
-		MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
-		uint32_t key[2] = {item.secID, item.docID};
-		cur = *(uint64_t*)key;
 		if (cur == iter->min) {
-			uint8_t w = item.sect_width;
-			score = score + MIN(v, w) * ipf[iid];
+			/* read hit inverted list item */
+			struct math_invlist_item item;
+			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
+			/* accumulate preceise partial score */
+			score += MIN(ref, item.sect_width) * ipf[iid];
 		}
-
-		leftover = leftover - v * ipf[iid];
+skip:
+		leftover = leftover - ref * ipf[iid];
 		estimate = score + leftover; /* new score estimation */
+#ifndef MATH_PRUNING_STRATEGY_NONE
 		if (estimate <= best || math_score_upp(msf, estimate) <= threshold)
 			return 0;
+#endif
 	}
 
 	return score;
@@ -181,12 +188,12 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		goto terminated;
 
 	/* merge to the next */
-	uint32_t cur_docID;
 	float *ipf = l2_iter->ipf;
 	struct math_score_factors *msf = l2_iter->msf;
+	int n_max_nodes = l2_iter->n_qnodes;
 	do {
 		/* set current candidate */
-		cur_docID = key2doc(iter->min);
+		uint32_t cur_docID = key2doc(iter->min);
 
 		/* test the termination of level-2 merge iteration */
 		if (cur_docID != l2_iter->future_docID) {
@@ -197,30 +204,35 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		}
 
 		/* get hits query nodes of current candidate */
-		int out[l2_iter->n_qnodes];
-		int n_hit_nodes = get_hit_nodes(pruner, iter, out);
+		int out[n_max_nodes];
+		int n_hit_nodes = hit_nodes(pruner, n_max_nodes, iter, out);
 
 		/* calculate structural score */
-		float t, best_node, best = 0;
+		float t, best_qnode, best_dnode, best = 0;
 		for (int i = 0; i < n_hit_nodes; i++) {
 			struct math_pruner_qnode *qnode = pruner->qnodes + out[i];
+#ifndef MATH_PRUNING_STRATEGY_NONE
 			if (qnode->sum_ipf <= best)
 				continue;
-
-			t = struct_score(iter, qnode, msf, ipf, threshold, best);
+#endif
+			/* get structural score of matched tree rooted at qnode */
+			t = struct_score(iter, qnode, msf, ipf, best, threshold);
 			if (t > best) {
 				best = t;
-				best_node = qnode->root;
+				best_qnode = qnode->root;
+				best_dnode = key2rot(iter->min);
 			}
 		}
 
 		/* if structural score is non-zero */
 		if (best > 0) {
-			(void)best_node;
 			/* TODO: calculate symbol score here */
+			(void)best_qnode;
+			(void)best_dnode;
 
-			/* update the returning item values for current docID */
+			/* take max expression score as math score for this docID */
 			if (best > l2_iter->item.score) {
+				/* update the returning item values for current docID */
 				l2_iter->item.score = best;
 				l2_iter->item.n_occurs = 1;
 				l2_iter->item.occur[0] = key2exp(iter->min);

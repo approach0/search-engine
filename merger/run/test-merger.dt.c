@@ -80,7 +80,7 @@ int main()
 			/* advance those in skipping set */
 			if (i > iter->pivot) {
 				printf("skipping [%d]\n", iter->map[i]);
-				i = ms_merger_map_follow(iter, i);
+				ms_merger_map_follow(iter, i);
 			}
 
 			/* accumulate precise partial score */
