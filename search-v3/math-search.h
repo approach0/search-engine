@@ -11,7 +11,7 @@ struct math_l2_invlist {
 };
 
 struct math_l2_invlist *math_l2_invlist(math_index_t, const char*, float*);
-void math_l2_invlist_free(struct math_l2_invlist*);
+void  math_l2_invlist_free(struct math_l2_invlist*);
 
 /* iterator */
 typedef struct ms_merger *merger_set_iter_t;
@@ -44,3 +44,6 @@ void     math_l2_invlist_iter_free(math_l2_invlist_iter_t);
 uint64_t math_l2_invlist_iter_cur(math_l2_invlist_iter_t);
 int      math_l2_invlist_iter_next(math_l2_invlist_iter_t);
 size_t   math_l2_invlist_iter_read(math_l2_invlist_iter_t, void*, size_t);
+
+/* level-2 inverted list upperbound calculation */
+float math_l2_invlist_iter_upp(math_l2_invlist_iter_t);
