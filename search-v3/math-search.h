@@ -22,7 +22,7 @@ struct math_l2_iter_item {
 	uint32_t n_occurs, occur[MAX_MATH_OCCURS];
 };
 
-typedef struct {
+typedef struct math_l2_invlist_iter {
 	/* copied from level-2 invert list */
 	int n_qnodes;
 	float  *ipf;
