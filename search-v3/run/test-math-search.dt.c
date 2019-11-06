@@ -7,11 +7,6 @@
 #define merger_set_iter_next ms_merger_iter_next
 #define merger_set_iter_free ms_merger_iter_free
 
-static void keyprint(uint64_t k)
-{
-	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
-}
-
 static void print_l2_item(struct math_l2_iter_item *item)
 {
 	printf("doc#%u: %.2f, occurred: ", item->docID, item->score);
@@ -66,7 +61,7 @@ int main()
 		print_l2_item(&item);
 
 		math_pruner_print(l2_iter->pruner);
-		ms_merger_iter_print(merge_iter, keyprint);
+		ms_merger_iter_print(merge_iter, NULL);
 		printf("\n");
 
 	}
