@@ -1,3 +1,4 @@
+#include "config.h"
 #include "math-search.h"
 
 struct math_l2_invlist
@@ -43,12 +44,21 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 
 	math_l2_invlist_iter_t l2_iter = malloc(sizeof *l2_iter);
 
-	l2_iter->merge_iter = merger_set_iterator(&inv->mq.merge_set);
-	l2_iter->future_docID = 0;
+	l2_iter->n_qnodes       = inv->mq.n_qnodes;
+	l2_iter->ipf            = inv->mq.ipf;
+	l2_iter->msf            = &inv->msf;
+	l2_iter->merge_iter     = merger_set_iterator(&inv->mq.merge_set);
+	l2_iter->future_docID   = 0;
 	l2_iter->last_threshold = -1.f;
-	l2_iter->threshold = inv->threshold;
+	l2_iter->threshold      = inv->threshold;
 
 	l2_iter->pruner = math_pruner_init(&inv->mq, &inv->msf, *inv->threshold);
+
+	/* run level-2 next() **twice** to forward the current
+	 * ID from zero to future_docID (also zero initially)
+	 * and then forward to the first item docID. */
+	if (0 != math_l2_invlist_iter_next(l2_iter))
+		math_l2_invlist_iter_next(l2_iter);
 
 	return l2_iter;
 }
@@ -68,6 +78,66 @@ uint64_t math_l2_invlist_iter_cur(math_l2_invlist_iter_t l2_iter)
 		return UINT64_MAX;
 	else
 		return l2_iter->item.docID;
+}
+
+static inline int
+get_hit_nodes(struct math_pruner *pruner, merger_set_iter_t iter, int *out)
+{
+	int n = 0, max_n = pruner->mq->n_qnodes;
+
+	/* create a simple bitmap */
+	int hits[max_n];
+	memset(hits, 0, max_n);
+
+	/* find all hit node indexs */
+	for (int i = 0; i <= iter->pivot; i++) {
+		uint64_t cur = merger_map_call(iter, cur, i);
+		if (cur == iter->min) {
+			struct math_pruner_backref back_refs;
+			int iid = iter->map[i];
+			back_refs = pruner->backrefs[iid];
+
+			for	(int j = 0; j < back_refs.cnt; j++) {
+				int idx = back_refs.idx[j];
+				if (hits[idx] == 0) {
+					hits[idx] = 1;
+					out[n++] = idx;
+				}
+			}
+		}
+	}
+
+	return n;
+}
+
+static inline float
+struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
+	struct math_score_factors *msf, float *ipf, float threshold, float best)
+{
+	float estimate, score = 0, leftover = qnode->sum_ipf;
+	for (int i = 0; i < qnode->n; i++) {
+		int iid = qnode->invlist_id[i];
+		int v   = qnode->secttr_w[i];
+		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
+		if (cur < iter->min)
+			MERGER_ITER_CALL(iter, skip, iid, iter->min);
+
+		struct math_invlist_item item;
+		MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
+		uint32_t key[2] = {item.secID, item.docID};
+		cur = *(uint64_t*)key;
+		if (cur == iter->min) {
+			uint8_t w = item.sect_width;
+			score = score + MIN(v, w) * ipf[iid];
+		}
+
+		leftover = leftover - v * ipf[iid];
+		estimate = score + leftover; /* new score estimation */
+		if (estimate <= best || math_score_upp(msf, estimate) <= threshold)
+			return 0;
+	}
+
+	return score;
 }
 
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
@@ -105,36 +175,63 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 	}
 #endif
 
-	/* make shortcut for current document ID */
-	uint32_t *cur_docID = &l2_iter->item.docID;
-
 	/* safe guard */
 	if (l2_iter->future_docID == UINT32_MAX)
 		goto terminated;
 
-	/* reset occurred position */
-	l2_iter->item.n_occurs = 0;
-
 	/* merge to the next */
+	uint32_t cur_docID;
+	float *ipf = l2_iter->ipf;
+	struct math_score_factors *msf = l2_iter->msf;
 	do {
 		/* set current candidate */
-		*cur_docID = key2doc(iter->min);
+		cur_docID = key2doc(iter->min);
 
 		/* test the termination of level-2 merge iteration */
-		if (*cur_docID != l2_iter->future_docID) {
+		if (cur_docID != l2_iter->future_docID) {
 			/* passed through all maths in future_docID. */
-			uint32_t save = *cur_docID;
-			*cur_docID = l2_iter->future_docID;
-			l2_iter->future_docID = save;
+			l2_iter->item.docID = l2_iter->future_docID;
+			l2_iter->future_docID = cur_docID;
 			return 1;
 		}
 
-		/* scoring the current candidate */
+		/* get hits query nodes of current candidate */
+		int out[l2_iter->n_qnodes];
+		int n_hit_nodes = get_hit_nodes(pruner, iter, out);
+
+		/* calculate structural score */
+		float t, best_node, best = 0;
+		for (int i = 0; i < n_hit_nodes; i++) {
+			struct math_pruner_qnode *qnode = pruner->qnodes + out[i];
+			if (qnode->sum_ipf <= best)
+				continue;
+
+			t = struct_score(iter, qnode, msf, ipf, threshold, best);
+			if (t > best) {
+				best = t;
+				best_node = qnode->root;
+			}
+		}
+
+		/* if structural score is non-zero */
+		if (best > 0) {
+			(void)best_node;
+			/* TODO: calculate symbol score here */
+
+			/* update the returning item values for current docID */
+			if (best > l2_iter->item.score) {
+				l2_iter->item.score = best;
+				l2_iter->item.n_occurs = 1;
+				l2_iter->item.occur[0] = key2exp(iter->min);
+			}
+		}
+
 	} while (merger_set_iter_next(iter));
 
-terminated:
+terminated: /* when iterator reaches the end */
 	l2_iter->item.docID = UINT32_MAX;
 	l2_iter->item.score = 0.f;
+	l2_iter->item.n_occurs = 0;
 	return 0;
 }
 
