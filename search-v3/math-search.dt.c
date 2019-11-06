@@ -13,7 +13,7 @@ struct math_l2_invlist
 	}
 
 	/* allocate memory */
-	struct math_l2_invlist *ret = calloc(1, sizeof(ret));
+	struct math_l2_invlist *ret = calloc(1, sizeof *ret);
 
 	/* save math query structure */
 	ret->mq = mq;
@@ -29,6 +29,7 @@ struct math_l2_invlist
 void math_l2_invlist_free(struct math_l2_invlist *inv)
 {
 	math_qry_release(&inv->mq);
+	free(inv);
 }
 
 /* use MaxScore merger */
