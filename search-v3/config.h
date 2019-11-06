@@ -17,3 +17,5 @@
 
 
 #define MATH_SCORE_ETA 0.05f
+
+#define MAX_MATH_OCCURS 8

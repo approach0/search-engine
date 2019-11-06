@@ -93,11 +93,6 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	memset(mq, 0, sizeof *mq);
 
 	/*
-	 * save TeX
-	 */
-	mq->tex = strdup(tex);
-
-	/*
 	 * parse TeX
 	 */
 	struct tex_parse_ret parse_res;
@@ -106,6 +101,11 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	    parse_res.operator_tree == NULL) {
 		return 1;
 	}
+
+	/*
+	 * save TeX
+	 */
+	mq->tex = strdup(tex);
 
 	/*
 	 * save OPT
