@@ -263,8 +263,8 @@ float math_l2_invlist_iter_upp(math_l2_invlist_iter_t l2_iter)
 	float max_sum_ipf = 0;
 	for (int i = 0; i < pruner->n_qnodes; i++) {
 		struct math_pruner_qnode *qnode = pruner->qnodes + i;
-		if (qnode->sum_ipf > max_sum_ipf)
-			qnode->sum_ipf = max_sum_ipf;
+		if (max_sum_ipf < qnode->sum_ipf)
+			max_sum_ipf = qnode->sum_ipf;
 	}
 	return math_score_upp(msf, max_sum_ipf);
 }
