@@ -66,7 +66,7 @@ int main()
 
 	}
 
-	math_l2_invlist_iter_free(merge_set.iter[0]);
+	math_l2_invlist_iter_free(l2_iter);
 
 end:
 	math_l2_invlist_free(minv);
