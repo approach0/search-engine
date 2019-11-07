@@ -22,7 +22,8 @@ static int get_json_val(const char *json, const char *key, char *val)
 	}
 
 	parson_obj = json_value_get_object(parson_val);
-	strcpy(val, json_object_get_string(parson_obj, key));
+	strncpy(val, json_object_get_string(parson_obj, key), MAX_CORPUS_FILE_SZ);
+	val[MAX_CORPUS_FILE_SZ - 1] = '\0';
 
 	json_value_free(parson_val);
 	return 0;
