@@ -168,6 +168,37 @@ void indices_print_summary(struct indices* indices)
 		indices->n_tex, indices->n_secttr);
 }
 
+char *get_blob_txt(blob_index_t bi, doc_id_t docID,
+                   int decompress, size_t *str_len)
+{
+	struct codec   codec = {CODEC_GZ, NULL};
+	static char    text[MAX_CORPUS_FILE_SZ + 1];
+	size_t         blob_sz, text_sz;
+	char          *blob_out = NULL;
+
+	blob_sz = blob_index_read(bi, docID, (void **)&blob_out);
+
+	if (blob_out) {
+		if (decompress) {
+			text_sz = codec_decompress(&codec, blob_out, blob_sz,
+					text, MAX_CORPUS_FILE_SZ);
+			text[text_sz] = '\0';
+			*str_len = text_sz;
+		} else {
+			memcpy(text, blob_out, blob_sz);
+			text[blob_sz] = '\0';
+			*str_len = blob_sz;
+		}
+
+		blob_free(blob_out);
+		return strdup(text);
+	}
+
+	fprintf(stderr, "error: get_blob_string().\n");
+	*str_len = 0;
+	return NULL;
+}
+
 /*
  * Below are indexer implementation.
  */

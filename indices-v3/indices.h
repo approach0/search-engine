@@ -48,6 +48,9 @@ void indices_close(struct indices*);
 int  indices_cache(struct indices*);
 void indices_print_summary(struct indices*);
 
+/* utility function to read indexed blob text */
+char *get_blob_txt(blob_index_t, doc_id_t, int, size_t*);
+
 /*
  * Indexer (writer)
  */

@@ -11,36 +11,19 @@
 
 static void print_document(struct indices *indices, doc_id_t docID)
 {
-	struct codec codec = {CODEC_GZ, NULL};
-	static char text[MAX_CORPUS_FILE_SZ + 1];
-	size_t   blob_sz, text_sz;
-	char    *blob_out = NULL;
-
 	uint32_t docLen = term_index_get_docLen(indices->ti, docID);
 	printf("doc#%u length: %u\n", docID, docLen);
 
-	blob_sz = blob_index_read(indices->url_bi, docID, (void **)&blob_out);
-	if (blob_out) {
-		memcpy(text, blob_out, blob_sz);
-		text[blob_sz] = '\0';
-		printf("URL: %s\n\n", text);
-		blob_free(blob_out);
-	} else {
-		fprintf(stderr, "URL blob read failed.\n");
-	}
+	char *text;
+	size_t len;
 
-	blob_sz = blob_index_read(indices->txt_bi, docID, (void **)&blob_out);
+	text = get_blob_txt(indices->url_bi, docID, 0, &len);
+	printf("%s\n\n", text);
+	free(text);
 
-	if (blob_out) {
-		text_sz = codec_decompress(&codec, blob_out, blob_sz,
-		                           text, MAX_CORPUS_FILE_SZ);
-		text[text_sz] = '\0';
-		blob_free(blob_out);
-
-		printf("%s", text);
-	} else {
-		fprintf(stderr, "text blob read failed.\n");
-	}
+	text = get_blob_txt(indices->txt_bi, docID, 1, &len);
+	printf("%s\n", text);
+	free(text);
 }
 
 static void print_term(term_index_t ti, char *term)
