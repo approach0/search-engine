@@ -13,7 +13,8 @@
 
 static void print_l2_item(struct math_l2_iter_item *item)
 {
-	printf("[read item] doc#%u: %.2f, occurred: ", item->docID, item->score);
+	printf("[level-2 read item] doc#%u: %.2f, occurred: ",
+		item->docID, item->score);
 	for (int i = 0; i < item->n_occurs; i++) {
 		printf("@%u ", item->occur[i]);
 	}
@@ -30,7 +31,7 @@ int main()
 		goto close;
 	}
 
-	const char tex[] = "k(b+a)+ab+k+a";
+	const char tex[] = "a=\\frac{b+5}2";
 	float threshold = 0.f;
 
 	struct math_l2_invlist *minv;
@@ -61,30 +62,29 @@ int main()
 	ranked_results_t rk_res;
 	priority_Q_init(&rk_res, DEFAULT_N_TOP_RESULTS);
 
+	int cnt = 0;
 	foreach (merge_iter, merger_set, &merge_set) {
 		struct math_l2_iter_item item;
 		merger_map_call(merge_iter, read, 0, &item, sizeof(item));
-#if 1
-		printf("=== Iteration ===\n");
-		uint64_t cur = merger_map_call(merge_iter, cur, 0);
-		printf("[cur docID] %lu\n", cur);
 
-		print_l2_item(&item);
+//		printf("=== Iteration ===\n");
+//		uint64_t cur = merger_map_call(merge_iter, cur, 0);
+//		printf("[cur docID] %lu\n", cur);
 
-		math_pruner_print(l2_iter->pruner);
-		ms_merger_iter_print(merge_iter, NULL);
-		printf("\n");
-#endif
 		if (item.score > 0) {
-			float score = math_score_upp(&minv->msf, item.score);
+
+			printf(C_RED);
+			print_l2_item(&item);
+			printf(C_RST);
+			printf("\n");
 
 			if (!priority_Q_full(&rk_res) ||
-			    score > priority_Q_min_score(&rk_res)) {
+			    item.score > priority_Q_min_score(&rk_res)) {
 
 				struct rank_hit *hit = malloc(sizeof *hit);
 				const int sz = sizeof(uint32_t) * item.n_occurs;
 				hit->docID = item.docID;
-				hit->score = score;
+				hit->score = item.score;
 				hit->n_occurs = item.n_occurs;
 				hit->occur = malloc(sz);
 				memcpy(hit->occur, item.occur, sz);
@@ -95,6 +95,11 @@ int main()
 				threshold = priority_Q_min_score(&rk_res);
 			}
 		}
+
+		if (cnt > 3)
+			break;
+		else
+			cnt ++;
 	}
 
 	math_l2_invlist_iter_free(l2_iter);

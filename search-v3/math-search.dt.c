@@ -1,3 +1,4 @@
+#include "common/common.h"
 #include "config.h"
 #include "math-search.h"
 
@@ -148,6 +149,32 @@ skip:
 	return score;
 }
 
+static inline float
+doc_lr_paths(merger_set_iter_t iter, struct math_pruner_qnode *qnode)
+{
+	int ret = -1;
+	for (int i = 0; i < qnode->n; i++) {
+		int iid = qnode->invlist_id[i];
+		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
+		if (cur == iter->min) {
+			/* read hit inverted list item */
+			struct math_invlist_item item;
+			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
+			ret = item.orig_width;
+			break;
+		}
+	}
+
+	return (float)ret;
+}
+
+#ifdef DEBUG_MATH_SEARCH
+static void keyprint(uint64_t k)
+{
+	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
+}
+#endif
+
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 {
 	struct math_pruner *pruner = l2_iter->pruner;
@@ -157,8 +184,12 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 #ifndef MATH_PRUNING_STRATEGY_NONE
 	/* handle threshold update */
 	if (threshold != l2_iter->last_threshold) {
-		if (math_pruner_update(pruner, threshold))
-			printf("[node dropped]\n");
+		if (math_pruner_update(pruner, threshold)) {
+			;
+#ifdef DEBUG_MATH_SEARCH
+			printf(C_BLUE "[node dropped]\n" C_RST);
+#endif
+		}
 
 		math_pruner_iters_drop(pruner, iter);
 
@@ -183,12 +214,9 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 	}
 #endif
 
-#ifdef DEBUG_MATH_SEARCH
-	printf("[math merge iteration]\n");
-	math_pruner_print(pruner);
-	ms_merger_iter_print(iter, NULL);
-	printf("\n");
-#endif
+	/* reset item values */
+	l2_iter->item.score = 0.f;
+	l2_iter->item.n_occurs = 0;
 
 	/* safe guard */
 	if (l2_iter->future_docID == UINT32_MAX)
@@ -201,6 +229,13 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 	do {
 		/* set current candidate */
 		uint32_t cur_docID = key2doc(iter->min);
+
+#ifdef DEBUG_MATH_SEARCH
+		printf("[math merge iteration] future_docID=%u\n",
+			l2_iter->future_docID);
+		math_pruner_print(pruner);
+		ms_merger_iter_print(iter, keyprint);
+#endif
 
 		/* test the termination of level-2 merge iteration */
 		if (cur_docID != l2_iter->future_docID) {
@@ -227,7 +262,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			t = struct_score(iter, qnode, msf, ipf, best, threshold);
 			if (t > best) {
 				best = t;
-				best_qnode = qnode->root;
+				best_qnode = i; //qnode->root;
 				best_dnode = key2rot(iter->min);
 			}
 		}
@@ -238,25 +273,37 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			(void)best_qnode;
 			(void)best_dnode;
 
+			msf->symbol_sim = 1.0;
+			msf->struct_sim = best;
+			msf->doc_lr_paths = doc_lr_paths(iter, pruner->qnodes + out[best_qnode]);
+			float score = math_score_calc(msf);
+
 			/* take max expression score as math score for this docID */
-			if (best > l2_iter->item.score) {
+			if (score > l2_iter->item.score) {
 				/* update the returning item values for current docID */
-				l2_iter->item.score = best;
+				l2_iter->item.score = score;
 				l2_iter->item.n_occurs = 1;
 				l2_iter->item.occur[0] = key2exp(iter->min);
+
 #ifdef DEBUG_MATH_SEARCH
-				printf("[doc#%u exp#%u match %d<->%d]: %.2f\n", cur_docID,
-					key2exp(iter->min), best_qnode, best_dnode, best);
+				printf(C_GREEN);
+				printf("Propose ");
+				printf("[doc#%u exp#%u match %d<->%d]: %.2f/%.0f => %.2f\n",
+					cur_docID, key2exp(iter->min), best_qnode, best_dnode,
+					best, msf->doc_lr_paths, score);
+				printf(C_RST);
 #endif
 			}
 		}
 
+#ifdef DEBUG_MATH_SEARCH
+		printf("\n");
+#endif
 	} while (merger_set_iter_next(iter));
 
 terminated: /* when iterator reaches the end */
+
 	l2_iter->item.docID = UINT32_MAX;
-	l2_iter->item.score = 0.f;
-	l2_iter->item.n_occurs = 0;
 	return 0;
 }
 

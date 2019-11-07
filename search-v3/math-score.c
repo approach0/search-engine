@@ -2,16 +2,19 @@
 #include "common/common.h"
 #include "math-score.h"
 
+const float eta = MATH_SCORE_ETA;
+
+#define DOC_LEN_PENALTY ((1.f - eta) + eta * (1.f / logf(1.f + dn)))
+
 void math_score_precalc(struct math_score_factors *msf)
 {
-	const float eta = MATH_SCORE_ETA;
 	float dn;
 
 	dn = 1.f;
-	msf->upp_sf = 1.f * ((1.f - eta) + eta * (1.f / logf(1.f + dn)));
+	msf->upp_sf = 1.f * DOC_LEN_PENALTY;
 
 	dn = (float)MAX_MATCHED_PATHS;
-	msf->low_sf = .5f * ((1.f - eta) + eta * (1.f / logf(1.f + dn)));
+	msf->low_sf = .5f * DOC_LEN_PENALTY;
 }
 
 float math_score_ipf(float N, float pf)
@@ -22,9 +25,7 @@ float math_score_ipf(float N, float pf)
 float math_score_calc(struct math_score_factors *msf)
 {
 	float dn = msf->doc_lr_paths;
-	float eta = MATH_SCORE_ETA;
-
-	float sf = msf->symbol_sim * ((1.f - eta) + eta * (1.f / logf(1.f + dn)));
+	float sf = msf->symbol_sim * DOC_LEN_PENALTY;
 
 	return msf->struct_sim * sf;
 }
