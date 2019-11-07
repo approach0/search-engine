@@ -13,7 +13,7 @@
 
 static void print_l2_item(struct math_l2_iter_item *item)
 {
-	printf("doc#%u: %.2f, occurred: ", item->docID, item->score);
+	printf("[read item] doc#%u: %.2f, occurred: ", item->docID, item->score);
 	for (int i = 0; i < item->n_occurs; i++) {
 		printf("@%u ", item->occur[i]);
 	}
@@ -23,14 +23,14 @@ static void print_l2_item(struct math_l2_iter_item *item)
 int main()
 {
 	struct indices indices;
-	char indices_path[] = "../math-index-v3/tmp";
+	char indices_path[] = "../indexerd/tmp";
 
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
 
-	const char tex[] = "k(b+a)+ab+\\sqrt{b}+k+a";
+	const char tex[] = "k(b+a)+ab+k+a";
 	float threshold = 0.f;
 
 	struct math_l2_invlist *minv;
@@ -64,10 +64,10 @@ int main()
 	foreach (merge_iter, merger_set, &merge_set) {
 		struct math_l2_iter_item item;
 		merger_map_call(merge_iter, read, 0, &item, sizeof(item));
-#if 0
+#if 1
 		printf("=== Iteration ===\n");
 		uint64_t cur = merger_map_call(merge_iter, cur, 0);
-		printf("cur docID is: %lu\n", cur);
+		printf("[cur docID] %lu\n", cur);
 
 		print_l2_item(&item);
 
@@ -82,7 +82,7 @@ int main()
 			    score > priority_Q_min_score(&rk_res)) {
 
 				struct rank_hit *hit = malloc(sizeof *hit);
-				const int sz = sizeof(uint32_t) * hit->n_occurs;
+				const int sz = sizeof(uint32_t) * item.n_occurs;
 				hit->docID = item.docID;
 				hit->score = score;
 				hit->n_occurs = item.n_occurs;
@@ -104,6 +104,7 @@ int main()
 	/* sort and print search results */
 	priority_Q_sort(&rk_res);
 	print_search_results(&indices, &rk_res, 0 /* print all pages */);
+	priority_Q_free(&rk_res);
 
 close:
 	indices_close(&indices);
