@@ -114,8 +114,10 @@ skip:
 
 	/* set index stats */
 	indices_update_stats(indices);
+
 	/* Ad-hoc FIX: Update n_doc only for initialization. */
-	indices->n_doc = term_index_get_docN(indices->ti);
+	if (indices->ti)
+		indices->n_doc = term_index_get_docN(indices->ti);
 
 	return open_err;
 }
