@@ -1,6 +1,10 @@
 #include "mhook/mhook.h"
+#include "common/common.h"
 #include "config.h"
+#include "indices-v3/indices.h"
 #include "math-search.h"
+#include "rank.h"
+#include "print-search-results.h"
 
 /* use MaxScore merger */
 #define merger_set_iterator  ms_merger_iterator
@@ -18,20 +22,22 @@ static void print_l2_item(struct math_l2_iter_item *item)
 
 int main()
 {
-	math_index_t mi = math_index_open("../math-index-v3/tmp", "r");
-	if (mi == NULL) {
-		prerr("cannot open index.");
-		return 1;
+	struct indices indices;
+	char indices_path[] = "../math-index-v3/tmp";
+
+	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
+		fprintf(stderr, "indices open failed.\n");
+		goto close;
 	}
 
 	const char tex[] = "k(b+a)+ab+\\sqrt{b}+k+a";
 	float threshold = 0.f;
-	struct math_l2_invlist *minv = math_l2_invlist(mi, tex, &threshold);
 
+	struct math_l2_invlist *minv;
+	minv = math_l2_invlist(indices.mi, tex, &threshold);
 	if (NULL == minv) {
 		prerr("cannot parse tex %s", tex);
-		math_index_close(mi);
-		return 2;
+		goto close;
 	}
 
 	struct merge_set merge_set = {0};
@@ -46,32 +52,61 @@ int main()
 
 	if (l2_iter == NULL) {
 		prerr("cannot create level-2 iterator.");
-		goto end;
+		math_l2_invlist_free(minv);
+		goto close;
 	}
 
 	printf("level-2 inverted list upperbound: %.2f\n", merge_set.upp[0]);
 
+	ranked_results_t rk_res;
+	priority_Q_init(&rk_res, DEFAULT_N_TOP_RESULTS);
+
 	foreach (merge_iter, merger_set, &merge_set) {
+		struct math_l2_iter_item item;
+		merger_map_call(merge_iter, read, 0, &item, sizeof(item));
+#if 0
 		printf("=== Iteration ===\n");
 		uint64_t cur = merger_map_call(merge_iter, cur, 0);
 		printf("cur docID is: %lu\n", cur);
 
-		struct math_l2_iter_item item;
-		merger_map_call(merge_iter, read, 0, &item, sizeof(item));
 		print_l2_item(&item);
 
 		math_pruner_print(l2_iter->pruner);
 		ms_merger_iter_print(merge_iter, NULL);
 		printf("\n");
+#endif
+		if (item.score > 0) {
+			float score = math_score_upp(&minv->msf, item.score);
 
+			if (!priority_Q_full(&rk_res) ||
+			    score > priority_Q_min_score(&rk_res)) {
+
+				struct rank_hit *hit = malloc(sizeof *hit);
+				const int sz = sizeof(uint32_t) * hit->n_occurs;
+				hit->docID = item.docID;
+				hit->score = score;
+				hit->n_occurs = item.n_occurs;
+				hit->occur = malloc(sz);
+				memcpy(hit->occur, item.occur, sz);
+
+				priority_Q_add_or_replace(&rk_res, hit);
+
+				/* update threshold */
+				threshold = priority_Q_min_score(&rk_res);
+			}
+		}
 	}
 
 	math_l2_invlist_iter_free(l2_iter);
 
-end:
 	math_l2_invlist_free(minv);
-	math_index_close(mi);
 
+	/* sort and print search results */
+	priority_Q_sort(&rk_res);
+	print_search_results(&indices, &rk_res, 0 /* print all pages */);
+
+close:
+	indices_close(&indices);
 	mhook_print_unfree();
 	return 0;
 }

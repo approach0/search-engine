@@ -1,3 +1,4 @@
+#pragma once
 #include "common/types.h"
 #include "strmap/strmap.h"
 #include "codec/codec.h"
