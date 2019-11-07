@@ -22,6 +22,7 @@ int main(void)
 		return 1;
 	}
 
+	/* positions here are in byte offset */
 	ADD(363, "hello");
 	ADD(3908, "world");
 	ADD(4276, "world");
