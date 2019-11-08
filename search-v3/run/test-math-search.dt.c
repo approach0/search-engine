@@ -24,15 +24,15 @@ static void print_l2_item(struct math_l2_iter_item *item)
 int main()
 {
 	struct indices indices;
-	//char indices_path[] = "../indexerd/tmp";
-	char indices_path[] = "/home/tk/nvme0n1/mnt-test-v3.img/";
+	char indices_path[] = "../indexerd/tmp";
+	//char indices_path[] = "/home/tk/nvme0n1/mnt-test-v3.img/";
 
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
 
-	const char tex[] = "\\sum_{i=0}^n x_i = x";
+	const char tex[] = "x^2+2xy+y^2=(x+y)^2";
 	float threshold = 0.f;
 
 	struct math_l2_invlist *minv;

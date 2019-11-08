@@ -40,6 +40,23 @@ typedef struct ms_merger *merger_set_iter_t;
 #define merger_set_iter_free  ms_merger_iter_free
 #define merger_set_map_follow ms_merger_map_follow
 
+#ifdef DEBUG_MATH_SEARCH
+static void keyprint(uint64_t k)
+{
+	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
+}
+
+static int inspect(uint64_t k)
+{
+	uint d = key2doc(k);
+	uint e = key2exp(k);
+	uint r = key2rot(k);
+	(void)d; (void)e; (void)r;
+	//return (d == 116 && e == 228 && r == 20);
+	return (d == 593 && e == 26);
+}
+#endif
+
 math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 {
 	if (merger_set_empty(&inv->mq.merge_set))
@@ -179,23 +196,6 @@ doc_lr_paths(merger_set_iter_t iter, struct math_pruner_qnode *qnode)
 	return (float)ret;
 }
 
-#ifdef DEBUG_MATH_SEARCH
-static void keyprint(uint64_t k)
-{
-	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
-}
-
-static int inspect(uint64_t k)
-{
-	return 1;
-	uint d = key2doc(k);
-	uint e = key2exp(k);
-	uint r = key2rot(k);
-	return (d == 36 && e == 77 && r == 11) ||
-	       (d == 1 && e == 176 && r == 5);
-}
-#endif
-
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 {
 	struct math_pruner *pruner = l2_iter->pruner;
@@ -244,7 +244,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		goto terminated;
 
 	/* best expression (w/ highest structural score) within a document */
-	float s, best = 0;
+	float best = 0;
 	int best_qnode = 0, best_dnode = 0;
 
 	/* merge to the next */
@@ -257,8 +257,10 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 
 #ifdef DEBUG_MATH_SEARCH
 		if (inspect(iter->min)) {
+			printf(C_BROWN);
 			printf("[math merge iteration] future_docID=%u\n",
 				l2_iter->future_docID);
+			printf(C_RST);
 			math_pruner_print(pruner);
 			ms_merger_iter_print(iter, keyprint);
 		}
@@ -304,7 +306,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			}
 #endif
 			/* get structural score of matched tree rooted at qnode */
-			s = struct_score(iter, qnode, msf, ipf, best, threshold);
+			float s = struct_score(iter, qnode, msf, ipf, best, threshold);
 			if (s > best) {
 				best = s;
 				best_qnode = i; //qnode->root;
