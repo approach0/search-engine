@@ -136,11 +136,22 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
 			/* accumulate preceise partial score */
 			score += MIN(ref, item.sect_width) * ipf[iid];
+#ifdef DEBUG_MATH_SEARCH__STRUCT_SCORING
+			if (inspect(iter->min)) {
+				printf("node score += min(q=%u, d=%u) * %.2f from [%3u]"
+					" = %.2f \n", ref, item.sect_width, ipf[iid], iid, score);
+			}
+#endif
 		}
 skip:
+#ifndef MATH_PRUNING_STRATEGY_NONE
 		leftover = leftover - ref * ipf[iid];
 		estimate = score + leftover; /* new score estimation */
-#ifndef MATH_PRUNING_STRATEGY_NONE
+
+#ifdef DEBUG_MATH_SEARCH__STRUCT_SCORING
+		if (inspect(iter->min))
+			printf("+= leftover=%.2f = %.2f\n", leftover, estimate);
+#endif
 		if (estimate <= best || math_score_upp(msf, estimate) <= threshold)
 			return 0;
 #endif
