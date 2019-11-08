@@ -79,9 +79,15 @@ int term_index_load(void *index_, size_t limit_sz)
 	if (NULL == index->cinfo)
 		index->cinfo = term_codec_info();
 
+	/* get "math_exp" term ID */
+	term_id_t exclude_id = term_lookup(index, (char*)"math_exp");
+
 	for (term_id = 1; term_id <= termN; term_id++) {
 		/* break when we do not want any term being cached */
 		if (limit_sz == 0) break;
+
+		/* exclude "math_exp" */
+		if (term_id == exclude_id) continue;
 
 		/* only document terms with DF greater than a threshold */
 		uint32_t df = term_index_get_df(index, term_id);
