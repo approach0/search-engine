@@ -131,7 +131,7 @@ hit_nodes(struct math_pruner *pruner, int N, merger_set_iter_t iter, int *out)
 }
 
 static inline float
-struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
+struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode, int *dn,
 	struct math_score_factors *msf, float *ipf, float best, float threshold)
 {
 	float estimate, score = 0, leftover = qnode->sum_ipf;
@@ -153,6 +153,7 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
 			/* accumulate preceise partial score */
 			score += MIN(ref, item.sect_width) * ipf[iid];
+			*dn = item.orig_width;
 #ifdef DEBUG_MATH_SEARCH__STRUCT_SCORING
 			if (inspect(iter->min)) {
 				printf("node score += min(q=%u, d=%u) * %.2f from [%3u]"
@@ -175,25 +176,6 @@ skip:
 	}
 
 	return score;
-}
-
-static inline float
-doc_lr_paths(merger_set_iter_t iter, struct math_pruner_qnode *qnode)
-{
-	int ret = -1;
-	for (int i = 0; i < qnode->n; i++) {
-		int iid = qnode->invlist_id[i];
-		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
-		if (cur == iter->min) {
-			/* read hit inverted list item */
-			struct math_invlist_item item;
-			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
-			ret = item.orig_width;
-			break;
-		}
-	}
-
-	return (float)ret;
 }
 
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
@@ -245,7 +227,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 
 	/* best expression (w/ highest structural score) within a document */
 	float best = 0;
-	int best_qnode = 0, best_dnode = 0;
+	int best_dn, best_qnode = 0, best_dnode = 0;
 
 	/* merge to the next */
 	float *ipf = l2_iter->ipf;
@@ -306,7 +288,8 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			}
 #endif
 			/* get structural score of matched tree rooted at qnode */
-			float s = struct_score(iter, qnode, msf, ipf, best, threshold);
+			float s;
+			s = struct_score(iter, qnode, &best_dn, msf, ipf, best, threshold);
 			if (s > best) {
 				best = s;
 				best_qnode = i; //qnode->root;
@@ -329,7 +312,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 
 			msf->symbol_sim = 1.0;
 			msf->struct_sim = best;
-			msf->doc_lr_paths = doc_lr_paths(iter, pruner->qnodes + out[best_qnode]);
+			msf->doc_lr_paths = (float)best_dn;
 			float score = math_score_calc(msf);
 			//float score = best;
 
