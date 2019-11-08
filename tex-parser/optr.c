@@ -304,7 +304,14 @@ uint32_t optr_assign_values(struct optr_node *optr)
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
 	             0 /* excluding root */, &leaf_cnt);
 	node_cnt = leaf_cnt;
-	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_node_id,
+
+	/*
+	 * Use pre-order to traverse and assign operator node IDs
+	 * because we want larger sector tree (w/ smaller node IDs)
+	 * to be searched first in inverted list such that dynamic
+	 * pruning applied later will presumably work more efficiently.
+	 */
+	tree_foreach(&optr->tnd, &tree_pre_order_DFS, &assign_node_id,
 	             0 /* excluding root */, &node_cnt);
 
 	/* return the maximum path_id assigned */
