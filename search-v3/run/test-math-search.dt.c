@@ -24,14 +24,15 @@ static void print_l2_item(struct math_l2_iter_item *item)
 int main()
 {
 	struct indices indices;
-	char indices_path[] = "../indexerd/tmp";
+	//char indices_path[] = "../indexerd/tmp";
+	char indices_path[] = "/home/tk/nvme0n1/mnt-test-v3.img/";
 
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
 
-	const char tex[] = "a=\\frac{b+5}2";
+	const char tex[] = "\\sum_{i=0}^n x_i = x";
 	float threshold = 0.f;
 
 	struct math_l2_invlist *minv;
@@ -57,12 +58,12 @@ int main()
 		goto close;
 	}
 
-	printf("level-2 inverted list upperbound: %.2f\n", merge_set.upp[0]);
+	printf("level-2 inverted list upperbound: %.2f\n\n", merge_set.upp[0]);
 
 	ranked_results_t rk_res;
 	priority_Q_init(&rk_res, DEFAULT_N_TOP_RESULTS);
 
-	int cnt = 0;
+//	int cnt = 0;
 	foreach (merge_iter, merger_set, &merge_set) {
 		struct math_l2_iter_item item;
 		merger_map_call(merge_iter, read, 0, &item, sizeof(item));
@@ -73,10 +74,10 @@ int main()
 
 		if (item.score > 0) {
 
-			printf(C_RED);
-			print_l2_item(&item);
-			printf(C_RST);
-			printf("\n");
+//			printf(C_RED);
+//			print_l2_item(&item);
+//			printf(C_RST);
+//			printf("\n");
 
 			if (!priority_Q_full(&rk_res) ||
 			    item.score > priority_Q_min_score(&rk_res)) {
@@ -91,15 +92,16 @@ int main()
 
 				priority_Q_add_or_replace(&rk_res, hit);
 
-				/* update threshold */
-				threshold = priority_Q_min_score(&rk_res);
+				/* update threshold if the heap is full */
+				if (priority_Q_full(&rk_res))
+					threshold = priority_Q_min_score(&rk_res);
 			}
 		}
 
-		if (cnt > 3)
-			break;
-		else
-			cnt ++;
+//		if (cnt > 108)
+//			break;
+//		else
+//			cnt ++;
 	}
 
 	math_l2_invlist_iter_free(l2_iter);
@@ -108,7 +110,7 @@ int main()
 
 	/* sort and print search results */
 	priority_Q_sort(&rk_res);
-	print_search_results(&indices, &rk_res, 0 /* print all pages */);
+	print_search_results(&indices, &rk_res, 1);
 	priority_Q_free(&rk_res);
 
 close:
