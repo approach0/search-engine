@@ -51,20 +51,32 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 	}
 
 	/*
-	 * Sort sector trees in each node by their widths
+	 * Sort sector trees in each node by their (widths * IPF)
+	 * TODO: quik-sort?
 	 */
+	float *ipf = mq->ipf;
 	for (int k = 0; k < pruner->n_qnodes; k++) {
 		struct math_pruner_qnode *qn = pruner->qnodes + k;
 		for (int i = 0; i < qn->n; i++) {
 			for (int j = i + 1; j < qn->n; j++) {
-				int t1 = qn->secttr_w[i];
-				int t2 = qn->invlist_id[i];
+				int i_w = qn->secttr_w[i];
+				int i_iid = qn->invlist_id[i];
+				float i_sum_ipf = ipf[i_iid] * (float)i_w;
 
-				qn->secttr_w[i] = qn->secttr_w[j];
-				qn->invlist_id[i] = qn->invlist_id[j];
+				int j_w   = qn->secttr_w[j];
+				int j_iid = qn->invlist_id[j];
+				float j_sum_ipf = ipf[j_iid] * (float)j_w;
 
-				qn->secttr_w[j] = t1;
-				qn->invlist_id[j] = t2;
+				if (i_sum_ipf < j_sum_ipf) {
+					/* swap */
+					int t1 = qn->secttr_w[i];
+					int t2 = qn->invlist_id[i];
+					qn->secttr_w[i] = qn->secttr_w[j];
+					qn->invlist_id[i] = qn->invlist_id[j];
+
+					qn->secttr_w[j] = t1;
+					qn->invlist_id[j] = t2;
+				}
 			}
 		}
 	}
