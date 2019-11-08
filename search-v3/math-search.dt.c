@@ -336,7 +336,9 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			}
 		}
 
-	} while (merger_set_iter_next(iter));
+		/* termination should be judged by future_docID, not cur_docID */
+		merger_set_iter_next(iter);
+	} while (1 /* only terminate when future_docID is UINT64_MAX */);
 
 terminated: /* when iterator reaches the end */
 
