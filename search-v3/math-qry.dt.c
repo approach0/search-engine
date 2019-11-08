@@ -106,12 +106,14 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	 * save TeX
 	 */
 	mq->tex = strdup(tex);
+#ifdef DEBUG_PREPARE_MATH_QRY
+	printf("%s\n", tex);
+#endif
 
 	/*
 	 * save OPT
 	 */
 	mq->optr = parse_res.operator_tree;
-
 #ifdef DEBUG_PREPARE_MATH_QRY
 	optr_print(mq->optr, stdout);
 #endif
@@ -146,6 +148,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 
 #ifdef DEBUG_PREPARE_MATH_QRY
 	print_subpath_set(mq->subpath_set);
+	printf("\n");
 #endif
 
 	/*

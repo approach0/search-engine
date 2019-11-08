@@ -173,6 +173,16 @@ static void keyprint(uint64_t k)
 {
 	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
 }
+
+static int inspect(uint64_t k)
+{
+	return 1;
+	uint d = key2doc(k);
+	uint e = key2exp(k);
+	uint r = key2rot(k);
+	return (d == 36 && e == 77 && r == 11) ||
+	       (d == 1 && e == 176 && r == 5);
+}
 #endif
 
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
@@ -231,10 +241,12 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		uint32_t cur_docID = key2doc(iter->min);
 
 #ifdef DEBUG_MATH_SEARCH
-		printf("[math merge iteration] future_docID=%u\n",
-			l2_iter->future_docID);
-		math_pruner_print(pruner);
-		ms_merger_iter_print(iter, keyprint);
+		if (inspect(iter->min)) {
+			printf("[math merge iteration] future_docID=%u\n",
+				l2_iter->future_docID);
+			math_pruner_print(pruner);
+			ms_merger_iter_print(iter, keyprint);
+		}
 #endif
 
 		/* test the termination of level-2 merge iteration */
@@ -277,6 +289,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			msf->struct_sim = best;
 			msf->doc_lr_paths = doc_lr_paths(iter, pruner->qnodes + out[best_qnode]);
 			float score = math_score_calc(msf);
+			//float score = best;
 
 			/* take max expression score as math score for this docID */
 			if (score > l2_iter->item.score) {
@@ -286,19 +299,18 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 				l2_iter->item.occur[0] = key2exp(iter->min);
 
 #ifdef DEBUG_MATH_SEARCH
-				printf(C_GREEN);
-				printf("Propose ");
-				printf("[doc#%u exp#%u match %d<->%d]: %.2f/%.0f => %.2f\n",
-					cur_docID, key2exp(iter->min), best_qnode, best_dnode,
-					best, msf->doc_lr_paths, score);
-				printf(C_RST);
+				if (inspect(iter->min)) {
+					printf(C_GREEN);
+					printf("Propose ");
+					printf("[doc#%u exp#%u match %d<->%d]: %.2f/%.0f=>%.2f\n",
+						cur_docID, key2exp(iter->min), best_qnode, best_dnode,
+						best, msf->doc_lr_paths, score);
+					printf(C_RST);
+				}
 #endif
 			}
 		}
 
-#ifdef DEBUG_MATH_SEARCH
-		printf("\n");
-#endif
 	} while (merger_set_iter_next(iter));
 
 terminated: /* when iterator reaches the end */

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "common/common.h"
 #include "indices-v3/indices.h"
 #include "config.h" /* for DEFAULT_RES_PER_PAGE */
 #include "txt2snippet.h"
@@ -12,8 +13,10 @@ static void print_res_item(struct rank_result *res, void* arg)
 	struct rank_hit *hit = res->hit;
 	PTR_CAST(indices, struct indices, arg);
 
+	printf(C_BLUE);
 	printf("result[%d]: doc#%u score=%.3f\n",
 	        res->cnt, hit->docID, hit->score);
+	printf(C_RST);
 
 	/* get URL */
 	txt = get_blob_txt(indices->url_bi, hit->docID, 0, &txt_sz);
@@ -58,8 +61,10 @@ void print_search_results(struct indices *indices,
 	}
 
 	for (i = from_page - 1; i < MIN(to_page, tot_pages); i++) {
-		printf("page %d/%u, top result(s) from %u to %u:\n",
+		printf(C_BLUE);
+		printf("[ page %d/%u ] Result(s) ranked from %u to %u:\n\n",
 			i + 1, tot_pages, wind.from + 1, wind.to);
+		printf(C_RST);
 
 		wind = rank_wind_calc(rk_res, i, DEFAULT_RES_PER_PAGE, &tot_pages);
 		rank_wind_foreach(&wind, &print_res_item, indices);
