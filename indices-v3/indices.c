@@ -279,6 +279,12 @@ static int indexer_handle_slice(struct lex_slice *slice)
 //		slice->offset, str_sz);
 //#endif
 
+	/* safe-guard for document length (maximum number of positions) */
+	if (g_indexer->cur_position + 1 == UINT16_MAX) {
+		prerr("document position reaches maximum (%u)", UINT16_MAX);
+		return 1;
+	}
+
 	switch (slice->type) {
 	case LEX_SLICE_TYPE_MATH_SEG:
 		/* term_index_doc_add() is invoked here to make position numbers
