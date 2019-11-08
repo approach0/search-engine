@@ -266,10 +266,11 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 	}
 
 	/* find sector trees in each element */
+	struct u16_ht ht_sect = u16_ht_new(5);
+	struct u16_ht ht_hash = u16_ht_new(5);
 	foreach (iter, li, set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
-		struct u16_ht ht_sect = u16_ht_new(2);
-		struct u16_ht ht_hash = u16_ht_new(2);
+		/* group all the root IDs in subpaths of this element */
 		for (int i = 0; i <= ele->dup_cnt; i++) {
 			struct subpath *sp = ele->dup[i];
 			uint32_t rootID    = ele->rid[i];
@@ -279,6 +280,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 			}
 			u16_ht_incr(&ht_sect, rootID, 1);
 		}
+		/* for all unique root IDs, push into secttor trees array */
 		for (int i = 0; i < ht_sect.sz; i++) {
 			if (ht_sect.table[i].occupied) {
 				uint32_t n = ele->n_sects;
@@ -289,8 +291,27 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 				ele->n_sects ++;
 			}
 		}
-		u16_ht_free(&ht_sect);
-		u16_ht_free(&ht_hash);
+		u16_ht_reset(&ht_sect, 5);
+		u16_ht_reset(&ht_hash, 5);
+	}
+	u16_ht_free(&ht_sect);
+	u16_ht_free(&ht_hash);
+
+	/* sort sector trees in each element by rootID. TODO: quick-sort?
+	 * (later we need to index ordered tuple (docID, expID, rootID)) */
+	foreach (iter, li, set) {
+		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+		for (int i = 0; i < ele->n_sects; i++) {
+			struct sector_tree *secttr_i = ele->secttr + i;
+			for (int j = i + 1; j < ele->n_sects; j++) {
+				struct sector_tree *secttr_j = ele->secttr + j;
+				if (secttr_j->rootID < secttr_i->rootID) {
+					struct sector_tree tmp = *secttr_i;
+					*secttr_i = *secttr_j;
+					*secttr_j = tmp;
+				}
+			}
+		}
 	}
 
 	/* find symbol splits in each element */

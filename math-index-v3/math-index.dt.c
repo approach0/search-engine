@@ -281,7 +281,7 @@ dict_entry_size(struct codec_buf_struct_info *cinfo, size_t str_len)
 	return tot_sz;
 }
 
-static size_t cache_append_invlist(math_index_t index, char *path,
+static size_t append_invlist(math_index_t index, char *path,
 	struct subpath_ele *ele, doc_id_t docID, exp_id_t expID, uint32_t width)
 {
 	size_t flush_payload = 0;
@@ -386,8 +386,7 @@ add_subpath_set(math_index_t index, linkli_t set,
 #endif
 		mkdir_p(path);
 
-		flush_sz +=
-		cache_append_invlist(index, path, ele, docID, expID, width);
+		flush_sz += append_invlist(index, path, ele, docID, expID, width);
 	}
 
 	return flush_sz;
