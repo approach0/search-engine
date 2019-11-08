@@ -243,6 +243,10 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 	if (l2_iter->future_docID == UINT32_MAX)
 		goto terminated;
 
+	/* best expression (w/ highest structural score) within a document */
+	float s, best = 0;
+	int best_qnode = 0, best_dnode = 0;
+
 	/* merge to the next */
 	float *ipf = l2_iter->ipf;
 	struct math_score_factors *msf = l2_iter->msf;
@@ -272,26 +276,51 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		int out[n_max_nodes];
 		int n_hit_nodes = hit_nodes(pruner, n_max_nodes, iter, out);
 
+#ifdef DEBUG_MATH_SEARCH
+		if (inspect(iter->min)) {
+			printf("[hit nodes] ");
+			for (int i = 0; i < n_hit_nodes; i++) {
+				struct math_pruner_qnode *qnode = pruner->qnodes + out[i];
+				printf("#%u/%u upp(%.2f)", qnode->root,
+					qnode->sum_w, qnode->sum_ipf);
+			}
+			printf("\n");
+		}
+#endif
+
 		/* calculate structural score */
-		float t, best = 0;
-		int best_qnode = 0, best_dnode = 0;
+		int best_updated = 0;
 		for (int i = 0; i < n_hit_nodes; i++) {
 			struct math_pruner_qnode *qnode = pruner->qnodes + out[i];
+
+			/* prune qnode if its rooted tree is smaller than that of `best' */
 #ifndef MATH_PRUNING_STRATEGY_NONE
-			if (qnode->sum_ipf <= best)
+			if (qnode->sum_ipf <= best) {
+#ifdef DEBUG_MATH_SEARCH
+				if (inspect(iter->min))
+					printf("qnode#%u pruned (less than best)\n", qnode->root);
+#endif
 				continue;
+			}
 #endif
 			/* get structural score of matched tree rooted at qnode */
-			t = struct_score(iter, qnode, msf, ipf, best, threshold);
-			if (t > best) {
-				best = t;
+			s = struct_score(iter, qnode, msf, ipf, best, threshold);
+			if (s > best) {
+				best = s;
 				best_qnode = i; //qnode->root;
 				best_dnode = key2rot(iter->min);
+				best_updated = 1;
 			}
+
+#ifdef DEBUG_MATH_SEARCH
+			if (inspect(iter->min))
+				printf("qnode#%u sum_ipf: actual=%.2f,upper=%.2f,best=%.2f\n",
+					qnode->root, s, qnode->sum_ipf, best);
+#endif
 		}
 
 		/* if structural score is non-zero */
-		if (best > 0) {
+		if (best_updated) {
 			/* TODO: calculate symbol score here */
 			(void)best_qnode;
 			(void)best_dnode;
