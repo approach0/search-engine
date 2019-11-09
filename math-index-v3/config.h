@@ -14,7 +14,8 @@
 #define SYMBINFO_FNAME "symbinfo" // symbol information
 #define PATHFREQ_FNAME "pathfreq" // token path frequency
 
-#define MATH_INDEX_BLK_LEN 128
+#include "skippy/ondisk-skippy.h"
+#define MATH_INDEX_BLK_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
 
 // #define DEBUG_SUBPATH_SET
 

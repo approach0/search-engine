@@ -1,3 +1,5 @@
+#pragma once
+
 #if 0
 /* test config */
 #define ON_DISK_SKIPPY_LEVELS 3
@@ -8,7 +10,7 @@
 /* deploy config */
 #define ON_DISK_SKIPPY_LEVELS 1
 #define ON_DISK_SKIPPY_MIN_N_BLOCKS 2
-#define ON_DISK_SKIPPY_SKIPPY_SPANS 64
+#define ON_DISK_SKIPPY_SKIPPY_SPANS 256
 #define ON_DISK_SKIPPY_BUF_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
 #endif
 
