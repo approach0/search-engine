@@ -10,6 +10,7 @@ struct math_pruner_qnode {
 	int n; /* number of sector trees */
 	int secttr_w[MAX_MERGE_SET_SZ];
 	int invlist_id[MAX_MERGE_SET_SZ];
+	int ele_splt_idx[MAX_MERGE_SET_SZ];
 };
 
 struct math_pruner_backref {

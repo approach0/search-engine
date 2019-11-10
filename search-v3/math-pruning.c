@@ -1,8 +1,19 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "math-qry.h"
 #include "math-pruning.h"
+
+static int find_splt_idx(struct subpath_ele *ele, uint32_t root)
+{
+	for (int i = 0; i < ele->n_sects; i++)
+		if (ele->secttr[i].rootID == root)
+			return i;
+
+	assert(0);
+	return -1;
+}
 
 static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 {
@@ -30,6 +41,7 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 
 				qnode->root = r;
 				qnode->invlist_id[qnode->n] = i;
+				qnode->ele_splt_idx[qnode->n] = find_splt_idx(ele, r);
 				qnode->n += 1;
 			}
 		}
@@ -71,11 +83,15 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 					/* swap */
 					int t1 = qn->secttr_w[i];
 					int t2 = qn->invlist_id[i];
+					int t3 = qn->ele_splt_idx[i];
+
 					qn->secttr_w[i] = qn->secttr_w[j];
 					qn->invlist_id[i] = qn->invlist_id[j];
+					qn->ele_splt_idx[i] = qn->ele_splt_idx[j];
 
 					qn->secttr_w[j] = t1;
 					qn->invlist_id[j] = t2;
+					qn->ele_splt_idx[j] = t3;
 				}
 			}
 		}

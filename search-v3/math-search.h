@@ -27,6 +27,8 @@ typedef struct math_l2_invlist_iter {
 	int n_qnodes;
 	float  *ipf;
 	struct math_score_factors *msf;
+	FILE **fh_symbinfo;       /* used for symbol scoring */
+	struct subpath_ele **ele; /* used for symbol scoring */
 
 	/* merger and pruner for level-2 merge */
 	merger_set_iter_t merge_iter;
