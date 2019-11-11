@@ -4,17 +4,22 @@
 
 const float eta = MATH_SCORE_ETA;
 
-#define DOC_LEN_PENALTY ((1.f - eta) + eta * (1.f / logf(1.f + dn)))
+#define DOC_LEN_PENALTY ((1.f - eta) + eta * (1.f / logf(1.f + dl)))
 
 void math_score_precalc(struct math_score_factors *msf)
 {
-	float dn;
+	float dl;
 
-	dn = 1.f;
+	dl = 1.f;
 	msf->upp_sf = 1.f * DOC_LEN_PENALTY;
 
-	dn = (float)MAX_MATCHED_PATHS;
+	dl = (float)MAX_MATCHED_PATHS;
 	msf->low_sf = .5f * DOC_LEN_PENALTY;
+
+	for (int i = 0; i < MAX_MATCHED_PATHS; i++) {
+		dl = (float)i;
+		msf->penalty_tab[i] = DOC_LEN_PENALTY;
+	}
 }
 
 float math_score_ipf(float N, float pf)
@@ -24,10 +29,14 @@ float math_score_ipf(float N, float pf)
 
 float math_score_calc(struct math_score_factors *msf)
 {
-	float dn = msf->doc_lr_paths;
-	float sf = msf->symbol_sim * DOC_LEN_PENALTY;
+	float sf = msf->symbol_sim * msf->penalty_tab[msf->doc_lr_paths];
 
 	return msf->struct_sim * sf;
+}
+
+float math_score_coarse(struct math_score_factors *msf)
+{
+	return msf->struct_sim * msf->penalty_tab[msf->doc_lr_paths];
 }
 
 float math_score_upp(void *msf_, float sum_ipf)
