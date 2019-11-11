@@ -273,23 +273,23 @@ symbol_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			/* output document original length */
 			*dl = item.orig_width;
 
-			/* seek to symbol info file offset */
-			uint32_t offset = item.symbinfo_offset;
-			if (0 != fseek(fhs[iid], offset, SEEK_SET)) {
-				prerr("fh_symbinfo cannot seek to %u", offset);
-				return 0;
-			}
-
-			/* read document symbol information */
-			struct symbinfo symbinfo;
-			size_t rd_sz;
-			rd_sz = fread(&symbinfo, 1, sizeof symbinfo, fhs[iid]);
-			assert(rd_sz == sizeof symbinfo); (void)rd_sz;
-			// print_symbinfo(&symbinfo);
-
-			/* accumulate qry-doc symbol pair scores */
-			int j = qnode->ele_splt_idx[i];
-			acc_symbol_subscore(eles[iid], j, &symbinfo);
+//			/* seek to symbol info file offset */
+//			uint32_t offset = item.symbinfo_offset;
+//			if (0 != fseek(fhs[iid], offset, SEEK_SET)) {
+//				prerr("fh_symbinfo cannot seek to %u", offset);
+//				return 0;
+//			}
+//
+//			/* read document symbol information */
+//			struct symbinfo symbinfo;
+//			size_t rd_sz;
+//			rd_sz = fread(&symbinfo, 1, sizeof symbinfo, fhs[iid]);
+//			assert(rd_sz == sizeof symbinfo); (void)rd_sz;
+//			// print_symbinfo(&symbinfo);
+//
+//			/* accumulate qry-doc symbol pair scores */
+//			int j = qnode->ele_splt_idx[i];
+//			acc_symbol_subscore(eles[iid], j, &symbinfo);
 		}
 	}
 
@@ -432,14 +432,12 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 				iter, best_qn, l2_iter, best, threshold, &orig_width
 			);
 
-			/* get overall score */
+			/* get coarse score */
 			struct math_score_factors *msf = l2_iter->msf;
-			msf->symbol_sim = symbol_sim;
 			msf->struct_sim = best;
-			msf->doc_lr_paths = (float)orig_width;
+			msf->doc_lr_paths = orig_width;
 
-			float score = math_score_calc(msf);
-			//float score = best;
+			float score = math_score_coarse(msf);
 
 			/* take max expression score as math score for this docID */
 			if (score > l2_iter->item.score) {

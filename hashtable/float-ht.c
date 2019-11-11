@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "config.h"
-#include "u16-ht.h"
+#include "float-ht.h"
 
 static const int rehash_sz[][2] = {
 	/* size => load factor */
@@ -29,28 +29,28 @@ static const int rehash_sz[][2] = {
 
 #define TOTAL_SZ_LEVELS (sizeof(rehash_sz) / sizeof(rehash_sz[0]))
 
-void u16_ht_reset(struct u16_ht *ht, int sz_level)
+void float_ht_reset(struct float_ht *ht, int sz_level)
 {
 	ht->sz = rehash_sz[sz_level][0];
 	ht->len = 0;
 	ht->load_limit = rehash_sz[sz_level][1];
 	ht->sz_level = sz_level;
-	memset(ht->table, 0, ht->sz * sizeof(struct u16_ht_entry));
+	memset(ht->table, 0, ht->sz * sizeof(struct float_ht_entry));
 }
 
-struct u16_ht u16_ht_new(int sz_level)
+struct float_ht float_ht_new(int sz_level)
 {
-	struct u16_ht ht;
+	struct float_ht ht;
 	int sz = rehash_sz[sz_level][0];
-	ht.table = calloc(sz, sizeof(struct u16_ht_entry));
-	u16_ht_reset(&ht, sz_level);
+	ht.table = calloc(sz, sizeof(struct float_ht_entry));
+	float_ht_reset(&ht, sz_level);
 	return ht;
 }
 
-void u16_ht_free(struct u16_ht *ht)
+void float_ht_free(struct float_ht *ht)
 {
 	free(ht->table);
-	memset(ht, 0, sizeof(struct u16_ht));
+	memset(ht, 0, sizeof(struct float_ht));
 }
 
 static __inline__ int probing(int key, int i)
@@ -66,10 +66,10 @@ static __inline__ int keyhash(int key, int sz)
 	return key % sz;
 }
 
-int u16_ht_lookup(struct u16_ht *ht, int key)
+float float_ht_lookup(struct float_ht *ht, int key)
 {
 	int sz = ht->sz;
-	struct u16_ht_entry *table = ht->table;
+	struct float_ht_entry *table = ht->table;
 
 	for (int i = 0; i < sz; i++) {
 		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
@@ -79,20 +79,20 @@ int u16_ht_lookup(struct u16_ht *ht, int key)
 			else
 				continue;
 		} else {
-			return -1;
+			return -1.f;
 		}
 	}
 
-	return -1;
+	return -1.f;
 }
 
-static void u16_ht_rehash(struct u16_ht*);
+static void float_ht_rehash(struct float_ht*);
 
 void
-u16_ht_update(struct u16_ht *ht, int key, int val)
+float_ht_update(struct float_ht *ht, int key, float val)
 {
 	int sz = ht->sz;
-	struct u16_ht_entry *table = ht->table;
+	struct float_ht_entry *table = ht->table;
 
 	for (int i = 0; i < sz; i++) {
 		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
@@ -109,14 +109,14 @@ u16_ht_update(struct u16_ht *ht, int key, int val)
 	}
 
 	if (ht->len > ht->load_limit)
-		u16_ht_rehash(ht);
+		float_ht_rehash(ht);
 }
 
-int u16_ht_incr(struct u16_ht *ht, int key, int incr)
+float float_ht_incr(struct float_ht *ht, int key, float incr)
 {
 	int sz = ht->sz;
-	struct u16_ht_entry *table = ht->table;
-	int ret = -1;
+	struct float_ht_entry *table = ht->table;
+	float ret = -1.f;
 
 	for (int i = 0; i < sz; i++) {
 		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
@@ -135,16 +135,16 @@ int u16_ht_incr(struct u16_ht *ht, int key, int incr)
 	}
 
 	if (ht->len > ht->load_limit)
-		u16_ht_rehash(ht);
+		float_ht_rehash(ht);
 
 	return ret;
 }
 
-static void u16_ht_rehash(struct u16_ht *ht)
+static void float_ht_rehash(struct float_ht *ht)
 {
 	assert(ht->sz_level != TOTAL_SZ_LEVELS);
 	int sz_level = ht->sz_level + 1;
-	struct u16_ht tmp_ht = u16_ht_new(sz_level);
+	struct float_ht tmp_ht = float_ht_new(sz_level);
 
 #ifdef DEBUG_U16_HASHTABLE
 	printf("rehashing...\n");
@@ -152,17 +152,17 @@ static void u16_ht_rehash(struct u16_ht *ht)
 
 	for (int i = 0; i < ht->sz; i++)
 		if (ht->table[i].occupied)
-			u16_ht_update(&tmp_ht, ht->table[i].key, ht->table[i].val);
+			float_ht_update(&tmp_ht, ht->table[i].key, ht->table[i].val);
 
-	u16_ht_free(ht);
+	float_ht_free(ht);
 	*ht = tmp_ht;
 }
 
-void u16_ht_print(struct u16_ht *ht)
+void float_ht_print(struct float_ht *ht)
 {
 	for (int i = 0; i < ht->sz; i++)
 		if (ht->table[i].occupied)
-			printf("[%u] %u: %u ", i, ht->table[i].key, ht->table[i].val);
+			printf("[%u] %u: %f ", i, ht->table[i].key, ht->table[i].val);
 
 	printf(" (%d/%d/%d:%d)\n", ht->len, ht->load_limit,
 	       ht->sz, ht->sz_level);

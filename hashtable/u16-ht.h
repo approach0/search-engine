@@ -2,8 +2,8 @@
 #include <stdint.h>
 
 struct u16_ht_entry {
-	int occupied:  1;
-	uint16_t key: 15;
+	uint32_t occupied;
+	uint16_t key;
 	uint16_t val;
 };
 
