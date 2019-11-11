@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include "tex-parser/head.h"
 #include "math-qry.h"
 #include "math-pruning.h"
 
@@ -320,15 +321,30 @@ void math_pruner_print(struct math_pruner *pruner)
 {
 	printf("[math pruner] threshold: %.2f \n", pruner->threshold_);
 	for (int i = 0; i < pruner->n_qnodes; i++) {
+		/* print node */
 		struct math_pruner_qnode *qn = pruner->qnodes + i;
 		printf("[%d] qnode#%d/%d, upp(%.2f)=%.2f: \n", i, qn->root, qn->sum_w,
 			qn->sum_ipf, math_score_upp(pruner->msf, qn->sum_ipf));
 		for (int j = 0; j < qn->n; j++) {
+			/* print sector tree */
 			int iid = qn->invlist_id[j];
 			float sum_ipf = pruner->mq->ipf[iid] * qn->secttr_w[j];
-			printf("\t secttr/%d, upp(%.2f)=%.2f ---> ", qn->secttr_w[j],
+			printf("\t secttr/%d, upp(%.2f)=%.2f ", qn->secttr_w[j],
 				sum_ipf, math_score_upp(pruner->msf, sum_ipf));
-			printf("invlist[%d] <---[", iid);
+
+			/* print sector tree symbol splits */
+			int l = qn->ele_splt_idx[j];
+			struct subpath_ele *ele = pruner->mq->ele[iid];
+			printf("{");
+			for (int s = 0; s < ele->n_splits[l]; s++)
+				printf("%s/%d ", trans_symbol(ele->symbol[l][s]),
+				                 ele->splt_w[l][s]);
+			printf("} ");
+
+			/* print inverted list ID */
+			printf("---> invlist[%d] <---[", iid);
+
+			/* print inverted list back references */
 			for (int k = 0; k < pruner->backrefs[iid].cnt; k++) {
 				int idx = pruner->backrefs[iid].idx[k];
 				int ref = pruner->backrefs[iid].ref[k];
