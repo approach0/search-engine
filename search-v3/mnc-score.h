@@ -15,10 +15,14 @@ struct mnc_row {
 
 struct mnc_scorer {
 	int n_row;
+	struct u16_ht row_map;
 	struct mnc_row row[MAX_MATCHED_PATHS];
+
 	int tot_d_symb; /* for testing early termination */
 
-	struct u16_ht row_map;
+	uint16_t paired_d[MAX_MATCHED_PATHS];
+	struct u16_ht cross;
+	int n_cross;
 };
 
 void mnc_score_init(struct mnc_scorer*);
@@ -28,5 +32,6 @@ void mnc_score_qry_path_add(struct mnc_scorer*, uint16_t);
 void mnc_score_qry_path_sort(struct mnc_scorer *mnc);
 
 void  mnc_score_doc_path_add(struct mnc_scorer*, uint16_t, uint16_t, float);
+float mnc_score_align(struct mnc_scorer*);
 float mnc_score_calc(struct mnc_scorer*, struct mnc_scorer*);
 void  mnc_score_doc_reset(struct mnc_scorer*);
