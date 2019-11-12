@@ -6,6 +6,24 @@ $searchd_url = 'http://localhost:'.$searchd_port.'/search';
 $logd_port = 3207;
 $logd_url = 'http://localhost:'.$logd_port.'/push/query';
 
+/* open CORS policy to allow access with any Origin field in header */
+function open_cors_policy()
+{
+	if (isset($_SERVER['HTTP_ORIGIN'])) {
+		header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+		header('Access-Control-Allow-Credentials: true');
+		header('Cache-Control: no-cache');
+	}
+
+	if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+		if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
+			header("Access-Control-Allow-Methods: GET, OPTIONS");
+
+		if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+            header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+	}
+}
+
 /*
  * search relay: send query to searchd and return search
  * results.
@@ -181,6 +199,7 @@ send_query_log($qry_arr);
 try {
 	/* relay query and return searchd response */
 	$searchd_response = search_relay($qry_arr);
+	open_cors_policy();
 	echo $searchd_response;
 
 } catch (Exception $e) {
