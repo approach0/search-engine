@@ -106,7 +106,7 @@ static void test_case(
 	printf("local[1] score: %f\n", s);
 
 	s = mnc_score_calc(gmnc, lmnc2);
-	printf("local[1] score: %f\n", s);
+	printf("local[2] score: %f\n", s);
 }
 
 int main()
