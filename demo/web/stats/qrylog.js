@@ -1,3 +1,5 @@
+var xor = require('base64-xor');
+
 function push_query(db, qry_json) {
 	const now = new Date();
 
@@ -14,12 +16,28 @@ function push_query(db, qry_json) {
 	}
 }
 
+function mask_ip(ip) {
+	if (ip.trim() == '') return '?';
+	const masked = ip.split('.').slice(0,2).join('.');
+	return masked + '.*.*';
+}
+
+function encrypt_ip(ip) {
+	return xor.encode('no_one_wants_to_censor_math_query', ip);
+	//return ip;
+}
+
+function decrypt_ip(ip) {
+	return xor.decode('no_one_wants_to_censor_math_query', ip);
+	//return ip;
+}
+
 function pull_query_items(db, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
 	return db.prepare(`SELECT id,
-		time, query.ip, page, city, region, country,
+		time, query.ip as ip, page, city, region, country,
 		json_group_array(str) as kw,
 		json_group_array(type) as type
 		FROM query
@@ -29,17 +47,21 @@ function pull_query_items(db, max, date_range) {
 		GROUP BY id ORDER BY id DESC LIMIT ?`)
 		.all(date_begin, date_end, max)
 		.map((q) => {
+			q.ip = {
+				'encrypted': encrypt_ip(q.ip),
+				'masked': mask_ip(q.ip)
+			};
 			q.kw = JSON.parse(q.kw);
 			q.type = JSON.parse(q.type);
 			return q;
-		}
-	);
+		});
 }
 
 function pull_query_items_of(db, ip, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
+	ip = decrypt_ip(ip);
 	console.log(ip);
 	return db.prepare(`SELECT id,
 		time, query.ip, page, city, region, country,
@@ -52,11 +74,14 @@ function pull_query_items_of(db, ip, max, date_range) {
 		GROUP BY id ORDER BY id DESC LIMIT ?`)
 		.all(date_begin, date_end, ip, max)
 		.map((q) => {
+			q.ip = {
+				'encrypted': encrypt_ip(q.ip),
+				'masked': mask_ip(q.ip)
+			};
 			q.kw = JSON.parse(q.kw);
 			q.type = JSON.parse(q.type);
 			return q;
-		}
-	);
+		});
 }
 
 function pull_query_IPs(db, max, date_range) {
@@ -69,20 +94,36 @@ function pull_query_IPs(db, max, date_range) {
 		JOIN ip_info ON query.ip = ip_info.ip
 		WHERE date(time) BETWEEN ? AND ?
 		GROUP BY query.ip ORDER BY counter DESC LIMIT ?`)
-		.all(date_begin, date_end, max);
+		.all(date_begin, date_end, max)
+		.map((q) => {
+			q.ip = {
+				'encrypted': encrypt_ip(q.ip),
+				'masked': mask_ip(q.ip)
+			};
+			return q;
+		});
 }
 
 function pull_query_IPs_of(db, ip, max, date_range) {
 	if (date_range === undefined) date_range = {};
 	const date_begin = date_range['begin'] || '0000-01-01';
 	const date_end   = date_range['end']   || '9999-12-31';
+	ip = decrypt_ip(ip);
+	console.log(ip);
 	return db.prepare(`SELECT max(time) as time, query.ip as ip,
 		city, region, country, COUNT(*) as counter
 		FROM query
 		JOIN ip_info ON query.ip = ip_info.ip
 		WHERE (date(time) BETWEEN ? AND ? AND query.ip = ?)
 		GROUP BY query.ip ORDER BY counter DESC LIMIT ?`)
-		.all(date_begin, date_end, ip, max);
+		.all(date_begin, date_end, ip, max)
+		.map((q) => {
+			q.ip = {
+				'encrypted': encrypt_ip(q.ip),
+				'masked': mask_ip(q.ip)
+			};
+			return q;
+		});
 }
 
 function pull_query_summary(db, date_range) {
