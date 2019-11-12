@@ -17,12 +17,15 @@
     </v-text-field>
   </v-flex>
 
+  <!--
   <v-flex xs4 md2>
-    <v-text-field v-bind:value="mask_ip(ip)" @click:clear="clear_ip_filter()"
+    <v-text-field v-bind:value="url_ip['masked']"
+      @click:clear="clear_ip_filter()"
       prepend-icon="filter_list" :counter="15" label="Specified IP"
       readonly clearable>
     </v-text-field>
   </v-flex>
+  -->
 
   <v-flex xs4 md2>
     <v-text-field v-model="max" prepend-icon="format_list_numbered"
@@ -71,13 +74,14 @@
 <v-container fill-height fluid>
   <v-layout align-center justify-center>
     <v-timeline dense v-show="results.length > 0">
-      <v-timeline-item class="mb-3" color="grey" fill-dot
-       small v-for="(item, i) in results" v-bind:key="item.ip + item.time">
+      <v-timeline-item class="mb-3" color="grey" fill-dot small
+        v-for="(item, i) in results"
+        v-bind:key="item.ip['encrypted'] + item.time">
         <v-layout justify-space-between wrap>
           <v-flex xs6>
-            <b>IP:</b>
+            <b>IP: </b>
             <v-btn outline small @click="filter_ip(item.ip)">
-              {{mask_ip(item.ip)}}
+              {{item.ip['masked']}}
             </v-btn>
           </v-flex>
           <v-flex xs6><b>{{item.location}}</b></v-flex>
@@ -135,7 +139,7 @@ export default {
     'to': function () {
       if (this.form_valid) this.refresh();
     },
-    'ip': function () {
+    'url_ip': function () {
       if (this.form_valid) this.refresh();
     },
     'max': function () {
@@ -162,8 +166,9 @@ export default {
   },
   methods: {
     api_compose(from, to, max, ip, detail) {
-      var from_ip = `from-${ip}/`;
-      if (ip.trim() == '') from_ip = '';
+      var from_ip = '';
+      if (ip)
+        from_ip = `from-${ip["encrypted"]}/`;
       if (detail)
         return `query-items/${from_ip}${max}/${from}.${to}`;
       else
@@ -193,7 +198,7 @@ export default {
         }
       });
       const api_uri = vm.api_compose(
-        vm.from, vm.to, vm.max, vm.ip, vm.showQueries
+        vm.from, vm.to, vm.max, vm.url_ip, vm.showQueries
       );
       $.ajax({
         url: '/stats-api/pull/' + api_uri,
@@ -220,14 +225,10 @@ export default {
       const h = Math.ceil(height * (val / max));
       return h + 1;
     },
-    mask_ip(ip) {
-      if (ip.trim() == '') return '*';
-      const masked = ip.split('.').slice(0,2).join('.');
-      return masked + '.*.*';
-    },
     filter_ip(ip) {
       const url = urlpar.parse(window.location.href);
-      window.open(url['pathname'] + '?loc=' + Base64.btoa(ip), '_blank');
+      const token = Base64.btoa(JSON.stringify(ip))
+      window.open(url['pathname'] + '?ip=' + token, '_blank');
     },
     clear_ip_filter() {
       this.ip = '';
@@ -314,8 +315,11 @@ export default {
     },
     uri_IP() {
       const uri_params = urlpar.parse(window.location.href, true)['query'];
-      const ip_base64 = uri_params['loc'] || '';
-      return Base64.atob(ip_base64);
+      const token = uri_params['ip'] || null;
+      var ip = null;
+      if (token)
+        ip = JSON.parse(Base64.atob(token))
+      return ip;
     }
   },
   data: function () {
@@ -325,7 +329,7 @@ export default {
       from: '2019-06-01',
       to: new Date().toISOString().substr(0, 10),
       max: 30,
-      ip: this.uri_IP(),
+      url_ip: this.uri_IP(),
       showQueries: true,
       n_uniq_ip: 0,
       n_queries: 0,
