@@ -4,25 +4,26 @@
 #include "hashtable/float-ht.h"
 
 struct mnc_row {
-	uint16_t q_symb;
-	int      q_path_cnt;
+	uint16_t q_symb; /* query symbol */
+	int      q_path_cnt; /* path count */
 
+	/* score for each pair of query-doc symbols */
 	struct float_ht subscore;
 
-	int      n_d_symb;
-	uint16_t d_symb[MAX_MATCHED_PATHS];
+	int      n_d_symb; /* number of document paths in this row */
+	uint16_t d_symb[MAX_MATCHED_PATHS]; /* document paths in this row */
 };
 
+/* "mark and cross" scorer */
 struct mnc_scorer {
-	int n_row;
-	struct u16_ht row_map;
+	int n_row; /* number of rows */
+	struct u16_ht row_map; /* fast lookup table for row from symbol */
 	struct mnc_row row[MAX_MATCHED_PATHS];
 
-	int tot_d_symb; /* for testing early termination */
-
+	/* temporary variables for saving alignment results */
 	uint16_t paired_d[MAX_MATCHED_PATHS];
-	struct u16_ht cross;
-	int n_cross;
+	struct u16_ht cross; /* aligned / matched document symbols */
+	int n_cross; /* number of aligned /matched document symbols */
 };
 
 void mnc_score_init(struct mnc_scorer*);
