@@ -11,6 +11,8 @@
 
 // #define DEBUG_MATH_PRUNING
 
+// #define DEBUG_MNC_SCORING
+
 /* choose math pruning strategy */
 //#define MATH_PRUNING_STRATEGY_NONE
 //#define MATH_PRUNING_STRATEGY_MAXREF
