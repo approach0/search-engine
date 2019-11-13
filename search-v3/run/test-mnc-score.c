@@ -41,13 +41,19 @@ static void test_case(
 	QRY_PATH_ADD(lmnc1, id('c'));
 	QRY_PATH_ADD(lmnc1, id('a'));
 	QRY_PATH_ADD(lmnc1, id('b'));
+	printf("lmnc1: \n");
+	mnc_score_print(lmnc1, 0);
 
 	/* make query [2] */
 	QRY_PATH_ADD(lmnc2, id('a'));
 	QRY_PATH_ADD(lmnc2, id('c'));
+	printf("lmnc2: \n");
+	mnc_score_print(lmnc2, 0);
 
 	/* only need to sort global mnc */
 	mnc_score_qry_path_sort(gmnc);
+	printf("gmnc (sorted): \n");
+	mnc_score_print(gmnc, 0);
 
 	/*
 	 * match document symbols
@@ -83,6 +89,9 @@ static void test_case(
 	DOC_PATH_ADD(lmnc1, id('b'), id('y'), 0.9f);
 	DOC_PATH_ADD(lmnc1, id('b'), id('z'), 0.9f);
 
+	printf("lmnc1 after adding:\n");
+	mnc_score_print(lmnc1, 0);
+
 	/* for query [2] */
 	/*
 	 * Query:
@@ -97,8 +106,13 @@ static void test_case(
 	DOC_PATH_ADD(lmnc2, id('c'), id('y'), 0.9f);
 	DOC_PATH_ADD(lmnc2, id('c'), id('c'), 1.0f);
 
+	printf("lmnc2 after adding:\n");
+	mnc_score_print(lmnc2, 0);
+
 	/* align global mnc */
 	float s = mnc_score_align(gmnc);
+	printf("global after adding and aligning:\n");
+	mnc_score_print(gmnc, 1);
 	printf("global score: %f\n", s);
 
 	/* calculate individual local mnc scores */

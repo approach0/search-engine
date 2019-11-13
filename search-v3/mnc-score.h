@@ -36,3 +36,5 @@ void  mnc_score_doc_path_add(struct mnc_scorer*, uint16_t, uint16_t, float);
 float mnc_score_align(struct mnc_scorer*);
 float mnc_score_calc(struct mnc_scorer*, struct mnc_scorer*);
 void  mnc_score_doc_reset(struct mnc_scorer*);
+
+void  mnc_score_print(struct mnc_scorer*, int);

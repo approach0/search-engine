@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "common/common.h"
 #include "tex-parser/head.h"
 #include "mnc-score.h"
@@ -100,7 +101,7 @@ mnc_score_doc_path_add(struct mnc_scorer *mnc, uint16_t q, uint16_t d, float s)
 }
 
 /* get greedily aligned pairs of document/query symbols */
-float mnc_score_align(struct mnc_scorer* mnc)
+float mnc_score_align(struct mnc_scorer *mnc)
 {
 	float score = 0;
 
@@ -146,15 +147,17 @@ float mnc_score_align(struct mnc_scorer* mnc)
 }
 
 /* calculate symbol score for a local mnc given "global" aligned mnc */
-float mnc_score_calc(struct mnc_scorer* gmnc, struct mnc_scorer* lmnc)
+float mnc_score_calc(struct mnc_scorer *gmnc, struct mnc_scorer *lmnc)
 {
 	float score = 0;
 
 	/* in already aligned rows of global mnc */
-	for (int i = 0; i < gmnc->n_cross; i++) {
+	int cnt = 0, i = 0;
+	while (cnt + 1 < gmnc->n_cross) {
 		/* q, d are aligned pair of this row */
 		uint16_t q = gmnc->row[i].q_symb;
 		uint16_t d = gmnc->paired_d[i];
+		i++;
 
 		/* if this query symbol has any matched pair in local mnc */
 		int idx = u16_ht_lookup(&lmnc->row_map, q);
@@ -166,7 +169,46 @@ float mnc_score_calc(struct mnc_scorer* gmnc, struct mnc_scorer* lmnc)
 		float subscore = float_ht_lookup(&row->subscore, d);
 		if (subscore > 0)
 			score += subscore;
+
+		cnt++;
 	}
 
 	return score;
+}
+
+void mnc_score_print(struct mnc_scorer *mnc, int print_align)
+{
+	printf("n_cross = %u\n", mnc->n_cross);
+	int cntdown = mnc->n_cross;
+	for (int i = 0; i < mnc->n_row; i++) {
+		struct mnc_row *row = mnc->row + i;
+		uint16_t q = row->q_symb;
+
+		/* test row map */
+		assert(i == u16_ht_lookup(&mnc->row_map, q));
+		printf("[%d] %s x %u \n", i, trans_symbol(q),
+			row->q_path_cnt);
+
+		printf("doc match: [");
+		for (int j = 0; j < row->n_d_symb; j++) {
+			uint16_t d = row->d_symb[j];
+			float s = float_ht_lookup(&row->subscore, d);
+			printf("%s(%.2f) ", trans_symbol(d), s);
+		}
+		printf("]\n");
+
+		if (print_align) {
+			uint16_t paired_d = mnc->paired_d[i];
+			if (paired_d != S_NIL) {
+				printf("(paired with %s)\n", trans_symbol(paired_d));
+				cntdown --;
+
+				/* test cross table */
+				assert(-1 != u16_ht_lookup(&mnc->cross, paired_d));
+			} else {
+				printf("(no match)\n");
+			}
+		}
+	}
+	printf("\n");
 }
