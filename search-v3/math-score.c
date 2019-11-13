@@ -29,14 +29,9 @@ float math_score_ipf(float N, float pf)
 
 float math_score_calc(struct math_score_factors *msf)
 {
-	float sf = msf->symbol_sim * msf->penalty_tab[msf->doc_lr_paths];
+	float sf = (0.5f + msf->symbol_sim / 2.f) * msf->penalty_tab[msf->doc_lr_paths];
 
 	return msf->struct_sim * sf;
-}
-
-float math_score_coarse(struct math_score_factors *msf)
-{
-	return msf->struct_sim * msf->penalty_tab[msf->doc_lr_paths];
 }
 
 float math_score_upp(void *msf_, float sum_ipf)

@@ -2,6 +2,7 @@
 #include "config.h"
 #include "math-qry.h"
 #include "math-pruning.h"
+#include "mnc-score.h"
 
 /* math level-2 inverted list */
 struct math_l2_invlist {
@@ -29,6 +30,8 @@ typedef struct math_l2_invlist_iter {
 	struct math_score_factors *msf;
 	FILE **fh_symbinfo;       /* used for symbol scoring */
 	struct subpath_ele **ele; /* used for symbol scoring */
+	struct mnc_scorer *mnc; /* symbol scorer */
+	const char *tex;
 
 	/* merger and pruner for level-2 merge */
 	merger_set_iter_t merge_iter;

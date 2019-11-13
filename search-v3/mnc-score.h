@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include "config.h"
 #include "hashtable/u16-ht.h"

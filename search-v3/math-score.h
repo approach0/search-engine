@@ -4,7 +4,7 @@
 struct math_score_factors {
 	float symbol_sim; /* normalized */
 	float struct_sim; /* sum of ipf */
-	int   doc_lr_paths;
+	int   doc_lr_paths; /* original doc expression length */
 
 	/* precomputed */
 	float upp_sf;
@@ -15,7 +15,6 @@ struct math_score_factors {
 void  math_score_precalc(struct math_score_factors *);
 float math_score_ipf(float, float);
 
-float math_score_coarse(struct math_score_factors*);
 float math_score_calc(struct math_score_factors *);
 
 float math_score_upp(void *, float);

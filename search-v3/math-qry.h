@@ -2,6 +2,7 @@
 #include "math-index-v3/math-index.h"
 #include "math-index-v3/subpath-set.h"
 #include "merger/mergers.h"
+#include "mnc-score.h"
 
 struct math_qry {
 	const char *tex;
@@ -19,6 +20,8 @@ struct math_qry {
 
 	/* shortcut links to subpath set elements */
 	struct subpath_ele *ele[MAX_MERGE_SET_SZ];
+
+	struct mnc_scorer mnc; /* symbol scoring */
 };
 
 int  math_qry_prepare(math_index_t, const char*, struct math_qry*);

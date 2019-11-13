@@ -85,6 +85,16 @@ static LIST_IT_CALLBK(assign_pathID_by_order)
 	LIST_GO_OVER;
 }
 
+static LIST_IT_CALLBK(add_mnc_qry_path)
+{
+	LIST_OBJ(struct subpath, sp, ln);
+	P_CAST(mq, struct math_qry, pa_extra);
+
+	mnc_score_qry_path_add(&mq->mnc, sp->lf_symbol_id);
+
+	LIST_GO_OVER;
+}
+
 /*
  * main exported functions
  */
@@ -124,9 +134,19 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	mq->n_qnodes = optr_max_node_id(mq->optr);
 
 	/*
-	 * save subpaths and sort them by bond variable size
+	 * prepare query path mnc structure
 	 */
 	struct subpaths subpaths = parse_res.subpaths;
+	mnc_score_init(&mq->mnc);
+	list_foreach(&subpaths.li, &add_mnc_qry_path, mq);
+	mnc_score_qry_path_sort(&mq->mnc);
+#ifdef DEBUG_PREPARE_MATH_QRY
+	mnc_score_print(&mq->mnc, 0);
+#endif
+
+	/*
+	 * save subpaths and sort them by bond variable size
+	 */
 	list_foreach(&subpaths.li, &overwrite_pathID_to_bondvar_sz, NULL);
 
 	struct list_sort_arg sort_arg = {&compare_qry_path, NULL};
@@ -216,6 +236,9 @@ void math_qry_release(struct math_qry *mq)
 		if (entry.fh_symbinfo)
 			fclose(entry.fh_symbinfo);
 	}
+
+	if (mq->mnc.n_row > 0)
+		mnc_score_free(&mq->mnc);
 }
 
 void math_qry_print(struct math_qry* mq, int print_details)

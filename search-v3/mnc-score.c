@@ -23,7 +23,7 @@ void mnc_score_free(struct mnc_scorer *mnc)
 	u16_ht_free(&mnc->cross);
 }
 
-void  mnc_score_doc_reset(struct mnc_scorer *mnc)
+void mnc_score_doc_reset(struct mnc_scorer *mnc)
 {
 	for (int i = 0; i < mnc->n_row; i++) {
 		struct mnc_row *row = mnc->row + i;
@@ -231,5 +231,4 @@ void mnc_score_print(struct mnc_scorer *mnc, int print_align)
 			}
 		}
 	}
-	printf("\n");
 }

@@ -55,7 +55,7 @@ static int inspect(uint64_t k)
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r;
 	//return (d == 116 && e == 228 && r == 20);
-	return (d == 593 && e == 26);
+	return (d == 39 && e == 5);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
@@ -99,6 +99,9 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 	l2_iter->msf            = &inv->msf;
 	l2_iter->fh_symbinfo    = duplicate_entries_fh_array(&inv->mq);
 	l2_iter->ele            = inv->mq.ele;
+	l2_iter->mnc            = &inv->mq.mnc;
+	l2_iter->tex            = inv->mq.tex;
+
 	l2_iter->merge_iter     = merger_set_iterator(&inv->mq.merge_set);
 	l2_iter->future_docID   = 0;
 	l2_iter->last_threshold = -1.f;
@@ -218,7 +221,8 @@ skip:
 }
 
 static inline void
-acc_symbol_subscore(struct subpath_ele *ele, int j, struct symbinfo *symbinfo)
+acc_symbol_subscore(struct mnc_scorer *mnc, struct subpath_ele *ele,
+                    int j, struct symbinfo *symbinfo)
 {
 	uint16_t q_ophash = ele->secttr[j].ophash;
 	uint16_t d_ophash = symbinfo->ophash;
@@ -233,33 +237,39 @@ acc_symbol_subscore(struct subpath_ele *ele, int j, struct symbinfo *symbinfo)
 			int sym_equal = (q_symbol == d_symbol) ? 0x2 : 0x0;
 			int fnp_equal = (q_ophash == d_ophash) ? 0x1 : 0x0;
 
-			float match_score = 0.f;
+			float score = 0.f;
 			switch (sym_equal | fnp_equal) {
 				case 0x3: /* exact match */
-					match_score = SYMBOL_SUBSCORE_FULL;
+					score = SYMBOL_SUBSCORE_FULL;
 					break;
 				case 0x2: /* match except for fingerprint */
-					match_score = SYMBOL_SUBSCORE_HALF;
+					score = SYMBOL_SUBSCORE_HALF;
 					break;
 				case 0x1: /* match fingerprint but not symbol */
 				default:
-					match_score = SYMBOL_SUBSCORE_BASE;
+					score = SYMBOL_SUBSCORE_BASE;
 					break;
 			}
 
 			uint16_t min_w = MIN(q_splt_w, d_splt_w);
-			match_score = match_score * min_w;
-			// q_hash_table[q_symbol][d_symbol] += match_score;
+			score = score * min_w;
+
+			mnc_score_doc_path_add(mnc, q_symbol, d_symbol, score);
 		}
 	}
 }
 
 static inline float
-symbol_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
-	math_l2_invlist_iter_t l2_iter, float best, float threshold, int *dl)
+symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
+	struct math_pruner_qnode *qnode, int *dl)
 {
+	float score;
 	FILE **fhs = l2_iter->fh_symbinfo;
 	struct subpath_ele **eles = l2_iter->ele;
+	struct mnc_scorer *mnc = l2_iter->mnc;
+
+	/* reset mnc */
+	mnc_score_doc_reset(mnc);
 
 	/* for each sector tree under evaluating qnode */
 	for (int i = 0; i < qnode->n; i++) {
@@ -273,32 +283,39 @@ symbol_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			/* output document original length */
 			*dl = item.orig_width;
 
-//			/* seek to symbol info file offset */
-//			uint32_t offset = item.symbinfo_offset;
-//			if (0 != fseek(fhs[iid], offset, SEEK_SET)) {
-//				prerr("fh_symbinfo cannot seek to %u", offset);
-//				return 0;
-//			}
-//
-//			/* read document symbol information */
-//			struct symbinfo symbinfo;
-//			size_t rd_sz;
-//			rd_sz = fread(&symbinfo, 1, sizeof symbinfo, fhs[iid]);
-//			assert(rd_sz == sizeof symbinfo); (void)rd_sz;
-//			// print_symbinfo(&symbinfo);
-//
-//			/* accumulate qry-doc symbol pair scores */
-//			int j = qnode->ele_splt_idx[i];
-//			acc_symbol_subscore(eles[iid], j, &symbinfo);
+			/* seek to symbol info file offset */
+			uint32_t offset = item.symbinfo_offset;
+			if (0 != fseek(fhs[iid], offset, SEEK_SET)) {
+				prerr("fh_symbinfo cannot seek to %u", offset);
+				return 0;
+			}
+
+			/* read document symbol information */
+			struct symbinfo symbinfo;
+			size_t rd_sz;
+			rd_sz = fread(&symbinfo, 1, sizeof symbinfo, fhs[iid]);
+			assert(rd_sz == sizeof symbinfo); (void)rd_sz;
+#ifdef DEBUG_MATH_SEARCH
+			if (inspect(iter->min)) {
+				print_symbinfo(&symbinfo);
+			}
+#endif
+			/* accumulate qry-doc symbol pair scores */
+			int j = qnode->ele_splt_idx[i];
+			acc_symbol_subscore(mnc, eles[iid], j, &symbinfo);
 		}
 	}
 
-	float mnc_score = 0;
-//	for i in q_hash_table:
-//		d_symbol = argmax(q_hash_table[i], cross)
-//		mnc_score += q_hash_table[i][d_symbol]
-//		cross[d_symbol] = 1
-	return mnc_score / (float)qnode->sum_w;
+	score = mnc_score_align(mnc);
+#ifdef DEBUG_MATH_SEARCH
+	if (inspect(iter->min)) {
+		printf("[mnc table]\n");
+		mnc_score_print(mnc, 1);
+		printf("struct score = %.2f / %d = %.2f\n", score, qnode->sum_w,
+			score / qnode->sum_w);
+	}
+#endif
+	return score / qnode->sum_w;
 }
 
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
@@ -428,16 +445,15 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 		if (best_updated) {
 			/* calculate symbol score */
 			int orig_width = 0;
-			float symbol_sim = symbol_score(
-				iter, best_qn, l2_iter, best, threshold, &orig_width
-			);
+			float symb = symbol_score(l2_iter, iter, best_qn, &orig_width);
 
-			/* get coarse score */
+			/* get overall score */
 			struct math_score_factors *msf = l2_iter->msf;
-			msf->struct_sim = best;
+			msf->symbol_sim   = symb;
+			msf->struct_sim   = best;
 			msf->doc_lr_paths = orig_width;
 
-			float score = math_score_coarse(msf);
+			float score = math_score_calc(msf);
 
 			/* take max expression score as math score for this docID */
 			if (score > l2_iter->item.score) {
@@ -450,7 +466,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 				if (inspect(iter->min)) {
 					printf(C_GREEN);
 					printf("Propose ");
-					printf("[doc#%u exp#%u match %d<->%d]: %.2f/%.0f=>%.2f\n",
+					printf("[doc#%u exp#%u match %d<->%d]: %.2f/%d=>%.2f\n",
 						cur_docID, key2exp(iter->min), best_qn->root,
 						key2rot(iter->min), best, msf->doc_lr_paths, score);
 					printf(C_RST);
