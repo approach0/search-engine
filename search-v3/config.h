@@ -3,6 +3,7 @@
 //#define DEBUG_PREPARE_MATH_QRY
 //#define DEBUG_MATH_SEARCH
 //#define DEBUG_MATH_SEARCH__STRUCT_SCORING
+//#define DEBUG_MATH_SEARCH__SYMBOL_SCORING
 
 #include "math-index-v3/config.h"
 #define MAX_MATCHED_PATHS MAX_MATH_PATHS

@@ -21,7 +21,7 @@ int  ms_merger_lift_up_pivot(struct ms_merger*, float,
 
 void ms_merger_update_acc_upp(struct ms_merger*);
 int  ms_merger_map_remove(struct ms_merger*, int);
-int  ms_merger_map_follow(struct ms_merger*, int);
+int  ms_merger_iter_follow(struct ms_merger*, int);
 void ms_merger_iter_sort_by_upp(struct ms_merger*);
 uint64_t ms_merger_min(struct ms_merger*);
 

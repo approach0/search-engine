@@ -32,8 +32,8 @@ int main()
 		goto close;
 	}
 
-	//const char tex[] = "k(k+1)";
-	const char tex[] = "x^2+2xy+y^2=(x+y)^2";
+	const char tex[] = "k(k+1)";
+	//const char tex[] = "x^2+2xy+y^2=(x+y)^2";
 	//const char tex[] = "\\sum_{i=0}^n x_i = x";
 	float threshold = 0.f;
 

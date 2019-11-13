@@ -45,12 +45,12 @@ int ms_merger_map_remove(struct ms_merger *m, int i)
 	return i - 1;
 }
 
-int ms_merger_map_follow(struct ms_merger *m, int i)
+int ms_merger_iter_follow(struct ms_merger *m, int iid)
 {
-	uint64_t cur = merger_map_call(m, cur, i);
+	uint64_t cur = MERGER_ITER_CALL(m, cur, iid);
 	int left = (cur != UINT64_MAX);
 	if (cur < m->min)
-		left = merger_map_call(m, skip, i, m->min);
+		left = MERGER_ITER_CALL(m, skip, iid, m->min);
 
 	return left;
 }

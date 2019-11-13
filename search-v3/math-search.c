@@ -37,12 +37,14 @@ void math_l2_invlist_free(struct math_l2_invlist *inv)
 
 /* use MaxScore merger */
 typedef struct ms_merger *merger_set_iter_t;
-#define merger_set_iterator   ms_merger_iterator
-#define merger_set_iter_next  ms_merger_iter_next
-#define merger_set_iter_free  ms_merger_iter_free
-#define merger_set_map_follow ms_merger_map_follow
+#define merger_set_iterator    ms_merger_iterator
+#define merger_set_iter_next   ms_merger_iter_next
+#define merger_set_iter_free   ms_merger_iter_free
+#define merger_set_iter_follow ms_merger_iter_follow
 
 #ifdef DEBUG_MATH_SEARCH
+static int do_inspect;
+
 static void keyprint(uint64_t k)
 {
 	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
@@ -53,14 +55,13 @@ static int inspect(uint64_t k)
 	uint d = key2doc(k);
 	uint e = key2exp(k);
 	uint r = key2rot(k);
-	(void)d; (void)e; (void)r;
-	//return (d == 116 && e == 228 && r == 20);
-	return (d == 39 && e == 5);
+	(void)d; (void)e; (void)r; (void)do_inspect;
+	return (d == 5129 && e == 17);// || (d == 602 && e == 26);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
 {
-	printf("ophash: 0x%x: ", symbinfo->ophash);
+	printf("[read info] ophash: 0x%x: ", symbinfo->ophash);
 	for (int i = 0; i < symbinfo->n_splits; i++) {
 		int symbol = symbinfo->symbol[i];
 		int width  = symbinfo->splt_w[i];
@@ -185,10 +186,16 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 		int ref = qnode->secttr_w[i];
 
 		/* skip set iterators must follow up */
-		if (i > iter->pivot)
-			if (!merger_set_map_follow(iter, i))
-				goto skip;
+		if (!merger_set_iter_follow(iter, iid))
+			goto skip;
 
+#ifdef DEBUG_MATH_SEARCH__STRUCT_SCORING
+		if (inspect(iter->min)) {
+			printf("after skip [%u]:\n", iid);
+			ms_merger_iter_print(iter, keyprint);
+		}
+#endif
+		/* read item if it is a candiate */
 		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
 		if (cur == iter->min) {
 			/* read hit inverted list item */
@@ -233,6 +240,7 @@ acc_symbol_subscore(struct mnc_scorer *mnc, struct subpath_ele *ele,
 		for (int v = 0; v < symbinfo->n_splits; v++) {
 			uint16_t d_symbol = symbinfo->symbol[v];
 			uint16_t d_splt_w = symbinfo->splt_w[v];
+			uint16_t min_w = MIN(q_splt_w, d_splt_w);
 
 			int sym_equal = (q_symbol == d_symbol) ? 0x2 : 0x0;
 			int fnp_equal = (q_ophash == d_ophash) ? 0x1 : 0x0;
@@ -250,10 +258,18 @@ acc_symbol_subscore(struct mnc_scorer *mnc, struct subpath_ele *ele,
 					score = SYMBOL_SUBSCORE_BASE;
 					break;
 			}
-
-			uint16_t min_w = MIN(q_splt_w, d_splt_w);
+#ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
+			if (do_inspect) {
+				printf("q=%s|0x%x * %u\n", trans_symbol(q_symbol),
+					q_ophash, q_splt_w);
+				printf("d=%s|0x%x * %u\n", trans_symbol(d_symbol),
+					d_ophash, d_splt_w);
+				printf("+= %.2f * %u = %.2f\n", score, min_w,
+					score * min_w);
+				do_inspect = 0;
+			}
+#endif
 			score = score * min_w;
-
 			mnc_score_doc_path_add(mnc, q_symbol, d_symbol, score);
 		}
 	}
@@ -295,9 +311,10 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 			size_t rd_sz;
 			rd_sz = fread(&symbinfo, 1, sizeof symbinfo, fhs[iid]);
 			assert(rd_sz == sizeof symbinfo); (void)rd_sz;
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 			if (inspect(iter->min)) {
 				print_symbinfo(&symbinfo);
+				do_inspect = 1;
 			}
 #endif
 			/* accumulate qry-doc symbol pair scores */
@@ -307,7 +324,7 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 	}
 
 	score = mnc_score_align(mnc);
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 	if (inspect(iter->min)) {
 		printf("[mnc table]\n");
 		mnc_score_print(mnc, 1);
@@ -420,7 +437,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			if (qnode->sum_ipf <= best) {
 #ifdef DEBUG_MATH_SEARCH
 				if (inspect(iter->min))
-					printf("qnode#%u pruned (less than best)\n", qnode->root);
+					printf("qnode#%u skipped (less than best)\n", qnode->root);
 #endif
 				continue;
 			}
@@ -466,9 +483,10 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 				if (inspect(iter->min)) {
 					printf(C_GREEN);
 					printf("Propose ");
-					printf("[doc#%u exp#%u match %d<->%d]: %.2f/%d=>%.2f\n",
-						cur_docID, key2exp(iter->min), best_qn->root,
-						key2rot(iter->min), best, msf->doc_lr_paths, score);
+					printf("[doc#%u exp#%u %d<->%d] %.2f,%.2f/%d=>%.2f\n",
+						cur_docID, key2exp(iter->min),
+						best_qn->root, key2rot(iter->min),
+						symb, best, msf->doc_lr_paths, score);
 					printf(C_RST);
 				}
 #endif
