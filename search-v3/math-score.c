@@ -29,7 +29,11 @@ float math_score_ipf(float N, float pf)
 
 float math_score_calc(struct math_score_factors *msf)
 {
-	float sf = (0.5f + msf->symbol_sim / 2.f) * msf->penalty_tab[msf->doc_lr_paths];
+	/* rescale symbol similarity score */
+	//float rescale = (0.5f + msf->symbol_sim / 2.f);
+	float rescale = 1.f / (1.f + powf(1.f - msf->symbol_sim, 2.f));
+
+	float sf = rescale * msf->penalty_tab[msf->doc_lr_paths];
 
 	return msf->struct_sim * sf;
 }
