@@ -152,25 +152,28 @@ float mnc_score_calc(struct mnc_scorer *gmnc, struct mnc_scorer *lmnc)
 	float score = 0;
 
 	/* in already aligned rows of global mnc */
-	int cnt = 0, i = 0;
-	while (cnt + 1 < gmnc->n_cross) {
+	for (int cnt = 0; cnt < gmnc->n_cross;) {
 		/* q, d are aligned pair of this row */
-		uint16_t q = gmnc->row[i].q_symb;
-		uint16_t d = gmnc->paired_d[i];
-		i++;
+		uint16_t q = gmnc->row[cnt].q_symb;
+		uint16_t d = gmnc->paired_d[cnt];
+
+		/* only count for matched rows */
+		if (d == S_NIL)
+			continue;
+		else
+			cnt++; /* for early termination */
 
 		/* if this query symbol has any matched pair in local mnc */
 		int idx = u16_ht_lookup(&lmnc->row_map, q);
-		if (-1 == idx) /* No? Skip. */
+		if (-1 == idx) { /* No? Skip. */
 			continue;
+		}
 
 		/* get matched score from local mnc */
 		struct mnc_row *row = lmnc->row + idx;
 		float subscore = float_ht_lookup(&row->subscore, d);
 		if (subscore > 0)
 			score += subscore;
-
-		cnt++;
 	}
 
 	return score;
