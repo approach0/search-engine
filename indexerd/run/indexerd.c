@@ -48,7 +48,7 @@ static int consider_index_maintain(struct indexer *indexer, int force)
 		fflush(stdout);
 
 		indexer_maintain(indexer);
-		sleep(30);
+		sleep(5);
 
 	}
 
