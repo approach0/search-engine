@@ -133,8 +133,10 @@ float mnc_score_align(struct mnc_scorer *mnc)
 			}
 		}
 
+#if 0 /* for efficiency, uncommnet only if mnc_score_calc() is used. */
 		/* save matched/paired document symbol for this row */
 		mnc->paired_d[i] = max_d;
+#endif
 
 		/* skip accumulating score if there is no match in this row */
 		if (max_d == S_NIL) {
