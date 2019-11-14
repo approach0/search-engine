@@ -324,8 +324,8 @@ static size_t append_invlist(math_index_t index, char *path,
 		symbinfo.ophash = secttr.ophash;
 		symbinfo.n_splits = MIN(ele->n_splits[i], MAX_INDEX_EXP_SYMBOL_SPLITS);
 		for (int j = 0; j < symbinfo.n_splits; j++) {
-			symbinfo.symbol[j] = ele->symbol[i][j];
-			symbinfo.splt_w[j] = ele->splt_w[i][j];
+			symbinfo.split[j].symbol = ele->symbol[i][j];
+			symbinfo.split[j].splt_w = ele->splt_w[i][j];
 #ifdef MATH_INDEX_SECTTR_PRINT
 			printf("%s/%u ", trans_symbol(symbinfo.symbol[j]),
 			                 symbinfo.splt_w[j]);
@@ -336,7 +336,8 @@ static size_t append_invlist(math_index_t index, char *path,
 #endif
 
 		/* write symbinfo structure, update offset by written bytes */
-		flush_payload += fwrite(&symbinfo, 1, sizeof symbinfo, fh_symbinfo);
+		flush_payload += fwrite(&symbinfo, 1, SYMBINFO_SIZE(symbinfo.n_splits),
+		                        fh_symbinfo);
 
 		/* update frequency statistics */
 		entry->pf ++;

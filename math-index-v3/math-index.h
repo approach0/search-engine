@@ -1,5 +1,5 @@
 #pragma once
-#include "common/types.h"
+#include "common/common.h"
 #include "strmap/strmap.h"
 #include "codec/codec.h"
 #include "invlist/invlist.h"
@@ -102,10 +102,17 @@ enum {
 #define MAX_INDEX_EXP_SYMBOL_SPLITS 8
 
 #pragma pack(push, 1)
+struct symbsplt {
+	uint16_t symbol;
+	uint8_t  splt_w;
+};
+
 struct symbinfo {
 	uint32_t ophash:24;
 	uint32_t n_splits:8;
-	uint16_t symbol[MAX_INDEX_EXP_SYMBOL_SPLITS];
-	uint8_t  splt_w[MAX_INDEX_EXP_SYMBOL_SPLITS];
-}; /* 28 bytes */
+
+	struct symbsplt split[MAX_INDEX_EXP_SYMBOL_SPLITS];
+};
 #pragma pack(pop)
+
+#define SYMBINFO_SIZE(_n) offsetof(struct symbinfo, split[_n]) /* 4 + 3n */

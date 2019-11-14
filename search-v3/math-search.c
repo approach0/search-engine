@@ -63,8 +63,8 @@ static void print_symbinfo(struct symbinfo *symbinfo)
 {
 	printf("[read info] ophash: 0x%x: ", symbinfo->ophash);
 	for (int i = 0; i < symbinfo->n_splits; i++) {
-		int symbol = symbinfo->symbol[i];
-		int width  = symbinfo->splt_w[i];
+		int symbol = symbinfo->split[i].symbol;
+		int width  = symbinfo->split[i].splt_w;
 		printf("%s/%d ", trans_symbol(symbol), width);
 	}
 	printf("\n");
@@ -238,8 +238,8 @@ acc_symbol_subscore(struct mnc_scorer *mnc, struct subpath_ele *ele,
 		uint16_t q_symbol = ele->symbol[j][u];
 		uint16_t q_splt_w = ele->splt_w[j][u];
 		for (int v = 0; v < symbinfo->n_splits; v++) {
-			uint16_t d_symbol = symbinfo->symbol[v];
-			uint16_t d_splt_w = symbinfo->splt_w[v];
+			uint16_t d_symbol = symbinfo->split[v].symbol;
+			uint16_t d_splt_w = symbinfo->split[v].splt_w;
 			uint16_t min_w = MIN(q_splt_w, d_splt_w);
 
 			int sym_equal = (q_symbol == d_symbol) ? 0x2 : 0x0;
@@ -309,8 +309,15 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 			/* read document symbol information */
 			struct symbinfo symbinfo;
 			size_t rd_sz;
-			rd_sz = fread(&symbinfo, 1, sizeof symbinfo, fhs[iid]);
-			assert(rd_sz == sizeof symbinfo); (void)rd_sz;
+
+			/* read symbol info header */
+			rd_sz = fread(&symbinfo, 1, SYMBINFO_SIZE(0), fhs[iid]);
+			assert(rd_sz == SYMBINFO_SIZE(0)); (void)rd_sz;
+
+			/* read symbol payload */
+			rd_sz = SYMBINFO_SIZE(symbinfo.n_splits) - SYMBINFO_SIZE(0);
+			(void)fread(symbinfo.split, 1, rd_sz, fhs[iid]);
+
 #ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 			if (inspect(iter->min)) {
 				print_symbinfo(&symbinfo);
