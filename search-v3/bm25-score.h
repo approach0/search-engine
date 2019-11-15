@@ -19,21 +19,16 @@
  *                   df + 0.5
  */
 
-#include "config.h"
-
 struct BM25_scorer {
 	float avgDocLen, docN;
-	float idf[MAX_SEARCH_INVLISTS];
-
-	/* fast lookup values */
 	float frac_b_avgDocLen;
-	float upp[MAX_SEARCH_INVLISTS];
 };
 
-void  BM25_precalc_global(struct BM25_scorer*, float avgDocLen, float docN);
-void  BM25_precalc_idf(struct BM25_scorer*, int i, float df);
+void BM25_init(struct BM25_scorer*, float avgDocLen, float docN);
 
-float
-BM25_calc_partial_score(struct BM25_scorer*, int i, float tf, float doclen);
+float BM25_idf(struct BM25_scorer*, float df);
+float BM25_upp(struct BM25_scorer*, float idf);
 
-void  BM25_params_print(struct BM25_scorer*, int n);
+float BM25_partial_score(struct BM25_scorer*, float, float, float);
+
+void BM25_params_print(struct BM25_scorer*);

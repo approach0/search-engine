@@ -7,6 +7,10 @@ struct term_qry {
 	uint32_t term_id;
 	uint32_t df;
 	uint32_t qf; /* query term frequency */
+
+	/* bm25 scoring */
+	float idf;
+	float upp;
 };
 
 int  term_qry_prepare(term_index_t, const char*, struct term_qry*);

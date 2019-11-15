@@ -38,11 +38,12 @@ struct BM25_scorer prepare_bm25(term_index_t ti, struct term_qry* tqs, int n)
 	float avgDocLen = (float)term_index_get_avgDocLen(ti);
 	float docN = (float)term_index_get_docN(ti);
 
-	BM25_precalc_global(&bm25, avgDocLen, docN);
+	BM25_init(&bm25, avgDocLen, docN);
 
 	for (int i = 0; i < n; i++) {
 		float df = (float)tqs[i].df;
-		BM25_precalc_idf(&bm25, i, df);
+		tqs[i].idf = BM25_idf(&bm25, df);
+		tqs[i].upp = BM25_idf(&bm25, tqs[i].idf);
 	}
 
 	return bm25;
