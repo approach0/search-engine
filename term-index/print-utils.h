@@ -29,7 +29,7 @@ inline static void print_inmemo_term_items(invlist_iter_t iter)
 	printf("\n");
 }
 
-static void print_ondisk_term_items(void *reader)
+inline static void print_ondisk_term_items(void *reader)
 {
 	printf("on-disk: ");
 	term_posting_start(reader);
