@@ -120,15 +120,15 @@ int main()
 	int cnt = 0;
 #endif
 	foreach (iter, merger_set, &merge_set) {
-		float doc_score = 0.f;
+		float tfidf_score = 0.f;
 		int h = 0; /* number of hit keywords */
 
 		for (int i = 0; i < iter->size; i++) {
-			if (doc_score + iter->acc_upp[i] < threshold) {
-//#ifdef DEBUG_TERM_SEARCH
+			if (tfidf_score + iter->acc_upp[i] < threshold) {
+#ifdef DEBUG_TERM_SEARCH
 				printf("doc#%lu pruned. \n\n", iter->min);
-//#endif
-				doc_score = 0.f;
+#endif
+				tfidf_score = 0.f;
 				break;
 			}
 
@@ -137,7 +137,8 @@ int main()
 #ifdef DEBUG_TERM_SEARCH
 				printf("skipping [%d]\n", iter->map[i]);
 #endif
-				ms_merger_iter_follow(iter, iter->map[i]);
+				if (!ms_merger_iter_follow(iter, iter->map[i]))
+					continue;
 			}
 
 			/* accumulate precise partial score */
@@ -153,11 +154,11 @@ int main()
 				struct term_qry *q = term_qry + iid;
 				float s, l = term_index_get_docLen(indices.ti, item[i].doc_id);
 				s = BM25_partial_score(&bm25, item[i].tf, q->idf, l);
-				doc_score += s * q->qf;
+				tfidf_score += s * q->qf;
 				prox_set_input(prox + (h++), item[i].pos_arr, item[i].n_occur);
 #ifdef DEBUG_TERM_SEARCH
 				printf("parital[%u] += %.2f x %.0f = %.2f\n", iid,
-					s, q->qf, doc_score);
+					s, q->qf, tfidf_score);
 #endif
 			}
 		}
@@ -165,19 +166,21 @@ int main()
 #ifdef DEBUG_TERM_SEARCH
 		ms_merger_iter_print(iter, NULL);
 #endif
-		if (doc_score > 0.f) {
+		if (tfidf_score > 0.f) {
 			float proximity = prox_score(prox, h);
 
 #ifdef DEBUG_TERM_SEARCH
 			prinfo("[doc#%lu tf-idf=%.2f, prox=%.2f]\n", iter->min,
-			       doc_score, proximity);
+			       tfidf_score, proximity);
 #endif
+
+			float doc_score = tfidf_score + proximity;
 			/* push document into top-K and update threshold */
 			if (!priority_Q_full(&rk_res) ||
 			    doc_score > priority_Q_min_score(&rk_res)) {
 
 				struct rank_hit *hit;
-				hit = new_hit(iter->min, doc_score + proximity, prox, h);
+				hit = new_hit(iter->min, doc_score, prox, h);
 				priority_Q_add_or_replace(&rk_res, hit);
 
 				/* update threshold if the heap is full */
@@ -186,10 +189,10 @@ int main()
 #ifdef DEBUG_TERM_SEARCH
 					printf("update threshold -> %.2f\n", threshold);
 #endif
+					ms_merger_lift_up_pivot(iter, threshold,
+					                        no_upp_relax, NULL);
 				}
 			}
-
-			ms_merger_lift_up_pivot(iter, threshold, no_upp_relax, NULL);
 		}
 
 #ifdef DEBUG_TERM_SEARCH
