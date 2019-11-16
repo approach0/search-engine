@@ -8,6 +8,8 @@
 #include "rank.h"
 #include "print-search-results.h"
 
+//#define DEBUG_TERM_SEARCH
+
 /* use MaxScore merger */
 typedef struct ms_merger *merger_set_iter_t;
 #define merger_set_iterator  ms_merger_iterator
@@ -114,21 +116,27 @@ int main()
 	float threshold = 0.f;
 
 	/* merge inverted lists */
+#ifdef DEBUG_TERM_SEARCH
 	int cnt = 0;
+#endif
 	foreach (iter, merger_set, &merge_set) {
 		float doc_score = 0.f;
 		int h = 0; /* number of hit keywords */
 
 		for (int i = 0; i < iter->size; i++) {
 			if (doc_score + iter->acc_upp[i] < threshold) {
+//#ifdef DEBUG_TERM_SEARCH
 				printf("doc#%lu pruned. \n\n", iter->min);
+//#endif
 				doc_score = 0.f;
 				break;
 			}
 
 			/* advance those in skipping set */
 			if (i > iter->pivot) {
+#ifdef DEBUG_TERM_SEARCH
 				printf("skipping [%d]\n", iter->map[i]);
+#endif
 				ms_merger_iter_follow(iter, iter->map[i]);
 			}
 
@@ -138,27 +146,32 @@ int main()
 				int iid = iter->map[i];
 
 				MERGER_ITER_CALL(iter, read, iid, &item[i], sizeof item[i]);
+#ifdef DEBUG_TERM_SEARCH
 				print_term_item(&item[i], iid);
-
+#endif
 				/* calculate precise partial score */
 				struct term_qry *q = term_qry + iid;
 				float s, l = term_index_get_docLen(indices.ti, item[i].doc_id);
 				s = BM25_partial_score(&bm25, item[i].tf, q->idf, l);
 				doc_score += s * q->qf;
 				prox_set_input(prox + (h++), item[i].pos_arr, item[i].n_occur);
-
-				printf("[%u] += %.2f x %u = %.2f\n", iid, s, q->qf, doc_score);
+#ifdef DEBUG_TERM_SEARCH
+				printf("parital[%u] += %.2f x %.0f = %.2f\n", iid,
+					s, q->qf, doc_score);
+#endif
 			}
 		}
 
+#ifdef DEBUG_TERM_SEARCH
 		ms_merger_iter_print(iter, NULL);
-
+#endif
 		if (doc_score > 0.f) {
 			float proximity = prox_score(prox, h);
 
+#ifdef DEBUG_TERM_SEARCH
 			prinfo("[doc#%lu tf-idf=%.2f, prox=%.2f]\n", iter->min,
 			       doc_score, proximity);
-
+#endif
 			/* push document into top-K and update threshold */
 			if (!priority_Q_full(&rk_res) ||
 			    doc_score > priority_Q_min_score(&rk_res)) {
@@ -170,19 +183,23 @@ int main()
 				/* update threshold if the heap is full */
 				if (priority_Q_full(&rk_res)) {
 					threshold = priority_Q_min_score(&rk_res);
+#ifdef DEBUG_TERM_SEARCH
 					printf("update threshold -> %.2f\n", threshold);
+#endif
 				}
 			}
 
 			ms_merger_lift_up_pivot(iter, threshold, no_upp_relax, NULL);
 		}
 
+#ifdef DEBUG_TERM_SEARCH
 		printf("\n");
 
 		if (cnt > 100)
 			break;
 		else
 			cnt ++;
+#endif
 	}
 
 	/* free merger members and term queries */

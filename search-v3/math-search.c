@@ -56,7 +56,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 5129 && e == 17);// || (d == 602 && e == 26);
+	return (d == 314473 && e == 117 && r == 16) || (d == 227 && e == 18 && r == 10);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
