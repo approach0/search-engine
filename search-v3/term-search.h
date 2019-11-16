@@ -6,9 +6,9 @@ struct term_qry {
 	char *kw_str;
 	uint32_t term_id;
 	uint32_t df;
-	uint32_t qf; /* query term frequency */
 
 	/* bm25 scoring */
+	float qf; /* query term frequency */
 	float idf;
 	float upp;
 };

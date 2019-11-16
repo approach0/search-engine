@@ -7,7 +7,7 @@ int
 term_qry_prepare(term_index_t ti, const char* term, struct term_qry* term_qry)
 {
 	term_qry->term_id = term_lookup(ti, (char*)term);
-	term_qry->qf = 1;
+	term_qry->qf = 1.f;
 	term_qry->kw_str = strdup(term);
 
 	if (0 == term_qry->term_id) {
@@ -27,7 +27,7 @@ void term_qry_release(struct term_qry *term_qry)
 
 void term_qry_print(struct term_qry *term_qry)
 {
-	printf("`%s' (id=%u, df=%u, qf=%u, idf=%.2f, upp=%.2f)\n",
+	printf("`%s' (id=%u, df=%u, qf=%.2f, idf=%.2f, upp=%.2f)\n",
 		term_qry->kw_str, term_qry->term_id, term_qry->df,
 		term_qry->qf, term_qry->idf, term_qry->upp);
 }
@@ -72,7 +72,7 @@ int term_qry_array_merge(struct term_qry* tqs, int n)
 			    (!tqs_i->term_id && 0 == strcmp(tqs_i->kw_str, tqs_j->kw_str))
 			   ) {
 			   n = array_remove(tqs, n, j);
-			   tqs_i->qf ++;
+			   tqs_i->qf += 1.f;
 			   j --; /* redo at j */
 			}
 		}

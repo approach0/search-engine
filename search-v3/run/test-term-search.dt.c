@@ -140,10 +140,14 @@ int main()
 				MERGER_ITER_CALL(iter, read, iid, &item[i], sizeof item[i]);
 				print_term_item(&item[i], iid);
 
+				/* calculate precise partial score */
+				struct term_qry *q = term_qry + iid;
 				float s, l = term_index_get_docLen(indices.ti, item[i].doc_id);
-				s = BM25_partial_score(&bm25, item[i].tf, term_qry[i].idf, l);
-				doc_score += s;
+				s = BM25_partial_score(&bm25, item[i].tf, q->idf, l);
+				doc_score += s * q->qf;
 				prox_set_input(prox + (h++), item[i].pos_arr, item[i].n_occur);
+
+				printf("[%u] += %.2f x %u = %.2f\n", iid, s, q->qf, doc_score);
 			}
 		}
 
