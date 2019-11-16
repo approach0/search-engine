@@ -190,11 +190,11 @@ term_index_lookup(void *index_, term_id_t term_id)
 		entry_reader.ondisk_reader = NULL;
 	} else {
 		void *ondisk_reader = term_index_get_posting(index_, term_id);
-		if (ondisk_reader) {
-			/* return entry reader directly as term_posting */
-			entry_reader.inmemo_reader = NULL;
-			entry_reader.ondisk_reader = ondisk_reader;
-		}
+		term_posting_start(ondisk_reader);
+
+		/* return entry reader as term_posting */
+		entry_reader.inmemo_reader = NULL;
+		entry_reader.ondisk_reader = ondisk_reader;
 	}
 
 	return entry_reader;

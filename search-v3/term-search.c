@@ -27,8 +27,9 @@ void term_qry_release(struct term_qry *term_qry)
 
 void term_qry_print(struct term_qry *term_qry)
 {
-	printf("`%s' (id=%u, df=%u, qf=%u)\n", term_qry->kw_str,
-		term_qry->term_id, term_qry->df, term_qry->qf);
+	printf("`%s' (id=%u, df=%u, qf=%u, idf=%.2f, upp=%.2f)\n",
+		term_qry->kw_str, term_qry->term_id, term_qry->df,
+		term_qry->qf, term_qry->idf, term_qry->upp);
 }
 
 struct BM25_scorer prepare_bm25(term_index_t ti, struct term_qry* tqs, int n)
@@ -52,6 +53,8 @@ struct BM25_scorer prepare_bm25(term_index_t ti, struct term_qry* tqs, int n)
 static int
 array_remove(struct term_qry *tqs, int n, int j)
 {
+	term_qry_release(tqs + j);
+
 	for (int i = j; i < n - 1; i++) {
 		tqs[i] = tqs[i + 1];
 	}

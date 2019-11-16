@@ -31,22 +31,21 @@ inline static void print_inmemo_term_items(invlist_iter_t iter)
 
 inline static void print_ondisk_term_items(void *reader)
 {
+	struct term_posting_item item;
 	printf("on-disk: ");
-	term_posting_start(reader);
 
 	do {
 		/* test both "get_cur_item" functions */
-		struct term_posting_item pi;
 		uint64_t doc_id = term_posting_cur(reader);
-		term_posting_read(reader, &pi);
+		term_posting_read(reader, &item);
 
 		(void)doc_id;
-		assert(doc_id == pi.doc_id);
+		assert(doc_id == item.doc_id);
 
-		printf("[docID=%u, tf=%u", pi.doc_id, pi.tf);
+		printf("[docID=%u, tf=%u", item.doc_id, item.tf);
 
 		/* read term positions in this document */
-		print_pos_arr(pi.pos_arr, pi.n_occur);
+		print_pos_arr(item.pos_arr, item.n_occur);
 		printf("]");
 
 	} while (term_posting_next(reader));
