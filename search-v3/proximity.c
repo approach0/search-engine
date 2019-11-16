@@ -2,9 +2,18 @@
 #include "config.h" /* for MAX_TOTAL_OCCURS */
 #include "proximity.h"
 
+static void reset_inputs(prox_input_t *in, uint32_t n)
+{
+	uint32_t i;
+	for (i = 0; i < n; i++)
+		in[i].cur = 0;
+}
+
 void prox_print(prox_input_t *in, uint32_t n)
 {
 	uint32_t i, j;
+	reset_inputs(in, n);
+
 	for (i = 0; i < n; i++) {
 		printf("position_array[%d] (len=%u): ", i, in[i].n_pos);
 		for (j = 0; j < in[i].n_pos; j++)
@@ -19,10 +28,14 @@ void prox_print(prox_input_t *in, uint32_t n)
 #define CUR_POS(_in, _i) \
 	_in[_i].pos[_in[_i].cur]
 
-uint32_t prox_min_dist(prox_input_t* in, uint32_t n)
+static uint32_t calc_min_dist(prox_input_t* in, uint32_t n)
 {
 	uint32_t last_idx, last = UINT_MAX;
 	uint32_t min_dist = UINT_MAX;
+
+	/* Usually calc_min_dist() is only called once after prox_set_input()
+	 * which already reset the positions, thus comment here for efficiency. */
+	// reset_inputs(in, n);
 
 	while (1) {
 		uint32_t i, min_idx, min = UINT_MAX;
@@ -69,10 +82,11 @@ uint32_t prox_min_dist(prox_input_t* in, uint32_t n)
 	return min_dist;
 }
 
-uint32_t
-prox_sort_occurs(uint32_t *dest, prox_input_t* in, int n)
+uint32_t prox_sort_occurs(uint32_t *dest, prox_input_t* in, int n)
 {
 	uint32_t dest_end = 0;
+	reset_inputs(in, n);
+
 	while (dest_end < MAX_TOTAL_OCCURS) {
 		uint32_t i, min_idx, min_cur, min = UINT_MAX;
 
@@ -101,15 +115,15 @@ prox_sort_occurs(uint32_t *dest, prox_input_t* in, int n)
 
 #include <math.h>
 
-float prox_calc_score(uint32_t min_dist)
+static float calc_score(uint32_t min_dist)
 {
 	float dis = (float)min_dist;
 
 	return logf(0.3f + expf(-dis));
 }
 
-float proximity_score(prox_input_t *prox, int n)
+float prox_score(prox_input_t *prox, int n)
 {
-	uint32_t min_dist = prox_min_dist(prox, n);
-	return prox_calc_score(min_dist);
+	uint32_t min_dist = calc_min_dist(prox, n);
+	return calc_score(min_dist);
 }
