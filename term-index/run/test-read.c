@@ -155,7 +155,6 @@ int main(int argc, char* argv[])
 		if (opt_all || opt_postings) {
 			struct term_invlist_entry_reader entry_reader;
 			entry_reader = term_index_lookup(ti, i);
-			printf("(check df=%u) ", entry_reader.df);
 			if (entry_reader.inmemo_reader)
 				print_inmemo_term_items(entry_reader.inmemo_reader);
 			if (entry_reader.ondisk_reader)

@@ -16,7 +16,6 @@ enum {
 struct term_invlist_entry_reader {
 	invlist_iter_t inmemo_reader;
 	void          *ondisk_reader;
-	uint32_t       df;
 };
 
 /* term cache entry */

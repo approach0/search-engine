@@ -116,7 +116,6 @@ int term_index_load(void *index_, size_t limit_sz)
 			struct term_index_cache_entry *entry;
 			entry = (struct term_index_cache_entry*)malloc(sizeof *entry);
 			entry->invlist = memo_invlist;
-			entry->df = df;
 			TREAP_NODE_CONS(entry->trp_nd, term_id);
 
 			inserted = treap_insert(&index->trp_root, &entry->trp_nd);
@@ -189,14 +188,12 @@ term_index_lookup(void *index_, term_id_t term_id)
 		/* return entry reader as iterator */
 		entry_reader.inmemo_reader = invlist_iterator(entry->invlist);
 		entry_reader.ondisk_reader = NULL;
-		entry_reader.df = entry->df;
 	} else {
 		void *ondisk_reader = term_index_get_posting(index_, term_id);
 		if (ondisk_reader) {
 			/* return entry reader directly as term_posting */
 			entry_reader.inmemo_reader = NULL;
 			entry_reader.ondisk_reader = ondisk_reader;
-			entry_reader.df = term_index_get_df(index_, term_id);
 		}
 	}
 
