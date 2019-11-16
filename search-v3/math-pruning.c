@@ -27,6 +27,7 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 		struct subpath_ele *ele = mq->ele[i];
 		if (ele == NULL) continue;
 
+		/* a new element now, will create a new sector tree in each qnode */
 		int dirty_r[mq->n_qnodes];
 		memset(dirty_r, 0, sizeof(dirty_r));
 
@@ -35,16 +36,19 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 			uint32_t r = ele->rid[j];
 			struct math_pruner_qnode *qnode = pruner->qnodes + (r - 1);
 
-			qnode->secttr_w[qnode->n] += 1;
-
-			if (!dirty_r[r - 1]) {
+			if (0 == dirty_r[r - 1]) {
 				dirty_r[r - 1] = 1;
-
-				qnode->root = r;
-				qnode->invlist_id[qnode->n] = i;
-				qnode->ele_splt_idx[qnode->n] = find_splt_idx(ele, r);
+				/* create a new sector tree if this qnode has not created */
 				qnode->n += 1;
+
+				/* initialize sector tree properties */
+				qnode->root = r;
+				qnode->invlist_id[qnode->n - 1] = i;
+				qnode->ele_splt_idx[qnode->n - 1] = find_splt_idx(ele, r);
 			}
+
+			/* accumulate sector tree width */
+			qnode->secttr_w[qnode->n - 1] += 1;
 		}
 	}
 
