@@ -6,9 +6,9 @@
 #include "rank.h"
 #include "print-search-results.h"
 
-//#define LIMIT_ITERS
-//#define TEST_SEARCH
-#define TEST_SKIP
+#define LIMIT_ITERS
+#define TEST_SEARCH
+//#define TEST_SKIP
 
 /* use MaxScore merger */
 #define merger_set_iterator  ms_merger_iterator
