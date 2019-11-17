@@ -502,8 +502,9 @@ dir_search_callbk(const char* path, const char *srchpath,
 	entry->invlist = fork_invlist(entry->invlist);
 	index->memo_usage += entry->invlist->tot_payload_sz;
 
-	printf("caching %s, memory usage: %.2f %%\n", key_path,
-		100.f * index->memo_usage / args->limit_sz);
+	printf(ES_RESET_LINE);
+	printf("[caching @ level %u, memory usage: %.2f %%] %s, ", level,
+		100.f * index->memo_usage / args->limit_sz, key_path);
 
 	return DS_RET_CONTINUE;
 }
@@ -513,6 +514,7 @@ int math_index_load(math_index_t index, size_t limit_sz)
 	/* load index from on-disk directories by BFS */
 	struct math_index_load_arg args = {index, limit_sz};
 	dir_search_bfs(index->dir, &dir_search_callbk, &args);
+	printf("\n");
 
 	return 0;
 }
