@@ -41,8 +41,8 @@ static struct rank_hit
 int main()
 {
 	struct indices indices;
-	//char indices_path[] = "../indexerd/tmp";
-	char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
+	char indices_path[] = "../indexerd/tmp";
+	//char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
 
 	const char query[][128] = {
 		"common", "world", "real", "world", "kunming"
@@ -58,6 +58,13 @@ int main()
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
+
+	/* cache index */
+	indices.ti_cache_limit = 16 MB;
+	indices.mi_cache_limit = 0;
+	indices_cache(&indices);
+	indices_print_summary(&indices);
+	printf("\n");
 
 	/* prepare term queries */
 	for (int i = 0; i < qry_len; i++) {
@@ -83,8 +90,10 @@ int main()
 	struct merge_set merge_set = {0};
 	for (int i = 0; i < qry_len; i++) {
 		readers[i] = term_index_lookup(indices.ti, term_qry[i].term_id);
+		printf("[%u] `%s' ", i, term_qry[i].kw_str);
 
 		if (readers[i].inmemo_reader) {
+			printf("(in memo)");
 			merge_set.iter[i] = readers[i].inmemo_reader;
 			merge_set.upp [i] = term_qry[i].upp;
 			merge_set.cur [i] =  (merger_callbk_cur)invlist_iter_curkey;
@@ -93,6 +102,7 @@ int main()
 			merge_set.read[i] = (merger_callbk_read)invlist_iter_read;
 
 		} else if (readers[i].ondisk_reader) {
+			printf("(on disk)");
 			merge_set.iter[i] = readers[i].ondisk_reader;
 			merge_set.upp [i] = term_qry[i].upp;
 			merge_set.cur [i] =  (merger_callbk_cur)term_posting_cur;
@@ -101,6 +111,7 @@ int main()
 			merge_set.read[i] = (merger_callbk_read)term_posting_read;
 
 		} else {
+			printf("(empty)");
 			merge_set.iter[i] = NULL;
 			merge_set.upp [i] = 0;
 			merge_set.cur [i] = empty_invlist_cur;
@@ -109,6 +120,7 @@ int main()
 			merge_set.read[i] = empty_invlist_read;
 
 		}
+		printf("\n");
 
 		merge_set.n += 1;
 	}
