@@ -56,7 +56,8 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 314473 && e == 117 && r == 16) || (d == 227 && e == 18 && r == 10);
+	return (d == 78 && e == 13);
+	//return (d == 314473 && e == 117 && r == 16) || (d == 227 && e == 18 && r == 10);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
@@ -513,6 +514,11 @@ terminated: /* when iterator reaches the end */
 int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
 {
 	merger_set_iter_t iter = l2_iter->merge_iter;
+
+	/* refuse to skip if target key is in the back */
+	uint64_t cur_docID = math_l2_invlist_iter_cur(l2_iter);
+	if (cur_docID >= key_)
+		return (cur_docID != UINT64_MAX);
 
 	/* convert to l1 key */
 	uint64_t key = doc2key(key_);
