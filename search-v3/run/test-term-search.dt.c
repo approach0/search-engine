@@ -123,15 +123,10 @@ int main()
 		float tfidf_score = 0.f;
 		int h = 0; /* number of hit keywords */
 
+		/*
+		 * get proximity score
+		 */
 		for (int i = 0; i < iter->size; i++) {
-			if (tfidf_score + iter->acc_upp[i] < threshold) {
-#ifdef DEBUG_TERM_SEARCH
-				printf("doc#%lu pruned. \n\n", iter->min);
-#endif
-				tfidf_score = 0.f;
-				break;
-			}
-
 			/* advance those in skipping set */
 			if (i > iter->pivot) {
 #ifdef DEBUG_TERM_SEARCH
@@ -141,12 +136,34 @@ int main()
 					continue;
 			}
 
+			uint64_t cur = merger_map_call(iter, cur, i);
+			if (cur == iter->min) {
+				/* read hit items and use their occurred positions */
+				merger_map_call(iter, read, i, &item[i], sizeof item[i]);
+				prox_set_input(prox + (h++), item[i].pos_arr, item[i].n_occur);
+			}
+		}
+		
+		float proximity = prox_score(prox, h);
+		float delta = threshold - proximity;
+
+		/*
+		 * calculate TF-IDF score
+		 */
+		for (int i = 0; i < iter->size; i++) {
+			/* prune document early if it cannot make into top-K */
+			if (tfidf_score + iter->acc_upp[i] < delta) {
+#ifdef DEBUG_TERM_SEARCH
+				printf("doc#%lu pruned. \n\n", iter->min);
+#endif
+				tfidf_score = 0.f;
+				break;
+			}
+
 			/* accumulate precise partial score */
 			uint64_t cur = merger_map_call(iter, cur, i);
 			if (cur == iter->min) {
 				int iid = iter->map[i];
-
-				MERGER_ITER_CALL(iter, read, iid, &item[i], sizeof item[i]);
 #ifdef DEBUG_TERM_SEARCH
 				print_term_item(&item[i], iid);
 #endif
@@ -155,7 +172,6 @@ int main()
 				float s, l = term_index_get_docLen(indices.ti, item[i].doc_id);
 				s = BM25_partial_score(&bm25, item[i].tf, q->idf, l);
 				tfidf_score += s * q->qf;
-				prox_set_input(prox + (h++), item[i].pos_arr, item[i].n_occur);
 #ifdef DEBUG_TERM_SEARCH
 				printf("parital[%u] += %.2f x %.0f = %.2f\n", iid,
 					s, q->qf, tfidf_score);
@@ -167,7 +183,6 @@ int main()
 		ms_merger_iter_print(iter, NULL);
 #endif
 		if (tfidf_score > 0.f) {
-			float proximity = prox_score(prox, h);
 
 #ifdef DEBUG_TERM_SEARCH
 			prinfo("[doc#%lu tf-idf=%.2f, prox=%.2f]\n", iter->min,
