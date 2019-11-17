@@ -431,8 +431,14 @@ static struct invlist *fork_invlist(struct invlist *disk)
 	codec_buf_struct_info_t *c_info = disk->c_info;
 
 	struct invlist *memo = invlist_open(NULL, MATH_INDEX_BLK_LEN, c_info);
+
+	/* change default bufkey map */
+	memo->bufkey = &math_bufkey_64;
+
+	/* get writer */
 	invlist_iter_t  memo_writer = invlist_writer(memo);
 
+	/* write all items to memory */
 	foreach (iter, invlist, disk) {
 		/* read item from disk */
 		struct math_invlist_item item;
@@ -444,11 +450,10 @@ static struct invlist *fork_invlist(struct invlist *disk)
 
 	invlist_writer_flush(memo_writer);
 
+	/* free writer and disk reader */
 	invlist_iter_free(memo_writer);
 	invlist_free(disk);
 
-	/* change default bufkey map */
-	memo->bufkey = &math_bufkey_64;
 	return memo;
 }
 
