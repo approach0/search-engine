@@ -179,9 +179,9 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	foreach (iter, li, mq->subpath_set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		struct subpath *sp = ele->dup[0];
-		char path_key[MAX_DIR_PATH_NAME_LEN] = "";
+		char path_key[MAX_DIR_PATH_NAME_LEN] = "/";
 
-		if (0 != mk_path_str(sp, ele->prefix_len, path_key)) {
+		if (0 != mk_path_str(sp, ele->prefix_len, path_key + 1)) {
 			prerr("subpath too long or unexpected type.\n");
 			continue;
 		}
