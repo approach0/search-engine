@@ -84,6 +84,7 @@ struct math_invlist_item {
 	/* 4 bytes */
 }; /* 4 x 4 = 16 bytes in total */
 
+#define doc2key(_64key) (_64key << 32)
 #define key2doc(_64key) (_64key >> 32)
 #define key2exp(_64key) ((_64key >> 16) & 0xffff)
 #define key2rot(_64key) (_64key & 0xffff)

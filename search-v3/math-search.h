@@ -48,6 +48,7 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist*);
 void     math_l2_invlist_iter_free(math_l2_invlist_iter_t);
 uint64_t math_l2_invlist_iter_cur(math_l2_invlist_iter_t);
 int      math_l2_invlist_iter_next(math_l2_invlist_iter_t);
+int      math_l2_invlist_iter_skip(math_l2_invlist_iter_t, uint64_t);
 size_t   math_l2_invlist_iter_read(math_l2_invlist_iter_t, void*, size_t);
 
 /* level-2 inverted list upperbound calculation */

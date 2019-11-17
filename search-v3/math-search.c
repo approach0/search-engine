@@ -510,6 +510,28 @@ terminated: /* when iterator reaches the end */
 	return 0;
 }
 
+int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
+{
+	merger_set_iter_t iter = l2_iter->merge_iter;
+
+	/* convert to l1 key */
+	uint64_t key = doc2key(key_);
+
+	/* skip to key for every iterator in required set */
+	for (int i = 0; i <= iter->pivot; i++) {
+		uint64_t cur = merger_map_call(iter, cur, i);
+		if (cur < key)
+			merger_map_call(iter, skip, i, key);
+	}
+
+	/* assign current candidate ID to future_docID */
+	iter->min = ms_merger_min(iter);
+	l2_iter->future_docID = key2doc(iter->min);
+
+	/* read item by invoking next() */
+	return math_l2_invlist_iter_next(l2_iter);
+}
+
 size_t
 math_l2_invlist_iter_read(math_l2_invlist_iter_t l2_iter, void *dst, size_t sz)
 {
