@@ -24,16 +24,22 @@ static void print_l2_item(struct math_l2_iter_item *item)
 int main()
 {
 	struct indices indices;
-	//char indices_path[] = "../indexerd/tmp";
-	char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
+	char indices_path[] = "../indexerd/tmp/";
+	//char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
 
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		fprintf(stderr, "indices open failed.\n");
 		goto close;
 	}
 
-	const char tex[] = "k(k+1)";
-	//const char tex[] = "\\sum_{k=0}^n (k-1)k(k+1)";
+	indices.ti_cache_limit = 0;
+	indices.mi_cache_limit = 2 MB;
+	indices_cache(&indices);
+	indices_print_summary(&indices);
+	printf("\n");
+
+	//const char tex[] = "k(k+1)";
+	const char tex[] = "\\sum_{k=0}^n (k-1)k(k+1)";
 	//const char tex[] = "x^2+2xy+y^2=(x+y)^2";
 	//const char tex[] = "\\sum_{i=0}^n x_i = x";
 	float threshold = 0.f;
@@ -44,6 +50,8 @@ int main()
 		prerr("cannot parse tex %s", tex);
 		goto close;
 	}
+
+	math_qry_print(&minv->mq, 1);
 
 	struct merge_set merge_set = {0};
 	math_l2_invlist_iter_t l2_iter = math_l2_invlist_iterator(minv);
