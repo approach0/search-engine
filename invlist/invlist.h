@@ -95,5 +95,6 @@ size_t   invlist_iter_read(struct invlist_iterator*, void*);
 int invlist_iter_jump(struct invlist_iterator*, uint64_t);
 
 /* misc function */
+void invlist_iter_print_cur_as_decoded_ints(invlist_iter_t);
 void invlist_iter_print_as_decoded_ints(invlist_iter_t);
 void invlist_print_as_decoded_ints(struct invlist*);
