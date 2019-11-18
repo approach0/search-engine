@@ -9,6 +9,12 @@
 #include "search.h"
 #include "proximity.h"
 
+/* use MaxScore merger */
+typedef struct ms_merger *merger_set_iter_t;
+#define merger_set_iterator  ms_merger_iterator
+#define merger_set_iter_next ms_merger_iter_next
+#define merger_set_iter_free ms_merger_iter_free
+
 /* shorthands for level-2 math iterator */
 #define math_iter_cur  math_l2_invlist_iter_cur;
 #define math_iter_next math_l2_invlist_iter_next;
@@ -103,7 +109,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 static int
 prepare_math_keywords(struct indices *indices, struct query *qry,
 	 struct merge_set *ms, struct math_l2_invlist **math_invlist,
-	math_l2_invlist_iter_t *math_iter, float *threshold, float *dynm_thresh)
+	math_l2_invlist_iter_t *math_iter, float *math_th, float *dynm_th)
 {
 	int n_math = 0;
 	for (int i = 0; i < qry->len; i++) {
@@ -117,7 +123,7 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		/* math level-2 inverted list and iterator */
 		char *kw_str = wstr2mbstr(kw->wstr); /* utf-8 */
 		struct math_l2_invlist *minv = math_l2_invlist(indices->mi, kw_str,
-			threshold + n_math, dynm_thresh + n_math);
+			math_th + n_math, dynm_th + n_math);
 		math_l2_invlist_iter_t miter = NULL;
 
 #ifdef PRINT_SEARCH_QUERIES
@@ -164,6 +170,24 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 	return n_math;
 }
 
+static struct rank_hit
+*new_hit(doc_id_t docID, float score, prox_input_t *prox, int n)
+{
+	struct rank_hit *hit;
+	hit = malloc(sizeof *hit);
+	hit->docID = docID;
+	hit->score = score;
+	hit->occur = malloc(sizeof(uint32_t) * MAX_TOTAL_OCCURS);
+	hit->n_occurs = prox_sort_occurs(hit->occur, prox, n);
+	return hit;
+}
+
+static float prox_upp_relax(void *arg, float upp)
+{
+	P_CAST(proximity_upp, float, arg);
+	return upp + (*proximity_upp);
+}
+
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry)
 {
@@ -174,16 +198,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 	/* merge set */
 	struct merge_set merge_set = {0};
 
-	/* proximity is only used in text query */
-	//prox_input_t prox[qry->n_term];
-
 	/*
 	 * Prepare term query keywords
 	 */
 	struct term_qry term_qry[qry->n_term];
 	struct term_invlist_entry_reader term_reader[qry->n_term];
-	/* items are used for storing positions temporarily */
-	///// struct term_posting_item term_item[qry->n_term];
 
 	struct BM25_scorer bm25;
 	int n_term = prepare_term_keywords(indices, qry, &merge_set,
@@ -194,16 +213,143 @@ indices_run_query(struct indices* indices, struct query* qry)
 	 */
 	struct math_l2_invlist *math_invlist[qry->n_math];
 	math_l2_invlist_iter_t math_iter[qry->n_math];
-	float threshold[qry->n_math];
+	float math_threshold[qry->n_math];
 	float dynm_threshold[qry->n_math];
 
 	memset(math_invlist, 0, sizeof math_invlist);
 	memset(math_iter, 0, sizeof math_iter);
-	memset(threshold, 0, sizeof threshold);
+	memset(math_threshold, 0, sizeof math_threshold);
 	memset(dynm_threshold, 0, sizeof dynm_threshold);
 
 	int n_math = prepare_math_keywords(indices, qry, &merge_set,
-		math_invlist, math_iter, threshold, dynm_threshold);
+		math_invlist, math_iter, math_threshold, dynm_threshold);
+
+	/*
+	 * Threshold and proximity upperbound
+	 */
+	float threshold = 0.f;
+	float proximity_upp = prox_upp();
+
+	/*
+	 * Merge variables
+	 */
+	struct term_posting_item term_item[qry->n_term];
+	struct math_l2_iter_item math_item[qry->n_math];
+	prox_input_t prox[qry->len];
+
+	/*
+	 * Perform merging
+	 */
+	foreach (iter, merger_set, &merge_set) {
+		/*
+		 * get proximity score
+		 */
+		int h = 0; /* number of hits */
+		for (int i = 0; i < iter->size; i++) {
+			int iid = iter->map[i];
+
+			/* only consider term keywords */
+			if (iid < n_term) {
+				/* advance those in skipping set */
+				if (i > iter->pivot) {
+					if (!ms_merger_iter_follow(iter, iid))
+						continue;
+				}
+
+				uint64_t cur = merger_map_call(iter, cur, i);
+				if (cur == iter->min) {
+					/* read hit items and use their occurred positions */
+					struct term_posting_item *item = term_item + iid;
+					merger_map_call(iter, read, i, item, sizeof *item);
+					prox_set_input(prox + (h++), item->pos_arr, item->n_occur);
+				}
+			}
+		}
+		float proximity = prox_score(prox, h);
+
+		/*
+		 * calculate TF-IDF / SF-IPF score
+		 */
+		float score = proximity; /* base score */
+		for (int i = 0; i < iter->size; i++) {
+			int iid = iter->map[i];
+			int mid = iid - n_term;
+
+			/* update math level-2 iterator dynamic threshold */
+			if (iid >= n_term)
+				dynm_threshold[mid] = threshold + iter->set.upp[mid]
+				                       - (score + iter->acc_upp[i]);
+
+			/* prune document early if it cannot make into top-K */
+			if (score + iter->acc_upp[i] < threshold) {
+				score = 0.f;
+				break;
+			}
+
+			/* only consider hit iterators */
+			uint64_t cur = merger_map_call(iter, cur, i);
+			if (cur != iter->min)
+				continue;
+
+			/* accumulate precise partial score */
+			if (iid < n_term) {
+				struct term_qry *q = term_qry + iid;
+				struct term_posting_item *item = term_item + iid;
+				float l = term_index_get_docLen(indices->ti, item->doc_id);
+
+				float s = BM25_partial_score(&bm25, item->tf, q->idf, l);
+				score += s * q->qf;
+			} else {
+				struct math_l2_iter_item *item = math_item + mid;
+				merger_map_call(iter, read, i, item, sizeof *item);
+
+				score += item->score;
+				prox_set_input(prox + (h++), item->occur, item->n_occurs);
+			}
+		}
+
+		/*
+		 * print iteration
+		 */
+		ms_merger_iter_print(iter, NULL);
+
+		/*
+		 * update result only if needed
+		 */
+		if (score == 0.f)
+			continue;
+
+		/* if top-K is not full or this score exceeds threshold */
+		if (!priority_Q_full(&rk_res) ||
+			score > priority_Q_min_score(&rk_res)) {
+
+			/* store and push this candidate hit */
+			struct rank_hit *hit;
+			hit = new_hit(iter->min, score, prox, h);
+			priority_Q_add_or_replace(&rk_res, hit);
+
+			/* update threshold if the heap is full */
+			if (priority_Q_full(&rk_res)) {
+				/* update threshold */
+				threshold = priority_Q_min_score(&rk_res);
+
+				/* update math global thresholds */
+				for (int i = 0; i < iter->size; i++) {
+					int iid = iter->map[i];
+					int mid = iid - n_term;
+					if (mid >= 0) {
+						math_threshold[mid] = threshold + iter->set.upp[mid]
+							- (proximity_upp + iter->acc_upp[0]);
+					}
+				}
+
+				/* update pivot */
+				ms_merger_lift_up_pivot(iter, threshold,
+				                        prox_upp_relax, &proximity_upp);
+			}
+		}
+
+	} /* end of merge */
 
 	/*
 	 * Release term query keywords
