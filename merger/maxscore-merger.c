@@ -55,7 +55,7 @@ int ms_merger_iter_follow(struct ms_merger *m, int iid)
 	return left;
 }
 
-void ms_merger_iter_sort(struct ms_merger *m)
+static void ms_merger_iter_sort(struct ms_merger *m)
 {
 	// TODO: replace bubble sort with quick-sort.
 	for (int i = 0; i < m->size; i++) {
