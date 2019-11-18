@@ -9,9 +9,12 @@ struct math_l2_invlist {
 	struct math_qry mq;
 	struct math_score_factors msf;
 	float *threshold;
+	float *dynm_threshold /* dynamic threshold */;
 };
 
-struct math_l2_invlist *math_l2_invlist(math_index_t, const char*, float*);
+struct math_l2_invlist
+*math_l2_invlist(math_index_t, const char*, float*, float*);
+
 void  math_l2_invlist_free(struct math_l2_invlist*);
 
 /* iterator */
@@ -41,6 +44,7 @@ typedef struct math_l2_invlist_iter {
 	struct math_l2_iter_item item;
 	uint32_t future_docID;
 	float  last_threshold, *threshold;
+	float *dynm_threshold;
 } *math_l2_invlist_iter_t;
 
 /* iterator functions */

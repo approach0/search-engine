@@ -5,7 +5,8 @@
 #include "math-search.h"
 
 struct math_l2_invlist
-*math_l2_invlist(math_index_t index, const char* tex, float *threshold)
+*math_l2_invlist(math_index_t index, const char* tex,
+	float *threshold, float *dynamic_threshold)
 {
 	/* initialize math query */
 	struct math_qry mq;
@@ -24,8 +25,9 @@ struct math_l2_invlist
 	/* initialize scorer */
 	math_score_precalc(&ret->msf);
 
-	/* copy threshold address */
+	/* copy threshold addresses */
 	ret->threshold = threshold;
+	ret->dynm_threshold = dynamic_threshold;
 	return ret;
 }
 
@@ -108,6 +110,7 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 	l2_iter->future_docID   = 0;
 	l2_iter->last_threshold = -1.f;
 	l2_iter->threshold      = inv->threshold;
+	l2_iter->dynm_threshold = inv->dynm_threshold;
 
 	l2_iter->pruner = math_pruner_init(&inv->mq, &inv->msf, *inv->threshold);
 
@@ -394,6 +397,9 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 	float best = 0;
 	struct math_pruner_qnode *best_qn;
 
+	/* dynamic threshold */
+	float dynm_threshold = *l2_iter->dynm_threshold;
+
 	/* merge to the next */
 	int n_max_nodes = l2_iter->n_qnodes;
 	do {
@@ -452,7 +458,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 #endif
 			/* get structural score of matched tree rooted at qnode */
 			float s;
-			s = struct_score(iter, qnode, l2_iter, best, threshold);
+			s = struct_score(iter, qnode, l2_iter, best, dynm_threshold);
 			if (s > best) {
 				best = s;
 				best_qn = qnode;

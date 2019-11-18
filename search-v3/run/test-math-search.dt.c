@@ -61,7 +61,8 @@ int main()
 	 */
 	float threshold = 0.f;
 	struct math_l2_invlist *minv;
-	minv = math_l2_invlist(indices.mi, tex, &threshold);
+	                                        /* use same threshold */
+	minv = math_l2_invlist(indices.mi, tex, &threshold, &threshold);
 	if (NULL == minv) {
 		prerr("cannot parse tex %s", tex);
 		goto close;
