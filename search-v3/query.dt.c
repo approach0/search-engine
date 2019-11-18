@@ -92,8 +92,10 @@ struct query_keyword *query_get_kw(struct query* qry, int idx)
 	int cnt = 0;
 	foreach (iter, li, qry->keywords) {
 		struct query_keyword *kw = li_entry(kw, iter->cur, ln);
-		if (cnt == idx)
+		if (cnt == idx) {
+			li_iter_free(iter);
 			return kw;
+		}
 		cnt += 1;
 	}
 
