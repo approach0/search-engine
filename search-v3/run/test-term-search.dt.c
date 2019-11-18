@@ -94,30 +94,33 @@ int main()
 
 		if (readers[i].inmemo_reader) {
 			printf("(in memo)");
-			merge_set.iter[i] = readers[i].inmemo_reader;
-			merge_set.upp [i] = term_qry[i].upp;
-			merge_set.cur [i] =  (merger_callbk_cur)invlist_iter_curkey;
-			merge_set.next[i] = (merger_callbk_next)invlist_iter_next;
-			merge_set.skip[i] = (merger_callbk_skip)invlist_iter_jump;
-			merge_set.read[i] = (merger_callbk_read)invlist_iter_read;
+			merge_set.iter  [i] = readers[i].inmemo_reader;
+			merge_set.upp   [i] = term_qry[i].upp;
+			merge_set.sortby[i] = term_qry[i].upp;
+			merge_set.cur   [i] = (merger_callbk_cur) invlist_iter_curkey;
+			merge_set.next  [i] = (merger_callbk_next)invlist_iter_next;
+			merge_set.skip  [i] = (merger_callbk_skip)invlist_iter_jump;
+			merge_set.read  [i] = (merger_callbk_read)invlist_iter_read;
 
 		} else if (readers[i].ondisk_reader) {
 			printf("(on disk)");
-			merge_set.iter[i] = readers[i].ondisk_reader;
-			merge_set.upp [i] = term_qry[i].upp;
-			merge_set.cur [i] =  (merger_callbk_cur)term_posting_cur;
-			merge_set.next[i] = (merger_callbk_next)term_posting_next;
-			merge_set.skip[i] = (merger_callbk_skip)term_posting_jump;
-			merge_set.read[i] = (merger_callbk_read)term_posting_read;
+			merge_set.iter  [i] = readers[i].ondisk_reader;
+			merge_set.upp   [i] = term_qry[i].upp;
+			merge_set.sortby[i] = term_qry[i].upp;
+			merge_set.cur   [i] = (merger_callbk_cur) term_posting_cur;
+			merge_set.next  [i] = (merger_callbk_next)term_posting_next;
+			merge_set.skip  [i] = (merger_callbk_skip)term_posting_jump;
+			merge_set.read  [i] = (merger_callbk_read)term_posting_read;
 
 		} else {
 			printf("(empty)");
-			merge_set.iter[i] = NULL;
-			merge_set.upp [i] = 0;
-			merge_set.cur [i] = empty_invlist_cur;
-			merge_set.next[i] = empty_invlist_next;
-			merge_set.skip[i] = empty_invlist_skip;
-			merge_set.read[i] = empty_invlist_read;
+			merge_set.iter  [i] = NULL;
+			merge_set.upp   [i] = 0;
+			merge_set.sortby[i] = 0;
+			merge_set.cur   [i] = empty_invlist_cur;
+			merge_set.next  [i] = empty_invlist_next;
+			merge_set.skip  [i] = empty_invlist_skip;
+			merge_set.read  [i] = empty_invlist_read;
 
 		}
 		printf("\n");

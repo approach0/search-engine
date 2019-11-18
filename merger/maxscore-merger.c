@@ -25,7 +25,7 @@ void ms_merger_update_acc_upp(struct ms_merger *m)
 {
 	float sum = 0;
 	for (int i = m->size - 1; i >= 0; i--) {
-		float upp = merger_map_upp(m, i);
+		float upp = merger_map_prop(m, upp, i);
 		sum += upp;
 		m->acc_upp[i] = sum;
 	}
@@ -55,15 +55,15 @@ int ms_merger_iter_follow(struct ms_merger *m, int iid)
 	return left;
 }
 
-void ms_merger_iter_sort_by_upp(struct ms_merger *m)
+void ms_merger_iter_sort(struct ms_merger *m)
 {
 	// TODO: replace bubble sort with quick-sort.
 	for (int i = 0; i < m->size; i++) {
-		float max_upp = merger_map_upp(m, i);
+		float max_key = merger_map_prop(m, sortby, i);
 		for (int j = i + 1; j < m->size; j++) {
-			float upp = merger_map_upp(m, j);
-			if (upp > max_upp) {
-				max_upp = upp;
+			float key = merger_map_prop(m, sortby, j);
+			if (key > max_key) {
+				max_key = key;
 				/* swap */
 				int tmp;
 				tmp = m->map[i];
@@ -98,7 +98,7 @@ struct ms_merger *ms_merger_iterator(merge_set_t* set)
 	m->pivot = set->n - 1;
 	m->min = ms_merger_min(m);
 
-	ms_merger_iter_sort_by_upp(m); /* acc_upp is also updated */
+	ms_merger_iter_sort(m); /* acc_upp is also updated */
 	return m;
 }
 
@@ -131,7 +131,7 @@ void ms_merger_iter_print(struct ms_merger* m, keyprint_fun keyprint)
 		int invi = m->map[i];
 		int pivot = m->pivot;
 		float acc_upp = m->acc_upp[i];
-		float upp = merger_map_upp(m, i);
+		float upp = merger_map_prop(m, upp, i);
 		uint64_t cur = merger_map_call(m, cur, i);
 		char flag = ' ';
 		if (i == pivot) flag = 'P'; else if (i > pivot) flag = 'S';

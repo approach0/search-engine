@@ -57,12 +57,13 @@ int main()
 	for (int i = 0; i < n; i++) {
 		invlist[i] = INV_INIT(id[i], score[i]);
 
-		merge_set.iter[i] = example_invlist_iterator(&invlist[i]);
-		merge_set.upp [i] = invlist[i].upper;
-		merge_set.cur [i] =  (merger_callbk_cur)example_invlist_iter_cur;
-		merge_set.next[i] = (merger_callbk_next)example_invlist_iter_next;
-		merge_set.skip[i] = (merger_callbk_skip)example_invlist_iter_skip;
-		merge_set.read[i] = (merger_callbk_read)example_invlist_iter_read;
+		merge_set.iter  [i] = example_invlist_iterator(&invlist[i]);
+		merge_set.upp   [i] = invlist[i].upper;
+		merge_set.sortby[i] = invlist[i].upper;
+		merge_set.cur   [i] = (merger_callbk_cur) example_invlist_iter_cur;
+		merge_set.next  [i] = (merger_callbk_next)example_invlist_iter_next;
+		merge_set.skip  [i] = (merger_callbk_skip)example_invlist_iter_skip;
+		merge_set.read  [i] = (merger_callbk_read)example_invlist_iter_read;
 		merge_set.n += 1;
 	}
 
