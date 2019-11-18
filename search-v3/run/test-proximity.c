@@ -6,9 +6,9 @@
 
 float test1()
 {
-	uint32_t arr1[] = {5, 8, 10, 19};
-	uint32_t arr2[] = {1, 4, 9};
-	uint32_t arr3[] = {2, 3, 6, 7, 11, 15};
+	uint32_t arr1[] = {3, 5, 6, 19};
+	uint32_t arr2[] = {1, 8, 9};
+	uint32_t arr3[] = {11, 12, 13, 15, 17};
 
 	prox_input_t input[3] = {
 		INIT_ARR(arr1),
@@ -29,6 +29,8 @@ float test1()
 
 int main()
 {
+	printf("upperbound: %.2f\n", prox_upp());
+
 	printf("=== test1 ===\n");
 
 	printf("res = %f.\n\n", test1());

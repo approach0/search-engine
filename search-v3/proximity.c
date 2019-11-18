@@ -122,6 +122,11 @@ static float calc_score(uint32_t min_dist)
 	return logf(0.3f + expf(-dis));
 }
 
+float prox_upp()
+{
+	return calc_score(1);
+}
+
 float prox_score(prox_input_t *prox, int n)
 {
 	uint32_t min_dist = calc_min_dist(prox, n);
