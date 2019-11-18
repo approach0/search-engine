@@ -204,6 +204,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 	struct term_qry term_qry[qry->n_term];
 	struct term_invlist_entry_reader term_reader[qry->n_term];
 
+	memset(term_qry, 0, sizeof term_qry);
+	memset(term_reader, 0, sizeof term_reader);
+
 	struct BM25_scorer bm25;
 	int n_term = prepare_term_keywords(indices, qry, &merge_set,
 	                                   &bm25, term_qry, term_reader);
