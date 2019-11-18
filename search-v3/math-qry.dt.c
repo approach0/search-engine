@@ -243,7 +243,7 @@ void math_qry_release(struct math_qry *mq)
 
 void math_qry_print(struct math_qry* mq, int print_details)
 {
-	printf("[math query print] %s\n", mq->tex);
+	printf("`%s' (TeX)\n", mq->tex);
 
 	if (print_details) {
 		printf("[operator tree]\n");
@@ -254,9 +254,10 @@ void math_qry_print(struct math_qry* mq, int print_details)
 
 		printf("[subpath set]\n");
 		print_subpath_set(mq->subpath_set);
+
+		printf("[inverted lists]\n");
 	}
 
-	printf("[inverted lists]\n");
 	for (int i = 0; i < mq->merge_set.n; i++) {
 		struct subpath_ele *ele = mq->ele[i];
 		struct subpath *sp = ele->dup[0];
@@ -270,16 +271,16 @@ void math_qry_print(struct math_qry* mq, int print_details)
 		char *medium_str = NULL;
 		switch (medium) {
 		case MATH_READER_MEDIUM_INMEMO:
-			medium_str = "in-memo";
+			medium_str = "in memo";
 			break;
 		case MATH_READER_MEDIUM_ONDISK:
-			medium_str = "on-disk";
+			medium_str = "on disk";
 			break;
 		default:
 			medium_str = "unknown";
 		}
 
-		printf("[%3d][%s] %s ", i, medium_str, path_key);
+		printf("\t[%3d] (%s) %s ", i, medium_str, path_key);
 		printf("(pf=%u, ipf=%.2f)\n", mq->entry[i].pf, mq->ipf[i]);
 	}
 }

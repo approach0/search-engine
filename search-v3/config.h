@@ -43,3 +43,5 @@
 #include "txt-seg/config.h"
 #define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
+
+#define PRINT_SEARCH_QUERIES
