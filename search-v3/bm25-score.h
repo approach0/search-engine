@@ -10,7 +10,7 @@
  * TF(q, d) = ------------------------------------------
  *             tf + k1 * (1 - b + b(doclen / avgDocLen))
  *
- * where default k1 = 1.5 (in [1.2, 2.0]), and b = 0.75.
+ * where default k1 is in (0, 2.0], and b = 0.75.
  *
  * The TF upperbound is (k1 + 1) / (1 + k1 (b / avgDocLen)).
  *

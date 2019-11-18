@@ -36,7 +36,7 @@
 #define SYMBOL_SUBSCORE_BASE 0.8f
 
 #define BM25_DEFAULT_B  0.75
-#define BM25_DEFAULT_K1 1.5
+#define BM25_DEFAULT_K1 1.2 /* lower TF upperbound, less rewards to TF */
 
 #define MAX_SEARCH_INVLISTS 64
 
