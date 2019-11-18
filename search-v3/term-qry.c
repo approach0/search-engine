@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "term-search.h"
+#include "term-qry.h"
 
 int
 term_qry_prepare(term_index_t ti, const char* term, struct term_qry* term_qry)

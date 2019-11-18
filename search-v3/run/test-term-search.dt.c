@@ -3,7 +3,7 @@
 #include "config.h"
 #include "indices-v3/indices.h"
 #include "merger/mergers.h"
-#include "term-search.h"
+#include "term-qry.h"
 #include "proximity.h"
 #include "rank.h"
 #include "print-search-results.h"
