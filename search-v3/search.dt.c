@@ -156,7 +156,9 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		} else {
 			ms->iter  [n] = miter;
 			ms->upp   [n] = math_l2_invlist_iter_upp(miter);
-			ms->sortby[n] = -(ms->upp[n]); /* force math keywords at bottom */
+			/* force math keywords at bottom, so that it has more internal
+			 * pruning potential according to MaxScore strategy. */
+			ms->sortby[n] = -(ms->upp[n]);
 			ms->cur   [n] = (merger_callbk_cur) math_iter_cur;
 			ms->next  [n] = (merger_callbk_next)math_iter_next;
 			ms->skip  [n] = (merger_callbk_skip)math_iter_skip;
@@ -184,7 +186,7 @@ static struct rank_hit
 
 static float prox_upp_relax(void *arg, float upp)
 {
-	P_CAST(proximity_upp, float, arg);
+	P_CAST(proximity_upp, const float, arg);
 	return upp + (*proximity_upp);
 }
 
@@ -231,7 +233,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	 * Threshold and proximity upperbound
 	 */
 	float threshold = 0.f;
-	float proximity_upp = prox_upp();
+	const float proximity_upp = prox_upp();
 
 	/*
 	 * Merge variables
@@ -279,7 +281,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 			int mid = iid - n_term;
 
 			/* update math level-2 iterator dynamic threshold */
-			if (iid >= n_term)
+			if (mid >= 0)
 				dynm_threshold[mid] = threshold + iter->set.upp[mid]
 				                       - (score + iter->acc_upp[i]);
 
@@ -296,17 +298,17 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 			/* accumulate precise partial score */
 			if (iid < n_term) {
-				struct term_qry *q = term_qry + iid;
+				struct term_qry *tq = term_qry + iid;
 				struct term_posting_item *item = term_item + iid;
 				float l = term_index_get_docLen(indices->ti, item->doc_id);
 
-				float s = BM25_partial_score(&bm25, item->tf, q->idf, l);
-				score += s * q->qf;
+				float s = BM25_partial_score(&bm25, item->tf, tq->idf, l);
+				score += s * tq->qf;
 			} else {
 				struct math_l2_iter_item *item = math_item + mid;
 				merger_map_call(iter, read, i, item, sizeof *item);
 
-				score += item->score;
+				score += item->score; /* accumulate SF-IPF score */
 				prox_set_input(prox + (h++), item->occur, item->n_occurs);
 			}
 		}
@@ -348,7 +350,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 				/* update pivot */
 				ms_merger_lift_up_pivot(iter, threshold,
-				                        prox_upp_relax, &proximity_upp);
+				                        prox_upp_relax, (void*)&proximity_upp);
 			}
 		}
 
