@@ -68,8 +68,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(in memo) ");
 #endif
 			ms->iter  [n] = reader->inmemo_reader;
-			ms->upp   [n] = term_qry[i].upp;
-			ms->sortby[n] = term_qry[i].upp;
+			ms->upp   [n] = term_qry[i].upp * (1 - MIXED_SCORE_LAMBDA);
+			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) invlist_iter_curkey;
 			ms->next  [n] = (merger_callbk_next)invlist_iter_next;
 			ms->skip  [n] = (merger_callbk_skip)invlist_iter_jump;
@@ -79,8 +79,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(on disk) ");
 #endif
 			ms->iter  [n] = reader->ondisk_reader;
-			ms->upp   [n] = term_qry[i].upp;
-			ms->sortby[n] = term_qry[i].upp;
+			ms->upp   [n] = term_qry[i].upp * (1 - MIXED_SCORE_LAMBDA);
+			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) term_posting_cur;
 			ms->next  [n] = (merger_callbk_next)term_posting_next;
 			ms->skip  [n] = (merger_callbk_skip)term_posting_jump;
@@ -99,6 +99,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 		}
 
 #ifdef PRINT_SEARCH_QUERIES
+		printf("%6.2f ", ms->upp[n]);
 		term_qry_print(term_qry + i);
 #endif
 		ms->n += 1;
@@ -151,8 +152,9 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 			printf("( empty ) `%s' (malformed TeX, upp=0)\n", kw_str);
 #endif
 		} else {
+			const float math_upp = math_l2_invlist_iter_upp(miter);
 			ms->iter  [n] = miter;
-			ms->upp   [n] = math_l2_invlist_iter_upp(miter);
+			ms->upp   [n] = math_upp * MIXED_SCORE_LAMBDA;
 			/* force math keywords at bottom, so that it has more internal
 			 * pruning potential according to MaxScore strategy. */
 			ms->sortby[n] = -(ms->upp[n]);
@@ -162,7 +164,8 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 			ms->read  [n] = (merger_callbk_read)math_iter_read;
 
 #ifdef PRINT_SEARCH_QUERIES
-			printf("(level 2) `%s' (TeX, upp=%.2f)\n", kw_str, ms->upp[n]);
+			printf("(level 2) %6.2f `%s' (TeX, upp=%.2f)\n",
+				ms->upp[n], kw_str, math_upp);
 			math_qry_print(&minv->mq, 0);
 #endif
 		}
@@ -310,13 +313,15 @@ indices_run_query(struct indices* indices, struct query* qry)
 				struct term_posting_item *item = term_item + iid;
 				float l = term_index_get_docLen(indices->ti, item->doc_id);
 
+				/* accumulate TF-IDF score */
 				float s = BM25_partial_score(&bm25, item->tf, tq->idf, l);
-				score += s * tq->qf;
+				score += (s * tq->qf) * (1 - MIXED_SCORE_LAMBDA);
 			} else {
 				struct math_l2_iter_item *item = math_item + mid;
 				merger_map_call(iter, read, i, item, sizeof *item);
 
-				score += item->score; /* accumulate SF-IPF score */
+				/* accumulate SF-IPF score */
+				score += item->score * MIXED_SCORE_LAMBDA;
 				prox_set_input(prox + (h++), item->occur, item->n_occurs);
 			}
 		}
