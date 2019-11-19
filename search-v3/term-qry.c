@@ -44,7 +44,7 @@ struct BM25_scorer prepare_bm25(term_index_t ti, struct term_qry* tqs, int n)
 	for (int i = 0; i < n; i++) {
 		float df = (float)tqs[i].df;
 		tqs[i].idf = BM25_idf(&bm25, df);
-		tqs[i].upp = BM25_idf(&bm25, tqs[i].idf);
+		tqs[i].upp = tqs[i].qf * BM25_upp(&bm25, tqs[i].idf);
 	}
 
 	return bm25;
