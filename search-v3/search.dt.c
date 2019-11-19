@@ -13,10 +13,10 @@
 #include "proximity.h"
 
 /* use MaxScore merger */
-typedef struct ms_merger *merger_set_iter_t;
-#define merger_set_iterator  ms_merger_iterator
-#define merger_set_iter_next ms_merger_iter_next
-#define merger_set_iter_free ms_merger_iter_free
+typedef struct pd_merger *merger_set_iter_t;
+#define merger_set_iterator  pd_merger_iterator
+#define merger_set_iter_next pd_merger_iter_next
+#define merger_set_iter_free pd_merger_iter_free
 
 /* shorthands for level-2 math iterator */
 #define math_iter_cur  math_l2_invlist_iter_cur;
@@ -70,7 +70,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(in memo) ");
 #endif
 			ms->iter  [n] = reader->inmemo_reader;
-			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_LAMBDA;
+			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_TERM_WEIGHT;
+			ms->pd_upp[n] = term_qry[i].upp;
 			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) invlist_iter_curkey;
 			ms->next  [n] = (merger_callbk_next)invlist_iter_next;
@@ -81,7 +82,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(on disk) ");
 #endif
 			ms->iter  [n] = reader->ondisk_reader;
-			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_LAMBDA;
+			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_TERM_WEIGHT;
+			ms->pd_upp[n] = term_qry[i].upp;
 			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) term_posting_cur;
 			ms->next  [n] = (merger_callbk_next)term_posting_next;
@@ -93,6 +95,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 #endif
 			ms->iter  [n] = NULL;
 			ms->upp   [n] = 0;
+			ms->pd_upp[n] = 0;
 			ms->sortby[n] = -FLT_MAX;
 			ms->cur   [n] = empty_invlist_cur;
 			ms->next  [n] = empty_invlist_next;
@@ -144,6 +147,7 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		if (minv == NULL || miter == NULL) {
 			ms->iter  [n] = NULL;
 			ms->upp   [n] = 0;
+			ms->pd_upp[n] = 0;
 			ms->sortby[n] = -FLT_MAX;
 			ms->cur   [n] = empty_invlist_cur;
 			ms->next  [n] = empty_invlist_next;
@@ -156,10 +160,9 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		} else {
 			const float math_upp = math_l2_invlist_iter_upp(miter);
 			ms->iter  [n] = miter;
-			ms->upp   [n] = math_upp;
-			/* force math keywords at bottom, so that it has more internal
-			 * pruning potential according to MaxScore strategy. */
-			ms->sortby[n] = -(ms->upp[n]);
+			ms->upp   [n] = math_upp * MIXED_SCORE_MATH_WEIGHT;
+			ms->pd_upp[n] = math_upp;
+			ms->sortby[n] = -(100.f / (1.f + ms->upp[n]));
 			ms->cur   [n] = (merger_callbk_cur) math_iter_cur;
 			ms->next  [n] = (merger_callbk_next)math_iter_next;
 			ms->skip  [n] = (merger_callbk_skip)math_iter_skip;
@@ -252,7 +255,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 #ifdef DEBUG_INDICES_RUN_QUERY
 	foreach (iter, merger_set, &merge_set) {
-		ms_merger_iter_print(iter, NULL);
+		pd_merger_iter_print(iter, NULL);
 		sleep(3);
 		printf("Begin merging !!!\n");
 		break;
@@ -274,7 +277,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 			if (iid < n_term) {
 				/* advance those in skipping set */
 				if (i > iter->pivot) {
-					if (!ms_merger_iter_follow(iter, iid))
+					if (!pd_merger_iter_follow(iter, iid))
 						continue;
 				}
 
@@ -322,13 +325,13 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 				/* accumulate TF-IDF score */
 				float s = BM25_partial_score(&bm25, item->tf, tq->idf, l);
-				score += (s * tq->qf) * MIXED_SCORE_LAMBDA;
+				score += (s * tq->qf) * MIXED_SCORE_TERM_WEIGHT;
 			} else {
 				struct math_l2_iter_item *item = math_item + mid;
 				merger_map_call(iter, read, i, item, sizeof *item);
 
 				/* accumulate SF-IPF score */
-				score += item->score;
+				score += item->score * MIXED_SCORE_MATH_WEIGHT;
 				prox_set_input(prox + (h++), item->occur, item->n_occurs);
 			}
 		}
@@ -337,7 +340,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 		/*
 		 * print iteration
 		 */
-		// ms_merger_iter_print(iter, NULL);
+		// pd_merger_iter_print(iter, NULL);
 		// printf("\n");
 #endif
 
@@ -383,7 +386,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 				}
 
 				/* update pivot */
-				ms_merger_lift_up_pivot(iter, threshold,
+				pd_merger_lift_up_pivot(iter, threshold,
 				                        prox_upp_relax, (void*)&proximity_upp);
 #ifdef DEBUG_INDICES_RUN_QUERY
 		printf("\n");

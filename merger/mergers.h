@@ -24,3 +24,4 @@ typedef void  (*merger_keyprint_fun)(uint64_t);
 
 /* different merge strategies */
 #include "maxscore-merger.h"
+#include "podium-merger.h"

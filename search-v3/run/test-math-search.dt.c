@@ -11,6 +11,7 @@
 //#define TEST_SKIP
 
 /* use MaxScore merger */
+typedef struct ms_merger *merger_set_iter_t;
 #define merger_set_iterator  ms_merger_iterator
 #define merger_set_iter_next ms_merger_iter_next
 #define merger_set_iter_free ms_merger_iter_free

@@ -17,15 +17,14 @@ struct math_l2_invlist
 
 void  math_l2_invlist_free(struct math_l2_invlist*);
 
-/* iterator */
-typedef struct ms_merger *merger_set_iter_t;
-
+/* iterator read item */
 struct math_l2_iter_item {
 	uint32_t docID;
 	float    score;
 	uint32_t n_occurs, occur[MAX_MATH_OCCURS];
 };
 
+/* iterator */
 typedef struct math_l2_invlist_iter {
 	/* copied from level-2 invert list */
 	int n_qnodes;
@@ -37,7 +36,7 @@ typedef struct math_l2_invlist_iter {
 	const char *tex;
 
 	/* merger and pruner for level-2 merge */
-	merger_set_iter_t merge_iter;
+	struct ms_merger *merge_iter;
 	struct math_pruner *pruner;
 
 	/* item book-keeping */
