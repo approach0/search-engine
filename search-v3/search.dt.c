@@ -1,4 +1,6 @@
 #include <float.h>
+#include <unistd.h> /* for sleep() */
+
 #include "mhook/mhook.h"
 #include "common/common.h"
 #include "wstring/wstring.h"
@@ -68,7 +70,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(in memo) ");
 #endif
 			ms->iter  [n] = reader->inmemo_reader;
-			ms->upp   [n] = term_qry[i].upp * (1 - MIXED_SCORE_LAMBDA);
+			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_LAMBDA;
 			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) invlist_iter_curkey;
 			ms->next  [n] = (merger_callbk_next)invlist_iter_next;
@@ -79,7 +81,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(on disk) ");
 #endif
 			ms->iter  [n] = reader->ondisk_reader;
-			ms->upp   [n] = term_qry[i].upp * (1 - MIXED_SCORE_LAMBDA);
+			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_LAMBDA;
 			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) term_posting_cur;
 			ms->next  [n] = (merger_callbk_next)term_posting_next;
@@ -154,7 +156,7 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		} else {
 			const float math_upp = math_l2_invlist_iter_upp(miter);
 			ms->iter  [n] = miter;
-			ms->upp   [n] = math_upp * MIXED_SCORE_LAMBDA;
+			ms->upp   [n] = math_upp;
 			/* force math keywords at bottom, so that it has more internal
 			 * pruning potential according to MaxScore strategy. */
 			ms->sortby[n] = -(ms->upp[n]);
@@ -239,6 +241,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	 */
 	float threshold = 0.f;
 	const float proximity_upp = prox_upp();
+	printf("proximity upperbound: %.2f\n", proximity_upp);
 
 	/*
 	 * Merge variables
@@ -247,11 +250,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 	struct math_l2_iter_item math_item[qry->n_math];
 	prox_input_t prox[qry->len];
 
+#ifdef DEBUG_INDICES_RUN_QUERY
 	foreach (iter, merger_set, &merge_set) {
 		ms_merger_iter_print(iter, NULL);
+		sleep(3);
+		printf("Begin merging !!!\n");
 		break;
 	}
-	goto skip_merge;
+#endif
 
 	/*
 	 * Perform merging
@@ -292,9 +298,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 			int mid = iid - n_term;
 
 			/* update math level-2 iterator dynamic threshold */
-			if (mid >= 0)
-				dynm_threshold[mid] = threshold + iter->set.upp[mid]
+			if (mid >= 0) {
+				dynm_threshold[mid] = threshold + iter->set.upp[iid]
 				                       - (score + iter->acc_upp[i]);
+			}
 
 			/* prune document early if it cannot make into top-K */
 			if (score + iter->acc_upp[i] < threshold) {
@@ -315,21 +322,24 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 				/* accumulate TF-IDF score */
 				float s = BM25_partial_score(&bm25, item->tf, tq->idf, l);
-				score += (s * tq->qf) * (1 - MIXED_SCORE_LAMBDA);
+				score += (s * tq->qf) * MIXED_SCORE_LAMBDA;
 			} else {
 				struct math_l2_iter_item *item = math_item + mid;
 				merger_map_call(iter, read, i, item, sizeof *item);
 
 				/* accumulate SF-IPF score */
-				score += item->score * MIXED_SCORE_LAMBDA;
+				score += item->score;
 				prox_set_input(prox + (h++), item->occur, item->n_occurs);
 			}
 		}
 
+#ifdef DEBUG_INDICES_RUN_QUERY
 		/*
 		 * print iteration
 		 */
-		ms_merger_iter_print(iter, NULL);
+		// ms_merger_iter_print(iter, NULL);
+		// printf("\n");
+#endif
 
 		/*
 		 * update result only if needed
@@ -350,14 +360,23 @@ indices_run_query(struct indices* indices, struct query* qry)
 			if (priority_Q_full(&rk_res)) {
 				/* update threshold */
 				threshold = priority_Q_min_score(&rk_res);
+#ifdef DEBUG_INDICES_RUN_QUERY
+		printf(ES_RESET_CONSOLE);
+		printf("threshold -> %.2f\n", threshold);
+#endif
 
 				/* update math global thresholds */
 				for (int i = 0; i < iter->size; i++) {
 					int iid = iter->map[i];
 					int mid = iid - n_term;
 					if (mid >= 0) {
-						math_threshold[mid] = threshold + iter->set.upp[mid]
+						math_threshold[mid] = threshold + iter->set.upp[iid]
 							- (proximity_upp + iter->acc_upp[0]);
+#ifdef DEBUG_INDICES_RUN_QUERY
+		printf("[%d] dynm_threshold -> %.2f\n", iid, dynm_threshold[mid]);
+		printf("[%d] math_threshold -> %.2f\n", iid, math_threshold[mid]);
+		fflush(stdout);
+#endif
 					}
 				}
 
@@ -368,8 +387,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 
 	} /* end of merge */
-
-skip_merge:
 
 	/*
 	 * Release term query keywords

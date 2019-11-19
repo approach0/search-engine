@@ -4,6 +4,7 @@
 #include "mhook/mhook.h"
 #include "search.h"
 #include "query.h"
+#include "print-search-results.h"
 
 int main()
 {
@@ -40,8 +41,9 @@ int main()
 	printf("\n");
 #endif
 
-	/* perform searching */
+	/* perform searching and print results */
 	ranked_results_t rk_res = indices_run_query(&indices, &qry);
+	print_search_results(&indices, &rk_res, 1);
 	priority_Q_free(&rk_res);
 
 	/* free query */
