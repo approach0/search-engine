@@ -143,6 +143,9 @@ static int column_max(struct bin_lp *blp, int c)
 
 static void column_swap(struct bin_lp *blp, int a, int b)
 {
+#ifdef DEBUG_BIN_LP
+	printf("swap col %d and %d ...\n", a, b);
+#endif
 	float tmp;
 	for (int row = 0; row < blp->n_nodes; row++) {
 		tmp = blp->matrix[row * blp->width + a];
@@ -211,7 +214,7 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 
 #ifdef DEBUG_BIN_LP
 	printf("\n");
-	printf("objective weight sum: %f\n", cur_max);
+	printf("objective weight sum: %f, max=%f.\n", cur_max, *max);
 	bin_lp_print(*blp, level);
 #endif
 
@@ -220,7 +223,10 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 		printf("pruned.\n");
 #endif
 		return;
-	} else if (blp->zero_pivot > blp->one_pivot) {
+	} else if (blp->zero_pivot >= blp->one_pivot) {
+#ifdef DEBUG_BIN_LP
+		printf("infeasible.\n");
+#endif
 		return;
 	}
 
@@ -230,7 +236,8 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 		float sum = row_weight_sum(blp, row);
 		float delta = upp(args, sum) - threshold;
 #ifdef DEBUG_BIN_LP
-			printf("row[%d] weight sum: %f (violate: %f)\n", row, sum, delta);
+		printf("row[%d] weight sum: %f (violate: %f)", row, sum, delta);
+		printf(" upperbound=%f (threshold: %f)\n", upp(args, sum), threshold);
 #endif
 		if (delta > max_delta) {
 			max_delta = delta;
@@ -244,7 +251,7 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 		// int max_col = row_max_column(blp, max_row);
 		int max_col = row_min_objective_col(blp, max_row);
 #ifdef DEBUG_BIN_LP
-			printf("most violating row = %d, col = %d\n", max_row, max_col);
+		printf("most violating row = %d, col = %d\n", max_row, max_col);
 #endif
 		struct bin_lp lp1, lp2;
 		lp1 = bin_lp_alloc(blp->height, blp->width);
@@ -287,13 +294,16 @@ bin_lp_solve(struct bin_lp* blp, float threshold,
 	for (int column = 0; column < blp->n_po; column++) {
 		float max = column_max(blp, column);
 
-		/* violates constraints anyway, take out */
+		/* violates constraints anyway, take it out */
 		if (upp(args, max) > threshold) {
 			column_swap(blp, blp->zero_pivot ++, column);
+#ifdef DEBUG_BIN_LP
+			bin_lp_print(*blp, 0);
+#endif
 		}
 	}
 
-	float max = -1; /* branch-and-cut upperbound */
+	float max = -FLT_MAX; /* branch-and-cut upperbound */
 	bin_lp_solve_r(blp, threshold, &max, blp, upp, args, 0);
 	return blp->zero_pivot;
 }
