@@ -1,3 +1,4 @@
+#include <float.h>
 #include "mhook/mhook.h"
 #include "common/common.h"
 #include "wstring/wstring.h"
@@ -90,7 +91,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 #endif
 			ms->iter  [n] = NULL;
 			ms->upp   [n] = 0;
-			ms->sortby[n] = 0;
+			ms->sortby[n] = -FLT_MAX;
 			ms->cur   [n] = empty_invlist_cur;
 			ms->next  [n] = empty_invlist_next;
 			ms->skip  [n] = empty_invlist_skip;
@@ -126,15 +127,6 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 			math_th + n_math, dynm_th + n_math);
 		math_l2_invlist_iter_t miter = NULL;
 
-#ifdef PRINT_SEARCH_QUERIES
-		printf("[%d] ", n);
-		if (minv) {
-			printf("(level 2) ");
-			math_qry_print(&minv->mq, 0);
-		} else {
-			printf("( empty ) `%s' (malformed TeX)\n", kw_str);
-		}
-#endif
 		/* generate math iterator only if math invlist is valid */
 		if (minv) {
 			miter = math_l2_invlist_iterator(minv);
@@ -142,17 +134,22 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 			math_iter[n_math] = miter;
 		}
 
+#ifdef PRINT_SEARCH_QUERIES
+		printf("[%d] ", n);
+#endif
 		/* push into merge set */
 		if (minv == NULL || miter == NULL) {
-			//prerr("math keyword malformed: `%s', leave empty.", kw_str);
 			ms->iter  [n] = NULL;
 			ms->upp   [n] = 0;
-			ms->sortby[n] = 0;
+			ms->sortby[n] = -FLT_MAX;
 			ms->cur   [n] = empty_invlist_cur;
 			ms->next  [n] = empty_invlist_next;
 			ms->skip  [n] = empty_invlist_skip;
 			ms->read  [n] = empty_invlist_read;
 
+#ifdef PRINT_SEARCH_QUERIES
+			printf("( empty ) `%s' (malformed TeX, upp=0)\n", kw_str);
+#endif
 		} else {
 			ms->iter  [n] = miter;
 			ms->upp   [n] = math_l2_invlist_iter_upp(miter);
@@ -163,6 +160,11 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 			ms->next  [n] = (merger_callbk_next)math_iter_next;
 			ms->skip  [n] = (merger_callbk_skip)math_iter_skip;
 			ms->read  [n] = (merger_callbk_read)math_iter_read;
+
+#ifdef PRINT_SEARCH_QUERIES
+			printf("(level 2) `%s' (TeX, upp=%.2f)\n", kw_str, ms->upp[n]);
+			math_qry_print(&minv->mq, 0);
+#endif
 		}
 
 		n_math += 1;
@@ -241,6 +243,12 @@ indices_run_query(struct indices* indices, struct query* qry)
 	struct term_posting_item term_item[qry->n_term];
 	struct math_l2_iter_item math_item[qry->n_math];
 	prox_input_t prox[qry->len];
+
+	foreach (iter, merger_set, &merge_set) {
+		ms_merger_iter_print(iter, NULL);
+		break;
+	}
+	goto skip_merge;
 
 	/*
 	 * Perform merging
@@ -355,6 +363,8 @@ indices_run_query(struct indices* indices, struct query* qry)
 		}
 
 	} /* end of merge */
+
+skip_merge:
 
 	/*
 	 * Release term query keywords

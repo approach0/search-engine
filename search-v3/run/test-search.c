@@ -20,7 +20,7 @@ int main()
 	/* cache index */
 	indices.ti_cache_limit = /* 16 MB; */ DEFAULT_TERM_INDEX_CACHE_SZ;
 	indices.mi_cache_limit = /* 2 MB;  */ DEFAULT_MATH_INDEX_CACHE_SZ;
-	indices_cache(&indices);
+	// indices_cache(&indices);
 	indices_print_summary(&indices);
 	printf("\n");
 
@@ -29,7 +29,7 @@ int main()
 	query_push_kw(&qry, "prove", QUERY_KEYWORD_TERM, QUERY_BOOL_OP_AND);
 	query_push_kw(&qry, "x^2+y^2=z^2", QUERY_KEYWORD_TEX, QUERY_BOOL_OP_OR);
 	query_push_kw(&qry, "x^^" /* malformed */, QUERY_KEYWORD_TEX, QUERY_BOOL_OP_OR);
-	query_push_kw(&qry, "a^2+b^2=c^2", QUERY_KEYWORD_TEX, QUERY_BOOL_OP_OR);
+	query_push_kw(&qry, "a^2+b^2", QUERY_KEYWORD_TEX, QUERY_BOOL_OP_OR);
 	query_push_kw(&qry, "Pythagoras", QUERY_KEYWORD_TERM, QUERY_BOOL_OP_OR);
 	query_push_kw(&qry, "theorem", QUERY_KEYWORD_TERM, QUERY_BOOL_OP_OR);
 	query_push_kw(&qry, "Kunming", QUERY_KEYWORD_TERM, QUERY_BOOL_OP_NOT);

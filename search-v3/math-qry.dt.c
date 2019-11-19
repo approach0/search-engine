@@ -243,8 +243,6 @@ void math_qry_release(struct math_qry *mq)
 
 void math_qry_print(struct math_qry* mq, int print_details)
 {
-	printf("`%s' (TeX)\n", mq->tex);
-
 	if (print_details) {
 		printf("[operator tree]\n");
 		optr_print(mq->optr, stdout);
