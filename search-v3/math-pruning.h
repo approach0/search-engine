@@ -33,6 +33,10 @@ struct math_pruner {
 	struct math_pruner_backref backrefs[MAX_MERGE_SET_SZ];
 
 	struct bin_lp blp; /* binary linear-programming problem */
+
+	/* pruner performance statistics */
+	int n_dropped_nodes;
+	int n_dropped_iters;
 };
 
 struct math_qry;
@@ -42,6 +46,7 @@ struct math_pruner
 void math_pruner_free(struct math_pruner*);
 int  math_pruner_update(struct math_pruner*, float);
 void math_pruner_print(struct math_pruner*);
+void math_pruner_print_stats(struct math_pruner*);
 
 void math_pruner_iters_drop(struct math_pruner *, struct ms_merger *);
 void math_pruner_iters_sort_by_maxref(struct math_pruner*, struct ms_merger*);

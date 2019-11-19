@@ -373,9 +373,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 						math_threshold[mid] = threshold + iter->set.upp[iid]
 							- (proximity_upp + iter->acc_upp[0]);
 #ifdef DEBUG_INDICES_RUN_QUERY
-		printf("[%d] dynm_threshold -> %.2f\n", iid, dynm_threshold[mid]);
-		printf("[%d] math_threshold -> %.2f\n", iid, math_threshold[mid]);
-		fflush(stdout);
+		if (math_iter[mid]) {
+			printf("[%d] dynm_threshold -> %.2f", iid, dynm_threshold[mid]);
+			printf(" math_threshold -> %.2f\n", iid, math_threshold[mid]);
+			printf("\t"); math_pruner_print_stats(math_iter[mid]->pruner);
+		}
 #endif
 					}
 				}
@@ -383,6 +385,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 				/* update pivot */
 				ms_merger_lift_up_pivot(iter, threshold,
 				                        prox_upp_relax, (void*)&proximity_upp);
+#ifdef DEBUG_INDICES_RUN_QUERY
+		printf("\n");
+		fflush(stdout);
+#endif
 			}
 		}
 

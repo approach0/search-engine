@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include "common/common.h"
 #include "tex-parser/head.h"
 #include "math-qry.h"
 #include "math-pruning.h"
@@ -171,6 +172,9 @@ struct math_pruner
 
 	pruner->blp = bin_lp_alloc(mq->n_qnodes, mq->merge_set.n);
 
+	pruner->n_dropped_nodes = 0;
+	pruner->n_dropped_iters = 0;
+
 	math_pruner_update(pruner, init_threshold);
 	return pruner;
 }
@@ -195,6 +199,8 @@ static void dele_qnode(struct math_pruner *pruner, int i)
 	pruner->n_qnodes -= 1;
 	for (int j = i; j < pruner->n_qnodes; j++)
 		pruner->qnodes[j] = pruner->qnodes[j + 1];
+
+	pruner->n_dropped_nodes += 1;
 }
 
 int math_pruner_update(struct math_pruner *pruner, float threshold)
@@ -227,10 +233,14 @@ void math_pruner_iters_drop(struct math_pruner *pruner, struct ms_merger *iter)
 		uint64_t cur = MERGER_ITER_CALL(iter, cur, iid);
 
 		/* drop unreferenced or terminated iterators */
-		if (pruner->backrefs[iid].cnt <= 0)
+		if (pruner->backrefs[iid].cnt <= 0) {
 			i = ms_merger_map_remove(iter, i);
-		else if (cur == UINT64_MAX)
+			pruner->n_dropped_iters += 1;
+
+		} else if (cur == UINT64_MAX) {
 			i = ms_merger_map_remove(iter, i);
+			pruner->n_dropped_iters += 1;
+		}
 	}
 }
 
@@ -357,4 +367,12 @@ void math_pruner_print(struct math_pruner *pruner)
 			printf("max=%d] \n", pruner->backrefs[iid].max);
 		}
 	}
+}
+
+void math_pruner_print_stats(struct math_pruner *pruner)
+{
+	printf("%s=%d, %s=%d\n",
+		STRVAR_PAIR(pruner->n_dropped_nodes),
+		STRVAR_PAIR(pruner->n_dropped_iters)
+	);
 }
