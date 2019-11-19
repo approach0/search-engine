@@ -13,5 +13,14 @@
 #define merger_map_prop(_merger, _name, _j) \
 	((_merger)->set._name[_merger->map[_j]])
 
+/* merger no-relax upperbound */
+float no_upp_relax(void*, float);
+
+/* merger iteration printing callback type */
+typedef float (*merger_upp_relax_fun)(void *, float);
+
+/* merger iteration printing callback type */
+typedef void  (*merger_keyprint_fun)(uint64_t);
+
 /* different merge strategies */
 #include "maxscore-merger.h"

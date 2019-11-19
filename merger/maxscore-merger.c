@@ -2,13 +2,8 @@
 #include <stdio.h>
 #include "mergers.h"
 
-float no_upp_relax(void *_, float upp)
-{
-	return upp;
-}
-
 int ms_merger_lift_up_pivot(struct ms_merger *m, float threshold,
-                            upp_relax_callbk relax, void *arg)
+                            merger_upp_relax_fun relax, void *arg)
 {
 	for (int i = m->pivot; i >= 0; i--) {
 		float sum = m->acc_upp[i];
@@ -125,7 +120,7 @@ int ms_merger_iter_next(struct ms_merger *m)
 	return 1;
 }
 
-void ms_merger_iter_print(struct ms_merger* m, keyprint_fun keyprint)
+void ms_merger_iter_print(struct ms_merger* m, merger_keyprint_fun keyprint)
 {
 	for (int i = 0; i < m->size; i++) {
 		int invi = m->map[i];
