@@ -9,8 +9,8 @@ int main()
 {
 	struct indices indices;
 
-	char indices_path[] = "../indexerd/tmp/";
-	//char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
+	//char indices_path[] = "../indexerd/tmp/";
+	char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
 
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		prerr("indices open failed: %s", indices_path);
@@ -18,8 +18,8 @@ int main()
 	}
 
 	/* cache index */
-	indices.ti_cache_limit = 16 MB; //DEFAULT_TERM_INDEX_CACHE_SZ;
-	indices.mi_cache_limit = 2 MB; //DEFAULT_MATH_INDEX_CACHE_SZ;
+	indices.ti_cache_limit = /* 16 MB; */ DEFAULT_TERM_INDEX_CACHE_SZ;
+	indices.mi_cache_limit = /* 2 MB;  */ DEFAULT_MATH_INDEX_CACHE_SZ;
 	indices_cache(&indices);
 	indices_print_summary(&indices);
 	printf("\n");

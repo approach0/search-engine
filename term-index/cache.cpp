@@ -106,8 +106,9 @@ int term_index_load(void *index_, size_t limit_sz)
 #ifdef PRINT_CACHING_TEXT_TERMS
 		char *term = term_lookup_r(index, term_id);
 		printf(ES_RESET_LINE);
-		printf("caching `%s' (df=%u, blocks=%lu)", term, df,
+		printf("caching `%s' (df=%u, blocks=%lu) ", term, df,
 			memo_invlist->n_blk);
+		fflush(stdout);
 		free(term);
 #endif
 

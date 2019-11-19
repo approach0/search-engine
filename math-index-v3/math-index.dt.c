@@ -508,8 +508,9 @@ dir_search_callbk(const char* path, const char *srchpath,
 	index->memo_usage += entry->invlist->tot_payload_sz;
 
 	printf(ES_RESET_LINE);
-	printf("[caching @ level %u, memory usage: %.2f %%] %s, ", level,
+	printf("[caching @ level %u, memory usage: %.2f %%] %s ", level,
 		100.f * index->memo_usage / args->limit_sz, key_path);
+	fflush(stdout);
 
 	return DS_RET_CONTINUE;
 }
