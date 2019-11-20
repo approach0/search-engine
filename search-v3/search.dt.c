@@ -24,6 +24,9 @@ typedef struct pd_merger *merger_set_iter_t;
 #define math_iter_skip math_l2_invlist_iter_skip;
 #define math_iter_read math_l2_invlist_iter_read;
 
+#define MAX_AFTER(_iter, _i) \
+	(_i + 1 < (_iter)->size ? (_iter)->acc_max[_i + 1] : -FLT_MAX)
+
 static int
 prepare_term_keywords(struct indices *indices, struct query *qry,
 	 struct merge_set *ms, struct BM25_scorer *bm25,
@@ -162,7 +165,7 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 			ms->iter  [n] = miter;
 			ms->upp   [n] = math_upp;
 			ms->pd_upp[n] = math_upp * MEDAL_WEIGHT;
-			ms->sortby[n] = -(100.f / (1.f + ms->upp[n]));
+			ms->sortby[n] = ms->upp[n]; // -(100.f / (1.f + ms->upp[n]));
 			ms->cur   [n] = (merger_callbk_cur) math_iter_cur;
 			ms->next  [n] = (merger_callbk_next)math_iter_next;
 			ms->skip  [n] = (merger_callbk_skip)math_iter_skip;
@@ -200,15 +203,14 @@ static float prox_upp_relax(void *arg, float upp)
 	return upp + (*proximity_upp);
 }
 
-static inline float internal_threshold(merge_set_t *ms, int iid,
-	float max_score, float acc_max, float acc_upp, float threshold)
+static inline float internal_threshold(merge_set_t *ms, int iid, int optim,
+	float max_before, float max_after, float acc_upp, float threshold)
 {
-	float pd_upp = ms->pd_upp[iid];
-
 	/* pessimistic */
-	float pess = threshold - (max_score + acc_upp) + ms->upp[iid];
+	float others_max = MAX(max_before, max_after);
+	float pess = threshold - (others_max + acc_upp) + ms->upp[iid];
 
-	if (pd_upp > acc_max) {
+	if (optim || others_max == -FLT_MAX) {
 		/* optimistic */
 		float opti = threshold - acc_upp + ms->upp[iid];
 
@@ -349,8 +351,11 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 				/* update math level-2 iterator dynamic threshold */
 				float acc_upp = acc_score + iter->acc_upp[i];
+
 				dynm_threshold[mid] = internal_threshold(&iter->set, iid,
-					max_score, acc_max, acc_upp, threshold);
+					iter->set.pd_upp[iid] >= acc_max /* true => optimistic */,
+					acc_max, MAX_AFTER(iter, i),
+					acc_upp, threshold);
 
 				/* math level-2 iterator read item */
 				struct math_l2_iter_item *item = math_item + mid;
@@ -397,10 +402,18 @@ indices_run_query(struct indices* indices, struct query* qry)
 #endif
 
 				/* update math static thresholds */
-				for (int mid = 0; mid < n_math; mid++) {
-					int iid = n_term + mid;
-					dynm_threshold[mid] = internal_threshold(&iter->set, iid,
-						iter->acc_max[0], 0, iter->acc_upp[0], threshold);
+				acc_max = -FLT_MAX; /* accumulated max score */
+				for (int i = 0; i < iter->size; i++) {
+					int iid = iter->map[i];
+					int mid = iid - n_term;
+					if (mid < 0) { continue; }
+
+					math_threshold[mid] = internal_threshold(&iter->set, iid,
+						0 /* can be any case */,
+						acc_max, MAX_AFTER(iter, i),
+						iter->acc_upp[0], threshold);
+
+					acc_max = MAX(acc_max, iter->set.pd_upp[iid]);
 
 #ifdef DEBUG_INDICES_RUN_QUERY
 					if (math_iter[mid]) {
@@ -418,6 +431,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 				pd_merger_lift_up_pivot(iter, threshold,
 				                        prox_upp_relax, (void*)&proximity_upp);
 #ifdef DEBUG_INDICES_RUN_QUERY
+				pd_merger_iter_print(iter, NULL);
 				printf("\n");
 				fflush(stdout);
 #endif
