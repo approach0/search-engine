@@ -107,18 +107,14 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 	l2_iter->tex            = inv->mq.tex;
 
 	l2_iter->merge_iter     = merger_set_iterator(&inv->mq.merge_set);
-	l2_iter->future_docID   = 0;
+	/* now, pointing to the first REAL item */
+	l2_iter->real_curID     = key2doc(l2_iter->merge_iter->min);
+	l2_iter->item.docID     = l2_iter->real_curID;
 	l2_iter->last_threshold = -1.f;
 	l2_iter->threshold      = inv->threshold;
 	l2_iter->dynm_threshold = inv->dynm_threshold;
 
 	l2_iter->pruner = math_pruner_init(&inv->mq, &inv->msf, *inv->threshold);
-
-	/* run level-2 next() **twice** to forward the current
-	 * ID from zero to future_docID (also zero initially)
-	 * and then forward to the first item docID. */
-	if (0 != math_l2_invlist_iter_next(l2_iter))
-		math_l2_invlist_iter_next(l2_iter);
 
 	return l2_iter;
 }
@@ -135,14 +131,6 @@ void math_l2_invlist_iter_free(math_l2_invlist_iter_t l2_iter)
 
 	merger_set_iter_free(l2_iter->merge_iter);
 	free(l2_iter);
-}
-
-uint64_t math_l2_invlist_iter_cur(math_l2_invlist_iter_t l2_iter)
-{
-	if (l2_iter->item.docID == UINT32_MAX)
-		return UINT64_MAX;
-	else
-		return l2_iter->item.docID;
 }
 
 static inline int
@@ -346,7 +334,32 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 	return score / qnode->sum_w;
 }
 
-int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
+float math_l2_invlist_iter_upp(math_l2_invlist_iter_t l2_iter)
+{
+	struct math_pruner* pruner = l2_iter->pruner;
+	struct math_score_factors *msf = l2_iter->msf;
+
+	float max_sum_ipf = 0;
+	for (int i = 0; i < pruner->n_qnodes; i++) {
+		struct math_pruner_qnode *qnode = pruner->qnodes + i;
+		if (max_sum_ipf < qnode->sum_ipf)
+			max_sum_ipf = qnode->sum_ipf;
+	}
+	return math_score_upp(msf, max_sum_ipf);
+}
+
+/*
+ * Iterator positional functions
+ */
+uint64_t math_l2_invlist_iter_cur(math_l2_invlist_iter_t l2_iter)
+{
+	if (l2_iter->item.docID == UINT32_MAX)
+		return UINT64_MAX;
+	else
+		return l2_iter->item.docID;
+}
+
+inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 {
 	struct math_pruner *pruner = l2_iter->pruner;
 	merger_set_iter_t iter = l2_iter->merge_iter;
@@ -381,17 +394,35 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 
 		/* if there is no element in requirement set */
 		if (iter->pivot < 0)
-			goto terminated;
+			return 0;
 	}
 #endif
 
-	/* reset item values */
-	l2_iter->item.score = 0.f;
-	l2_iter->item.n_occurs = 0;
+	return 1;
+}
 
-	/* safe guard */
-	if (l2_iter->future_docID == UINT32_MAX)
-		goto terminated;
+/*
+ * read_and_future_next() will read the current unread level-2 item and
+ * forward real_curID to the next docID.
+ *
+ * Before:
+ * +---------------+   +---------------+
+ * ||              |   |               |
+ * +---------------+   +---------------+
+ *  ^
+ *  `---- real_curID, item.docID
+ *
+ * After:
+ * +---------------+   +---------------+
+ * |||||||||||||||||   ||              |
+ * +---------------+   +---------------+
+ *  ^                   ^
+ *  `---- item.docID     `---- real_curID
+ */
+inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
+{
+	merger_set_iter_t iter = l2_iter->merge_iter;
+	struct math_pruner *pruner = l2_iter->pruner;
 
 	/* best expression (w/ highest structural score) within a document */
 	float best = 0;
@@ -408,20 +439,15 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 
 #ifdef DEBUG_MATH_SEARCH
 		if (inspect(iter->min)) {
-			printf(C_BROWN);
-			printf("[math merge iteration] future_docID=%u\n",
-				l2_iter->future_docID);
-			printf(C_RST);
-			math_pruner_print(pruner);
+			printf("[l2_read_next] docID=%u\n", cur_docID);
 			ms_merger_iter_print(iter, keyprint);
 		}
 #endif
 
-		/* test the termination of level-2 merge iteration */
-		if (cur_docID != l2_iter->future_docID) {
-			/* passed through all maths in future_docID. */
-			l2_iter->item.docID = l2_iter->future_docID;
-			l2_iter->future_docID = cur_docID;
+		/* read until current ID becomes different */
+		if (cur_docID != l2_iter->real_curID) {
+			/* now real_curID is async with item.docID */
+			l2_iter->real_curID = cur_docID;
 			return 1;
 		}
 
@@ -507,14 +533,89 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 			}
 		}
 
-		/* termination should be judged by future_docID, not cur_docID */
-		merger_set_iter_next(iter);
-	} while (1 /* only terminate when future_docID is UINT64_MAX */);
+	} while (merger_set_iter_next(iter));
 
-terminated: /* when iterator reaches the end */
+	l2_iter->real_curID = UINT32_MAX;
+	return 0;
+}
+
+/*
+ * pass_through_next() will simply fast forward to the next docID,
+ * skip reading passing elements.
+ *
+ * Before:
+ * +---------------+   +---------------+
+ * ||              |   |               |
+ * +---------------+   +---------------+
+ *  ^
+ *  `---- real_curID, item.docID
+ *
+ * After:
+ * +---------------+   +---------------+
+ * |               |   ||              |
+ * +---------------+   +---------------+
+ *                      ^
+ *                      `---- real_curID, item.docID
+ */
+inline static int pass_through_next(math_l2_invlist_iter_t l2_iter)
+{
+	merger_set_iter_t iter = l2_iter->merge_iter;
+
+	do {
+		/* set current candidate */
+		uint32_t cur_docID = key2doc(iter->min);
+
+#ifdef DEBUG_MATH_SEARCH
+		if (inspect(iter->min)) {
+			printf("[l2_next] docID=%u\n", cur_docID);
+			ms_merger_iter_print(iter, keyprint);
+		}
+#endif
+		/* read until current ID becomes different */
+		if (cur_docID != l2_iter->item.docID) {
+			l2_iter->item.docID = cur_docID;
+			l2_iter->real_curID = cur_docID;
+			return 1;
+		}
+
+	} while (merger_set_iter_next(iter));
 
 	l2_iter->item.docID = UINT32_MAX;
+	l2_iter->real_curID = UINT32_MAX;
 	return 0;
+}
+
+int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
+{
+	if (l2_iter->item.docID < l2_iter->real_curID) {
+		/* since iterator is already passed, just need to fast forward */
+		l2_iter->item.docID = l2_iter->real_curID;
+		return (l2_iter->item.docID != UINT32_MAX);
+	} else {
+		/* iterator is at begining of this docID, let's pass through it */
+		if (unlikely(0 == update_pruner(l2_iter)))
+			return 0;
+		return pass_through_next(l2_iter);
+	}
+}
+
+size_t
+math_l2_invlist_iter_read(math_l2_invlist_iter_t l2_iter, void *dst, size_t sz)
+{
+	if (l2_iter->item.docID == l2_iter->real_curID) {
+		/* reset item values */
+		l2_iter->item.score = 0.f;
+		l2_iter->item.n_occurs = 0;
+
+		/* let's read this item */
+		if (unlikely(0 == update_pruner(l2_iter)))
+			return 0;
+		read_and_future_next(l2_iter);
+	}
+
+	/* copy and return item */
+	memcpy(dst, &l2_iter->item, sizeof(struct math_l2_iter_item));
+	return sizeof(struct math_l2_iter_item);
 }
 
 int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
@@ -523,11 +624,15 @@ int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
 
 	/* refuse to skip if target key is in the back */
 	uint64_t cur_docID = math_l2_invlist_iter_cur(l2_iter);
-	if (cur_docID >= key_)
+	if (key_ <= cur_docID)
 		return (cur_docID != UINT64_MAX);
 
-	/* convert to l1 key */
+	/* convert to level-1 key */
 	uint64_t key = doc2key(key_);
+
+	/* update pruner */
+	if (unlikely(0 == update_pruner(l2_iter)))
+		return 0;
 
 	/* skip to key for every iterator in required set */
 	for (int i = 0; i <= iter->pivot; i++) {
@@ -536,31 +641,10 @@ int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
 			merger_map_call(iter, skip, i, key);
 	}
 
-	/* assign current candidate ID to future_docID */
+	/* assign updated current ID */
 	iter->min = ms_merger_min(iter);
-	l2_iter->future_docID = key2doc(iter->min);
+	l2_iter->real_curID = key2doc(iter->min);
+	l2_iter->item.docID = l2_iter->real_curID;
 
-	/* read item by invoking next() */
-	return math_l2_invlist_iter_next(l2_iter);
-}
-
-size_t
-math_l2_invlist_iter_read(math_l2_invlist_iter_t l2_iter, void *dst, size_t sz)
-{
-	memcpy(dst, &l2_iter->item, sizeof(struct math_l2_iter_item));
-	return sizeof(struct math_l2_iter_item);
-}
-
-float math_l2_invlist_iter_upp(math_l2_invlist_iter_t l2_iter)
-{
-	struct math_pruner* pruner = l2_iter->pruner;
-	struct math_score_factors *msf = l2_iter->msf;
-
-	float max_sum_ipf = 0;
-	for (int i = 0; i < pruner->n_qnodes; i++) {
-		struct math_pruner_qnode *qnode = pruner->qnodes + i;
-		if (max_sum_ipf < qnode->sum_ipf)
-			max_sum_ipf = qnode->sum_ipf;
-	}
-	return math_score_upp(msf, max_sum_ipf);
+	return (l2_iter->item.docID != UINT32_MAX);
 }

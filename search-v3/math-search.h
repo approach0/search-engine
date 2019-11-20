@@ -41,7 +41,7 @@ typedef struct math_l2_invlist_iter {
 
 	/* item book-keeping */
 	struct math_l2_iter_item item;
-	uint32_t future_docID;
+	uint32_t real_curID; /* docs before real_curID are passed */
 	float  last_threshold, *threshold;
 	float *dynm_threshold;
 } *math_l2_invlist_iter_t;
