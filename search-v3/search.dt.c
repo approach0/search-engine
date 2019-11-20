@@ -1,4 +1,4 @@
-#include <float.h>
+#include <float.h> /* for FLT_MAX */
 #include <unistd.h> /* for sleep() */
 
 #include "mhook/mhook.h"
@@ -70,8 +70,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(in memo) ");
 #endif
 			ms->iter  [n] = reader->inmemo_reader;
-			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_TERM_WEIGHT;
-			ms->pd_upp[n] = term_qry[i].upp;
+			ms->upp   [n] = term_qry[i].upp;
+			ms->pd_upp[n] = term_qry[i].upp * MEDAL_WEIGHT;
 			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) invlist_iter_curkey;
 			ms->next  [n] = (merger_callbk_next)invlist_iter_next;
@@ -82,8 +82,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			printf("(on disk) ");
 #endif
 			ms->iter  [n] = reader->ondisk_reader;
-			ms->upp   [n] = term_qry[i].upp * MIXED_SCORE_TERM_WEIGHT;
-			ms->pd_upp[n] = term_qry[i].upp;
+			ms->upp   [n] = term_qry[i].upp;
+			ms->pd_upp[n] = term_qry[i].upp * MEDAL_WEIGHT;
 			ms->sortby[n] = ms->upp[n];
 			ms->cur   [n] = (merger_callbk_cur) term_posting_cur;
 			ms->next  [n] = (merger_callbk_next)term_posting_next;
@@ -160,8 +160,8 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		} else {
 			const float math_upp = math_l2_invlist_iter_upp(miter);
 			ms->iter  [n] = miter;
-			ms->upp   [n] = math_upp * MIXED_SCORE_MATH_WEIGHT;
-			ms->pd_upp[n] = math_upp;
+			ms->upp   [n] = math_upp;
+			ms->pd_upp[n] = math_upp * MEDAL_WEIGHT;
 			ms->sortby[n] = -(100.f / (1.f + ms->upp[n]));
 			ms->cur   [n] = (merger_callbk_cur) math_iter_cur;
 			ms->next  [n] = (merger_callbk_next)math_iter_next;
@@ -199,6 +199,27 @@ static float prox_upp_relax(void *arg, float upp)
 	P_CAST(proximity_upp, const float, arg);
 	return upp + (*proximity_upp);
 }
+
+static inline float internal_threshold(merge_set_t *ms, int iid,
+	float max_score, float acc_max, float acc_upp, float threshold)
+{
+	float pd_upp = ms->pd_upp[iid];
+
+	/* pessimistic */
+	float pess = threshold - (max_score + acc_upp) + ms->upp[iid];
+
+	if (pd_upp > acc_max) {
+		/* optimistic */
+		float opti = threshold - acc_upp + ms->upp[iid];
+
+		opti = opti / (MEDAL_WEIGHT + 1.f);
+
+		return MIN(opti, pess);
+	}
+
+	return pess;
+}
+
 
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry)
@@ -267,13 +288,12 @@ indices_run_query(struct indices* indices, struct query* qry)
 	 */
 	foreach (iter, merger_set, &merge_set) {
 		/*
-		 * get proximity score
+		 * get proximity score (only consider term keywords)
 		 */
 		int h = 0; /* number of hits */
 		for (int i = 0; i < iter->size; i++) {
 			int iid = iter->map[i];
 
-			/* only consider term keywords */
 			if (iid < n_term) {
 				/* advance those in skipping set */
 				if (i > iter->pivot) {
@@ -290,26 +310,20 @@ indices_run_query(struct indices* indices, struct query* qry)
 				}
 			}
 		}
+		/* calculate proximity score */
 		float proximity = prox_score(prox, h);
 
 		/*
 		 * calculate TF-IDF / SF-IPF score
 		 */
-		float score = proximity; /* base score */
+		float acc_score = proximity; /* accumulated score */
+		float acc_max = -FLT_MAX; /* accumulated max score */
 		for (int i = 0; i < iter->size; i++) {
-			int iid = iter->map[i];
-			int mid = iid - n_term;
-
-			/* update math level-2 iterator dynamic threshold */
-			if (mid >= 0) {
-				dynm_threshold[mid] = threshold + iter->set.upp[iid]
-				                       - (score + iter->acc_upp[i]);
-			}
+			float max_score = MAX(acc_max, iter->acc_max[i]);
 
 			/* prune document early if it cannot make into top-K */
-			if (score + iter->acc_upp[i] < threshold) {
-				score = 0.f;
-				break;
+			if (max_score + acc_score + iter->acc_upp[i] < threshold) {
+				goto next_iter;
 			}
 
 			/* only consider hit iterators */
@@ -318,20 +332,35 @@ indices_run_query(struct indices* indices, struct query* qry)
 				continue;
 
 			/* accumulate precise partial score */
+			int iid = iter->map[i];
 			if (iid < n_term) {
 				struct term_qry *tq = term_qry + iid;
 				struct term_posting_item *item = term_item + iid;
-				float l = term_index_get_docLen(indices->ti, item->doc_id);
 
 				/* accumulate TF-IDF score */
+				float l = term_index_get_docLen(indices->ti, item->doc_id);
 				float s = BM25_partial_score(&bm25, item->tf, tq->idf, l);
-				score += (s * tq->qf) * MIXED_SCORE_TERM_WEIGHT;
+				s = s * tq->qf;
+				acc_score += s;
+				acc_max = MAX(acc_max, s * MEDAL_WEIGHT);
+
 			} else {
+				int mid = iid - n_term;
+
+				/* update math level-2 iterator dynamic threshold */
+				float acc_upp = acc_score + iter->acc_upp[i];
+				dynm_threshold[mid] = internal_threshold(&iter->set, iid,
+					max_score, acc_max, acc_upp, threshold);
+
+				/* math level-2 iterator read item */
 				struct math_l2_iter_item *item = math_item + mid;
 				merger_map_call(iter, read, i, item, sizeof *item);
 
 				/* accumulate SF-IPF score */
-				score += item->score * MIXED_SCORE_MATH_WEIGHT;
+				acc_score += item->score;
+				acc_max = MAX(acc_max, item->score * MEDAL_WEIGHT);
+
+				/* save math term position for later being highlighted */
 				prox_set_input(prox + (h++), item->occur, item->n_occurs);
 			}
 		}
@@ -347,16 +376,15 @@ indices_run_query(struct indices* indices, struct query* qry)
 		/*
 		 * update result only if needed
 		 */
-		if (score == 0.f)
-			continue;
+		float doc_score = acc_max + acc_score;
 
 		/* if top-K is not full or this score exceeds threshold */
 		if (!priority_Q_full(&rk_res) ||
-			score > priority_Q_min_score(&rk_res)) {
+			doc_score > priority_Q_min_score(&rk_res)) {
 
 			/* store and push this candidate hit */
 			struct rank_hit *hit;
-			hit = new_hit(iter->min, score, prox, h);
+			hit = new_hit(iter->min, doc_score, prox, h);
 			priority_Q_add_or_replace(&rk_res, hit);
 
 			/* update threshold if the heap is full */
@@ -364,37 +392,40 @@ indices_run_query(struct indices* indices, struct query* qry)
 				/* update threshold */
 				threshold = priority_Q_min_score(&rk_res);
 #ifdef DEBUG_INDICES_RUN_QUERY
-		printf(ES_RESET_CONSOLE);
-		printf("threshold -> %.2f\n", threshold);
+				printf(ES_RESET_CONSOLE);
+				printf("threshold -> %.2f\n", threshold);
 #endif
 
-				/* update math global thresholds */
-				for (int i = 0; i < iter->size; i++) {
-					int iid = iter->map[i];
-					int mid = iid - n_term;
-					if (mid >= 0) {
-						math_threshold[mid] = threshold + iter->set.upp[iid]
-							- (proximity_upp + iter->acc_upp[0]);
+				/* update math static thresholds */
+				for (int mid = 0; mid < n_math; mid++) {
+					int iid = n_term + mid;
+					dynm_threshold[mid] = internal_threshold(&iter->set, iid,
+						iter->acc_max[0], 0, iter->acc_upp[0], threshold);
+
 #ifdef DEBUG_INDICES_RUN_QUERY
-		if (math_iter[mid]) {
-			printf("[%d] dynm_threshold -> %.2f", iid, dynm_threshold[mid]);
-			printf(" math_threshold -> %.2f\n", iid, math_threshold[mid]);
-			printf("\t"); math_pruner_print_stats(math_iter[mid]->pruner);
-		}
-#endif
+					if (math_iter[mid]) {
+						printf("[%d] dynm_threshold -> %.2f",
+							iid, dynm_threshold[mid]);
+						printf(" math_threshold -> %.2f\n",
+							math_threshold[mid]);
+						printf("\t");
+						math_pruner_print_stats(math_iter[mid]->pruner);
 					}
+#endif
 				}
 
 				/* update pivot */
 				pd_merger_lift_up_pivot(iter, threshold,
 				                        prox_upp_relax, (void*)&proximity_upp);
 #ifdef DEBUG_INDICES_RUN_QUERY
-		printf("\n");
-		fflush(stdout);
+				printf("\n");
+				fflush(stdout);
 #endif
 			}
 		}
 
+next_iter:
+		;
 	} /* end of merge */
 
 	/*
