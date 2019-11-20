@@ -6,10 +6,6 @@
 #include "rank.h"
 #include "print-search-results.h"
 
-//#define LIMIT_ITERS
-#define TEST_SEARCH
-//#define TEST_SKIP
-
 /* use MaxScore merger */
 typedef struct ms_merger *merger_set_iter_t;
 #define merger_set_iterator  ms_merger_iterator
@@ -32,8 +28,8 @@ int main()
 	 * Open index
 	 */
 	struct indices indices;
-	//char indices_path[] = "../indexerd/tmp/";
-	char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
+	char indices_path[] = "../indexerd/tmp/";
+	//char indices_path[] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
 
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		fprintf(stderr, "indices open failed.\n");
@@ -45,7 +41,7 @@ int main()
 	 */
 	indices.ti_cache_limit = 0;
 	indices.mi_cache_limit = 2 MB;
-	indices_cache(&indices);
+	// indices_cache(&indices);
 	indices_print_summary(&indices);
 	printf("\n");
 
@@ -109,68 +105,70 @@ int main()
 	/*
 	 * Merge
 	 */
-#if defined(LIMIT_ITERS) || defined(TEST_SKIP)
-	uint64_t cur;
-#endif
-
-#ifdef LIMIT_ITERS
-	int cnt = 0;
-#endif
-
 	foreach (merge_iter, merger_set, &merge_set) {
-		struct math_l2_iter_item item;
-
-#ifdef TEST_SKIP
+		uint64_t cur; char cmd; uint64_t jump_to;
 loop_head:
-#endif
-		merger_map_call(merge_iter, read, 0, &item, sizeof(item));
-
-#if defined(LIMIT_ITERS) || defined(TEST_SKIP)
 		cur = merger_map_call(merge_iter, cur, 0);
-		printf("[cur docID] " C_RED "%lu\n" C_RST, cur);
+		printf("\n [cur docID] " C_RED "%lu\n" C_RST, cur);
 
-		print_l2_item(&item);
-		printf("\n");
-#endif
+		printf("Commands:\n");
+		printf("r: read current and consider it as a top-K.\n");
+		printf("n: go to next.\n");
+		printf("s <id>: skip to <id>.\n");
+		printf("q: quit.\n");
+get_char:
+		cmd = getchar();
 
-#ifdef TEST_SEARCH
-		if (item.score > 0) {
+		if (cmd == 'r') {
+			struct math_l2_iter_item item;
+			merger_map_call(merge_iter, read, 0, &item, sizeof(item));
+			print_l2_item(&item);
+			printf("\n");
 
-			if (!priority_Q_full(&rk_res) ||
-			    item.score > priority_Q_min_score(&rk_res)) {
+			if (item.score > 0) {
+				if (!priority_Q_full(&rk_res) ||
+					item.score > priority_Q_min_score(&rk_res)) {
 
-				struct rank_hit *hit = malloc(sizeof *hit);
-				const int sz = sizeof(uint32_t) * item.n_occurs;
-				hit->docID = item.docID;
-				hit->score = item.score;
-				hit->n_occurs = item.n_occurs;
-				hit->occur = malloc(sz);
-				memcpy(hit->occur, item.occur, sz);
+					struct rank_hit *hit = malloc(sizeof *hit);
+					const int sz = sizeof(uint32_t) * item.n_occurs;
+					hit->docID = item.docID;
+					hit->score = item.score;
+					hit->n_occurs = item.n_occurs;
+					hit->occur = malloc(sz);
+					memcpy(hit->occur, item.occur, sz);
 
-				priority_Q_add_or_replace(&rk_res, hit);
+					priority_Q_add_or_replace(&rk_res, hit);
 
-				/* update threshold if the heap is full */
-				if (priority_Q_full(&rk_res))
-					threshold = priority_Q_min_score(&rk_res);
+					/* update threshold if the heap is full */
+					if (priority_Q_full(&rk_res)) {
+						threshold = priority_Q_min_score(&rk_res);
+						printf("threshold --> %.2f\n", threshold);
+					}
+				}
 			}
-		}
-#endif
 
-#ifdef TEST_SKIP
-		uint64_t to;
-		printf("skip to?\n");
-		scanf("%lu", &to);
-		int res = merger_map_call(merge_iter, skip, 0, to);
-		printf("[res: %d] skipping to %lu ...\n", res, to);
-		if (res) goto loop_head;
-#endif
+			goto loop_head;
 
-#ifdef LIMIT_ITERS
-		if (cnt > 108)
+		} else if (cmd == 'n') {
+			printf("go to the next...\n");
+			/* pass through */;
+
+		} else if (cmd == 's') {
+			scanf("%lu", &jump_to);
+			printf("skipping to %lu ...\n", jump_to);
+			int res = merger_map_call(merge_iter, skip, 0, jump_to);
+
+			/* remember to update merge iteration min after skip() */
+			merge_iter->min = ms_merger_min(merge_iter);
+
+			printf("[skipping res] %d\n", res);
+			goto loop_head;
+
+		} else if (cmd == 'q') {
 			break;
-		else
-			cnt ++;
-#endif
+		} else {
+			goto get_char;
+		}
 	}
 
 	/*

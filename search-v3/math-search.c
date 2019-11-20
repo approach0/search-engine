@@ -58,7 +58,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 78 && e == 13);
+	return 1;
 	//return (d == 314473 && e == 117 && r == 16) || (d == 227 && e == 18 && r == 10);
 }
 
@@ -392,6 +392,12 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 
 		l2_iter->last_threshold = threshold;
 
+#ifdef DEBUG_MATH_SEARCH
+		printf("[pruner update] for `%s'\n", l2_iter->tex);
+		math_pruner_print(pruner);
+		math_pruner_print_stats(pruner);
+#endif
+
 		/* if there is no element in requirement set */
 		if (iter->pivot < 0)
 			return 0;
@@ -646,5 +652,12 @@ int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
 	l2_iter->real_curID = key2doc(iter->min);
 	l2_iter->item.docID = l2_iter->real_curID;
 
+#ifdef DEBUG_MATH_SEARCH
+	if (inspect(iter->min)) {
+		printf("[after level-2 skipping]\n");
+		ms_merger_iter_print(iter, keyprint);
+	}
+#endif
+	printf("assign min=%lu \n", iter->min);
 	return (l2_iter->item.docID != UINT32_MAX);
 }
