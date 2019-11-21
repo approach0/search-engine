@@ -38,7 +38,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 		struct query_keyword *kw = query_get_kw(qry, i);
 		char *kw_str = wstr2mbstr(kw->wstr); /* utf-8 */
 
-		if (kw->type == QUERY_KEYWORD_TERM) {
+		if (kw->type == QUERY_KW_TERM) {
 			term_qry_prepare(indices->ti, kw_str, term_qry + n_term);
 			n_term ++;
 		}
@@ -127,7 +127,7 @@ prepare_math_keywords(struct indices *indices, struct query *qry,
 		struct query_keyword *kw = query_get_kw(qry, i);
 
 		/* only consider math keyword here */
-		if (kw->type != QUERY_KEYWORD_TEX)
+		if (kw->type != QUERY_KW_TEX)
 			continue;
 
 		/* math level-2 inverted list and iterator */

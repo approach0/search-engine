@@ -20,13 +20,13 @@ void query_print_kw(struct query_keyword *kw, FILE* fh)
 	}
 
 	switch (kw->op) {
-	case QUERY_BOOL_OP_OR:
+	case QUERY_OP_OR:
 		fprintf(fh, "[ OR] ");
 		break;
-	case QUERY_BOOL_OP_AND:
+	case QUERY_OP_AND:
 		fprintf(fh, "[AND] ");
 		break;
-	case QUERY_BOOL_OP_NOT:
+	case QUERY_OP_NOT:
 		fprintf(fh, "[NOT] ");
 		break;
 	default:
@@ -34,7 +34,7 @@ void query_print_kw(struct query_keyword *kw, FILE* fh)
 	}
 
 	fprintf(fh, "`%S' ", kw->wstr);
-	if (kw->type == QUERY_KEYWORD_TEX)
+	if (kw->type == QUERY_KW_TEX)
 		fprintf(fh, "(tex) ");
 	fprintf(fh, "\n");
 }
@@ -56,7 +56,7 @@ int query_push_kw(struct query *qry, const char *utf8_kw,
 	enum query_kw_type type, enum query_kw_bool_op op)
 {
 	/* update stats */
-	if (type != QUERY_KEYWORD_TEX && type != QUERY_KEYWORD_TERM) {
+	if (type != QUERY_KW_TEX && type != QUERY_KW_TERM) {
 		prerr("Not adding keyword due to bad type.");
 		return 1;
 	}
@@ -76,7 +76,7 @@ int query_push_kw(struct query *qry, const char *utf8_kw,
 	li_append(&qry->keywords, &kw->ln);
 
 	/* convert to lowercase for all term keywords */
-	if (type == QUERY_KEYWORD_TERM) {
+	if (type == QUERY_KW_TERM) {
 		eng_to_lower_case_w(kw->wstr, wstr_len(kw->wstr));
 		qry->n_term ++;
 	} else {
@@ -137,7 +137,7 @@ static int digest_handler(struct lex_slice *slice)
 	eng_to_lower_case(str, strlen(str));
 
 	if (NULL == digest_qry || query_push_kw(digest_qry, str,
-	    QUERY_KEYWORD_TERM, QUERY_BOOL_OP_OR))
+	    QUERY_KW_TERM, QUERY_OP_OR))
 		digest_fails ++;
 
 	return 0;

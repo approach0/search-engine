@@ -19,13 +19,13 @@ int main()
 	int res;
 	struct query_keyword *kw;
 
-	PUSH("dog",      QUERY_KEYWORD_TERM, QUERY_BOOL_OP_OR);
-	PUSH("2x^3 + x", QUERY_KEYWORD_TEX,  QUERY_BOOL_OP_OR);
-	PUSH("eats",     QUERY_KEYWORD_TERM, QUERY_BOOL_OP_AND);
-	PUSH("f(x)",     QUERY_KEYWORD_TEX,  QUERY_BOOL_OP_AND);
-	PUSH("Loves",    QUERY_KEYWORD_TERM, QUERY_BOOL_OP_NOT);
-	PUSH("2x^2+2x",  QUERY_KEYWORD_TEX,  QUERY_BOOL_OP_NOT);
-	PUSH("cat",      QUERY_KEYWORD_TERM, QUERY_BOOL_OP_OR);
+	PUSH("dog",      QUERY_KW_TERM, QUERY_OP_OR);
+	PUSH("2x^3 + x", QUERY_KW_TEX,  QUERY_OP_OR);
+	PUSH("eats",     QUERY_KW_TERM, QUERY_OP_AND);
+	PUSH("f(x)",     QUERY_KW_TEX,  QUERY_OP_AND);
+	PUSH("Loves",    QUERY_KW_TERM, QUERY_OP_NOT);
+	PUSH("2x^2+2x",  QUERY_KW_TEX,  QUERY_OP_NOT);
+	PUSH("cat",      QUERY_KW_TERM, QUERY_OP_OR);
 
 	query_digest_txt(&qry, "Dog eats cat");
 

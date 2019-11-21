@@ -6,15 +6,15 @@
 #include "config.h"
 
 enum query_kw_type {
-	QUERY_KEYWORD_INVALID,
-	QUERY_KEYWORD_TEX,
-	QUERY_KEYWORD_TERM
+	QUERY_KW_INVALID,
+	QUERY_KW_TEX,
+	QUERY_KW_TERM
 };
 
 enum query_kw_bool_op {
-	QUERY_BOOL_OP_OR,
-	QUERY_BOOL_OP_AND,
-	QUERY_BOOL_OP_NOT
+	QUERY_OP_OR,
+	QUERY_OP_AND,
+	QUERY_OP_NOT
 };
 
 struct query_keyword {
