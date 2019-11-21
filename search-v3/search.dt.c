@@ -409,7 +409,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 					if (mid < 0) { continue; }
 
 					math_threshold[mid] = internal_threshold(&iter->set, iid,
-						0 /* can be any case */,
+						1 /* any keyword can become the one with max score */,
 						acc_max, MAX_AFTER(iter, i),
 						iter->acc_upp[0], threshold);
 
