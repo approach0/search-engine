@@ -66,10 +66,9 @@ def pri_carryalone_dep(dd, included, module, _type):
 			if dep not in included:
 				included[dep] = True
 				print(dep, end=" ")
-		else:
-			pri_carryalone_dep(dd, included, dep, _type)
+		pri_carryalone_dep(dd, included, dep, _type)
 
-def pri_internal_dep(targets_file):
+def pri_proj_dep(targets_file):
 	dd = mk_dep_dict(targets_file)
 	for module in dd:
 		print('%s.carryalone-extdep :=' % module, end=" ")
@@ -125,7 +124,7 @@ def help(arg0):
 	      'SYNOPSIS:\n' \
 	      '%s [-h | --help] ' \
 	      '[--dot] ' \
-	      '[--internal-dep]' \
+	      '[--proj-dep]' \
 	      '[--targets]' \
 	      '[--check-dep]' \
 	      '\n' \
@@ -138,7 +137,7 @@ def main():
 	args = sys.argv[1:]
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "h", [
-			'help', 'dot', 'internal-dep', 'targets', 'check-dep'
+			'help', 'dot', 'proj-dep', 'targets', 'check-dep'
 		])
 	except:
 		help(cmd)
@@ -152,8 +151,8 @@ def main():
 		if opt in ("--dot"):
 			pri_dep_dot(config_targets_file)
 			break
-		if opt in ("--internal-dep"):
-			pri_internal_dep(config_targets_file)
+		if opt in ("--proj-dep"):
+			pri_proj_dep(config_targets_file)
 			break
 		if opt in ("--targets"):
 			pri_targets_mk(config_targets_file)

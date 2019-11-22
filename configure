@@ -80,7 +80,7 @@ def main():
 	print('')
 
 	print('Generating proj-dep.mk:')
-	os.system(py + ' %s --internal-dep | tee %s' % (proj_dep_py, proj_dep_mk))
+	os.system(py + ' %s --proj-dep | tee %s' % (proj_dep_py, proj_dep_mk))
 	print('')
 
 	print('Check external library dependencies:')
