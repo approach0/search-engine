@@ -41,8 +41,8 @@ int main()
 		"x + x + x +z + z + (a + a + b) c"
 	};
 
-	doc_id_t docID = 1;
-	exp_id_t expID = 0;
+	uint32_t docID = 1;
+	uint32_t expID = 0;
 
 	struct tex_parse_ret parse_ret;
 	math_index_t index = math_index_open("./tmp", "w");

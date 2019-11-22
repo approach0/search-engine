@@ -13,6 +13,8 @@
 #include "math-index.h"
 #include "subpath-set.h"
 
+typedef uint32_t doc_id_t;
+
 struct mk_path_str_arg {
 	char **dest;
 	bool skip_first;

@@ -27,7 +27,7 @@ LIST_CMP_CALLBK(compare)
 	struct T *p1 = MEMBER_2_STRUCT(pa_node1, struct T, ln);
 	P_CAST(extra, int, pa_extra);
 
-	assert(*extra == 123); (void)pa_extra;
+	assert(*extra == 123); (void)extra;
 	return p0->i > p1->i;
 }
 

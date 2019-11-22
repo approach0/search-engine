@@ -5,10 +5,10 @@
 #include "invlist/invlist.h"
 
 #include "dir-util/dir-util.h" /* for MAX_DIR_PATH_NAME_LEN */
-#include "term-index/term-index.h" /* for doc_id_t and position_t */
 #include "tex-parser/tex-parser.h" /* for subpaths */
 
-typedef position_t exp_id_t;
+typedef uint32_t exp_id_t;
+
 #define MAX_EXP_ID UINT_MAX
 
 /* invlist entry stored in dictionary */
@@ -59,7 +59,7 @@ math_index_lookup(math_index_t, const char *);
 
 void math_index_print(math_index_t);
 
-size_t math_index_add(math_index_t, doc_id_t, exp_id_t, struct subpaths);
+size_t math_index_add(math_index_t, uint32_t, exp_id_t, struct subpaths);
 
 /* utilities */
 int    mk_path_str(struct subpath*, int, char*);

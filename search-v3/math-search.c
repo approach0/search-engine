@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <unistd.h> /* for dup() */
+
 #include "common/common.h"
 #include "tex-parser/head.h"
 #include "config.h"

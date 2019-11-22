@@ -1,8 +1,8 @@
 OTHER_OBJS := lex.mix.o lex.eng.o
 
+include ../config.mk
 include ../rules.mk
 include ../module.mk
-include jieba-path.mk
 
 CFLAGS += -I $(JIEBA)/include -I $(JIEBA)/deps
 

@@ -7,3 +7,8 @@ $ sudo python3 install.py install
 ```sh
 $ make
 ```
+
+### Test
+```sh
+$ python test.py
+```
