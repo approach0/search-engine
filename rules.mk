@@ -17,7 +17,8 @@ RUN_DIR := run
 CREAT_BUILD_DIR := @ mkdir -p $(BUILD_DIR)
 
 # reset CFLAGS
-CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE -O2 -fno-builtin
+CFLAGS = -Wall -Wno-unused-function -D_DEFAULT_SOURCE -O2 \
+	-fno-builtin -fno-strict-aliasing
 # (_DEFAULT_SOURCE enables strdup function and DT_* macro)
 
 # target color print
@@ -40,6 +41,7 @@ COLOR_CXX = @ tput setaf 5 && echo '[compile C++ source] $<' && \
        tput sgr0
 COMPILE_CXX = $(CXX) -c $(CFLAGS) $(filter %.cpp, $^) -o $@
 
+SHOW_OBJ_UNDEF_SYMBOLS = nm --undefined-only $@
 CCDH = gcc -dH
 
 # linker
@@ -80,6 +82,20 @@ DO_YACC = $(YACC) -v -d --report=itemset $< -o y.tab.c
 HIGHLIGHT_BEGIN := @ tput setaf
 HIGHLIGHT_END := @ tput sgr0
 
+# set Position-independent code, so that linker can relocate
+# symbols for shared library.
+CFLAGS += -fPIC
+
+# handle debug flag here, e.g., `make all debug=0'
+# (you need to rebuild all project objects when debug flag is changed.
+# Also notice that -D gets defined before the source file is parsed)
+debug ?= 0 # debug=0 by default
+ifeq ($(debug), 1)
+    CFLAGS += -g
+else
+    CFLAGS += -DNDEBUG
+endif
+
 # regular rules
 all:
 	$(HIGHLIGHT_BEGIN) 5
@@ -96,7 +112,7 @@ new: clean all
 $(BUILD_DIR)/%.o: %.c
 	$(COLOR_CC)
 	$(CREAT_BUILD_DIR)
-	$(CC_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
+	$(CC_DEP) $@ $(CFLAGS) $< > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CC))
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
@@ -130,6 +146,7 @@ $(BUILD_DIR)/%.o: %.cpp
 	$(CREAT_BUILD_DIR)
 	$(CXX_DEP) $@ $(CFLAGS) $^ > $(BUILD_DIR)/$*.d
 	$(strip $(COMPILE_CXX))
+	$(SHOW_OBJ_UNDEF_SYMBOLS) # to show C++ object symbols
 
 $(RUN_DIR)/%.out: $(BUILD_DIR)/%.main.o
 	$(COLOR_LINK)
@@ -151,7 +168,7 @@ validate-%.h: %.h
 # library check
 check-lib%:
 	@ $(CXX) $(LDFLAGS) -w -Xlinker \
-	--unresolved-symbols=ignore-all -l$*
+	--unresolved-symbols=ignore-all -l$* -o /dev/null
 
 FIND := @ find . -type d \( -path './.git' -o -path '*/tmp' \) -prune -o
 

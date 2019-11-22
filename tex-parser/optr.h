@@ -51,9 +51,8 @@ struct subpath *create_subpath(struct optr_node*, bool);
 int is_single_node(struct optr_node*);
 
 fingerpri_t subpath_fingerprint(struct subpath*, uint32_t);
+char *optr_hash_str(symbol_id_t);
 
 #include "sds/sds.h"
 int
 optr_graph_print(struct optr_node*, char **, uint32_t*, int, sds*);
-
-uint32_t get_subpath_nodeid(struct subpath*, uint32_t);

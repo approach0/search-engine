@@ -1,7 +1,7 @@
 #include <string.h>
 #include "tex-parser/head.h"
-#include "search/config.h"
 #include "math-expr-highlight.h"
+#include "config.h"
 
 static char *colors[] = {"Maroon", "Green", "Orange"};
 

@@ -1,3 +1,4 @@
+include ../config.mk
 include ../rules.mk
 
 # objects below are associated to generated auto-generated source code.

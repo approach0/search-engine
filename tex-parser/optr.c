@@ -304,7 +304,14 @@ uint32_t optr_assign_values(struct optr_node *optr)
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_value,
 	             0 /* excluding root */, &leaf_cnt);
 	node_cnt = leaf_cnt;
-	tree_foreach(&optr->tnd, &tree_post_order_DFS, &assign_node_id,
+
+	/*
+	 * Use pre-order to traverse and assign operator node IDs
+	 * because we want larger sector tree (w/ smaller node IDs)
+	 * to be searched first in inverted list such that dynamic
+	 * pruning applied later will presumably work more efficiently.
+	 */
+	tree_foreach(&optr->tnd, &tree_pre_order_DFS, &assign_node_id,
 	             0 /* excluding root */, &node_cnt);
 
 	/* return the maximum path_id assigned */
@@ -423,7 +430,7 @@ halt:
 
 fingerpri_t subpath_fingerprint(struct subpath *sp, uint32_t prefix_len)
 {
-	struct _gen_fingerprint_arg arg = {0};
+	struct _gen_fingerprint_arg arg = {0, 0, prefix_len};
 	list_foreach(&sp->path_nodes, &_gen_fingerprint, &arg);
 	return arg.fp;
 }
@@ -653,8 +660,8 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 
 	fprintf(fh, ": ");
 	list_foreach(&sp->path_nodes, &print_subpath_path_node, fh);
-	fprintf(fh, " (fingerprint %s)", optr_hash_str(sp->fingerprint));
-	fprintf(fh, " (conjugacy %lx)", sp->conjugacy);
+	fprintf(fh, " (fp %s)", optr_hash_str(sp->fingerprint));
+	// fprintf(fh, " (conjugacy %lx)", sp->conjugacy);
 	fprintf(fh, "\n");
 
 	LIST_GO_OVER;
@@ -663,35 +670,6 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 void subpaths_print(struct subpaths *subpaths, FILE *fh)
 {
 	list_foreach(&subpaths->li, &print_subpath_list_item, fh);
-}
-
-struct _get_subpath_nodeid_at {
-	uint32_t height;
-	uint32_t cnt;
-	uint32_t ret_node_id;
-};
-
-static LIST_IT_CALLBK(subpath_nodeid_at)
-{
-	LIST_OBJ(struct subpath_node, sp_nd, ln);
-	P_CAST(args, struct _get_subpath_nodeid_at, pa_extra);
-
-	args->cnt ++;
-	args->ret_node_id = sp_nd->node_id;
-
-	if (args->height == args->cnt) {
-		return LIST_RET_BREAK;
-	} else {
-		LIST_GO_OVER;
-	}
-}
-
-uint32_t get_subpath_nodeid(struct subpath *sp, uint32_t height)
-{
-	struct _get_subpath_nodeid_at args = {height, 0, 0};
-	list_foreach(&sp->path_nodes, &subpath_nodeid_at, &args);
-
-	return args.ret_node_id;
 }
 
 static TREE_IT_CALLBK(gen_idpos_map)

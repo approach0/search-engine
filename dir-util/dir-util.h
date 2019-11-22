@@ -3,8 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_DIR_PATH_NAME_LEN 4096
-#define MAX_FILE_NAME_LEN     1024
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {

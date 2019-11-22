@@ -46,6 +46,30 @@ struct strmap *test_2()
 	return m;
 }
 
+void test_3()
+{
+	struct strmap *d = strmap(
+		"good", "bad",
+		"small", "large",
+		"pretty", "ugly"
+	);
+
+	d["new"] = "old";
+	d["cool"] = "hot";
+	d["hot"] = "cool";
+
+	printf("d[%s] = %s\n", "hot", (char*)d["hot"]);
+
+	foreach (iter, strmap, d) {
+		char *key = iter->cur->keystr;
+		printf("d[%s] = %s\n", key, (char*)d[[key]]);
+	}
+
+	printf("dict empty? %d\n", strmap_empty(d));
+	strmap_free(d);
+}
+
+
 void test_valist_construct()
 {
 	struct strmap *m = strmap(
@@ -89,6 +113,11 @@ int main()
 
 	printf("test_2\n");
 	struct strmap *m = test_2();
+	printf("\n");
+
+	printf("test_3\n");
+	test_3();
+	printf("\n");
 
 	printf("%s\n", (char *)(*strmap_val_ptr(m, "name")));
 	printf("%s\n", (char *)(*strmap_val_ptr(m, "age")));

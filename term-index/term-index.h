@@ -21,13 +21,13 @@ enum term_index_open_flag {
 	TERM_INDEX_OPEN_EXISTS
 };
 
-void *term_index_open(const char *, enum term_index_open_flag);
-void term_index_close(void *);
+void    *term_index_open(const char *, enum term_index_open_flag);
+void     term_index_close(void *);
 
-int term_index_maintain(void*);
-int term_index_should_maintain(void*);
-size_t term_index_size(void*);
-int term_index_write(void*);
+int      term_index_maintain(void*);
+int      term_index_should_maintain(void*);
+size_t   term_index_size(void*);
+int      term_index_write(void*);
 
 void     term_index_doc_begin(void *);
 void     term_index_doc_add(void *, char *);
@@ -41,9 +41,9 @@ uint32_t term_index_get_avgDocLen(void *); /* average doc len (in words) */
 uint32_t term_index_get_df(void *, term_id_t); /* get document frequency */
 
 term_id_t term_lookup(void *, char *);
-char *term_lookup_r(void *, term_id_t);
+char     *term_lookup_r(void *, term_id_t);
 
-void *term_index_get_posting(void *, term_id_t);
+void     *term_index_get_posting(void *, term_id_t);
 
 #include "config.h"
 struct term_posting_item {
@@ -53,12 +53,15 @@ struct term_posting_item {
 	position_t pos_arr[MAX_TERM_ITEM_POSITIONS];
 };
 
-bool term_posting_start(void *);
-bool term_posting_jump(void *, uint64_t);
-bool term_posting_next(void *);
+bool     term_posting_start(void *);
+bool     term_posting_jump(void *, uint64_t);
+bool     term_posting_next(void *);
 uint64_t term_posting_cur(void*);
-size_t term_posting_read(void*, void*);
-void term_posting_finish(void *);
+size_t   term_posting_read(void*, void*);
+void     term_posting_finish(void *);
+
+/* term index cache data structures */
+#include "cache.h"
 
 #ifdef __cplusplus
 }

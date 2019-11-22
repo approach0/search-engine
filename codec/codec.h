@@ -3,7 +3,9 @@
 #include <stddef.h>
 
 /* import frame of reference */
-#include "for.h"
+#include "for32.h"
+#include "for16.h"
+#include "for8.h"
 
 struct for_delta_args {
 	size_t b;
@@ -11,11 +13,16 @@ struct for_delta_args {
 /* import END */
 
 enum codec_method {
-	CODEC_FOR,
+	CODEC_FOR32,
+	CODEC_FOR16,
+	CODEC_FOR8,
 	CODEC_FOR_DELTA,
 	CODEC_GZ,
 	CODEC_PLAIN /* do nothing */
 };
+
+/* for compatibility */
+#define CODEC_FOR CODEC_FOR32
 
 #define CODEC_DEFAULT_ARGS NULL
 
@@ -27,9 +34,8 @@ struct codec {
 struct codec *codec_new(enum codec_method, void*);
 void          codec_free(struct codec*);
 
-size_t codec_compress_ints(struct codec*, const uint32_t*, size_t, void*);
-
-size_t codec_decompress_ints(struct codec*, const void*, uint32_t*, size_t);
+size_t codec_compress_ints(struct codec*, const void*, size_t, void*);
+size_t codec_decompress_ints(struct codec*, const void*, void*, size_t);
 
 size_t codec_compress(struct codec*, const void*, size_t, void**);
 

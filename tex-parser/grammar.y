@@ -27,11 +27,13 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 	}
 } <nd>
 
-%error-verbose
+// %error-verbose (deprecated)
+%define parse.error verbose
 
 /* ====================
- * token definitions
+ * terminal symbols
  * ===================*/
+%token _EOL
 %token <nd> NUM
 %token <nd> VAR
 %token <nd> ADD
@@ -84,6 +86,9 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %token _R_TEX_BRACE
 %token _R_TEX_BRACKET
 
+/* ====================
+ * nonterminal symbols
+ * ===================*/
 %start doc /* start rule */
 %type <nd> tex
 %type <nd> term
@@ -146,7 +151,7 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 %%
 doc: line | doc line;
 
-line: tex '\n';
+line: tex _EOL;
 
 tex: %prec NULL_REDUCE {
 	struct optr_node *nil = optr_alloc(S_NIL, T_NIL,

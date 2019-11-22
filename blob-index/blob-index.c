@@ -91,7 +91,9 @@ reopen:
 
 static blob_ptr_t file_seek_end(FILE *fh)
 {
-	assert(0 == fseek(fh, 0L, SEEK_END));
+	int err = fseek(fh, 0L, SEEK_END);
+	(void)err;
+	assert(0 == err);
 	return (blob_ptr_t)ftell(fh);
 }
 
@@ -105,7 +107,9 @@ blob_index_write(blob_index_t index, doc_id_t docID,
 	blob_sz_t  blob_sz;
 	size_t blob_sz_written;
 
-	assert(0 == fseek(bi->ptr_file, ptr_wr_pos, SEEK_SET));
+	int err = fseek(bi->ptr_file, ptr_wr_pos, SEEK_SET);
+	(void)err;
+	assert(0 == err);
 
 #ifdef DEBUG_BLOBINDEX
 	printf("blob writing: ptr_wr_pos, dat_pos @ (%lu, %lu)\n",
@@ -134,11 +138,14 @@ blob_index_replace(blob_index_t index, doc_id_t docID,
 	size_t blob_sz_written;
 
 	/* read pointer file at ptr_rd_pos position */
-	assert(0 == fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET));
+	int err = fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET);
+	assert(0 == err);
 	(void)fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
 	/* replace blob data file */
-	assert(0 == fseek(bi->dat_file, dat_pos, SEEK_SET));
+	err = fseek(bi->dat_file, dat_pos, SEEK_SET);
+	(void)err;
+	assert(0 == err);
 	(void)fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
 	blob_sz_written = fwrite(blob, 1, blob_sz, bi->dat_file);
 
@@ -172,14 +179,17 @@ size_t blob_index_read(blob_index_t index, doc_id_t docID, void **blob)
 	printf("blob reading: ptr_wr_pos @ %lu.\n", (off_t)ptr_rd_pos);
 #endif
 	/* seek pointer file to get blob data position */
-	assert(0 == fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET));
+	int err = fseek(bi->ptr_file, ptr_rd_pos, SEEK_SET);
+	assert(0 == err);
 	(void)fread(&dat_pos, 1, sizeof(blob_ptr_t), bi->ptr_file);
 
 #ifdef DEBUG_BLOBINDEX
 	printf("blob reading: dat_pos @ %lu.\n", (off_t)dat_pos);
 #endif
 	/* seek to that data position and first get blob size */
-	assert(0 == fseek(bi->dat_file, dat_pos, SEEK_SET));
+	err = fseek(bi->dat_file, dat_pos, SEEK_SET);
+	(void)err;
+	assert(0 == err);
 	(void)fread(&blob_sz, 1, sizeof(blob_sz_t), bi->dat_file);
 
 	/* alloc read buffer */

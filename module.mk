@@ -75,10 +75,7 @@ lib_paths = $(foreach lpath, $(filter-out $(LOCAL_LDPATH), $(1:%/=%)), \
 # make an archive only if ALL_OBJS is non-empty.
 ifneq ($(ALL_OBJS), )
 ARCHIVE := $(BUILD_DIR)/lib$(CURDIRNAME).a
-AUTO_MERGE_AR = $(call lib_paths, $(LDFLAGS))
-
-# let ar know what objects/libraries to archive.
-ARLIBS = $(sort $(AUTO_MERGE_AR) $(OTHER_MERGE_AR))
+ARLIBS = $(sort $(call lib_paths, $(LDFLAGS)))
 endif
 
 # add new .PHONY name
@@ -87,7 +84,7 @@ endif
 # top rules.
 all: lib bin
 lib: $(DEP_LIBS) $(ALL_OBJS) $(ARCHIVE)
-bin: $(RUN_BINS) #DEBUG: $(warning $(RUN_BINS))
+bin: $(RUN_BINS)
 
 # more specific dependency rules ...
 # re-create archive if any lib changes.
@@ -102,6 +99,15 @@ $(RUN_BINS): $(DEP_LIBS) $(ALL_OBJS) $(ARCHIVE)
 # project-wise dependency awareness
 PROJ_DEP_MK := proj-dep.mk
 -include ../$(PROJ_DEP_MK)
+
+# include carry-alone external dependency libs
+LDLIBS += $(${CURDIRNAME:%=%.carryalone-extdep}:%=-l%)
+LDLIBS := $(sort ${LDLIBS})
+
+# include carry-alone dependency paths (in dep-*.mk files)
+CARRY_ALONG_DEP_MK := $(${CURDIRNAME:%=%.carryalone-intdep})
+CARRY_ALONG_DEP_MK := ${CARRY_ALONG_DEP_MK:%=../%/${DEP_DIR}/dep-*.mk}
+-include ${CARRY_ALONG_DEP_MK}
 
 # update all direct/indirect dependencies
 update: $(CURDIRNAME)-module

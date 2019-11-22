@@ -5,7 +5,7 @@
 #include "config.h"
 #include "u16-ht.h"
 
-const int rehash_sz[][2] = {
+static const int rehash_sz[][2] = {
 	/* size => load factor */
 #ifdef DEBUG_U16_HASHTABLE
 	{8,  6},

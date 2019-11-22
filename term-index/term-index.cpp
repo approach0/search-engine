@@ -1,9 +1,3 @@
-#include "indri/Repository.hpp"
-#include "indri/Parameters.hpp"
-#include "indri/ParsedDocument.hpp"
-#include "indri/CompressedCollection.hpp"
-#include "term-index.h"
-#include "config.h"
 #include <iostream>
 #include <stdio.h>
 #include <limits.h>
@@ -11,25 +5,15 @@
 #include <vector>
 #include <stdlib.h>
 
-#ifndef UINT32_MAX
-#define UINT32_MAX             (4294967295U)
-#endif
+#include "config.h"
+#include "term-index.hpp"
+#include "term-index.h"
 
 using namespace std;
-
-struct term_index {
-	indri::collection::Repository  repo;
-	indri::api::Parameters         parameters;
-	indri::api::ParsedDocument     document;
-	indri::index::Index           *index;
-	uint32_t                       avgDocLen;
-	vector<char*>                  save;
-};
 
 void *term_index_open(const char *path, enum term_index_open_flag flag)
 {
 	struct term_index *ti = new struct term_index;
-	uint32_t docN, doci, doclen;
 
 	ti->parameters.set("memory", 1024 * 1024 * 512);
 	//ti->parameters.set("stemmer.name", "krovertz");
@@ -61,34 +45,25 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 	ti->document.content = NULL;
 	ti->document.contentLength = 0;
 
-	/* update avgDocLen */
-	//cout<< "calculating avgDocLen..." << endl;
-	docN = term_index_get_docN(ti);
-	ti->avgDocLen = 0;
-	for (doci = 1; doci <= docN; doci++) {
-		doclen = ti->index->documentLength(doci);
-		if (ti->avgDocLen < UINT32_MAX - doclen)
-			ti->avgDocLen += doclen;
-		else
-			break;
-	}
-	//printf("avgDocLen=%u/%u", ti->avgDocLen, doci - 1);
-	if (doci > 1)
-		ti->avgDocLen = ti->avgDocLen / (doci - 1);
-	else
-		ti->avgDocLen = 0;
-
-	//printf("=%u\n", ti->avgDocLen);
+	/* text index cache, initially empty */
+	ti->cinfo = NULL;
+	ti->trp_root = NULL;
+	ti->memo_usage = 0;
 
 	return ti;
 }
 
 void term_index_close(void *handle)
 {
+	/* free Indri index iteself */
 	struct term_index *ti = (struct term_index*)handle;
 	ti->repo.close();
-	delete ti;
 
+	/* free text index cache */
+	term_index_cache_free(ti);
+
+	/* free term index structure */
+	delete ti;
 }
 
 int term_index_maintain(void *handle)
@@ -184,7 +159,23 @@ uint32_t term_index_get_docLen(void *handle, doc_id_t doc_id)
 uint32_t term_index_get_avgDocLen(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->avgDocLen;
+	uint32_t docN, doci, doclen, avgDocLen = 0;
+
+	docN = term_index_get_docN(ti);
+	for (doci = 1; doci <= docN; doci++) {
+		doclen = ti->index->documentLength(doci);
+		if (avgDocLen < UINT32_MAX - doclen)
+			avgDocLen += doclen;
+		else
+			break;
+	}
+
+	if (doci > 1)
+		avgDocLen = avgDocLen / (doci - 1);
+	else
+		avgDocLen = 0;
+
+	return avgDocLen;
 }
 
 uint32_t term_index_get_df(void *handle, term_id_t term_id)

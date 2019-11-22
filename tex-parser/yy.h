@@ -4,6 +4,9 @@ extern int yyerror(const char *);
 extern int yylex();
 extern int yylex_destroy();
 
+extern FILE *yyin;
+extern char *yytext;
+
 struct yy_buffer_state;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 typedef size_t yy_size_t;

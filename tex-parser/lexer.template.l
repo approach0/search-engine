@@ -75,7 +75,7 @@ extern int lexer_warning_flag;
   *  comments
   * ===========*/
 "%"                                         { yy_push_state(cmt); }
-<cmt>\n                { safe_pop_start_condition(); return '\n'; }
+<cmt>\n                { safe_pop_start_condition(); return _EOL; }
 <cmt>.                                             { /* ignore */ }
 
  /* ============
@@ -962,7 +962,7 @@ extern int lexer_warning_flag;
  /* ======================
   *  some invisibles left
   * =====================*/
-\n                                                                 { return yytext[0]; }
+\n                                                                      { return _EOL; }
 \\[a-zA-Z]+                                    { /* omit undefined control sequence */ }
 &                                                   { /* ignore when not in matrix. */ }
 "\\!"                                       { /* omit short space, before factorial */ }

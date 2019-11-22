@@ -15,23 +15,6 @@ Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB 
 
 ![](https://github.com/approach0/search-engine-docs-eng/raw/master/img/clip.gif)
 
-## A little history
-The author has been doing a
-[math-only search engine prototype](https://github.com/t-k-/opmes)
-during his graduate research. Shortly after that prototype is implemented, this
-project is created. Its mission is to combine both math-search and fulltext search.
-Now I am happy this goal is achieved too! The next step is continuously develop
-this project and focus on improving effectiveness and efficiency.
-
-Technically, this search engine is still based on previously existing and established
-fulltext search methods. On top of these, it adds new ideas and algorithms to handle
-structural content (see paper
-[1](https://github.com/tkhost/tkhost.github.io/raw/master/opmes/thesis-ref.pdf) and
-[2](https://github.com/tkhost/tkhost.github.io/raw/master/opmes/ecir2016.pdf))
-
-For now only math-aware search is implemented, but this idea can be generally
-applied to other structural text search such as code, chemistry formula and more.
-
 ## Documentation
 Please check out our documentation for technical details:
 [https://approach0.xyz/docs](https://approach0.xyz/docs)
