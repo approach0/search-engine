@@ -26,6 +26,7 @@ tmp/
 tmp
 build/
 .build/
+config.mk
 proj-dep.mk
 targets.mk
 __pycache__

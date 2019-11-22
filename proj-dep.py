@@ -40,7 +40,7 @@ def check_dep(targets_file):
 	flag = 0
 	for module in dd:
 		for dep, dep_type in dd[module]:
-			if (dep_type == 'external'):
+			if dep_type == 'external':
 				print("checking lib" + dep + ' path', end="")
 				print(' used by ' + module + '...')
 				res = system('make -C %s check-lib%s'
@@ -57,13 +57,37 @@ def check_dep(targets_file):
 		print("some libraries are not found, building will fail.")
 		print("\033[0m", end="")
 
+def pri_carryalone_dep(dd, included, module, _type):
+	if module not in dd:
+		return
+	dep_arr = dd[module]
+	for dep, dep_type in dep_arr:
+		if dep_type == _type:
+			if dep not in included:
+				included[dep] = True
+				print(dep, end=" ")
+		else:
+			pri_carryalone_dep(dd, included, dep, _type)
+
 def pri_internal_dep(targets_file):
 	dd = mk_dep_dict(targets_file)
 	for module in dd:
-		dep_dict = dd[module]
-		if len(dep_dict) > 0:
+		print('%s.carryalone-extdep :=' % module, end=" ")
+		included = dict()
+		pri_carryalone_dep(dd, included, module, 'external')
+		print('')
+
+		print('%s.carryalone-intdep :=' % module, end=" ")
+		included = dict()
+		pri_carryalone_dep(dd, included, module, 'internal')
+		print('')
+	print('')
+
+	for module in dd:
+		dep_arr = dd[module]
+		if len(dep_arr) > 0:
 			print('%s-module: ' % (module), end="")
-		for dep, dep_type in dep_dict:
+		for dep, dep_type in dep_arr:
 			if (dep_type == 'internal'):
 				print('%s-module' % (dep), end=" ")
 		print("")
@@ -75,8 +99,8 @@ def pri_dep_dot(targets_file):
 	print("digraph G {")
 	for module in dd:
 		print('\t"%s"' % (module))
-		dep_dict = dd[module]
-		for dep, dep_type in dep_dict:
+		dep_arr = dd[module]
+		for dep, dep_type in dep_arr:
 			if dep_type == 'external':
 				libdep = 'lib' + dep
 				print('\t"%s"[shape="box"]' % (libdep))
