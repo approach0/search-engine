@@ -15,6 +15,9 @@ Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB 
 
 ![](https://github.com/approach0/search-engine-docs-eng/raw/master/img/clip.gif)
 
+## Dependence hierarchy
+![](https://raw.githubusercontent.com/approach0/docs/master/img/dep.png)
+
 ## Documentation
 Please check out our documentation for technical details:
 [https://approach0.xyz/docs](https://approach0.xyz/docs)
