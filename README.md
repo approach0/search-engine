@@ -24,6 +24,3 @@ Please check out our documentation for technical details:
 
 ## License
 MIT
-
-## Contact
-zhongwei@udel.edu
