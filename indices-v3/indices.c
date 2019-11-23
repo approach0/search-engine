@@ -109,8 +109,8 @@ skip:
 	indices->txt_bi = blob_index_txt;
 
 	/* set cache memory limits */
-	indices->mi_cache_limit = DEFAULT_MATH_INDEX_CACHE_SZ;
-	indices->ti_cache_limit = DEFAULT_TERM_INDEX_CACHE_SZ;
+	indices->mi_cache_limit = DEFAULT_MATH_INDEX_CACHE_SZ MB;
+	indices->ti_cache_limit = DEFAULT_TERM_INDEX_CACHE_SZ MB;
 
 	/* set index stats */
 	indices_update_stats(indices);

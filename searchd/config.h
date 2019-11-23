@@ -5,3 +5,15 @@
 
 #define SEARCHD_HIGHLIGHT_OPEN  "<em class=\"hl\">"
 #define SEARCHD_HIGHLIGHT_CLOSE "</em>"
+
+#define MAX_SEARCHD_MATH_KEYWORDS 3
+#define MAX_SEARCHD_TERM_KEYWORDS 20
+
+#define SEARCHD_DEFAULT_PORT 8921
+#define SEARCHD_DEFAULT_URI  "/search"
+
+#define CLUSTER_MASTER_NODE 0
+#define CLUSTER_MAX_QRY_BUF_SZ 65530
+
+#define SEARCHD_LOG_FILE "searchd.log"
+#define OUTPUT_TREC_FILE "trec-format-results.tmp"

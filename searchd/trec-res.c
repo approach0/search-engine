@@ -1,3 +1,4 @@
+#include "config.h"
 #include "trec-res.h"
 
 static FILE *fh_trec_output = NULL;
@@ -21,7 +22,7 @@ int search_results_trec_log(ranked_results_t *rk_res, struct indices *indices)
 	struct rank_wind wind;
 	int tot_pages;
 	
-	fh_trec_output = fopen("trec-format-results.tmp", "w");
+	fh_trec_output = fopen(OUTPUT_TREC_FILE, "w");
 	if (fh_trec_output == NULL)
 		return 1;
 
