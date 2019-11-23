@@ -150,6 +150,7 @@ rank_wind_foreach(struct rank_wind *wind, rank_wind_callbk fun, void *arg)
 		res.from = wind->from;
 		res.to   = wind->to;
 		res.cnt  = cnt;
+		res.cur  = i;
 		(*fun)(&res, arg);
 		cnt ++;
 	}

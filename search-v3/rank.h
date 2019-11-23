@@ -36,7 +36,7 @@ struct rank_wind {
 
 struct rank_result {
 	struct rank_hit *hit;
-	int from, cnt, to;
+	int from, cnt, to, cur;
 };
 
 struct rank_wind
