@@ -279,7 +279,7 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 		return search_errcode_json(SEARCHD_RET_ILLEGAL_PAGENUM);
 
 	/* check window calculation validity */
-	if (wind.from > 0 && wind.to > wind.from) {
+	if (wind.from >= 0 && wind.to > wind.from) {
 		/* construct response header */
 		sprintf(
 			response, "{%s, \"hits\": [", response_head_str(

@@ -50,8 +50,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 	/* prepare Okapi-BM25 scoring structure */
 	*bm25 = prepare_bm25(indices->ti, term_qry, n_term);
 #ifdef PRINT_SEARCH_QUERIES
-	printf("[BM25 parameters]\n");
-	BM25_params_print(bm25);
+	// printf("[BM25 parameters]\n");
+	// BM25_params_print(bm25);
 	printf("\n[inverted lists]\n");
 #endif
 
@@ -267,7 +267,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	 */
 	float threshold = 0.f;
 	const float proximity_upp = prox_upp();
-	printf("proximity upperbound: %.2f\n", proximity_upp);
+	// printf("proximity upperbound: %.2f\n", proximity_upp);
 
 	/*
 	 * Merge variables

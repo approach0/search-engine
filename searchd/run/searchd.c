@@ -48,22 +48,22 @@ httpd_on_recv(const char *req, void *arg_)
 
 	if (page == 0) {
 		ret = search_errcode_json(SEARCHD_RET_BAD_QRY_JSON);
-		fprintf(log_fh, "%s\n", "bad JSON format.");
+		fprintf(log_fh, "%s\n", "Bad JSON format.");
 		goto reply;
 
 	} else if (qry.len == 0) {
 		ret = search_errcode_json(SEARCHD_RET_EMPTY_QRY);
-		fprintf(log_fh, "%s\n", "empty query.");
+		fprintf(log_fh, "%s\n", "Empty query.");
 		goto reply;
 
 	} else if (qry.n_math >= MAX_SEARCHD_MATH_KEYWORDS) {
 		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_MATH_KW);
-		fprintf(log_fh, "%s\n", "too many math keywords");
+		fprintf(log_fh, "%s\n", "Too many math keywords");
 		goto reply;
 
 	} else if (qry.n_term >= MAX_SEARCHD_TERM_KEYWORDS) {
 		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_TERM_KW);
-		fprintf(log_fh, "%s\n", "too many text keywords");
+		fprintf(log_fh, "%s\n", "Too many text keywords");
 		goto reply;
 	}
 
@@ -126,7 +126,10 @@ httpd_on_recv(const char *req, void *arg_)
 reply:
 	query_delete(qry);
 
-	fprintf(log_fh, "query handle cost: %ld msec.\n", timer_tot_msec(&timer));
+	long time_cost = timer_tot_msec(&timer);
+	printf("Query handle cost: %ld msec.\n\n", time_cost);
+
+	fprintf(log_fh, "Query handle cost: %ld msec.\n", time_cost);
 	fprintf(log_fh, "unfree allocs: %ld.\n\n", mhook_unfree());
 	fflush(log_fh);
 
@@ -202,7 +205,7 @@ int main(int argc, char *argv[])
 	/* open searchd log file */
 	log_fh = fopen(SEARCHD_LOG_FILE, "a");
 	if (log_fh == NULL) {
-		fprintf(stderr, "cannot open %s.\n", SEARCHD_LOG_FILE);
+		fprintf(stderr, "Cannot open %s.\n", SEARCHD_LOG_FILE);
 		log_fh = fopen("/dev/null", "a");
 	}
 
@@ -223,7 +226,6 @@ int main(int argc, char *argv[])
 			       " -C <math cache size (MB), default: %u MB> \n"
 			       "\n", argv[0],
 			       DEFAULT_TERM_INDEX_CACHE_SZ, DEFAULT_MATH_INDEX_CACHE_SZ);
-			printf("\n");
 			goto exit;
 
 		case 'T':
@@ -258,20 +260,22 @@ int main(int argc, char *argv[])
 
 	/* check index path argument */
 	if (index_path == NULL) {
-		fprintf(stderr, "indices path not specified.\n");
+		fprintf(stderr, "Indice path not specified.\n");
 		goto exit;
 	}
 
 	/* open indices */
-	printf("opening index at: `%s' ...\n", index_path);
+	printf("Opening index at: %s\n", index_path);
 	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
-		printf("index open failed.\n");
+		printf("Index open failed.\n");
 		goto close;
 	}
 
 	/* setup cache */
-	indices.ti_cache_limit = ti_cache_limit;
-	indices.mi_cache_limit = mi_cache_limit;
+	indices.ti_cache_limit = ti_cache_limit MB;
+	indices.mi_cache_limit = mi_cache_limit MB;
+	printf("Caching index (term %lu MiB, math %lu MiB) ...\n",
+		ti_cache_limit, mi_cache_limit);
 	indices_cache(&indices);
 	indices_print_summary(&indices);
 	printf("\n");
@@ -290,13 +294,13 @@ int main(int argc, char *argv[])
 			{SEARCHD_DEFAULT_URI, &httpd_on_recv}
 		};
 
-		printf("listening on port %hu ...\n", port);
+		printf("Listening on port %hu ...\n", port);
 		fflush(stdout); /* notify others (expect script) */
 
-		fprintf(log_fh, "master node ready.\n"); fflush(log_fh);
+		fprintf(log_fh, "Master node ready.\n"); fflush(log_fh);
 
 		if (0 != httpd_run(port, uri_handlers, 1, &searchd_args))
-			printf("port %hu is occupied\n", port);
+			printf("Port %hu is occupied\n", port);
 
 		slave_die();
 	} else {
