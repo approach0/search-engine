@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <float.h>
 #include "parson/parson.h"
 #include "search-v3/txt2snippet.h"
 
@@ -13,6 +16,10 @@ enum parse_json_kw_res {
 	PARSE_JSON_KW_INVALID_TYPE,
 	PARSE_JSON_KW_SUCC
 };
+
+#define JSON_ARR_SEP ", "
+#define JSON_RES_END "]}\n"
+#define JSON_SAFE_ROOM (strlen(JSON_ARR_SEP) + strlen(JSON_RES_END) + 1)
 
 /* parse a JSON object into query_keyword, and push into query */
 static enum parse_json_kw_res
@@ -236,10 +243,15 @@ static void append_result(struct rank_result* res, void* arg)
 
 	/* append search result */
 	hit_json = response_hit_str(docID, hit->score, title, url, snippet);
-	strcat(response, hit_json);
 
-	if (res->cur + 1 < res->to)
-		strcat(response, ", ");
+	/* if buffer is large enough */
+	if (strlen(response) + strlen(hit_json) + JSON_SAFE_ROOM <
+		MAX_SEARCHD_RESPONSE_JSON_SZ) {
+		/* append result */
+		strcat(response, hit_json);
+		if (res->cur + 1 < res->to)
+			strcat(response, JSON_ARR_SEP);
+	}
 
 	/* free allocated strings */
 	free(url);
@@ -273,11 +285,187 @@ search_results_json(ranked_results_t *rk_res, int i, struct indices *indices)
 
 		/* append result JSONs */
 		rank_wind_foreach(&wind, &append_result, indices);
-		strcat(response, "]}\n");
+		strcat(response, JSON_RES_END);
 	} else {
 		/* not valid calculation, return error */
 		return search_errcode_json(SEARCHD_RET_WIND_CALC_ERR);
 	}
 
 	return response;
+}
+
+/*
+ * MPI related functions.
+ */
+static float hit_array_score(JSON_Array *arr, int idx)
+{
+	if (NULL == arr ||
+	    idx >= json_array_get_count(arr))
+		return -FLT_MAX;
+
+	JSON_Object *obj = json_array_get_object(arr, idx);
+
+	if (!json_object_has_value_of_type(obj, "score", JSONNumber)) {
+		return -FLT_MAX;
+	}
+
+	return (float)json_object_get_number(obj, "score");
+}
+
+static const char *hit_object_to_string(JSON_Object *obj)
+{
+	static char empty[] = "{}";
+	static char retstr[MAX_SEARCHD_RESPONSE_JSON_SZ];
+
+	if (!json_object_has_value_of_type(obj, "docid",   JSONNumber) ||
+	    !json_object_has_value_of_type(obj, "score",   JSONNumber) ||
+	    !json_object_has_value_of_type(obj, "title",   JSONString) ||
+	    !json_object_has_value_of_type(obj, "url",     JSONString) ||
+	    !json_object_has_value_of_type(obj, "snippet", JSONString)) {
+		return empty;
+	}
+
+#define ENC(_str) json_encode_string(_str)
+	doc_id_t docID  = (doc_id_t)json_object_get_number(obj, "docid");
+	float score     = (float)json_object_get_number(obj, "score");
+	char *title     = ENC(json_object_get_string(obj, "title"));
+	const char *url = json_object_get_string(obj, "url");
+	char *snippet   = ENC(json_object_get_string(obj, "snippet"));
+#undef ENC
+
+	/* the JSON is returned by peers so it must fit in this buffer */
+	sprintf(retstr, "{"
+		"\"docid\": %u, "     /* hit docID */
+		"\"score\": %.3f, "   /* hit score */
+		"\"title\": %s, "     /* hit title */
+		"\"url\": \"%s\", "   /* hit document URL */
+		"\"snippet\": %s"     /* hit document snippet */
+		"}",
+		docID, score, title, url, snippet
+	);
+
+	free(title);
+	free(snippet);
+	return retstr;
+}
+
+const char *json_results_merge(char *gather_buf, int n, int page)
+{
+	char (*gather_res)[MAX_SEARCHD_RESPONSE_JSON_SZ];
+	gather_res = (char(*)[MAX_SEARCHD_RESPONSE_JSON_SZ])gather_buf;
+
+	/* space to store JSON values */
+	JSON_Value **parson_vals = calloc(n, sizeof(JSON_Value *));
+
+	/* merge arrays */
+	JSON_Array **hit_arr = calloc(n, sizeof(JSON_Array *));
+	int *cur = calloc(n, sizeof(int));
+
+	/* calculate results window */
+	int n_total_res = 0;
+	int tot_pages;
+	ranked_results_t rk_res; /* mock-up merged results */
+	struct rank_wind wind;
+
+	/* parse and get hit arrays */
+	for (int i = 0; i < n; i++) {
+		// printf("result[%d]: \n%s\n", i, gather_res[i]);
+		parson_vals[i] = json_parse_string(gather_res[i]);
+
+		if (parson_vals[i] == NULL) {
+			fprintf(stderr, "Parson fails to parse JSON query.\n");
+			continue;
+		}
+
+		JSON_Object *parson_obj = json_value_get_object(parson_vals[i]);
+
+		if (!json_object_has_value_of_type(parson_obj, "hits", JSONArray)) {
+			continue;
+		}
+
+		hit_arr[i] = json_object_get_array(parson_obj, "hits");
+		/* count the number of total results */
+		if (hit_arr[i])
+			n_total_res += json_array_get_count(hit_arr[i]);
+	}
+
+	/* calculate page range */
+	rk_res.n_elements = n_total_res;
+	wind = rank_wind_calc(&rk_res, page - 1, DEFAULT_RES_PER_PAGE, &tot_pages);
+
+	/* check requested page number validity */
+	if (tot_pages == 0 || page > tot_pages)
+		goto free;
+
+	/* overwrite the response buffer */
+	snprintf(response, MAX_SEARCHD_RESPONSE_JSON_SZ,
+		"{%s, \"hits\": [", response_head_str(SEARCHD_RET_SUCC, tot_pages)
+	);
+
+	/* merge hit arrays ordered by score */
+	int pos = 0;
+	while (pos < wind.to) {
+		/* find next max */
+		float max_score = -FLT_MAX;
+		for (int i = 0; i < n; i++) {
+			float s = hit_array_score(hit_arr[i], cur[i]);
+			if (s > max_score)
+				max_score = s;
+		}
+
+		/* stop generating result on any error */
+		if (max_score == -FLT_MAX)
+			break;
+
+		/* append next max result(s) */
+		for (int i = 0; i < n; i++) {
+			JSON_Object *obj;
+			const char *json;
+			float s = hit_array_score(hit_arr[i], cur[i]);
+			if (s == max_score) {
+				if (wind.from <= pos && pos < wind.to) {
+					/* convert JSON element to string */
+					obj = json_array_get_object(hit_arr[i], cur[i]);
+					json = hit_object_to_string(obj);
+
+					if (strlen(response) + strlen(json) + JSON_SAFE_ROOM <
+						MAX_SEARCHD_RESPONSE_JSON_SZ) {
+						/* append result string */
+						strcat(response, json);
+
+						if (pos + 1 < wind.to)
+							strcat(response, JSON_ARR_SEP);
+					}
+				}
+
+				cur[i] ++;
+				pos ++;
+			}
+		}
+	} /* end while */
+
+	/* finish writing response buffer */
+	strcat(response, JSON_RES_END);
+
+free:
+	/* free allocated JSON values */
+	for (int i = 0; i < n; i++) {
+		if (parson_vals[i])
+			json_value_free(parson_vals[i]);
+	}
+	free(parson_vals);
+
+	/* free merge arrays */
+	free(hit_arr);
+	free(cur);
+
+	// mhook_print_unfree();
+
+	/* response JSON message */
+	if (tot_pages == 0)
+		return search_errcode_json(SEARCHD_RET_NO_HIT_FOUND);
+	else if (page > tot_pages)
+		return search_errcode_json(SEARCHD_RET_ILLEGAL_PAGENUM);
+	else
+		return response;
 }

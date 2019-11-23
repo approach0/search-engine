@@ -42,6 +42,3 @@ const char *search_errcode_json(enum searchd_ret_code);
 /* merge json results array into one and return a given page */
 const char *
 json_results_merge(char*, int, int);
-
-/* generate TREC-formated results log */
-int search_results_trec_log(ranked_results_t*, struct indices*);
