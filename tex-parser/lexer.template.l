@@ -1080,7 +1080,8 @@ int ret_num(char *text, struct optr_node **tr)
 		*tr = optr_alloc(S_one, T_ONE, WC_NORMAL_LEAF);
 	} else {
 		n = num2symbol_id(n);
-		*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF);
+		/* use VAR token for general numbers */
+		*tr = optr_alloc(n, T_VAR, WC_NORMAL_LEAF);
 	}
 
 	SET_TOK_POS(*tr);
