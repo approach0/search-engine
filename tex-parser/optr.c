@@ -31,6 +31,8 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->pos_begin = 0;
 	n->pos_end   = 0;
 	TREE_NODE_CONS(n->tnd);
+
+	//printf("allocate node %s\n", trans_symbol(n->symbol_id));
 	return n;
 }
 
@@ -74,7 +76,7 @@ optr_pass_children(struct optr_node *of, struct optr_node *to)
 		return NULL;
 
 	list_foreach(&of->tnd.sons, &pass_children_to_father, to);
-	free(of);
+	optr_release(of);
 	return to;
 }
 
@@ -87,7 +89,7 @@ struct optr_node* optr_attach(struct optr_node *c /* child */,
 	if (f->commutative && c->token_id == f->token_id) {
 		/* apply commutative rule */
 		list_foreach(&c->tnd.sons, &pass_children_to_father, f);
-		free(c);
+		optr_release(c);
 		return f;
 	}
 
@@ -202,6 +204,7 @@ static TREE_IT_CALLBK(release)
 	TREE_OBJ(struct optr_node, p, tnd);
 	bool res;
 	res = tree_detach(&p->tnd, pa_now, pa_fwd);
+	// printf("free node %s\n", trans_symbol(p->symbol_id));
 	free(p);
 	return res;
 }
@@ -488,7 +491,7 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p,
 		/* create and insert rank node if necessary */
 		if (f && !f->commutative) {
 			/* should be OK to assign an zero ID for rank node, since
-			 * rank node is NOT an interesting node (see interested_token()).
+			 * rank node is NOT an interesting node (see meaningful_gener()).
 			 * As it will never be used as subr node nor a leaf node. */
 			const uint32_t rank_node_id = 0;
 
