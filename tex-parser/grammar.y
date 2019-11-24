@@ -420,7 +420,13 @@ pack: atom {
 ;
 
 atom: VAR {
-	OPTR_ATTACH($$, NULL, NULL, $1);
+	struct optr_node *hanger;
+	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+	struct optr_node *base;
+	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+
+	OPTR_ATTACH($$, $1, NULL, base);
+	OPTR_ATTACH($$, base, NULL, hanger);
 }
 | NUM {
 	OPTR_ATTACH($$, NULL, NULL, $1);
