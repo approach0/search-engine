@@ -23,11 +23,20 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->token_id = t_id;
 	n->sons = 0;
 	n->rank = 0;
+	n->always_base = 0;
 	n->subtr_hash = 0;
 	n->path_id = 0;
 	n->node_id = 0;
 	n->pos_begin = 0;
 	n->pos_end   = 0;
+	TREE_NODE_CONS(n->tnd);
+	return n;
+}
+
+struct optr_node* optr_copy(struct optr_node *m)
+{
+	struct optr_node *n = malloc(sizeof(struct optr_node));
+	*n = *m;
 	TREE_NODE_CONS(n->tnd);
 	return n;
 }

@@ -9,6 +9,7 @@ struct optr_node {
 	enum token_id    token_id;
 	uint32_t         sons;
 	uint32_t         rank;
+	uint32_t         always_base;
 	symbol_id_t      subtr_hash;
 	uint32_t         path_id;
 	uint32_t         node_id;
@@ -17,6 +18,7 @@ struct optr_node {
 };
 
 struct optr_node* optr_alloc(enum symbol_id, enum token_id, bool);
+struct optr_node* optr_copy(struct optr_node*);
 
 struct optr_node* optr_attach(struct optr_node*, struct optr_node*);
 

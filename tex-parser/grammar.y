@@ -361,8 +361,26 @@ factor: pack {
 | factor script {
 	struct optr_node *base;
 	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
-	OPTR_ATTACH($$, $1, NULL, base);
-	OPTR_ATTACH($$, base, NULL, $2);
+
+	if ($1->always_base) {
+		/* free old hanger tree and only copy the top */
+		struct optr_node *operand = optr_copy($1);
+		optr_release($1);
+
+		/* construct new base and attach to hanger of script */
+		OPTR_ATTACH($$, operand, NULL, base);
+		OPTR_ATTACH($$, base, NULL, $2);
+
+		/* change the hanger token/symbol so that we can
+		 * distinguish `\sum x_i' from `\sum_i x'. */
+		$2->token_id = operand->token_id;
+		$2->symbol_id = operand->symbol_id;
+
+	} else {
+		/* construct new base and attach to hanger of script */
+		OPTR_ATTACH($$, $1, NULL, base);
+		OPTR_ATTACH($$, base, NULL, $2);
+	}
 }
 ;
 
@@ -397,7 +415,15 @@ atom: VAR {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | SUM_CLASS {
-	OPTR_ATTACH($$, NULL, NULL, $1);
+	struct optr_node *hanger;
+	hanger = optr_copy($1);
+	hanger->always_base = 1;
+
+	struct optr_node *base;
+	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+
+	OPTR_ATTACH($$, $1, NULL, base);
+	OPTR_ATTACH($$, base, NULL, hanger);
 }
 | FRAC__ {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -453,18 +479,12 @@ s_atom: atom {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | ADD {
-	struct optr_node *var = $1;
-	var->wildcard = false;
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | NEG {
-	struct optr_node *var = $1;
-	var->wildcard = false;
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | TIMES {
-	struct optr_node *var = $1;
-	var->wildcard = false;
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 ;
