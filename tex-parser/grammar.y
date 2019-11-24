@@ -398,6 +398,7 @@ factor: pack {
 		/* the left one is a hanger with prime(s) */
 		optr_pass_children($2, $1);
 		$$ = grammar_optr_root = $1;
+		free(base); /* No need for this token! */
 
 	} else {
 		/* construct new base and attach to hanger of script */
