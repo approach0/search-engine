@@ -30,9 +30,11 @@ int main()
 	test("a_2'");
 	test("a'_2");
 
+	test("a+b+c");
+
+	test("a_1^2");
+
 	test("\\sum_i a_i");
 	test("\\sum a_i");
-
-	test("a+b+c");
 	return 0;
 }

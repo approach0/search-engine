@@ -11,6 +11,12 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 	optr_attach(_child1, _father); \
 	optr_attach(_child2, _father); \
 	_ret = grammar_optr_root = _father;
+
+#define MAKE_IT_BASE(_ret, _leaf, _hanger) \
+	struct optr_node *_base_; \
+	_base_ = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR); \
+	OPTR_ATTACH(_ret, _leaf, NULL, _base_); \
+	OPTR_ATTACH(_ret, _base_, NULL, _hanger);
 %}
 
 /* =========================
@@ -380,7 +386,7 @@ factor: pack {
 	struct optr_node *base;
 	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
 
-	if ($1->always_base) {
+	if ($1->sum_class) {
 		/* free old hanger tree and only copy the top */
 		struct optr_node *operand = optr_copy($1);
 		optr_release($1);
@@ -395,7 +401,7 @@ factor: pack {
 		$2->symbol_id = operand->symbol_id;
 
 	} else if ($1->token_id == T_HANGER && !$1->tex_braced) {
-		/* the left one is a hanger with prime(s) */
+		/* the left one is also a hanger, e.g. prime(s) */
 		optr_pass_children($2, $1);
 		$$ = grammar_optr_root = $1;
 		free(base); /* No need for this token! */
@@ -422,11 +428,7 @@ pack: atom {
 atom: VAR {
 	struct optr_node *hanger;
 	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
-	struct optr_node *base;
-	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
-
-	OPTR_ATTACH($$, $1, NULL, base);
-	OPTR_ATTACH($$, base, NULL, hanger);
+	MAKE_IT_BASE($$, $1, hanger);
 }
 | NUM {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -448,13 +450,8 @@ atom: VAR {
 | SUM_CLASS {
 	struct optr_node *hanger;
 	hanger = optr_copy($1);
-	hanger->always_base = 1;
-
-	struct optr_node *base;
-	base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
-
-	OPTR_ATTACH($$, $1, NULL, base);
-	OPTR_ATTACH($$, base, NULL, hanger);
+	hanger->sum_class = 1;
+	MAKE_IT_BASE($$, $1, hanger);
 }
 | FRAC__ {
 	OPTR_ATTACH($$, NULL, NULL, $1);

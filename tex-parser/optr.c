@@ -23,7 +23,7 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->token_id = t_id;
 	n->sons = 0;
 	n->rank = 0;
-	n->always_base = 0;
+	n->sum_class = 0;
 	n->tex_braced = 0;
 	n->subtr_hash = 0;
 	n->path_id = 0;

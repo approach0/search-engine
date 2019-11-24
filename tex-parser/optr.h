@@ -9,7 +9,7 @@ struct optr_node {
 	enum token_id    token_id;
 	uint32_t         sons;
 	uint32_t         rank;
-	uint32_t         always_base;
+	uint32_t         sum_class;
 	uint32_t         tex_braced;
 	symbol_id_t      subtr_hash;
 	uint32_t         path_id;
