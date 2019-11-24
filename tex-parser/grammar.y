@@ -356,7 +356,25 @@ factor: pack {
 	OPTR_ATTACH($$, $1, NULL, $2);
 }
 | factor PRIME {
-	OPTR_ATTACH($$, $1, NULL, $2);
+	struct optr_node *sup;
+	sup = optr_alloc(S_supscript, T_SUPSCRIPT, WC_COMMUT_OPERATOR);
+
+	if ($1->token_id == T_HANGER) {
+		OPTR_ATTACH($$, $2, NULL, sup);
+		OPTR_ATTACH($$, sup, NULL, $1);
+
+	} else {
+		struct optr_node *hanger;
+		hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
+		struct optr_node *base;
+		base = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR);
+
+		OPTR_ATTACH($$, $2, NULL, sup);
+		OPTR_ATTACH($$, sup, NULL, hanger);
+
+		OPTR_ATTACH($$, $1, NULL, base);
+		OPTR_ATTACH($$, base, NULL, hanger);
+	}
 }
 | factor script {
 	struct optr_node *base;
@@ -375,6 +393,11 @@ factor: pack {
 		 * distinguish `\sum x_i' from `\sum_i x'. */
 		$2->token_id = operand->token_id;
 		$2->symbol_id = operand->symbol_id;
+
+	} else if ($1->token_id == T_HANGER && !$1->tex_braced) {
+		/* the left one is a hanger with prime(s) */
+		optr_pass_children($2, $1);
+		$$ = grammar_optr_root = $1;
 
 	} else {
 		/* construct new base and attach to hanger of script */
@@ -404,8 +427,9 @@ atom: VAR {
 | _L_TEX_BRACE tex _R_TEX_BRACE {
 	/* tex braces is invisible in math rendering,
 	 * and it is treated as atom. Think about that
-	 * the command "\frac a {b+c}" works, but the
-	 * command "\frac a (b+c)" does not. */
+	 * the command "{a^2}^2" works, while command
+	 * "a^2^2" does not. */
+	$2->tex_braced = 1;
 	OPTR_ATTACH($$, NULL, NULL, $2);
 }
 | _L_TEX_BRACE FACT _R_TEX_BRACE {

@@ -365,7 +365,7 @@ extern int lexer_warning_flag;
  /* =========================
   * primes and su[bp]scripts
   * ========================*/
-"'"                                { RET_TOK(prime, PRIME, WC_NONCOM_OPERATOR, PRIME); }
+"'"                                { RET_TOK(prime, PRIME, WC_COMMUT_OPERATOR, PRIME); }
 \\prime                              { RET_TOK(_AUTOGEN_, PRIME, WC_NORMAL_LEAF, VAR); }
 "_"                    { RET_TOK(subscript, SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
 "^"                    { RET_TOK(supscript, SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }

@@ -10,6 +10,7 @@ struct optr_node {
 	uint32_t         sons;
 	uint32_t         rank;
 	uint32_t         always_base;
+	uint32_t         tex_braced;
 	symbol_id_t      subtr_hash;
 	uint32_t         path_id;
 	uint32_t         node_id;
@@ -20,6 +21,7 @@ struct optr_node {
 struct optr_node* optr_alloc(enum symbol_id, enum token_id, bool);
 struct optr_node* optr_copy(struct optr_node*);
 
+struct optr_node* optr_pass_children(struct optr_node*, struct optr_node*);
 struct optr_node* optr_attach(struct optr_node*, struct optr_node*);
 
 void optr_print(struct optr_node*, FILE*);

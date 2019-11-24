@@ -24,6 +24,7 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->sons = 0;
 	n->rank = 0;
 	n->always_base = 0;
+	n->tex_braced = 0;
 	n->subtr_hash = 0;
 	n->path_id = 0;
 	n->node_id = 0;
@@ -64,6 +65,17 @@ static LIST_IT_CALLBK(pass_children_to_father)
 	update(child, gf);
 
 	return res;
+}
+
+struct optr_node*
+optr_pass_children(struct optr_node *of, struct optr_node *to)
+{
+	if (of == NULL || to == NULL)
+		return NULL;
+
+	list_foreach(&of->tnd.sons, &pass_children_to_father, to);
+	free(of);
+	return to;
 }
 
 struct optr_node* optr_attach(struct optr_node *c /* child */,
