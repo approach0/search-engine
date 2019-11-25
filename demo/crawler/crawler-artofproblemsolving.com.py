@@ -68,7 +68,10 @@ def curl(sub_url, c, post = None):
 
 def parse_op_name(obj):
     if isinstance(obj, ast.DotAccessor):
-        l = obj.node.value + "." + obj.identifier.value
+        if isinstance(obj.node, ast.Identifier):
+            l = obj.node.value + "." + obj.identifier.value
+        else:
+            l = parse_op_name(obj.node) + "." + obj.identifier.value
     elif isinstance(obj, ast.String):
         l = obj.value
         # no using strip here, because it can remove more than 1
@@ -345,7 +348,7 @@ def crawl_category_topics(category, newest, oldest, extra_opt):
         # log crawled topics
         page_log = open(file_prefix + ".log", "a")
         page_log.write('category %d, topic_id: %s \n' %
-                       (category, post['topic_id']))
+                        (category, post['topic_id']))
         page_log.close()
     return 'finish'
 
