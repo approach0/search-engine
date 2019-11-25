@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=80b258d7afe16644" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=223d9e19c6f8ffe5" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=80b258d7afe16644"></script>
+<script type="text/javascript" src="bundle.min.js?hash=223d9e19c6f8ffe5"></script>
 <style>
 img.social {
 	height: 16px;
@@ -165,10 +165,9 @@ a.btn, a.btn:visited{
 
 	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
-		<p>Know TeX? You are an expert! Try to edit directly the raw query below (separate keywords by commas).</p>
+		<p>Know TeX? Great! You may want to edit raw query below directly (separate keywords by commas).</p>
 		<input id="qry" style="padding-left: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
 		placeholder="empty"/>
-		(<b style="font-size: small">please separate math and non-math keywords by commas</b>)
 
 		<!-- hidden URI parameters -->
 		<input id="q" type="hidden" value=

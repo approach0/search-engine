@@ -22,32 +22,65 @@ $(document).ready(function() {
 	var raw_str_2_query = function() {
 		var q = query;
 		var dollar_open = false;
+		var seen_text = false;
 		var kw_arr = [];
 		var kw = '';
 
 		/* get keyword array splitted by commas */
 		for (var i = 0; i < q.raw_str.length; i++) {
+			if (q.raw_str[i] == '$' && i + 1 < q.raw_str.length &&
+			    q.raw_str[i + 1] == '$')
+				continue; /* this is a double dollar, eat this $ */
+
 			if (q.raw_str[i] == '$') {
 				if (dollar_open)
 					dollar_open = false;
 				else
 					dollar_open = true;
+
+				/* handle "word $tex$", user forgets the comma? */
+				if (dollar_open && $.trim(kw) != "") {
+					/* wrap up this keyword */
+					kw_arr.push(kw);
+					kw = '';
+				}
+
+				/* $ just closed, looking for the text */
+				if (!dollar_open)
+					seen_text = false;
+
 			} else if (contains(q.raw_str[i], tex_charset)) {
 				/* in case user does not enclose math with '$' */
 				dollar_open = true;
 			}
 
-			if (!dollar_open && q.raw_str[i] == ',') {
-				kw_arr.push(kw);
-				kw = '';
-			} else {
-				kw += q.raw_str[i];
+			if (!dollar_open && q.raw_str[i] != '$') {
+				/* have left math, now it is text space */
+
+				/* handle comma between "any, any" */
+				if (q.raw_str[i] == ',') {
+					/* wrap up this keyword */
+					kw_arr.push(kw);
+					kw = '';
+					continue; /* skip this comma */
+
+				} else if (!seen_text && q.raw_str[i] != ' ') {
+					/* or, "$tex$ word" w/o comma, user forgets it? */
+					seen_text = true;
+
+					/* wrap up this keyword */
+					kw_arr.push(kw);
+					kw = '';
+				}
 			}
+
+			kw += q.raw_str[i];
 		}
 		kw_arr.push(kw);
 
 		/* for each of the keyword, add into query */
 		q.items = []; /* clear */
+
 		var correct_raw_str = false;
 		$.each(kw_arr, function(i, kw) {
 			kw = $.trim(kw);
