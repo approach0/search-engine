@@ -519,26 +519,26 @@ $(document).ready(function() {
 
 	window.qry_vm = qry_vm;
 
-	/* not ready to deploy until backers' database is non-empty */
-	$.ajax({
-		url: '/backers/join_rows',
-		type: 'GET',
-		success: function (data) {
-			var arr = data['res'];
-			if (arr.length > 0) {
-				window.qry_vm.en_donation = true;
-				window.srch_vm.unlock = false;
-				Vue.nextTick(function () {
-					$("span.collapse").next().hide();
-				});
-			} else {
-				console.log('donation disabled.');
-			}
-		},
-		error: function (req, err) {
-			console.log('donation disabled.');
-		}
-	});
+	/* check if donation is enabled... */
+//	$.ajax({
+//		url: '/backers/join_rows',
+//		type: 'GET',
+//		success: function (data) {
+//			var arr = data['res'];
+//			if (arr.length > 0) {
+//				window.qry_vm.en_donation = true;
+//				window.srch_vm.unlock = false;
+//				Vue.nextTick(function () {
+//					$("span.collapse").next().hide();
+//				});
+//			} else {
+//				console.log('donation disabled.');
+//			}
+//		},
+//		error: function (req, err) {
+//			console.log('donation disabled.');
+//		}
+//	});
 
 	/* on keyword editing */
 	window.dele_kw = function (idx) {
