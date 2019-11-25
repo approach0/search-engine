@@ -1,4 +1,6 @@
 #pragma once
+#include <stdio.h>
+#include <stdint.h>
 
 #if 0
 /* test config */

@@ -40,12 +40,12 @@ float math_score_calc(struct math_score_factors *msf)
 
 float math_score_upp(void *msf_, float sum_ipf)
 {
-	P_CAST(msf, struct math_score_factors, msf_);
+	PTR_CAST(msf, struct math_score_factors, msf_);
 	return sum_ipf * msf->upp_sf;
 }
 
 float math_score_low(void *msf_, float sum_ipf)
 {
-	P_CAST(msf, struct math_score_factors, msf_);
+	PTR_CAST(msf, struct math_score_factors, msf_);
 	return sum_ipf * msf->low_sf;
 }

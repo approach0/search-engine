@@ -7,6 +7,10 @@
 #define TYPE_MAP_STR_MAX             128
 //#define OPTR_HASH_DEBUG
 
+/* assigned pathID is in [1, 64] */
+#define MAX_SUBPATH_ID  64
+
+/* max number of subpaths (including gener paths) */
 #define MAX_SUBPATHS	128
 //#define MAX_SUBPATHS	256
 

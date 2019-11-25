@@ -12,9 +12,6 @@ typedef uint16_t fingerpri_t;
 
 #define MAX_PARSER_ERR_STR  1024
 
-/* assigned pathID is in [1, 64] */
-#define MAX_SUBPATH_ID      64
-
 enum subpath_type {
 	SUBPATH_TYPE_GENERNODE,
 	SUBPATH_TYPE_WILDCARD,

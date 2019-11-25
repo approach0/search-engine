@@ -1,5 +1,7 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdint.h>
+
 #include "config.h"
 #include "bm25-score.h"
 
