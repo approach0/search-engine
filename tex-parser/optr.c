@@ -431,14 +431,19 @@ static LIST_IT_CALLBK(_gen_fingerprint)
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
 	P_CAST(arg, struct _gen_fingerprint_arg, pa_extra);
 
-	/* skip the first node (operand) */
-	if (pa_now->now != pa_head->now) {
+	/* skip the first node (operand) and only digest meaningful nodes */
+	if (pa_now->now != pa_head->now && meaningful_gener(sp_nd->token_id)) {
 
-		/* prohibit to encode beyond 4 nodes */
+		/* stop going beyond 4 nodes */
 		if (arg->cnt > 4) goto halt;
 
+		//printf("extracting %s\n", trans_symbol(sp_nd->symbol_id));
+
+		/* shift and extract 4 bits from each node (total 16 bits) */
 		arg->fp = arg->fp << 4;
 		arg->fp = arg->fp | (sp_nd->symbol_id % 0xf);
+
+		arg->cnt ++;
 	}
 
 	if (arg->cnt >= arg->prefix_len - 1 ||
@@ -446,7 +451,6 @@ static LIST_IT_CALLBK(_gen_fingerprint)
 halt:
 		return LIST_RET_BREAK;
 	} else {
-		arg->cnt ++;
 		return LIST_RET_CONTINUE;
 	}
 }
