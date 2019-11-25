@@ -251,7 +251,12 @@ index_tex(math_index_t mi, char *tex, doc_id_t docID, uint32_t expID)
 #ifdef DEBUG_INDEXER
 	printf("[parse tex] `%s'\n", tex);
 #endif
-	ret = tex_parse(tex, 0, true, false);
+
+#ifdef SUPPORT_MATH_WILDCARDS
+	#error("math wildcards not supported yet.")
+#else
+	ret = tex_parse(tex, 0, true, true);
+#endif
 
 	if (ret.code != PARSER_RETCODE_ERR) {
 		if (ret.operator_tree) {

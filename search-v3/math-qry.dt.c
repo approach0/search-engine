@@ -106,7 +106,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	 * parse TeX
 	 */
 	struct tex_parse_ret parse_res;
-	parse_res = tex_parse(tex, 0, true /* keep OPT */, true /* concrete */);
+	parse_res = tex_parse(tex, 0, true /* keep OPT */, true /* query */);
 	if (parse_res.code == PARSER_RETCODE_ERR ||
 	    parse_res.operator_tree == NULL) {
 		return 1;

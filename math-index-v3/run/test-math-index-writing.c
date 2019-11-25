@@ -56,7 +56,12 @@ int main()
 	for (int n = 0; n < 1; n++) {
 	for (int i = 0; i < sizeof(test) / sizeof(char*); i++) {
 		printf("add: `%s' as experssion#%u\n", test[i], expID);
-		parse_ret = tex_parse(test[i], 0, true, false);
+
+#ifdef SUPPORT_MATH_WILDCARDS
+#error("math wildcards not supported yet.")
+#else
+		parse_ret = tex_parse(test[i], 0, true, true);
+#endif
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
 			/* print operator tree */
