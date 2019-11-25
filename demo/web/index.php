@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=223d9e19c6f8ffe5" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=ff24a6ca3c5ab7f9" type="text/css"/>
 
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=223d9e19c6f8ffe5"></script>
+<script type="text/javascript" src="bundle.min.js?hash=ff24a6ca3c5ab7f9"></script>
 <style>
 img.social {
 	height: 16px;
@@ -127,12 +127,19 @@ a.btn, a.btn:visited{
 	<div style="display: inline-block; width: 5px;">
 	</div>
 
+	<a style="text-decoration: none; color: blue; font-size: 14px;"
+	href="/guide" target="_blank">
+	<img src="images/link.png" style="vertical-align: middle;"/>
+	user guide
+	</a>
+
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
 	<div id="handy-pad">
-		<p>If you are not familiar with TeX and math symbol names, we would suggest to use
+		<p>Unfamiliar with entering math symbols?
+		Check out a helpful hand written math recognizer
 		<a target="_blank" href="https://webdemo.myscript.com/views/math/index.html">
-		a hand written math recognizer</a> to assist your math keyword input.</p>
-		<p> Alternatively, we provide some commonly used math symbols below for you to pick. </p>
+		here</a>.</p>
+		<p> Alternatively, you can click button to insert symbols:</p>
 		<div v-for="p in pad">
 		<h3>{{p.tab_name}}</h3>
 		<ul class="pad-li-warp"><template v-for="b in p.buttons">
@@ -146,19 +153,15 @@ a.btn, a.btn:visited{
 		</template></ul>
 		</div>
 
-		<h3> Want More?</h3>
 		<p>Above only lists most frequently used math snippets. Refer to <a target="_blank"
 		href="http://www.onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">
-		this link</a> for a complete math-related TeX commands and use "raw query" to
-		input unlisted TeX commands.
+		this link</a> for a complete math-related TeX commands and paste what you need here.
 		</p>
 		<p>Willing to learn some Tex? <a target="_blank" href=
 		"https://en.wikibooks.org/wiki/LaTeX">Here</a> is a helpful tutorial.
 		</p>
-		<p>If you want to add more buttons on this "handy pad" or help us imporve in any way,
-		send us an issue (for suggestions) or a pull request (for proposed modifications) to our
-		<a target="_blank" href="https://github.com/approach0/search-engine/blob/master/demo/web/pad.js">
-		Github repository</a>.
+		<p>Want more? Make a request and add more buttons
+		<a target="_blank" href="https://github.com/approach0/search-engine/blob/master/demo/web/pad.js">here</a>.
 		</p>
 		<hr class="vsep"/>
 	</div>
@@ -166,22 +169,17 @@ a.btn, a.btn:visited{
 	<span class="collapse" title="Raw query and API">(+) raw query</span>
 	<div>
 		<p>Know TeX? Great! You may want to edit raw query below directly (separate keywords by commas).</p>
-		<input id="qry" style="padding-left: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
-		placeholder="empty"/>
+		<input id="qry" style="padding-left: 6px; margin-bottom: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
+		placeholder="Enter raw query here."/>
 
 		<!-- hidden URI parameters -->
 		<input id="q" type="hidden" value=
 		"<?php if (isset($_GET['q']) && is_scalar($_GET['q'])) echo htmlentities($_GET['q'], ENT_QUOTES,'UTF-8'); ?>"/>
 		<input id="p" type="hidden" value=
 		"<?php if (isset($_GET['p']) && is_scalar($_GET['p'])) echo htmlentities($_GET['p'], ENT_QUOTES,'UTF-8'); ?>"/>
-
-		<p>You can also make a query in command line. Copy and issue the command below:</p>
-		<p style="background-color: black; color: #bbb; padding: 3px 0 3px 6px; overflow-x: auto; white-space: nowrap;">
-		curl -v '{{url_root}}search-relay.php?p={{page}}&amp;q={{enc_uri}}'
-		<p>
-
 	</div>
 
+<!--
 	<span v-show="en_donation" class="collapse" title="Donate" id="donate-expander">(+) donations </span>
 	<div v-show="en_donation">
 		<h3>Please consider to donate</h3>
@@ -278,7 +276,7 @@ You can also donate to this project via bitcoin, Paypal, Alipay or WeChat. If yo
 		<li>Your StackExchange flair will be shown in our <a href="/backers" target="_blank">list of sponsors or backers</a> and your support will always be appreciated!</li>
 	</ul>
 
-	</div>  <!-- END v-else -->
+	</div>
 
 		<script src="https://js.stripe.com/v3"></script>
 		<div id="stripe-error-message" style="color: red"></div>
@@ -349,19 +347,7 @@ SE.init({
 });
 </script>
 	</div>
-
-
-	<a style="text-decoration: none; color: blue; font-size: 14px;"
-	href="/stats" target="_blank">
-	<img src="images/link.png" style="vertical-align: middle;"/>
-	query logs
-	</a>
-
-	<a style="text-decoration: none; color: blue; font-size: 14px; padding-left: 6px;"
-	href="/guide" target="_blank">
-	<img src="images/link.png" style="vertical-align: middle;"/>
-	user guide
-	</a>
+-->
 
 	<button style="position: absolute; right: 5px; top: 15px;"
 	type="button" id="search_button">Search</button>
@@ -403,11 +389,14 @@ SE.init({
 			+
 			<span style="color: red;">♡ </span>
 			=
-			<p>A math-aware search engine for Mathematics Stack Exchange.</p>
+			<p>A math-aware search engine.
+			</p>
+		[<a style="text-decoration: none; color: blue;" href="/stats" target="_blank">
+		query log
+		</a>]
 		</div>
 	</div>
 	<!-- Initial Footer END -->
-
 </div>
 <!-- Quiz App END -->
 
