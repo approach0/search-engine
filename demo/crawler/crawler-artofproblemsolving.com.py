@@ -368,6 +368,21 @@ def help(arg0):
           '[--hook-script <script name>] ' \
           '[-p | --post <post id>] ' \
           '\n' % (arg0))
+    print(
+    """Below are presumably the majority of posts on AoS (as of May 2018):
+
+    -c 3 (Middle School Math, > 33k posts)
+    -c 4 (High School Math > 71k posts)
+    -c 5 (Contests & Programs > 17k posts)
+    -c 6 (High School Olympiads > 214k posts)
+    -c 7 (College Math > 78k posts)
+
+    Although it seems there is no way to get the age of oldest post,
+    we can enter some huge number of days to crawl all posts under given
+    category, for example:
+
+        -n 0 -o 3650 (from now to 10 years back)
+    """)
     sys.exit(1)
 
 def main(args):
