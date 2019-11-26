@@ -16,7 +16,7 @@ from slimit.parser import Parser
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-root_url = "http://artofproblemsolving.com"
+root_url = "https://artofproblemsolving.com"
 file_prefix = 'aops'
 
 vt100_BLUE = '\033[94m'
@@ -43,6 +43,7 @@ def curl(sub_url, c, post = None):
     url = url.encode('iso-8859-1')
     c.setopt(c.URL, url)
     c.setopt(c.WRITEFUNCTION, buf.write)
+    c.setopt(c.FOLLOWLOCATION, True)
     #c.setopt(c.VERBOSE, True)
     if post is not None:
         c.setopt(c.POST, 1)
@@ -277,6 +278,10 @@ def list_category_links(category, newest, oldest, c):
             resp = parsed['response']
             if 'no_more_topics' in resp and resp['no_more_topics']:
                 break
+
+            # check response validity
+            if 'topics' not in resp:
+                raise Exception("no key in response.")
 
             for post in resp['topics']:
                 fetch_before = int(post['last_post_time'])
