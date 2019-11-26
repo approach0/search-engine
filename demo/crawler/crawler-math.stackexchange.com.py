@@ -354,8 +354,7 @@ def main(args):
 				os.system(extra_opt["hookscript"])
 
 			if extra_opt['patrol']:
-				# if patrol mode is enabled, repeatedly crawl
-				# the page range instead of breaking out of loop.
+				# if patrol mode is enabled, loop forever.
 				pass
 			else:
 				break
