@@ -36,5 +36,11 @@ int main()
 
 	test("\\sum_i a_i");
 	test("\\sum a_i");
+
+	test("a-b+c");
+	test("a+b-c");
+	test("a+b-c+");
+	test("a+b-c-");
+	test("-bc");
 	return 0;
 }

@@ -15,6 +15,7 @@ enum token_id {
 	T_FLOAT,
 	T_HANGER,
 	T_BASE,
+	T_SIGN,
 
 	/* pair tokens */
 	T_GROUP,

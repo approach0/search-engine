@@ -12,11 +12,21 @@ char grammar_last_err_str[MAX_GRAMMAR_ERR_STR_LEN] = "";
 	optr_attach(_child2, _father); \
 	_ret = grammar_optr_root = _father;
 
-#define MAKE_IT_BASE(_ret, _leaf, _hanger) \
-	struct optr_node *_base_; \
+#define MAKE_BASE(_ret, _leaf, _hanger) \
+	{ struct optr_node *_base_; \
 	_base_ = optr_alloc(S_base, T_BASE, WC_COMMUT_OPERATOR); \
 	OPTR_ATTACH(_ret, _leaf, NULL, _base_); \
-	OPTR_ATTACH(_ret, _base_, NULL, _hanger);
+	OPTR_ATTACH(_ret, _base_, NULL, _hanger); } do {} while (0)
+
+#define MAKE_SIGNED(_ret, _sign, _child, _father) \
+	({ struct optr_node *top, *sign; \
+		if (_child->token_id != _father->token_id && \
+		    _child->token_id != T_NIL) { \
+			sign = optr_alloc(_sign, T_SIGN, WC_COMMUT_OPERATOR); \
+			OPTR_ATTACH(_ret, _child, NULL, sign); \
+			top = sign; \
+		} else { top = _child; } top; \
+	})
 %}
 
 /* =========================
@@ -168,24 +178,31 @@ tex: %prec NULL_REDUCE {
 	OPTR_ATTACH($$, NULL, NULL, $1);
 }
 | tex ADD term {
-	OPTR_ATTACH($$, $1, $3, $2);
+	struct optr_node *op1 = MAKE_SIGNED($$, S_pos, $1, $2);
+	struct optr_node *op2 = MAKE_SIGNED($$, S_pos, $3, $2);
+	OPTR_ATTACH($$, op1, op2, $2);
 }
 | tex ADD script term {
-	OPTR_ATTACH($$, $1, $4, $2);
+	struct optr_node *op1 = MAKE_SIGNED($$, S_pos, $1, $2);
+	struct optr_node *op2 = MAKE_SIGNED($$, S_pos, $4, $2);
+	OPTR_ATTACH($$, op1, op2, $2);
 	optr_release($3);
 }
 | tex ADD {
-	OPTR_ATTACH($$, $1, NULL, $2);
+	struct optr_node *op = MAKE_SIGNED($$, S_pos, $1, $2);
+	OPTR_ATTACH($$, op, NULL, $2);
 }
 | tex ADD script {
-	OPTR_ATTACH($$, $1, NULL, $2);
+	struct optr_node *op = MAKE_SIGNED($$, S_pos, $1, $2);
+	OPTR_ATTACH($$, op, NULL, $2);
 	optr_release($3);
 }
 | tex NEG term {
-	struct optr_node *neg, *add = optr_alloc(S_plus, T_ADD,
-	                                         WC_COMMUT_OPERATOR);
-	OPTR_ATTACH(neg, $3, NULL, $2);
-	OPTR_ATTACH($$, neg, $1, add);
+	struct optr_node *add = optr_alloc(S_plus, T_ADD, WC_COMMUT_OPERATOR);
+	struct optr_node *op1 = MAKE_SIGNED($$, S_pos, $1, add);
+	struct optr_node *op2 = MAKE_SIGNED($$, S_neg, $3, add);
+	OPTR_ATTACH($$, op1, op2, add);
+	optr_release($2);
 }
 | tex NEG {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -428,7 +445,7 @@ pack: atom {
 atom: VAR {
 	struct optr_node *hanger;
 	hanger = optr_alloc(S_hanger, T_HANGER, WC_COMMUT_OPERATOR);
-	MAKE_IT_BASE($$, $1, hanger);
+	MAKE_BASE($$, $1, hanger);
 }
 | NUM {
 	OPTR_ATTACH($$, NULL, NULL, $1);
@@ -451,7 +468,7 @@ atom: VAR {
 	struct optr_node *hanger;
 	hanger = optr_copy($1);
 	hanger->sum_class = 1;
-	MAKE_IT_BASE($$, $1, hanger);
+	MAKE_BASE($$, $1, hanger);
 }
 | FRAC__ {
 	OPTR_ATTACH($$, NULL, NULL, $1);

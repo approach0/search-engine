@@ -9,6 +9,7 @@ enum symbol_id {
 	S_float,
 	S_hanger,
 	S_base,
+	S_pos, /* positive */
 
 	/* pair symbols */
 	S_bracket,
