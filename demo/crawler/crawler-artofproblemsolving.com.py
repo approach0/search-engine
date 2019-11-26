@@ -293,7 +293,7 @@ def get_file_path(post_id):
     directory = './tmp/' + str(post_id % DIVISIONS)
     return directory + '/' + file_prefix + str(post_id)
 
-def process_post(post_id, post_txt, url):
+def process_post(post_id, post_txt, url, extra_opt):
     # decide sub-directory
     file_path = get_file_path(post_id)
     try:
@@ -321,7 +321,8 @@ def process_post(post_id, post_txt, url):
 
     # two files are different, save files
     save_json(jsonfile, post_txt, url)
-    save_preview(file_path + '.html', post_txt, url)
+    if extra_opt["save-preview"]:
+        save_preview(file_path + '.html', post_txt, url)
 
 def crawl_category_topics(category, newest, oldest, extra_opt):
     c = get_curl()
@@ -336,7 +337,7 @@ def crawl_category_topics(category, newest, oldest, extra_opt):
             sub_url = '/community/c{}h{}'.format(category, topic_id)
             url = root_url + sub_url
             topic_txt = crawl_topic_page(sub_url, topic_id, get_curl())
-            process_post(topic_id, topic_txt, url)
+            process_post(topic_id, topic_txt, url, extra_opt)
         except (KeyboardInterrupt, SystemExit):
             print('[abort]')
             return 'abort'
@@ -365,6 +366,7 @@ def help(arg0):
           '[-o | --oldest <days>] ' \
           '[-c | --category <cnum>] ' \
           '[--patrol] ' \
+          '[--save-preview] ' \
           '[--hook-script <script name>] ' \
           '[-p | --post <post id>] ' \
           '\n' % (arg0))
@@ -395,6 +397,7 @@ def main(args):
                 'category=',
                 'post=',
                 'patrol',
+                'save-preview',
                 'hook-script='
             ]
         )
@@ -404,7 +407,8 @@ def main(args):
     # default arguments
     extra_opt = {
         "hookscript": "",
-        "patrol": False
+        "patrol": False,
+        "save-preview": False
     }
     category = -1
     post = -1
@@ -426,6 +430,8 @@ def main(args):
             continue
         elif opt in ("--patrol"):
             extra_opt["patrol"] = True
+        elif opt in ("--save-preview"):
+            extra_opt["save-preview"] = True
         elif opt in ("--hook-script"):
             extra_opt["hookscript"] = arg
         else:
@@ -435,7 +441,7 @@ def main(args):
         sub_url = "/community/c{}h{}".format(category, post)
         full_url = root_url + sub_url
         post_txt = crawl_topic_page(sub_url, post, get_curl())
-        process_post(post, post_txt, full_url)
+        process_post(post, post_txt, full_url, extra_opt)
         exit(0)
 
     if (category > 0):
