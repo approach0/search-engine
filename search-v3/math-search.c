@@ -125,7 +125,7 @@ void math_l2_invlist_iter_free(math_l2_invlist_iter_t l2_iter)
 	if (l2_iter->pruner)
 		math_pruner_free(l2_iter->pruner);
 
-	for (int i = 0; i < l2_iter->merge_iter->size; i++)
+	for (int i = 0; i < l2_iter->merge_iter->set.n; i++)
 		if (l2_iter->fh_symbinfo[i])
 			fclose(l2_iter->fh_symbinfo[i]);
 	free(l2_iter->fh_symbinfo);
