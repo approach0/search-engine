@@ -343,13 +343,19 @@ indices_run_query(struct indices* indices, struct query* qry)
 				goto next_iter;
 			}
 
+			/* non-requirement set follows up (for math keyword) */
+			int iid = iter->map[i];
+			if (i > iter->pivot) {
+				if (!pd_merger_iter_follow(iter, iid))
+					continue;
+			}
+
 			/* only consider hit iterators */
 			uint64_t cur = merger_map_call(iter, cur, i);
 			if (cur != iter->min)
 				continue;
 
 			/* accumulate precise partial score */
-			int iid = iter->map[i];
 			if (iid < n_term) {
 				struct term_qry *tq = term_qry + iid;
 				struct term_posting_item *item = term_item + iid;
