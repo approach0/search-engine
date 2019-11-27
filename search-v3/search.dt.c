@@ -423,9 +423,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 			} /* end threshold update */
 		} /* end minheap push */
 
+next_iter:;
+
 #ifdef DEBUG_INDICES_RUN_QUERY
-		{
-			float threshold = priority_Q_min_score(&rk_res);
+		if (inspect(iter->min)) {
 			printf("threshold -> %.2f\n", threshold);
 			for (int i = 0; i < iter->size; i++) {
 				int iid = iter->map[i];
@@ -445,9 +446,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 			fflush(stdout);
 		}
 #endif
-
-next_iter:
-		;
 	} /* end of merge */
 
 	/*
