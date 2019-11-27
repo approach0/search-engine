@@ -128,7 +128,7 @@ int pd_merger_iter_next(struct pd_merger *m)
 void pd_merger_iter_print(struct pd_merger* m, merger_keyprint_fun keyprint)
 {
 	/* header first */
-	printf("%c | %5s | %-6s %5s | %-6s %5s [%3s]\n", 'F',
+	printf("%c | %6s | %-6s %6s | %-6s %5s [%3s]\n", 'F',
 		"score", "accmax", "pdupp", "accupp", "upp", "inv");
 
 	for (int i = 0; i < m->size; i++) {
@@ -141,7 +141,7 @@ void pd_merger_iter_print(struct pd_merger* m, merger_keyprint_fun keyprint)
 		uint64_t cur = merger_map_call(m, cur, i);
 		char flag = ' ';
 		if (i == pivot) flag = 'P'; else if (i > pivot) flag = 'S';
-		printf("%c | %5.2f | %-6.2f %5.2f | %-6.2f %5.2f [%3d] ",
+		printf("%c | %6.2f | %-6.2f %6.2f | %-6.2f %5.2f [%3d] ",
 			flag, pd_upp + upp, acc_max, pd_upp, acc_upp, upp, invi);
 		if (NULL != keyprint)
 			keyprint(cur);
