@@ -222,6 +222,12 @@ static inline float internal_threshold(merge_set_t *ms, int iid, int optim,
 	return pess;
 }
 
+#ifdef DEBUG_L2_SEARCH
+static int inspect(uint64_t docID)
+{
+	return (docID == 142544);
+}
+#endif
 
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry)
@@ -297,7 +303,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 			int iid = iter->map[i];
 
 			if (iid < n_term) {
-				/* advance those in skipping set */
+				/* non-requirement set follows up (for text keyword) */
 				if (i > iter->pivot) {
 					if (!pd_merger_iter_follow(iter, iid))
 						continue;
@@ -315,6 +321,14 @@ indices_run_query(struct indices* indices, struct query* qry)
 		/* calculate proximity score */
 		float proximity = prox_score(prox, h);
 
+#ifdef DEBUG_L2_SEARCH
+		if (inspect(iter->min)) {
+			printf(ES_RESET_CONSOLE);
+			pd_merger_iter_print(iter, NULL);
+			printf("\n");
+			usleep(500);
+		}
+#endif
 		/*
 		 * calculate TF-IDF / SF-IPF score
 		 */

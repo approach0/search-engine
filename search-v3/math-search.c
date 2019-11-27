@@ -47,12 +47,12 @@ typedef struct ms_merger *merger_set_iter_t;
 #define merger_set_iter_follow ms_merger_iter_follow
 
 #ifdef DEBUG_MATH_SEARCH
-static int do_inspect;
-
 static void keyprint(uint64_t k)
 {
 	printf("#%u, #%u, r%u", key2doc(k), key2exp(k), key2rot(k));
 }
+
+static int do_inspect;
 
 static int inspect(uint64_t k)
 {
@@ -60,8 +60,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return 1;
-	//return (d == 314473 && e == 117 && r == 16) || (d == 227 && e == 18 && r == 10);
+	return (d == 142544 && e == 28) || (d == 142544 && e == 13);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
@@ -204,7 +203,7 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			}
 #endif
 		}
-skip:
+skip:;
 #ifndef MATH_PRUNING_STRATEGY_NONE
 		leftover = leftover - ref * ipf[iid];
 		estimate = score + leftover; /* new score estimation */
@@ -660,6 +659,5 @@ int math_l2_invlist_iter_skip(math_l2_invlist_iter_t l2_iter, uint64_t key_)
 		ms_merger_iter_print(iter, keyprint);
 	}
 #endif
-	printf("assign min=%lu \n", iter->min);
 	return (l2_iter->item.docID != UINT32_MAX);
 }

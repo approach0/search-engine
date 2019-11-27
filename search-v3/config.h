@@ -1,5 +1,6 @@
 #pragma once
 
+//#define DEBUG_L2_SEARCH
 //#define DEBUG_PREPARE_MATH_QRY
 //#define DEBUG_MATH_SEARCH
 //#define DEBUG_MATH_SEARCH__STRUCT_SCORING
