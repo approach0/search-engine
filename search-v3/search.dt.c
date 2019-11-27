@@ -18,12 +18,13 @@ typedef struct pd_merger *merger_set_iter_t;
 #define merger_set_iter_next pd_merger_iter_next
 #define merger_set_iter_free pd_merger_iter_free
 
-/* shorthands for level-2 math iterator */
+/* shorthand for level-2 math iterator */
 #define math_iter_cur  math_l2_invlist_iter_cur;
 #define math_iter_next math_l2_invlist_iter_next;
 #define math_iter_skip math_l2_invlist_iter_skip;
 #define math_iter_read math_l2_invlist_iter_read;
 
+/* shorthand for max upperbound calculation */
 #define MAX_AFTER(_iter, _i) \
 	(_i + 1 < (_iter)->size ? (_iter)->acc_max[_i + 1] : -FLT_MAX)
 
