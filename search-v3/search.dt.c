@@ -223,10 +223,10 @@ static inline float internal_threshold(merge_set_t *ms, int iid, int optim,
 	return pess;
 }
 
-#ifdef DEBUG_L2_SEARCH
+#ifdef DEBUG_INDICES_RUN_QUERY
 static int inspect(uint64_t docID)
 {
-	return (docID == 142544);
+	return 1;
 }
 #endif
 
@@ -283,15 +283,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 	struct math_l2_iter_item math_item[qry->n_math];
 	prox_input_t prox[qry->len];
 
-#ifdef DEBUG_INDICES_RUN_QUERY
-	foreach (iter, merger_set, &merge_set) {
-		pd_merger_iter_print(iter, NULL);
-		sleep(3);
-		printf("Begin merging !!!\n");
-		break;
-	}
-#endif
-
 	/*
 	 * Perform merging
 	 */
@@ -322,12 +313,13 @@ indices_run_query(struct indices* indices, struct query* qry)
 		/* calculate proximity score */
 		float proximity = prox_score(prox, h);
 
-#ifdef DEBUG_L2_SEARCH
+#ifdef DEBUG_INDICES_RUN_QUERY
 		if (inspect(iter->min)) {
+			usleep(500);
+			printf("\n");
+
 			printf(ES_RESET_CONSOLE);
 			pd_merger_iter_print(iter, NULL);
-			printf("\n");
-			usleep(500);
 		}
 #endif
 		/*
@@ -391,14 +383,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 			}
 		}
 
-#ifdef DEBUG_INDICES_RUN_QUERY
-		/*
-		 * print iteration
-		 */
-		// pd_merger_iter_print(iter, NULL);
-		// printf("\n");
-#endif
-
 		/*
 		 * update result only if needed
 		 */
@@ -417,10 +401,6 @@ indices_run_query(struct indices* indices, struct query* qry)
 			if (priority_Q_full(&rk_res)) {
 				/* update threshold */
 				threshold = priority_Q_min_score(&rk_res);
-#ifdef DEBUG_INDICES_RUN_QUERY
-				printf(ES_RESET_CONSOLE);
-				printf("threshold -> %.2f\n", threshold);
-#endif
 
 				/* update math static thresholds */
 				acc_max = -FLT_MAX; /* accumulated max score */
@@ -435,29 +415,36 @@ indices_run_query(struct indices* indices, struct query* qry)
 						iter->acc_upp[0], threshold);
 
 					acc_max = MAX(acc_max, iter->set.pd_upp[iid]);
-
-#ifdef DEBUG_INDICES_RUN_QUERY
-					if (math_iter[mid]) {
-						printf("[%d] dynm_threshold -> %.2f",
-							iid, dynm_threshold[mid]);
-						printf(" math_threshold -> %.2f\n",
-							math_threshold[mid]);
-						printf("\t");
-						math_pruner_print_stats(math_iter[mid]->pruner);
-					}
-#endif
 				}
 
 				/* update pivot */
 				pd_merger_lift_up_pivot(iter, threshold,
 				                        prox_upp_relax, (void*)&proximity_upp);
+			} /* end threshold update */
+		} /* end minheap push */
+
 #ifdef DEBUG_INDICES_RUN_QUERY
-				pd_merger_iter_print(iter, NULL);
+		{
+			float threshold = priority_Q_min_score(&rk_res);
+			printf("threshold -> %.2f\n", threshold);
+			for (int i = 0; i < iter->size; i++) {
+				int iid = iter->map[i];
+				int mid = iid - n_term;
+				if (mid < 0) { continue; }
+
+				if (math_iter[mid]) {
+					printf("[%d] dynm_threshold -> %.2f",
+						iid, dynm_threshold[mid]);
+					printf(" math_threshold -> %.2f\n",
+						math_threshold[mid]);
+					printf("\t");
+					math_pruner_print_stats(math_iter[mid]->pruner);
+				}
 				printf("\n");
-				fflush(stdout);
-#endif
 			}
+			fflush(stdout);
 		}
+#endif
 
 next_iter:
 		;
