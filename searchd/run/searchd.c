@@ -56,12 +56,12 @@ httpd_on_recv(const char *req, void *arg_)
 		fprintf(log_fh, "%s\n", "Empty query.");
 		goto reply;
 
-	} else if (qry.n_math >= MAX_SEARCHD_MATH_KEYWORDS) {
+	} else if (qry.n_math > MAX_SEARCHD_MATH_KEYWORDS) {
 		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_MATH_KW);
 		fprintf(log_fh, "%s\n", "Too many math keywords");
 		goto reply;
 
-	} else if (qry.n_term >= MAX_SEARCHD_TERM_KEYWORDS) {
+	} else if (qry.n_term > MAX_SEARCHD_TERM_KEYWORDS) {
 		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_TERM_KW);
 		fprintf(log_fh, "%s\n", "Too many text keywords");
 		goto reply;
