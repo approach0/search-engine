@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include "indices-v3/config.h" /* for INDICES_TXT_LEXER */
 #include "txt2snippet.h"
 #include "txt-seg/lex.h"
 
@@ -26,7 +27,7 @@ list txt2snippet(const char *txt, size_t txt_sz, uint32_t *pos, uint32_t n)
 
 	/* invoke lexer */
 	txt_fh = fmemopen((void *)txt, txt_sz, "r");
-	lex_eng_file(txt_fh);
+	INDICES_TXT_LEXER(txt_fh);
 
 	/* print snippet */
 	snippet_read_file(txt_fh, &hi_list);
@@ -67,13 +68,7 @@ static int handle_slice(struct lex_slice *slice)
 		break;
 
 	case LEX_SLICE_TYPE_MIX_SEG:
-		fprintf(stderr, "Not implemented for mix-seg.\n");
-		assert(0);
-
-		break;
-
 	case LEX_SLICE_TYPE_ENG_SEG:
-		/* this is a pure English segment */
 
 		add_highlight_seg(slice->mb_str, slice->offset, str_sz, NULL);
 		break;

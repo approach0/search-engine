@@ -1,5 +1,6 @@
 #pragma once
 /* dependency headers */
+#include "indices-v3/config.h" /* for INDICES_TXT_LEXER */
 #include "indices-v3/indices.h"
 #include "query.h"
 #include "rank.h"

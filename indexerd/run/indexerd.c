@@ -6,6 +6,7 @@
 #include "mhook/mhook.h"
 #include "httpd/httpd.h"
 #include "parson/parson.h"
+#include "txt-seg/txt-seg.h"
 #include "txt-seg/lex.h"
 
 #include "config.h"
@@ -110,6 +111,7 @@ ret:
 int main(int argc, char* argv[])
 {
 	char indexd_uri[1024] = INDEXD_DEFAULT_URI;
+	char dict_path[1024] = ".";
 	struct uri_handler handlers[1];
 	struct indices indices;
 	struct indexer *indexer;
@@ -117,7 +119,7 @@ int main(int argc, char* argv[])
 	char index_output_dir[MAX_PATH_LEN] = INDEXD_DEFAULT_DIR;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "ho:u:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "ho:u:p:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -127,6 +129,7 @@ int main(int argc, char* argv[])
 			printf("%s -h | "
 			       "-o <output> (default: " INDEXD_DEFAULT_DIR ") | "
 			       "-p <port> (default is %hu) | "
+			       "-d <dict path> (default is '.') | "
 			       "-u <index uri> (default is " INDEXD_DEFAULT_URI ")"
 			       "\n", argv[0], INDEXD_DEFAULT_PORT);
 			printf("\n");
@@ -142,6 +145,10 @@ int main(int argc, char* argv[])
 			sscanf(optarg, "%hu", &port);
 			break;
 
+		case 'd':
+			strcpy(dict_path, optarg);
+			break;
+
 		case 'u':
 			if (optarg[0] != '/')
 				prerr("Error: URI should start with a slash.\n", 0);
@@ -155,12 +162,16 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	/* open segmentation dictionary */
+	printf("open segment dictionary at %s ...\n", dict_path);
+	text_segment_init(dict_path);
+
 	/* open specified indices */
 	printf("open indices at %s ...\n", index_output_dir);
 	indices_open(&indices, index_output_dir, INDICES_OPEN_RW);
 
 	/* create indexer for specified indices */
-	indexer = indexer_alloc(&indices, &lex_eng_file, &parser_exception);
+	indexer = indexer_alloc(&indices, INDICES_TXT_LEXER, &parser_exception);
 
 	/* prepare and spawn httpd */
 	strcpy(handlers[0].uri, indexd_uri);
@@ -177,6 +188,8 @@ int main(int argc, char* argv[])
 	printf("closing index...\n");
 	indexer_free(indexer);
 	indices_close(&indices);
+	text_segment_free();
+
 	printf("\n");
 
 exit:

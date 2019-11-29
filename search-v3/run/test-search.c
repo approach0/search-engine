@@ -9,13 +9,14 @@
 int main(int argc, char *argv[])
 {
 	struct indices indices;
-	char indices_path[1024] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
+	char indices_path[1024] = "./tmp";
+	char dict_path[1024] = ".";
 	struct query qry = QUERY_NEW;
 	int page = 1;
 	size_t ti_cache_limit = 0, mi_cache_limit = 0;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "hi:t:m:p:c:C:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:d:t:m:p:c:C:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -24,17 +25,22 @@ int main(int argc, char *argv[])
 			printf("USAGE:\n");
 			printf("%s \n"
 			       " -h (show this help text) \n"
-			       " -i <index path> \n"
+			       " -i <index path> (default: %s) \n"
+			       " -d <dict path> (default: %s) \n"
 			       " -t <text keyword> \n"
 			       " -m <math keyword> \n"
 			       " -p <page> (0 for all pages) \n"
 			       " -c <term cache size (MB)> \n"
 			       " -C <math cache size (MB)> \n"
-			       "\n", argv[0]);
+			       "\n", argv[0], indices_path, dict_path);
 			return 0;
 
 		case 'i':
 			strcpy(indices_path, optarg);
+			break;
+
+		case 'd':
+			strcpy(dict_path, optarg);
 			break;
 
 		case 't':
@@ -63,10 +69,15 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* open indices */
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		prerr("indices open failed: %s", indices_path);
 		goto close;
 	}
+
+	/* open segmentation dictionary */
+	printf("open segment dictionary at %s ...\n", dict_path);
+	text_segment_init(dict_path);
 
 	/* cache index */
 	indices.ti_cache_limit = ti_cache_limit;
@@ -97,6 +108,9 @@ int main(int argc, char *argv[])
 
 	/* free query */
 	query_delete(qry);
+
+	/* free text segment */
+	text_segment_free();
 
 close:
 	indices_close(&indices);

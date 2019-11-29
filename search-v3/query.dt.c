@@ -5,6 +5,7 @@
 #include "common/common.h"
 #include "wstring/wstring.h"
 #include "txt-seg/lex.h"
+#include "indices-v3/config.h" /* for INDICES_TXT_LEXER */
 #include "query.h"
 
 void query_delete(struct query qry)
@@ -121,7 +122,7 @@ int query_digest_txt(struct query *qry, const char* utf8_txt)
 	/* invoke lexer */
 	text_fh = fmemopen((void *)utf8_txt, strlen(utf8_txt), "r");
 
-	lex_eng_file(text_fh);
+	INDICES_TXT_LEXER(text_fh);
 
 	/* close file handler */
 	fclose(text_fh);

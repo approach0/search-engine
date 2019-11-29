@@ -195,6 +195,7 @@ int main(int argc, char *argv[])
 	/* command line arguments */
 	int                   trec_log = 0;
 	char                 *index_path = NULL;
+	char                  dict_path[1024] = ".";
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	size_t                mi_cache_limit = DEFAULT_MATH_INDEX_CACHE_SZ;
 	size_t                ti_cache_limit = DEFAULT_TERM_INDEX_CACHE_SZ;
@@ -210,7 +211,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:p:c:C:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:d:p:c:C:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -221,6 +222,7 @@ int main(int argc, char *argv[])
 			       " -h (help) \n"
 			       " -T (TREC log) \n"
 			       " -i <index path> \n"
+			       " -d <dict path> \n"
 			       " -p <port> \n"
 			       " -c <term cache size (MB), default: %u MB> \n"
 			       " -C <math cache size (MB), default: %u MB> \n"
@@ -234,6 +236,10 @@ int main(int argc, char *argv[])
 
 		case 'i':
 			index_path = strdup(optarg);
+			break;
+
+		case 'd':
+			strcpy(dict_path, optarg);
 			break;
 
 		case 'p':
@@ -270,6 +276,10 @@ int main(int argc, char *argv[])
 		printf("Index open failed.\n");
 		goto close;
 	}
+
+	/* open segmentation dictionary */
+	printf("open segment dictionary at %s ...\n", dict_path);
+	text_segment_init(dict_path);
 
 	/* setup cache */
 	indices.ti_cache_limit = ti_cache_limit MB;
@@ -308,6 +318,9 @@ int main(int argc, char *argv[])
 		signal(SIGUSR1, signal_handler);
 		slave_run(&searchd_args);
 	}
+
+	/* free text segment */
+	text_segment_free();
 
 close:
 	/* close indices */
