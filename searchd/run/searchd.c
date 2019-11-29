@@ -9,6 +9,7 @@
 #include "timer/timer.h"
 
 #include "search-v3/search.h"
+#include "txt-seg/txt-seg.h"
 #include "httpd/httpd.h"
 
 #include "config.h"
@@ -278,7 +279,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* open segmentation dictionary */
-	printf("open segment dictionary at %s ...\n", dict_path);
+	printf("Open segment dictionary at [%s]\n", dict_path);
 	text_segment_init(dict_path);
 
 	/* setup cache */

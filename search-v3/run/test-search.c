@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "mhook/mhook.h"
+#include "txt-seg/txt-seg.h"
 #include "search.h"
 #include "query.h"
 #include "print-search-results.h"
@@ -10,7 +11,6 @@ int main(int argc, char *argv[])
 {
 	struct indices indices;
 	char indices_path[1024] = "./tmp";
-	char dict_path[1024] = ".";
 	struct query qry = QUERY_NEW;
 	int page = 1;
 	size_t ti_cache_limit = 0, mi_cache_limit = 0;
@@ -26,13 +26,13 @@ int main(int argc, char *argv[])
 			printf("%s \n"
 			       " -h (show this help text) \n"
 			       " -i <index path> (default: %s) \n"
-			       " -d <dict path> (default: %s) \n"
+			       " -d <dict path> (should be passed before -t) \n"
 			       " -t <text keyword> \n"
 			       " -m <math keyword> \n"
 			       " -p <page> (0 for all pages) \n"
 			       " -c <term cache size (MB)> \n"
 			       " -C <math cache size (MB)> \n"
-			       "\n", argv[0], indices_path, dict_path);
+			       "\n", argv[0], indices_path);
 			return 0;
 
 		case 'i':
@@ -40,11 +40,12 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'd':
-			strcpy(dict_path, optarg);
+			printf("open segment dictionary at [%s]\n", optarg);
+			text_segment_init(optarg);
 			break;
 
 		case 't':
-			query_push_kw(&qry, optarg, QUERY_KW_TERM, QUERY_OP_OR);
+			query_digest_txt(&qry, optarg);
 			break;
 
 		case 'm':
@@ -74,10 +75,6 @@ int main(int argc, char *argv[])
 		prerr("indices open failed: %s", indices_path);
 		goto close;
 	}
-
-	/* open segmentation dictionary */
-	printf("open segment dictionary at %s ...\n", dict_path);
-	text_segment_init(dict_path);
 
 	/* cache index */
 	indices.ti_cache_limit = ti_cache_limit;
@@ -109,11 +106,12 @@ int main(int argc, char *argv[])
 	/* free query */
 	query_delete(qry);
 
+close:
+	indices_close(&indices);
+
 	/* free text segment */
 	text_segment_free();
 
-close:
-	indices_close(&indices);
 	mhook_print_unfree();
 	return 0;
 }
