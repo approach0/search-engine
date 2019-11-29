@@ -282,7 +282,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 	/*
 	 * Threshold and proximity upperbound
 	 */
-	float threshold = 0.f;
+	float threshold = -FLT_MAX;
 	const float proximity_upp = prox_upp();
 	// printf("proximity upperbound: %.2f\n", proximity_upp);
 
