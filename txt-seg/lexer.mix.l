@@ -9,8 +9,13 @@
 #include "lex.h"
 %}
 
-engword [a-zA-Z]
+ /* English */
+engword [a-zA-Z0-9]
+
+ /* From ASCII 120 to multi-bytes */
 chinese [\x80-\xf3]
+
+ /* Almost all characters */
 mathsym [\x20-\xf3]
 
  /* ==================
@@ -20,7 +25,7 @@ mathsym [\x20-\xf3]
 
 %%
  /* text */
-({engword}|{chinese}|[\ ])+            { lex_handle_mix_text(yytext, yyleng); }
+({engword}|{chinese})+                 { lex_handle_mix_text(yytext, yyleng); }
 
  /* inline math */
 "[imath]"            { BEGIN(imath); MORE; /* Append next tokens to yytext */ }

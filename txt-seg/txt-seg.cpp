@@ -25,8 +25,8 @@ int text_segment_init(const char *path)
 	if (!file_exists(dict_path) ||
 	    !file_exists(hmm_path) ||
 	    !file_exists(usr_dict_path)) {
-//		fprintf(stderr, "cannot open dict at (%s, %s, %s)\n",
-//		        dict_path, hmm_path, usr_dict_path);
+		fprintf(stderr, "Cannot open Jieba dict at (%s, %s, %s)\n",
+		        dict_path, hmm_path, usr_dict_path);
 		return 1;
 	}
 
@@ -46,6 +46,11 @@ void text_segment_free()
 	}
 }
 
+int text_segment_ready()
+{
+	return (jieba != NULL);
+}
+
 list text_segment(const char *text)
 {
 	list ret = LIST_NULL;
@@ -63,9 +68,10 @@ list text_segment(const char *text)
 		
 		seg = (struct text_seg*)malloc(sizeof(struct text_seg));
 
-		strcpy(seg->str, it->word.c_str());
+		strncpy(seg->str, it->word.c_str(), MAX_TXT_SEG_BYTES);
+		seg->str[MAX_TXT_SEG_BYTES - 1] = '\0';
+
 		seg->offset = it->offset;
-		seg->n_bytes = strlen(seg->str);
 		LIST_NODE_CONS(seg->ln);
 
 		list_insert_one_at_tail(&seg->ln, &ret, NULL, NULL);
