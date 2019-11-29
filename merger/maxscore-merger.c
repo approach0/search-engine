@@ -117,7 +117,7 @@ int ms_merger_iter_next(struct ms_merger *m)
 	}
 
 	m->min = ms_merger_min(m);
-	return 1;
+	return (m->min != UINT64_MAX);
 }
 
 void ms_merger_iter_print(struct ms_merger* m, merger_keyprint_fun keyprint)
