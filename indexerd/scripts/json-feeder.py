@@ -6,7 +6,7 @@ import time
 import sys
 import os
 
-def send_json(json_obj):
+def send_json(json_obj, url):
 	headers = {'content-type': 'application/json'}
 	r = requests.post(url, json=json_obj, headers=headers)
 	j = json.loads(r.content.decode("utf-8"))
@@ -58,7 +58,7 @@ for dirname, basename in each_json_file(corpus, endat):
 	with open(path, 'r') as fh:
 		try:
 			j = json.load(fh)
-			docid = send_json(j)
+			docid = send_json(j, url)
 		except Exception as err:
 			print(err)
 			break

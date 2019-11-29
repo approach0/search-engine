@@ -1,0 +1,2 @@
+正整数数列 [imath]a_1 > 1, a_{n+1}=a_n + p(a_n)[/imath]. 这里 [imath]p(a_n)[/imath]表示 [imath]a_n[/imath] 的最大素因子。
+证明：[imath]\{a_n\}[/imath]中有完全平方数。

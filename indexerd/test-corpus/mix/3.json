@@ -1,0 +1,1 @@
+{"url": "file:///home/tk/Desktop/search-engine-v3/v3/indexerd/test-corpus/mix/3.blog", "text": "是否存在正整数[imath]a_0, a_1,a_2 ..., a_{19}[/imath]满足：\n[imath]x^{20}+a_{19}x^{19}+...+a_1x +a_0[/imath]\n没有实根且对任意[imath]0\\le i<j \\le 19[/imath]，交换[imath]x^i[/imath]和[imath]x^j[/imath]前系数，多项式都有实根？并证明你的结论。\n"}
