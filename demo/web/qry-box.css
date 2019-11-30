@@ -33,7 +33,7 @@ div.qry-div-fix {
 }
 
 #qry-input-area {
-	box-shadow: inset 0 1px 2px black;
+	box-shadow: inset 0 1px 2px #ebebeb;
 }
 
 .pl_holder {
@@ -83,7 +83,7 @@ hr.vsep {
 
 button {
 	color: #333;
-	border-color: #ccc;
+	border-color: #8590a6;
 	background-color: #fff;
 	width: 128px;
 	border: 1px solid #ccc;
@@ -95,7 +95,7 @@ button {
 
 button:hover {
 	background-color: #f8f8f8;
-	border-color: #adadad;
+	border-color: #ebebeb;
 }
 
 ul.pad-li-wrap {

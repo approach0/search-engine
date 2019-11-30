@@ -166,6 +166,18 @@ $(document).ready(function() {
 		});
 	};
 
+	var focus_style = function () {
+		$("#qry-input-area").css("border", "1px solid #8590a6");
+		$("#qry-input-area").css("background-color", "white");
+		$("#qry-input-box").css("background-color", "white");
+	};
+
+	var blur_style = function () {
+		$("#qry-input-area").css("border", "1px solid #ebebeb");
+		$("#qry-input-area").css("background-color", "#f6f6f6");
+		$("#qry-input-box").css("background-color", "#f6f6f6");
+	};
+
 	var render_mq_edit = function () {
 		var ele = document.getElementById("math-input");
 		var mq = MQ.MathField(ele, {
@@ -197,6 +209,7 @@ $(document).ready(function() {
 			}
 		});
 
+		focus_style();
 		if (mq) mq.focus();
 		return mq;
 	};
@@ -405,7 +418,6 @@ $(document).ready(function() {
 		type_and_click_search(q, page, true);
 	}
 
-
 	/* Vue instance */
 	var qry_vm = new Vue({
 		el: "#qry-input-vue-app",
@@ -492,6 +504,7 @@ $(document).ready(function() {
 			},
 			area_on_click: function (ev) {
 				$("#qry-input-box").focus();
+				$("#qry-input-area").animate({"min-height": "60px"});
 				this.ever_focused = true;
 			},
 			on_input: input_box_on_keyup,
@@ -507,11 +520,41 @@ $(document).ready(function() {
 					raw_str_2_query();
 					Vue.nextTick(function () {
 						tex_render_fast("div.qry-div-fix");
+						blur_style();
 					});
 				}
+			},
+			register_focus_events: function () {
+				$("#qry-input-box").focus(function () {
+					focus_style();
+				});
+				$("#qry-input-box").blur(function () {
+					blur_style();
+				});
 			}
 		}
 	});
+
+	/* initial focus/blur style */
+	setTimeout(function () {
+		qry_vm.register_focus_events();
+		$("#qry-input-box").blur();
+
+		/* raw query input box */
+		$("#qry").focus(function () {
+			$(this).css("border", "1px solid #8590a6");
+			$(this).css("background-color", "white");
+		});
+		$("#qry").blur(function () {
+			$(this).css("border", "1px solid #ebebeb");
+			$(this).css("background-color", "#f6f6f6");
+		});
+		$("#qry").blur();
+	}, 500);
+
+	qry_vm.$watch('items', function (newVal, oldVal) {
+		qry_vm.register_focus_events();
+	})
 
 	qry_vm.$watch('SE_user', function (newVal, oldVal) {
 		$('#init-footer').stickToBottom();

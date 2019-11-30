@@ -23,8 +23,8 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=16990fab374e5a84" type="text/css"/>
-
+<link rel="stylesheet" href="all.css?hash=0a2e333616bc7979" type="text/css"/>
+<!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
 
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=16990fab374e5a84"></script>
+<script type="text/javascript" src="bundle.min.js?hash=0a2e333616bc7979"></script>
 <style>
 img.social {
 	height: 16px;
@@ -88,13 +88,12 @@ a.btn, a.btn:visited{
 
 <!-- Query input area -->
 <div class="toleft" style="display: flex">
-<div style="flex: 0;">
+<div v-if="!ever_focused && raw_str.trim().length == 0" style="flex: 0;">
 	<a href=".">
-	<img v-if="!ever_focused && raw_str.trim().length == 0" src="images/logo32.png"/>
-	<img v-else style="margin-top: 0px" src="images/logo64.png"/>
+	<img src="images/logo32.png"/>
 	</a>
 </div>
-<div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 16px;" v-on:click="area_on_click">
+<div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 6px;" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
 			<div class="qry-div-fix">
@@ -112,11 +111,12 @@ a.btn, a.btn:visited{
 		<li v-if="i.type == 'term-input'" class="qry-li">
 			<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
 			type="text" id="qry-input-box" class="pl_holder"
-			placeholder="Enter keywords here, type $ for math keyword."/>
+			placeholder="Enter keywords here, type $ for math formula."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
-			<span class="pl_holder"><b>You are editing a math keyword</b>.
+			<span class="pl_holder">
+			<b>You are editing a math formula</b>.
 			When you finish, press enter or click <a @click="on_finish_math_edit" href="#">here</a>.</span>
 		</li>
 </template></ul>
@@ -172,7 +172,7 @@ a.btn, a.btn:visited{
 	<div>
 		<p>Know TeX? Great! You may want to edit raw query below directly (separate keywords by commas).</p>
 		<input id="qry" style="padding-left: 6px; margin-bottom: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
-		placeholder="Enter raw query here."/>
+		placeholder="Enter raw query ..."/>
 
 		<!-- hidden URI parameters -->
 		<input id="q" type="hidden" value=
@@ -382,8 +382,8 @@ SE.init({
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div class="toleft" style="text-align: center;">
 			<a target="_blank" href="https://twitter.com/approach0"
-			title="Approach0" style="vertical-align:middle;">
-			<img src="images/logo32.png"/></a>
+			title="Approach0 (Version 3)" style="vertical-align:middle;">
+			<img src="images/logo42-v3.png"/></a>
 			=
 			<a target="_blank" href="https://math.stackexchange.com/"
 			title="Math StackExchange" style="vertical-align:middle;">
@@ -395,7 +395,7 @@ SE.init({
 			+
 			<span style="color: red; font-size:16px; font-weight:bold;">♡ </span>
 
-			<p>A math-aware search engine.
+			<p>Approach0: A math-aware search engine indexing MSE and AoPS data.
 			</p>
 		[<a style="text-decoration: none; color: blue;" href="/stats" target="_blank">
 		query log
