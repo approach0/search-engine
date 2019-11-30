@@ -22,6 +22,10 @@
 //#define MATH_PRUNING_STRATEGY_GBP_NUM
   #define MATH_PRUNING_STRATEGY_GBP_LEN
 
+//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .30f /* aggressive */
+  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
+//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
+
 #define MATH_SCORE_ETA 0.05f
 
 #define MATH_BASE_WEIGHT 6.f
@@ -44,16 +48,8 @@
 #define BM25_DEFAULT_B  0.75
 #define BM25_DEFAULT_K1 1.2 /* lower TF upperbound, less rewards to TF */
 
-#define MAX_SEARCH_INVLISTS 64
-
 #include "txt-seg/config.h"
 #define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
 
 #define PRINT_SEARCH_QUERIES
-
-//#define DEBUG_INDICES_RUN_QUERY
-
-//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .30f /* aggressive */
-  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
-//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
