@@ -223,6 +223,24 @@ int math_pruner_update(struct math_pruner *pruner, float threshold)
 	return cnt;
 }
 
+float math_pruner_max_sum_ipf(struct math_pruner* pruner)
+{
+	float max_sum_ipf = 0;
+	for (int i = 0; i < pruner->n_qnodes; i++) {
+		struct math_pruner_qnode *qnode = pruner->qnodes + i;
+		if (max_sum_ipf < qnode->sum_ipf)
+			max_sum_ipf = qnode->sum_ipf;
+	}
+	return max_sum_ipf;
+}
+
+float math_pruner_init_threshold(struct math_pruner* pruner)
+{
+	float max_sum_ipf = math_pruner_max_sum_ipf(pruner);
+	max_sum_ipf *= MATH_PRUNING_INIT_THRESHOLD_FACTOR;
+	return math_score_low(pruner->msf, max_sum_ipf);
+}
+
 /*
  * Below are functions manipulating iterators
  */

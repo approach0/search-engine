@@ -125,17 +125,20 @@ static int prepare_math_keywords(
 		if (kw->type != QUERY_KW_TEX)
 			continue;
 
-		/* math level-2 inverted list and iterator */
+		/* prepare math level-2 inverted list */
 		char *kw_str = wstr2mbstr(kw->wstr); /* utf-8 */
 		struct math_l2_invlist *minv = math_l2_invlist(indices->mi, kw_str,
 			math_th + n_math, dynm_th + n_math);
-		math_l2_invlist_iter_t miter = NULL;
+		m_invlist[n_math] = minv;
 
 		/* generate math iterator only if math invlist is valid */
+		math_l2_invlist_iter_t miter = NULL;
 		if (minv) {
 			miter = math_l2_invlist_iterator(minv);
-			m_invlist[n_math] = minv;
 			m_iter[n_math] = miter;
+
+			/* assign math l2 initial threshold */
+			math_th[n_math] = math_pruner_init_threshold(miter->pruner);
 		}
 
 #ifdef PRINT_SEARCH_QUERIES
@@ -163,8 +166,8 @@ static int prepare_math_keywords(
 			ms->read  [n] = (merger_callbk_read)math_iter_read;
 
 #ifdef PRINT_SEARCH_QUERIES
-			printf("(level 2) %6.2f `%s' (TeX, upp=%.2f)\n",
-				ms->upp[n], kw_str, math_upp);
+			printf("(level 2) %6.2f `%s' (TeX, upp=%.2f, th=%.2f)\n",
+				ms->upp[n], kw_str, math_upp, math_th[n_math]);
 			math_qry_print(&minv->mq, 0);
 #endif
 		}
@@ -176,10 +179,10 @@ static int prepare_math_keywords(
 	/* find out the max math keywords */
 	int max_i = -1;
 	float max = -FLT_MAX;
-	for (int i = 0; i < n_math; i++) {
-		if (max < ms->upp[base + i]) {
-			max = ms->upp[base + i];
-			max_i = base + i;
+	for (int i = base; i < ms->n; i++) {
+		if (max < ms->upp[i]) {
+			max = ms->upp[i];
+			max_i = i;
 		}
 	}
 
@@ -396,9 +399,10 @@ indices_run_query(struct indices* indices, struct query* qry)
 					int mid = iid - n_term;
 					if (mid < 0) { continue; }
 
-					math_threshold[mid] = internal_threshold(math_weight[mid],
+					float tmp = internal_threshold(math_weight[mid],
 						acc_before, iter->acc_upp[i] - iter->set.upp[iid],
 						threshold);
+					math_threshold[mid] = MAX(tmp, math_threshold[mid]);
 
 					acc_before += iter->set.upp[iid];
 				}

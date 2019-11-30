@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <float.h> /* for FLT_MAX */
 #include <unistd.h> /* for dup() */
 
 #include "common/common.h"
@@ -111,7 +112,7 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 	/* now, pointing to the first REAL item */
 	l2_iter->real_curID     = key2doc(l2_iter->merge_iter->min);
 	l2_iter->item.docID     = l2_iter->real_curID;
-	l2_iter->last_threshold = -1.f;
+	l2_iter->last_threshold = -FLT_MAX;
 	l2_iter->threshold      = inv->threshold;
 	l2_iter->dynm_threshold = inv->dynm_threshold;
 
@@ -337,15 +338,9 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 
 float math_l2_invlist_iter_upp(math_l2_invlist_iter_t l2_iter)
 {
-	struct math_pruner* pruner = l2_iter->pruner;
 	struct math_score_factors *msf = l2_iter->msf;
+	float max_sum_ipf = math_pruner_max_sum_ipf(l2_iter->pruner);
 
-	float max_sum_ipf = 0;
-	for (int i = 0; i < pruner->n_qnodes; i++) {
-		struct math_pruner_qnode *qnode = pruner->qnodes + i;
-		if (max_sum_ipf < qnode->sum_ipf)
-			max_sum_ipf = qnode->sum_ipf;
-	}
 	return math_score_upp(msf, max_sum_ipf);
 }
 

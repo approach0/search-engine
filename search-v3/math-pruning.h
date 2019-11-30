@@ -48,6 +48,9 @@ int  math_pruner_update(struct math_pruner*, float);
 void math_pruner_print(struct math_pruner*);
 void math_pruner_print_stats(struct math_pruner*);
 
+float math_pruner_max_sum_ipf(struct math_pruner*);
+float math_pruner_init_threshold(struct math_pruner*);
+
 void math_pruner_iters_drop(struct math_pruner *, struct ms_merger *);
 void math_pruner_iters_sort_by_maxref(struct math_pruner*, struct ms_merger*);
 void math_pruner_iters_gbp_assign(struct math_pruner*, struct ms_merger*, int);

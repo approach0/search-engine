@@ -53,3 +53,7 @@
 #define PRINT_SEARCH_QUERIES
 
 //#define DEBUG_INDICES_RUN_QUERY
+
+//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .30f /* aggressive */
+  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
+//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
