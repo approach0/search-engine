@@ -3,8 +3,8 @@ var response = {
 	'ret_str': '',
 	'tot_pages': 0,
 	'cur_page': 0,
-	'prev': '',
-	'next': '',
+	'enc_qry': null,
+	'pages': [],
 	'SE_user': 0,
 	'SE_netID': 0,
 	'SE_site': 'https://stackexchange.com',
@@ -40,29 +40,33 @@ function render_search_results() {
 }
 
 function handle_search_res(res, enc_qry, page) {
+	/* save results */
 	response.ret_code = res.ret_code;
 	response.ret_str = res.ret_str;
+
 	response.tot_pages = res.tot_pages;
 	response.cur_page = page;
+	response.enc_qry = enc_qry;
 
 	response.hits = res.hits;
 
-	if (page - 1 > 0)
-		response.prev = str_fmt(
-			'srch_enc_qry("{0}", {1}, true)',
-			enc_qry, page - 1
-		);
-	else
-		response.prev = '';
+	/* calculate pages array shown in pagination */
+	var wind = 5; /* better be odd */
+	var half = Math.ceil((wind - 1) / 2);
+	var left = Math.max(1, page - half);
+	var right = Math.min(res.tot_pages, page + half);
 
-	if (page + 1 <= res.tot_pages)
-		response.next = str_fmt(
-			'srch_enc_qry("{0}", {1}, true)',
-			enc_qry, page + 1
-		);
-	else
-		response.next = '';
+	if (left == 1)
+		right = Math.min(res.tot_pages, left + wind - 1);
+	else if (right == res.tot_pages)
+		left = Math.max(1, right - wind + 1);
 
+	response.pages = [];
+	for (var i = left; i <= right; i++) {
+		response.pages.push(i);
+	};
+
+	/* show search results */
 	render_search_results();
 
 //	setTimeout(function(){
@@ -132,6 +136,11 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 		                  "?q=" + enc_qry + "&p=" + page);
 		//console.log('push history state...');
 	}
+}
+
+function goto_page(page) {
+	if (page != response.cur_page)
+		srch_enc_qry(response.enc_qry, page, true);
 }
 
 function srch_qry(qry, page, is_pushState) {
@@ -231,6 +240,12 @@ $(document).ready(function() {
 					scope: [],
 					networkUsers: true
 				});
+			},
+			gen_href: function(page) {
+				if (page == this.cur_page)
+					return 'javascript:void(0)';
+				else
+					return '#';
 			},
 			blur_this: function(idx) {
 				if (vm.unlock) return false;

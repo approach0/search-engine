@@ -24,8 +24,20 @@ span.imath-err {
 	border: 1px solid #CC0000 !important;
 }
 
-a.page-navi, a.page-navi:visited{
-	color: blue;
-	padding-left: 10px;
-	padding-right: 10px;
+/* Pagination links */
+.pagination a {
+  color: black;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color .3s;
 }
+
+/* Style the active/current link */
+.pagination a.active {
+  background-color: #1bc1ba;
+  color: white;
+  cursor: default;
+}
+
+/* Add a grey background color on mouse-over */
+.pagination a:hover:not(.active) {background-color: #ebebeb;}

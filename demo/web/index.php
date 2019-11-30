@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=0a2e333616bc7979" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=c69b0a64c560e837" type="text/css"/>
 <!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=0a2e333616bc7979"></script>
+<script type="text/javascript" src="bundle.min.js?hash=c69b0a64c560e837"></script>
 <style>
 img.social {
 	height: 16px;
@@ -472,16 +472,41 @@ SE.init({
 
 <!-- Navigator -->
 <div v-show="ret_code == 0"
-	style="text-align: center; margin-bottom: 26px;" class="toleft">
-	<span v-if="prev != ''">
-		<b style="font-size:1.5em">←</b>
-		<a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
+	style="text-align: center; margin-bottom: 50px; margin-top: 30px;" class="toleft">
+
+	<span class="pagination mainfont">
+		<a href="#" v-if="cur_page - 1 > 0" title="Previous page"
+			v-bind:onclick="'goto_page(' + (cur_page - 1) + ')'">
+			<b style="font-size:1.5em">←</b>
+		</a>
+		<template v-if="-1 == pages.indexOf(1)">
+			<a href="#" title="First page"
+				v-bind:onclick="'goto_page(1)'">
+				1
+			</a>
+			<span v-if="-1 == pages.indexOf(2)">
+			...
+			</span>
+		</template>
+		<a v-for="p in pages" v-bind:onclick="'goto_page(' + p + ')'"
+		v-bind:class="{active: p == cur_page}" v-bind:href="gen_href(p)">
+			{{p}}
+		</a>
+		<template v-if="-1 == pages.indexOf(tot_pages)">
+			<span v-if="-1 == pages.indexOf(tot_pages - 1)">
+			...
+			</span>
+			<a href="#" title="Last page"
+				v-bind:onclick="'goto_page(' + tot_pages + ')'">
+				{{tot_pages}}
+			</a>
+		</template>
+		<a href="#" v-if="cur_page + 1 <= tot_pages" title="Next page"
+			v-bind:onclick="'goto_page(' + (cur_page + 1) + ')'">
+			<b style="font-size:1.5em">→</b>
+		</a>
 	</span>
-	<span class="mainfont">Page {{cur_page}}/{{tot_pages}}</span>
-	<span v-if="next != ''">
-		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
-		<b style="font-size:1.5em">→</b>
-	</span>
+
 </div>
 
 <!-- Footer -->
