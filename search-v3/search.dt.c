@@ -49,7 +49,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 #ifdef PRINT_SEARCH_QUERIES
 	// printf("[BM25 parameters]\n");
 	// BM25_params_print(bm25);
-	printf("\n[inverted lists]\n");
+	printf("[inverted lists]\n");
 #endif
 
 	/* only generate iterators for unique keywords */
