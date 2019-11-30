@@ -404,6 +404,7 @@ $(document).ready(function() {
 		Vue.nextTick(function () {
 			tex_render_fast("div.qry-div-fix");
 			click_search(page, is_pushState);
+			$("#qry-input-box").blur();
 		});
 	};
 
