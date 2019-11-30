@@ -146,8 +146,11 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 }
 
 function goto_page(page) {
-	if (page != response.cur_page)
+	if (page != response.cur_page) {
 		srch_enc_qry(response.enc_qry, page, true);
+		/* scroll to the top */
+		$("html, body").animate({ scrollTop: 0 });
+	}
 }
 
 function srch_qry(qry, page, is_pushState) {
@@ -247,12 +250,6 @@ $(document).ready(function() {
 					scope: [],
 					networkUsers: true
 				});
-			},
-			gen_href: function(page) {
-				if (page == this.cur_page)
-					return 'javascript:void(0)';
-				else
-					return '#';
 			},
 			blur_this: function(idx) {
 				if (vm.unlock) return false;

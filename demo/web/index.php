@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=eb75db7994b235e9" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=50a5d3b49577be89" type="text/css"/>
 <!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=eb75db7994b235e9"></script>
+<script type="text/javascript" src="bundle.min.js?hash=50a5d3b49577be89"></script>
 <style>
 img.social {
 	height: 16px;
@@ -117,7 +117,7 @@ a.btn, a.btn:visited{
 			<span id="math-input"></span>
 			<span class="pl_holder">
 			<b>You are editing a math formula</b>.
-			When you finish, press enter or click <a @click="on_finish_math_edit" href="#">here</a>.</span>
+			When you finish, press enter or click <a @click="on_finish_math_edit">here</a>.</span>
 		</li>
 </template></ul>
 </div>
@@ -475,12 +475,12 @@ SE.init({
 	style="text-align: center; margin-bottom: 50px; margin-top: 30px;">
 
 	<span class="pagination mainfont">
-		<a href="#" v-if="cur_page - 1 > 0" title="Previous page"
+		<a v-if="cur_page - 1 > 0" title="Previous page"
 			v-bind:onclick="'goto_page(' + (cur_page - 1) + ')'">
 			<b style="font-size:1.5em">←</b>
 		</a>
 		<template v-if="-1 == pages.indexOf(1)">
-			<a href="#" title="First page"
+			<a title="First page"
 				v-bind:onclick="'goto_page(1)'">
 				1
 			</a>
@@ -489,19 +489,19 @@ SE.init({
 			</span>
 		</template>
 		<a v-for="p in pages" v-bind:onclick="'goto_page(' + p + ')'"
-		v-bind:class="{active: p == cur_page}" v-bind:href="gen_href(p)">
+		v-bind:class="{active: p == cur_page}">
 			{{p}}
 		</a>
 		<template v-if="-1 == pages.indexOf(tot_pages)">
 			<span v-if="-1 == pages.indexOf(tot_pages - 1)">
 			...
 			</span>
-			<a href="#" title="Last page"
+			<a title="Last page"
 				v-bind:onclick="'goto_page(' + tot_pages + ')'">
 				{{tot_pages}}
 			</a>
 		</template>
-		<a href="#" v-if="cur_page + 1 <= tot_pages" title="Next page"
+		<a v-if="cur_page + 1 <= tot_pages" title="Next page"
 			v-bind:onclick="'goto_page(' + (cur_page + 1) + ')'">
 			<b style="font-size:1.5em">→</b>
 		</a>

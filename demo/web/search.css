@@ -29,6 +29,7 @@ span.imath-err {
 	color: black;
 	padding: 8px 16px;
 	text-decoration: none;
+	cursor: pointer;
 	transition: background-color .3s;
 }
 
