@@ -88,9 +88,9 @@ a.btn, a.btn:visited{
 
 <!-- Query input area -->
 <div class="toleft" style="display: flex">
-<div v-if="!ever_focused && raw_str.trim().length == 0" style="flex: 0;">
-	<a href=".">
-	<img src="images/logo32.png"/>
+<div v-if="ever_focused" style="flex: 0;">
+	<a href="." title="Approach0 (Version 3)">
+	<img src="images/logo42-v3.png"/>
 	</a>
 </div>
 <div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 6px;" v-on:click="area_on_click">
@@ -382,8 +382,8 @@ SE.init({
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div class="toleft" style="text-align: center;">
 			<a target="_blank" href="https://twitter.com/approach0"
-			title="Approach0 (Version 3)" style="vertical-align:middle;">
-			<img src="images/logo42-v3.png"/></a>
+			title="Approach0" style="vertical-align:middle;">
+			<img src="images/logo32.png"/></a>
 			=
 			<a target="_blank" href="https://math.stackexchange.com/"
 			title="Math StackExchange" style="vertical-align:middle;">
