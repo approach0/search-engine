@@ -15,7 +15,7 @@ if ($detect->isMobile()) {
 ?>
 
 <head>
-<title>Approach0 - Math-aware search engine</title>
+<title>Approach0: A Math-aware search engine</title>
 <meta charset="utf-8"/>
 <meta name="description" content="Approach Zero: A math-aware search engine. Search millions of math formulas.">
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
