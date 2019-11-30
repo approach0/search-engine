@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=c69b0a64c560e837" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=6bdb39e29cfc6701" type="text/css"/>
 <!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=c69b0a64c560e837"></script>
+<script type="text/javascript" src="bundle.min.js?hash=6bdb39e29cfc6701"></script>
 <style>
 img.social {
 	height: 16px;
@@ -321,7 +321,7 @@ function expand_donation_options() {
 			t = head.text();
 			t = t.replace("+", "-");
 			head.text(t);
-			$('#init-footer').stickToBottom();
+			$('#init-footer').stickToBottom(aaaaaaa);
 		});
 	}, 500);
 
@@ -471,8 +471,8 @@ SE.init({
 <!-- Search Results END -->
 
 <!-- Navigator -->
-<div v-show="ret_code == 0"
-	style="text-align: center; margin-bottom: 50px; margin-top: 30px;" class="toleft">
+<div id="navigator" v-show="ret_code == 0" class="toleft"
+	style="text-align: center; margin-bottom: 50px; margin-top: 30px;">
 
 	<span class="pagination mainfont">
 		<a href="#" v-if="cur_page - 1 > 0" title="Previous page"
@@ -510,8 +510,8 @@ SE.init({
 </div>
 
 <!-- Footer -->
-<div v-show="ret_code == 0"
-	style="padding-top: 15px; background: #f4f6f8;
+<div id="search-footer" v-show="ret_code == 0"
+	style="padding-top: 15px; background: #f4f6f8; width: 100%;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 	<div style="text-align: right;">

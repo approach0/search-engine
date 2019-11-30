@@ -23,12 +23,17 @@ function str_fmt() {
 }
 
 function render_search_results() {
+	var footer_adjust_timer = setInterval(function(){
+		$('#search-footer').stickToBottom('#navigator');
+	}, 600);
+
 	setTimeout(function(){
 		tex_render("a.title");
 		tex_render("p.snippet", function (a, b) {
 			var percent = Math.ceil((a * 100) / b);
 			if (percent > 90) {
 				percent = 100;
+				clearInterval(footer_adjust_timer);
 			}
 			if (percent % 10 == 0) {
 				var percent_str = "" + percent + "%";
@@ -107,9 +112,11 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 		url: 'search-relay.php',
 		data: 'p=' + page + '&q=' + enc_qry,
 		dataType: 'json'
+
 	}).done(function(res) {
 		handle_search_res(res, enc_qry, page);
 		clearInterval(dots_timer);
+
 	}).fail(function(res, ajax_err_str) {
 		console.log("AJAX error: " + ajax_err_str);
 		response.ret_code = 101;
