@@ -351,6 +351,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 
 			/* accumulate precise partial score */
 			if (iid < n_term) {
+				/* for text keywords */
 				struct term_qry *tq = term_qry + iid;
 				struct term_posting_item *item = term_item + iid;
 
@@ -360,8 +361,8 @@ indices_run_query(struct indices* indices, struct query* qry)
 				score += s * tq->qf;
 
 			} else {
+				/* for math keywords ... */
 				int mid = iid - n_term;
-
 				dynm_threshold[mid] = internal_threshold(math_weight[mid],
 					score, iter->acc_upp[i] - iter->set.upp[iid],
 					threshold);
@@ -381,6 +382,9 @@ indices_run_query(struct indices* indices, struct query* qry)
 		/* if top-K is not full or this score exceeds threshold */
 		if (!priority_Q_full(&rk_res) ||
 			score > priority_Q_min_score(&rk_res)) {
+
+			if (unlikely(iter->min == UINT64_MAX))
+				goto next_iter;
 
 			/* store and push this candidate hit */
 			struct rank_hit *hit;

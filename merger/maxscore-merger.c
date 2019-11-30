@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "common/common.h" /* for unlikely() */
 #include "mergers.h"
 
 int ms_merger_lift_up_pivot(struct ms_merger *m, float threshold,
@@ -104,7 +105,7 @@ void ms_merger_iter_free(struct ms_merger *m)
 
 int ms_merger_iter_next(struct ms_merger *m)
 {
-	if (m->min == UINT64_MAX)
+	if (unlikely(m->min == UINT64_MAX))
 		return 0;
 
 	for (int i = 0; i <= m->pivot; i++) {
