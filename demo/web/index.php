@@ -41,7 +41,7 @@ img.social {
 	height: 16px;
 }
 div.center-v-pad {
-	height: 200px
+	height: 200px;
 }
 div.center-horiz {
 	margin: 0 auto;
@@ -80,7 +80,7 @@ a.btn, a.btn:visited{
 </head>
 
 <body style="margin: 0">
-<div id="progress" style="position: fixed; border-top: 2px solid #46ece5"></div>
+<div id="progress" style="position: fixed; border-top: 2px solid #46ece5; z-index:9999;"></div>
 
 <!-- Query Box App -->
 <div id="qry-input-vue-app" style="background: white;
@@ -395,7 +395,7 @@ SE.init({
 			+
 			<span style="color: red; font-size:16px; font-weight:bold;">♡ </span>
 
-			<p>Approach0: A math-aware search engine indexing MSE and AoPS data.
+			<p>Approach0: A math-aware search engine.
 			</p>
 		[<a style="text-decoration: none; color: blue;" href="/stats" target="_blank">
 		query log
