@@ -1,5 +1,8 @@
 $.fn.stickToBottom = function (ceil_selector) {
 	var ceil_ele = $(ceil_selector);
+	if (ceil_ele.offset() === undefined)
+		return;
+
 	var ceil_pos = ceil_ele.offset().top + ceil_ele.outerHeight();
 	var wind_height = window.innerHeight;
 	var this_margin_top = parseInt($(this).css('margin-top'), 10);
