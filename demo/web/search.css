@@ -26,17 +26,18 @@ span.imath-err {
 
 /* Pagination links */
 .pagination a {
-  color: black;
-  padding: 8px 16px;
-  text-decoration: none;
-  transition: background-color .3s;
+	color: black;
+	padding: 8px 16px;
+	text-decoration: none;
+	transition: background-color .3s;
 }
 
 /* Style the active/current link */
 .pagination a.active {
-  background-color: #1bc1ba;
-  color: white;
-  cursor: default;
+	background-color: #1bc1ba;
+	color: white;
+	cursor: default;
+	border-radius: 5px;
 }
 
 /* Add a grey background color on mouse-over */
