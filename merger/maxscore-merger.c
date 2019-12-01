@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "common/common.h" /* for unlikely() */
 #include "mergers.h"
 
 int ms_merger_lift_up_pivot(struct ms_merger *m, float threshold,
@@ -104,7 +105,7 @@ void ms_merger_iter_free(struct ms_merger *m)
 
 int ms_merger_iter_next(struct ms_merger *m)
 {
-	if (m->min == UINT64_MAX)
+	if (unlikely(m->min == UINT64_MAX))
 		return 0;
 
 	for (int i = 0; i <= m->pivot; i++) {
@@ -117,11 +118,13 @@ int ms_merger_iter_next(struct ms_merger *m)
 	}
 
 	m->min = ms_merger_min(m);
-	return 1;
+	return (m->min != UINT64_MAX);
 }
 
 void ms_merger_iter_print(struct ms_merger* m, merger_keyprint_fun keyprint)
 {
+	printf("%c | %-7s %6s [%3s]\n", 'F', "acc_upp", "upp", "inv");
+
 	for (int i = 0; i < m->size; i++) {
 		int invi = m->map[i];
 		int pivot = m->pivot;
@@ -130,7 +133,7 @@ void ms_merger_iter_print(struct ms_merger* m, merger_keyprint_fun keyprint)
 		uint64_t cur = merger_map_call(m, cur, i);
 		char flag = ' ';
 		if (i == pivot) flag = 'P'; else if (i > pivot) flag = 'S';
-		printf("%c %-6.2f %5.2f [%3d] ", flag, acc_upp, upp, invi);
+		printf("%c | %-7.2f %6.2f [%3d] ", flag, acc_upp, upp, invi);
 		if (NULL != keyprint)
 			keyprint(cur);
 		else

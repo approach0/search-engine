@@ -1,0 +1,3 @@
+设[imath]a_1, a_2, ..., a_{40}[/imath] 是一列实数，满足[imath]\sum_{i=1}^{40}a_i = 0[/imath], 且对任意 [imath]i=1,2,...,40[/imath] 都有 [imath]|a_i - a_{i+1}|\le 1[/imath]，其中 [imath]a_{41}=a_1[/imath].
+（1） 求 [imath]a_{10} + a_{20} + a_{30} + a_{40}[/imath]的最大值;
+（2） 求 [imath]a_{10} a_{20} + a_{30} a_{40}[/imath]的最大值。

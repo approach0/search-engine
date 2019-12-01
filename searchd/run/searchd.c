@@ -9,6 +9,7 @@
 #include "timer/timer.h"
 
 #include "search-v3/search.h"
+#include "txt-seg/txt-seg.h"
 #include "httpd/httpd.h"
 
 #include "config.h"
@@ -56,12 +57,12 @@ httpd_on_recv(const char *req, void *arg_)
 		fprintf(log_fh, "%s\n", "Empty query.");
 		goto reply;
 
-	} else if (qry.n_math >= MAX_SEARCHD_MATH_KEYWORDS) {
+	} else if (qry.n_math > MAX_SEARCHD_MATH_KEYWORDS) {
 		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_MATH_KW);
 		fprintf(log_fh, "%s\n", "Too many math keywords");
 		goto reply;
 
-	} else if (qry.n_term >= MAX_SEARCHD_TERM_KEYWORDS) {
+	} else if (qry.n_term > MAX_SEARCHD_TERM_KEYWORDS) {
 		ret = search_errcode_json(SEARCHD_RET_TOO_MANY_TERM_KW);
 		fprintf(log_fh, "%s\n", "Too many text keywords");
 		goto reply;
@@ -195,6 +196,7 @@ int main(int argc, char *argv[])
 	/* command line arguments */
 	int                   trec_log = 0;
 	char                 *index_path = NULL;
+	char                  dict_path[1024] = ".";
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	size_t                mi_cache_limit = DEFAULT_MATH_INDEX_CACHE_SZ;
 	size_t                ti_cache_limit = DEFAULT_TERM_INDEX_CACHE_SZ;
@@ -210,7 +212,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:p:c:C:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:d:p:c:C:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -221,6 +223,7 @@ int main(int argc, char *argv[])
 			       " -h (help) \n"
 			       " -T (TREC log) \n"
 			       " -i <index path> \n"
+			       " -d <dict path> \n"
 			       " -p <port> \n"
 			       " -c <term cache size (MB), default: %u MB> \n"
 			       " -C <math cache size (MB), default: %u MB> \n"
@@ -234,6 +237,10 @@ int main(int argc, char *argv[])
 
 		case 'i':
 			index_path = strdup(optarg);
+			break;
+
+		case 'd':
+			strcpy(dict_path, optarg);
 			break;
 
 		case 'p':
@@ -270,6 +277,10 @@ int main(int argc, char *argv[])
 		printf("Index open failed.\n");
 		goto close;
 	}
+
+	/* open segmentation dictionary */
+	printf("Open segment dictionary at [%s]\n", dict_path);
+	text_segment_init(dict_path);
 
 	/* setup cache */
 	indices.ti_cache_limit = ti_cache_limit MB;
@@ -308,6 +319,9 @@ int main(int argc, char *argv[])
 		signal(SIGUSR1, signal_handler);
 		slave_run(&searchd_args);
 	}
+
+	/* free text segment */
+	text_segment_free();
 
 close:
 	/* close indices */

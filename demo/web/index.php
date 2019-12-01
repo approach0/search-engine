@@ -15,7 +15,7 @@ if ($detect->isMobile()) {
 ?>
 
 <head>
-<title>Approach0 - Math-aware search engine</title>
+<title>Approach0: A Math-aware search engine</title>
 <meta charset="utf-8"/>
 <meta name="description" content="Approach Zero: A math-aware search engine. Search millions of math formulas.">
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
@@ -23,8 +23,8 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=16990fab374e5a84" type="text/css"/>
-
+<link rel="stylesheet" href="all.css?hash=2eb5ff3917ca3db6" type="text/css"/>
+<!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
 
@@ -35,13 +35,13 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=16990fab374e5a84"></script>
+<script type="text/javascript" src="bundle.min.js?hash=2eb5ff3917ca3db6"></script>
 <style>
 img.social {
 	height: 16px;
 }
 div.center-v-pad {
-	height: 200px
+	height: 200px;
 }
 div.center-horiz {
 	margin: 0 auto;
@@ -73,14 +73,11 @@ div.blur {
 	-ms-user-select: none;
 	user-select: none;
 }
-a.btn, a.btn:visited{
-	color: blue;
-}
 </style>
 </head>
 
 <body style="margin: 0">
-<div id="progress" style="position: fixed; border-top: 2px solid #46ece5"></div>
+<div id="progress" style="position: fixed; border-top: 2px solid #46ece5; z-index:9999;"></div>
 
 <!-- Query Box App -->
 <div id="qry-input-vue-app" style="background: white;
@@ -88,13 +85,12 @@ a.btn, a.btn:visited{
 
 <!-- Query input area -->
 <div class="toleft" style="display: flex">
-<div style="flex: 0;">
-	<a href=".">
-	<img v-if="!ever_focused && raw_str.trim().length == 0" src="images/logo32.png"/>
-	<img v-else style="margin-top: 0px" src="images/logo64.png"/>
+<div v-show="ever_focused" style="line-height: 60px;">
+	<a href="." title="Approach0 (Version 3)">
+	<img src="images/logo42-v3.png" style="vertical-align: middle;"/>
 	</a>
 </div>
-<div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 16px;" v-on:click="area_on_click">
+<div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 6px;" v-on:click="area_on_click">
 <ul class="qry-li-wrap"><template v-for="i in items">
 		<li v-if="i.type == 'term'" class="qry-li">
 			<div class="qry-div-fix">
@@ -112,12 +108,13 @@ a.btn, a.btn:visited{
 		<li v-if="i.type == 'term-input'" class="qry-li">
 			<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
 			type="text" id="qry-input-box" class="pl_holder"
-			placeholder="Enter keywords here, type $ for math keyword."/>
+			placeholder="Enter query keywords here, type $ for math formula."/>
 		</li>
 		<li v-if="i.type == 'tex-input'" class="qry-li">
 			<span id="math-input"></span>
-			<span class="pl_holder"><b>You are editing a math keyword</b>.
-			When you finish, press enter or click <a @click="on_finish_math_edit" href="#">here</a>.</span>
+			<span class="pl_holder">
+			<b>You are editing a math formula</b>.
+			When you finish, press enter or click <a @click="on_finish_math_edit">here</a>.</span>
 		</li>
 </template></ul>
 </div>
@@ -126,10 +123,10 @@ a.btn, a.btn:visited{
 
 <!-- Search button and options -->
 <div style="padding-top: 18px; padding-bottom: 5px; position: relative" class="toleft">
-	<div style="display: inline-block; width: 5px;">
+	<div style="display: inline-block; width: 15px;">
 	</div>
 
-	<a style="text-decoration: none; color: blue; font-size: 14px;"
+	<a style="text-decoration: none; font-size: 14px;"
 	href="/guide" target="_blank">
 	<img src="images/link.png" style="vertical-align: middle;"/>
 	user guide
@@ -172,7 +169,7 @@ a.btn, a.btn:visited{
 	<div>
 		<p>Know TeX? Great! You may want to edit raw query below directly (separate keywords by commas).</p>
 		<input id="qry" style="padding-left: 6px; margin-bottom: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
-		placeholder="Enter raw query here."/>
+		placeholder="Enter raw query ..."/>
 
 		<!-- hidden URI parameters -->
 		<input id="q" type="hidden" value=
@@ -321,7 +318,7 @@ function expand_donation_options() {
 			t = head.text();
 			t = t.replace("+", "-");
 			head.text(t);
-			$('#init-footer').stickToBottom();
+			$('#init-footer').stickToBottom(aaaaaaa);
 		});
 	}, 500);
 
@@ -362,7 +359,7 @@ SE.init({
 
 <!-- Quiz App -->
 <div id="quiz-vue-app" v-show="!hide">
-	<div id="quiz" class="toleft">
+	<div id="quiz" class="toleft" style="padding-bottom: 100px;">
 		<div class="center-v-pad"></div>
 		<div class="center-horiz">
 			<p id="quiz-question">
@@ -393,11 +390,11 @@ SE.init({
 			title="Art of Problem solving (community)" style="vertical-align:middle;">
 			<img src="images/aops.png"/></a>
 			+
-			<span style="color: red; font-size:16px; font-weight:bold;">♡ </span>
+			<span style="color: red; font-size:18px; font-weight:bold;
+			vertical-align:middle;">♡ </span>
 
-			<p>A math-aware search engine.
-			</p>
-		[<a style="text-decoration: none; color: blue;" href="/stats" target="_blank">
+			<p>Approach0: A math-aware search engine.</p>
+		[<a style="text-decoration: none;" href="/stats" target="_blank">
 		query log
 		</a>]
 		</div>
@@ -430,7 +427,7 @@ SE.init({
 		<div v-if="blur_this(idx)" style="position: relative;">
 			<div class="blur">
 				<a class="title" target="_blank" v-bind:href="mess_up(hit.url)"
-				style="text-decoration: none; font-size: 120%;">
+				style="text-decoration: none; font-size: 1.5em;">
 				{{mess_up(hit.title)}}</a><br/>
 				<span style="color:#006d21">{{mess_up(hit.url)}}</span>
 				<div style="overflow-x: hidden;">
@@ -458,7 +455,7 @@ SE.init({
 			<span class="docid">{{hit.docid}}</span>
 			<span class="score">{{hit.score}}</span>
 			<a class="title" target="_blank" v-bind:href="hit.url"
-			style="text-decoration: none; font-size: 120%;">
+			style="text-decoration: none; font-size: 1.5em;">
 			{{hit.title}}</a><br/>
 			<span style="color:#006d21">{{hit.url}}</span>
 			<div style="overflow-x: hidden;">
@@ -471,22 +468,47 @@ SE.init({
 <!-- Search Results END -->
 
 <!-- Navigator -->
-<div v-show="ret_code == 0"
-	style="text-align: center; margin-bottom: 26px;" class="toleft">
-	<span v-if="prev != ''">
-		<b style="font-size:1.5em">←</b>
-		<a class="page-navi" v-bind:onclick="prev" href="#">prev</a>
+<div id="navigator" v-show="ret_code == 0" class="toleft"
+	style="text-align: center; margin-bottom: 50px; margin-top: 30px;">
+
+	<span class="pagination mainfont">
+		<a v-if="cur_page - 1 > 0" title="Previous page"
+			v-bind:onclick="'goto_page(' + (cur_page - 1) + ')'">
+			<b style="font-size:1.5em">←</b>
+		</a>
+		<template v-if="-1 == pages.indexOf(1)">
+			<a title="First page"
+				v-bind:onclick="'goto_page(1)'">
+				1
+			</a>
+			<span v-if="-1 == pages.indexOf(2)">
+			...
+			</span>
+		</template>
+		<a v-for="p in pages" v-bind:onclick="'goto_page(' + p + ')'"
+		v-bind:class="{active: p == cur_page}">
+			{{p}}
+		</a>
+		<template v-if="-1 == pages.indexOf(tot_pages)">
+			<span v-if="-1 == pages.indexOf(tot_pages - 1)">
+			...
+			</span>
+			<a title="Last page"
+				v-bind:onclick="'goto_page(' + tot_pages + ')'">
+				{{tot_pages}}
+			</a>
+		</template>
+		<a v-if="cur_page + 1 <= tot_pages" title="Next page"
+			v-bind:onclick="'goto_page(' + (cur_page + 1) + ')'">
+			<b style="font-size:1.5em">→</b>
+		</a>
 	</span>
-	<span class="mainfont">Page {{cur_page}}/{{tot_pages}}</span>
-	<span v-if="next != ''">
-		<a class="page-navi" v-bind:onclick="next" href="#">next</a>
-		<b style="font-size:1.5em">→</b>
-	</span>
+
 </div>
 
 <!-- Footer -->
-<div v-show="ret_code == 0"
-	style="padding-top: 15px; background: #f4f6f8;
+<div id="search-footer" v-show="ret_code == 0"
+	style="padding-top: 15px; background: #f4f6f8; width: 100%;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 	<div style="text-align: right;">

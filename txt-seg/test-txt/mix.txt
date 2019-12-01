@@ -4,3 +4,5 @@ Test math [imath]f(x) = a + b[/imath]
 Test math2 [imath] \sin(x) [/imath]
 据说Linux操作系统的发明人托瓦尔兹也到了这个公司工作。第三，小道消息传说公司的投资者包括微软创始人保罗?爱伦和金融家索罗斯等著名人物。
 2000年1月，秘密公开了。Transmeta宣布研制成功了适用于移动计算的名叫“ Crusoe ”的处理器芯片。2000年3月，《IEEE Spectrum》杂志刊登了一篇封面文章，披露了Transmeta的 Crusoe 芯片的技术。
+
+做B超

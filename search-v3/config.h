@@ -1,6 +1,7 @@
 #pragma once
 
 //#define DEBUG_INDICES_RUN_QUERY
+
 //#define DEBUG_PREPARE_MATH_QRY
 //#define DEBUG_MATH_SEARCH
 //#define DEBUG_MATH_SEARCH__STRUCT_SCORING
@@ -21,9 +22,15 @@
 //#define MATH_PRUNING_STRATEGY_GBP_NUM
   #define MATH_PRUNING_STRATEGY_GBP_LEN
 
+//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .30f /* aggressive */
+  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
+//#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
+
 #define MATH_SCORE_ETA 0.05f
 
-#define MEDAL_WEIGHT 3.0f
+#define MATH_BASE_WEIGHT 6.f
+#define MATH_REWARD_WEIGHT  (MATH_BASE_WEIGHT * 0.98f)
+#define MATH_PENALTY_WEIGHT (MATH_BASE_WEIGHT * 0.02f)
 
 #define MAX_MATH_OCCURS 8
 #define MAX_TOTAL_OCCURS 8
@@ -41,12 +48,8 @@
 #define BM25_DEFAULT_B  0.75
 #define BM25_DEFAULT_K1 1.2 /* lower TF upperbound, less rewards to TF */
 
-#define MAX_SEARCH_INVLISTS 64
-
 #include "txt-seg/config.h"
 #define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
 
 #define PRINT_SEARCH_QUERIES
-
-//#define DEBUG_INDICES_RUN_QUERY

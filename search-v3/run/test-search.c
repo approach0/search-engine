@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "mhook/mhook.h"
+#include "txt-seg/txt-seg.h"
 #include "search.h"
 #include "query.h"
 #include "print-search-results.h"
@@ -9,13 +10,13 @@
 int main(int argc, char *argv[])
 {
 	struct indices indices;
-	char indices_path[1024] = "/home/tk/nvme0n1/mnt-test-opt-prune-128-compact.img";
+	char indices_path[1024] = "./tmp";
 	struct query qry = QUERY_NEW;
 	int page = 1;
 	size_t ti_cache_limit = 0, mi_cache_limit = 0;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "hi:t:m:p:c:C:")) != -1) {
+	while ((opt = getopt(argc, argv, "hi:d:t:m:p:c:C:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -24,21 +25,27 @@ int main(int argc, char *argv[])
 			printf("USAGE:\n");
 			printf("%s \n"
 			       " -h (show this help text) \n"
-			       " -i <index path> \n"
+			       " -i <index path> (default: %s) \n"
+			       " -d <dict path> (should be passed before -t) \n"
 			       " -t <text keyword> \n"
 			       " -m <math keyword> \n"
 			       " -p <page> (0 for all pages) \n"
 			       " -c <term cache size (MB)> \n"
 			       " -C <math cache size (MB)> \n"
-			       "\n", argv[0]);
+			       "\n", argv[0], indices_path);
 			return 0;
 
 		case 'i':
 			strcpy(indices_path, optarg);
 			break;
 
+		case 'd':
+			printf("open segment dictionary at [%s]\n", optarg);
+			text_segment_init(optarg);
+			break;
+
 		case 't':
-			query_push_kw(&qry, optarg, QUERY_KW_TERM, QUERY_OP_OR);
+			query_digest_txt(&qry, optarg);
 			break;
 
 		case 'm':
@@ -63,6 +70,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* open indices */
 	if(indices_open(&indices, indices_path, INDICES_OPEN_RD)) {
 		prerr("indices open failed: %s", indices_path);
 		goto close;
@@ -100,6 +108,10 @@ int main(int argc, char *argv[])
 
 close:
 	indices_close(&indices);
+
+	/* free text segment */
+	text_segment_free();
+
 	mhook_print_unfree();
 	return 0;
 }

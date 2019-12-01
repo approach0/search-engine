@@ -10,7 +10,7 @@ static LIST_IT_CALLBK(print)
 {
 	LIST_OBJ(struct text_seg, seg, ln);
 
-	printf("%s<%u,%u>", seg->str, seg->offset, seg->n_bytes);
+	printf("%s@%u", seg->str, seg->offset);
 
 	if (pa_now->now == pa_head->last)
 		printf(".");
@@ -43,7 +43,7 @@ int main(void)
 {
 	unsigned int i;
 	list li = LIST_NULL;
-	if (text_segment_init("../../cppjieba/dict")) {
+	if (text_segment_init("/home/tk/cppjieba/dict")) {
 		printf("open dict failed.\n");
 		return 1;
 	}

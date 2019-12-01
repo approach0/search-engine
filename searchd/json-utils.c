@@ -108,10 +108,6 @@ int parse_json_qry(const char* req, struct query *qry)
 		JSON_Object *parson_arr_obj;
 		enum parse_json_kw_res res;
 
-		if (qry->n_math >= MAX_SEARCHD_MATH_KEYWORDS ||
-		    qry->n_term >= MAX_SEARCHD_TERM_KEYWORDS)
-			break;
-
 		/* get array object[i] */
 		parson_arr_obj = json_array_get_object(parson_arr, i);
 

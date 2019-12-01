@@ -9,7 +9,10 @@
 #include "lex.h"
 %}
 
-engword [a-zA-Z]
+ /* English */
+engword [a-zA-Z0-9]
+
+ /* Almost all characters */
 mathsym [\x20-\xf3]
 
  /* ==================

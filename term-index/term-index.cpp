@@ -153,7 +153,11 @@ uint32_t term_index_get_docN(void *handle)
 uint32_t term_index_get_docLen(void *handle, doc_id_t doc_id)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->documentLength(doc_id);
+	uint32_t docN = term_index_get_docN(ti);
+	if (unlikely(doc_id > docN))
+		return 0;
+	else
+		return ti->index->documentLength(doc_id);
 }
 
 uint32_t term_index_get_avgDocLen(void *handle)

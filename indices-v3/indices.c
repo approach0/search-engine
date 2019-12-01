@@ -319,18 +319,16 @@ static int indexer_handle_slice(struct lex_slice *slice)
 		break;
 
 	case LEX_SLICE_TYPE_ENG_SEG:
+	case LEX_SLICE_TYPE_MIX_SEG:
 		/* turn all indexing words to lower case for recall */
 		eng_to_lower_case(slice->mb_str, str_sz);
 
 		/* add term into inverted-index */
+		//printf("add [%s]@%u\n", slice->mb_str, g_indexer->cur_position);
 		term_index_doc_add(indices->ti, slice->mb_str);
 
 		/* increments */
 		g_indexer->cur_position ++;
-		break;
-
-	case LEX_SLICE_TYPE_MIX_SEG: /* Non-English segmentation */
-		assert(0); /* not implemented */
 		break;
 
 	default:

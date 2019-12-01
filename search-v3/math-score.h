@@ -9,7 +9,7 @@ struct math_score_factors {
 	/* precomputed */
 	float upp_sf;
 	float low_sf;
-	float penalty_tab[MAX_MATCHED_PATHS];
+	float penalty_tab[MAX_MATCHED_PATHS + 1];
 };
 
 void  math_score_precalc(struct math_score_factors *);

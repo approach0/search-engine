@@ -3,8 +3,8 @@ var response = {
 	'ret_str': '',
 	'tot_pages': 0,
 	'cur_page': 0,
-	'prev': '',
-	'next': '',
+	'enc_qry': null,
+	'pages': [],
 	'SE_user': 0,
 	'SE_netID': 0,
 	'SE_site': 'https://stackexchange.com',
@@ -23,12 +23,17 @@ function str_fmt() {
 }
 
 function render_search_results() {
+	var footer_adjust_timer = setInterval(function(){
+		$('#search-footer').stickToBottom('#navigator');
+	}, 600);
+
 	setTimeout(function(){
 		tex_render("a.title");
 		tex_render("p.snippet", function (a, b) {
 			var percent = Math.ceil((a * 100) / b);
 			if (percent > 90) {
 				percent = 100;
+				clearInterval(footer_adjust_timer);
 			}
 			if (percent % 10 == 0) {
 				var percent_str = "" + percent + "%";
@@ -40,29 +45,33 @@ function render_search_results() {
 }
 
 function handle_search_res(res, enc_qry, page) {
+	/* save results */
 	response.ret_code = res.ret_code;
 	response.ret_str = res.ret_str;
+
 	response.tot_pages = res.tot_pages;
 	response.cur_page = page;
+	response.enc_qry = enc_qry;
 
 	response.hits = res.hits;
 
-	if (page - 1 > 0)
-		response.prev = str_fmt(
-			'srch_enc_qry("{0}", {1}, true)',
-			enc_qry, page - 1
-		);
-	else
-		response.prev = '';
+	/* calculate pages array shown in pagination */
+	var wind = 5; /* better be odd */
+	var half = Math.ceil((wind - 1) / 2);
+	var left = Math.max(1, page - half);
+	var right = Math.min(res.tot_pages, page + half);
 
-	if (page + 1 <= res.tot_pages)
-		response.next = str_fmt(
-			'srch_enc_qry("{0}", {1}, true)',
-			enc_qry, page + 1
-		);
-	else
-		response.next = '';
+	if (left == 1)
+		right = Math.min(res.tot_pages, left + wind - 1);
+	else if (right == res.tot_pages)
+		left = Math.max(1, right - wind + 1);
 
+	response.pages = [];
+	for (var i = left; i <= right; i++) {
+		response.pages.push(i);
+	};
+
+	/* show search results */
 	render_search_results();
 
 //	setTimeout(function(){
@@ -103,9 +112,11 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 		url: 'search-relay.php',
 		data: 'p=' + page + '&q=' + enc_qry,
 		dataType: 'json'
+
 	}).done(function(res) {
 		handle_search_res(res, enc_qry, page);
 		clearInterval(dots_timer);
+
 	}).fail(function(res, ajax_err_str) {
 		console.log("AJAX error: " + ajax_err_str);
 		response.ret_code = 101;
@@ -131,6 +142,14 @@ function srch_enc_qry(enc_qry, page, is_pushState) {
 		history.pushState(srch_state, srch_state_str,
 		                  "?q=" + enc_qry + "&p=" + page);
 		//console.log('push history state...');
+	}
+}
+
+function goto_page(page) {
+	if (page != response.cur_page) {
+		srch_enc_qry(response.enc_qry, page, true);
+		/* scroll to the top */
+		$("html, body").animate({ scrollTop: 0 });
 	}
 }
 

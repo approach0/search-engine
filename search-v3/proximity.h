@@ -17,7 +17,7 @@ prox_set_input(prox_input_t *in, uint32_t* pos, uint32_t n_pos)
 	in->cur = 0;
 }
 
-float    prox_upp();
+float    prox_upp(); /* proximity score upperbound */
 float    prox_score(prox_input_t*, int);
 uint32_t prox_sort_occurs(uint32_t*, prox_input_t*, int);
 

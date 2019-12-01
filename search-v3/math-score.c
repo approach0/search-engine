@@ -16,7 +16,7 @@ void math_score_precalc(struct math_score_factors *msf)
 	dl = (float)MAX_MATCHED_PATHS;
 	msf->low_sf = .5f * DOC_LEN_PENALTY;
 
-	for (int i = 0; i < MAX_MATCHED_PATHS; i++) {
+	for (int i = 0; i <= MAX_MATCHED_PATHS; i++) {
 		dl = (float)i;
 		msf->penalty_tab[i] = DOC_LEN_PENALTY;
 	}

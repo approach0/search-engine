@@ -8,3 +8,6 @@
 // #define SUPPORT_MATH_WILDCARDS
 
 // #define DEBUG_INDEXER
+
+//#define INDICES_TXT_LEXER lex_mix_file
+  #define INDICES_TXT_LEXER lex_eng_file

@@ -4,6 +4,7 @@
 #include "mhook/mhook.h"
 
 #include "lex.h"
+#include "txt-seg.h"
 #include "offset-check.h"
 
 #undef NDEBUG
@@ -40,40 +41,47 @@ static int my_lex_handler(struct lex_slice *slice)
 	return 0;
 }
 
-int main(void)
+typedef int (*test_lex_callback)(FILE *);
+
+static void test(const char *fname, test_lex_callback callbk)
 {
-	const char test_file_name[] = "test-txt/eng.txt";
-	FILE *fh = fopen(test_file_name, "r");
+	FILE *fh = fopen(fname, "r");
 
 	if (fh == NULL) {
-		printf("cannot open `%s'...\n", test_file_name);
-		return 1;
+		printf("cannot open `%s'...\n", fname);
+		return;
 	}
 
-	if (0 != file_offset_check_init(test_file_name))
+	if (0 != file_offset_check_init(fname))
 		goto close;
 
 	/* set global lex handler */
 	g_lex_handler = my_lex_handler;
 
-	printf("testing English lexer...\n");
-	lex_eng_file(fh);
-
-	file_offset_check_print();
-	file_offset_check_free();
-
-	if (0 != file_offset_check_init(test_file_name))
-		goto close;
-
-	printf("testing mix lexer...\n");
-	lex_mix_file(fh);
+	printf("lexer test [%s]\n", fname);
+	callbk(fh);
 
 	file_offset_check_print();
 	file_offset_check_free();
 
 close:
 	fclose(fh);
+	printf("\n");
+}
 
+int main(void)
+{
+	const char test_eng_file_name[] = "test-txt/eng.txt";
+	const char test_mix_file_name[] = "test-txt/mix.txt";
+
+	text_segment_init("/home/tk/cppjieba/dict");
+	// text_segment_init("/nowhere");
+
+	test(test_eng_file_name, lex_eng_file);
+	test(test_mix_file_name, lex_eng_file);
+	test(test_mix_file_name, lex_mix_file);
+
+	text_segment_free();
 	mhook_print_unfree();
 	return 0;
 }
