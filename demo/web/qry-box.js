@@ -336,7 +336,8 @@ $(document).ready(function() {
 				t = t.replace("-", "+");
 			head.text(t);
 
-			$('#init-footer').stickToBottom();
+			$('#init-footer').stickToBottom('#quiz');
+
 			Vue.nextTick(function () {
 				tex_render_fast("#handy-pad");
 			});
@@ -561,7 +562,7 @@ $(document).ready(function() {
 	})
 
 	qry_vm.$watch('SE_user', function (newVal, oldVal) {
-		$('#init-footer').stickToBottom();
+		$('#init-footer').stickToBottom('#quiz');
 	})
 
 	window.qry_vm = qry_vm;
