@@ -397,29 +397,6 @@ $(document).ready(function() {
 		}
 	}
 
-	window.type_and_click_search =
-	function (qry, page, is_pushState) {
-//		console.log('search: ' + raw_qry_str);
-		query.raw_str = qry;
-		raw_str_2_query();
-		Vue.nextTick(function () {
-			tex_render_fast("div.qry-div-fix");
-			click_search(page, is_pushState);
-			$("#qry-input-box").blur();
-		});
-	};
-
-	/* go to URI-specified query, if any */
-	var q = $("#q").val();
-	var p = $("#p").val();
-	if (q != "") {
-		var page = 1;
-		if (p != "")
-			page = parseInt(p, 10);
-
-		type_and_click_search(q, page, true);
-	}
-
 	/* Vue instance */
 	var qry_vm = new Vue({
 		el: "#qry-input-vue-app",
@@ -539,6 +516,30 @@ $(document).ready(function() {
 			}
 		}
 	});
+
+	window.type_and_click_search =
+	function (qry, page, is_pushState) {
+//		console.log('search: ' + raw_qry_str);
+		query.raw_str = qry;
+		raw_str_2_query();
+		Vue.nextTick(function () {
+			tex_render_fast("div.qry-div-fix");
+			click_search(page, is_pushState);
+			qry_vm.ever_focused = true;
+			$("#qry-input-box").blur();
+		});
+	};
+
+	/* go to URI-specified query, if any */
+	var q = $("#q").val();
+	var p = $("#p").val();
+	if (q != "") {
+		var page = 1;
+		if (p != "")
+			page = parseInt(p, 10);
+
+		type_and_click_search(q, page, true);
+	}
 
 	/* initial focus/blur style */
 	setTimeout(function () {
