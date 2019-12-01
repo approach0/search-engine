@@ -24,6 +24,11 @@ span.imath-err {
 	border: 1px solid #CC0000 !important;
 }
 
+/* default link color */
+a {
+	color: #003dbf;
+}
+
 /* Pagination links */
 .pagination a {
 	color: black;

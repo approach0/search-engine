@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=72b835b32d4533ee" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=0da0bcdfd991f39e" type="text/css"/>
 <!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=72b835b32d4533ee"></script>
+<script type="text/javascript" src="bundle.min.js?hash=0da0bcdfd991f39e"></script>
 <style>
 img.social {
 	height: 16px;
@@ -73,9 +73,6 @@ div.blur {
 	-ms-user-select: none;
 	user-select: none;
 }
-a.btn, a.btn:visited{
-	color: blue;
-}
 </style>
 </head>
 
@@ -88,9 +85,9 @@ a.btn, a.btn:visited{
 
 <!-- Query input area -->
 <div class="toleft" style="display: flex">
-<div v-if="ever_focused" style="flex: 0;">
+<div v-show="ever_focused" style="line-height: 60px;">
 	<a href="." title="Approach0 (Version 3)">
-	<img src="images/logo42-v3.png"/>
+	<img src="images/logo42-v3.png" style="vertical-align: middle;"/>
 	</a>
 </div>
 <div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 6px;" v-on:click="area_on_click">
@@ -126,10 +123,10 @@ a.btn, a.btn:visited{
 
 <!-- Search button and options -->
 <div style="padding-top: 18px; padding-bottom: 5px; position: relative" class="toleft">
-	<div style="display: inline-block; width: 5px;">
+	<div style="display: inline-block; width: 15px;">
 	</div>
 
-	<a style="text-decoration: none; color: blue; font-size: 14px;"
+	<a style="text-decoration: none; font-size: 14px;"
 	href="/guide" target="_blank">
 	<img src="images/link.png" style="vertical-align: middle;"/>
 	user guide
@@ -393,11 +390,11 @@ SE.init({
 			title="Art of Problem solving (community)" style="vertical-align:middle;">
 			<img src="images/aops.png"/></a>
 			+
-			<span style="color: red; font-size:16px; font-weight:bold;">♡ </span>
+			<span style="color: red; font-size:18px; font-weight:bold;
+			vertical-align:middle;">♡ </span>
 
-			<p>Approach0: A math-aware search engine.
-			</p>
-		[<a style="text-decoration: none; color: blue;" href="/stats" target="_blank">
+			<p>Approach0: A math-aware search engine.</p>
+		[<a style="text-decoration: none;" href="/stats" target="_blank">
 		query log
 		</a>]
 		</div>
@@ -430,7 +427,7 @@ SE.init({
 		<div v-if="blur_this(idx)" style="position: relative;">
 			<div class="blur">
 				<a class="title" target="_blank" v-bind:href="mess_up(hit.url)"
-				style="text-decoration: none; font-size: 120%;">
+				style="text-decoration: none; font-size: 1.5em;">
 				{{mess_up(hit.title)}}</a><br/>
 				<span style="color:#006d21">{{mess_up(hit.url)}}</span>
 				<div style="overflow-x: hidden;">
@@ -458,7 +455,7 @@ SE.init({
 			<span class="docid">{{hit.docid}}</span>
 			<span class="score">{{hit.score}}</span>
 			<a class="title" target="_blank" v-bind:href="hit.url"
-			style="text-decoration: none; font-size: 120%;">
+			style="text-decoration: none; font-size: 1.5em;">
 			{{hit.title}}</a><br/>
 			<span style="color:#006d21">{{hit.url}}</span>
 			<div style="overflow-x: hidden;">

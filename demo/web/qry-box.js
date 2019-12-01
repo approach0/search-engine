@@ -505,8 +505,11 @@ $(document).ready(function() {
 			},
 			area_on_click: function (ev) {
 				$("#qry-input-box").focus();
-				$("#qry-input-area").animate({"min-height": "60px"});
-				this.ever_focused = true;
+				var vm = this;
+				$("#qry-input-area").animate(
+					{"min-height": "60px"}, "fast", "swing", function () {
+					vm.ever_focused = true;
+				});
 			},
 			on_input: input_box_on_keyup,
 			on_del: input_box_on_del,
