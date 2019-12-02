@@ -23,7 +23,7 @@ if ($detect->isMobile()) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=2eb5ff3917ca3db6" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=74ac7f5a9d1d6317" type="text/css"/>
 <!-- -->
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +35,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=2eb5ff3917ca3db6"></script>
+<script type="text/javascript" src="bundle.min.js?hash=74ac7f5a9d1d6317"></script>
 <style>
 img.social {
 	height: 16px;
@@ -76,7 +76,7 @@ div.blur {
 </style>
 </head>
 
-<body style="margin: 0">
+<body style="margin: 0" class="mainfont">
 <div id="progress" style="position: fixed; border-top: 2px solid #46ece5; z-index:9999;"></div>
 
 <!-- Query Box App -->
@@ -367,7 +367,7 @@ SE.init({
 			</p>
 		</div>
 		<div class="center-horiz" style="padding-top:20px;">
-			<span id="quiz-hint" class="mainfont"></span>
+			<span id="quiz-hint"></span>
 		</div>
 	</div>
 
@@ -471,7 +471,7 @@ SE.init({
 <div id="navigator" v-show="ret_code == 0" class="toleft"
 	style="text-align: center; margin-bottom: 50px; margin-top: 30px;">
 
-	<span class="pagination mainfont">
+	<span class="pagination">
 		<a v-if="cur_page - 1 > 0" title="Previous page"
 			v-bind:onclick="'goto_page(' + (cur_page - 1) + ')'">
 			<b style="font-size:1.5em">←</b>
