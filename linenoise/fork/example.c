@@ -10,7 +10,7 @@ void completion(const char *buf, linenoiseCompletions *lc, size_t pos) {
     size_t i, j, n, start, termlen;
     char lookahread[1024];
     char lookback[1024];
-    char newbuf[1024];
+    char newbuf[4096];
 
     if (pos == 0)
         return;

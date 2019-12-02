@@ -76,7 +76,7 @@ math_index_open(const char *path, const char *mode)
 
 	index = malloc(sizeof(struct math_index));
 
-	sprintf(index->dir, "%s", path);
+	snprintf(index->dir, MAX_PATH_LEN, "%s", path);
 	sprintf(index->mode, "%s", mode);
 
 	index->dict = strmap_new();
@@ -84,7 +84,7 @@ math_index_open(const char *path, const char *mode)
 
 	{  /* read the stats value */
 		char path[MAX_PATH_LEN];
-		sprintf(path, "%s/%s.bin", index->dir, MSTATS_FNAME);
+		snprintf(path, MAX_PATH_LEN, "%s/%s.bin", index->dir, MSTATS_FNAME);
 		FILE *fh_stats = fopen(path, "r");
 		if (NULL == fh_stats) {
 			memset(&index->stats, 0, sizeof index->stats);
@@ -115,7 +115,8 @@ void math_index_flush(math_index_t index)
 
 	/* write the current stats values */
 	char path[MAX_PATH_LEN];
-	sprintf(path, "%s/%s.bin", index->dir, MSTATS_FNAME);
+	snprintf(path, MAX_PATH_LEN, "%s/%s.bin",
+		index->dir, MSTATS_FNAME);
 	FILE *fh_stats = fopen(path, "w");
 	if (fh_stats) {
 		fwrite(&index->stats, 1, sizeof index->stats, fh_stats);
@@ -241,9 +242,9 @@ static int init_invlist_entry(struct math_invlist_entry *entry,
 	char invlist_path[MAX_PATH_LEN];
 	char symbinfo_path[MAX_PATH_LEN];
 	char pf_path[MAX_PATH_LEN];
-	sprintf(invlist_path, "%s/%s", path, MINVLIST_FNAME);
-	sprintf(symbinfo_path, "%s/%s.bin", path, SYMBINFO_FNAME);
-	sprintf(pf_path, "%s/%s.bin", path, PATHFREQ_FNAME);
+	snprintf(invlist_path, MAX_PATH_LEN, "%s/%s", path, MINVLIST_FNAME);
+	snprintf(symbinfo_path, MAX_PATH_LEN, "%s/%s.bin", path, SYMBINFO_FNAME);
+	snprintf(pf_path, MAX_PATH_LEN, "%s/%s.bin", path, PATHFREQ_FNAME);
 
 	/* create path strings */
 	entry->symbinfo_path = strdup(symbinfo_path);
@@ -367,9 +368,9 @@ add_subpath_set(math_index_t index, linkli_t set,
 	const char *root_path = index->dir;
 	size_t flush_sz = 0;
 	foreach (iter, li, set) {
-		char path[MAX_DIR_PATH_NAME_LEN] = "";
+		char path[MAX_PATH_LEN] = "";
 		char *p = path;
-		p += sprintf(p, "%s/", root_path);
+		p += snprintf(p, MAX_PATH_LEN, "%s/", root_path);
 
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		struct subpath *sp = ele->dup[0];
@@ -476,7 +477,7 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 	/* is this directory empty? */
 	char test_path[MAX_PATH_LEN];
-	sprintf(test_path, "%s/%s.bin", path, SYMBINFO_FNAME);
+	snprintf(test_path, MAX_PATH_LEN, "%s/%s.bin", path, SYMBINFO_FNAME);
 	if (!file_exists(test_path) /* no inverted list here */)
 		return DS_RET_CONTINUE;
 
@@ -547,10 +548,11 @@ math_index_lookup(math_index_t index, const char *key_)
 
 	/* if not there, look up from disk directory */
 	char path[MAX_PATH_LEN];
-	sprintf(path, "%s/%s/%s.bin", index->dir, key_, SYMBINFO_FNAME);
+	snprintf(path, MAX_PATH_LEN, "%s/%s/%s.bin",
+		index->dir, key_, SYMBINFO_FNAME);
 
 	if (file_exists(path)) {
-		sprintf(path, "%s/%s", index->dir, key_);
+		snprintf(path, MAX_PATH_LEN, "%s/%s", index->dir, key_);
 		init_invlist_entry(&entry, index->cinfo, path);
 
 		entry_reader.reader = invlist_iterator(entry.invlist);
