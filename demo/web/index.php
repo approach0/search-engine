@@ -494,7 +494,7 @@ SE.init({
 	<span class="pagination">
 		<a v-if="cur_page - 1 > 0" title="Previous page"
 			v-bind:onclick="'goto_page(' + (cur_page - 1) + ')'">
-			<i class="fa fa-chevron-left" aria-hidden="true"></i>
+			<i class="fa fa-angle-left" aria-hidden="true"></i>
 		</a>
 		<template v-if="-1 == pages.indexOf(1)">
 			<a title="First page"
@@ -520,7 +520,7 @@ SE.init({
 		</template>
 		<a v-if="cur_page + 1 <= tot_pages" title="Next page"
 			v-bind:onclick="'goto_page(' + (cur_page + 1) + ')'">
-			<i class="fa fa-chevron-right" aria-hidden="true"></i>
+			<i class="fa fa-angle-right" aria-hidden="true"></i>
 		</a>
 	</span>
 
