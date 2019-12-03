@@ -539,8 +539,12 @@ SE.init({
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 	<div style="text-align: right; letter-spacing: 5px;">
+		<a href="https://chat.stackexchange.com/rooms/46148/"
+		target="_blank" title="Chatroom or feedback">
+			<i class="fa fa-comment" aria-hidden="true"></i></a>
+
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
-		target="_blank" title="Share on Twitter" class="twitter-share-button">
+		target="_blank" title="Share on Twitter">
 			<i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a>
 
 		<a href="http://www.reddit.com/submit?url=https%3A%2F%2Fwww.approach0.xyz&title=Check%20out%20this%20math-aware%20search%20engine!"
