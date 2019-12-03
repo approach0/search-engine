@@ -97,14 +97,20 @@ div.blur {
 		<li v-if="i.type == 'term'" class="qry-li">
 			<div class="qry-div-fix">
 				<span style="padding-right: 12px;">{{{i.str}}}</span>
-				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">✗</span>
+				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
+					<i class="fa fa-times" aria-hidden="true"></i>
+				</span>
 			</div>
 		</li>
 		<li v-if="i.type == 'tex'" class="qry-li">
 			<div class="qry-div-fix">
 				<span style="padding-right: 12px;">[imath]{{i.str}}[/imath]</span>
-				<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">_🖉</span>
-				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">✗</span>
+				<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">
+					<i class="fa fa-pencil" aria-hidden="true"></i>
+				</span>
+				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
+					<i class="fa fa-times" aria-hidden="true"></i>
+				</span>
 			</div>
 		</li>
 		<li v-if="i.type == 'term-input'" class="qry-li">
