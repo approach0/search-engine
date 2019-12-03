@@ -21,9 +21,10 @@ if ($detect->isMobile()) {
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=ebb47e8f589e5040" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=cbc33b1d76cebc42" type="text/css"/>
 <!-- -->
 <script src="https://cdn.jsdelivr.net/npm/polyfill@0.1.0/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -35,7 +36,8 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=ebb47e8f589e5040"></script>
+<script type="text/javascript" src="bundle.min.js?hash=cbc33b1d76cebc42"></script>
+
 <style>
 img.social {
 	height: 16px;
@@ -348,8 +350,11 @@ SE.init({
 	</div>
 -->
 
-	<button style="position: absolute; right: 5px; top: 15px;"
-	type="button" id="search_button">Search</button>
+	<button style="position: absolute; right: 10px; top: 15px;"
+	type="button" id="search_button">
+		<i class="fa fa-search" style="margin-right: 10px;"></i>
+		Search
+	</button>
 
 </div>
 <!-- Search button and options END -->
