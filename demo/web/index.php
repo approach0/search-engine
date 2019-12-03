@@ -140,7 +140,7 @@ div.blur {
 	</a>
 
 	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">
-		<i class="fa fa-angle-down" aria-hidden="true"></i> Symbols
+		<i class="fa fa-angle-down" aria-hidden="true"></i> Lookup symbols
 	</span>
 	<div id="handy-pad">
 		<p>Unfamiliar with entering math symbols?
@@ -409,10 +409,10 @@ SE.init({
 				<i class="fa fa-heart-o" aria-hidden="true"></i>
 			</span>
 
-			<p>Approach0: A math-aware search engine.</p>
-		[<a style="text-decoration: none;" href="/stats" target="_blank">
-		query log
-		</a>]
+			<p>Approach Zero: A math-aware search engine.</p>
+		[ <a style="text-decoration: none;" href="/stats" target="_blank">
+		<i class="fa fa-history" aria-hidden="true"></i>
+		query log</a> ]
 		</div>
 	</div>
 	<!-- Initial Footer END -->
