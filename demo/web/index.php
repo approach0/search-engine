@@ -428,10 +428,14 @@ SE.init({
 <div class="center-horiz">
 	<template v-if="ret_code == 102">
 	<p><span class="dots" style="color:white"></span>
+	<i class="fa fa-cog fa-spin fa-fw"></i>
 	{{ret_str}}
 	<span class="dots"></span></p>
 	</template>
-	<p v-else>Opps! {{ret_str}}. (return code #{{ret_code}})</p>
+	<p v-else>
+		<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+		{{ret_str}}. (return code #{{ret_code}})
+	</p>
 </div>
 </div>
 <!-- Error code END -->
