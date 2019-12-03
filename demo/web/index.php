@@ -24,7 +24,7 @@ if ($detect->isMobile()) {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=3085682ee277e029" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=5a62e415f59308bc" type="text/css"/>
 <!-- -->
 <script src="https://cdn.jsdelivr.net/npm/polyfill@0.1.0/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -36,7 +36,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=3085682ee277e029"></script>
+<script type="text/javascript" src="bundle.min.js?hash=5a62e415f59308bc"></script>
 
 <style>
 img.social {
@@ -93,38 +93,43 @@ div.blur {
 	</a>
 </div>
 <div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 6px;" v-on:click="area_on_click">
-<ul class="qry-li-wrap"><template v-for="i in items">
-		<li v-if="i.type == 'term'" class="qry-li">
-			<div class="qry-div-fix">
-				<span style="padding-right: 12px;">{{{i.str}}}</span>
-				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
-					<i class="fa fa-times" aria-hidden="true"></i>
-				</span>
-			</div>
-		</li>
-		<li v-if="i.type == 'tex'" class="qry-li">
-			<div class="qry-div-fix">
-				<span style="padding-right: 12px;">[imath]{{i.str}}[/imath]</span>
-				<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">
-					<i class="fa fa-pencil" aria-hidden="true"></i>
-				</span>
-				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
-					<i class="fa fa-times" aria-hidden="true"></i>
-				</span>
-			</div>
-		</li>
-		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
-			type="text" id="qry-input-box" class="pl_holder"
-			placeholder="Enter query keywords here, type $ for math formula."/>
-		</li>
-		<li v-if="i.type == 'tex-input'" class="qry-li">
-			<span id="math-input"></span>
-			<span class="pl_holder">
-			<b>You are editing a math formula</b>.
-			When you finish, press enter or click <a @click="on_finish_math_edit">here</a>.</span>
-		</li>
-</template></ul>
+<ul class="qry-li-wrap">
+	<template v-for="i in items">
+	<li v-if="i.type == 'term'" class="qry-li">
+		<div class="qry-div-fix">
+			<span style="padding-right: 12px;">{{{i.str}}}</span>
+			<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
+				<i class="fa fa-times" aria-hidden="true"></i>
+			</span>
+		</div>
+	</li>
+	<li v-if="i.type == 'tex'" class="qry-li">
+		<div class="qry-div-fix">
+			<span style="padding-right: 12px;">[imath]{{i.str}}[/imath]</span>
+			<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">
+				<i class="fa fa-pencil" aria-hidden="true"></i>
+			</span>
+			<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
+				<i class="fa fa-times" aria-hidden="true"></i>
+			</span>
+		</div>
+	</li>
+	<li class="qry-li-empty">
+		<div v-bind:style="{height: chip_max_height + 'px', width: '1px'}">
+	</li>
+	<li v-if="i.type == 'term-input'" class="qry-li">
+		<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
+		type="text" id="qry-input-box" class="pl_holder"
+		placeholder="Enter query keywords here, type $ for math formula."/>
+	</li>
+	<li v-if="i.type == 'tex-input'" class="qry-li">
+		<span id="math-input"></span>
+		<span class="pl_holder">
+		<b>You are editing a math formula</b>.
+		When you finish, press enter or click <a @click="on_finish_math_edit">here</a>.</span>
+	</li>
+	</template>
+</ul>
 </div>
 </div>
 <!-- Query input area END -->

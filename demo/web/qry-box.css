@@ -13,6 +13,11 @@ li.qry-li {
 	margin-top: 2px;
 }
 
+li.qry-li-empty {
+	float: left;
+	display: block;
+}
+
 div.qry-div-fix {
 	background-color: #fbfefe;
 	padding-left: 8px;
