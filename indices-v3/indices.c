@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "term-index/config.h" /* for excluding cache terms */
 #include "dir-util/dir-util.h" /* for MAX_FILE_NAME_LEN */
 #include "tex-parser/head.h" /* for optr_print() */
 #include "indices.h"
@@ -276,12 +277,12 @@ index_tex(math_index_t mi, char *tex, doc_id_t docID, uint32_t expID)
 static int indexer_handle_slice(struct lex_slice *slice)
 {
 	struct indices *indices = g_indexer->indices;
-	size_t str_sz = strlen(slice->mb_str);
+	size_t str_len = strlen(slice->mb_str);
 	struct tex_parse_ret tex_parse_ret;
 
 //#ifdef DEBUG_INDEXER
 //	printf("input slice: [%s] <%u, %lu>\n", slice->mb_str,
-//		slice->offset, str_sz);
+//		slice->offset, str_len);
 //#endif
 
 	/* safe-guard for document length (maximum number of positions) */
@@ -292,18 +293,16 @@ static int indexer_handle_slice(struct lex_slice *slice)
 
 	switch (slice->type) {
 	case LEX_SLICE_TYPE_MATH_SEG:
-		/* term_index_doc_add() is invoked here to make position numbers
-		 * synchronous in both math-index and term-index. */
-		term_index_doc_add(indices->ti, "math_exp");
+		/* synchronize position in Indri index */
+		term_index_doc_add(indices->ti, TERM_INDEX_MATH_EXPR_PLACEHOLDER);
 
 		/* extract tex from math tag */
-		strip_math_tag(slice->mb_str, str_sz);
+		strip_math_tag(slice->mb_str, str_len);
 
 		/* index TeX */
 		tex_parse_ret = index_tex(indices->mi, slice->mb_str,
 		                          indices->n_doc + 1, g_indexer->cur_position);
 		/* increments */
-		g_indexer->cur_position ++;
 		g_indexer->n_parse_tex ++;
 
 		if (tex_parse_ret.code == PARSER_RETCODE_ERR) {
@@ -320,21 +319,28 @@ static int indexer_handle_slice(struct lex_slice *slice)
 
 	case LEX_SLICE_TYPE_ENG_SEG:
 	case LEX_SLICE_TYPE_MIX_SEG:
+		/* refuse to index text terms ridiculously long */
+		if (str_len > INDICES_MAX_TEXT_TERM_LEN) {
+			/* synchronize position in Indri index */
+			term_index_doc_add(indices->ti, TERM_INDEX_LONG_WORD_PLACEHOLDER);
+			break;
+		}
+
 		/* turn all indexing words to lower case for recall */
-		eng_to_lower_case(slice->mb_str, str_sz);
+		eng_to_lower_case(slice->mb_str, str_len);
 
 		/* add term into inverted-index */
 		//printf("add [%s]@%u\n", slice->mb_str, g_indexer->cur_position);
 		term_index_doc_add(indices->ti, slice->mb_str);
 
-		/* increments */
-		g_indexer->cur_position ++;
 		break;
 
 	default:
 		assert(0);
 	}
 
+	/* current position increment */
+	g_indexer->cur_position ++;
 	return 0;
 }
 
