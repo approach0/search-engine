@@ -390,19 +390,21 @@ SE.init({
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div class="toleft" style="text-align: center;">
 			<a target="_blank" href="https://twitter.com/approach0"
-			title="Approach0" style="vertical-align:middle;">
-			<img src="images/logo32.png"/></a>
+			title="Approach0">
+			<img src="images/logo32.png" style="vertical-align:middle;"/></a>
 			=
 			<a target="_blank" href="https://math.stackexchange.com/"
-			title="Math StackExchange" style="vertical-align:middle;">
-			<img src="images/math-stackexchange.png"/></a>
+			title="Math StackExchange">
+			<img src="images/math-stackexchange.png" style="vertical-align:middle;"/></a>
 			+
 			<a target="_blank" href="https://artofproblemsolving.com/community"
-			title="Art of Problem solving (community)" style="vertical-align:middle;">
-			<img src="images/aops.png"/></a>
+			title="Art of Problem solving (community)">
+			<img src="images/aops.png" style="vertical-align:middle;"/></a>
 			+
 			<span style="color: red; font-size:18px; font-weight:bold;
-			vertical-align:middle;">♡ </span>
+			vertical-align:middle;">
+				<i class="fa fa-heart-o" aria-hidden="true"></i>
+			</span>
 
 			<p>Approach0: A math-aware search engine.</p>
 		[<a style="text-decoration: none;" href="/stats" target="_blank">
