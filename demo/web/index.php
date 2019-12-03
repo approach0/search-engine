@@ -126,7 +126,9 @@ div.blur {
 		<span id="math-input"></span>
 		<span class="pl_holder">
 		<b>You are editing a math formula</b>.
-		When you finish, press enter or click <a @click="on_finish_math_edit">here</a>.</span>
+		When you finish, press enter or click
+		<a href="javascript: void(0)" @click="on_finish_math_edit">here</a>.
+		</span>
 	</li>
 	</template>
 </ul>
