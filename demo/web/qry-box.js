@@ -329,12 +329,12 @@ $(document).ready(function() {
 		head = obj;
 		below = head.next();
 		below.toggle("fast", function () {
-			t = head.text();
+			t = head.html();
 			if (below.is(":visible"))
-				t = t.replace("+", "-");
+				t = t.replace("-down", "-up");
 			else
-				t = t.replace("-", "+");
-			head.text(t);
+				t = t.replace("-up", "-down");
+			head.html(t);
 
 			$('#init-footer').stickToBottom('#quiz');
 
