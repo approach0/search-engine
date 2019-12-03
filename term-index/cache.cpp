@@ -70,7 +70,6 @@ int term_index_load(void *index_, size_t limit_sz)
 	term_id_t term_id, termN;
 	termN = term_index_get_termN(index_);
 
-	uint32_t avgDocLen = term_index_get_avgDocLen(index);
 #ifdef PRINT_CACHING_TEXT_TERMS
 	printf("Term-index caching DocFreq threshold = %u\n",
 		MINIMAL_CACHE_DOC_FREQ);
@@ -79,19 +78,22 @@ int term_index_load(void *index_, size_t limit_sz)
 	if (NULL == index->cinfo)
 		index->cinfo = term_codec_info();
 
-	/* get "math_exp" term ID */
-	term_id_t exclude_id = term_lookup(index, (char*)"math_exp");
+	/* get IDs of excluding cache terms */
+	term_id_t math_expr_id;
+	term_id_t long_word_id;
+	math_expr_id = term_lookup(index, TERM_INDEX_MATH_EXPR_PLACEHOLDER);
+	long_word_id = term_lookup(index, TERM_INDEX_LONG_WORD_PLACEHOLDER);
 
 	for (term_id = 1; term_id <= termN; term_id++) {
 		/* break when we do not want any term being cached */
 		if (limit_sz == 0) break;
 
-		/* exclude "math_exp" */
-		if (term_id == exclude_id) continue;
+		/* ignore those excluding cache terms */
+		if (term_id == math_expr_id || term_id == long_word_id)
+			continue;
 
 		/* only document terms with DF greater than a threshold */
 		uint32_t df = term_index_get_df(index, term_id);
-		(void)avgDocLen;
 		if (df < MINIMAL_CACHE_DOC_FREQ)
 			continue;
 

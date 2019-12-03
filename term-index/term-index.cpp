@@ -121,12 +121,7 @@ doc_id_t term_index_doc_end(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
 
-#ifdef IGNORE_TERM_INDEX
-	static doc_id_t new_docID = 0;
-	new_docID ++;
-#else
 	doc_id_t new_docID = ti->repo.addDocument(&ti->document);
-#endif
 
 	vector<char*>::iterator it;
 	vector<char*> &terms = ti->save;
