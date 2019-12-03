@@ -527,19 +527,18 @@ SE.init({
 	style="padding-top: 15px; background: #f4f6f8; width: 100%;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
-	<div style="text-align: right;">
+	<div style="text-align: right; letter-spacing: 5px;">
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
-		target="_blank" title="Tweet" class="twitter-share-button">
-		<img class="social" src="images/social/Twitter.svg"></a>
+		target="_blank" title="Share on Twitter" class="twitter-share-button">
+			<i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a>
 
 		<a href="http://www.reddit.com/submit?url=https%3A%2F%2Fwww.approach0.xyz&title=Check%20out%20this%20math-aware%20search%20engine!"
 		target="_blank" title="Submit to Reddit">
-		<img class="social" src="images/social/Reddit.svg"></a>
+			<i class="fa fa-reddit-alien fa-lg" aria-hidden="true"></i></a>
 
-		<script async defer src="https://buttons.github.io/buttons.js"></script>
-		<a class="github-button" href="https://github.com/approach0/search-engine"
-		data-count-href="/approach0/search-engine/stargazers" data-count-api="/repos/approach0/search-engine#stargazers_count"
-		data-count-aria-label="# stargazers on GitHub" aria-label="Star approach0/search-engine on GitHub">Star</a>
+		<a href="https://github.com/approach0/search-engine"
+		target="_blank" title="Star on Github">
+			<i class="fa fa-github fa-lg" aria-hidden="true"></i></a>
 	</div>
 
 </div>
