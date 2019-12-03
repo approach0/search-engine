@@ -46,7 +46,6 @@ div.qry-div-fix {
 span.dele {
 	font-size: 14px;
 	color: gray;
-	padding-left: 12px;
 }
 
 span.dele:hover {
@@ -55,6 +54,7 @@ span.dele:hover {
 }
 
 span.edit {
+	padding-left: 12px;
 	font-size: 14px;
 	color: gray;
 }
