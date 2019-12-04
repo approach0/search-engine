@@ -51,7 +51,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	invlist_iter_t writer = invlist_writer(invlist);
 
 	/* write a sequence of random items */
-	size_t flush_sz;
+	size_t flush_sz, total_size = 0;
 	srand(time(0));
 
 	uint last_docID = 1;
@@ -64,7 +64,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
 		flush_sz = invlist_writer_write(writer, items + i);
-		(void)flush_sz;
+		total_size += flush_sz;
 #ifdef VERBOSE
 		printf("write items[%d] (flush %lu): ", i, flush_sz);
 		print_item(items + i);
@@ -75,11 +75,11 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	}
 
 	flush_sz = invlist_writer_flush(writer);
+	total_size += flush_sz;
 #ifdef VERBOSE
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 #endif
 
-	size_t total_size = invlist->tot_payload_sz;
 	size_t orig_size = n * sizeof(items[0]);
 	printf("compression rate: %lu / %lu = %.2f %%\n", orig_size, total_size,
 		100.f * orig_size / total_size);
@@ -173,16 +173,16 @@ int main()
 	struct math_invlist_item items[N] = {0};
 
 	/* test for in-memory inverted list */
-	invlist = gen_random_items(NULL, info, items, N);
-	test_iterator(invlist, items);
-	test_skipping(invlist);
-	invlist_free(invlist);
+	// invlist = gen_random_items(NULL, info, items, N);
+	// test_iterator(invlist, items);
+	// test_skipping(invlist);
+	// invlist_free(invlist);
 
 	/* test for on-disk inverted list */
 	system("rm -f ./run/*.bin");
 	invlist = gen_random_items("run/invlist", info, items, N);
 	test_iterator(invlist, items);
-	test_skipping(invlist);
+	//test_skipping(invlist);
 	invlist_free(invlist);
 
 	/* free structure field information */
