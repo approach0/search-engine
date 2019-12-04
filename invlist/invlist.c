@@ -255,7 +255,7 @@ invlist_iter_t invlist_writer(struct invlist *invlist)
 
 		/* set buf_idx so that invlist_writer_write() shall work correctly. */
 		iter->buf_idx = file_sz / iter->c_info->struct_sz;
-		iter->buf_len = iter->buf_idx;
+		iter->buf_len = iter->buf_idx; /* for writer, keep them equal */
 	}
 
 	return iter;
