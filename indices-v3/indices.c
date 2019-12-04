@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "common/common.h" /* for prerr() */
 #include "term-index/config.h" /* for excluding cache terms */
 #include "dir-util/dir-util.h" /* for MAX_FILE_NAME_LEN */
 #include "tex-parser/head.h" /* for optr_print() */
@@ -322,6 +323,7 @@ static int indexer_handle_slice(struct lex_slice *slice)
 		/* refuse to index text terms ridiculously long */
 		if (str_len > INDICES_MAX_TEXT_TERM_LEN) {
 			/* synchronize position in Indri index */
+			prinfo("text term too long to be indexed: \n%s\n", slice->mb_str);
 			term_index_doc_add(indices->ti, TERM_INDEX_LONG_WORD_PLACEHOLDER);
 			break;
 		}
