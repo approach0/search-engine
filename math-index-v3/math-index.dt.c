@@ -330,10 +330,6 @@ static size_t append_invlist(math_index_t index, char *path,
 
 		/* write sector tree structure */
 		flush_payload = invlist_writer_write(writer, &item);
-		if (flush_payload == 0) {
-			prerr("invlist_writer_write writes nothing.");
-			continue;
-		}
 
 		/* prepare symbinfo structure */
 		symbinfo.ophash = secttr.ophash;
