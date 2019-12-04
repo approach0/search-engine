@@ -50,6 +50,21 @@ char *filename_ext(const char *name)
 	return NULL;
 }
 
+long get_file_size(const char *path)
+{
+	long fsize = 0;
+	FILE *fh = fopen(path, "r");
+	if (fh) {
+		fseek(fh, 0, SEEK_END);
+		fsize = ftell(fh);
+		if (fsize < 0)
+			fsize = 0;
+		fclose(fh);
+	}
+
+	return fsize;
+}
+
 void mkdir_p(const char *path)
 {
 	char dir[MAX_DIR_PATH_NAME_LEN];

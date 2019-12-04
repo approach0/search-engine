@@ -13,6 +13,8 @@ bool dir_exists(const char*);
 
 int file_exists(const char*);
 
+long get_file_size(const char*);
+
 enum ds_ret {
 	DS_RET_STOP_SUBDIR,
 	DS_RET_STOP_ALLDIR,

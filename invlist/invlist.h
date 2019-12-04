@@ -65,8 +65,9 @@ typedef struct invlist_iterator {
 	struct invlist_node     *cur; /* in-memo invlist */
 
 	/* below only used for on-disk reading */
-	struct skippy_fh         sfh;
 	FILE                    *lfh;
+	struct skippy_fh         sfh;
+
 	int                      if_disk_buf_read;
 } *invlist_iter_t;
 
@@ -91,8 +92,7 @@ int      invlist_iter_next(struct invlist_iterator*);
 uint64_t invlist_iter_bufkey(struct invlist_iterator*, uint32_t);
 uint64_t invlist_iter_curkey(struct invlist_iterator*);
 size_t   invlist_iter_read(struct invlist_iterator*, void*);
-
-int invlist_iter_jump(struct invlist_iterator*, uint64_t);
+int      invlist_iter_jump(struct invlist_iterator*, uint64_t);
 
 /* misc function */
 void invlist_iter_print_cur_as_decoded_ints(invlist_iter_t);
