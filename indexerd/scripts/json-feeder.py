@@ -45,7 +45,7 @@ begin = args.begin_from if args.begin_from else 0
 
 print('Indexd URL: ' + url)
 
-print('Count how many files there ...')
+print(f'Count how many files there in {corpus} ...')
 N = get_n_files(corpus)
 print('%u files in total.' % N)
 
