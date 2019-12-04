@@ -84,8 +84,9 @@ static size_t refill_buffer__memo(struct invlist_iterator *iter)
 	if (cur) {
 		codec_buf_struct_info_t *c_info = iter->c_info;
 		/* decode and refill buffer */
-		out_sz = codec_buf_decode(iter->buf, cur->blk, cur->len, c_info);
-		iter->buf_len = cur->len;
+		uint n;
+		out_sz = codec_buf_decode(iter->buf, cur->blk, &n, c_info);
+		iter->buf_len = n;
 	} else {
 		iter->buf_len = 0;
 	}
@@ -172,11 +173,12 @@ static size_t refill_buffer__disk(struct invlist_iterator *iter, long offset)
 	}
 
 	/* decode and refill the buffer (full) */
+	uint n;
 	codec_buf_struct_info_t *c_info = iter->c_info;
-	out_sz = codec_buf_decode(iter->buf, block, iter->buf_max_len, c_info);
+	out_sz = codec_buf_decode(iter->buf, block, &n, c_info);
 
 	/* now the buffer is filled full */
-	iter->buf_len = iter->buf_max_len;
+	iter->buf_len = n;
 	return out_sz;
 }
 
@@ -450,7 +452,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 		/* fill the temporary buffer, refuse to flush when it is not full */
 		iter->if_disk_buf_read = 0; /* force refill */
 
-		if (refill_buffer__disk_buf(iter) == iter->buf_max_sz) {
+		if (refill_buffer__disk_buf(iter) <= iter->buf_max_sz) {
 			/* truncate disk buffer file */
 			char path[MAX_PATH_LEN];
 			snprintf(path, MAX_PATH_LEN, "%s.%s.bin",
@@ -464,7 +466,7 @@ size_t invlist_writer_flush(struct invlist_iterator *iter)
 				prerr("cannot truncate file %s", path);
 			}
 		} else {
-			prerr("refill_buffer__disk_buf and buf_max_sz not match.");
+			prerr("on-disk buffer exceeds buf_max_sz.");
 		}
 
 		/* destory temporary codec buffer */
