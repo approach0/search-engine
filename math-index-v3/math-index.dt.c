@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> /* for dup() */
-#include <assert.h>
 
 #include "common/common.h"
 #include "linkli/list.h"
@@ -298,6 +297,10 @@ static size_t append_invlist(math_index_t index, char *path,
 	/* open files */
 	FILE *fh_symbinfo = fopen(entry->symbinfo_path, "a");
 	FILE *fh_pf = fopen(entry->pf_path, "w");
+	if (NULL == fh_symbinfo || NULL == fh_pf) {
+		prerr("cannot open symbinfo or pf file(s).");
+		goto free;
+	}
 
 	/* append invert list item */
 	struct math_invlist_item item;
@@ -313,7 +316,12 @@ static size_t append_invlist(math_index_t index, char *path,
 
 		item.sect_width = secttr.width;
 		item.orig_width = width;
-		item.symbinfo_offset = ftell(fh_symbinfo);
+		long offset = ftell(fh_symbinfo);
+		if (-1 == offset) {
+			prerr("ftell error.");
+			continue;
+		}
+		item.symbinfo_offset = offset;
 
 #ifdef MATH_INDEX_SECTTR_PRINT
 		printf("writing sector tree %u/%u: ",
@@ -343,20 +351,23 @@ static size_t append_invlist(math_index_t index, char *path,
 		                        fh_symbinfo);
 
 		/* update frequency statistics */
-		entry->pf ++;
-		rewind(fh_pf);
-		fwrite(&entry->pf, 1, sizeof entry->pf, fh_pf);
+		{
+			entry->pf ++;
+			rewind(fh_pf);
+			fwrite(&entry->pf, 1, sizeof entry->pf, fh_pf);
+		}
 
 		index->stats.N ++;
 	}
 
+free:
 	/* free temporary entry */
 	free_invlist_entry(entry);
 	invlist_iter_free(writer);
 
 	/* close files to save OS file descriptor space */
-	fclose(fh_symbinfo);
-	fclose(fh_pf);
+	if (fh_symbinfo) fclose(fh_symbinfo);
+	if (fh_pf) fclose(fh_pf);
 
 	return flush_payload;
 }

@@ -84,7 +84,7 @@ int main()
 
 	/* prepare min-heap */
 	ranked_results_t rk_res;
-	priority_Q_init(&rk_res, DEFAULT_N_TOP_RESULTS);
+	priority_Q_init(&rk_res, DEFAULT_K_TOP_RESULTS);
 
 	/* prepare merger */
 	struct merge_set merge_set = {0};

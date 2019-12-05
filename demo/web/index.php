@@ -21,11 +21,12 @@ if ($detect->isMobile()) {
 <meta name="keywords" content="Approach0, Approach Zero, ApproachO, mathematics, math, formula, equation, math search, equation search, formula search, search engine" />
 <link rel="shortcut icon" href="images/favicon.ico">
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=74ac7f5a9d1d6317" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=5a62e415f59308bc" type="text/css"/>
 <!-- -->
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/polyfill@0.1.0/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
 
 <script type='text/javascript' src='vendor/stackexchange/oauth.js'></script>
@@ -35,7 +36,8 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=74ac7f5a9d1d6317"></script>
+<script type="text/javascript" src="bundle.min.js?hash=5a62e415f59308bc"></script>
+
 <style>
 img.social {
 	height: 16px;
@@ -91,32 +93,45 @@ div.blur {
 	</a>
 </div>
 <div id="qry-input-area" style="flex: 1; margin-left: 15px; border-radius: 6px;" v-on:click="area_on_click">
-<ul class="qry-li-wrap"><template v-for="i in items">
-		<li v-if="i.type == 'term'" class="qry-li">
-			<div class="qry-div-fix">
-				<span>{{{i.str}}}</span>
-				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">×</span>
-			</div>
-		</li>
-		<li v-if="i.type == 'tex'" class="qry-li">
-			<div class="qry-div-fix">
-				<span>[imath]{{i.str}}[/imath]</span>
-				<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">×</span>
-				<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">✐</span>
-			</div>
-		</li>
-		<li v-if="i.type == 'term-input'" class="qry-li">
-			<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
-			type="text" id="qry-input-box" class="pl_holder"
-			placeholder="Enter query keywords here, type $ for math formula."/>
-		</li>
-		<li v-if="i.type == 'tex-input'" class="qry-li">
-			<span id="math-input"></span>
-			<span class="pl_holder">
-			<b>You are editing a math formula</b>.
-			When you finish, press enter or click <a @click="on_finish_math_edit">here</a>.</span>
-		</li>
-</template></ul>
+<ul class="qry-li-wrap">
+	<template v-for="i in items">
+	<li v-if="i.type == 'term'" class="qry-li">
+		<div class="qry-div-fix">
+			<span style="padding-right: 12px;">{{{i.str}}}</span>
+			<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
+				<i class="fa fa-times" aria-hidden="true"></i>
+			</span>
+		</div>
+	</li>
+	<li v-if="i.type == 'tex'" class="qry-li">
+		<div class="qry-div-fix">
+			<span style="padding-right: 12px;">[imath]{{i.str}}[/imath]</span>
+			<span title="edit" class="edit" v-bind:onclick="'edit_kw('+$index+')'">
+				<i class="fa fa-pencil" aria-hidden="true"></i>
+			</span>
+			<span title="delete" class="dele" v-bind:onclick="'dele_kw('+$index+')'">
+				<i class="fa fa-times" aria-hidden="true"></i>
+			</span>
+		</div>
+	</li>
+	<li class="qry-li-empty">
+		<div v-bind:style="{height: chip_max_height + 'px', width: '1px'}">
+	</li>
+	<li v-if="i.type == 'term-input'" class="qry-li">
+		<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
+		type="text" id="qry-input-box" class="pl_holder"
+		placeholder="Enter query keywords here, type $ for math formula."/>
+	</li>
+	<li v-if="i.type == 'tex-input'" class="qry-li">
+		<span id="math-input"></span>
+		<span class="pl_holder">
+		<b>You are editing a math formula</b>.
+		When you finish, press enter or click
+		<a href="javascript: void(0)" @click="on_finish_math_edit">here</a>.
+		</span>
+	</li>
+	</template>
+</ul>
 </div>
 </div>
 <!-- Query input area END -->
@@ -128,17 +143,19 @@ div.blur {
 
 	<a style="text-decoration: none; font-size: 14px;"
 	href="/guide" target="_blank">
-	<img src="images/link.png" style="vertical-align: middle;"/>
-	user guide
+		<i class="fa fa-external-link" aria-hidden="true"></i> Guide
 	</a>
 
-	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">(+) handy pad</span>
+	<span class="collapse" title="Lookup TeX commands" id="handy-pad-expander">
+		<i class="fa fa-angle-down" aria-hidden="true"></i> Lookup symbols
+	</span>
 	<div id="handy-pad">
 		<p>Unfamiliar with entering math symbols?
 		Check out a helpful hand written math recognizer
 		<a target="_blank" href="https://webdemo.myscript.com/views/math/index.html">
-		here</a>.</p>
-		<p> Alternatively, you can click button to insert symbols:</p>
+		here</a>.
+		Copy and paste TeX string of the math you want to search here.
+		Alternatively, you can look up and insert symbols from below:</p>
 		<div v-for="p in pad">
 		<h3>{{p.tab_name}}</h3>
 		<ul class="pad-li-warp"><template v-for="b in p.buttons">
@@ -152,22 +169,24 @@ div.blur {
 		</template></ul>
 		</div>
 
-		<p>Above only lists most frequently used math snippets. Refer to <a target="_blank"
-		href="http://www.onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">
-		this link</a> for a complete math-related TeX commands and paste what you need here.
-		</p>
-		<p>Willing to learn some Tex? <a target="_blank" href=
-		"https://en.wikibooks.org/wiki/LaTeX">Here</a> is a helpful tutorial.
-		</p>
 		<p>Want more? Make a request and add more buttons
 		<a target="_blank" href="https://github.com/approach0/search-engine/blob/master/demo/web/pad.js">here</a>.
+		</p>
+
+		<p>Above only lists some of most frequently used math snippets. Refer to <a target="_blank"
+		href="http://www.onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">
+		this link</a> for a complete math-related TeX commands and paste what you need here.
+		Willing to learn some Tex? <a target="_blank" href=
+		"https://en.wikibooks.org/wiki/LaTeX">Here</a> is a helpful tutorial.
 		</p>
 		<hr class="vsep"/>
 	</div>
 
-	<span class="collapse" title="Raw query and API">(+) raw query</span>
+	<span class="collapse" title="Raw query and API">
+		<i class="fa fa-angle-down" aria-hidden="true"></i> Raw query
+	</span>
 	<div>
-		<p>Know TeX? Great! You may want to edit raw query below directly (separate keywords by commas).</p>
+		<p>Know how to write TeX? Great! You may want to edit math query in TeX directly (separate keywords by commas):</p>
 		<input id="qry" style="padding-left: 6px; margin-bottom: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
 		placeholder="Enter raw query ..."/>
 
@@ -348,8 +367,11 @@ SE.init({
 	</div>
 -->
 
-	<button style="position: absolute; right: 5px; top: 15px;"
-	type="button" id="search_button">Search</button>
+	<button style="position: absolute; right: 10px; top: 15px;"
+	type="button" id="search_button">
+		<i class="fa fa-search" style="margin-right: 10px;"></i>
+		Search
+	</button>
 
 </div>
 <!-- Search button and options END -->
@@ -359,7 +381,7 @@ SE.init({
 
 <!-- Quiz App -->
 <div id="quiz-vue-app" v-show="!hide">
-	<div id="quiz" class="toleft" style="padding-bottom: 100px;">
+	<div id="quiz" class="toleft" style="padding-bottom: 101px;">
 		<div class="center-v-pad"></div>
 		<div class="center-horiz">
 			<p id="quiz-question">
@@ -379,24 +401,26 @@ SE.init({
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div class="toleft" style="text-align: center;">
 			<a target="_blank" href="https://twitter.com/approach0"
-			title="Approach0" style="vertical-align:middle;">
-			<img src="images/logo32.png"/></a>
+			title="Approach0">
+			<img src="images/logo32.png" style="vertical-align:middle;"/></a>
 			=
 			<a target="_blank" href="https://math.stackexchange.com/"
-			title="Math StackExchange" style="vertical-align:middle;">
-			<img src="images/math-stackexchange.png"/></a>
+			title="Math StackExchange">
+			<img src="images/math-stackexchange.png" style="vertical-align:middle;"/></a>
 			+
 			<a target="_blank" href="https://artofproblemsolving.com/community"
-			title="Art of Problem solving (community)" style="vertical-align:middle;">
-			<img src="images/aops.png"/></a>
+			title="Art of Problem solving (community)">
+			<img src="images/aops.png" style="vertical-align:middle;"/></a>
 			+
 			<span style="color: red; font-size:18px; font-weight:bold;
-			vertical-align:middle;">♡ </span>
+			vertical-align:middle;">
+				<i class="fa fa-heart-o" aria-hidden="true"></i>
+			</span>
 
-			<p>Approach0: A math-aware search engine.</p>
-		[<a style="text-decoration: none;" href="/stats" target="_blank">
-		query log
-		</a>]
+			<p>Approach Zero: A math-aware search engine.</p>
+		[ <a style="text-decoration: none;" href="/stats" target="_blank">
+		<i class="fa fa-history" aria-hidden="true"></i>
+		query log</a> ]
 		</div>
 	</div>
 	<!-- Initial Footer END -->
@@ -407,15 +431,19 @@ SE.init({
 <div id="search-vue-app">
 
 <!-- Error code -->
-<div v-if="ret_code > 0">
+<div v-if="ret_code > 0" style="padding-bottom: 101px;">
 <div class="center-v-pad"></div>
 <div class="center-horiz">
 	<template v-if="ret_code == 102">
 	<p><span class="dots" style="color:white"></span>
+	<i class="fa fa-cog fa-spin fa-fw"></i>
 	{{ret_str}}
 	<span class="dots"></span></p>
 	</template>
-	<p v-else>Opps! {{ret_str}}. (return code #{{ret_code}})</p>
+	<p v-else>
+		<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+		{{ret_str}}. (return code #{{ret_code}})
+	</p>
 </div>
 </div>
 <!-- Error code END -->
@@ -474,7 +502,7 @@ SE.init({
 	<span class="pagination">
 		<a v-if="cur_page - 1 > 0" title="Previous page"
 			v-bind:onclick="'goto_page(' + (cur_page - 1) + ')'">
-			<b style="font-size:1.5em">←</b>
+			<i class="fa fa-angle-left" aria-hidden="true"></i>
 		</a>
 		<template v-if="-1 == pages.indexOf(1)">
 			<a title="First page"
@@ -500,7 +528,7 @@ SE.init({
 		</template>
 		<a v-if="cur_page + 1 <= tot_pages" title="Next page"
 			v-bind:onclick="'goto_page(' + (cur_page + 1) + ')'">
-			<b style="font-size:1.5em">→</b>
+			<i class="fa fa-angle-right" aria-hidden="true"></i>
 		</a>
 	</span>
 
@@ -511,19 +539,22 @@ SE.init({
 	style="padding-top: 15px; background: #f4f6f8; width: 100%;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
-	<div style="text-align: right;">
+	<div style="text-align: right; letter-spacing: 5px;">
+		<a href="https://chat.stackexchange.com/rooms/46148/"
+		target="_blank" title="Chatroom or feedback">
+			<i class="fa fa-comment" aria-hidden="true"></i></a>
+
 		<a href="https://twitter.com/intent/tweet?text=Check%20this%20out%3A%20%40Approach0%2C%20A%20math-aware%20search%20engine%3A%20http%3A%2F%2Fwww.approach0.xyz"
-		target="_blank" title="Tweet" class="twitter-share-button">
-		<img class="social" src="images/social/Twitter.svg"></a>
+		target="_blank" title="Share on Twitter">
+			<i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a>
 
 		<a href="http://www.reddit.com/submit?url=https%3A%2F%2Fwww.approach0.xyz&title=Check%20out%20this%20math-aware%20search%20engine!"
 		target="_blank" title="Submit to Reddit">
-		<img class="social" src="images/social/Reddit.svg"></a>
+			<i class="fa fa-reddit-alien fa-lg" aria-hidden="true"></i></a>
 
-		<script async defer src="https://buttons.github.io/buttons.js"></script>
-		<a class="github-button" href="https://github.com/approach0/search-engine"
-		data-count-href="/approach0/search-engine/stargazers" data-count-api="/repos/approach0/search-engine#stargazers_count"
-		data-count-aria-label="# stargazers on GitHub" aria-label="Star approach0/search-engine on GitHub">Star</a>
+		<a href="https://github.com/approach0/search-engine"
+		target="_blank" title="Star on Github">
+			<i class="fa fa-github fa-lg" aria-hidden="true"></i></a>
 	</div>
 
 </div>

@@ -100,7 +100,7 @@ int main()
 	 * Create top-K heap
 	 */
 	ranked_results_t rk_res;
-	priority_Q_init(&rk_res, DEFAULT_N_TOP_RESULTS);
+	priority_Q_init(&rk_res, DEFAULT_K_TOP_RESULTS);
 
 	/*
 	 * Merge

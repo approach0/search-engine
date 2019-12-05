@@ -9,8 +9,8 @@
 
 #include <assert.h>
 
-#define N (30)
-// #define N (300)
+// #define N (30)
+#define N (300)
 
 #define SPAN 128
 #define VERBOSE
@@ -51,7 +51,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	invlist_iter_t writer = invlist_writer(invlist);
 
 	/* write a sequence of random items */
-	size_t flush_sz;
+	size_t flush_sz, total_size = 0;
 	srand(time(0));
 
 	uint last_docID = 1;
@@ -64,7 +64,7 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 		items[i].symbinfo_offset = last_offset + rand() % 128;
 
 		flush_sz = invlist_writer_write(writer, items + i);
-		(void)flush_sz;
+		total_size += flush_sz;
 #ifdef VERBOSE
 		printf("write items[%d] (flush %lu): ", i, flush_sz);
 		print_item(items + i);
@@ -75,11 +75,11 @@ gen_random_items(const char *path, struct codec_buf_struct_info *info,
 	}
 
 	flush_sz = invlist_writer_flush(writer);
+	total_size += flush_sz;
 #ifdef VERBOSE
 	printf("final flush ... (flush size = %lu) \n", flush_sz);
 #endif
 
-	size_t total_size = invlist->tot_payload_sz;
 	size_t orig_size = n * sizeof(items[0]);
 	printf("compression rate: %lu / %lu = %.2f %%\n", orig_size, total_size,
 		100.f * orig_size / total_size);

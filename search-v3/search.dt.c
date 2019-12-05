@@ -246,7 +246,7 @@ indices_run_query(struct indices* indices, struct query* qry)
 {
 	/* top-K results' heap */
 	ranked_results_t rk_res;
-	priority_Q_init(&rk_res, DEFAULT_N_TOP_RESULTS);
+	priority_Q_init(&rk_res, DEFAULT_K_TOP_RESULTS);
 
 	/* merge set */
 	struct merge_set merge_set = {0};

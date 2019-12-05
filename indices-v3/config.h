@@ -8,6 +8,9 @@
 // #define SUPPORT_MATH_WILDCARDS
 
 // #define DEBUG_INDEXER
+// #define DEBUG_INDEXER_LEXER
 
 //#define INDICES_TXT_LEXER lex_mix_file
   #define INDICES_TXT_LEXER lex_eng_file
+
+#define INDICES_MAX_TEXT_TERM_LEN 21

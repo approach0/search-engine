@@ -13,6 +13,11 @@ li.qry-li {
 	margin-top: 2px;
 }
 
+li.qry-li-empty {
+	float: left;
+	display: block;
+}
+
 div.qry-div-fix {
 	background-color: #fbfefe;
 	padding-left: 8px;
@@ -46,7 +51,6 @@ div.qry-div-fix {
 span.dele {
 	font-size: 14px;
 	color: gray;
-	padding-left: 12px;
 }
 
 span.dele:hover {
@@ -55,6 +59,7 @@ span.dele:hover {
 }
 
 span.edit {
+	padding-left: 12px;
 	font-size: 14px;
 	color: gray;
 }
@@ -82,19 +87,20 @@ hr.vsep {
 }
 
 button {
-	color: #333;
 	border-color: #8590a6;
 	background-color: #fff;
-	width: 128px;
+	width: 100px;
 	border: 1px solid #ccc;
 
-	border-radius: 4px;
+	border-radius: 5px;
 	cursor: pointer;
 	font-weight: 400;
+	padding-right: 10px;
 }
 
 button:hover {
-	background-color: #f8f8f8;
+	color: white !important;
+	background-color: #1bc1ba;
 	border-color: #ebebeb;
 }
 

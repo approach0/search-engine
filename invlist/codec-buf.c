@@ -75,7 +75,7 @@ size_t codec_buf_encode(void *dest, void **src, uint n,
 	return (uintptr_t)((void*)d - dest);
 }
 
-size_t codec_buf_decode(void **dest, void *src, uint n,
+size_t codec_buf_decode(void **dest, void *src, uint *n,
                         struct codec_buf_struct_info *info)
 {
 	PTR_CAST(s, char, src);
@@ -83,6 +83,7 @@ size_t codec_buf_decode(void **dest, void *src, uint n,
 	/* extract the length */
 	u16 l = *(u16 *)s;
 	s += sizeof(u16);
+	*n = l;
 
 	/* decoding */
 	for (int j = 0; j < info->n_fields; j++) {

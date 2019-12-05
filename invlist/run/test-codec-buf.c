@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 
 #include "mhook/mhook.h"
 
 #include "codec/codec.h"
 #include "codec-buf.h"
 
+#pragma pack(push, 1)
 struct math_invlist_item {
 	uint32_t docID;
 	uint32_t secID;
@@ -14,6 +16,7 @@ struct math_invlist_item {
 	uint8_t  orig_width;
 	uint32_t symbinfo_offset; /* pointing to symbinfo file offset */
 };
+#pragma pack(pop)
 
 /* field index for math_invlist_item */
 enum {
@@ -76,8 +79,10 @@ int main()
 
 	/* decompressing */
 	void **buf_check = codec_buf_alloc(N, info);
-	out_sz = codec_buf_decode(buf_check, block, N, info);
-	printf("decoded sz = %lu\n", out_sz);
+	uint n;
+	out_sz = codec_buf_decode(buf_check, block, &n, info);
+	assert(n == N);
+	printf("decoded sz = %lu, total = %u\n", out_sz, n);
 	free(block);
 
 	/* checking decompressed data */

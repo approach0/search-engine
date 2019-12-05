@@ -8,12 +8,24 @@ $(document).ready(function() {
 		'SE_site': 'https://stackexchange.com',
 		'en_donation': false,
 		"ever_focused": false,
+		"chip_max_height": 40,
 		"page": 1,
 		"items": [
 			{"type": "term-input", "str": ""}
 		],
 		"pad": math_pad, /* from pad.js */
 		'mouse_on_teddy': false
+	};
+
+	var get_max_chip_height = function () {
+		var max_height = 0;
+		$('li.qry-li').each(function() {
+			var h = $(this).height();
+			if (h > max_height)
+				max_height = h;
+		});
+		/* add some offset to ensure nice alignment */
+		return max_height + 6;
 	};
 
 	var tex_charset = "+*/\\!^_%()[]:;{}=<>";
@@ -136,6 +148,7 @@ $(document).ready(function() {
 		query_2_raw_str();
 
 		Vue.nextTick(function () {
+			query.chip_max_height = get_max_chip_height();
 			then();
 		});
 	};
@@ -329,12 +342,12 @@ $(document).ready(function() {
 		head = obj;
 		below = head.next();
 		below.toggle("fast", function () {
-			t = head.text();
+			t = head.html();
 			if (below.is(":visible"))
-				t = t.replace("+", "-");
+				t = t.replace("-down", "-up");
 			else
-				t = t.replace("-", "+");
-			head.text(t);
+				t = t.replace("-up", "-down");
+			head.html(t);
 
 			$('#init-footer').stickToBottom('#quiz');
 
@@ -527,6 +540,7 @@ $(document).ready(function() {
 			click_search(page, is_pushState);
 			qry_vm.ever_focused = true;
 			$("#qry-input-box").blur();
+			query.chip_max_height = get_max_chip_height();
 		});
 	};
 
