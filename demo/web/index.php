@@ -153,8 +153,9 @@ div.blur {
 		<p>Unfamiliar with entering math symbols?
 		Check out a helpful hand written math recognizer
 		<a target="_blank" href="https://webdemo.myscript.com/views/math/index.html">
-		here</a>.</p>
-		<p> Alternatively, you can click button to insert symbols:</p>
+		here</a>.
+		Copy and paste TeX string of the math you want to search here.
+		Alternatively, you can look up and insert symbols from below:</p>
 		<div v-for="p in pad">
 		<h3>{{p.tab_name}}</h3>
 		<ul class="pad-li-warp"><template v-for="b in p.buttons">
@@ -168,15 +169,15 @@ div.blur {
 		</template></ul>
 		</div>
 
-		<p>Above only lists most frequently used math snippets. Refer to <a target="_blank"
-		href="http://www.onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">
-		this link</a> for a complete math-related TeX commands and paste what you need here.
-		</p>
-		<p>Willing to learn some Tex? <a target="_blank" href=
-		"https://en.wikibooks.org/wiki/LaTeX">Here</a> is a helpful tutorial.
-		</p>
 		<p>Want more? Make a request and add more buttons
 		<a target="_blank" href="https://github.com/approach0/search-engine/blob/master/demo/web/pad.js">here</a>.
+		</p>
+
+		<p>Above only lists some of most frequently used math snippets. Refer to <a target="_blank"
+		href="http://www.onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">
+		this link</a> for a complete math-related TeX commands and paste what you need here.
+		Willing to learn some Tex? <a target="_blank" href=
+		"https://en.wikibooks.org/wiki/LaTeX">Here</a> is a helpful tutorial.
 		</p>
 		<hr class="vsep"/>
 	</div>
@@ -185,7 +186,7 @@ div.blur {
 		<i class="fa fa-angle-down" aria-hidden="true"></i> Raw query
 	</span>
 	<div>
-		<p>Know TeX? Great! You may want to edit raw query below directly (separate keywords by commas).</p>
+		<p>Know how to write TeX? Great! You may want to edit math query in TeX directly (separate keywords by commas):</p>
 		<input id="qry" style="padding-left: 6px; margin-bottom: 6px; width:100%;" type="text" v-model="raw_str" v-on:keyup="on_rawinput"
 		placeholder="Enter raw query ..."/>
 
@@ -380,7 +381,7 @@ SE.init({
 
 <!-- Quiz App -->
 <div id="quiz-vue-app" v-show="!hide">
-	<div id="quiz" class="toleft" style="padding-bottom: 100px;">
+	<div id="quiz" class="toleft" style="padding-bottom: 101px;">
 		<div class="center-v-pad"></div>
 		<div class="center-horiz">
 			<p id="quiz-question">
@@ -430,7 +431,7 @@ SE.init({
 <div id="search-vue-app">
 
 <!-- Error code -->
-<div v-if="ret_code > 0">
+<div v-if="ret_code > 0" style="padding-bottom: 101px;">
 <div class="center-v-pad"></div>
 <div class="center-horiz">
 	<template v-if="ret_code == 102">
