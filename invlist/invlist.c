@@ -284,8 +284,6 @@ invlist_iter_t invlist_iterator(struct invlist *invlist)
 				iter->buf_max_len /* set skippy span = block length */);
 			if (error)
 				prerr("open skippy file from %s failed.", iter->path);
-		} else {
-			prerr("open %s failed.", iter->path);
 		}
 
 		refill_buffer__disk(iter, 0);
