@@ -314,7 +314,6 @@ static int indexer_handle_slice(struct lex_slice *slice)
 			parser_exception_callbk callbk = g_indexer->on_parser_exception;
 			if (callbk) /* invoke parser error callback */
 				callbk(g_indexer, slice->mb_str, tex_parse_ret.msg);
-			return 1;
 		}
 
 		break;
