@@ -19,8 +19,8 @@ def each_json_file(corpus, endat):
 			if cnt >= endat and endat > 0:
 				return
 			if f.split('.')[-1] == 'json':
+				cnt += 1
 				yield (dirname, f)
-			cnt += 1
 
 def get_n_files(corpus):
 	cnt = 0
