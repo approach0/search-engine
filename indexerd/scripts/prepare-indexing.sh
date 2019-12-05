@@ -50,10 +50,10 @@ function spawn_indexd() {
 		return
 	fi
 	echo "starting $indexd_bin in tmux session $name ..."
-	echo tmux new-session -c "${indexd_dir}" -d -s $name \
-		"./${indexd_bin} -o ${INDEX_ROOT}/${mnt_dir_name}/ -p $port 2> ./err-$name.log"
+	set -x
 	tmux new-session -c "${indexd_dir}" -d -s $name \
 		"./${indexd_bin} -o ${INDEX_ROOT}/${mnt_dir_name}/ -p $port 2> ./err-$name.log"
+	set +x
 }
 
 if [ $mode == "create-images" ]; then
@@ -68,7 +68,7 @@ elif [ $mode == "umount-images" ]; then
 
 elif [ $mode == "create-index-sessions" ]; then
 	for i in "${INDEX_NUMS[@]}"; do
-		spawn_indexd  index-$i "800${i}"
+		spawn_indexd  index-$i "890${i}"
 	done;
 
 elif [ $mode == "inspect-index-sessions" ]; then
