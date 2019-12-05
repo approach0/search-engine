@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include "indices-v3/config.h" /* for INDICES_TXT_LEXER */
+#include "config.h"
 #include "txt2snippet.h"
 #include "txt-seg/lex.h"
 
@@ -45,8 +46,6 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 	if (positions_cur == positions_len)
 		return;
 
-	// printf("%s@%u ?= %u\n", mb_str, cur_lex_pos, positions[positions_cur]);
-
 	/* if this segment is any of our interested positions */
 	if (cur_lex_pos == positions[positions_cur]) {
 		snippet_push_highlight(&hi_list, mb_str, offset, sz);
@@ -58,19 +57,26 @@ add_highlight_seg(char *mb_str, uint32_t offset, size_t sz, void *arg)
 
 static int handle_slice(struct lex_slice *slice)
 {
-	size_t str_sz = strlen(slice->mb_str);
+	size_t str_len = strlen(slice->mb_str);
+
+#ifdef DEBUG_SNIPPET_LEXER
+	printf("handle slice: [%s] @%u <%u, %lu> type=%d (math,eng,mix)\n",
+		slice->mb_str, cur_lex_pos, slice->offset, str_len, slice->type);
+	printf("trying to highlight @positions[%u]=%u\n",
+		positions_cur, positions[positions_cur]);
+#endif
 
 	switch (slice->type) {
 	case LEX_SLICE_TYPE_MATH_SEG:
 		/* this is a math segment */
 
-		add_highlight_seg(slice->mb_str, slice->offset, str_sz, NULL);
+		add_highlight_seg(slice->mb_str, slice->offset, str_len, NULL);
 		break;
 
 	case LEX_SLICE_TYPE_MIX_SEG:
 	case LEX_SLICE_TYPE_ENG_SEG:
 
-		add_highlight_seg(slice->mb_str, slice->offset, str_sz, NULL);
+		add_highlight_seg(slice->mb_str, slice->offset, str_len, NULL);
 		break;
 
 	default:

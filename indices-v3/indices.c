@@ -281,10 +281,11 @@ static int indexer_handle_slice(struct lex_slice *slice)
 	size_t str_len = strlen(slice->mb_str);
 	struct tex_parse_ret tex_parse_ret;
 
-//#ifdef DEBUG_INDEXER
-//	printf("input slice: [%s] <%u, %lu>\n", slice->mb_str,
-//		slice->offset, str_len);
-//#endif
+#ifdef DEBUG_INDEXER_LEXER
+	printf("input slice: [%s] @%u <%u, %lu> type=%d (math,eng,mix)\n",
+		slice->mb_str, g_indexer->cur_position, slice->offset, str_len,
+		slice->type);
+#endif
 
 	/* safe-guard for document length (maximum number of positions) */
 	if (g_indexer->cur_position + 1 == UINT16_MAX) {
