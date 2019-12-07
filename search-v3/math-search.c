@@ -61,7 +61,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 142544 && e == 28) || (d == 142544 && e == 13);
+	return (d == 9535 || d == 44);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
@@ -330,8 +330,8 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 #ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 	if (inspect(iter->min)) {
 		printf("[mnc table]\n");
-		mnc_score_print(mnc, 1);
-		printf("struct score = %.2f / %d = %.2f\n", score, qnode->sum_w,
+		mnc_score_print(mnc, 0);
+		printf("symbol score = %.2f / %d = %.2f\n", score, qnode->sum_w,
 			score / qnode->sum_w);
 	}
 #endif
@@ -525,12 +525,12 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 
 #ifdef DEBUG_MATH_SEARCH
 				if (inspect(iter->min)) {
-					printf(C_GREEN);
 					printf("Propose ");
+					printf(C_GREEN);
 					printf("[doc#%u exp#%u %d<->%d] %.2f,%.2f/%d=>%.2f\n",
 						cur_docID, key2exp(iter->min),
 						best_qn->root, key2rot(iter->min),
-						symb, best, msf->doc_lr_paths, score);
+						best, symb, msf->doc_lr_paths, score);
 					printf(C_RST);
 				}
 #endif
