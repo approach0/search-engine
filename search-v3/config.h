@@ -7,6 +7,8 @@
 //#define DEBUG_MATH_SEARCH__STRUCT_SCORING
 //#define DEBUG_MATH_SEARCH__SYMBOL_SCORING
 
+//#define IGNORE_MATH_SYMBOL_SCORE
+
 #include "math-index-v3/config.h"
 #define MAX_MATCHED_PATHS MAX_MATH_PATHS
 

@@ -292,7 +292,9 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 
 			/* output document original length */
 			*dl = item.orig_width;
-
+#ifdef IGNORE_MATH_SYMBOL_SCORE
+			return 1.f;
+#endif
 			/* seek to symbol info file offset */
 			uint32_t offset = item.symbinfo_offset;
 			if (0 != fseek(fhs[iid], offset, SEEK_SET)) {
