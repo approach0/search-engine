@@ -373,11 +373,17 @@ $(document).ready(function() {
 	}
 
 	function click_search(page, is_pushState) {
+		/* if user does not separate keywords by comma, correct it */
+		query_2_raw_str();
+
+		/* set query box to blur style */
+		blur_style();
+
 		query.page = page;
 		arr = query.items;
 		input_box = arr[arr.length - 1];
 
-		qry = correct_math($("#qry").val());
+		qry = correct_math(query.raw_str);
 
 		if (input_box.str != '') {
 			/* push the last query to UI */
@@ -539,7 +545,6 @@ $(document).ready(function() {
 			tex_render_fast("div.qry-div-fix");
 			click_search(page, is_pushState);
 			qry_vm.ever_focused = true;
-			$("#qry-input-box").blur();
 			query.chip_max_height = get_max_chip_height();
 		});
 	};
@@ -558,7 +563,7 @@ $(document).ready(function() {
 	/* initial focus/blur style */
 	setTimeout(function () {
 		qry_vm.register_focus_events();
-		$("#qry-input-box").blur();
+		blur_style();
 
 		/* raw query input box */
 		$("#qry").focus(function () {
