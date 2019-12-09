@@ -2,7 +2,7 @@
 #include "common/common.h"
 #include "math-score.h"
 
-const float eta = MATH_SCORE_ETA;
+static const float eta = MATH_SCORE_ETA;
 
 #define DOC_LEN_PENALTY ((1.f - eta) + eta * (1.f / logf(1.f + dl)))
 
