@@ -73,7 +73,10 @@ int main()
 
 	qry_len = term_qry_array_merge(term_qry, qry_len);
 
-	struct BM25_scorer bm25 = prepare_bm25(indices.ti, term_qry, qry_len);
+	uint32_t avgDocLen = term_index_get_avgDocLen(indices.ti);
+	uint32_t docN = term_index_get_docN(indices.ti);
+	struct BM25_scorer bm25;
+	bm25 = prepare_bm25(indices.ti, docN, avgDocLen, term_qry, qry_len);
 
 	/* print prepared term queries */
 	BM25_params_print(&bm25);

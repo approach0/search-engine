@@ -101,7 +101,7 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 	math_l2_invlist_iter_t l2_iter = malloc(sizeof *l2_iter);
 
 	l2_iter->n_qnodes       = inv->mq.n_qnodes;
-	l2_iter->ipf            = inv->mq.ipf;
+	l2_iter->ipf            = inv->mq.merge_set.upp;
 	l2_iter->msf            = &inv->msf;
 	l2_iter->fh_symbinfo    = duplicate_entries_fh_array(&inv->mq);
 	l2_iter->ele            = inv->mq.ele;

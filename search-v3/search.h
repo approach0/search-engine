@@ -5,4 +5,12 @@
 #include "query.h"
 #include "rank.h"
 
-ranked_results_t indices_run_query(struct indices*, struct query*);
+typedef struct {
+	uint32_t docN;
+	uint32_t avgDocLen;
+	uint32_t pathN;
+	uint    *doc_freq;
+} indices_run_sync_t;
+
+ranked_results_t
+indices_run_query(struct indices*, struct query*, indices_run_sync_t *);
