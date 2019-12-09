@@ -13,4 +13,4 @@ typedef struct {
 } indices_run_sync_t;
 
 ranked_results_t
-indices_run_query(struct indices*, struct query*, indices_run_sync_t *);
+indices_run_query(struct indices*, struct query*, indices_run_sync_t *, int);

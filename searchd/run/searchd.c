@@ -85,7 +85,7 @@ httpd_on_recv(const char *req, void *arg_)
 	fflush(log_fh);
 
 	/* search query */
-	srch_res = indices_run_query(args->indices, &qry, NULL);
+	srch_res = indices_run_query(args->indices, &qry, NULL, 0);
 
 	//////// TREC LOG ////////
 	if (args->trec_log)

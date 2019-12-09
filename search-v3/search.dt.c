@@ -289,7 +289,7 @@ static int inspect(uint64_t docID)
 
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry,
-                  indices_run_sync_t *run_sync)
+                  indices_run_sync_t *run_sync, int dry_run)
 {
 	/* top-K results' heap */
 	ranked_results_t rk_res;
@@ -346,6 +346,9 @@ indices_run_query(struct indices* indices, struct query* qry,
 	/*
 	 * Perform merging
 	 */
+	if (dry_run)
+		goto skip_merge;
+
 	foreach (iter, merger_set, &merge_set) {
 		/*
 		 * get proximity score (only consider term keywords)
@@ -494,6 +497,8 @@ next_iter:;
 		}
 #endif
 	} /* end of merge */
+
+skip_merge:
 
 	/*
 	 * Release term query keywords
