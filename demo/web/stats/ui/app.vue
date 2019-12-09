@@ -5,27 +5,27 @@
 <v-container fluid>
 
 <v-layout row wrap justify-space-between>
-  <v-flex xs4 md2>
+  <v-flex xs12 md2>
     <v-text-field v-model="from" prepend-icon="date_range"
       :rules="timeRules" :counter="10" label="From">
     </v-text-field>
   </v-flex>
 
-  <v-flex xs4 md2>
+  <v-flex xs12 md2>
     <v-text-field v-model="to" prepend-icon="date_range"
       :rules="timeRules" :counter="10" label="To">
     </v-text-field>
   </v-flex>
 
-  <!--
-  <v-flex xs4 md2>
-    <v-text-field v-bind:value="url_ip['masked']"
-      @click:clear="clear_ip_filter()"
-      prepend-icon="filter_list" :counter="15" label="Specified IP"
-      readonly clearable>
+  <v-flex xs12 md2>
+    <v-text-field v-if="url_ip === null" v-bind:value="'*'"
+      prepend-icon="filter_list"  label="Specified IP" disabled>
+    </v-text-field>
+    <v-text-field v-else v-bind:value="url_ip['masked']"
+      prepend-icon="filter_list"  label="Specified IP" readonly
+      @click:clear="clear_ip_filter()" clearable>
     </v-text-field>
   </v-flex>
-  -->
 
   <v-flex xs4 md2>
     <v-text-field v-model="max" prepend-icon="format_list_numbered"
@@ -33,11 +33,11 @@
     </v-text-field>
   </v-flex>
 
-  <v-flex xs4 md2>
+  <v-flex xs8 md2>
     <v-checkbox v-model="showQueries" label="Show query detail"></v-checkbox>
   </v-flex>
 
-  <v-flex xs4 md2>
+  <v-flex xs12 md2>
     <v-btn color="primary" @click="refresh()" block>refresh</v-btn>
     <!-- <v-btn color="primary" @click="render()" block>render</v-btn> -->
   </v-flex>
@@ -46,7 +46,7 @@
 </v-container>
 </v-form>
 
-<div class="pa-5" v-if="results.length != 0">
+<div class="pa-5" v-if="results.length != 0" style="text-align: center;">
   <p>Unique IPs of past {{trend_days}} days (back from {{show_time(to, false)}}):</p>
   <v-layout align-center justify-center>
     <div style="overflow-x: auto">
@@ -66,7 +66,7 @@
   </v-layout>
 </div>
 
-<div class="pa-5" v-if="results.length != 0">
+<div class="pa-5" v-if="results.length != 0" style="text-align: center;">
   From {{show_time(from, false)}} to {{show_time(to, false)}},
   there are {{n_queries}} queries ({{n_uniq_ip}} unique IPs).
 </div>
@@ -231,7 +231,7 @@ export default {
       window.open(url['pathname'] + '?ip=' + token, '_blank');
     },
     clear_ip_filter() {
-      this.ip = '';
+      this.url_ip = null;
     },
     show_keyword(kw, type) {
       if (type == 'tex')
