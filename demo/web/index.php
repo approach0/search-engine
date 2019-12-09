@@ -443,6 +443,10 @@ SE.init({
 	<p v-else>
 		<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
 		{{ret_str}}. (return code #{{ret_code}})
+		<br/><br/>
+		<a href="https://chat.stackexchange.com/rooms/46148/"
+		target="_blank" title="Chatroom or feedback">
+		<i class="fa fa-comment" aria-hidden="true"></i> Live chatroom</a>
 	</p>
 </div>
 </div>
