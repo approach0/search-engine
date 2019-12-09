@@ -44,6 +44,12 @@ float math_score_upp(void *msf_, float sum_ipf)
 	return sum_ipf * msf->upp_sf;
 }
 
+float math_score_upp_tight(void *msf_, float sum_ipf, uint32_t dl)
+{
+	PTR_CAST(msf, struct math_score_factors, msf_);
+	return sum_ipf * msf->penalty_tab[dl];
+}
+
 float math_score_low(void *msf_, float sum_ipf)
 {
 	PTR_CAST(msf, struct math_score_factors, msf_);

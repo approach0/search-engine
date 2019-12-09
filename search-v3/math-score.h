@@ -18,4 +18,5 @@ float math_score_ipf(float, float);
 float math_score_calc(struct math_score_factors *);
 
 float math_score_upp(void *, float);
+float math_score_upp_tight(void*, float, uint32_t);
 float math_score_low(void *, float);

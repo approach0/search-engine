@@ -171,6 +171,7 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 {
 	float *ipf = l2_iter->ipf;
 	struct math_score_factors *msf = l2_iter->msf;
+	uint32_t dl = 1;
 
 	float estimate, score = 0, leftover = qnode->sum_ipf;
 	/* for each sector tree under qnode */
@@ -195,6 +196,7 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			/* read hit inverted list item */
 			struct math_invlist_item item;
 			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
+			dl = item.orig_width;
 			/* accumulate preceise partial score */
 			score += MIN(ref, item.sect_width) * ipf[iid];
 #ifdef DEBUG_MATH_SEARCH__STRUCT_SCORING
@@ -213,7 +215,8 @@ skip:;
 		if (inspect(iter->min))
 			printf("+= leftover=%.2f = %.2f\n", leftover, estimate);
 #endif
-		if (estimate <= best || math_score_upp(msf, estimate) <= threshold)
+		if (estimate <= best ||
+		    math_score_upp_tight(msf, estimate, dl) <= threshold)
 			return 0;
 #endif
 	}
