@@ -115,6 +115,7 @@ struct add_subpath_args {
 	linkli_t *set;
 	uint32_t  prefix_len;
 	int       added;
+	int       n_uniq;
 };
 
 struct prefix_path_root_args {
@@ -224,6 +225,7 @@ static LIST_IT_CALLBK(add_into_set)
 	ele_add_dup(newele, sp);
 	li_append(args->set, &newele->ln);
 	args->added ++;
+	args->n_uniq ++;
 
 next:
 	LIST_GO_OVER;
@@ -240,7 +242,7 @@ static int interesting_token(enum token_id tokid)
 linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 {
 	linkli_t set = NULL;
-	struct add_subpath_args args = {&set, 0, 0};
+	struct add_subpath_args args = {&set, 0, 0, 0};
 
 	/* group by prefix path tokens */
 	for (args.prefix_len = 2;; args.prefix_len ++) {
@@ -250,7 +252,6 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		printf("%d paths added at prefix length = %u... \n",
 			args.added, args.prefix_len);
 #endif
-
 		if (!args.added) break;
 	}
 
@@ -262,6 +263,27 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		if (!interesting_token(root->token_id)) {
 			li_iter_remove(iter, &set);
 			free(ele);
+			args.n_uniq--;
+		}
+	}
+
+	/* remove excessive paths (from longest) */
+	while (args.n_uniq > MAX_SUBPATHS) {
+		uint32_t max = 0;
+		foreach (iter, li, set) {
+			struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+			if (max < ele->prefix_len)
+				max = ele->prefix_len;
+		}
+
+		foreach (iter, li, set) {
+			struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
+			if (max == ele->prefix_len) {
+				li_iter_remove(iter, &set);
+				free(ele);
+				if (--args.n_uniq <= MAX_SUBPATHS)
+					break;
+			}
 		}
 	}
 
