@@ -385,11 +385,14 @@ $(document).ready(function() {
 
 		qry = correct_math(query.raw_str);
 
-		if (input_box.str != '') {
+		if (input_box.str != '' /* there are un-fixed keywords */) {
 			/* push the last query to UI */
 			if (input_box.type == 'tex-input') {
 				fix_input("tex", input_box.str, function() {
 					tex_render_fast("div.qry-div-fix");
+
+					/* blur to cancel fix_input() focus */
+					blur_style();
 
 					/* perform search */
 					srch_qry(qry, page, is_pushState);
@@ -397,6 +400,8 @@ $(document).ready(function() {
 
 			} else if (input_box.type == 'term-input') {
 				fix_input("term", input_box.str, function() {
+					/* blur to cancel fix_input() focus */
+					blur_style();
 
 					/* perform search */
 					srch_qry(qry, page, is_pushState);
