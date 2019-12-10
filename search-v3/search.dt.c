@@ -157,13 +157,14 @@ static int prepare_math_keywords(struct indices *indices,
 		m_invlist[n_math] = minv;
 
 		/* if running parallel, we need to synchronize df values */
-		if (sync) {
+		if (sync && minv) {
 			uint32_t N  = indices->mi->stats.N;
 			if (sync->pathN > 0)
 				N = sync->pathN;
 			else
 				sync->pathN = N;
 
+			/* for l2 invlist, we need synchronize each sub-list under it */
 			struct math_qry *mq = &minv->mq;
 			for (int j = 0; j < mq->merge_set.n; j++) {
 				int k = base + j;
