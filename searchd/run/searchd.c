@@ -231,6 +231,7 @@ static void slave_run(struct searchd_args *args)
 	free(recv_buf);
 }
 
+/* very unpleasant function name, but very descriptive :P */
 static void signal_slaves_to_die()
 {
 	char *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);

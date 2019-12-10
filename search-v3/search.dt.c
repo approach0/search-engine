@@ -164,7 +164,7 @@ static int prepare_math_keywords(struct indices *indices,
 			else
 				sync->pathN = N;
 
-			/* for l2 invlist, we need synchronize each sub-list under it */
+			/* for l2 invlist, we need to synchronize each sub-list under it */
 			struct math_qry *mq = &minv->mq;
 			for (int j = 0; j < mq->merge_set.n; j++) {
 				int k = base + j;
