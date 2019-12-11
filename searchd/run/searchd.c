@@ -117,10 +117,10 @@ httpd_on_recv(const char *req, void *arg_)
 		/* get this node index stats */
 		srch_res = indices_run_query(args->indices, &qry, &sync, 1, log_fh);
 		free_ranked_results(&srch_res);
-
-		/* log index stats */
+#ifdef DEBUG_LOG_STATS_SYNC
 		fprintf(log_fh, "node[%d] stats: ", args->node_rank);
 		print_index_stats(&sync, log_fh);
+#endif
 
 		/* gather each node stats and reduce to single global stats */
 		indices_run_sync_t *gather_sync = NULL;
@@ -134,8 +134,10 @@ httpd_on_recv(const char *req, void *arg_)
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* reduce index stats */
 			reduce_index_stats(gather_sync, args->n_nodes, &sync);
+#ifdef DEBUG_LOG_STATS_SYNC
 			fprintf(log_fh, "reduced: ");
 			print_index_stats(&sync, log_fh);
+#endif
 			free(gather_sync);
 		}
 
