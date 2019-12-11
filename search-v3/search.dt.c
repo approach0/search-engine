@@ -41,9 +41,9 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			/* if running parallel, we need to synchronize df values */
 			if (sync) {
 				if (sync->doc_freq[n_term] == 0)
-					sync->doc_freq[n_term] = term_qry->df;
+					sync->doc_freq[n_term] = term_qry[n_term].df;
 				else
-					term_qry->df = sync->doc_freq[n_term];
+					term_qry[n_term].df = sync->doc_freq[n_term];
 			}
 
 			n_term ++;
