@@ -115,7 +115,7 @@ httpd_on_recv(const char *req, void *arg_)
 	indices_run_sync_t sync = {0};
 	if (args->n_nodes > 1) {
 		/* get this node index stats */
-		srch_res = indices_run_query(args->indices, &qry, &sync, 1);
+		srch_res = indices_run_query(args->indices, &qry, &sync, 1, log_fh);
 		fprintf(log_fh, "dry-run finished...\n");
 		free_ranked_results(&srch_res);
 
@@ -146,7 +146,7 @@ httpd_on_recv(const char *req, void *arg_)
 	}
 
 	/* actually perform search */
-	srch_res = indices_run_query(args->indices, &qry, &sync, 0);
+	srch_res = indices_run_query(args->indices, &qry, &sync, 0, log_fh);
 
 	//////// TREC LOG ////////
 	if (args->trec_log)

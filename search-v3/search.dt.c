@@ -25,7 +25,7 @@ typedef struct ms_merger *merger_set_iter_t;
 #define math_iter_read math_l2_invlist_iter_read;
 
 static int
-prepare_term_keywords(struct indices *indices, struct query *qry,
+prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 	 struct merge_set *ms, indices_run_sync_t *sync, struct BM25_scorer *bm25,
 	 struct term_qry *term_qry, struct term_invlist_entry_reader *term_reader)
 {
@@ -35,9 +35,11 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 		struct query_keyword *kw = query_get_kw(qry, i);
 		char *kw_str = wstr2mbstr(kw->wstr); /* utf-8 */
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		if (kw->type == QUERY_KW_TERM) {
 			term_qry_prepare(indices->ti, kw_str, term_qry + n_term);
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 			/* if running parallel, we need to synchronize df values */
 			if (sync) {
 				if (sync->doc_freq[n_term] == 0)
@@ -46,18 +48,22 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 					term_qry[n_term].df = sync->doc_freq[n_term];
 			}
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 			n_term ++;
 		}
 	}
 
 	/* merge term query duplicate keywords */
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 	n_term = term_qry_array_merge(term_qry, n_term);
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 
 	/* prepare Okapi-BM25 scoring structure */
 	uint32_t avgDocLen = term_index_get_avgDocLen(indices->ti);
 	uint32_t docN = term_index_get_docN(indices->ti);
 
 	/* if running parallel, we need to synchronize term index values */
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 	if (sync) {
 		if (sync->docN > 0)
 			docN = sync->docN;
@@ -70,7 +76,9 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			sync->avgDocLen = avgDocLen;
 	}
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 	*bm25 = prepare_bm25(indices->ti, docN, avgDocLen, term_qry, n_term);
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 #ifdef PRINT_SEARCH_QUERIES
 	// printf("[BM25 parameters]\n");
 	// BM25_params_print(bm25);
@@ -83,8 +91,10 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 		uint32_t term_id = term_qry[i].term_id;
 		struct term_invlist_entry_reader *reader = term_reader + i;
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		/* lookup index entry for this term */
 		*reader = term_index_lookup(indices->ti, term_id);
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 
 #ifdef PRINT_SEARCH_QUERIES
 		printf("[%d] ", n);
@@ -124,6 +134,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 			ms->skip  [n] = empty_invlist_skip;
 			ms->read  [n] = empty_invlist_read;
 		}
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 
 #ifdef PRINT_SEARCH_QUERIES
 		printf("%6.2f ", ms->upp[n]);
@@ -135,17 +146,19 @@ prepare_term_keywords(struct indices *indices, struct query *qry,
 	return n_term;
 }
 
-static int prepare_math_keywords(struct indices *indices,
-	struct query *qry, struct merge_set *ms, indices_run_sync_t *sync,
+static int prepare_math_keywords(struct indices *indices, struct query *qry,
+	FILE *log, struct merge_set *ms, indices_run_sync_t *sync,
 	struct math_l2_invlist **m_invlist, math_l2_invlist_iter_t *m_iter,
 	float *math_th, float *dynm_th, float *math_weight)
 {
 	int n_math = 0;
 	int base = ms->n;
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 	for (int i = 0; i < qry->len; i++) {
 		const int n = ms->n;
 		struct query_keyword *kw = query_get_kw(qry, i);
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		/* only consider math keyword here */
 		if (kw->type != QUERY_KW_TEX)
 			continue;
@@ -154,9 +167,11 @@ static int prepare_math_keywords(struct indices *indices,
 		char *kw_str = wstr2mbstr(kw->wstr); /* utf-8 */
 		struct math_l2_invlist *minv = math_l2_invlist(
 			indices->mi, kw_str, math_th + n_math, dynm_th + n_math);
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		m_invlist[n_math] = minv;
 
 		/* if running parallel, we need to synchronize df values */
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		if (sync && minv) {
 			uint32_t N  = indices->mi->stats.N;
 			if (sync->pathN > 0)
@@ -164,13 +179,16 @@ static int prepare_math_keywords(struct indices *indices,
 			else
 				sync->pathN = N;
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 			/* for l2 invlist, we need to synchronize each sub-list under it */
 			struct math_qry *mq = &minv->mq;
 			for (int j = 0; j < mq->merge_set.n; j++) {
 				int k = base + j;
 				if (sync->doc_freq[k] == 0) {
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 					sync->doc_freq[k] = mq->entry[j].pf;
 				} else {
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 					mq->entry[j].pf = sync->doc_freq[k];
 					float ipf = math_score_ipf(N, sync->doc_freq[k]);
 					mq->merge_set.upp[j] = ipf;
@@ -178,14 +196,17 @@ static int prepare_math_keywords(struct indices *indices,
 			}
 		}
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		/* generate math iterator only if math invlist is valid */
 		math_l2_invlist_iter_t miter = NULL;
 		if (minv) {
 			miter = math_l2_invlist_iterator(minv);
 			m_iter[n_math] = miter;
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 			/* assign math l2 initial threshold */
 			math_th[n_math] = math_pruner_init_threshold(miter->pruner);
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		}
 
 #ifdef PRINT_SEARCH_QUERIES
@@ -222,6 +243,7 @@ static int prepare_math_keywords(struct indices *indices,
 		n_math += 1;
 		ms->n += 1;
 	}
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 
 	/* find out the max math keywords */
 	int max_i = -1;
@@ -232,6 +254,7 @@ static int prepare_math_keywords(struct indices *indices,
 			max_i = i;
 		}
 	}
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 
 	/* rescale upperbound and output math weight */
 	for (int i = base; i < ms->n; i++) {
@@ -241,15 +264,18 @@ static int prepare_math_keywords(struct indices *indices,
 		else
 			math_weight[i - base] = MATH_PENALTY_WEIGHT;
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		/* rescale upperbound */
 		ms->upp[i] *= math_weight[i - base];
 
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 		/* sort such that math keywords stick to bottom */
 		if (ms->upp[i] == 0)
 			ms->sortby[i] = -FLT_MAX;
 		else
 			ms->sortby[i] = -(100.f / (1.f + ms->upp[i]));
 	}
+if (log) fprintf(log, "@ line %u\n", __LINE__);
 
 	return n_math;
 }
@@ -290,7 +316,7 @@ static int inspect(uint64_t docID)
 
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry,
-                  indices_run_sync_t *run_sync, int dry_run)
+                  indices_run_sync_t *run_sync, int dry_run, FILE *log)
 {
 	/* top-K results' heap */
 	ranked_results_t rk_res;
@@ -308,8 +334,10 @@ indices_run_query(struct indices* indices, struct query* qry,
 	memset(term_qry, 0, sizeof term_qry);
 	memset(term_reader, 0, sizeof term_reader);
 
+	if (log) fprintf(log, "prepare term keywords...\n");
+
 	struct BM25_scorer bm25;
-	int n_term = prepare_term_keywords(indices, qry, &merge_set, run_sync,
+	int n_term = prepare_term_keywords(indices, qry, log, &merge_set, run_sync,
 	                                   &bm25, term_qry, term_reader);
 
 	/*
@@ -327,7 +355,9 @@ indices_run_query(struct indices* indices, struct query* qry,
 	memset(dynm_threshold, 0, sizeof dynm_threshold);
 	memset(math_weight, 0, sizeof math_weight);
 
-	int n_math = prepare_math_keywords(indices, qry, &merge_set, run_sync,
+	if (log) fprintf(log, "prepare math keywords...\n");
+
+	int n_math = prepare_math_keywords(indices, qry, log, &merge_set, run_sync,
 		math_invlist, math_iter, math_threshold, dynm_threshold, math_weight);
 
 	/*
@@ -335,6 +365,7 @@ indices_run_query(struct indices* indices, struct query* qry,
 	 */
 	float threshold = -FLT_MAX;
 	const float proximity_upp = prox_upp();
+	if (log) fprintf(log, "ready for merge\n");
 	// printf("proximity upperbound: %.2f\n", proximity_upp);
 
 	/*
@@ -347,8 +378,11 @@ indices_run_query(struct indices* indices, struct query* qry,
 	/*
 	 * Perform merging
 	 */
+
 	if (dry_run)
 		goto skip_merge;
+
+	if (log) fprintf(log, "merge ...\n");
 
 	foreach (iter, merger_set, &merge_set) {
 		/*
@@ -500,10 +534,12 @@ next_iter:;
 	} /* end of merge */
 
 skip_merge:
-
+	
 	/*
 	 * Release term query keywords
 	 */
+	if (log) fprintf(log, "Release term query keywords.\n");
+
 	for (int i = 0; i < n_term; i++) {
 		/* free term query reader */
 		struct term_invlist_entry_reader *reader = term_reader + i;
@@ -518,6 +554,8 @@ skip_merge:
 	/*
 	 * Release math query keywords
 	 */
+	if (log) fprintf(log, "Release math query keywords.\n");
+
 	for (int i = 0; i < n_math; i++) {
 		struct math_l2_invlist *minv = math_invlist[i];
 		math_l2_invlist_iter_t miter = math_iter[i];
@@ -528,6 +566,7 @@ skip_merge:
 	}
 
 	/* before returning top-K, invoke heap-sort. */
+	if (log) fprintf(log, "Sort heap ... \n");
 	priority_Q_sort(&rk_res);
 	return rk_res;
 }

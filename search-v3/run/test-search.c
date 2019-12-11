@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	/* perform searching and print results */
-	ranked_results_t rk_res = indices_run_query(&indices, &qry, NULL, 0);
+	ranked_results_t rk_res = indices_run_query(&indices, &qry, NULL, 0, NULL);
 	print_search_results(&indices, &rk_res, page);
 	priority_Q_free(&rk_res);
 
