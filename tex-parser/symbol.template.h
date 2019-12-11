@@ -4,8 +4,6 @@ enum symbol_id {
 
 	/* special symbols */
 	S_bignum,
-	S_zero,
-	S_one,
 	S_float,
 	S_hanger,
 	S_base,
