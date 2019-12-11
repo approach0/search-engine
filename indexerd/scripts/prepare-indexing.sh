@@ -56,7 +56,7 @@ function spawn_indexd() {
 		echo "sesseion $name already exists."
 		return
 	fi
-	echo "starting $indexd_bin in tmux session $name ..."
+	echo "starting $indexd_bin in tmux session $name at port $port..."
 	set -x
 	tmux new-session -c "${indexd_dir}" -d -s $name \
 		"./${indexd_bin} -o ${INDEX_ROOT}/${mnt_dir_name}/ -p $port 2> ./err-$name.log"
