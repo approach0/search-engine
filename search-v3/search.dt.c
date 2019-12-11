@@ -344,6 +344,12 @@ indices_run_query(struct indices* indices, struct query* qry,
 	struct math_l2_iter_item math_item[qry->n_math];
 	prox_input_t prox[qry->len];
 
+	/* When empty invlist is the only list in merger set, its iterator
+	 * may call read() function thus we should erase the reading item
+	 * to ensure our read data (e.g., proximity length) is not random. */
+	memset(term_item, 0, sizeof term_item);
+	memset(math_item, 0, sizeof math_item);
+
 	/*
 	 * Perform merging
 	 */
