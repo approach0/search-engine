@@ -369,6 +369,8 @@ extern int lexer_warning_flag;
 \\prime                              { RET_TOK(_AUTOGEN_, PRIME, WC_NORMAL_LEAF, VAR); }
 "_"                    { RET_TOK(subscript, SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
 "^"                    { RET_TOK(supscript, SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
+
+ /* _hack_* are placeholders for generating token IDs consumed by MathML parser */
 "_hack___"         { RET_TOK(subscript, PRE_SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
 "_hack^^^"         { RET_TOK(supscript, PRE_SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
 "_hackROOT"                    { RET_TOK(root, MATHML_ROOT, WC_COMMUT_OPERATOR, ROOT); }
