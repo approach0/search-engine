@@ -116,7 +116,6 @@ httpd_on_recv(const char *req, void *arg_)
 	if (args->n_nodes > 1) {
 		/* get this node index stats */
 		srch_res = indices_run_query(args->indices, &qry, &sync, 1, log_fh);
-		fprintf(log_fh, "dry-run finished...\n");
 		free_ranked_results(&srch_res);
 
 		/* log index stats */
