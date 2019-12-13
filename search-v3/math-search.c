@@ -61,7 +61,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 9535 || d == 44);
+	return (d == 1 || d == 2);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
@@ -371,7 +371,7 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 	if (threshold != l2_iter->last_threshold) {
 		if (math_pruner_update(pruner, threshold)) {
 			;
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_SEARCH__PRUNER_UPDATE
 			printf(C_BLUE "[node dropped]\n" C_RST);
 #endif
 		}
@@ -393,7 +393,7 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 
 		l2_iter->last_threshold = threshold;
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_SEARCH__PRUNER_UPDATE
 		printf("[pruner update] for `%s'\n", l2_iter->tex);
 		math_pruner_print(pruner);
 		math_pruner_print_stats(pruner);

@@ -4,4 +4,4 @@ function do_txt2json_in () {
 	find "$1" -type f -name '*.blog' | xargs -I {} ./txt2json.py {}
 }
 
-do_txt2json_in "../test-corpus/mix"
+do_txt2json_in ~/nvme0n1/test-corpus
