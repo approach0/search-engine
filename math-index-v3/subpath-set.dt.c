@@ -295,11 +295,13 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 		/* group all the root IDs in subpaths of this element */
 		for (int i = 0; i <= ele->dup_cnt; i++) {
 			struct subpath *sp = ele->dup[i];
-			uint32_t rootID    = ele->rid[i];
-			if (-1 == u16_ht_lookup(&ht_sect, rootID)) {
-				uint16_t ophash = subpath_fingerprint(sp, ele->prefix_len);
-				u16_ht_update(&ht_hash, rootID, ophash);
-			}
+			uint32_t rootID = ele->rid[i];
+			/* combine path ophash into sector tree ophash */
+			uint16_t ophash = subpath_fingerprint(sp, ele->prefix_len);
+			int prev_ophash = u16_ht_lookup(&ht_hash, rootID);
+			if (-1 == prev_ophash || ophash != prev_ophash)
+				u16_ht_incr(&ht_hash, rootID, ophash);
+			/* increment sector width */
 			u16_ht_incr(&ht_sect, rootID, 1);
 		}
 		/* for all unique root IDs, push into secttor trees array */
