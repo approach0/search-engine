@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 
 app = express();
 app.use(bodyParser.json());
+app.disable('etag');
 
 const max_items = 120;
 
