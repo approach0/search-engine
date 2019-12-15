@@ -8,6 +8,7 @@ import json
 import sys
 import getopt
 import filecmp
+import html
 from urllib.parse import urlencode
 from replace_post_tex import replace_dollar_tex
 from replace_post_tex import replace_display_tex
@@ -80,6 +81,7 @@ def parse_op_name(obj):
         # instance of quotes, which is not desired and can cause issues
         if l.startswith('"') and l.endswith('"'):
             l = l[1:-1]
+        print(l)
         l = l.encode().decode('unicode_escape')
     elif hasattr(obj, 'value'):
         l = obj.value
@@ -152,7 +154,7 @@ def crawl_topic_page(sub_url, category_id, topic_id, c, extra_opt):
     session_data = parsed['AoPS.session']
 
     # get title
-    title = topic_data['topic_title']
+    title = html.unescape(topic_data['topic_title'])
 
     num_posts = int(topic_data['num_posts'])
     posts_data = topic_data['posts_data']
