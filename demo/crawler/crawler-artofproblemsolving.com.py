@@ -128,7 +128,7 @@ def parse_node(node):
         return "<UnknownRight>"
     return ret
 
-def get_aos_data(page):
+def get_aops_data(page):
     s = BeautifulSoup(page, "html.parser")
     parser = slimit_parser
     for script in s.findAll('script'):
@@ -148,7 +148,7 @@ def crawl_topic_page(sub_url, category_id, topic_id, c, extra_opt):
     except:
         raise
 
-    parsed = get_aos_data(topic_page)
+    parsed = get_aops_data(topic_page)
     topic_data = parsed['AoPS.bootstrap_data']['preload_cmty_data']['topic_data']
     session_data = parsed['AoPS.session']
 
@@ -183,7 +183,7 @@ def crawl_topic_page(sub_url, category_id, topic_id, c, extra_opt):
             post_url += 'c{}h{}p{}'.format(category_id, topic_id, post_id)
             full_url = root_url + post_url
             file_path = get_file_path(category_id, topic_id, post_id)
-            process_posts(file_path, topic_txt, full_url, extra_opt)
+            process_topic(file_path, topic_txt, full_url, extra_opt)
 
         # keep track of where we are
         fetched_posts += len(posts_data)
@@ -218,24 +218,24 @@ def mkdir_p(path):
         else:
             raise Exception("mkdir needs permission")
 
-def save_preview(path, post_txt, url):
+def save_preview(path, topic_txt, url):
     # put preview into HTML template
     f = open("template.html", "r")
     fmt_str = f.read()
     f.close()
-    post_txt = post_txt.replace("\n", "</br>")
-    preview = fmt_str.replace("{PREVIEW}", post_txt)
+    topic_txt = topic_txt.replace("\n", "</br>")
+    preview = fmt_str.replace("{PREVIEW}", topic_txt)
     preview = preview.replace("{URL}", url)
     # save preview
     f = open(path, "w", encoding="utf8")
     f.write(preview)
     f.close()
 
-def save_json(path, post_txt, url):
+def save_json(path, topic_txt, url):
     f = open(path, "w")
     f.write(json.dumps({
         "url": url,
-        "text": post_txt
+        "text": topic_txt
     }, sort_keys=True))
     f.close()
 
@@ -251,13 +251,13 @@ def get_curl():
     c.setopt(c.FOLLOWLOCATION, 1)
     return c
 
-def list_category_links(category, newest, oldest, c):
+def list_category_topics(category, newest, oldest, c):
     #first access the page to acquire session id
     sub_url = '/community/'
 
     community_page = curl(sub_url, c)
 
-    parsed = get_aos_data(community_page)
+    parsed = get_aops_data(community_page)
     session = parsed['AoPS.session']
     session_id = session['id']
     user_id = session['user_id']
@@ -300,9 +300,9 @@ def list_category_links(category, newest, oldest, c):
             if 'topics' not in resp:
                 raise Exception("no key in response.")
 
-            for post in resp['topics']:
-                fetch_before = int(post['last_post_time'])
-                yield (category, post, None)
+            for topic in resp['topics']:
+                fetch_before = int(topic['last_post_time'])
+                yield (category, topic, None)
         except Exception as e:
             yield (category, None, e)
 
@@ -311,23 +311,23 @@ def get_file_path(category_id, topic_id, post_id):
     return directory + '/' + file_prefix + (('-c%s' + 'h%d' + 'p%s') %
         (category_id, topic_id, post_id))
 
-def process_posts(file_path, post_txt, url, extra_opt):
+def process_topic(file_path, topic_txt, url, extra_opt):
     try:
         mkdir_p(os.path.dirname(file_path))
     except:
         raise
     # process TeX mode pieces
-    post_txt = convert_canonical_tex(post_txt)
-    post_txt = replace_display_tex(post_txt)
-    post_txt = replace_inline_tex(post_txt)
-    post_txt = replace_dollar_tex(post_txt)
+    topic_txt = convert_canonical_tex(topic_txt)
+    topic_txt = replace_display_tex(topic_txt)
+    topic_txt = replace_inline_tex(topic_txt)
+    topic_txt = replace_dollar_tex(topic_txt)
 
     # do not touch time stamp if previously
     # an identical file already exists.
     jsonfile = file_path + ".json"
     if os.path.isfile(jsonfile):
         print('[exists]' + jsonfile)
-        save_json(file_prefix + '.tmp', post_txt, url)
+        save_json(file_prefix + '.tmp', topic_txt, url)
         if filecmp.cmp(file_prefix + '.tmp', jsonfile):
             # two files are identical, do not touch
             print('[identical, no touch]')
@@ -336,31 +336,31 @@ def process_posts(file_path, post_txt, url, extra_opt):
             print('[overwrite]')
 
     # two files are different, save files
-    save_json(jsonfile, post_txt, url)
+    save_json(jsonfile, topic_txt, url)
     if extra_opt["save-preview"]:
-        save_preview(file_path + '.html', post_txt, url)
+        save_preview(file_path + '.html', topic_txt, url)
 
 def crawl_category_topics(category, newest, oldest, extra_opt):
     c = get_curl()
 
-    succ_posts = 0
-    for category, post, e in list_category_links(category, newest, oldest, c):
+    succ_topics = 0
+    for category, topic, e in list_category_topics(category, newest, oldest, c):
         if e is not None:
             print_err("category %d error: %s" % (category, e))
             break
         try:
-            topic_id = post['topic_id']
+            topic_id = topic['topic_id']
             sub_url = '/community/c{}h{}'.format(category, topic_id)
             crawl_topic_page(sub_url, category, topic_id, get_curl(), extra_opt)
         except (KeyboardInterrupt, SystemExit):
             print('[abort]')
             return 'abort'
         except BaseException as e:
-            print_err("post %s (%s)" % (sub_url, str(e)))
+            print_err("topic %s (%s)" % (sub_url, str(e)))
             continue
 
         # count on success
-        succ_posts += 1
+        succ_topics += 1
 
         # sleep to avoid over-frequent request.
         time.sleep(0.6)
@@ -368,7 +368,7 @@ def crawl_category_topics(category, newest, oldest, extra_opt):
         # log crawled topics
         page_log = open(file_prefix + ".log", "a")
         page_log.write('category %d, topic_id: %s \n' %
-                        (category, post['topic_id']))
+                        (category, topic['topic_id']))
         page_log.close()
     return 'finish'
 
@@ -385,16 +385,16 @@ def help(arg0):
           '[-t | --topic <topic id>] ' \
           '\n' % (arg0))
     print(
-    """Below are presumably the majority of posts on AoS (as of May 2018):
+    """Below are presumably the majority of topics on AoPS (as of May 2018):
 
-    -c 3 (Middle School Math, > 33k posts)
-    -c 4 (High School Math > 71k posts)
-    -c 5 (Contests & Programs > 17k posts)
-    -c 6 (High School Olympiads > 214k posts)
-    -c 7 (College Math > 78k posts)
+    -c 3 (Middle School Math, > 33k topics)
+    -c 4 (High School Math > 71k topics)
+    -c 5 (Contests & Programs > 17k topics)
+    -c 6 (High School Olympiads > 214k topics)
+    -c 7 (College Math > 78k topics)
 
-    Although it seems there is no way to get the age of oldest post,
-    we can enter some huge number of days to crawl all posts under given
+    Although it seems there is no way to get the age of oldest topic,
+    we can enter some huge number of days to crawl all topics under given
     category, for example:
 
         -n 0 -o 3650 (from now to 10 years back)
@@ -425,7 +425,7 @@ def main(args):
         "save-preview": False
     }
     category = -1
-    post = -1
+    topic = -1
     newest = 0
     oldest = 0
 
@@ -440,7 +440,7 @@ def main(args):
             category = int(arg)
             continue
         elif opt in ("-t", "--topic"):
-            post = int(arg)
+            topic = int(arg)
             continue
         elif opt in ("--patrol"):
             extra_opt["patrol"] = True
@@ -451,9 +451,9 @@ def main(args):
         else:
             help(args[0])
 
-    if post > 0:
-        sub_url = "/community/c{}h{}".format(category, post)
-        crawl_topic_page(sub_url, category, post, get_curl(), extra_opt)
+    if topic > 0:
+        sub_url = "/community/c{}h{}".format(category, topic)
+        crawl_topic_page(sub_url, category, topic, get_curl(), extra_opt)
         exit(0)
 
     if (category > 0):
