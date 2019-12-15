@@ -381,7 +381,7 @@ def help(arg0):
           '[--patrol] ' \
           '[--save-preview] ' \
           '[--hook-script <script name>] ' \
-          '[-p | --post <post id>] ' \
+          '[-t | --topic <topic id>] ' \
           '\n' % (arg0))
     print(
     """Below are presumably the majority of posts on AoS (as of May 2018):
@@ -404,11 +404,11 @@ def main(args):
     argv = args[1:]
     try:
         opts, _ = getopt.getopt(
-            argv, "n:o:c:p:h", [
+            argv, "n:o:c:t:h", [
                 'newest=',
                 'oldest=',
                 'category=',
-                'post=',
+                'topic=',
                 'patrol',
                 'save-preview',
                 'hook-script='
@@ -438,7 +438,7 @@ def main(args):
         if opt in ("-c", "--category"):
             category = int(arg)
             continue
-        elif opt in ("-p", "--post"):
+        elif opt in ("-t", "--topic"):
             post = int(arg)
             continue
         elif opt in ("--patrol"):
