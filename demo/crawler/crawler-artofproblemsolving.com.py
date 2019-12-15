@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import time
 import pycurl
+import certifi
 import os
 import errno
 import json
@@ -243,6 +244,7 @@ def get_curl():
     c.setopt(c.TIMEOUT, 10)
     c.setopt(c.COOKIEJAR, file_prefix + '-cookie.tmp')
     c.setopt(c.COOKIEFILE, file_prefix + '-cookie.tmp')
+    c.setopt(c.CAINFO, certifi.where())
 
     # redirect on 3XX error
     c.setopt(c.FOLLOWLOCATION, 1)
