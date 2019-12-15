@@ -42,5 +42,6 @@ int main()
 	test("a+b-c+");
 	test("a+b-c-");
 	test("-bc");
+
 	return 0;
 }

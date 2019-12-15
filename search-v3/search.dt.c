@@ -152,10 +152,6 @@ static int prepare_math_keywords(struct indices *indices, struct query *qry,
 
 		/* prepare math level-2 inverted list */
 		char *kw_str = wstr2mbstr(kw->wstr); /* utf-8 */
-		for (int j = 0; j < strlen(kw_str); j++) {
-			if (kw_str[j] == '\n')
-				kw_str[j] = ' ';
-		}
 		struct math_l2_invlist *minv = math_l2_invlist(
 			indices->mi, kw_str, math_th + n_math, dynm_th + n_math);
 		m_invlist[n_math] = minv;
@@ -184,12 +180,14 @@ static int prepare_math_keywords(struct indices *indices, struct query *qry,
 
 		/* generate math iterator only if math invlist is valid */
 		math_l2_invlist_iter_t miter = NULL;
+
 		if (minv) {
 			miter = math_l2_invlist_iterator(minv);
 			m_iter[n_math] = miter;
 
 			/* assign math l2 initial threshold */
-			math_th[n_math] = math_pruner_init_threshold(miter->pruner);
+			if (miter)
+				math_th[n_math] = math_pruner_init_threshold(miter->pruner);
 		}
 
 #ifdef PRINT_SEARCH_QUERIES

@@ -95,6 +95,8 @@ static FILE **duplicate_entries_fh_array(struct math_qry *mq)
 
 math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 {
+	/* merge set can be empty when you get no subpath from tex, for example,
+	 * a single NIL node alone. */
 	if (merger_set_empty(&inv->mq.merge_set))
 		return NULL;
 

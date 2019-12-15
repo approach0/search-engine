@@ -10,14 +10,30 @@ extern bool grammar_err_flag;
 extern char grammar_last_err_str[];
 extern int  lexer_warning_flag;
 
+static void strip_newlines(char *str, size_t len)
+{
+	for (int i = 0; i < len; i++) {
+		if (str[i] == '\n')
+			str[i] = ' ';
+	}
+}
+
+/*
+ * mk_scan_buf() appends '\n' and '\0' after str such that:
+ * (1) make a _EOL so that grammar can terminate,
+ * (2) yy_scan_buffer() requires double-null string (YY_END_OF_BUFFER_CHAR).
+ */
 static char *mk_scan_buf(const char *str, size_t *out_sz)
 {
 	char *buf;
-	*out_sz = strlen(str) + 3;
+	size_t len = strlen(str);
+	*out_sz = len + 3;
 	buf = malloc(*out_sz);
 	sprintf(buf, "%s\n_", str);
 	buf[*out_sz - 2] = '\0';
 
+	/* to avoid multiple parsing, we should strip '\n' from original string */
+	strip_newlines(buf, len);
 	return buf;
 }
 
