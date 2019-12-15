@@ -18,8 +18,8 @@ struct snippet_hi {
 	bool     joint_left, joint_right;
 
 	/* string buffers */
-	char     left_str[SNIPPET_PADDING + 1];
-	char     right_str[SNIPPET_PADDING + 1];
+	char     left_str[SNIPPET_MAX_PADDING + 1];
+	char     right_str[SNIPPET_MAX_PADDING + 1];
 	char     kw_str[MAX_HIGHLIGHTED_BYTES];
 
 	struct list_node ln;
@@ -43,7 +43,7 @@ void snippet_push_highlight(list* hi_li, char* kw_str,
 	struct snippet_hi *h = malloc(sizeof(struct snippet_hi));
 	h->kw_pos = kw_pos;
 	h->kw_end = kw_pos + kw_len;
-	h->pad_left = h->pad_right = SNIPPET_PADDING;
+	h->pad_left = h->pad_right = SNIPPET_MAX_PADDING; /* overwritten later */
 	h->joint_left = h->joint_right = 0;
 
 	h->left_str[0]  = '\0';
@@ -107,6 +107,7 @@ static LIST_IT_CALLBK(align)
 	if (next_h->pad_left > next_h->kw_pos)
 		next_h->pad_left = next_h->kw_pos;
 
+	/* if there is a snippet after this one */
 	if (pa_now->now != pa_head->last) {
 		/* calculate the rightmost of this h and the
 		 * leftmost of the next h */
@@ -116,10 +117,10 @@ static LIST_IT_CALLBK(align)
 		/* align them if overlap */
 		if (right < left) {
 			kw_dist = next_h->kw_pos - h->kw_end;
-			h->pad_right = MIN(SNIPPET_PADDING, kw_dist);
+			h->pad_right = MIN(h->pad_right, kw_dist);
 			next_h->pad_left = next_h->kw_pos - (h->kw_end + h->pad_right);
 			/* it follows that next_h->pad_left can only be
-			 * either zero or (kw_dist - SNIPPET_PADDING). */
+			 * either zero or (kw_dist - h->pad_right). */
 
 			h->joint_right = 1;
 			next_h->joint_left = 1;
@@ -241,6 +242,23 @@ static LIST_IT_CALLBK(rm_linefeed)
 	LIST_GO_OVER;
 }
 
+static LIST_IT_CALLBK(count_occurs)
+{
+	P_CAST(cnt, uint32_t, pa_extra);
+	(*cnt)++;
+	LIST_GO_OVER;
+}
+
+static LIST_IT_CALLBK(adjust_padding)
+{
+	P_CAST(adjusted, uint32_t, pa_extra);
+	LIST_OBJ(struct snippet_hi, h, ln);
+
+	h->pad_left = h->pad_right = *adjusted;
+
+	LIST_GO_OVER;
+}
+
 void snippet_read_file(FILE* fh, list* hi_li)
 {
 #ifdef DEBUG_SNIPPET
@@ -248,6 +266,16 @@ void snippet_read_file(FILE* fh, list* hi_li)
 	snippet_pos_print(hi_li);
 #endif
 
+	/* adjust padding according to the number of occurs */
+	uint32_t count = 0;
+	list_foreach(hi_li, &count_occurs, &count);
+	uint32_t new_pad;
+	new_pad = SNIPPET_ROUGH_SZ / (count * 2 + 1 /* ensure non-zero */);
+	new_pad = MIN(SNIPPET_MAX_PADDING, new_pad); /* ensure in safe range */
+	new_pad = MAX(SNIPPET_MIN_PADDING, new_pad); /* ensure in safe range */
+	list_foreach(hi_li, &adjust_padding, &new_pad);
+
+	/* then align and fill padding */
 	list_foreach(hi_li, &align, NULL);
 	list_foreach(hi_li, &read_file, fh);
 	list_foreach(hi_li, &rm_linefeed, NULL);
