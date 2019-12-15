@@ -81,7 +81,6 @@ def parse_op_name(obj):
         # instance of quotes, which is not desired and can cause issues
         if l.startswith('"') and l.endswith('"'):
             l = l[1:-1]
-        print(l)
         l = l.encode().decode('unicode_escape')
     elif hasattr(obj, 'value'):
         l = obj.value
