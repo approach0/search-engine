@@ -17,3 +17,5 @@
 
 #define SEARCHD_LOG_FILE "searchd.log"
 #define OUTPUT_TREC_FILE "trec-format-results.tmp"
+
+//#define DEBUG_LOG_STATS_SYNC

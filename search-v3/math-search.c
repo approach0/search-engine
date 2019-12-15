@@ -61,7 +61,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 142544 && e == 28) || (d == 142544 && e == 13);
+	return (d == 1 || d == 2);
 }
 
 static void print_symbinfo(struct symbinfo *symbinfo)
@@ -101,7 +101,7 @@ math_l2_invlist_iter_t math_l2_invlist_iterator(struct math_l2_invlist *inv)
 	math_l2_invlist_iter_t l2_iter = malloc(sizeof *l2_iter);
 
 	l2_iter->n_qnodes       = inv->mq.n_qnodes;
-	l2_iter->ipf            = inv->mq.ipf;
+	l2_iter->ipf            = inv->mq.merge_set.upp;
 	l2_iter->msf            = &inv->msf;
 	l2_iter->fh_symbinfo    = duplicate_entries_fh_array(&inv->mq);
 	l2_iter->ele            = inv->mq.ele;
@@ -171,6 +171,7 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 {
 	float *ipf = l2_iter->ipf;
 	struct math_score_factors *msf = l2_iter->msf;
+	uint32_t dl = 1;
 
 	float estimate, score = 0, leftover = qnode->sum_ipf;
 	/* for each sector tree under qnode */
@@ -195,6 +196,7 @@ struct_score(merger_set_iter_t iter, struct math_pruner_qnode *qnode,
 			/* read hit inverted list item */
 			struct math_invlist_item item;
 			MERGER_ITER_CALL(iter, read, iid, &item, sizeof(item));
+			dl = item.orig_width;
 			/* accumulate preceise partial score */
 			score += MIN(ref, item.sect_width) * ipf[iid];
 #ifdef DEBUG_MATH_SEARCH__STRUCT_SCORING
@@ -213,7 +215,8 @@ skip:;
 		if (inspect(iter->min))
 			printf("+= leftover=%.2f = %.2f\n", leftover, estimate);
 #endif
-		if (estimate <= best || math_score_upp(msf, estimate) <= threshold)
+		if (estimate <= best ||
+		    math_score_upp_tight(msf, estimate, dl) <= threshold)
 			return 0;
 #endif
 	}
@@ -292,7 +295,9 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 
 			/* output document original length */
 			*dl = item.orig_width;
-
+#ifdef IGNORE_MATH_SYMBOL_SCORE
+			return 1.f;
+#endif
 			/* seek to symbol info file offset */
 			uint32_t offset = item.symbinfo_offset;
 			if (0 != fseek(fhs[iid], offset, SEEK_SET)) {
@@ -328,8 +333,8 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 #ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 	if (inspect(iter->min)) {
 		printf("[mnc table]\n");
-		mnc_score_print(mnc, 1);
-		printf("struct score = %.2f / %d = %.2f\n", score, qnode->sum_w,
+		mnc_score_print(mnc, 0);
+		printf("symbol score = %.2f / %d = %.2f\n", score, qnode->sum_w,
 			score / qnode->sum_w);
 	}
 #endif
@@ -366,7 +371,7 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 	if (threshold != l2_iter->last_threshold) {
 		if (math_pruner_update(pruner, threshold)) {
 			;
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_SEARCH__PRUNER_UPDATE
 			printf(C_BLUE "[node dropped]\n" C_RST);
 #endif
 		}
@@ -388,7 +393,7 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 
 		l2_iter->last_threshold = threshold;
 
-#ifdef DEBUG_MATH_SEARCH
+#ifdef DEBUG_MATH_SEARCH__PRUNER_UPDATE
 		printf("[pruner update] for `%s'\n", l2_iter->tex);
 		math_pruner_print(pruner);
 		math_pruner_print_stats(pruner);
@@ -523,12 +528,12 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 
 #ifdef DEBUG_MATH_SEARCH
 				if (inspect(iter->min)) {
-					printf(C_GREEN);
 					printf("Propose ");
+					printf(C_GREEN);
 					printf("[doc#%u exp#%u %d<->%d] %.2f,%.2f/%d=>%.2f\n",
 						cur_docID, key2exp(iter->min),
 						best_qn->root, key2rot(iter->min),
-						symb, best, msf->doc_lr_paths, score);
+						best, symb, msf->doc_lr_paths, score);
 					printf(C_RST);
 				}
 #endif

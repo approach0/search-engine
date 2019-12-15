@@ -9,7 +9,8 @@ cat << USAGE
 Description:
 Prepare indexing later to be fed by json-feeder.
 
-$0 create-images (will prompt you for sudo password)
+$0 create-images
+$0 mount-images (will prompt you for sudo password)
 $0 umount-images (will prompt you for sudo password)
 $0 create-index-sessions
 $0 inspect-index-sessions
@@ -27,6 +28,12 @@ function prepare_image() {
 	echo "preparing $img_name ..."
 	vdisk-creat.sh reiserfs $INDEX_SIZE
 	mv vdisk.img "$img_name"
+}
+
+function mount_image() {
+	img_name="$1.img"
+	cd "$INDEX_ROOT"
+	echo "mount $img_name ..."
 	sudo vdisk-mount.sh reiserfs "$img_name"
 }
 
@@ -49,7 +56,7 @@ function spawn_indexd() {
 		echo "sesseion $name already exists."
 		return
 	fi
-	echo "starting $indexd_bin in tmux session $name ..."
+	echo "starting $indexd_bin in tmux session $name at port $port..."
 	set -x
 	tmux new-session -c "${indexd_dir}" -d -s $name \
 		"./${indexd_bin} -o ${INDEX_ROOT}/${mnt_dir_name}/ -p $port 2> ./err-$name.log"
@@ -59,6 +66,11 @@ function spawn_indexd() {
 if [ $mode == "create-images" ]; then
 	for i in "${INDEX_NUMS[@]}"; do
 		prepare_image index-$i
+	done;
+
+elif [ $mode == "mount-images" ]; then
+	for i in "${INDEX_NUMS[@]}"; do
+		mount_image index-$i
 	done;
 
 elif [ $mode == "umount-images" ]; then

@@ -22,7 +22,6 @@ struct term_invlist_entry_reader {
 struct term_index_cache_entry {
 	struct invlist    *invlist; /* in-memory inverted list */
 	struct treap_node  trp_nd; /* treap key-value container */
-	uint32_t           df; /* document frequency */
 };
 
 /* load limited sized posting lists into cache */

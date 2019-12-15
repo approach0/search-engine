@@ -7,6 +7,15 @@ var bodyParser = require('body-parser');
 app = express();
 app.use(bodyParser.json());
 
+
+/* disable etag (hash) and cache-control policy */
+app.disable('etag');
+
+app.use((req, res, next) => {
+	res.set('Cache-Control', 'no-cache')
+	next()
+})
+
 const max_items = 120;
 
 var db = new sqlite3('qrylog.sqlite3', {verbose: console.log});

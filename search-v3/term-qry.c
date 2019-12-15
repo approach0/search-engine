@@ -32,12 +32,14 @@ void term_qry_print(struct term_qry *term_qry)
 		term_qry->qf, term_qry->idf, term_qry->upp);
 }
 
-struct BM25_scorer prepare_bm25(term_index_t ti, struct term_qry* tqs, int n)
+struct BM25_scorer
+prepare_bm25(term_index_t ti, uint32_t docN_, uint32_t avgDocLen_,
+             struct term_qry* tqs, int n)
 {
 	struct BM25_scorer bm25;
 
-	float avgDocLen = (float)term_index_get_avgDocLen(ti);
-	float docN = (float)term_index_get_docN(ti);
+	float avgDocLen = (float)avgDocLen_;
+	float docN = (float)docN_;
 
 	BM25_init(&bm25, avgDocLen, docN);
 

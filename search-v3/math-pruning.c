@@ -72,7 +72,7 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 	 * Sort sector trees in each node by their (widths * IPF)
 	 * TODO: quik-sort?
 	 */
-	float *ipf = mq->ipf;
+	float *ipf = mq->merge_set.upp;
 	for (int k = 0; k < pruner->n_qnodes; k++) {
 		struct math_pruner_qnode *qn = pruner->qnodes + k;
 		for (int i = 0; i < qn->n; i++) {
@@ -113,7 +113,7 @@ static void init_qnodes(struct math_pruner *pruner, struct math_qry *mq)
 		for (int j = 0; j < qn->n; j++) {
 			int iid = qn->invlist_id[j];
 			qn->sum_w += qn->secttr_w[j];
-			qn->sum_ipf += pruner->mq->ipf[iid] * (float)qn->secttr_w[j];
+			qn->sum_ipf += ipf[iid] * (float)qn->secttr_w[j];
 		}
 	}
 }
@@ -294,9 +294,10 @@ void math_pruner_iters_sort_by_maxref(struct math_pruner *pruner,
 	}
 
 	/* overwrite upperbound using updated maxref */
+	float *ipf = pruner->mq->merge_set.upp;
 	for (int i = 0; i < iter->size; i++) {
 		int iid = iter->map[i];
-		iter->set.upp[iid] = pruner->backrefs[iid].max * pruner->mq->ipf[iid];
+		iter->set.upp[iid] = pruner->backrefs[iid].max * ipf[iid];
 	}
 
 	/* update accumulated sum and pivot */
@@ -312,13 +313,14 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 	bin_lp_reset(blp);
 
 	/* assign BP weights */
+	float *ipf = pruner->mq->merge_set.upp;
 	for (int i = 0; i < iter->size; i++) {
 		int iid = iter->map[i];
 		struct math_pruner_backref backref = pruner->backrefs[iid];
 		for (int j = 0; j < backref.cnt; j++) {
 			int idx = backref.idx[j];
 			int ref = backref.ref[j];
-			float sum_ipf = pruner->mq->ipf[iid] * ref;
+			float sum_ipf = ipf[iid] * ref;
 			(void)bin_lp_assign(blp, idx, iid, sum_ipf);
 		}
 	}
@@ -351,6 +353,7 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 
 void math_pruner_print(struct math_pruner *pruner)
 {
+	float *ipf = pruner->mq->merge_set.upp;
 	printf("[math pruner] threshold: %.2f \n", pruner->threshold_);
 	for (int i = 0; i < pruner->n_qnodes; i++) {
 		/* print node */
@@ -360,7 +363,7 @@ void math_pruner_print(struct math_pruner *pruner)
 		for (int j = 0; j < qn->n; j++) {
 			/* print sector tree */
 			int iid = qn->invlist_id[j];
-			float sum_ipf = pruner->mq->ipf[iid] * qn->secttr_w[j];
+			float sum_ipf = ipf[iid] * qn->secttr_w[j];
 			printf("\t secttr/%d, upp(%.2f)=%.2f ", qn->secttr_w[j],
 				sum_ipf, math_score_upp(pruner->msf, sum_ipf));
 

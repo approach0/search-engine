@@ -16,8 +16,6 @@ struct math_qry {
 
 	struct math_invlist_entry_reader entry[MAX_MERGE_SET_SZ];
 
-	float ipf[MAX_MERGE_SET_SZ]; /* inverted path freq for single path */
-
 	/* shortcut links to subpath set elements */
 	struct subpath_ele *ele[MAX_MERGE_SET_SZ];
 

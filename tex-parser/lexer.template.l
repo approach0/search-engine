@@ -369,6 +369,8 @@ extern int lexer_warning_flag;
 \\prime                              { RET_TOK(_AUTOGEN_, PRIME, WC_NORMAL_LEAF, VAR); }
 "_"                    { RET_TOK(subscript, SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
 "^"                    { RET_TOK(supscript, SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
+
+ /* _hack_* are placeholders for generating token IDs consumed by MathML parser */
 "_hack___"         { RET_TOK(subscript, PRE_SUBSCRIPT, WC_COMMUT_OPERATOR, SUBSCRIPT); }
 "_hack^^^"         { RET_TOK(supscript, PRE_SUPSCRIPT, WC_COMMUT_OPERATOR, SUPSCRIPT); }
 "_hackROOT"                    { RET_TOK(root, MATHML_ROOT, WC_COMMUT_OPERATOR, ROOT); }
@@ -1030,6 +1032,7 @@ void update_font_state()
 		cur_font = MFONT_NORMAL;
 }
 
+/* return alphabet (i.e., [a-z]) variables */
 int ret_var(char *text, struct optr_node **tr, char offset)
 {
 	int c = (int)(text[0] - offset);
@@ -1047,7 +1050,7 @@ int ret_var(char *text, struct optr_node **tr, char offset)
 	return VAR;
 }
 
-static uint32_t num2symbol_id(uint32_t n)
+static enum symbol_id num2symbol_id(uint32_t n)
 {
 	if (n >= SYMBOL_ID_LARGE_NUM_FIRST)
 		n = S_bignum;
@@ -1056,13 +1059,23 @@ static uint32_t num2symbol_id(uint32_t n)
 	return n;
 }
 
+static enum token_id num2token_id(uint32_t n)
+{
+	if (0 == n) {
+		return T_ZERO;
+	} else if (1 == n) {
+		return T_ONE;
+	} else {
+		return T_NUM;
+	}
+}
+
 int ret_qvar_num(char *text, struct optr_node **tr)
 {
 	uint32_t n;
 	sscanf(text, "*%u*", &n);
 
-	n = num2symbol_id(n);
-	*tr = optr_alloc(n, T_NUM, WC_NORMAL_LEAF);
+	*tr = optr_alloc(num2symbol_id(n), num2token_id(n), WC_NORMAL_LEAF);
 	SET_TOK_POS(*tr);
 
 	return NUM;
@@ -1074,17 +1087,9 @@ int ret_num(char *text, struct optr_node **tr)
 	uint32_t n;
 	sscanf(text, "%u", &n);
 
-	if (n == 0) {
-		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF);
-	} else if (n == 1) {
-		*tr = optr_alloc(S_one, T_ONE, WC_NORMAL_LEAF);
-	} else {
-		n = num2symbol_id(n);
-		/* use VAR token for general numbers */
-		*tr = optr_alloc(n, T_VAR, WC_NORMAL_LEAF);
-	}
-
+	*tr = optr_alloc(num2symbol_id(n), num2token_id(n), WC_NORMAL_LEAF);
 	SET_TOK_POS(*tr);
+
 	return NUM;
 }
 
@@ -1092,7 +1097,6 @@ int ret_float_num(char *text, struct optr_node **tr)
 {
 	struct optr_node  *tr_decimal, *tr_integer;
 	uint32_t           decimal, integer;
-	enum token_id      inttok;
 
 	if (strlen(text) < MAX_FLOAT_STR_LEN) {
 		sscanf(text, "%u.%u", &integer, &decimal);
@@ -1100,16 +1104,10 @@ int ret_float_num(char *text, struct optr_node **tr)
 		*tr = optr_alloc(S_float, T_FLOAT, WC_NONCOM_OPERATOR);
 		SET_TOK_POS(*tr);
 
-		if (0 == integer) {
-			inttok = T_ZERO;
-		} else if (1 == integer) {
-			inttok = T_ONE;
-		} else {
-			inttok = T_NUM;
-		}
-
-		tr_integer = optr_alloc(num2symbol_id(integer), inttok, WC_NORMAL_LEAF);
-		tr_decimal = optr_alloc(num2symbol_id(decimal), T_NUM, WC_NORMAL_LEAF);
+		tr_integer = optr_alloc(num2symbol_id(integer), num2token_id(integer),
+		                        WC_NORMAL_LEAF);
+		tr_decimal = optr_alloc(num2symbol_id(decimal), num2token_id(decimal),
+		                        WC_NORMAL_LEAF);
 		SET_TOK_POS(tr_integer);
 		SET_TOK_POS(tr_decimal);
 
@@ -1121,7 +1119,7 @@ int ret_float_num(char *text, struct optr_node **tr)
 		fprintf(stderr, "%s is too long to cast into float number (len=%lu).\n",
 		        text, strlen(text));
 
-		*tr = optr_alloc(S_zero, T_ZERO, WC_NORMAL_LEAF);
+		*tr = optr_alloc(num2symbol_id(0), num2token_id(0), WC_NORMAL_LEAF);
 		SET_TOK_POS(*tr);
 		return NUM;
 	}
@@ -1135,8 +1133,8 @@ int hack_attach(struct optr_node *tr, char *text, struct optr_node **ret_tr, int
 	a = (uint32_t)(text[l - 2] - '0');
 	b = (uint32_t)(text[l - 1] - '0');
 
-	tr_a = optr_alloc(num2symbol_id(a), T_NUM, WC_NORMAL_LEAF);
-	tr_b = optr_alloc(num2symbol_id(b), T_NUM, WC_NORMAL_LEAF);
+	tr_a = optr_alloc(num2symbol_id(a), num2token_id(a), WC_NORMAL_LEAF);
+	tr_b = optr_alloc(num2symbol_id(b), num2token_id(b), WC_NORMAL_LEAF);
 	SET_TOK_POS(tr_a);
 	SET_TOK_POS(tr_a);
 

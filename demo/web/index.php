@@ -24,7 +24,7 @@ if ($detect->isMobile()) {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.css" type="text/css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" type="text/css"/>
-<link rel="stylesheet" href="all.css?hash=5a62e415f59308bc" type="text/css"/>
+<link rel="stylesheet" href="all.css?hash=7167ce8139066663" type="text/css"/>
 <!-- -->
 <script src="https://cdn.jsdelivr.net/npm/polyfill@0.1.0/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
@@ -36,7 +36,7 @@ if ($detect->isMobile()) {
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1-a/build/mathquill.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typed.js@2.0.10/lib/typed.min.js"></script>
-<script type="text/javascript" src="bundle.min.js?hash=5a62e415f59308bc"></script>
+<script type="text/javascript" src="bundle.min.js?hash=7167ce8139066663"></script>
 
 <style>
 img.social {
@@ -115,7 +115,7 @@ div.blur {
 		</div>
 	</li>
 	<li class="qry-li-empty">
-		<div v-bind:style="{height: chip_max_height + 'px', width: '1px'}">
+		<div v-bind:style="{height: chip_max_height + 'px', width: '1px'}"></div>
 	</li>
 	<li v-if="i.type == 'term-input'" class="qry-li">
 		<input v-on:keyup="on_input" v-on:keydown.delete="on_del" v-on:paste="on_paste" v-model="i.str"
@@ -443,6 +443,10 @@ SE.init({
 	<p v-else>
 		<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
 		{{ret_str}}. (return code #{{ret_code}})
+		<br/><br/>
+		<a href="https://chat.stackexchange.com/rooms/46148/"
+		target="_blank" title="Chatroom or feedback">
+		<i class="fa fa-comment" aria-hidden="true"></i> Live chatroom</a>
 	</p>
 </div>
 </div>
@@ -475,8 +479,8 @@ SE.init({
 				onclick="expand_donation_options()"> supporting</a>
 				this project.
 				(<a class="btn" v-on:click="SE_verify()" href="javascript: void(0)">refresh</a>)
-				<p v-if="verifying">verifying ...</p>
 			</p>
+			<p v-if="verifying">verifying ...</p>
 			</div>
 		</div>
 		<div v-else>

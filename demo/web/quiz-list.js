@@ -1,12 +1,13 @@
 var quiz_list = [
 	{ /* 0 */
-		"Q": "Which function represents the intersection of the cone [imath]z=\\sqrt{x^2+y^2}[/imath] and the plane [imath]z=1+y[/imath] ?",
+		"Q": "Please prove the convergence of series [imath]\\sum_{k=1}^\\infty \\dfrac{\\sin k^2} k[/imath].",
 		"hints": [
-			"Let me think...",
-			"It reminds me when I drop my vanilla cone to the floor last time",
-			"Can I just skip to the next question?",
-			"Is it possible to <a href=\"#\">search for the answer</a> on the Internet?"
+			"Ah this one, it looks familiar to me! I know its improper integral does converge.",
+			"Wait, integral criterion only works for nonnegative and monotone decreasing integrands ...",
+			"... (15 minutes working on it) ...",
+			"I have no idea, it seems not that trival to prove.",
+			"Is it possible to <a href=\"#\">search for the answer</a> on the Internet ?"
 		],
-		"search":  "cone, $z=\\sqrt{x^2+y^2}$, plane, $z=1+y$"
+		"search":  "prove, $\\sum_{k=1}^\\infty \\dfrac{\\sin k^2} k$, convergence"
 	}
 ];

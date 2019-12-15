@@ -190,15 +190,13 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 		mq->entry[n] = math_index_lookup(mi, path_key);
 
 		if (mq->entry[n].pf) {
-			mq->ipf[n] = math_score_ipf(N, mq->entry[n].pf);
 			mq->merge_set.iter[n] = mq->entry[n].reader;
-			mq->merge_set.upp [n] = mq->ipf[n]; /* here is single path IPF */
+			mq->merge_set.upp [n] = math_score_ipf(N, mq->entry[n].pf);
 			mq->merge_set.cur [n] = (merger_callbk_cur)invlist_iter_curkey;
 			mq->merge_set.next[n] = (merger_callbk_next)invlist_iter_next;
 			mq->merge_set.skip[n] = (merger_callbk_skip)invlist_iter_jump;
 			mq->merge_set.read[n] = (merger_callbk_read)invlist_iter_read;
 		} else {
-			mq->ipf[n] = 0;
 			mq->merge_set.iter[n] = NULL;
 			mq->merge_set.upp [n] = 0;
 			mq->merge_set.cur [n] = empty_invlist_cur;
@@ -279,6 +277,6 @@ void math_qry_print(struct math_qry* mq, int print_details)
 		}
 
 		printf("\t[%3d] (%s) %s ", i, medium_str, path_key);
-		printf("(pf=%u, ipf=%.2f)\n", mq->entry[i].pf, mq->ipf[i]);
+		printf("(pf=%u, ipf=%.2f)\n", mq->entry[i].pf, mq->merge_set.upp[i]);
 	}
 }

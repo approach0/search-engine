@@ -26,6 +26,33 @@ struct searchd_args {
 	int trec_log;
 };
 
+static void print_index_stats(indices_run_sync_t *stats, FILE *fh)
+{
+	fprintf(fh, "docN=%u, avgDocLen=%u, pathN=%u\n",
+		stats->docN, stats->avgDocLen, stats->pathN);
+
+	for (int i = 0; i < MAX_MERGE_SET_SZ; i++) {
+		uint32_t doc_freq = stats->doc_freq[i];
+		fprintf(fh, "%u ", doc_freq);
+	}
+	fprintf(fh, "\n");
+}
+
+static void reduce_index_stats(indices_run_sync_t arr[], uint32_t n,
+                               indices_run_sync_t *out)
+{
+	PTR_CAST(p, uint32_t, out);
+	for (int i = 0; i < MAX_SYNC_ARR_LEN; i++) {
+		uint32_t sum = 0;
+		for (int j = 0; j < n; j++) {
+			sum += *((uint32_t*)&arr[j] + i);
+		}
+		*p = sum;
+		p++;
+	}
+	out->avgDocLen = out->avgDocLen / n;
+}
+
 static const char *
 httpd_on_recv(const char *req, void *arg_)
 {
@@ -84,8 +111,43 @@ httpd_on_recv(const char *req, void *arg_)
 	query_print(qry, log_fh);
 	fflush(log_fh);
 
-	/* search query */
-	srch_res = indices_run_query(args->indices, &qry);
+	/* if it is cluster, synchronize and sum index stats */
+	indices_run_sync_t sync = {0};
+	if (args->n_nodes > 1) {
+		/* get this node index stats */
+		srch_res = indices_run_query(args->indices, &qry, &sync, 1, log_fh);
+		free_ranked_results(&srch_res);
+#ifdef DEBUG_LOG_STATS_SYNC
+		fprintf(log_fh, "node[%d] stats: ", args->node_rank);
+		print_index_stats(&sync, log_fh);
+#endif
+
+		/* gather each node stats and reduce to single global stats */
+		indices_run_sync_t *gather_sync = NULL;
+		if (args->node_rank == CLUSTER_MASTER_NODE)
+			gather_sync = malloc(args->n_nodes * sizeof(indices_run_sync_t));
+
+		MPI_Gather(&sync, MAX_SYNC_ARR_LEN, MPI_UINT32_T,
+		           gather_sync, MAX_SYNC_ARR_LEN, MPI_UINT32_T,
+		           CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
+
+		if (args->node_rank == CLUSTER_MASTER_NODE) {
+			/* reduce index stats */
+			reduce_index_stats(gather_sync, args->n_nodes, &sync);
+#ifdef DEBUG_LOG_STATS_SYNC
+			fprintf(log_fh, "reduced: ");
+			print_index_stats(&sync, log_fh);
+#endif
+			free(gather_sync);
+		}
+
+		/* now distribute the global index stats among nodes */
+		MPI_Bcast(&sync, MAX_SYNC_ARR_LEN, MPI_UINT32_T,
+			CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
+	}
+
+	/* actually perform search */
+	srch_res = indices_run_query(args->indices, &qry, &sync, 0, log_fh);
 
 	//////// TREC LOG ////////
 	if (args->trec_log)
@@ -114,8 +176,6 @@ httpd_on_recv(const char *req, void *arg_)
 		MPI_Gather(ret, MAX_SEARCHD_RESPONSE_JSON_SZ, MPI_BYTE,
 		           gather_buf, MAX_SEARCHD_RESPONSE_JSON_SZ, MPI_BYTE,
 		           CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
-		/* blocks until all nodes have reached here */
-		MPI_Barrier(MPI_COMM_WORLD);
 
 		if (args->node_rank == CLUSTER_MASTER_NODE) {
 			/* merge gather results and return */
@@ -173,11 +233,11 @@ static void slave_run(struct searchd_args *args)
 	free(recv_buf);
 }
 
-static void slave_die()
+/* very unpleasant function name, but very descriptive :P */
+static void signal_slaves_to_die()
 {
-	/* broadcast to slave nodes */
 	char *send_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
-	send_buf[0] = '\0'; /* send an empty message */
+	send_buf[0] = '\0'; /* empty buffer to signal die command */
 	MPI_Bcast(send_buf, CLUSTER_MAX_QRY_BUF_SZ, MPI_BYTE,
 			  CLUSTER_MASTER_NODE, MPI_COMM_WORLD);
 	free(send_buf);
@@ -313,7 +373,7 @@ int main(int argc, char *argv[])
 		if (0 != httpd_run(port, uri_handlers, 1, &searchd_args))
 			printf("Port %hu is occupied\n", port);
 
-		slave_die();
+		signal_slaves_to_die();
 	} else {
 		/* slave node */
 		signal(SIGUSR1, signal_handler);
