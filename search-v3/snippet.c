@@ -11,9 +11,6 @@
 #define SNIPPET_HL_COLOR C_RED
 #define SNIPPET_HL_RST   C_RST
 
-/* for SNIPPET_PADDING and MAX_SNIPPET_SZ */
-#include "config.h"
-
 struct snippet_hi {
 	/* position info */
 	uint32_t kw_pos, kw_end;
