@@ -140,7 +140,7 @@ def get_aos_data(page):
 
     return None
 
-def crawl_topic_page(sub_url, topic_id, c):
+def crawl_topic_page(sub_url, category_id, topic_id, c, extra_opt):
     try:
         topic_page = curl(sub_url, c)
     except:
@@ -152,28 +152,42 @@ def crawl_topic_page(sub_url, topic_id, c):
 
     # get title
     title = topic_data['topic_title']
-    topic_txt = title + '\n\n'
 
     num_posts = int(topic_data['num_posts'])
     posts_data = topic_data['posts_data']
     if len(posts_data) < num_posts:
         # now this is a bit tricky, but if there are more posts
         # than we received, AoPS sens first 15 and last 15 posts,
-        # so to simplify stuff, we are gonna ignore the second half, and request
-        # all subsequent posts through Ajax
+        # so to simplify stuff, we are gonna ignore the second half,
+        # and request all subsequent posts through Ajax.
         posts_data = posts_data[:len(posts_data)//2]
 
     fetched_posts = 0
     while fetched_posts < num_posts:
-        # get posts
-        for post in posts_data:
-            topic_txt += post['post_canonical']
+        if len(posts_data) > 0:
+            post_number = posts_data[0]['post_number']
+            post_id     = posts_data[0]['post_id']
+            # compose title
+            topic_txt = title
+            if post_number != '1':
+                topic_txt += ' ' + ('(posts after #%s)' % post_number)
             topic_txt += '\n\n'
+            # get posts
+            for post in posts_data:
+                topic_txt += post['post_canonical']
+                topic_txt += '\n\n'
+            # save posts
+            post_url = '/community/'
+            post_url += 'c{}h{}p{}'.format(category_id, topic_id, post_id)
+            full_url = root_url + post_url
+            file_path = get_file_path(category_id, topic_id, post_id)
+            process_posts(file_path, topic_txt, full_url, extra_opt)
 
+        # keep track of where we are
         fetched_posts += len(posts_data)
 
         if fetched_posts < num_posts:
-            # we need to request more...
+            # it is not ending, we need to request for more posts...
             postfields = {"topic_id": topic_id,
                           "direction": "forwards",
                           "start_post_id": -1,
@@ -289,13 +303,12 @@ def list_category_links(category, newest, oldest, c):
         except Exception as e:
             yield (category, None, e)
 
-def get_file_path(post_id):
-    directory = './tmp/' + str(post_id % DIVISIONS)
-    return directory + '/' + file_prefix + str(post_id)
+def get_file_path(category_id, topic_id, post_id):
+    directory = './tmp/' + str(topic_id % DIVISIONS)
+    return directory + '/' + file_prefix + (('-c%s' + 'h%d' + 'p%s') %
+        (category_id, topic_id, post_id))
 
-def process_post(post_id, post_txt, url, extra_opt):
-    # decide sub-directory
-    file_path = get_file_path(post_id)
+def process_posts(file_path, post_txt, url, extra_opt):
     try:
         mkdir_p(os.path.dirname(file_path))
     except:
@@ -335,14 +348,12 @@ def crawl_category_topics(category, newest, oldest, extra_opt):
         try:
             topic_id = post['topic_id']
             sub_url = '/community/c{}h{}'.format(category, topic_id)
-            url = root_url + sub_url
-            topic_txt = crawl_topic_page(sub_url, topic_id, get_curl())
-            process_post(topic_id, topic_txt, url, extra_opt)
+            crawl_topic_page(sub_url, category, topic_id, get_curl(), extra_opt)
         except (KeyboardInterrupt, SystemExit):
             print('[abort]')
             return 'abort'
         except BaseException as e:
-            print_err("post %s (%s)" % (url, str(e)))
+            print_err("post %s (%s)" % (sub_url, str(e)))
             continue
 
         # count on success
@@ -439,9 +450,7 @@ def main(args):
 
     if post > 0:
         sub_url = "/community/c{}h{}".format(category, post)
-        full_url = root_url + sub_url
-        post_txt = crawl_topic_page(sub_url, post, get_curl())
-        process_post(post, post_txt, full_url, extra_opt)
+        crawl_topic_page(sub_url, category, post, get_curl(), extra_opt)
         exit(0)
 
     if (category > 0):
