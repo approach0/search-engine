@@ -1,5 +1,8 @@
 #pragma once
 
+/* for MAX_TXT_SEG_BYTES */
+#include "txt-seg/config.h"
+
 //#define DEBUG_INDICES_RUN_QUERY
 
 //#define DEBUG_PREPARE_MATH_QRY
@@ -38,9 +41,14 @@
 #define MAX_MATH_OCCURS 1
 #define MAX_TOTAL_OCCURS (10 + 2)
 
+/* even a short query can get a long hilighted string, e.g.
+ * in the case of math search */
+#define MAX_HIGHLIGHTED_BYTES (MAX_TXT_SEG_BYTES * 64)
+
 //#define DEBUG_SNIPPET_LEXER
 #define SNIPPET_PADDING 768
-#define MAX_SNIPPET_SZ 4096
+#define MAX_SNIPPET_SZ \
+	(MAX_TOTAL_OCCURS * (MAX_TXT_SEG_BYTES + (SNIPPET_PADDING + 1) * 2))
 
 #define DEFAULT_K_TOP_RESULTS 20
 #define DEFAULT_RES_PER_PAGE  10
@@ -52,7 +60,6 @@
 #define BM25_DEFAULT_B  0.75
 #define BM25_DEFAULT_K1 1.2 /* lower TF upperbound, less rewards to TF */
 
-#include "txt-seg/config.h"
 #define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
 

@@ -161,6 +161,7 @@ httpd_on_recv(const char *req, void *arg_)
 		/* generate response JSON for specific page only */
 		ret = search_results_json(&srch_res, page - 1, args->indices);
 	}
+
 	/* since results are converted to JSON string, we can free them now. */
 	free_ranked_results(&srch_res);
 

@@ -2,6 +2,7 @@
 #include "config.h" /* for MAX_TOTAL_OCCURS */
 #include "proximity.h"
 
+/* reset current pointer of each merging position array */
 static void reset_inputs(prox_input_t *in, uint32_t n)
 {
 	uint32_t i;
@@ -33,9 +34,7 @@ static uint32_t calc_min_dist(prox_input_t* in, uint32_t n)
 	uint32_t last_idx, last = UINT_MAX;
 	uint32_t min_dist = UINT_MAX;
 
-	/* Usually calc_min_dist() is only called once after prox_set_input()
-	 * which already reset the positions, thus comment here for efficiency. */
-	// reset_inputs(in, n);
+	reset_inputs(in, n);
 
 	while (1) {
 		uint32_t i, min_idx, min = UINT_MAX;

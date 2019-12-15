@@ -3,14 +3,8 @@
 #include <string.h>
 
 #include "common/common.h"
+#include "config.h"
 #include "snippet.h"
-
-/* for MAX_TXT_SEG_BYTES */
-#include "txt-seg/config.h"
-
-/* even a short query can get a long hilighted string, e.g.
- * in the case of math search */
-#define MAX_HIGHLIGHTED_BYTES (MAX_TXT_SEG_BYTES * 64)
 
 /* for terminal colors */
 #include "tex-parser/vt100-color.h"
