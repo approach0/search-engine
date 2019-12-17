@@ -1,0 +1,4 @@
+pycurl
+certifi
+bs4
+slimit
