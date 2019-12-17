@@ -246,6 +246,7 @@ def crawl_pages(sortby, start, end, extra_opt):
 					succ_posts += 1
 					continue
 			try:
+				sub_url = sub_url + '?noredirect=1'
 				url = root_url + sub_url
 				post_txt = crawl_post_page(sub_url, get_curl())
 				process_post(ID, post_txt, url, extra_opt["save-preview"])
@@ -319,6 +320,7 @@ def main(args):
 			continue
 		elif opt in ("-p", "--post"):
 			sub_url = "/questions/" + arg
+			sub_url = sub_url + '?noredirect=1'
 			full_url = root_url + sub_url
 			post_txt = crawl_post_page(sub_url, get_curl())
 			process_post(int(arg), post_txt, full_url, True)
