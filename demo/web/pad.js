@@ -9,6 +9,7 @@ var math_pad = [
 		{'desc': 'division', 'cmd': '\\\\div', 'disp': '\\div'},
 		{'desc': 'equal', 'cmd': '=', 'disp': '='},
 		{'desc': 'not equal', 'cmd': '\\\\neq', 'disp': '\\neq'},
+		{'desc': 'congruence', 'cmd': '\\\\equiv', 'disp': '\\equiv'},
 		{'desc': 'approximately equal', 'cmd': '\\\\approx', 'disp': '\\approx'},
 		{'desc': 'proportional', 'cmd': '\\\\propto', 'disp': '\\propto'},
 		{'desc': 'greater than', 'cmd': '\\\\gt', 'disp': '\\gt'},
@@ -32,6 +33,7 @@ var math_pad = [
 		{'desc': 'exponential', 'cmd': '\\\\exp(x)\t', 'disp': '\\exp(x)'},
 		{'desc': 'minimal', 'cmd': '\\\\min', 'disp': '\\min()'},
 		{'desc': 'maximal', 'cmd': '\\\\max', 'disp': '\\max()'},
+		{'desc': 'mod', 'cmd': '\\\\pmod\tx', 'disp': '(\\mod \\Box)'},
 	]},
 	{"tab_name": "Set/Logic", "buttons": [
 		{'desc': 'empty set', 'cmd': '\\\\varnothing', 'disp': '\\varnothing'},

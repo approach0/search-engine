@@ -195,6 +195,8 @@ $(document).ready(function() {
 		var ele = document.getElementById("math-input");
 		var mq = MQ.MathField(ele, {
 			supSubsRequireOperand: true, /* avoid _{_a} */
+			autoCommands: 'alpha beta gamma delta zeta eta theta kappa mu nu xi rho sigma tau chi psi omega sqrt sum prod pi pmod mod',
+			/* where pmod and mod are supported only in forked mathquill */
 			handlers: {
 				edit: function() {
 					var arr = query.items;
