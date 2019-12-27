@@ -156,34 +156,35 @@ def crawl_topic_page(sub_url, category_id, topic_id, c, extra_opt):
     title = html.unescape(topic_data['topic_title'])
 
     num_posts = int(topic_data['num_posts'])
-    posts_data = topic_data['posts_data']
-    if len(posts_data) < num_posts:
-        # now this is a bit tricky, but if there are more posts
-        # than we received, AoPS sens first 15 and last 15 posts,
-        # so to simplify stuff, we are gonna ignore the second half,
-        # and request all subsequent posts through Ajax.
-        posts_data = posts_data[:len(posts_data)//2]
+    posts_data_tmp = topic_data['posts_data']
+    posts_data = []
+
+    # now this is a bit tricky, but if there are more posts
+    # than we received, AoPS sens first 15 and last 15 posts,
+    # remove all posts that should be shown only from the end
+    for post in posts_data_tmp:
+        if post['show_from_start'] == 'true':
+            posts_data.append(post)
 
     fetched_posts = 0
-    while fetched_posts < num_posts:
-        if len(posts_data) > 0:
-            post_number = posts_data[0]['post_number']
-            post_id     = posts_data[0]['post_id']
-            # compose title
-            topic_txt = title
-            if post_number != '1':
-                topic_txt += ' ' + ('(posts after #%s)' % post_number)
+    while fetched_posts < num_posts and (len(posts_data) > 0):
+        post_number = posts_data[0]['post_number']
+        post_id     = posts_data[0]['post_id']
+        # compose title
+        topic_txt = title
+        if post_number != '1':
+            topic_txt += ' ' + ('(posts after #%s)' % post_number)
+        topic_txt += '\n\n'
+        # get posts
+        for post in posts_data:
+            topic_txt += post['post_canonical']
             topic_txt += '\n\n'
-            # get posts
-            for post in posts_data:
-                topic_txt += post['post_canonical']
-                topic_txt += '\n\n'
-            # save posts
-            post_url = '/community/'
-            post_url += 'c{}h{}p{}'.format(category_id, topic_id, post_id)
-            full_url = root_url + post_url
-            file_path = get_file_path(category_id, topic_id, post_id)
-            process_topic(file_path, topic_txt, full_url, extra_opt)
+        # save posts
+        post_url = '/community/'
+        post_url += 'c{}h{}p{}'.format(category_id, topic_id, post_id)
+        full_url = root_url + post_url
+        file_path = get_file_path(category_id, topic_id, post_id)
+        process_topic(file_path, topic_txt, full_url, extra_opt)
 
         # keep track of where we are
         fetched_posts += len(posts_data)
@@ -206,6 +207,8 @@ def crawl_topic_page(sub_url, category_id, topic_id, c, extra_opt):
             topic_page = curl(sub_url, c, post=postfields)
             parsed = json.loads(topic_page.decode("utf-8"))
             posts_data = parsed['response']['posts']
+            # sleep to avoid over-frequent request.
+            time.sleep(0.6)
 
     return topic_txt
 
