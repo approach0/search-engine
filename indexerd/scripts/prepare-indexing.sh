@@ -3,15 +3,17 @@ INDEX_ROOT=~/nvme0n1/
 INDEX_SIZE=4700 # in MiB
 INDEXD_BIN=~/Desktop/search-engine-v3/v3/indexerd/run/indexerd.out
 INDEX_NUMS=(0 1 2 3)
+PORT_PREFIX=870
 
 if [ "$1" == "-h" ]; then
 cat << USAGE
 Description:
 Prepare indexing later to be fed by json-feeder.
 
+$0 fstrim (may prompt you for sudo password)
 $0 create-images
-$0 mount-images (will prompt you for sudo password)
-$0 umount-images (will prompt you for sudo password)
+$0 mount-images (may prompt you for sudo password)
+$0 umount-images (may prompt you for sudo password)
 $0 create-index-sessions
 $0 inspect-index-sessions
 $0 stop-index-sessions
@@ -63,7 +65,10 @@ function spawn_indexd() {
 	set +x
 }
 
-if [ $mode == "create-images" ]; then
+if [ $mode == "fstrim" ]; then
+	sudo fstrim -v "$INDEX_ROOT"
+
+elif [ $mode == "create-images" ]; then
 	for i in "${INDEX_NUMS[@]}"; do
 		prepare_image index-$i
 	done;
@@ -80,7 +85,7 @@ elif [ $mode == "umount-images" ]; then
 
 elif [ $mode == "create-index-sessions" ]; then
 	for i in "${INDEX_NUMS[@]}"; do
-		spawn_indexd  index-$i "890${i}"
+		spawn_indexd  index-$i "${PORT_PREFIX}${i}"
 	done;
 
 elif [ $mode == "inspect-index-sessions" ]; then
