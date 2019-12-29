@@ -1,6 +1,6 @@
 #!/bin/sh
 INDEX_ROOT=~/nvme0n1/
-INDEX_SIZE=4700 # in MiB
+INDEX_SIZE=5600 # in MiB
 INDEXD_BIN=~/Desktop/search-engine-v3/v3/indexerd/run/indexerd.out
 INDEX_NUMS=(0 1 2 3)
 PORT_PREFIX=870
