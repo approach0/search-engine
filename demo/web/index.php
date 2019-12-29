@@ -50,8 +50,25 @@ div.center-horiz {
 	text-align: center;
 }
 .toleft {
-	width: 932px;
+	width: 932px; /* fixed width */
 	margin: auto;
+}
+.fullwidth {
+	min-width: 932px;  /* fixed min-width */
+	width: 100%;
+	padding-left: 8px;
+	padding-right: 8px;
+}
+ol {
+	padding: 0; /* <li> indent */
+	margin-left: 40px;
+	padding-inline-start: 0;
+	margin-block-start: 0;
+	margin-block-end: 0;
+}
+li.limit_width {
+	max-width: 892px !important; /* 932 - 40 */
+	word-break: break-word;
 }
 div.stick-bottom {
 	position: absolute;
@@ -82,8 +99,8 @@ div.blur {
 <div id="progress" style="position: fixed; border-top: 2px solid #46ece5; z-index:9999;"></div>
 
 <!-- Query Box App -->
-<div id="qry-input-vue-app" style="background: white;
-	padding: 8px 8px 10px 8px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
+<div id="qry-input-vue-app" class="fullwidth" style="background: white;
+padding-top: 8px; padding-bottom: 10px; box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 <!-- Query input area -->
 <div class="toleft" style="display: flex">
@@ -394,10 +411,9 @@ SE.init({
 	</div>
 
 	<!-- Initial Footer -->
-	<div v-show="!hide" id="init-footer"
-	style="font-size: small; margin-top: 40px; width: 100%;
-	bottom: 0px; position: absolute; background: #f4f6f8;
-	padding-bottom: 15px; padding-top: 15px;
+	<div v-show="!hide" id="init-footer" class="fullwidth"
+	style="font-size: small; margin-top: 40px; bottom: 0px; position: absolute;
+	background: #f4f6f8; padding-bottom: 15px; padding-top: 15px;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 		<div class="toleft" style="text-align: center;">
 			<a target="_blank" href="https://twitter.com/approach0"
@@ -455,7 +471,7 @@ SE.init({
 <!-- Search Results -->
 <div v-if="ret_code == 0" style="margin-top: 30px;">
 	<ol>
-	<li v-for="(idx, hit) in hits" class="hit toleft">
+	<li v-for="(idx, hit) in hits" class="hit toleft limit_width">
 		<div v-if="blur_this(idx)" style="position: relative;">
 			<div class="blur">
 				<a class="title" target="_blank" v-bind:href="mess_up(hit.url)"
@@ -539,8 +555,8 @@ SE.init({
 </div>
 
 <!-- Footer -->
-<div id="search-footer" v-show="ret_code == 0"
-	style="padding-top: 15px; background: #f4f6f8; width: 100%;
+<div id="search-footer" v-show="ret_code == 0" class="fullwidth"
+	style="padding-top: 15px; background: #f4f6f8;
 	box-shadow: 0 0 4px rgba(0,0,0,0.25);">
 
 	<div style="text-align: right; letter-spacing: 5px;">
