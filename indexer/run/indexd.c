@@ -19,7 +19,7 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 	static char retjson[1024];
 
 	{
-		printf(ES_RESET_LINE "cnt: %ld % %u, Size: %lu / %u",
+		printf(ES_RESET_LINE "cnt: %ld / %u, Size: %lu / %u",
 			cntDoc, INDEX_FLUSH_CNT,
 			index_size(), MAXIMUM_INDEX_COUNT
 		);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	text_lexer lex = lex_eng_file;
 	char *output_path = NULL;
 	const char err_output_file[] = "./indexd-parser-error.tmp";
-	unsigned short port = 8933;
+	unsigned short port = 8934;
 	struct uri_handler uri_handlers[] = {
 		{INDEXD_DEFAULT_URI, httpd_on_recv}
 	};
