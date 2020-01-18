@@ -12,14 +12,15 @@
 
 #define INDEXD_DEFAULT_URI  "/index"
 
+static uint64_t cntDoc = 0;
+
 static const char *httpd_on_recv(const char* req, void* arg_)
 {
 	static char retjson[1024];
 
 	{
-		const int64_t unfree = mhook_unfree();
-		printf(ES_RESET_LINE "Unfree: %ld / %u, Size: %lu / %u",
-			unfree, UNFREE_CNT_INDEXER_MAINTAIN,
+		printf(ES_RESET_LINE "cnt: %ld % %u, Size: %lu / %u",
+			cntDoc, INDEX_FLUSH_CNT,
 			index_size(), MAXIMUM_INDEX_COUNT
 		);
 		fflush(stdout);
@@ -29,7 +30,7 @@ static const char *httpd_on_recv(const char* req, void* arg_)
 			fflush(stdout);
 			index_maintain();
 
-		} else if (unfree > UNFREE_CNT_INDEXER_MAINTAIN) {
+		} else if ((++cntDoc) % INDEX_FLUSH_CNT == 0) {
 			printf(ES_RESET_LINE "[index write onto disk...]");
 			fflush(stdout);
 			index_write();
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
 	text_lexer lex = lex_eng_file;
 	char *output_path = NULL;
 	const char err_output_file[] = "./indexd-parser-error.tmp";
-	unsigned short port = 8934;
+	unsigned short port = 8933;
 	struct uri_handler uri_handlers[] = {
 		{INDEXD_DEFAULT_URI, httpd_on_recv}
 	};

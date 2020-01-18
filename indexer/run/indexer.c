@@ -83,11 +83,11 @@ dir_search_callbk(const char* path, const char *srchpath,
 
 	foreach_files_in(path, &foreach_file_callbk, i_args);
 
-	if (mhook_unfree() > UNFREE_CNT_INDEXER_MAINTAIN) {
-		printf(ES_RESET_LINE "[index maintaining...]");
-		fflush(stdout);
-		index_maintain();
-	}
+//	if (mhook_unfree() > UNFREE_CNT_INDEXER_MAINTAIN) {
+//		printf(ES_RESET_LINE "[index maintaining...]");
+//		fflush(stdout);
+//		index_maintain();
+//	}
 
 	if (force_stop) {
 		printf("\n");
