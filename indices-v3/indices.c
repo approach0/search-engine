@@ -409,13 +409,13 @@ uint32_t indexer_write_all_fields(struct indexer *indexer)
 
 int indexer_maintain(struct indexer *indexer)
 {
-	return term_index_should_maintain(indexer->indices->ti);
+	term_index_maintain(indexer->indices->ti);
+	return 0;
 }
 
 int indexer_should_maintain(struct indexer *indexer)
 {
-	term_index_maintain(indexer->indices->ti);
-	return 0;
+	return term_index_should_maintain(indexer->indices->ti);
 }
 
 int indexer_spill(struct indexer *indexer)
