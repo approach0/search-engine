@@ -40,11 +40,11 @@ int score_inspect_filter(doc_id_t doc_id, struct indices *indices)
 //	if (NULL != strstr(url, "/480364/" /* bad */) ||
 //	    NULL != strstr(url, "/879729/" /* good but missed */)) {
 
-//	if (NULL != strstr(url, "Bias_of_an_estimator:9")) {
+	if (NULL != strstr(url, "Monin–Obukhov_length:4")) {
 
 //	if (doc_id == 58337 || doc_id == 248554) {
 
-	if (doc_id == 351136) {
+//	if (doc_id == 351136) {
 
 		printf("%s: doc %u, url: %s\n", __func__, doc_id, url);
 		// printf("%s \n", txt);
