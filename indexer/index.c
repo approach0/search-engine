@@ -203,7 +203,7 @@ int indexer_handle_slice(struct lex_slice *slice)
 int index_maintain()
 {
 	term_index_maintain(term_index);
-	sleep(10);
+	sleep(5);
 
 	return 0;
 }
@@ -221,7 +221,7 @@ size_t index_size()
 int index_write()
 {
 	term_index_write(term_index);
-	sleep(10);
+	sleep(2);
 	return 0;
 }
 
