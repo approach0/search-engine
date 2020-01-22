@@ -71,6 +71,9 @@ extern int lexer_warning_flag;
 %%
 "{"[ ]*"}"                                         { /* ignore */ }
 "["[ ]*"]"                                         { /* ignore */ }
+
+"^"[]*"{"[ ]*"}"                                   { /* ignore */ }
+"_"[]*"{"[ ]*"}"                                   { /* ignore */ }
  /* ============
   *  comments
   * ===========*/
