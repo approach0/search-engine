@@ -6,7 +6,7 @@ This branch is saved for reproducing research paper results we submitted on ECIR
 [https://approach0.xyz/docs](https://approach0.xyz/docs)
 
 ### 2. Prepare indexing
-Use `vdisk-creat.sh` and `vdisk-mount.sh' scripts in `indexer/scripts` to create Reiserfs filesystem on virtual disk which supports unlimited number of files.
+Use `vdisk-creat.sh` and `vdisk-mount.sh` scripts in `indexer/scripts` to create Reiserfs filesystem on virtual disk which supports unlimited number of files.
 (documented [here](https://approach0.xyz/docs/src/vdisk.html))
 
 ### 3. Indexing
@@ -27,7 +27,7 @@ You will need to modify some file paths in these scripts to point to your downlo
 
 * NTCIR topics file: `topics.txt`
 * NTCIR judgement file: `NTCIR12_MathWiki-qrels_judge.dat`
-* trec_eval program
+* [trec_eval program](https://github.com/usnistgov/trec_eval)
 
 Setup search daemon:
 ```sh
@@ -66,7 +66,7 @@ Parameters related to this paper can be changed by modifying `search/config.h` f
 ```sh
 $ make update
 ```
-under search directory after you have changed the source code configs.
+under source code sub-directory after you have changed the source code configs.
 
 Here are a few interesting parameters related to this paper:
 ```c
@@ -82,8 +82,11 @@ Notice: Caching all posting lists into memory consumes a lot of time, use `cache
 
 ### 6. Automation scripts
 There are some automation scripts we use to generate our paper results.
+
 `ecir-auto-eval.py` and `ecir-collect.py` are used to run queries with different search parameters and collect efficiency results.
+
 `cnt-invlist-items.sh` and `get-stats.py` under `math-index/script` are used to get inverted lists statistics.
+
 Again, you will need to modify some hard coded paths accordingly in these scripts to be able to run them.
 
 ### 7. Implementation
@@ -91,4 +94,4 @@ Our source code that implements pseudo code described in the paper can be found 
 Scoring functions are implemented in `math_expr_set_score__opd_only` function in `search/math-expr-sim.c`.
 
 ### Questions
-Please email wxz8033@g.rit.edu if you have any questions.
+Please email wxz8033@g.rit.edu if you have any question.
