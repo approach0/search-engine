@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 import subprocess
+import _thread
 import signal
 import time
 import sys
+import csv
+import os
 
 # setup python script signal handler
 def signal_handler(sig, _):
@@ -12,54 +15,96 @@ def signal_handler(sig, _):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-index_dir = "/home/tk/index-fix-decimal-and-use-latexml/"
+index_dir = "/home/tk/nvme0n1/mnt-%s.img"
+cache_lst = "~/nvme0n1/cache-list.tmp"
 
-def do_evaluation(run_file):
+def ensure_no_daemon():
+    pid_out = os.popen('pidof searchd.out').read()
+    pid_str = pid_out.strip()
+    if len(pid_str):
+        os.system('kill -INT ' + pid_str)
+        time.sleep(3)
+
+def feed_cachelist(medium):
+    os.system('rm -f ./searchd/cache-list.tmp')
+    if 'memo' in  medium:
+        os.system('cp %s ./searchd/cache-list.tmp' % cache_lst)
+
+checking = False
+def check_alive(daemon):
+    global checking
+    while checking:
+        line_bytes = daemon.stdout.readline() # blocking
+        line = str(line_bytes, 'utf-8')
+        print(line.rstrip())
+
+def do_evaluation(run_file, medium, index):
     # Run make
     res = subprocess.run(['make'])
     if 0 != res.returncode:
         sys.exit(0)
 
+    # setup parameters
+    ensure_no_daemon()
+    feed_cachelist(medium)
+
     # Run searchd
     daemon = subprocess.Popen(
         ['./run/searchd.out',
-         "-i", index_dir,
-         '-c', str(32),
-         '-T'
+         "-i", index_dir % index,
+         '-c', str(0),
+         "-T"
         ], stdout=subprocess.PIPE,
            cwd='./searchd')
 
     while True:
-        line_bytes = daemon.stdout.readline()
+        line_bytes = daemon.stdout.readline() # blocking
         line = str(line_bytes, 'utf-8')
         print(line)
         if "listening" in line:
             break
 
+    global checking
+    checking = True
+    _thread.start_new_thread(check_alive, (daemon, ))
+
     # Run queries
-    trec_file = run_file + '.dat'
-    fh = open(trec_file, 'w')
-    res = subprocess.run(['./genn-trec-results.py'], stdout=fh)
-    fh.close()
+    os.system('rm -f %s ' % './searchd/merge.runtime.dat') #########
+
+    time_file = run_file + '.runtime.dat'
+    trec_file = run_file + '.trec.dat'
+    time_fh = sys.stdout
+    trec_fh = open(trec_file, 'w')
+    print('--- BEGIN --- ')
+    res = subprocess.run(['./genn-trec-results.py'], stderr=time_fh, stdout=trec_fh)
+    print('--- FINISH --- ')
+    #time_fh.close()
+    trec_fh.close()
+
+    os.system('mv %s %s' % ('./searchd/merge.runtime.dat', time_file)) #########
 
     # Run evaluations
-    fh = open(run_file + '.eval', 'w')
+    fh = open(run_file + '.eval.dat', 'w')
     res = subprocess.run(
         ['./eval-trec-results-summary.sh', trec_file], stdout=fh)
     fh.close()
 
+    # Run stats
+    fh = open(run_file + '.stats.dat', 'w')
+    res = subprocess.run(
+        ['python3', './stats-efficiency-summary.py', time_file], stdout=fh)
+    fh.close()
+
     # close daemon
+    checking = False
+    time.sleep(3)
     daemon.send_signal(signal.SIGINT)
 
 templates = [
     {
         "path": "./tmp/template/config.h",
         "output": "./search/config.h"
-    },
-    {
-        "path": "./tmp/template/math-expr-sim.c",
-        "output": "./search/math-expr-sim.c"
-    },
+    }
 ]
 
 def replace_source_code(replaces):
@@ -69,7 +114,6 @@ def replace_source_code(replaces):
         t['txt'] = fh_t.read()
         fh_t.close()
     for k, v in replaces.items():
-        print(k, v)
         for t in templates:
             t['txt'] = t['txt'].replace('{{' + k + '}}', v)
     for t in templates:
@@ -87,36 +131,25 @@ def float_str(string):
 ##
 ## Main procedure
 ##
-import csv
-import os
-
-input_tsv = "test.tsv"
+input_tsv = "eff.tsv"
 with open(input_tsv) as fd:
     tot_rows = sum(1 for _ in open(input_tsv))
     rd = csv.reader(fd, delimiter="\t")
     replaces = dict()
     for idx, row in enumerate(rd):
-        if idx == 0: continue # skip the header row.
+        if idx == 0: continue # skip the header row
         run_name = row[0]
-        print('[row %u / %u] %s' % (idx, tot_rows, run_name))
-        if os.path.exists('./tmp/' + run_name + '.eval'):
+        print('[row %u / %u] %s' % (idx + 1, tot_rows, run_name))
+        if os.path.exists('./tmp/' + run_name + '.eval.dat'):
             print('skip this row')
             time.sleep(0.1)
             continue
-        replaces["theta"]  = float_str(row[1])
-        replaces["mc"]     = row[2]
-        replaces["alpha"]  = float_str(row[3])
-        replaces["beta_1"] = float_str(row[4])
-        replaces["beta_2"] = float_str(row[5])
-        replaces["beta_3"] = float_str(row[6])
-        replaces["beta_4"] = float_str(row[7])
-        replaces["beta_5"] = float_str(row[8])
-        i = 1;
-        while i <= 5:
-            if float(row[i + 3]) == 0:
-                break
-            i += 1
-        k = i - 1
-        replaces["K"] = str(k)
+        print(row)
+        time.sleep(1)
+        replaces["top"] = row[1]
+        replaces["threshold"] = float_str(row[2])
+        replaces["strategy"] = row[3].upper()
+        medium = row[4]
+        index = row[5]
         replace_source_code(replaces)
-        do_evaluation('./tmp/' + run_name)
+        do_evaluation('./tmp/' + run_name, medium, index)
