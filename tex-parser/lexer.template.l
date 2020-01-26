@@ -757,6 +757,7 @@ extern int lexer_warning_flag;
 
  /* commutative gt/lt/eq */
 =                               { RET_TOK(equal, GTLS, WC_COMMUT_OPERATOR, REL_CLASS); }
+＝                              { RET_TOK(equal, GTLS, WC_COMMUT_OPERATOR, REL_CLASS); }
 :=                              { RET_TOK(equal, GTLS, WC_COMMUT_OPERATOR, REL_CLASS); }
 \\[dD]oteq                      { RET_TOK(equal, GTLS, WC_COMMUT_OPERATOR, REL_CLASS); }
 \\dot=                          { RET_TOK(equal, GTLS, WC_COMMUT_OPERATOR, REL_CLASS); }
