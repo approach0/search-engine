@@ -17,7 +17,19 @@ $ ./run/indexd.out -o ./mnt-vdisk.img/
 ```
 
 For [NTCIR corpus](https://drive.google.com/open?id=1emboT7k4m7yKjru3AOb1xScZgbUnQuC8), use `indexer/test-corpus/ntcir12/ntcir-feeder.py` (modify corresponding path in the script) to feed indexd.
-For [MSE corpus](https://www.cs.rit.edu/~dprl/data/mse-corpus.tar.gz), use `indexer/scripts/json-feeder.py` to feed indexd.
+For [MSE corpus](https://www.cs.rit.edu/~dprl/data/mse-corpus.tar.gz) or other compatible JSON-based corpus, use `indexer/scripts/json-feeder.py` to feed indexd.
+For [ARQMath corpus](https://drive.google.com/drive/folders/1ZPKIWDnhMGRaPNVLi1reQxZWTfH2R4u3), use `indexer/test-corpus/arqmath/convertARQMathCorpus.py` to convert `Posts.*.xml` to json corpus files grouped by thread, and then use `json-feeder.py` to feed indexd.
+
+Example commands to convert ARQMath corpus file to JSONs:
+```sh
+$ cd indexer/test-corpus/arqmath
+$ python3 convertARQMathCorpus.py --post-xml /path/to/Posts.xml --2json ./tmp
+```
+and feed these JSONs to an already running indexd:
+```sh
+$ cd indexer
+$ python3 ./scripts/json-feeder.py --corpus-path ./test-corpus/arqmath/tmp
+```
 
 ### 4. Effectiveness evaluation
 In order to reproduce Bpref scores, make sure LaTeXML is [installed](https://approach0.xyz/docs/src/appendix_indri.html#install-latexml), even before NTCIR corpus is indexed.
@@ -92,6 +104,11 @@ Again, you will need to modify some hard coded paths accordingly in these script
 ### 7. Implementation
 Our source code that implements pseudo code described in the paper can be found at the `math_l2_postlist_next` function in `search/math-search.c`.
 Scoring functions are implemented in `math_expr_set_score__opd_only` function in `search/math-expr-sim.c`.
+
+### 8. Input custom queries
+First make sure source code is compiled and `searchd.out` at `searchd/run` is running.
+Follow [this documentation page](https://approach0.xyz/docs/src/demo.html) to setup a WEB interface locally (http://127.0.0.1/demo) to input custom query formula.
+For each query, search daemon will append results to a log file `trec-format-results.tmp` in TREC format, you can use this file to evaluate your custom queries.
 
 ### Questions
 Please email wxz8033@g.rit.edu if you have any question.
