@@ -41,6 +41,7 @@ struct tex_parse_ret
 tex_parse(const char *tex_str, size_t len, bool keep_optr, bool lr_path)
 {
 	struct tex_parse_ret ret;
+#ifndef TEX_PARSER_ALWAYS_LATEXML
 	YY_BUFFER_STATE state_buf;
 	char *scan_buf;
 	size_t scan_buf_sz;
@@ -62,6 +63,9 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr, bool lr_path)
 
 	/* avoid memory leakage */
 	yylex_destroy();
+#else
+	grammar_err_flag = 1;
+#endif
 
 #ifdef TEX_PARSER_USE_LATEXML
 	if (grammar_err_flag) {
