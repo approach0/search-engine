@@ -339,7 +339,7 @@ void math_pruner_iters_gbp_assign(struct math_pruner *pruner,
 	/* greedily solve BP problem */
 	int blp_pivot = bin_lp_solve(blp, pruner->threshold_,
 	                             &math_score_upp, pruner->msf);
-	iter->pivot = blp_pivot - 1;
+	iter->pivot = blp_pivot - 1; /* convert BP "pivot" to our "pivot" */
 
 #ifdef DEBUG_MATH_PRUNING
 	printf("requirement set: (new pivot = %d)\n", iter->pivot);

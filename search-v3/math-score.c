@@ -38,12 +38,15 @@ float math_score_calc(struct math_score_factors *msf)
 	return msf->struct_sim * sf;
 }
 
+/* upperbound when we only know structural score (sum of ipf) */
 float math_score_upp(void *msf_, float sum_ipf)
 {
 	PTR_CAST(msf, struct math_score_factors, msf_);
 	return sum_ipf * msf->upp_sf;
 }
 
+/* upperbound when we know structural score (sum of ipf)
+ * plus document formula size (dl) */
 float math_score_upp_tight(void *msf_, float sum_ipf, uint32_t dl)
 {
 	PTR_CAST(msf, struct math_score_factors, msf_);

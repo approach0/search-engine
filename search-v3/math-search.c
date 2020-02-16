@@ -61,7 +61,7 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 1 || d == 2);
+	return (d == 60595 || d == 12);
 }
 #endif
 
@@ -207,6 +207,7 @@ skip:;
 			printf("+= leftover=%.2f = %.2f\n", leftover, estimate);
 #endif
 		if (estimate <= best ||
+		    /* since we know dl value now, we can use a better estimation */
 		    math_score_upp_tight(msf, estimate, dl) <= threshold)
 			return 0;
 #endif
@@ -377,7 +378,8 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 		l2_iter->last_threshold = threshold;
 
 #ifdef DEBUG_MATH_SEARCH__PRUNER_UPDATE
-		printf("[pruner update] for `%s'\n", l2_iter->tex);
+		printf("[pruner update] for `%s': ", l2_iter->tex);
+		printf("pivot -> %d\n", iter->pivot);
 		math_pruner_print(pruner);
 		math_pruner_print_stats(pruner);
 #endif

@@ -23,6 +23,9 @@ void bin_lp_brief_print(struct bin_lp blp)
 
 void bin_lp_print(struct bin_lp blp, int level)
 {
+	printf("[binary linear programming table]  ");
+	printf("(uncolored are feasible area) \n");
+
 	printf("%*c", level * 2, ' ');
 	for (int column = 0; column < blp.n_po; column++)
 		printf(" po-%-3u|", blp.po[column]);
@@ -132,7 +135,7 @@ static void bin_lp_copy(struct bin_lp *dst, struct bin_lp *src)
 /*
  * Manipulation functions
  */
-static int column_max(struct bin_lp *blp, int c)
+static float column_max(struct bin_lp *blp, int c)
 {
 	float max = 0;
 	for (int row = 0; row < blp->n_nodes; row++)
@@ -162,7 +165,7 @@ static void column_swap(struct bin_lp *blp, int a, int b)
 	blp->weight[b] = tmp;
 }
 
-static int row_weight_sum(struct bin_lp *blp, int r)
+static float row_weight_sum(struct bin_lp *blp, int r)
 {
 	float sum = 0;
 	for (int column = blp->zero_pivot; column < blp->n_po; column++)
@@ -170,7 +173,7 @@ static int row_weight_sum(struct bin_lp *blp, int r)
 	return sum;
 }
 
-static int objective_weight_sum(struct bin_lp *blp)
+static float objective_weight_sum(struct bin_lp *blp)
 {
 	float sum = 0;
 	for (int column = blp->zero_pivot; column < blp->n_po; column++)
@@ -195,7 +198,8 @@ static int row_min_objective_col(struct bin_lp *blp, int r)
 	int min_column = 0;
 	float min = FLT_MAX;
 	for (int column = blp->zero_pivot; column < blp->one_pivot; column++)
-		if (blp->matrix[r * blp->width + column] > 0 && blp->weight[column] < min) {
+		if (blp->matrix[r * blp->width + column] > 0 &&
+		    blp->weight[column] < min) {
 			min = blp->weight[column];
 			min_column = column;
 		}
@@ -214,7 +218,8 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 
 #ifdef DEBUG_BIN_LP
 	printf("\n");
-	printf("objective weight sum: %f, max=%f.\n", cur_max, *max);
+	printf("objective weight sum: %f, max=%f.\n", cur_max,
+		(*max == -FLT_MAX) ? 0 : *max);
 	bin_lp_print(*blp, level);
 #endif
 
@@ -234,11 +239,13 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 	int max_row = -1; float max_delta = 0.f;
 	for (int row = 0; row < blp->n_nodes; row++) {
 		float sum = row_weight_sum(blp, row);
+		/* delta: more positive, more violation */
 		float delta = upp(args, sum) - threshold;
 #ifdef DEBUG_BIN_LP
 		printf("row[%d] weight sum: %f (violate: %f)", row, sum, delta);
 		printf(" upperbound=%f (threshold: %f)\n", upp(args, sum), threshold);
 #endif
+		/* find the greatest delta */
 		if (delta > max_delta) {
 			max_delta = delta;
 			max_row = row;
@@ -248,8 +255,14 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 	/* if this problem does not satisfy all of our constraints */
 	if (max_row >= 0) {
 		/* solve sub-problems */
+
+		/* Find a column in that row to take out, heuristically, 2 methods: */
+		/* [1] find a column that violates the most of our constraints */
 		// int max_col = row_max_column(blp, max_row);
+
+		/* [2] find a column that contributes the least to our objective */
 		int max_col = row_min_objective_col(blp, max_row);
+
 #ifdef DEBUG_BIN_LP
 		printf("most violating row = %d, col = %d\n", max_row, max_col);
 #endif
@@ -263,6 +276,7 @@ bin_lp_solve_r(struct bin_lp* blp, float threshold,
 		column_swap(&lp1, lp1.zero_pivot ++, max_col);
 		bin_lp_solve_r(&lp1, threshold, max, sol, upp, args, level + 1);
 
+		/* uncomment to track all BP branches */
 //		column_swap(&lp2, -- lp2.one_pivot, max_col);
 //		bin_lp_solve_r(&lp2, threshold, max, sol, upp, args, level + 1);
 
