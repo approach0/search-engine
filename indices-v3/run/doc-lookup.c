@@ -55,10 +55,8 @@ static void print_math(math_index_t index, char *path_key)
 
 	entry_reader = math_index_lookup(index, path_key);
 	if (entry_reader.pf) {
-		printf("pf = %u, type = %s\n", entry_reader.pf,
-			(entry_reader.medium == MATH_READER_MEDIUM_INMEMO) ?
-			"in-memory" : "on-disk");
-		invlist_iter_print_as_decoded_ints(entry_reader.reader);
+		math_index_print_items(&entry_reader);
+
 		invlist_iter_free(entry_reader.reader);
 		fclose(entry_reader.fh_symbinfo);
 	} else {

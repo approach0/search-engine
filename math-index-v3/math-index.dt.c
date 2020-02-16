@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> /* for dup() */
+#include <assert.h>
 
 #include "common/common.h"
 #include "linkli/list.h"
@@ -583,4 +584,69 @@ math_index_lookup(math_index_t index, const char *key_)
 	}
 
 	return entry_reader;
+}
+
+size_t math_index_read_symbinfo(struct symbinfo *symbinfo, FILE *fh)
+{
+	size_t rd_sz;
+
+	/* read symbol info header */
+	rd_sz = fread(symbinfo, 1, SYMBINFO_SIZE(0), fh);
+	assert(rd_sz == SYMBINFO_SIZE(0)); (void)rd_sz;
+
+	/* read symbol payload */
+	rd_sz = SYMBINFO_SIZE(symbinfo->n_splits) - SYMBINFO_SIZE(0);
+	rd_sz = fread(symbinfo->split, 1, rd_sz, fh);
+
+	return SYMBINFO_SIZE(0) + rd_sz;
+}
+
+void math_index_print_symbinfo(struct symbinfo *symbinfo)
+{
+	printf("[symbinfo] ophash: 0x%x: ", symbinfo->ophash);
+	for (int i = 0; i < symbinfo->n_splits; i++) {
+		int symbol = symbinfo->split[i].symbol;
+		int width  = symbinfo->split[i].splt_w;
+		printf("%s/%d ", trans_symbol(symbol), width);
+	}
+	printf("\n");
+}
+
+void math_index_print_items(struct math_invlist_entry_reader *entry_reader)
+{
+	printf("pf = %u, type = %s\n", entry_reader->pf,
+		(entry_reader->medium == MATH_READER_MEDIUM_INMEMO) ?
+		"in-memory" : "on-disk");
+
+	invlist_iter_t iter = entry_reader->reader;
+	FILE *fh_symbinfo = entry_reader->fh_symbinfo;
+	codec_buf_struct_info_t *c_info = iter->c_info;
+
+	/* print table header */
+	printf("[%8s%4s%8s]: ", "", "key", "");
+	for (int j = 0; j < c_info->n_fields; j++) {
+		const char *name = c_info->field_info[j].name;
+		printf("%6.6s ", name);
+	}
+	printf("\n");
+
+	do {
+		struct math_invlist_item item;
+		uint64_t key = invlist_iter_bufkey(iter, iter->buf_idx);
+		invlist_iter_read(iter, &item);
+
+		/* print main item */
+		printf("[%20lu]: ", key);
+		printf("%6u ", item.docID);
+		printf("%6u ", item.expID);
+		printf("%6u ", item.sect_root);
+		printf("%6u ", item.sect_width);
+		printf("%6u ", item.orig_width);
+		printf("%6u ", item.symbinfo_offset);
+
+		struct symbinfo symbinfo;
+		math_index_read_symbinfo(&symbinfo, fh_symbinfo);
+		math_index_print_symbinfo(&symbinfo);
+
+	} while (invlist_iter_next(iter));
 }

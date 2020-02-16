@@ -57,8 +57,6 @@ struct math_invlist_entry_reader {
 struct math_invlist_entry_reader
 math_index_lookup(math_index_t, const char *);
 
-void math_index_print(math_index_t);
-
 size_t math_index_add(math_index_t, uint32_t, exp_id_t, struct subpaths);
 
 /* utilities */
@@ -117,3 +115,9 @@ struct symbinfo {
 #pragma pack(pop)
 
 #define SYMBINFO_SIZE(_n) offsetof(struct symbinfo, split[_n]) /* 4 + 3n */
+
+size_t math_index_read_symbinfo(struct symbinfo*, FILE*);
+
+void math_index_print(math_index_t);
+void math_index_print_items(struct math_invlist_entry_reader*);
+void math_index_print_symbinfo(struct symbinfo*);

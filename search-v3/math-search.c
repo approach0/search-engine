@@ -63,17 +63,6 @@ static int inspect(uint64_t k)
 	(void)d; (void)e; (void)r; (void)do_inspect;
 	return (d == 1 || d == 2);
 }
-
-static void print_symbinfo(struct symbinfo *symbinfo)
-{
-	printf("[read info] ophash: 0x%x: ", symbinfo->ophash);
-	for (int i = 0; i < symbinfo->n_splits; i++) {
-		int symbol = symbinfo->split[i].symbol;
-		int width  = symbinfo->split[i].splt_w;
-		printf("%s/%d ", trans_symbol(symbol), width);
-	}
-	printf("\n");
-}
 #endif
 
 static FILE **duplicate_entries_fh_array(struct math_qry *mq)
@@ -309,19 +298,11 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 
 			/* read document symbol information */
 			struct symbinfo symbinfo;
-			size_t rd_sz;
-
-			/* read symbol info header */
-			rd_sz = fread(&symbinfo, 1, SYMBINFO_SIZE(0), fhs[iid]);
-			assert(rd_sz == SYMBINFO_SIZE(0)); (void)rd_sz;
-
-			/* read symbol payload */
-			rd_sz = SYMBINFO_SIZE(symbinfo.n_splits) - SYMBINFO_SIZE(0);
-			(void)fread(symbinfo.split, 1, rd_sz, fhs[iid]);
+			math_index_read_symbinfo(&symbinfo, fhs[iid]);
 
 #ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 			if (inspect(iter->min)) {
-				print_symbinfo(&symbinfo);
+				math_index_print_symbinfo(&symbinfo);
 				do_inspect = 1;
 			}
 #endif
