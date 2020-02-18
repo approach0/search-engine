@@ -3,6 +3,7 @@
 
 #include "mhook/mhook.h"
 #include "common/common.h"
+#include "timer/timer.h"
 #include "wstring/wstring.h"
 #include "indices-v3/indices.h"
 
@@ -294,6 +295,11 @@ ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry,
                   indices_run_sync_t *run_sync, int dry_run, FILE *log)
 {
+#ifdef PRINT_MERGE_TIME
+	struct timer timer;
+	long time_cost = 0;
+#endif
+
 	/* top-K results' heap */
 	ranked_results_t rk_res;
 	priority_Q_init(&rk_res, DEFAULT_K_TOP_RESULTS);
@@ -355,6 +361,9 @@ indices_run_query(struct indices* indices, struct query* qry,
 	/*
 	 * Perform merging
 	 */
+#ifdef PRINT_MERGE_TIME
+	timer_reset(&timer);
+#endif
 
 	if (dry_run)
 		goto skip_merge;
@@ -509,6 +518,11 @@ next_iter:;
 	} /* end of merge */
 
 skip_merge:
+
+#ifdef PRINT_MERGE_TIME
+	time_cost = timer_tot_msec(&timer);
+	printf("merge time cost: %ld msec.\n", time_cost);
+#endif
 	
 	/*
 	 * Release term query keywords
