@@ -32,7 +32,7 @@
   #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
 //#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
 
-#define MATH_SCORE_ETA 0.05f
+#define MATH_SCORE_ETA 0.20f /* larger: slow */
 
 #define MATH_BASE_WEIGHT 3.f
 #define MATH_REWARD_WEIGHT  (MATH_BASE_WEIGHT * 0.98f)
