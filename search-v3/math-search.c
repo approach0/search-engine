@@ -46,6 +46,7 @@ typedef struct ms_merger *merger_set_iter_t;
 #define merger_set_iter_next   ms_merger_iter_next
 #define merger_set_iter_free   ms_merger_iter_free
 #define merger_set_iter_follow ms_merger_iter_follow
+#define merger_set_iter_min    ms_merger_min
 
 #ifdef DEBUG_MATH_SEARCH
 static void keyprint(uint64_t k)
@@ -62,7 +63,7 @@ static int inspect(uint64_t k)
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
 
-	return (d == 318409);
+	return (318408 <= d && d < 318410);
 }
 #endif
 
@@ -385,6 +386,10 @@ inline static int update_pruner(math_l2_invlist_iter_t l2_iter)
 		math_pruner_print_stats(pruner);
 #endif
 
+		/* when requirement set is updated, iter->min value becomes stale. */
+		iter->min = merger_set_iter_min(iter);
+		l2_iter->real_curID = key2doc(iter->min);
+
 		/* if there is no element in requirement set */
 		if (iter->pivot < 0)
 			return 0;
@@ -432,7 +437,8 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 
 #ifdef DEBUG_MATH_SEARCH
 		if (inspect(iter->min)) {
-			printf("[l2_read_next] docID=%u\n", cur_docID);
+			printf("[l2_read_next] docID=%u, realID=%u\n",
+				cur_docID, l2_iter->real_curID);
 			ms_merger_iter_print(iter, keyprint);
 		}
 #endif
@@ -472,8 +478,7 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 				if (inspect(iter->min))
 					printf("qnode#%u skipped (less than best)\n", qnode->root);
 #endif
-				/* continue to the next iteration */
-				goto Continue;
+				continue;
 			}
 #endif
 			/* get structural score of matched tree rooted at qnode */
@@ -527,7 +532,6 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 			}
 		}
 
-Continue:;
 	} while (merger_set_iter_next(iter));
 
 	l2_iter->real_curID = UINT32_MAX;
@@ -583,11 +587,17 @@ inline static int pass_through_next(math_l2_invlist_iter_t l2_iter)
 int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 {
 	if (l2_iter->item.docID < l2_iter->real_curID) {
-		/* since iterator is already passed, just need to fast forward */
+		/* iterator is already passed and item has been read, fast forward */
 		l2_iter->item.docID = l2_iter->real_curID;
 		return (l2_iter->item.docID != UINT32_MAX);
 	} else {
-		/* iterator is at begining of this docID, let's pass through it */
+		/* case (1): item.docID == real_curID is
+		   when upper level has consecutive next() without a read()
+		   case (2): item.docID > real_curID is
+		   when requirement set is updated where some old iterator has joined.
+		   In later case, we have to discard what already has been saved in
+		   l2_iter->item, and reset candidate to the old iterator just joined.
+		*/
 		if (unlikely(0 == update_pruner(l2_iter)))
 			return 0;
 		return pass_through_next(l2_iter);
@@ -597,7 +607,7 @@ int math_l2_invlist_iter_next(math_l2_invlist_iter_t l2_iter)
 size_t
 math_l2_invlist_iter_read(math_l2_invlist_iter_t l2_iter, void *dst, size_t sz)
 {
-	if (l2_iter->item.docID == l2_iter->real_curID) {
+	if (likely(l2_iter->item.docID == l2_iter->real_curID)) {
 		/* reset item values */
 		l2_iter->item.score = 0.f;
 		l2_iter->item.n_occurs = 0;
@@ -606,6 +616,8 @@ math_l2_invlist_iter_read(math_l2_invlist_iter_t l2_iter, void *dst, size_t sz)
 		if (unlikely(0 == update_pruner(l2_iter)))
 			return 0;
 		read_and_future_next(l2_iter);
+	} else {
+		prerr("math_l2_invlist_iter_read() may produce incorrect values.");
 	}
 
 	/* copy and return item */

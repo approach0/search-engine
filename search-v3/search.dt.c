@@ -285,9 +285,9 @@ static inline float internal_threshold(float weight,
 }
 
 #ifdef DEBUG_INDICES_RUN_QUERY
-static int inspect(uint64_t docID)
+static int inspect(uint64_t d)
 {
-	return docID == 318409;
+	return (318408 <= d && d < 318410);
 }
 #endif
 
