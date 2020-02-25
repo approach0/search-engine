@@ -61,7 +61,8 @@ static int inspect(uint64_t k)
 	uint e = key2exp(k);
 	uint r = key2rot(k);
 	(void)d; (void)e; (void)r; (void)do_inspect;
-	return (d == 60595 || d == 12);
+
+	return (d == 318409);
 }
 #endif
 
@@ -471,7 +472,8 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 				if (inspect(iter->min))
 					printf("qnode#%u skipped (less than best)\n", qnode->root);
 #endif
-				continue;
+				/* continue to the next iteration */
+				goto Continue;
 			}
 #endif
 			/* get structural score of matched tree rooted at qnode */
@@ -525,6 +527,7 @@ inline static int read_and_future_next(math_l2_invlist_iter_t l2_iter)
 			}
 		}
 
+Continue:;
 	} while (merger_set_iter_next(iter));
 
 	l2_iter->real_curID = UINT32_MAX;

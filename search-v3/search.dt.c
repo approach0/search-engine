@@ -287,7 +287,7 @@ static inline float internal_threshold(float weight,
 #ifdef DEBUG_INDICES_RUN_QUERY
 static int inspect(uint64_t docID)
 {
-	return 1;
+	return docID == 318409;
 }
 #endif
 
@@ -459,6 +459,14 @@ indices_run_query(struct indices* indices, struct query* qry,
 			struct rank_hit *hit;
 			hit = new_hit(iter->min, score, prox, h);
 			priority_Q_add_or_replace(&rk_res, hit);
+#ifdef DEBUG_INDICES_RUN_QUERY
+			if (inspect(iter->min)) {
+				printf("[ push ] ");
+				printf(C_BROWN);
+				printf("doc#%u score=%f occurs=%d\n", iter->min, score, h);
+				printf(C_RST);
+			}
+#endif
 
 			/* update threshold if the heap is full */
 			if (priority_Q_full(&rk_res)) {
@@ -489,31 +497,31 @@ indices_run_query(struct indices* indices, struct query* qry,
 next_iter:;
 
 #ifdef DEBUG_INDICES_RUN_QUERY
-		if (inspect(iter->min)) {
-			printf(ES_RESET_CONSOLE);
-			query_print(*qry, stdout);
-
-			ms_merger_iter_print(iter, NULL);
-
-			printf("threshold = %.2f\n", threshold);
-			for (int i = 0; i < iter->size; i++) {
-				int iid = iter->map[i];
-				int mid = iid - n_term;
-				if (mid < 0) { continue; }
-
-				if (math_iter[mid]) {
-					printf("[%d] dynm_threshold = %.2f, ",
-						iid, dynm_threshold[mid]);
-					printf("math_threshold = %.2f \n",
-						math_threshold[mid]);
-					printf("\t");
-					math_pruner_print_stats(math_iter[mid]->pruner);
-				}
-				printf("\n");
-			}
-			fflush(stdout);
-			usleep(500);
-		}
+//		if (inspect(iter->min)) {
+//			printf(ES_RESET_CONSOLE);
+//			query_print(*qry, stdout);
+//
+//			ms_merger_iter_print(iter, NULL);
+//
+//			printf("threshold = %.2f\n", threshold);
+//			for (int i = 0; i < iter->size; i++) {
+//				int iid = iter->map[i];
+//				int mid = iid - n_term;
+//				if (mid < 0) { continue; }
+//
+//				if (math_iter[mid]) {
+//					printf("[%d] dynm_threshold = %.2f, ",
+//						iid, dynm_threshold[mid]);
+//					printf("math_threshold = %.2f \n",
+//						math_threshold[mid]);
+//					printf("\t");
+//					math_pruner_print_stats(math_iter[mid]->pruner);
+//				}
+//				printf("\n");
+//			}
+//			fflush(stdout);
+//			usleep(500);
+//		}
 #endif
 	} /* end of merge */
 

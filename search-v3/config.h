@@ -3,8 +3,9 @@
 /* for MAX_TXT_SEG_BYTES */
 #include "txt-seg/config.h"
 
-//#define DEBUG_INDICES_RUN_QUERY
+//#define DEBUG_INDICES_RUN_QUERY /* mixed search debug */
 
+/* math search debug */
 //#define DEBUG_PREPARE_MATH_QRY
 //#define DEBUG_MATH_SEARCH
 //#define DEBUG_MATH_SEARCH__STRUCT_SCORING
