@@ -27,8 +27,11 @@ def saveSplit(ID, content, mode):
 	os.system(f'mkdir -p {directory}')
 	xml_path = f'{directory}/{ID}.txt'
 
-	with open(xml_path, mode) as fh:
-		fh.write(content)
+	try:
+		with open(xml_path, mode) as fh:
+			fh.write(content)
+	except:
+		return
 
 def each_file(root, extname):
 	for dirname, dirs, files in os.walk(root):
@@ -46,6 +49,9 @@ if __name__ == "__main__":
 		for attrs in xmliter(args['post_xml'], 'row'):
 			postType = attrs['@PostTypeId']
 			ID = int(attrs['@Id'])
+			if '@Body' not in attrs:
+				continue
+
 			body = attrs['@Body']
 			body = html2text(body)
 			if postType == "1":
