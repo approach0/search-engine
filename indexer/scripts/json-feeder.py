@@ -12,14 +12,16 @@ def send_json(json_obj):
 	j = json.loads(r.content.decode("utf-8"))
 	return j['docid']
 
-def each_json_file(corpus, maxcnt):
+
+def each_json_file(corpus, endat):
 	cnt = 0
 	for dirname, dirs, files in os.walk(corpus):
 		for f in files:
-			if cnt >= maxcnt and maxcnt > 0:
+			if cnt >= endat and endat > 0:
 				return
-			yield (dirname, f)
-			cnt += 1
+			if f.split('.')[-1] == 'json':
+				cnt += 1
+				yield (dirname, f)
 
 def get_n_files(corpus):
 	cnt = 0
@@ -59,5 +61,6 @@ for dirname, basename in each_json_file(corpus, maxfiles):
 			docid = send_json(j)
 		except Exception as err:
 			print(err)
-			break
+			time.sleep(1000)
+
 		print(f'[{cnt:,d} / {N:,d}] doc#{docid}: {j["url"]}')
