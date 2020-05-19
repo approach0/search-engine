@@ -27,7 +27,7 @@ if ($detect->isMobile()) {
 <link rel="stylesheet" href="all.css?hash=4f191fe0491cfc19" type="text/css"/>
 <!-- -->
 <script src="https://cdn.jsdelivr.net/npm/polyfill@0.1.0/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/approach0/mathjax-v3@cdn/components/dist/tex-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-chtml.js"></script>
 
 <script type='text/javascript' src='vendor/stackexchange/oauth.js'></script>
 
