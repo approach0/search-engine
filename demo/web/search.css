@@ -1,7 +1,6 @@
 /**/
 em.hl {
-	background-color: #FF9;
-	font-style: normal;
+	background-color: #FFC;
 }
 
 li.hit {
@@ -20,8 +19,7 @@ span.expid {
 span.imath-err {
 	/* set important to overwrite
 	 * MathJax .noError colors. */
-	color: #CC0000 !important;
-	border: 1px solid #CC0000 !important;
+	color: #aaa !important;
 }
 
 /* default link color */

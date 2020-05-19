@@ -77,23 +77,37 @@ function mathjax_tex_render(scope_select, progress_callbk) {
 			if (index > 64)
 				return false;
 			var vm = $(this);
-			leftover = 1;
 			var tex = vm.text();
 			var ele = vm.get(0);
 			try {
-				var math_ele = MathJax.tex2chtml(tex, {
+				var math_ele = MathJax.tex2svg(tex, {
 					display: false
 				});
+
+				var svg = MathJax.startup.adaptor.innerHTML(math_ele);
+
+				/* scale up math expressions a little */
+				//var scale = 1.1;
+				//var jq_svg = $(svg);
+				//var w = jq_svg.attr('width');
+				//var h = jq_svg.attr('height');
+				//w = '' + (scale * parseFloat(w.split('ex')[0])) + 'ex';
+				//h = '' + (scale * parseFloat(h.split('ex')[0])) + 'ex';
+				//jq_svg.attr('width', w);
+				//jq_svg.attr('height', h);
+				//svg = jq_svg[0];
 
 				/* prevent from being rendered again */
 				vm.removeClass(remove_class).addClass(replace_class);
 
-				$(ele).html(math_ele);
+				$(ele).html(svg);
 				MathJax.startup.document.clear();
 				MathJax.startup.document.updateDocument();
 
 				progress += 1;
 				progress_callbk && progress_callbk(progress, workload);
+
+				leftover = 1;
 
 			} catch(err) {
 				if (err.toString().indexOf('retry') != -1) {

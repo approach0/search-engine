@@ -13,13 +13,12 @@
 
 a {
 	font-family: 'Source Serif Pro', serif;
-	font-size: 100%;
 }
 
 p, button, input, h3, li, .mainfont {
 	font-family: 'Source Serif Pro', serif;
-	font-size: small;
-	line-height: 1.54;
+	font-size: 16px;
+	line-height: 1.59;
 	color: #454545;
 }
 
@@ -29,8 +28,12 @@ h3 {
 }
 
 .katex {
-	font-size: 1.2em !important;
+	font-size: 1.1em !important;
 	color: #454545;
+}
+
+.imathjax-rendered {
+	font-size: 1.1em !important;
 }
 
 a.title .katex {
