@@ -1,0 +1,4 @@
+\lim_{x\uparrow c}
+
+HIT \lim_{x\uparrow a}
+HIT \lim_{x \to c}

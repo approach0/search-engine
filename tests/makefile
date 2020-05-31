@@ -2,24 +2,15 @@ include ../rules.mk
 
 all: math-rank-test
 
-math-rank-test: links
+math-rank-test: searcher.ln indexer.ln
 	@ find cases/math-rank/ -type f \
 	-exec echo {} \; -exec ./$@.sh {} \;
 
-links: indexer.ln txt2json.ln searcher.ln \
-	search-math-doc-by-url.ln
-
 indexer.ln:
-	ln -sf `pwd`/../indexer/run/indexer.out $@
-
-txt2json.ln:
-	ln -sf `pwd`/../indexer/scripts/txt2json.py $@
+	ln -sf `pwd`/../indices-v3/run/test-doc-write.out $@
 
 searcher.ln:
-	ln -sf `pwd`/../search/run/test-search.out $@
-
-search-math-doc-by-url.ln:
-	ln -sf `pwd`/../search/run/search-math-doc-by-url.out $@
+	ln -sf `pwd`/../search-v3/run/test-search.out $@
 
 clean:
 	rm -rf intermediate

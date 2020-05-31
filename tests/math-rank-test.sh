@@ -18,10 +18,8 @@ testcase="$1"
 # clear potential old corpus in intermediate directory
 itm=./intermediate
 rm -rf $itm
+rm -rf ./tmp
 mkdir -p $itm
-
-# clear expected-rank file
-> $itm/expected-rank
 
 # extract sections
 head -1 "$testcase" > $itm/query
@@ -46,7 +44,7 @@ do
 
 	# generate corpus files
 	echo "[imath]$tex[/imath]" > $itm/doc${i}
-	./txt2json.ln $itm/doc${i} > /dev/null
+	./indexer.ln -f $itm/doc${i} > /dev/null
 
 	# generate expect ranking
 	if [ "$prefix" == 'HIT' ]; then
@@ -67,9 +65,7 @@ qry=$(cat "$itm/query")
 
 # echo index/search command
 set -x
-rm -rf ./tmp
-./indexer.ln -o ./tmp -p $itm > /dev/null
-./searcher.ln -i ./tmp -m "$qry" > $itm/search-results
+./searcher.ln -i ./tmp -m "$qry" 2> /dev/null 1> $itm/search-results
 set +x
 
 # extract search results
