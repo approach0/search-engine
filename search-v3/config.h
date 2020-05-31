@@ -57,9 +57,9 @@
 #define DEFAULT_K_TOP_RESULTS 20
 #define DEFAULT_RES_PER_PAGE  10
 
-#define SYMBOL_SUBSCORE_FULL 1.0f
-#define SYMBOL_SUBSCORE_HALF 0.9f
-#define SYMBOL_SUBSCORE_BASE 0.8f
+#define SYMBOL_SUBSCORE_FULL 1.00f /* leaf and fingerprint match */
+#define SYMBOL_SUBSCORE_LEAF 0.94f /* only leaf match */
+#define SYMBOL_SUBSCORE_BASE 0.90f /* base score */
 
 #define BM25_DEFAULT_B  0.75
 #define BM25_DEFAULT_K1 1.2 /* lower TF upperbound, less rewards to TF */

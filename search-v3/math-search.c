@@ -58,12 +58,13 @@ static int do_inspect;
 
 static int inspect(uint64_t k)
 {
-	uint d = key2doc(k);
-	uint e = key2exp(k);
-	uint r = key2rot(k);
-	(void)d; (void)e; (void)r; (void)do_inspect;
+	//uint d = key2doc(k);
+	//uint e = key2exp(k);
+	//uint r = key2rot(k);
+	//(void)d; (void)e; (void)r; (void)do_inspect;
 
-	return (318408 <= d && d < 318410);
+	//return (318408 <= d && d < 318410);
+	return 1;
 }
 #endif
 
@@ -241,23 +242,22 @@ acc_symbol_subscore(struct mnc_scorer *mnc, struct subpath_ele *ele,
 				case 0x3: /* exact match */
 					score = SYMBOL_SUBSCORE_FULL;
 					break;
-				case 0x2: /* match except for fingerprint */
-					score = SYMBOL_SUBSCORE_HALF;
+				case 0x2: /* match symbol but not fingerprint */
+					score = SYMBOL_SUBSCORE_LEAF;
 					break;
 				case 0x1: /* match fingerprint but not symbol */
-				default:
+				default:  /* or, neither is matched */
 					score = SYMBOL_SUBSCORE_BASE;
 					break;
 			}
 #ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 			if (do_inspect) {
-				printf("q=%s|0x%x * %u\n", trans_symbol(q_symbol),
+				printf("[add] q=%s|0x%x * %u\n", trans_symbol(q_symbol),
 					q_ophash, q_splt_w);
-				printf("d=%s|0x%x * %u\n", trans_symbol(d_symbol),
+				printf("[add] d=%s|0x%x * %u\n", trans_symbol(d_symbol),
 					d_ophash, d_splt_w);
-				printf("+= %.2f * %u = %.2f\n", score, min_w,
+				printf("[cell] %.2f * %u = %.2f\n", score, min_w,
 					score * min_w);
-				do_inspect = 0;
 			}
 #endif
 			score = score * min_w;
@@ -312,13 +312,18 @@ symbol_score(math_l2_invlist_iter_t l2_iter, merger_set_iter_t iter,
 			/* accumulate qry-doc symbol pair scores */
 			int j = qnode->ele_splt_idx[i];
 			acc_symbol_subscore(mnc, eles[iid], j, &symbinfo);
+#ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
+			{
+				do_inspect = 0;
+			}
+#endif
 		}
 	}
 
 	score = mnc_score_align(mnc);
 #ifdef DEBUG_MATH_SEARCH__SYMBOL_SCORING
 	if (inspect(iter->min)) {
-		printf("[mnc table]\n");
+		printf("[mnc table] ");
 		mnc_score_print(mnc, 0);
 		printf("symbol score = %.2f / %d = %.2f\n", score, qnode->sum_w,
 			score / qnode->sum_w);
