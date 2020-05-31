@@ -84,7 +84,9 @@ function mathjax_tex_render(scope_select, progress_callbk) {
 					display: false
 				});
 
-				var svg = MathJax.startup.adaptor.innerHTML(math_ele);
+				// var svg = MathJax.startup.adaptor.innerHTML(math_ele);
+				var adaptor = MathJax.startup.adaptor;
+				var svg = adaptor.outerHTML(adaptor.tags(math_ele, 'svg')[0]);
 
 				/* scale up math expressions a little */
 				//var scale = 1.1;
@@ -101,6 +103,8 @@ function mathjax_tex_render(scope_select, progress_callbk) {
 				vm.removeClass(remove_class).addClass(replace_class);
 
 				$(ele).html(svg);
+				$(ele).append('<script type="math/tex">' + tex + '</script>');
+
 				MathJax.startup.document.clear();
 				MathJax.startup.document.updateDocument();
 
