@@ -35,10 +35,11 @@ In 2017, I go back to China and work at Huawei doing a STB (TV box) project, irr
 In 2017 Fall, with an intuition that a math-aware search engine will provide huge value to many people, I gave up my job and continued working on this topic as a PhD student at [RIT](https://www.cs.rit.edu/~dprl/members.html).
 During the first two years of my PhD study, I have kept improving the effectiveness and efficiency of the formula retrieval model.
 
-In 2019, the new model has brought me [my first research full paper](http://ecir2019.org/best-paper-awards/) at ECIR 2019 (and a best application paper award!).
-Another paper focusing on efficiency has just been submitted to a conference, which shows our system is the first one to produce effective search results with practical query runtimes.
+In 2019, the new model has brought me [my first research full paper](http://ecir2019.org/best-paper-awards/) at ECIR 2019 conference (and a best application paper award!).
 
 In May 2019, the new model has been put online, it has indexed over 1 million posts and there are only 3 search instances running on two low-cost Linode servers.
+
+In early 2020, a paper focusing on efficiency has just been accepted at [ECIR 2020](https://link.springer.com/chapter/10.1007/978-3-030-45439-5_47) conference, this paper shows our system is the first one to produce very effective math search results with practical query runtimes.
 
 ## Documentation
 Please check out our documentation for technical details:
@@ -52,6 +53,3 @@ Currently, this master branch is inactive, although the research branch has an e
 The most updated code is closed source, it features very effective math-aware search and further supports text queries.
 The new system can search on 1 million documents in real time, hosted by only two low-cost servers.
 For information on the most recent development, please email `wxz8033 AT rit.edu` or contact me via WeChat (`hellozhongwei`).
-
-The reason that I choose to close source this project is I find a commercial company is [forking and (maybe) investigating the code](https://github.com/chensuim/search-engine/commit/27850b8db1338512ae7178da7ccb55460f6ac4f8), but it seems they would rather do it themself. Although the MIT license permits commercial usage, it starts to make me feel maybe I can get little benefit from exposing this project to public space, there is little chance I can get hired by them or be rewarded economically for all the effots I have spent writing this project, which unlike frameworks or other popular projects, can be used by a lot of pepople so that the authors get larger chance of being generously sponsored. Therefore I decide not to risk all the great potential value I can get out of this project, unless I failed to mine out its value (at that time I will open source it again). In addition, there are some research results I do not want to disclose too early. Nevertheless, I still welcome anyone who want to contribute and share the mind of doing things together. Moreover, if you have been invited as a member of the private repo, do not be too worry to share the code, please just ensure you are not sharing the code to people who only want to ultilize our efforts to make their own fortune.
-
