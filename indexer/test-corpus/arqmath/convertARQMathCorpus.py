@@ -80,7 +80,8 @@ if __name__ == "__main__":
 			with open(fpath) as fh:
 				ID = fname.split('.')[0]
 				text = fh.read()
-				url = f"{root_url}/{ID}/?noredirect=1"
+				#url = f"{root_url}/{ID}/?noredirect=1"
+				url = ID
 				with open(f"{dirname}/{ID}.json", "w") as fh_out:
 					print('json', f"{dirname}/{ID}.json")
 					fh_out.write(json.dumps({
