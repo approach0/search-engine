@@ -14,10 +14,12 @@ DIV = 500
 
 def html2text(html):
 	soup = BeautifulSoup(html, "html.parser")
+	for elem in soup.select('span.math-container'):
+		elem.replace_with('[imath]' + elem.text + '[/imath]')
 	text = soup.text
-	text = replace_display_tex(text)
-	text = replace_inline_tex(text)
-	text = replace_dollar_tex(text)
+	#text = replace_display_tex(text)
+	#text = replace_inline_tex(text)
+	#text = replace_dollar_tex(text)
 	return text
 
 
@@ -52,17 +54,24 @@ if __name__ == "__main__":
 			if '@Body' not in attrs:
 				continue
 
+			print('ID', ID)
+
 			body = attrs['@Body']
 			body = html2text(body)
-			if postType == "1":
-				print('thread', ID)
-				title = attrs['@Title']
-				title = html2text(title)
-				# print(title, end="\n\n")
-				saveSplit(ID, title + "\n\n" + body, 'w')
-			else:
+
+			#if postType == "1":
+			#	title = attrs['@Title']
+			#	title = html2text(title)
+			#	# print(title, end="\n\n")
+			#	saveSplit(ID, title + "\n\n" + body, 'w')
+			#else:
+			if postType != "1":
 				parentID = int(attrs['@ParentId'])
-				saveSplit(parentID, "\n\n" + body, 'a')
+				saveSplit(ID, ' ' + "\n\n" + body, 'w')
+
+			if ID == 554:
+				print(body)
+				#break
 
 	if args['2json']:
 		for dirname, fname in each_file(args['2json'], 'txt'):
