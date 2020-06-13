@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os
 import json
+import csv
 import argparse
 from xmlr import xmliter
 from bs4 import BeautifulSoup
@@ -44,8 +45,33 @@ def each_file(root, extname):
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Convert ARQMath Dataset to text files grouped by threads.')
 	parser.add_argument('--post-xml', type=str, help="Path to Posts.xml.", required=False)
+	parser.add_argument('--task2', type=str, help="Path to Task-2 csv directory", required=False)
 	parser.add_argument('--2json', type=str, help="Convert thread text files to JSONs.", required=False)
 	args = vars(parser.parse_args())
+
+	if args['task2']:
+		for dirname, fname in each_file(args['task2'], 'tsv'):
+			fpath = f"{dirname}/{fname}"
+			with open(fpath) as tsvfile:
+				tsvreader = csv.reader(tsvfile, delimiter="\t")
+				for i, line in enumerate(tsvreader):
+					if i == 0:
+						continue
+					ID = line[0]
+					topic_id = line[1]
+					thread_id = line[2]
+					latex = line[4:][0]
+					print(ID, topic_id, thread_id, latex)
+					folder = int(ID) % 500
+					place = f'task2/{folder}'
+					os.system(f'mkdir -p {place}')
+					place = f'{place}/{ID}.json'
+					with open(place, "w") as fh_out:
+						print('json', place)
+						fh_out.write(json.dumps({
+							"url": f"{ID},{topic_id},{thread_id}",
+							"text": latex
+						}, sort_keys=True))
 
 	if args['post_xml']:
 		for attrs in xmliter(args['post_xml'], 'row'):
@@ -76,7 +102,6 @@ if __name__ == "__main__":
 	if args['2json']:
 		for dirname, fname in each_file(args['2json'], 'txt'):
 			fpath = f"{dirname}/{fname}"
-			opath = f"{dirname}/jj"
 			with open(fpath) as fh:
 				ID = fname.split('.')[0]
 				text = fh.read()
