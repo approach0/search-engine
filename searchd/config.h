@@ -13,7 +13,7 @@
 #define SEARCHD_DEFAULT_CACHE_MB 32 /* 32 MB */
 
 #define SEARCHD_LOG_FILE "searchd.log"
-// #define SEARCHD_LOG_ENABLE
+ #define SEARCHD_LOG_ENABLE
 
 /*
  * usually no need to log IP, because most likely

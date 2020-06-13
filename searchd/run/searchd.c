@@ -85,7 +85,7 @@ httpd_on_recv(const char* req, void* arg_)
 #ifdef SEARCHD_LOG_ENABLE
 	fprintf(log_fh, "requested page: %u\n", page);
 	fprintf(log_fh, "parsed query: \n");
-	query_print_to(qry, log_fh);
+	query_print(qry, log_fh);
 	fprintf(log_fh, "\n");
 	fflush(log_fh);
 #endif
@@ -217,8 +217,8 @@ int main(int argc, char *argv[])
 
 	/* setup cache */
 	printf("setup cache size: %lu MB\n", cache_sz);
-	postlist_cache_set_limit(&indices.ci, cache_sz MB, 0);;
-	indices_cache(&indices);
+	postlist_cache_set_limit(&indices.ci, 0, 0);;
+	//indices_cache(&indices);
 
 	/* run httpd */
 	searchd_args.indices  = &indices;

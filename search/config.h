@@ -21,7 +21,7 @@
 #define MNC_MARK_MID_SCORE 100
 
 #define MATH_SYMBOLIC_SCORING_ENABLE /* enable symbolic scoring */
-#define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
+//#define MATH_PRUNING_ENABLE /* enable math dynamic pruning */
 
 //#define HIGHLIGHT_MATH_ALIGNMENT /* highlight info (qmask and dmask) */
 
@@ -89,7 +89,7 @@
 	#define CNT_VISIBLE_NODES_ONLY /* count operator only if it is visible */
 	#define MAX_MTREE 1
 #else
-	#define MAX_MTREE 1
+	#define MAX_MTREE 3
 #endif
 
 /* plus 3 to be safe, since some places mask[] index is harded coded. */

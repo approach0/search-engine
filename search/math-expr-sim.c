@@ -83,11 +83,11 @@ math_expr_set_score__multi_tree(
 	float sy = 1.f / (1.f + powf(1.f - (float)(sy0), 2));
 
 	const float theta = 0.05f;
-	const float alpha = 0.0f;
+	const float alpha = 0.4f;
 	const float beta[5] = {
-		1.0f,
-		0.f,
-		0.f,
+		0.90f,
+		0.06f,
+		0.04f,
 		0.f,
 		0.f
 	};
@@ -157,8 +157,8 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	factor->mnc_score = 0;
 #endif
 
-	// math_expr_set_score__multi_tree(factor, hit);
-	math_expr_set_score__opd_only(factor, hit);
+	math_expr_set_score__multi_tree(factor, hit);
+	//math_expr_set_score__opd_only(factor, hit);
 }
 
 void math_l2_postlist_print_cur(struct math_l2_postlist *po)
