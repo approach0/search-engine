@@ -60,6 +60,10 @@ if __name__ == "__main__":
 					ID = line[0]
 					topic_id = line[1]
 					thread_id = line[2]
+					type_ = line[3]
+					if type_  == 'comment':
+						print('skip comment')
+						continue
 					latex = line[4:][0]
 					print(ID, topic_id, thread_id, latex)
 					folder = int(ID) % 500
