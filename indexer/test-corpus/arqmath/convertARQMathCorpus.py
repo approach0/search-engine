@@ -11,7 +11,6 @@ from replace_post_tex import replace_display_tex
 from replace_post_tex import replace_inline_tex
 
 root_url = 'http://math.stackexchange.com/questions'
-DIV = 500
 
 def html2text(html):
 	soup = BeautifulSoup(html, "html.parser")
@@ -66,8 +65,8 @@ if __name__ == "__main__":
 						continue
 					latex = line[4:][0]
 					print(ID, topic_id, thread_id, latex)
-					folder = int(ID) % 500
-					place = f'task2/{folder}'
+					folder = int(ID) % 1200
+					place = f'task2-corpus/{folder}'
 					os.system(f'mkdir -p {place}')
 					place = f'{place}/{ID}.json'
 					with open(place, "w") as fh_out:
