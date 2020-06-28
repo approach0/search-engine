@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\sum_{k=0}^{n}k\\cdot \\left(\\begin{array}{l}{n}\\\\{k}\\end{array}\\right)=O\\left(2 ^ {n\\log _{3}n}\\right)"},
+		{"type": "term", "str": "combinatorial sum order estimate"}
+	]
+}

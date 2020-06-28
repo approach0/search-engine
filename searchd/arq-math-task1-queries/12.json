@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "(1+i\\sqrt{3})^{1/2}"},
+		{"type": "term", "str": "roots of a complex number"}
+	]
+}

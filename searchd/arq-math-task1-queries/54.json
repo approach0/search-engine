@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "P(N) = (S|S ⊆ N)"},
+		{"type": "term", "str": "diagonal argument for uncountable powerset"}
+	]
+}

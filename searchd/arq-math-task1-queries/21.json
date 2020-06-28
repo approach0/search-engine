@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "9^{9^{9^{…{^9}}}}"},
+		{"type": "term", "str": "towers of 9 "}
+	]
+}

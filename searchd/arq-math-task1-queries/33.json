@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\frac{\\partial^3 f}{\\partial t^3}"},
+		{"type": "term", "str": "physical meaning of third derivative"}
+	]
+}

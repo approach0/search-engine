@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "a_1x_1+a_2x_2+a_3x_3+...+a_nx_n="},
+		{"type": "term", "str": "meaning of linearity"}
+	]
+}

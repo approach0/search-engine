@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\displaystyle \\sum_{r=0}^n {n+r\\choose r} \\frac{1}{2^{r}}= 2^{n}"},
+		{"type": "term", "str": "Sum of series binomial coefficients"}
+	]
+}

@@ -1,0 +1,6 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\sum_{k=0}^{n} \\binom{n}{k} k"}
+	]
+}

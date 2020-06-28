@@ -1,0 +1,8 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\int_0^\\infty\\frac{\\sin x}{x}dx"},
+		{"type": "tex", "str": "sin x/x"},
+		{"type": "term", "str": "improper integral sin"}
+	]
+}

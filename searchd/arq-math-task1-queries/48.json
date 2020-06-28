@@ -1,0 +1,6 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "(x+y)^k \\geq x^k + y^k"}
+	]
+}

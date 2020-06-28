@@ -1,0 +1,6 @@
+{	
+	"page": 3,
+	"kw": [
+		{"type": "tex", "str": "f(x) = \\frac{x^2 + x + c}{x^2 + 2x + c}"}
+	]
+}

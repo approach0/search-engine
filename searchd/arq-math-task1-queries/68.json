@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "a^n+1"},
+		{"type": "term", "str": "prove divisible"}
+	]
+}

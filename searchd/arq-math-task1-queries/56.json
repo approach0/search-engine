@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\exists p\\ \\bigl(\\text{$p$ is prime } \\rightarrow \\forall x  \\text{ ($x$ is prime)}\\bigr)"},
+		{"type": "term", "str": "logical formula involving prime numbers"}
+	]
+}

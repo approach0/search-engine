@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\bigcup_{i \\in \\mathbb{N}}(a_i+b_i\\mathbb{Z})=\\mathbb{Z}"},
+		{"type": "term", "str": "covering Z by arithmetic progressions"}
+	]
+}

@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "(x^TAh)^T = h^TA^Tx"},
+		{"type": "term", "str": "transpose of product"}
+	]
+}

@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\mathbb{R}"},
+		{"type": "term", "str": "R dimension in vector space"}
+	]
+}

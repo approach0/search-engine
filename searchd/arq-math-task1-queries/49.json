@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "{2n\\choose n}=\\sum_{k=0}^n{n\\choose k}^2"},
+		{"type": "term", "str": "combinatoric interpretation identity"}
+	]
+}

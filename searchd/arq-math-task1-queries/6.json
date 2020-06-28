@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "5^{133} \\mod 8 = 5"},
+		{"type": "term", "str": "number mod with big exponent"}
+	]
+}

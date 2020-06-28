@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "|\\mathbb{Q}| = |\\mathbb{Z}|"},
+		{"type": "term", "str": "rational integer numbers set cardinality"}
+	]
+}

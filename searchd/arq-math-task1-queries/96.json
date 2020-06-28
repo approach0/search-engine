@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\sum_i \\frac{a_i}{a_i+a_{i+1}+a_{i+2}+\\cdots}"},
+		{"type": "term", "str": "convergent sum"}
+	]
+}

@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\sum_{r=1}^n (-1)^{(n-r)} {n \\choose r}(r)^m"},
+		{"type": "term", "str": "find number of onto functions"}
+	]
+}

@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\lim_{n \\rightarrow \\infty } \\frac {[(n+1)(n+2)\\cdots(n+n)]^{1/n}}{n}"},
+		{"type": "term", "str": "Cesáro-Stolz theorem"}
+	]
+}

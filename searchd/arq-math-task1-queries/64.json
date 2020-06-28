@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "f([a, b]) \\subset [a, b]"},
+		{"type": "term", "str": "mean value property"}
+	]
+}

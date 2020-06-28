@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "f(x)=x+\\dfrac{1}{x}"},
+		{"type": "term", "str": "image of function interval"}
+	]
+}

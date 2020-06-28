@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "1^2 + 2^2 + .... + n^2 = \\frac{n(n+1)(2n+1)}{6}"},
+		{"type": "term", "str": "sum of squares"}
+	]
+}

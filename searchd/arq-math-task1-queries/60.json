@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "a_{n} \\;=\\; \\left ( 1-\\frac{1}{\\sqrt{2}} \\right ) ... \\left ( 1- \\frac{1}{\\sqrt{n+1}} \\right )"},
+		{"type": "term", "str": "limiting value of a sequence"}
+	]
+}

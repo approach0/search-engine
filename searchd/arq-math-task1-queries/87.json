@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\forall n \\in \\Bbb{N} : (\\sum_{i=1}^{n} a_{i} ) (\\sum_{i=1}^{n} \\frac{1}{a_{i}} ) \\ge n^2"},
+		{"type": "term", "str": "AM-GM / Cauchy Schwarz inequality"}
+	]
+}

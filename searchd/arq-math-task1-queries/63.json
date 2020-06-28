@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\text{lcm}(n_1,n_2)=\\frac{n_1 n_2}{\\gcd(n_1,n_2)}"},
+		{"type": "term", "str": "gcd and lcm relationship"}
+	]
+}

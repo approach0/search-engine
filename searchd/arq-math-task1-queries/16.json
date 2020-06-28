@@ -1,0 +1,6 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\int_0^1\\frac{\\ln(1+x)\\ln(1-x)}{1+x}dx"}
+	]
+}

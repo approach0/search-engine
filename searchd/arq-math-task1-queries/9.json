@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\sum_{n=0}^N nx^n"},
+		{"type": "term", "str": "derivative geometric series"}
+	]
+}

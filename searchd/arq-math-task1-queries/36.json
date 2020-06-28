@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\lnot P  \\to A_1 \\to\\ ... \\ \\to A_n \\to P"},
+		{"type": "term", "str": "proof by contradiction"}
+	]
+}

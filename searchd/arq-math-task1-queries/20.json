@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\phi(n)=40"},
+		{"type": "term", "str": "euler-Totient Function"}
+	]
+}

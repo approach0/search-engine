@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "R^{n}(e^{2\\pi i x})=e^{2\\pi i(x+n\\alpha)}"},
+		{"type": "term", "str": "irrational rotation and dense set"}
+	]
+}

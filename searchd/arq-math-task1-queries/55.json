@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\frac{1}{\\sqrt{-1}}=\\sqrt{-1}"},
+		{"type": "term", "str": "mistake in calculation"}
+	]
+}

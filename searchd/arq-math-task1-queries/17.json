@@ -1,0 +1,8 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\int _{x=0}^{\\infty} \\frac{\\sin(x)}{x}"},
+		{"type": "tex", "str": "sinx /x"},
+		{"type": "term", "str": "contour integral"}
+	]
+}

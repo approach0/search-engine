@@ -1,0 +1,6 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\mathcal{X} = \\mathcal{Y}"},
+		{"type": "term", "str": "axiom of regularity"}	]
+}

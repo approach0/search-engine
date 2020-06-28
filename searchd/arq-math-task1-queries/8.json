@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\lim_{n\\rightarrow \\infty}\\sqrt[n]{\\frac{(27)^n(n!)^3}{(3n)!}}"},
+		{"type": "term", "str": "finding value of limit"}
+	]
+}

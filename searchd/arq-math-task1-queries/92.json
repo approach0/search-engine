@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\mathbb F_q[X,Y]"},
+		{"type": "term", "str": "principal maximal ideal"}
+	]
+}

@@ -1,0 +1,8 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "u \\times v"},
+		{"type": "tex", "str": "\\mathbb{R}^2"},
+		{"type": "term", "str": "cross product"}
+	]
+}

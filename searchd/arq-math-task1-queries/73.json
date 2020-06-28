@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "\\binom{n}{0}^2 + \\binom{n}{1}^2 + ... + \\binom{n}{n}^2 = \\binom{2n}{n}"},
+		{"type": "term", "str": "binomial theorem proof"}
+	]
+}

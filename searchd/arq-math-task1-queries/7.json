@@ -1,0 +1,7 @@
+{	
+	"page": 1,
+	"kw": [
+		{"type": "tex", "str": "11^{10}-1 =\\equiv x \\pmod{100}"},
+		{"type": "term", "str": "remainder using modulus"}
+	]
+}
