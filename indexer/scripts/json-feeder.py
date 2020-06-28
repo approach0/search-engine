@@ -55,12 +55,12 @@ for dirname, basename in each_json_file(corpus, maxfiles):
 	if cnt < begin:
 		continue
 	path = dirname + '/' + basename
-	with open(path, 'r') as fh:
-		try:
+	try:
+		with open(path, 'r') as fh:
 			j = json.load(fh)
 			docid = send_json(j)
-		except Exception as err:
-			print(err)
-			time.sleep(1000)
+	except Exception as err:
+		print(err)
+		time.sleep(1000)
 
 		print(f'[{cnt:,d} / {N:,d}] doc#{docid}: {j["url"]}')
