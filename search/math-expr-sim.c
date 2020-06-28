@@ -157,8 +157,8 @@ math_expr_set_score(struct math_expr_sim_factors* factor,
 	factor->mnc_score = 0;
 #endif
 
-	math_expr_set_score__multi_tree(factor, hit);
-	//math_expr_set_score__opd_only(factor, hit);
+	//math_expr_set_score__multi_tree(factor, hit);
+	math_expr_set_score__opd_only(factor, hit);
 }
 
 void math_l2_postlist_print_cur(struct math_l2_postlist *po)
