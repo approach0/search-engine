@@ -61,6 +61,5 @@ for dirname, basename in each_json_file(corpus, maxfiles):
 			docid = send_json(j)
 	except Exception as err:
 		print(err)
-		time.sleep(1000)
 
-		print(f'[{cnt:,d} / {N:,d}] doc#{docid}: {j["url"]}')
+	print(f'[{cnt:,d} / {N:,d}] doc#{docid}: {j["url"]}')
