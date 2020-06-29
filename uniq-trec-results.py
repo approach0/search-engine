@@ -22,13 +22,13 @@ with open(fname) as f:
             cnt_d[query] += 1
         else:
             cnt_d[query] = 1
-        docid = fields[2]
-        rank  = fields[3]
-        score = fields[4]
+        docid = fields[1]
+        rank  = fields[2]
+        score = fields[3]
         run = run_name
-        key = query + docid;
+        key = query + '#' + docid;
         if key in d:
-            print('duplicate:%s @ %s' % (key, query), file=sys.stderr)
+            print('duplicate: qry#docID %s @ query %s' % (key, query), file=sys.stderr)
             continue
         else:
             d[key] = True
@@ -43,11 +43,3 @@ with open(fname) as f:
 
 # print query result count to stderr
 print(json.dumps(cnt_d, indent=2, sort_keys=True), file=sys.stderr)
-
-order_key = list(out_d.keys())
-order_key = sorted(order_key, key=lambda x: int(x.split('-MathWiki-')[1]))
-for k in order_key:
-    l = out_d[k]
-    for res in l:
-        line = ' '.join(res)
-        print(line)
