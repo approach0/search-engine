@@ -73,7 +73,7 @@ if __name__ == "__main__":
 						print('json', place)
 						fh_out.write(json.dumps({
 							"url": f"{ID},{topic_id},{thread_id}",
-							"text": latex
+							"text": '[imath]' + latex + '[/imath]'
 						}, sort_keys=True))
 
 	if args['post_xml']:
