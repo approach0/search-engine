@@ -76,7 +76,7 @@ math_index_open(const char *path, const char *mode)
 
 	index = malloc(sizeof(struct math_index));
 
-	snprintf(index->dir, MAX_PATH_LEN, "%s", path);
+	snprintf(index->dir, MAX_DIR_PATH_NAME_LEN, "%s", path);
 	sprintf(index->mode, "%s", mode);
 
 	index->dict = strmap_new();
