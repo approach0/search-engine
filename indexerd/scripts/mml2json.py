@@ -19,7 +19,6 @@ def repl_callbk(m):
 
 def process(txt):
 	txt = re.sub("(<math.*?</math>)", repl_callbk, txt)
-	print(txt)
 	return txt
 
 
@@ -36,11 +35,12 @@ def mkdir_p(path):
 def convert(path):
 	abs_path = os.path.abspath(path)
 	with open(abs_path, encoding='utf-8', errors='replace') as fh:
-		cnt = 0;
-		for line in fh.readlines():
+		all_lines = fh.readlines()
+		cnt, total = 0, len(all_lines)
+		for line in all_lines:
 			fields = line.strip().split(" ", 1)
+			print(f'converting {path} line#{cnt} / {total}')
 			name = fields[0]
-			ID = int(name[2:])
 			txt = fields[1]
 			j = {
 				"url": name,
@@ -48,14 +48,14 @@ def convert(path):
 			}
 			enc = json.dumps(j, ensure_ascii=False)
 
-			outpath = './tmp/' + str(ID % DIV)
+			outpath = './tmp/' + str(cnt % DIV)
 			mkdir_p(outpath)
 
 			outfile = outpath+ f'/{name}.json'
 			with open(outfile, "w") as outfh:
 				outfh.write(enc)
 
-			break ######
+			#break ######
 			cnt += 1
 
 
