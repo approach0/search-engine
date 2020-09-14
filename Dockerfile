@@ -1,11 +1,13 @@
 ## base environment
 FROM ubuntu:16.04
 RUN apt update
-RUN apt install -y --no-install-recommends git build-essential g++ cmake wget python3 libxml2-dev
-RUN apt install -y --no-install-recommends bison flex libz-dev libevent-dev libopenmpi-dev reiserfsprogs
-
-## application environment
+RUN apt install -y --no-install-recommends git
+RUN mkdir -p /code
 ADD . /code/a0
+
+# building environment
+RUN apt install -y --no-install-recommends build-essential g++ cmake wget python3 libxml2-dev bison bison
+RUN apt install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev reiserfsprogs psmisc
 RUN git config --global http.sslVerify false
 RUN git clone https://github.com/approach0/fork-indri.git /code/indri
 RUN (cd /code/indri && ./configure && make)
@@ -20,5 +22,14 @@ RUN ln -sf `pwd`/searchd/run/searchd.out /usr/bin/searchd.out
 RUN ln -sf `pwd`/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-creat.sh
 RUN ln -sf `pwd`/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
 
-#CMD /usr/bin/indexer.out
-#CMD /usr/bin/searchd.out
+## devops environment
+RUN git clone -b deploy-ait https://github.com/approach0/panel.git /code/panel
+RUN chmod +x /code/a0/node_setup_14.x.sh
+RUN /code/a0/node_setup_14.x.sh
+RUN apt install -y --no-install-recommends nodejs
+
+RUN (cd /code/panel/proxy && npm install)
+RUN (cd /code/panel/jobd && npm install)
+RUN (cd /code/panel/ui && npm install && npm run build)
+
+CMD ./setup-panel.sh
