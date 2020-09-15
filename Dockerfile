@@ -6,7 +6,7 @@ RUN mkdir -p /code
 ADD . /code/a0
 
 # building environment
-RUN apt install -y --no-install-recommends build-essential g++ cmake wget python3 libxml2-dev bison bison
+RUN apt install -y --no-install-recommends build-essential g++ cmake wget python3 libxml2-dev flex bison
 RUN apt install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev reiserfsprogs psmisc
 RUN git config --global http.sslVerify false
 RUN git clone https://github.com/approach0/fork-indri.git /code/indri
