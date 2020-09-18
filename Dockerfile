@@ -1,17 +1,25 @@
 ## base environment
-FROM ubuntu:16.04
-RUN apt update
-RUN apt install -y --no-install-recommends git
+FROM debian:buster
+
+#RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+
+RUN apt-get update
 RUN mkdir -p /code
 ADD . /code/a0
 
-# building environment
-RUN apt install -y --no-install-recommends build-essential g++ cmake wget python3 libxml2-dev flex bison
-RUN apt install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev reiserfsprogs psmisc
+## building environment
+RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget python3 flex bison
+RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 RUN git config --global http.sslVerify false
-RUN git clone https://github.com/approach0/fork-indri.git /code/indri
+
+#RUN git clone --progress --depth=1 https://gitee.com/t-k-/fork-indri.git /code/indri
+RUN git clone --progress --depth=1 https://github.com/approach0/fork-indri.git /code/indri
+
 RUN (cd /code/indri && ./configure && make)
+
+#RUN mv /code/a0/cppjieba.tar.gz /code/
 RUN wget --no-check-certificate 'https://github.com/yanyiwu/cppjieba/archive/v4.8.1.tar.gz' -O /code/cppjieba.tar.gz
+
 RUN mkdir -p /code/cppjieba
 RUN tar -xzf /code/cppjieba.tar.gz -C /code/cppjieba --strip-components=1
 WORKDIR /code/a0
@@ -22,14 +30,5 @@ RUN ln -sf `pwd`/searchd/run/searchd.out /usr/bin/searchd.out
 RUN ln -sf `pwd`/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-creat.sh
 RUN ln -sf `pwd`/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
 
-## devops environment
-RUN git clone -b deploy-ait https://github.com/approach0/panel.git /code/panel
-RUN chmod +x /code/a0/node_setup_14.x.sh
-RUN /code/a0/node_setup_14.x.sh
-RUN apt install -y --no-install-recommends nodejs
-
-RUN (cd /code/panel/proxy && npm install)
-RUN (cd /code/panel/jobd && npm install)
-RUN (cd /code/panel/ui && npm install && npm run build)
-
-CMD ./setup-panel.sh
+##CMD searchd.out -h
+##CMD indexer.out -h
