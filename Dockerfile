@@ -30,5 +30,10 @@ RUN ln -sf `pwd`/searchd/run/searchd.out /usr/bin/searchd.out
 RUN ln -sf `pwd`/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-creat.sh
 RUN ln -sf `pwd`/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
 
+## Enable sshd
+ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+mkdir -p /var/run/sshd
+
 ##CMD searchd.out -h
 ##CMD indexer.out -h
