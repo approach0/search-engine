@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* open indices */
-	printf("Opening index at: %s\n", index_path);
+	printf("node[%d] Opening index at: %s\n", searchd_args.node_rank, index_path);
 	if (indices_open(&indices, index_path, INDICES_OPEN_RD)) {
 		printf("Index open failed.\n");
 		goto close;
