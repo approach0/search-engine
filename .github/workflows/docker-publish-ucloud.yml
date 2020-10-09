@@ -1,0 +1,38 @@
+name: Docker auto-push
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  # EDIT this env variable
+  IMAGE_ID: uhub.service.ucloud.cn/ga6840/a0
+
+jobs:
+
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Build image
+      run: docker build . --file Dockerfile --tag tmp
+      
+    # EDIT this Docker registry credentials
+    - name: Docker registry login
+      run: echo "${{ secrets.UCLOUDPASSWORD }}" | docker login https://uhub.service.ucloud.cn -u ${{ secrets.UCLOUDUSERNAME }} --password-stdin
+    
+    - name: Push image
+      run: |
+        # Example "ref": "refs/tags/0.3.1"
+        VERSION=$(echo "${{ github.ref }}" | sed -e 's@.*/\(.*\)@\1@')
+        [ "$VERSION" == "master" ] && VERSION=latest
+
+        echo IMAGE_ID=$IMAGE_ID
+        echo VERSION=$VERSION
+
+        docker tag tmp $IMAGE_ID:$VERSION
+        docker push $IMAGE_ID:$VERSION
