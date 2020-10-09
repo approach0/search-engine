@@ -2,9 +2,8 @@ name: Docker auto-push
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches: [ deploy ]
+    tags: [ v* ]
 
 env:
   # EDIT this env variable
@@ -17,14 +16,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      
+
     - name: Build image
       run: docker build . --file Dockerfile --tag tmp
-      
+
     # EDIT this Docker registry credentials
     - name: Docker registry login
       run: echo "${{ secrets.UCLOUDPASSWORD }}" | docker login https://uhub.service.ucloud.cn -u ${{ secrets.UCLOUDUSERNAME }} --password-stdin
-    
+
     - name: Push image
       run: |
         # Example "ref": "refs/tags/0.3.1"
