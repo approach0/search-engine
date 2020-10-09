@@ -1,3 +1,4 @@
+wheel
 pycurl
 certifi
 bs4
