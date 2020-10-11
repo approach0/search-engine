@@ -3,3 +3,4 @@ pycurl
 certifi
 bs4
 slimit
+fake_useragent

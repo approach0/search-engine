@@ -17,6 +17,7 @@ from slimit import ast
 from slimit.parser import Parser
 from io import BytesIO
 from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
 
 root_url = "https://artofproblemsolving.com"
 file_prefix = 'aops'
@@ -39,10 +40,12 @@ def print_err(err_str):
     f.close()
 
 def curl(sub_url, c, post = None):
+    ua = UserAgent()
     buf = BytesIO()
     print('[curl] %s' % sub_url)
     url = root_url + sub_url
     url = url.encode('iso-8859-1')
+    c.setopt(c.HTTPHEADER, ['User-agent: ' + ua.random])
     c.setopt(c.URL, url)
     c.setopt(c.WRITEFUNCTION, buf.write)
     c.setopt(c.FOLLOWLOCATION, True)
@@ -262,6 +265,9 @@ def list_category_topics(category, newest, oldest, c):
 
     parsed = get_aops_data(community_page)
     session = parsed['AoPS.session']
+    if session is None:
+        raise Exception("AoPS server format unexpected.")
+
     session_id = session['id']
     user_id = session['user_id']
     server_time = int(parsed['AoPS.bootstrap_data']['init_time'])
@@ -462,8 +468,12 @@ def main(args):
     if (category > 0):
         while True:
             # crawling newest pages
-            r = crawl_category_topics(category, newest, oldest,
-                                      extra_opt)
+            try:
+                r = crawl_category_topics(category, newest, oldest, extra_opt)
+            except Exception as e:
+                print_err(str(e))
+                quit(1)
+
             if r == 'abort':
                 break
 
