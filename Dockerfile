@@ -26,6 +26,7 @@ RUN apt-get install -y --no-install-recommends python3-pip python3-dev python3-s
 RUN cd demo/crawler && pip3 install -r requirements.txt
 ### for searchd / indexer
 RUN apt-get install -y --no-install-recommends reiserfsprogs
+RUN pip3 install requests # for json-feeder
 RUN ./configure --indri-path=/code/indri --jieba-path=/code/cppjieba
 RUN export TERM=xterm-256color; make clean && make
 ### export to global commands
