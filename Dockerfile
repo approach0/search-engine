@@ -25,6 +25,7 @@ WORKDIR /code/a0
 RUN apt-get install -y --no-install-recommends python3-pip python3-dev python3-setuptools libcurl4-openssl-dev libssl-dev
 RUN cd demo/crawler && pip3 install -r requirements.txt
 ### for searchd / indexer
+RUN apt-get install -y --no-install-recommends reiserfsprogs
 RUN ./configure --indri-path=/code/indri --jieba-path=/code/cppjieba
 RUN export TERM=xterm-256color; make clean && make
 ### export to global commands
