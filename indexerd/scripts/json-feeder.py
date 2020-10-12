@@ -20,12 +20,11 @@ def each_json_file(corpus, endat):
 				return
 			if f.split('.')[-1] == 'json':
 				cnt += 1
-				yield (dirname, f)
+				yield (cnt, dirname, f)
 
 def get_n_files(corpus):
 	cnt = 0
-	for dirname, basename in each_json_file(corpus, -1):
-		path = dirname + '/' + basename
+	for _, dirname, basename in each_json_file(corpus, -1):
 		cnt += 1
 	return cnt
 
@@ -35,26 +34,27 @@ parser = argparse.ArgumentParser(description='Approach0 indexd json feeder.')
 parser.add_argument('--begin-from', help='begin from specified count of files.', type=int)
 parser.add_argument('--end-at', help='stop at specified count of files.', type=int)
 parser.add_argument('--corpus-path', help='corpus path. (required)', type=str)
-parser.add_argument('--indexd-url', help='indexd URL. Default: ' + default_url, type=str)
+parser.add_argument('--indexd-url', help='indexd URL. Default: ' + default_url, type=str, action='append')
 args = parser.parse_args()
 
-url= args.indexd_url if args.indexd_url else default_url
+urls= args.indexd_url if args.indexd_url else [default_url]
 corpus = args.corpus_path if args.corpus_path else ''
 endat = args.end_at if args.end_at else -1
 begin = args.begin_from if args.begin_from else 0
 
-print('Indexd URL: ' + url)
+print('Indexd URL(s): ', urls)
 
 print(f'Count how many files there in {corpus} ...')
 N = get_n_files(corpus)
 print('%u files in total.' % N)
 
 cnt = 0
-for dirname, basename in each_json_file(corpus, endat):
+for i, dirname, basename in each_json_file(corpus, endat):
 	cnt += 1
 	if cnt < begin:
 		continue
 	path = dirname + '/' + basename
+	url = urls[i % len(urls)]
 	with open(path, 'r') as fh:
 		try:
 			j = json.load(fh)
@@ -62,4 +62,4 @@ for dirname, basename in each_json_file(corpus, endat):
 		except Exception as err:
 			print(err)
 			break
-		print(f'[{cnt:,d} / {N:,d}] doc#{docid}: {j["url"]}')
+		print(f'[{cnt:,d} / {N:,d}] doc#{docid} -> {url}: {j["url"]}')
