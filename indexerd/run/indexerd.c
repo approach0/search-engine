@@ -118,8 +118,8 @@ int main(int argc, char* argv[])
 	unsigned short port = INDEXD_DEFAULT_PORT;
 	char index_output_dir[MAX_PATH_LEN] = INDEXD_DEFAULT_DIR;
 
-	int opt;
-	while ((opt = getopt(argc, argv, "ho:u:p:d:")) != -1) {
+	int opt, create_output_dir = 1;
+	while ((opt = getopt(argc, argv, "ho:u:p:d:z")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -129,6 +129,7 @@ int main(int argc, char* argv[])
 			printf("%s -h | "
 			       "-o <output> (default: " INDEXD_DEFAULT_DIR ") | "
 			       "-p <port> (default is %hu) | "
+			       "-z (do not mkdir if output directory does not exist) | "
 			       "-d <dict path> (default is '.') | "
 			       "-u <index uri> (default is " INDEXD_DEFAULT_URI ")"
 			       "\n", argv[0], INDEXD_DEFAULT_PORT);
@@ -139,6 +140,10 @@ int main(int argc, char* argv[])
 
 		case 'o':
 			strcpy(index_output_dir, optarg);
+			break;
+
+		case 'z':
+			create_output_dir = 0;
 			break;
 
 		case 'p':
@@ -168,6 +173,12 @@ int main(int argc, char* argv[])
 
 	/* open specified indices */
 	printf("open indices at %s ...\n", index_output_dir);
+
+	if (!create_output_dir && !dir_exists(index_output_dir)) {
+		fprintf(stderr, "No such directory, exit due to option `-z'.\n");
+		goto close;
+	}
+
 	indices_open(&indices, index_output_dir, INDICES_OPEN_RW);
 
 	/* create indexer for specified indices */
@@ -188,8 +199,8 @@ int main(int argc, char* argv[])
 	printf("closing index...\n");
 	indexer_free(indexer);
 	indices_close(&indices);
+close:
 	text_segment_free();
-
 	printf("\n");
 
 exit:
