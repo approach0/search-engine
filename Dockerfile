@@ -5,7 +5,7 @@ RUN apt-get update
 RUN mkdir -p /code
 
 ## C/C++ environment
-RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget python3 flex bison
+RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget python3 flex bison rsync
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 RUN git config --global http.sslVerify false
 
