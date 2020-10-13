@@ -135,9 +135,9 @@ def get_aops_data(page):
     s = BeautifulSoup(page, "html.parser")
     parser = slimit_parser
     for script in s.findAll('script'):
-        if 'AoPS.bootstrap_data' in script.text:
+        if 'AoPS.bootstrap_data' in script.string:
             try:
-                tree = parser.parse(script.text)
+                tree = parser.parse(script.string)
                 parsed = parse_node(tree)
                 return parsed
             except SyntaxError:
