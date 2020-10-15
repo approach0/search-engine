@@ -37,7 +37,7 @@ parser.add_argument('--corpus-path', help='corpus path. (required)', type=str)
 parser.add_argument('--indexd-url', help='indexd URL. Default: ' + default_url, type=str, action='append')
 args = parser.parse_args()
 
-urls= args.indexd_url if args.indexd_url else [default_url]
+urls = args.indexd_url if args.indexd_url else [default_url]
 corpus = args.corpus_path if args.corpus_path else ''
 endat = args.end_at if args.end_at else -1
 begin = args.begin_from if args.begin_from else 0
