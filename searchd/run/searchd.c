@@ -11,6 +11,7 @@
 #include "search-v3/search.h"
 #include "txt-seg/txt-seg.h"
 #include "httpd/httpd.h"
+#include "flock.h"
 
 #include "config.h"
 #include "json-utils.h"
@@ -257,6 +258,8 @@ int main(int argc, char *argv[])
 	/* command line arguments */
 	int                   trec_log = 0;
 	char                 *index_path = NULL;
+	char                 *lock_file = NULL;
+	int                   lock_fd = -1;
 	char                  dict_path[1024] = ".";
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	size_t                mi_cache_limit = DEFAULT_MATH_INDEX_CACHE_SZ;
@@ -273,7 +276,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:d:p:c:C:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:L:d:p:c:C:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -282,8 +285,9 @@ int main(int argc, char *argv[])
 			printf("USAGE:\n");
 			printf("%s \n"
 			       " -h (help) \n"
+			       " -i <index path> (required) \n"
+			       " -L <lock file> \n"
 			       " -T (TREC log) \n"
-			       " -i <index path> \n"
 			       " -d <dict path> \n"
 			       " -p <port> \n"
 			       " -c <term cache size (MB), default: %u MB> \n"
@@ -292,12 +296,16 @@ int main(int argc, char *argv[])
 			       DEFAULT_TERM_INDEX_CACHE_SZ, DEFAULT_MATH_INDEX_CACHE_SZ);
 			goto exit;
 
-		case 'T':
-			trec_log = 1;
-			break;
-
 		case 'i':
 			index_path = strdup(optarg);
+			break;
+
+		case 'L':
+			lock_file = strdup(optarg);
+			break;
+
+		case 'T':
+			trec_log = 1;
 			break;
 
 		case 'd':
@@ -330,6 +338,17 @@ int main(int argc, char *argv[])
 	if (index_path == NULL) {
 		fprintf(stderr, "Indice path not specified.\n");
 		goto exit;
+	}
+
+	/* obtain lock (if specified to) before opening indices */
+	if (lock_file) {
+		printf("Obtaining file lock at `%s' ...\n", lock_file);
+		lock_fd = flock_exlock(lock_file);
+		if (lock_fd == -1) {
+			fprintf(stderr, "Unable to get lock file descriptor.\n");
+			goto exit;
+		}
+		printf("Lock obtained.\n");
 	}
 
 	/* open indices */
@@ -394,7 +413,10 @@ exit:
 	 * free program arguments
 	 */
 	free(index_path);
+	free(lock_file);
+	flock_unlock(lock_fd);
 
+	/* print unfree memory counter */
 	mhook_print_unfree();
 	fflush(stdout);
 
