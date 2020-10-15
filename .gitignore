@@ -14,6 +14,7 @@
 *.ln
 *.bin
 *.session
+*.lock
 gen-*
 y.output
 y.*.h
