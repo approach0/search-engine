@@ -41,8 +41,3 @@ RUN mkdir -p /var/run/sshd
 RUN ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
 RUN cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
 RUN sed -i "/StrictHostKeyChecking/c StrictHostKeyChecking no" /etc/ssh/ssh_config
-
-## Being able to use docker-cli to control other services
-ARG clipkg=docker-ce-cli_19.03.9~3-0~debian-buster_amd64.deb
-RUN wget http://mirrors.aliyun.com/docker-ce/linux/debian/dists/buster/pool/stable/amd64/$clipkg
-RUN dpkg -i $clipkg
