@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include <signal.h> // for raise()
+#include <event.h>  // for raise()
+
 #include "common/common.h"
 #include "mhook/mhook.h"
 #include "httpd/httpd.h"
@@ -12,7 +15,7 @@
 #include "config.h"
 #include "indices-v3/indices.h"
 
-static int get_json_val(const char *json, const char *key, char *val)
+static int get_json_val(const char *json, const char *key, char *val, size_t n)
 {
 	JSON_Value *parson_val = json_parse_string(json);
 	JSON_Object *parson_obj;
@@ -23,8 +26,15 @@ static int get_json_val(const char *json, const char *key, char *val)
 	}
 
 	parson_obj = json_value_get_object(parson_val);
-	strncpy(val, json_object_get_string(parson_obj, key), MAX_CORPUS_FILE_SZ);
-	val[MAX_CORPUS_FILE_SZ - 1] = '\0';
+	const char *valstr = json_object_get_string(parson_obj, key);
+	if (valstr) {
+		strncpy(val, valstr, n);
+		val[n - 1] = '\0';
+	} else {
+		/* no such key */
+		json_value_free(parson_val);
+		return 1;
+	}
 
 	json_value_free(parson_val);
 	return 0;
@@ -73,12 +83,22 @@ static const char *httpd_on_index(const char* req, void* arg_)
 	char *url_field = indexer->url_field;
 	char *txt_field = indexer->txt_field;
 
-	if (get_json_val(req, "url", url_field)) {
+	char command[1024] = "";
+	if (0 == get_json_val(req, "cmd", command, sizeof(command))) {
+		prinfo("Command received: `%s' \n", command);
+		if (0 == strcmp(command, "BYE")) {
+			fflush(stderr);
+			raise(SIGINT);
+		}
+		goto ret;
+	}
+
+	if (get_json_val(req, "url", url_field, sizeof(indexer->url_field))) {
 		fprintf(stderr, "JSON: get URL field failed.\n");
 		goto ret;
 	}
 
-	if (get_json_val(req, "text", txt_field)) {
+	if (get_json_val(req, "text", txt_field, sizeof(indexer->txt_field))) {
 		fprintf(stderr, "JSON: get TXT field failed.\n");
 		goto ret;
 	}

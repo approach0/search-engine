@@ -35,12 +35,14 @@ parser.add_argument('--begin-from', help='begin from specified count of files.',
 parser.add_argument('--end-at', help='stop at specified count of files.', type=int)
 parser.add_argument('--corpus-path', help='corpus path. (required)', type=str)
 parser.add_argument('--indexd-url', help='indexd URL. Default: ' + default_url, type=str, action='append')
+parser.add_argument('--bye', help='ask indexer(s) to terminate on quiting', dest='bye', action='store_true')
 args = parser.parse_args()
 
 urls = args.indexd_url if args.indexd_url else [default_url]
 corpus = args.corpus_path if args.corpus_path else ''
 endat = args.end_at if args.end_at else -1
 begin = args.begin_from if args.begin_from else 0
+bye = args.bye if args.bye else False
 
 print('Indexd URL(s): ', urls)
 
@@ -63,3 +65,11 @@ for i, dirname, basename in each_json_file(corpus, endat):
 			print(err)
 			break
 		print(f'[{cnt:,d} / {N:,d}] doc#{docid} -> {url}: {j["url"]}')
+
+if bye:
+	print('\n Now, send BYE to terminate indexers ... \n')
+	for url in urls:
+		try:
+			docid = send_json({'cmd': 'BYE'}, url)
+		except Exception as err:
+			print(err)
