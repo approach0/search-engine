@@ -3,8 +3,8 @@ FROM debian:buster AS builder
 RUN apt-get update
 RUN mkdir -p /code
 
-## C/C++ environment
-RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget flex bison
+## C/C++ and building environment
+RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget flex bison python3
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 RUN git config --global http.sslVerify false
 
@@ -28,7 +28,7 @@ FROM debian:buster
 RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update
 # necessary dynamic libraries
-RUN apt-get install -y --no-install-recommends python3 flex bison rsync
+RUN apt-get install -y --no-install-recommends build-essential flex bison python3 rsync
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 
 COPY --from=builder /code/a0/demo /demo
