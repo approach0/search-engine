@@ -4,7 +4,7 @@ RUN apt-get update
 RUN mkdir -p /code
 
 ## C/C++ environment
-RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget python3 flex bison
+RUN apt-get install -y --no-install-recommends git build-essential g++ cmake wget flex bison
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 RUN git config --global http.sslVerify false
 
@@ -41,7 +41,7 @@ COPY --from=builder /code/a0/indexerd/scripts/json-feeder.py /usr/bin/json-feede
 
 ### for crawlers
 RUN apt-get install -y --no-install-recommends python3-pip python3-dev python3-setuptools libcurl4-openssl-dev libssl-dev
-RUN cd /demo/crawler && pip3 install -r requirements.txt
+RUN cd /demo/crawler && pip3 install wheel && pip3 install -r requirements.txt
 
 ### for searchd / indexer
 RUN apt-get install -y --no-install-recommends reiserfsprogs curl
