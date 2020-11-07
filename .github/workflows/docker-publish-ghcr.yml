@@ -1,5 +1,5 @@
 # EDIT this workflow name
-name: Push to uhub
+name: Push to ghcr
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 env:
   # EDIT this env variable
-  IMAGE_ID: uhub.service.ucloud.cn/ga6840/a0
+  IMAGE_ID: ghcr.io/approach0/a0
 
 jobs:
 
@@ -23,7 +23,7 @@ jobs:
 
     # EDIT this Docker registry credentials
     - name: Docker registry login
-      run: echo "${{ secrets.UCLOUDPASSWORD }}" | docker login https://uhub.service.ucloud.cn -u ${{ secrets.UCLOUDUSERNAME }} --password-stdin
+      run: echo "${{ secrets.GITHUBPAT }}" | docker login ghcr.io -u 't-k-' --password-stdin
 
     - name: Push image
       run: |
