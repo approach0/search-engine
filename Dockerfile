@@ -32,6 +32,7 @@ RUN apt-get install -y --no-install-recommends build-essential flex bison python
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 
 COPY --from=builder /code/a0/demo /demo
+COPY --from=builder /code/a0/indices-v3/run/doc-lookup.out /usr/bin/doc-lookup.out
 COPY --from=builder /code/a0/indexerd/run/indexerd.out /usr/bin/indexer.out
 COPY --from=builder /code/a0/searchd/run/searchd.out /usr/bin/searchd.out
 
