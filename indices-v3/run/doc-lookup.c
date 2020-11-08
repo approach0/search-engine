@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
 	char term[64] = "";
 	char path[MAX_DIR_PATH_NAME_LEN] = "";
 
-	uint32_t math_cache_sz = 15 KB;
-	uint32_t term_cache_sz = 15 KB;
+	uint32_t math_cache_sz = 0;
+	uint32_t term_cache_sz = 0;
 
 	while ((opt = getopt(argc, argv, "hp:d:t:m:c:C:")) != -1) {
 		switch (opt) {
