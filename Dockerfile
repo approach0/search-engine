@@ -38,7 +38,7 @@ COPY --from=builder /code/a0/searchd/run/searchd.out /usr/bin/searchd.out
 COPY --from=builder /code/a0/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-creat.sh
 COPY --from=builder /code/a0/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
 COPY --from=builder /code/a0/indexerd/scripts/json-feeder.py /usr/bin/json-feeder.py
-COPY --from=builder /code/a0/searchd/scripts/test-query.py  /usr/bin/test-query.py
+COPY --from=builder /code/a0/searchd/scripts/test-query.sh  /usr/bin/test-query.sh
 COPY --from=builder /code/a0/searchd/tests/query-valid.json /code/a0/demo/test-query.json
 
 ### for crawlers
