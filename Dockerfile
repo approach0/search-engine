@@ -56,3 +56,6 @@ RUN mkdir -p /var/run/sshd
 RUN ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
 RUN cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
 RUN sed -i "/StrictHostKeyChecking/c StrictHostKeyChecking no" /etc/ssh/ssh_config
+RUN echo "ClientAliveInterval 30" | tee -a /etc/ssh/sshd_config
+RUN echo "ServerAliveInterval 30" | tee -a /etc/ssh/ssh_config
+RUN echo "ServerAliveCountMax 12" | tee -a /etc/ssh/ssh_config
