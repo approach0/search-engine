@@ -488,6 +488,7 @@ extern int lexer_warning_flag;
 \\vartheta                             { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\wr                                   { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\xi                                   { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
+\\wp                                   { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\zeta                                 { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 \\backepsilon                          { RET_TOK(_AUTOGEN_, VAR, WC_NORMAL_LEAF, VAR); }
 
