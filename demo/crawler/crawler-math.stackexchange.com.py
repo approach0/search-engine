@@ -16,7 +16,7 @@ from replace_post_tex import replace_inline_tex
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-root_url = "http://math.stackexchange.com"
+root_url = "https://math.stackexchange.com"
 file_prefix = 'mse'
 
 vt100_BLUE = '\033[94m'
@@ -64,7 +64,7 @@ def extract_p_tag_text(soup):
 	txt = ''
 	p_tags = soup.find_all('p')
 	for p in p_tags:
-		if p.text is not ' ':
+		if p.text != ' ':
 			txt += str(p.text)
 			txt += '\n'
 	return txt
@@ -94,12 +94,18 @@ def crawl_post_page(sub_url, c):
 	# get question
 	question = s.find(id="question")
 	if question is None:
-		raise Exception("question tag is None")
+		raise Exception("No question tag found.")
 	post_txt += extract_p_tag_text(question)
 	post_txt += '\n'
 	# get question comments
 	post_txt += extract_comments_text(question)
 	post_txt += '\n'
+
+	# get post tags
+	tags = question.find_all('a', class_="post-tag")
+	taglist = []
+	if tags is not None:
+		taglist = [t.string for t in tags]
 
 	# get answers
 	answers = s.find(id="answers")
@@ -111,7 +117,7 @@ def crawl_post_page(sub_url, c):
 		# get answer comments
 		post_txt += extract_comments_text(answer)
 		post_txt += '\n'
-	return post_txt
+	return post_txt, taglist
 
 def mkdir_p(path):
 	try:
@@ -136,10 +142,11 @@ def save_preview(path, post_txt, url):
 	f.write(preview)
 	f.close()
 
-def save_json(path, post_txt, url):
+def save_json(path, post_txt, tags, url):
 	f = open(path, "w")
 	f.write(json.dumps({
 		"url": url,
+		"tags": tags,
 		"text": post_txt
 	}, sort_keys=True))
 	f.close()
@@ -191,7 +198,7 @@ def get_file_path(post_id):
 	directory = './tmp/' + str(post_id % DIVISIONS)
 	return directory + '/' + file_prefix + str(post_id)
 
-def process_post(post_id, post_txt, url, if_save_preview):
+def process_post(post_id, post_txt, taglist, url, if_save_preview):
 	# decide sub-directory
 	file_path = get_file_path(post_id)
 	try:
@@ -208,7 +215,7 @@ def process_post(post_id, post_txt, url, if_save_preview):
 	jsonfile = file_path + ".json"
 	if os.path.isfile(jsonfile):
 		print('[exists]' + jsonfile)
-		save_json(file_prefix + '.tmp', post_txt, url)
+		save_json(file_prefix + '.tmp', post_txt, taglist, url)
 		if filecmp.cmp(file_prefix + '.tmp', jsonfile):
 			# two files are identical, do not touch
 			print('[identical, no touch]')
@@ -216,9 +223,8 @@ def process_post(post_id, post_txt, url, if_save_preview):
 		else:
 			print('[overwrite]')
 
-
 	# two files are different, save files
-	save_json(jsonfile, post_txt, url)
+	save_json(jsonfile, post_txt, taglist, url)
 	if if_save_preview:
 		save_preview(file_path + '.html', post_txt, url)
 
@@ -248,8 +254,8 @@ def crawl_pages(sortby, start, end, extra_opt):
 			try:
 				sub_url = sub_url + '?noredirect=1'
 				url = root_url + sub_url
-				post_txt = crawl_post_page(sub_url, get_curl())
-				process_post(ID, post_txt, url, extra_opt["save-preview"])
+				post_txt, taglist = crawl_post_page(sub_url, get_curl())
+				process_post(ID, post_txt, taglist, url, extra_opt["save-preview"])
 			except (KeyboardInterrupt, SystemExit):
 				print('[abort]')
 				return 'abort'
@@ -322,8 +328,8 @@ def main(args):
 			sub_url = "/questions/" + arg
 			sub_url = sub_url + '?noredirect=1'
 			full_url = root_url + sub_url
-			post_txt = crawl_post_page(sub_url, get_curl())
-			process_post(int(arg), post_txt, full_url, True)
+			post_txt, taglist = crawl_post_page(sub_url, get_curl())
+			process_post(int(arg), post_txt, taglist, full_url, True)
 			exit(0)
 		elif opt in ("--no-overwrite"):
 			extra_opt["overwrite"] = False
