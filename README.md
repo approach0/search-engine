@@ -32,14 +32,14 @@ In late 2016, the first rewritten version of math-aware search engine is complet
 
 In 2017, I go back to China and work at Huawei doing a STB (TV box) project, irrelevant to search engine whatsoever.
 
-In 2017 Fall, with an intuition that a math-aware search engine will provide huge value to many people, I gave up my job and continued working on this topic as a PhD student at [RIT](https://www.cs.rit.edu/~dprl/members.html).
-During the first two years of my PhD study, I have kept improving the effectiveness and efficiency of the formula retrieval model.
+In 2017 Fall, with the feeling that a math-aware search engine would probably provide huge value, I gave up my job and continued working on this topic as a PhD student at [RIT](https://www.cs.rit.edu/~dprl/members.html).
+During the first two years of my PhD study, I kept improving the effectiveness and efficiency of the formula retrieval model.
 
 In 2019, the new model has brought me [my first research full paper](http://ecir2019.org/best-paper-awards/) at ECIR 2019 conference (and a best application paper award!).
 
 In May 2019, the new model has been put online, it has indexed over 1 million posts and there are only 3 search instances running on two low-cost Linode servers.
 
-In early 2020, a paper focusing on efficiency has just been accepted at [ECIR 2020](https://link.springer.com/chapter/10.1007/978-3-030-45439-5_47) conference, this paper shows our system is the first one to produce very effective math search results with practical query runtimes.
+In early 2020, a paper focusing on efficiency has just been accepted at [ECIR 2020](https://link.springer.com/chapter/10.1007/978-3-030-45439-5_47) conference, this paper shows our system is the first one to produce very effective math search results with realtime query runtimes in single thread.
 
 ## Documentation
 Please check out our documentation for technical details:
@@ -50,6 +50,6 @@ MIT
 
 ## Updates (May 24, 2019)
 Currently, this master branch is inactive, although the research branch has an early version of the new model, it only supports math queries.
-The most updated code is closed source, it features very effective math-aware search and further supports text queries.
+The most updated code is closed source, it features very effective math-aware search with better efficiency (also supporting text query).
 The new system can search on 1 million documents in real time, hosted by only two low-cost servers.
 For information on the most recent development, please email `wxz8033 AT rit.edu` or contact me via WeChat (`hellozhongwei`).
