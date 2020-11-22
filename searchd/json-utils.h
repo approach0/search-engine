@@ -24,7 +24,7 @@ static const char searchd_ret_str_map[][128] = {
 	{"Illegal page number"},
 	{"Rank window calculation error"},
 	{"Too many math keywords in query"},
-	{"Too many term keywords in query"}
+	{"Too many non-math keywords in query"}
 };
 
 /* parse query JSON into our query structure */
