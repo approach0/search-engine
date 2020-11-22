@@ -77,7 +77,7 @@ httpd_on_recv(const char *req, void *arg_)
 
 	if (page == 0) {
 		ret = search_errcode_json(SEARCHD_RET_BAD_QRY_JSON);
-		fprintf(log_fh, "%s\n", "Bad JSON format.");
+		fprintf(log_fh, "%s\n", "Bad JSON format (page = 0).");
 		goto reply;
 
 	} else if (qry.len == 0) {
