@@ -5,12 +5,14 @@
 
 Approach0 is a math-aware search engine.
 
-Math search can be helpful in Q&A websites: Assume you are fighting a tough
+Math search can be helpful in many cases. For example, assuming you are struggling with a tough math
 question in your homework, spending so much time on it without any clue.
-Yes, you do not simply want an answer, but all you need is some hints.
+Of course, you do not simply want an answer, all you want is some hints.
+However, searching math formulas has been quite difficult in common search engines, if not entirely impossible. 
 And spending a lot of time on it without any progress is absolutely a desperate
-experience. It would be very helpful if you can search for similar or identical
-questions that have been answered on the Q&A websites.
+experience. It would be very helpful if we can search for formulas, using formula "keywords".
+This will help to identify questions that have been answered on Q&A websites but could not be searched using traditional
+search engine.
 
 ## Online demo
 Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB demo.
