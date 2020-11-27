@@ -11,8 +11,8 @@ Of course, you do not simply want an answer, all you want is some hints.
 However, searching math formulas has been quite difficult in common search engines, if not entirely impossible. 
 And spending a lot of time on it without any progress is absolutely a desperate
 experience. It would be very helpful if we can search for formulas, using formula "keywords".
-This will help to identify questions that have been answered on Q&A websites but could not be searched using traditional
-search engine.
+This will help to identify questions that have been answered on Q&A websites but could not be effectively found using traditional
+search engines.
 
 ## Online demo
 Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB demo.
