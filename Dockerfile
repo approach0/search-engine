@@ -28,7 +28,7 @@ FROM debian:buster
 RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update
 # necessary binaries and dynamic libraries
-RUN apt-get install -y --no-install-recommends build-essential flex bison python3
+RUN apt-get install -y --no-install-recommends build-essential flex bison python3 python3-pip
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 
 COPY --from=builder /code/a0/indices-v3/run/doc-lookup.out /usr/bin/doc-lookup.out
