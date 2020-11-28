@@ -28,10 +28,9 @@ FROM debian:buster
 RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update
 # necessary binaries and dynamic libraries
-RUN apt-get install -y --no-install-recommends build-essential flex bison python3 rsync
+RUN apt-get install -y --no-install-recommends build-essential flex bison python3
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 
-COPY --from=builder /code/a0/demo /demo
 COPY --from=builder /code/a0/indices-v3/run/doc-lookup.out /usr/bin/doc-lookup.out
 COPY --from=builder /code/a0/indexerd/run/indexerd.out /usr/bin/indexer.out
 COPY --from=builder /code/a0/searchd/run/searchd.out /usr/bin/searchd.out
@@ -40,11 +39,7 @@ COPY --from=builder /code/a0/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-crea
 COPY --from=builder /code/a0/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
 COPY --from=builder /code/a0/indexerd/scripts/json-feeder.py /usr/bin/json-feeder.py
 COPY --from=builder /code/a0/searchd/scripts/test-query.sh  /usr/bin/test-query.sh
-COPY --from=builder /code/a0/searchd/tests/query-valid.json /demo/test-query.json
-
-### for crawlers
-RUN apt-get install -y --no-install-recommends python3-pip python3-dev python3-setuptools libcurl4-openssl-dev libssl-dev
-RUN cd /demo/crawler && pip3 install wheel && pip3 install -r requirements.txt
+COPY --from=builder /code/a0/searchd/tests/query-valid.json /tmp/test-query.json
 
 ### for searchd / indexer
 RUN apt-get install -y --no-install-recommends reiserfsprogs curl
