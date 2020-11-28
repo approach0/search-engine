@@ -27,8 +27,8 @@ RUN export TERM=xterm-256color; make clean && make
 FROM debian:buster
 RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update
-# necessary binaries and dynamic libraries
-RUN apt-get install -y --no-install-recommends build-essential flex bison python3 python3-pip
+# necessary binaries and dynamic libraries (IMPORTANT: rsync is used to fetch index image from indexer_syncd)
+RUN apt-get install -y --no-install-recommends build-essential flex bison python3 python3-pip rsync
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 
 COPY --from=builder /code/a0/indices-v3/run/doc-lookup.out /usr/bin/doc-lookup.out
