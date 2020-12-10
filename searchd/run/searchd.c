@@ -199,19 +199,6 @@ reply:
 	return ret;
 }
 
-/*
- * Slave nodes
- */
-static void signal_handler(int sig)
-{
-	/* slave USR1 signal handler */
-	switch (sig) {
-		case SIGUSR1:
-			/* nothing here */
-			break;
-	}
-}
-
 static void slave_run(struct searchd_args *args)
 {
 	char *recv_buf = malloc(CLUSTER_MAX_QRY_BUF_SZ);
@@ -396,7 +383,7 @@ int main(int argc, char *argv[])
 		signal_slaves_to_die();
 	} else {
 		/* slave node */
-		signal(SIGUSR1, signal_handler);
+		signal(SIGUSR1, SIG_IGN);
 		slave_run(&searchd_args);
 	}
 

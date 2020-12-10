@@ -13,6 +13,7 @@ struct http_cb_arg {
 
 static void signal_handler(int sig)
 {
+	fprintf(stderr, "Caught signal: %u\n", sig);
 	switch (sig) {
 		case SIGUSR1:
 		case SIGTERM:
@@ -20,6 +21,10 @@ static void signal_handler(int sig)
 		case SIGQUIT:
 		case SIGINT:
 			event_loopbreak();
+			break;
+
+		default:
+			/* ignore anything else */
 			break;
 	}
 }
@@ -100,6 +105,7 @@ int httpd_run(unsigned short port,
 	struct http_cb_arg *copy_args;
 
 	/* initialization */
+	signal(SIGPIPE, signal_handler); /* Broken Pipe */
 	signal(SIGINT, signal_handler);  /* Ctrl-C   */
 	signal(SIGTERM, signal_handler); /* MPI quit */
 	signal(SIGUSR1, signal_handler); /* MPI-safe signal */
