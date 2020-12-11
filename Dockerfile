@@ -1,5 +1,7 @@
 ## build environment
 FROM debian:buster AS builder
+RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN sed -i s@/security.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update
 RUN mkdir -p /code
 
@@ -26,6 +28,7 @@ RUN export TERM=xterm-256color; make clean && make
 ## Now second-stage build for production
 FROM debian:buster
 RUN sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN sed -i s@/security.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update
 # necessary binaries and dynamic libraries (IMPORTANT: rsync is used to fetch index image from indexer_syncd)
 RUN apt-get install -y --no-install-recommends build-essential flex bison python3 python3-pip rsync
@@ -43,7 +46,7 @@ COPY --from=builder /code/a0/searchd/tests/query-valid.json /tmp/test-query.json
 
 ### for searchd / indexer
 RUN apt-get install -y --no-install-recommends reiserfsprogs curl
-RUN pip3 install requests # for json-feeder
+RUN pip3 install -i http://pypi.douban.com/simple/ --trusted-host=pypi.douban.com/simple requests # for json-feeder
 
 ## Enable sshd and config ssh client
 RUN apt-get install -y --no-install-recommends openssh-server
