@@ -3,6 +3,7 @@
 #include <float.h>
 #include "parson/parson.h"
 #include "search-v3/txt2snippet.h"
+#include "search-v3/query.h"
 
 #include "config.h"
 #include "json-utils.h"
@@ -23,9 +24,9 @@ enum parse_json_kw_res {
 
 /* parse a JSON object into query_keyword, and push into query */
 static enum parse_json_kw_res
-parse_json_kw_ele(JSON_Object *obj, struct query *qry)
+parse_json_kw_ele(size_t i, JSON_Object *obj, struct query *qry)
 {
-	struct query_keyword kw;
+	struct query_keyword kw = QUERY_NEW;
 	const char *type, *str;
 
 	/* parsing keyword type */
@@ -49,6 +50,7 @@ parse_json_kw_ele(JSON_Object *obj, struct query *qry)
 		return PARSE_JSON_KW_ABSENT_KEY;
 
 	str = json_object_get_string(obj, "str");
+	// printf("kw[%ld]: %s\n", i, str);
 
 	if (kw.type == QUERY_KW_TERM) {
 		/* term */
@@ -112,7 +114,7 @@ int parse_json_qry(const char* req, struct query *qry)
 		parson_arr_obj = json_array_get_object(parson_arr, i);
 
 		/* parse this array element */
-		res = parse_json_kw_ele(parson_arr_obj, qry);
+		res = parse_json_kw_ele(i, parson_arr_obj, qry);
 
 		if (PARSE_JSON_KW_SUCC != res) {
 			fprintf(stderr, "keywords JSON array "

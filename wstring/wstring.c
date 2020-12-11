@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
@@ -22,26 +23,45 @@ size_t mbstr_chars(const char *mbstr)
 
 wchar_t *mbstr2wstr(const char *multibyte_string)
 {
-	static wchar_t retstr[MAX_WSTR_CONV_BUF_LEN];
+	static wchar_t retstr[MAX_WSTR_CONV_BUF_LEN + 1] = L"";
 
 	/* mbstowcs() will convert a string from the 
 	 * current locale's multibyte encoding into a 
 	 * wide character string. Wide character strings 
 	 * are not necessarily unicode, but on Linux they 
 	 * are.
+	 *
+	 * Use `locale -a' to check available locales on your system.
 	 */
-	setlocale(LC_ALL, "en_US.UTF-8");
-	mbstowcs(retstr, multibyte_string, MAX_WSTR_CONV_BUF_LEN);
+	if (setlocale(LC_ALL, "C.UTF-8") == NULL) {
+		fprintf(stderr, "No support for POSIX standards-compliant UTF-8 locale!!\n");
+		return retstr;
+	}
+
+	/* at most MAX_WSTR_CONV_BUF_LEN wide characters are written to retstr (not including the L'\0') */
+	size_t n_chars = mbstowcs(retstr, multibyte_string, MAX_WSTR_CONV_BUF_LEN);
+	if (n_chars == -1)
+		return retstr;
+
+	retstr[n_chars] = L'\0';
 	return retstr;
 }
 
 char *wstr2mbstr(const wchar_t *wide_string)
 {
-	static char retstr[MAX_STR_CONV_BUF_LEN];
+	static char retstr[MAX_STR_CONV_BUF_LEN + 1] = "";
 
-	setlocale(LC_ALL, "en_US.UTF-8");
-	wcstombs(retstr, wide_string, MAX_STR_CONV_BUF_LEN);
+	if (setlocale(LC_ALL, "C.UTF-8") == NULL) {
+		fprintf(stderr, "No support for POSIX standards-compliant UTF-8 locale!!\n");
+		return retstr;
+	}
 
+	/* at most MAX_STR_CONV_BUF_LEN bytes are written to retstr (not including the '\0') */
+	size_t n_chars = wcstombs(retstr, wide_string, MAX_STR_CONV_BUF_LEN);
+	if (n_chars == -1)
+		return retstr;
+
+	retstr[n_chars] = '\0';
 	return retstr;
 }
 
