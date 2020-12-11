@@ -46,7 +46,7 @@ COPY --from=builder /code/a0/searchd/tests/query-valid.json /tmp/test-query.json
 
 ### for searchd / indexer
 RUN apt-get install -y --no-install-recommends reiserfsprogs curl
-RUN pip3 install -i http://pypi.douban.com/simple/ --trusted-host=pypi.douban.com/simple requests # for json-feeder
+RUN pip3 install -i http://pypi.douban.com/simple/ --trusted-host=pypi.douban.com requests # for json-feeder
 
 ## Enable sshd and config ssh client
 RUN apt-get install -y --no-install-recommends openssh-server
