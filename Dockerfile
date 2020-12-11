@@ -34,16 +34,6 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential flex bison python3 python3-pip rsync
 RUN apt-get install -y --no-install-recommends libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 
-COPY --from=builder /code/a0/indices-v3/run/doc-lookup.out /usr/bin/doc-lookup.out
-COPY --from=builder /code/a0/indexerd/run/indexerd.out /usr/bin/indexer.out
-COPY --from=builder /code/a0/searchd/run/searchd.out /usr/bin/searchd.out
-
-COPY --from=builder /code/a0/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-creat.sh
-COPY --from=builder /code/a0/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
-COPY --from=builder /code/a0/indexerd/scripts/json-feeder.py /usr/bin/json-feeder.py
-COPY --from=builder /code/a0/searchd/scripts/test-query.sh  /usr/bin/test-query.sh
-COPY --from=builder /code/a0/searchd/tests/query-valid.json /tmp/test-query.json
-
 ### for searchd / indexer
 RUN apt-get install -y --no-install-recommends reiserfsprogs curl
 RUN pip3 install -i http://pypi.douban.com/simple/ --trusted-host=pypi.douban.com requests # for json-feeder
@@ -58,3 +48,16 @@ RUN echo "ClientAliveInterval 30" | tee -a /etc/ssh/sshd_config
 RUN echo "ClientAliveCountMax 12" | tee -a /etc/ssh/sshd_config
 RUN echo "ServerAliveInterval 30" | tee -a /etc/ssh/ssh_config
 RUN echo "ServerAliveCountMax 12" | tee -a /etc/ssh/ssh_config
+
+## Copy binaries from first-stage build image
+COPY --from=builder /code/a0/indices-v3/run/doc-lookup.out /usr/bin/doc-lookup.out
+COPY --from=builder /code/a0/indexerd/run/indexerd.out /usr/bin/indexer.out
+COPY --from=builder /code/a0/searchd/run/searchd.out /usr/bin/searchd.out
+
+COPY --from=builder /code/a0/indexerd/scripts/vdisk-creat.sh /usr/bin/vdisk-creat.sh
+COPY --from=builder /code/a0/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-mount.sh
+COPY --from=builder /code/a0/indexerd/scripts/json-feeder.py /usr/bin/json-feeder.py
+COPY --from=builder /code/a0/searchd/scripts/test-query.sh  /usr/bin/test-query.sh
+COPY --from=builder /code/a0/searchd/tests/query-valid.json /tmp/test-query.json
+
+CMD doc-lookup.out -h
