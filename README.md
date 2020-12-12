@@ -17,7 +17,7 @@ search engines.
 ## Online demo
 Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB demo.
 
-![](https://github.com/approach0/search-engine-docs-eng/raw/master/img/clip.gif)
+![](https://approach0.xyz/guide/_images/mix-query.gif)
 
 ## A little history
 In 2014, the idea of searching math formulas takes off as a graducate level course project (at University of Delaware).
