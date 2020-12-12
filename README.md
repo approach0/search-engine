@@ -1,7 +1,4 @@
-![](https://api.travis-ci.org/approach0/search-engine.svg)
-![](http://github-release-version.herokuapp.com/github/approach0/search-engine/release.png)
-
-![](https://raw.githubusercontent.com/approach0/search-engine-docs-eng/master/logo.png)
+![](https://github.com/approach0/guide/blob/master/content/static/logo.png?raw=true)
 
 Approach0 is a math-aware search engine.
 
