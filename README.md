@@ -2,15 +2,6 @@
 
 Approach0 is a math-aware search engine.
 
-Math search can be helpful in many cases. For example, assuming you are struggling with a tough math
-question in your homework, spending so much time on it without any clue.
-Of course, you do not simply want an answer, all you want is some hints.
-However, searching math formulas has been quite difficult in common search engines, if not entirely impossible. 
-And spending a lot of time on it without any progress is absolutely a desperate
-experience. It would be very helpful if we can search for formulas, using formula "keywords".
-This will help to identify questions that have been answered on Q&A websites but could not be effectively found using traditional
-search engines.
-
 ## Online demo
 Visit [https://approach0.xyz/search](https://approach0.xyz/demo)
 
