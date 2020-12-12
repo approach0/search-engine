@@ -15,9 +15,9 @@ This will help to identify questions that have been answered on Q&A websites but
 search engines.
 
 ## Online demo
-Please visit [https://approach0.xyz/demo](https://approach0.xyz/demo) for a WEB demo.
+Visit [https://approach0.xyz/search](https://approach0.xyz/demo)
 
-![](https://approach0.xyz/guide/_images/mix-query.gif)
+![](https://github.com/approach0/guide/blob/master/content/static/mix-query.gif?raw=true)
 
 ## A little history
 In 2014, the idea of searching math formulas takes off as a graducate level course project (at University of Delaware).
