@@ -10,10 +10,6 @@
 /* assigned pathID is in [1, 64] */
 #define MAX_SUBPATH_ID  64
 
-/* max number of subpaths (including gener paths) */
-#define MAX_SUBPATHS	128
-//#define MAX_SUBPATHS	256
-
 #define OPTR_TREE_NODE_COLOR_CSS_PREFIX "optr_color_"
 
 //#define TEX_PARSER_USE_LATEXML /* use LaTeXML as fallback parser */

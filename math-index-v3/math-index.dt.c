@@ -409,20 +409,20 @@ add_subpath_set(math_index_t index, linkli_t set,
 }
 
 size_t math_index_add(math_index_t index,
-	doc_id_t docID, exp_id_t expID, struct subpaths subpaths)
+	doc_id_t docID, exp_id_t expID, struct lr_paths lrpaths)
 {
 	if (index->mode[0] != 'w') {
 		prerr("math_index_add needs writing permission.\n");
 		return 0;
 	}
 
-	if (subpaths.n_lr_paths > MAX_MATH_PATHS) {
-		prerr("too many subpaths (%lu > %lu), abort.\n",
-			subpaths.n_lr_paths, MAX_MATH_PATHS);
+	if (lrpaths.n > MAX_MATH_PATHS) {
+		prerr("too many leaf-root paths (%lu > %lu), abort.\n",
+			lrpaths.n, MAX_MATH_PATHS);
 		return 0;
 	}
 
-	linkli_t set = subpath_set(subpaths, SUBPATH_SET_DOC);
+	linkli_t set = subpath_set(lrpaths, SUBPATH_SET_DOC);
 
 	/* for indexing, we do not accept wildcards */
 	remove_wildcards(&set);
@@ -433,7 +433,7 @@ size_t math_index_add(math_index_t index,
 #endif
 
 	size_t flush_sz =
-	add_subpath_set(index, set, docID, expID, subpaths.n_lr_paths);
+	add_subpath_set(index, set, docID, expID, lrpaths.n);
 
 	index->stats.n_tex ++;
 

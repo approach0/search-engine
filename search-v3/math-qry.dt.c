@@ -5,7 +5,7 @@
 #include "math-score.h" /* for IPF calculation */
 
 /*
- * functions to sort subpaths by bound variable size
+ * functions to sort paths by bound variable size
  */
 struct cnt_same_symbol_args {
 	uint32_t          cnt;
@@ -61,7 +61,7 @@ static LIST_IT_CALLBK(overwrite_pathID_to_bondvar_sz)
 	/* get iterator of this list */
 	this_list = list_get_it(pa_head->now);
 
-	/* go through this list to count subpaths with same symbol */
+	/* go through this list to count paths with same symbol */
 	cnt_arg.cnt = 0;
 	cnt_arg.symbol_id = sp->lf_symbol_id;
 	cnt_arg.path_type = sp->type;
@@ -106,7 +106,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	 * parse TeX
 	 */
 	struct tex_parse_ret parse_res;
-	parse_res = tex_parse(tex, 0, true /* keep OPT */, true /* query */);
+	parse_res = tex_parse(tex);
 	if (parse_res.code == PARSER_RETCODE_ERR ||
 	    parse_res.operator_tree == NULL) {
 		return 1;
@@ -136,35 +136,35 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	/*
 	 * prepare query path mnc structure
 	 */
-	struct subpaths subpaths = parse_res.subpaths;
+	struct lr_paths lrpaths = parse_res.lr_paths;
 	mnc_score_init(&mq->mnc);
-	list_foreach(&subpaths.li, &add_mnc_qry_path, mq);
+	list_foreach(&lrpaths.li, &add_mnc_qry_path, mq);
 	mnc_score_qry_path_sort(&mq->mnc);
 #ifdef DEBUG_PREPARE_MATH_QRY
 	mnc_score_print(&mq->mnc, 0);
 #endif
 
 	/*
-	 * save subpaths and sort them by bond variable size
+	 * save paths and sort them by bond variable size
 	 */
-	list_foreach(&subpaths.li, &overwrite_pathID_to_bondvar_sz, NULL);
+	list_foreach(&lrpaths.li, &overwrite_pathID_to_bondvar_sz, NULL);
 
 	struct list_sort_arg sort_arg = {&compare_qry_path, NULL};
-	list_sort(&subpaths.li, &sort_arg);
+	list_sort(&lrpaths.li, &sort_arg);
 
 	uint32_t new_path_id = 0;
-	list_foreach(&subpaths.li, &assign_pathID_by_order, &new_path_id);
+	list_foreach(&lrpaths.li, &assign_pathID_by_order, &new_path_id);
 
-	mq->subpaths = subpaths;
+	mq->lrpaths = lrpaths;
 
 #ifdef DEBUG_PREPARE_MATH_QRY
-	subpaths_print(&subpaths, stdout);
+	subpaths_print(&lrpaths, stdout);
 #endif
 
 	/*
 	 * save subpath set
 	 */
-	mq->subpath_set = subpath_set(subpaths, SUBPATH_SET_QUERY);
+	mq->subpath_set = subpath_set(lrpaths, SUBPATH_SET_QUERY);
 
 #ifdef DEBUG_PREPARE_MATH_QRY
 	print_subpath_set(mq->subpath_set);
@@ -220,8 +220,8 @@ void math_qry_release(struct math_qry *mq)
 	if (mq->optr)
 		optr_release((struct optr_node*)mq->optr);
 
-	if (mq->subpaths.n_lr_paths)
-		subpaths_release(&mq->subpaths);
+	if (mq->lrpaths.n)
+		lr_paths_release(&mq->lrpaths);
 
 	if (mq->subpath_set) {
 		li_free(mq->subpath_set, struct subpath_ele, ln, free(e));
@@ -245,8 +245,8 @@ void math_qry_print(struct math_qry* mq, int print_details)
 		printf("[operator tree]\n");
 		optr_print(mq->optr, stdout);
 
-		printf("[subpaths]\n");
-		subpaths_print(&mq->subpaths, stdout);
+		printf("[leaf-root paths]\n");
+		lr_paths_print(&mq->lrpaths, stdout);
 
 		printf("[subpath set]\n");
 		print_subpath_set(mq->subpath_set);

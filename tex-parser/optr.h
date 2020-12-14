@@ -34,7 +34,7 @@ uint32_t optr_assign_values(struct optr_node*);
 
 uint32_t optr_prune_nil_nodes(struct optr_node*);
 
-struct subpaths optr_subpaths(struct optr_node*, int);
+struct lr_paths optr_lrpaths(struct optr_node*);
 
 void optr_leafroot_path(struct optr_node*);
 
@@ -48,13 +48,10 @@ int optr_print_idpos_map(uint32_t*);
 
 int optr_print_visibi_map(uint32_t*);
 
-void insert_subpath_nodes(struct subpath*, struct optr_node*, enum token_id);
-
-struct subpath *create_subpath(struct optr_node*, bool);
-
 int is_single_node(struct optr_node*);
 
-fingerpri_t subpath_fingerprint(struct subpath*, uint32_t);
+fingerpri_t fingerprint(struct subpath*, uint32_t);
+
 char *optr_hash_str(symbol_id_t);
 
 #include "sds/sds.h"

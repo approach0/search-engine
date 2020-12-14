@@ -3,14 +3,14 @@
 
 void test(const char *tex)
 {
-	struct tex_parse_ret ret = tex_parse(tex, 0, true, false);
+	struct tex_parse_ret ret = tex_parse(tex);
 	printf("testing `%s'\n", tex);
 
 	if (ret.code != PARSER_RETCODE_ERR) {
 		optr_print(ret.operator_tree, stdout);
 		optr_release(ret.operator_tree);
-		subpaths_print(&ret.subpaths, stdout);
-		subpaths_release(&ret.subpaths);
+		lr_paths_print(&ret.lr_paths, stdout);
+		lr_paths_release(&ret.lr_paths);
 	}
 
 	mhook_print_unfree();

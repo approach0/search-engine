@@ -9,7 +9,7 @@ struct math_qry {
 	void       *optr;
 	int         n_qnodes;
 
-	struct subpaths subpaths;
+	struct lr_paths lrpaths;
 
 	linkli_t    subpath_set;
 	merge_set_t merge_set;

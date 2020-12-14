@@ -60,7 +60,7 @@ int main()
 #ifdef SUPPORT_MATH_WILDCARDS
 #error("math wildcards not supported yet.")
 #else
-		parse_ret = tex_parse(test[i], 0, true, true);
+		parse_ret = tex_parse(test[i]);
 #endif
 
 		if (parse_ret.code != PARSER_RETCODE_ERR) {
@@ -68,14 +68,14 @@ int main()
 			optr_print(parse_ret.operator_tree, stdout);
 			optr_release(parse_ret.operator_tree);
 
-			/* print subpaths */
-			subpaths_print(&parse_ret.subpaths, stdout);
+			/* print leaf-root paths */
+			lr_paths_print(&parse_ret.lr_paths, stdout);
 
 			/* index the tex */
 			size_t flush_sz =
-			math_index_add(index, docID, expID, parse_ret.subpaths);
+			math_index_add(index, docID, expID, parse_ret.lr_paths);
 			prinfo("flush %lu byte(s)\n", flush_sz);
-			subpaths_release(&parse_ret.subpaths);
+			lr_paths_release(&parse_ret.lr_paths);
 			expID ++;
 		} else {
 			printf("parser error: %s\n", parse_ret.msg);

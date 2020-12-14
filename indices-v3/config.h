@@ -14,3 +14,5 @@
   #define INDICES_TXT_LEXER lex_eng_file
 
 #define INDICES_MAX_TEXT_TERM_LEN 21
+
+#define INDICES_SUBEXP_PRUNING_FACTOR 0.2

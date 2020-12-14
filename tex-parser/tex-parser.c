@@ -38,7 +38,7 @@ static char *mk_scan_buf(const char *str, size_t *out_sz)
 }
 
 struct tex_parse_ret
-tex_parse(const char *tex_str, size_t len, bool keep_optr, bool lr_path)
+tex_parse(const char *tex_str)
 {
 	struct tex_parse_ret ret;
 #ifndef TEX_PARSER_ALWAYS_LATEXML
@@ -100,22 +100,16 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr, bool lr_path)
 			}
 
 			max_path_id = optr_assign_values(grammar_optr_root);
-
-			/*
-			 * Inside optr_subpaths(), it uses a bitmap data
-			 * structure, we need to make sure path_id is in
-			 * a legal range.
-			 */
-			ret.subpaths = optr_subpaths(grammar_optr_root, lr_path);
+			ret.lr_paths = optr_lrpaths(grammar_optr_root);
 
 #if 0       /* print */
 			printf("tex: `%s', max_path_id: %u.\n", tex_str, max_path_id);
 			optr_print(grammar_optr_root, stdout);
-			subpaths_print(&ret.subpaths, stdout);
+			lr_paths_print(&ret.lr_paths, stdout);
 #endif
 			if (max_path_id > MAX_SUBPATH_ID) {
 				ret.code = PARSER_RETCODE_WARN;
-				sprintf(ret.msg, "too many subpaths (%u/%u).",
+				sprintf(ret.msg, "too many paths (%u/%u).",
 				        max_path_id, MAX_SUBPATH_ID);
 			} else if (lexer_warning_flag) {
 				ret.code = PARSER_RETCODE_WARN;
@@ -126,19 +120,12 @@ tex_parse(const char *tex_str, size_t len, bool keep_optr, bool lr_path)
 					max_path_id);
 			}
 
-			if (!keep_optr)
-				optr_release(grammar_optr_root);
 		} else {
 			ret.code = PARSER_RETCODE_ERR;
 			strcpy(ret.msg, "operator tree not generated.");
 		}
 	}
 
-	/* return operator tree or not, depends on `keep_optr' */
-	if (keep_optr)
-		ret.operator_tree = grammar_optr_root;
-	else
-		ret.operator_tree = NULL;
-
+	ret.operator_tree = grammar_optr_root;
 	return ret;
 }

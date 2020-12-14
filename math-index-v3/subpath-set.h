@@ -33,6 +33,6 @@ enum subpath_set_opt {
 	SUBPATH_SET_QUERY
 };
 
-linkli_t subpath_set(struct subpaths, enum subpath_set_opt);
+linkli_t subpath_set(struct lr_paths, enum subpath_set_opt);
 
 void print_subpath_set(linkli_t);

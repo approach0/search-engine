@@ -239,7 +239,7 @@ static int interesting_token(enum token_id tokid)
 	return 1;
 }
 
-linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
+linkli_t subpath_set(struct lr_paths lrpaths, enum subpath_set_opt opt)
 {
 	linkli_t set = NULL;
 	struct add_subpath_args args = {&set, 0, 0, 0};
@@ -247,7 +247,7 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 	/* group by prefix path tokens */
 	for (args.prefix_len = 2;; args.prefix_len ++) {
 		args.added = 0;
-		list_foreach(&subpaths.li, &add_into_set, &args);
+		list_foreach(&lrpaths.li, &add_into_set, &args);
 #ifdef DEBUG_SUBPATH_SET
 		printf("%d paths added at prefix length = %u... \n",
 			args.added, args.prefix_len);
@@ -292,12 +292,12 @@ linkli_t subpath_set(struct subpaths subpaths, enum subpath_set_opt opt)
 	struct u16_ht ht_hash = u16_ht_new(5);
 	foreach (iter, li, set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
-		/* group all the root IDs in subpaths of this element */
+		/* group all the root IDs in leaf-root paths of this element */
 		for (int i = 0; i <= ele->dup_cnt; i++) {
 			struct subpath *sp = ele->dup[i];
 			uint32_t rootID = ele->rid[i];
 			/* combine path ophash into sector tree ophash */
-			uint16_t ophash = subpath_fingerprint(sp, ele->prefix_len);
+			uint16_t ophash = fingerprint(sp, ele->prefix_len);
 			int prev_ophash = u16_ht_lookup(&ht_hash, rootID);
 			if (-1 == prev_ophash || ophash != prev_ophash)
 				u16_ht_incr(&ht_hash, rootID, ophash);

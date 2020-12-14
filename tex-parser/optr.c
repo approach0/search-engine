@@ -43,7 +43,7 @@ struct optr_node* optr_copy(struct optr_node *m)
 	return n;
 }
 
-static __inline__ void update(struct optr_node *c, struct optr_node *f)
+static __inline__ void attach_update(struct optr_node *c, struct optr_node *f)
 {
 	f->sons++;
 	c->rank = f->sons;
@@ -63,7 +63,7 @@ static LIST_IT_CALLBK(pass_children_to_father)
 	res = tree_detach(&child->tnd, pa_now, pa_fwd);
 
 	tree_attach(&child->tnd, &gf->tnd, pa_now, pa_fwd);
-	update(child, gf);
+	attach_update(child, gf);
 
 	return res;
 }
@@ -93,7 +93,7 @@ struct optr_node* optr_attach(struct optr_node *c /* child */,
 	}
 
 	tree_attach(&c->tnd, &f->tnd, NULL, NULL);
-	update(c, f);
+	attach_update(c, f);
 
 	return f;
 }
@@ -350,6 +350,10 @@ static TREE_IT_CALLBK(purne_nil_node)
 	if (p->tnd.sons.now == NULL /* is leaf */ &&
 	    p->tnd.father != NULL /* can be pruned */ &&
 	    p->token_id == T_NIL) {
+		/* decrement father sons counter */
+		struct optr_node *f;
+		f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
+		f->sons -= 1;
 
 		/* prune this NIL node */
 		res = tree_detach(&p->tnd, pa_now, pa_fwd);
@@ -377,30 +381,23 @@ int is_single_node(struct optr_node *p)
 	       p->tnd.father == NULL /* is root */);
 }
 
-struct subpath *create_subpath(struct optr_node *p, bool leaf)
+static struct subpath *create_lrpath(struct optr_node *p)
 {
-	struct subpath *subpath = malloc(sizeof(struct subpath));
+	struct subpath *lrpath = malloc(sizeof(struct subpath));
 
-	subpath->path_id = p->path_id;
-	subpath->leaf_id = p->node_id;
-	LIST_CONS(subpath->path_nodes);
+	lrpath->path_id = p->path_id;
+	lrpath->leaf_id = p->node_id;
+	LIST_CONS(lrpath->path_nodes);
 
 	/* a subpath is pseudo if it is created from expanding of
 	 * another subpath, or if it is a wildcard path. */
-	if (leaf) {
-		subpath->type = (p->wildcard) ? \
-		     SUBPATH_TYPE_WILDCARD : SUBPATH_TYPE_NORMAL;
-		subpath->pseudo = (p->wildcard) ? true : false;
-		subpath->lf_symbol_id = p->symbol_id;
-	} else {
-		subpath->type = SUBPATH_TYPE_GENERNODE;
-		subpath->pseudo = false;
-		subpath->subtree_hash = p->subtr_hash;
-	}
+	lrpath->type = (p->wildcard) ? \
+		 SUBPATH_TYPE_WILDCARD : SUBPATH_TYPE_NORMAL;
+	lrpath->pseudo = (p->wildcard) ? true : false;
+	lrpath->lf_symbol_id = p->symbol_id;
 
-	LIST_NODE_CONS(subpath->ln);
-
-	return subpath;
+	LIST_NODE_CONS(lrpath->ln);
+	return lrpath;
 }
 
 static struct subpath_node *create_subpath_node(
@@ -455,24 +452,22 @@ halt:
 	}
 }
 
-fingerpri_t subpath_fingerprint(struct subpath *sp, uint32_t prefix_len)
+fingerpri_t fingerprint(struct subpath *sp, uint32_t prefix_len)
 {
 	struct _gen_fingerprint_arg arg = {0, 0, prefix_len};
 	list_foreach(&sp->path_nodes, &_gen_fingerprint, &arg);
 	return arg.fp;
 }
 
-struct _gen_subpaths_arg {
-	struct subpaths *sp;
+struct _gen_lrpaths_arg {
+	struct lr_paths *sp;
 	uint32_t n_lr_paths_limit; /* limit of generated leaf-root paths */
-	uint32_t n_subpaths_limit; /* limit number of generated subpaths */
-	int lr_only; /* if only generate leaf-root paths */
 };
 
 /* Assign node-to-root path (from node p) to subpath path_nodes,
  * assign first node token, and create rank node if needed. */
-void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p,
-                          enum token_id first_tok)
+static void
+insert_lrpath_nodes(struct subpath *subpath, struct optr_node *p, enum token_id first_tok)
 {
 	struct subpath_node *nd;
 	struct optr_node *f;
@@ -514,40 +509,32 @@ void insert_subpath_nodes(struct subpath *subpath, struct optr_node *p,
 	subpath->n_nodes = cnt;
 }
 
-static TREE_IT_CALLBK(gen_subpaths)
+static TREE_IT_CALLBK(gen_lrpaths)
 {
-	P_CAST(arg, struct _gen_subpaths_arg, pa_extra);
+	P_CAST(arg, struct _gen_lrpaths_arg, pa_extra);
 	TREE_OBJ(struct optr_node, p, tnd);
 	struct subpath   *subpath;
-	struct optr_node *f;
 
 	/* is this a leaf node? */
 	int is_leaf = (p->tnd.sons.now == NULL);
 
-	/* stop generating paths on max number of leaf-root paths or all paths */
-	if (is_leaf && arg->sp->n_lr_paths >= arg->n_lr_paths_limit)
+	/* stop generating paths on max number of leaf-root paths */
+	if (is_leaf && arg->sp->n >= arg->n_lr_paths_limit)
 		return LIST_RET_BREAK;
-	else if (arg->sp->n_subpaths >= arg->n_subpaths_limit)
-		return LIST_RET_BREAK;
-
-	/* current father */
-	f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 
 	/* create subpath from each leaf or gener node bottom up to root. */
-	if (is_leaf || (!arg->lr_only && f != NULL &&
-	    meaningful_gener(p->token_id))) {
-
+	if (is_leaf) {
 		/* start to create and generate a subpath */
-		subpath = create_subpath(p, is_leaf);
+		subpath = create_lrpath(p);
 		/* generate nodes of this subpath */
-		insert_subpath_nodes(subpath, p, p->token_id);
+		insert_lrpath_nodes(subpath, p, p->token_id);
 		/* generate fingerprint of this subpath */
-		subpath->fingerprint = subpath_fingerprint(subpath, UINT32_MAX);
+		subpath->fingerprint = fingerprint(subpath, UINT32_MAX);
 		/* insert this new subpath to subpath list */
 		list_insert_one_at_tail(&subpath->ln, &arg->sp->li,
 								NULL, NULL);
-		arg->sp->n_subpaths ++; /* count total subpaths generated. */
-		if (is_leaf) arg->sp->n_lr_paths ++; /* count leaf-root paths */
+		arg->sp->n ++; /* count total leaf-root paths generated. */
+		if (is_leaf) arg->sp->n ++; /* count leaf-root paths */
 	}
 
 	LIST_GO_OVER;
@@ -574,21 +561,18 @@ uint32_t optr_max_node_id(struct optr_node *optr)
 	return max_node_id;
 }
 
-struct subpaths optr_subpaths(struct optr_node* optr, int lr_only)
+struct lr_paths optr_lrpaths(struct optr_node* optr)
 {
-	struct subpaths subpaths;
-	struct _gen_subpaths_arg arg;
-	LIST_CONS(subpaths.li);
-	subpaths.n_lr_paths = 0;
-	subpaths.n_subpaths = 0;
+	struct lr_paths lrpaths;
+	struct _gen_lrpaths_arg arg;
+	LIST_CONS(lrpaths.li);
+	lrpaths.n = 0;
 
-	arg.sp = &subpaths;
+	arg.sp = &lrpaths;
 	arg.n_lr_paths_limit = MAX_SUBPATH_ID;
-	arg.n_subpaths_limit = MAX_SUBPATHS;
-	arg.lr_only = lr_only;
-	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_subpaths,
+	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_lrpaths,
 	             0 /* including root */, &arg);
-	return subpaths;
+	return lrpaths;
 }
 
 LIST_DEF_FREE_FUN(_subpath_nodes_release, struct subpath_node, ln,
@@ -601,13 +585,13 @@ void subpath_free(struct subpath *subpath)
 	free(subpath);
 }
 
-LIST_DEF_FREE_FUN(_subpaths_release, struct subpath, ln,
+LIST_DEF_FREE_FUN(_lr_paths_release, struct subpath, ln,
 	subpath_free(p);
 );
 
-void subpaths_release(struct subpaths *subpaths)
+void lr_paths_release(struct lr_paths *lr_paths)
 {
-	_subpaths_release(&subpaths->li);
+	_lr_paths_release(&lr_paths->li);
 }
 
 static __inline__ char *subpath_type_str(enum subpath_type t)
@@ -667,9 +651,9 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 	LIST_GO_OVER;
 }
 
-void subpaths_print(struct subpaths *subpaths, FILE *fh)
+void lr_paths_print(struct lr_paths *lr_paths, FILE *fh)
 {
-	list_foreach(&subpaths->li, &print_subpath_list_item, fh);
+	list_foreach(&lr_paths->li, &print_subpath_list_item, fh);
 }
 
 static TREE_IT_CALLBK(gen_idpos_map)

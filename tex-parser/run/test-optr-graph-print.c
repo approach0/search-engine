@@ -28,7 +28,7 @@ int main()
 		/* Add to the history. */
 		linenoiseHistoryAdd(line);
 
-		ret = tex_parse(line, 0, true, false);
+		ret = tex_parse(line);
 
 		if (ret.code != PARSER_RETCODE_ERR) {
 			if (ret.operator_tree) {
@@ -51,7 +51,7 @@ int main()
 				optr_release((struct optr_node*)ret.operator_tree);
 			}
 
-			subpaths_release(&ret.subpaths);
+			lr_paths_release(&ret.lr_paths);
 		} else {
 			printf("error message:%s\n", ret.msg);
 		}

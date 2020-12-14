@@ -17,6 +17,9 @@
 #include "skippy/ondisk-skippy.h"
 #define MATH_INDEX_BLK_LEN ON_DISK_SKIPPY_SKIPPY_SPANS
 
+/* max number of subpaths (including gener paths) */
+#define MAX_SUBPATHS 128
+
 // #define DEBUG_SUBPATH_SET
 
 // #define MATH_INDEX_SECTTR_PRINT

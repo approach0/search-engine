@@ -256,7 +256,7 @@ index_tex(math_index_t mi, char *tex, doc_id_t docID, uint32_t expID)
 #ifdef SUPPORT_MATH_WILDCARDS
 	#error("math wildcards not supported yet.")
 #else
-	ret = tex_parse(tex, 0, true, true);
+	ret = tex_parse(tex);
 #endif
 
 	if (ret.code != PARSER_RETCODE_ERR) {
@@ -267,8 +267,8 @@ index_tex(math_index_t mi, char *tex, doc_id_t docID, uint32_t expID)
 			optr_release((struct optr_node*)ret.operator_tree);
 		}
 		/* add TeX into inverted index */
-		math_index_add(mi, docID, expID, ret.subpaths);
-		subpaths_release(&ret.subpaths);
+		math_index_add(mi, docID, expID, ret.lr_paths);
+		lr_paths_release(&ret.lr_paths);
 	}
 
 	return ret;

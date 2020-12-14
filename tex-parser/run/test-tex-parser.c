@@ -22,7 +22,7 @@ int main()
 		/* Add to the history. */
 		linenoiseHistoryAdd(line);
 
-		ret = tex_parse(line, 0, true, false);
+		ret = tex_parse(line);
 
 		printf("return string: %s\n", ret.msg);
 		printf("return code: %d\n", ret.code);
@@ -35,11 +35,9 @@ int main()
 			}
 			printf("\n");
 
-			printf("Suffix paths (leaf-root paths/total = %u/%u):\n",
-				   ret.subpaths.n_lr_paths, ret.subpaths.n_subpaths);
-			subpaths_print(&ret.subpaths, stdout);
-
-			subpaths_release(&ret.subpaths);
+			printf("%u leaf-root paths\n", ret.lr_paths.n);
+			lr_paths_print(&ret.lr_paths, stdout);
+			lr_paths_release(&ret.lr_paths);
 		} else {
 			printf("error message:%s\n", ret.msg);
 		}
