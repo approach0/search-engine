@@ -459,11 +459,6 @@ fingerpri_t fingerprint(struct subpath *sp, uint32_t prefix_len)
 	return arg.fp;
 }
 
-struct _gen_lrpaths_arg {
-	struct lr_paths *sp;
-	uint32_t n_lr_paths_limit; /* limit of generated leaf-root paths */
-};
-
 /* Assign node-to-root path (from node p) to subpath path_nodes,
  * assign first node token, and create rank node if needed. */
 static void
@@ -511,7 +506,7 @@ insert_lrpath_nodes(struct subpath *subpath, struct optr_node *p, enum token_id 
 
 static TREE_IT_CALLBK(gen_lrpaths)
 {
-	P_CAST(arg, struct _gen_lrpaths_arg, pa_extra);
+	P_CAST(sp, struct lr_paths, pa_extra);
 	TREE_OBJ(struct optr_node, p, tnd);
 	struct subpath   *subpath;
 
@@ -519,7 +514,7 @@ static TREE_IT_CALLBK(gen_lrpaths)
 	int is_leaf = (p->tnd.sons.now == NULL);
 
 	/* stop generating paths on max number of leaf-root paths */
-	if (is_leaf && arg->sp->n >= arg->n_lr_paths_limit)
+	if (is_leaf && sp->n >= MAX_SUBPATH_ID)
 		return LIST_RET_BREAK;
 
 	/* create subpath from each leaf or gener node bottom up to root. */
@@ -531,10 +526,10 @@ static TREE_IT_CALLBK(gen_lrpaths)
 		/* generate fingerprint of this subpath */
 		subpath->fingerprint = fingerprint(subpath, UINT32_MAX);
 		/* insert this new subpath to subpath list */
-		list_insert_one_at_tail(&subpath->ln, &arg->sp->li,
+		list_insert_one_at_tail(&subpath->ln, &sp->li,
 								NULL, NULL);
-		arg->sp->n ++; /* count total leaf-root paths generated. */
-		if (is_leaf) arg->sp->n ++; /* count leaf-root paths */
+		sp->n ++; /* count total leaf-root paths generated. */
+		if (is_leaf) sp->n ++; /* count leaf-root paths */
 	}
 
 	LIST_GO_OVER;
@@ -564,14 +559,10 @@ uint32_t optr_max_node_id(struct optr_node *optr)
 struct lr_paths optr_lrpaths(struct optr_node* optr)
 {
 	struct lr_paths lrpaths;
-	struct _gen_lrpaths_arg arg;
 	LIST_CONS(lrpaths.li);
 	lrpaths.n = 0;
-
-	arg.sp = &lrpaths;
-	arg.n_lr_paths_limit = MAX_SUBPATH_ID;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_lrpaths,
-	             0 /* including root */, &arg);
+	             0 /* including root */, &lrpaths);
 	return lrpaths;
 }
 
