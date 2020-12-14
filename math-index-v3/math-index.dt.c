@@ -428,7 +428,7 @@ size_t math_index_add(math_index_t index,
 	remove_wildcards(&set);
 
 #ifdef DEBUG_SUBPATH_SET
-	printf("subpath set (size=%d)\n", li_size(set));
+	printf("subpath set (size=%d) from %u leaf-root paths:\n", li_size(set), lrpaths.n);
 	print_subpath_set(set);
 #endif
 

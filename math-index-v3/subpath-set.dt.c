@@ -1,3 +1,4 @@
+#include <math.h>
 #include "hashtable/u16-ht.h"
 #include "tex-parser/head.h"
 
@@ -244,7 +245,7 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 	linkli_t set = NULL;
 	struct add_subpath_args args = {&set, 0, 0, 0};
 
-	/* group by prefix path tokens */
+	/* create a `set' grouped by prefix path tokens */
 	for (args.prefix_len = 2;; args.prefix_len ++) {
 		args.added = 0;
 		list_foreach(&lrpaths.li, &add_into_set, &args);
@@ -255,12 +256,17 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 		if (!args.added) break;
 	}
 
-	/* remove non-interesing paths */
+	/* remove non-interesing paths and statically prune small subpaths */
+	float min_width = MATH_INDEX_STATIC_PRUNING_FACTOR * (float)lrpaths.n;
+#ifdef DEBUG_SUBPATH_SET
+	printf("statically pruning those whose width <= %.2f ...\n", min_width);
+#endif
 	foreach (iter, li, set) {
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		struct subpath *sp = ele->dup[0];
 		struct subpath_node *root = prefix_path_root(sp, ele->prefix_len);
-		if (!interesting_token(root->token_id)) {
+		if (!interesting_token(root->token_id) ||
+		    root->sons <= min_width) {
 			li_iter_remove(iter, &set);
 			free(ele);
 			args.n_uniq--;
