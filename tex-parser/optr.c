@@ -154,7 +154,7 @@ static TREE_IT_CALLBK(print)
 	bool is_leaf;
 
 	if (pa_now->now == pa_head->last)
-	depth_flag[pa_depth] = depth_going_end;
+		depth_flag[pa_depth] = depth_going_end;
 	else if (pa_now->now == pa_head->now)
 		depth_flag[pa_depth] = depth_begin;
 
@@ -626,7 +626,7 @@ static TREE_IT_CALLBK(gen_idpos_map)
 	TREE_OBJ(struct optr_node, p, tnd);
 
 	if (p->tnd.sons.now == NULL /* is leaf */) {
-		if (p->path_id < MAX_SUBPATH_ID) {
+		if (p->path_id <= MAX_SUBPATH_ID) {
 			map[p->path_id - 1] |= (p->pos_begin << 16);
 			map[p->path_id - 1] |= (p->pos_end   << 0 );
 		}
