@@ -17,8 +17,8 @@ typedef void* term_index_t;
 #define MAX_DOC_ID UINT_MAX
 
 enum term_index_open_flag {
-	TERM_INDEX_OPEN_CREATE,
-	TERM_INDEX_OPEN_EXISTS
+	TERM_INDEX_OPEN_WR,
+	TERM_INDEX_OPEN_RD
 };
 
 void    *term_index_open(const char *, enum term_index_open_flag);

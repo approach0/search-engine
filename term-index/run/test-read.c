@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 		printf("open index: %s\n", index_path);
 	}
 
-	ti = term_index_open(index_path, TERM_INDEX_OPEN_EXISTS);
+	ti = term_index_open(index_path, TERM_INDEX_OPEN_RD);
 	if (ti == NULL) {
 		printf("index does not exists.\n");
 		goto exit;

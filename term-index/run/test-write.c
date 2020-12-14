@@ -7,7 +7,7 @@
 
 int main()
 {
-	void *ti = term_index_open("./tmp", TERM_INDEX_OPEN_CREATE);
+	void *ti = term_index_open("./tmp", TERM_INDEX_OPEN_WR);
 	doc_id_t doc_id;
 
 	if (NULL == ti) {

@@ -19,15 +19,15 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 	//ti->parameters.set("stemmer.name", "krovertz");
 	//cout<< "memory limit:" << ti->parameters.get("memory", "unset") <<endl;
 	
-	if (flag == TERM_INDEX_OPEN_CREATE) {
+	if (flag == TERM_INDEX_OPEN_WR) {
 		if (indri::collection::Repository::exists(path)) {
 			ti->repo.open(path, &ti->parameters);
 		} else {
 			ti->repo.create(path, &ti->parameters);
 		}
-	} else if (flag == TERM_INDEX_OPEN_EXISTS) {
+	} else if (flag == TERM_INDEX_OPEN_RD) {
 		if (indri::collection::Repository::exists(path)) {
-			ti->repo.open(path, &ti->parameters);
+			ti->repo.openRead(path, &ti->parameters);
 		} else {
 			return NULL;
 		}
