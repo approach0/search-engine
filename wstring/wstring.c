@@ -33,8 +33,8 @@ wchar_t *mbstr2wstr(const char *multibyte_string)
 	 *
 	 * Use `locale -a' to check available locales on your system.
 	 */
-	if (setlocale(LC_ALL, "C.UTF-8") == NULL) {
-		fprintf(stderr, "No support for POSIX standards-compliant UTF-8 locale!!\n");
+	if (setlocale(LC_ALL, "C.UTF-8") == NULL && setlocale(LC_ALL, "en_US.UTF-8") == NULL) {
+		fprintf(stderr, "setlocale() failed, no UTF-8 locale available!\n");
 		return retstr;
 	}
 
@@ -51,8 +51,8 @@ char *wstr2mbstr(const wchar_t *wide_string)
 {
 	static char retstr[MAX_STR_CONV_BUF_LEN + 1] = "";
 
-	if (setlocale(LC_ALL, "C.UTF-8") == NULL) {
-		fprintf(stderr, "No support for POSIX standards-compliant UTF-8 locale!!\n");
+	if (setlocale(LC_ALL, "C.UTF-8") == NULL && setlocale(LC_ALL, "en_US.UTF-8") == NULL) {
+		fprintf(stderr, "setlocale() failed, no UTF-8 locale available!\n");
 		return retstr;
 	}
 
