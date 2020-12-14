@@ -243,32 +243,6 @@ static LIST_IT_CALLBK(calpos_children)
 	LIST_GO_OVER;
 }
 
-static TREE_IT_CALLBK(leafroot_path)
-{
-	TREE_OBJ(struct optr_node, p, tnd);
-
-	if (p->tnd.sons.now == NULL /* is leaf */) {
-		struct optr_node *q = p;
-		while (q) {
-			printf("%u ", q->node_id);
-			q = MEMBER_2_STRUCT(q->tnd.father, struct optr_node, tnd);
-		}
-		q = p;
-		while (q) {
-			printf("%s ", trans_token(q->token_id));
-			q = MEMBER_2_STRUCT(q->tnd.father, struct optr_node, tnd);
-		}
-		printf("\n");
-	}
-	LIST_GO_OVER;
-}
-
-void optr_leafroot_path(struct optr_node* optr)
-{
-	tree_foreach(&optr->tnd, &tree_post_order_DFS, &leafroot_path,
-	             0 /* excluding root */, NULL);
-}
-
 static TREE_IT_CALLBK(assign_value)
 {
 	struct optr_node *q;

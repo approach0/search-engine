@@ -36,8 +36,6 @@ uint32_t optr_prune_nil_nodes(struct optr_node*);
 
 struct subpaths optr_lrpaths(struct optr_node*);
 
-void optr_leafroot_path(struct optr_node*);
-
 uint32_t optr_max_node_id(struct optr_node*);
 
 int optr_gen_idpos_map(uint32_t*, struct optr_node*);
@@ -45,8 +43,6 @@ int optr_gen_idpos_map(uint32_t*, struct optr_node*);
 int optr_gen_visibi_map(uint32_t*, struct optr_node*);
 
 int optr_print_idpos_map(uint32_t*);
-
-int optr_print_visibi_map(uint32_t*);
 
 int is_single_node(struct optr_node*);
 
