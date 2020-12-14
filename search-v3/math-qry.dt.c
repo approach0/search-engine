@@ -136,7 +136,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	/*
 	 * prepare query path mnc structure
 	 */
-	struct lr_paths lrpaths = parse_res.lr_paths;
+	struct subpaths lrpaths = parse_res.lrpaths;
 	mnc_score_init(&mq->mnc);
 	list_foreach(&lrpaths.li, &add_mnc_qry_path, mq);
 	mnc_score_qry_path_sort(&mq->mnc);
@@ -221,7 +221,7 @@ void math_qry_release(struct math_qry *mq)
 		optr_release((struct optr_node*)mq->optr);
 
 	if (mq->lrpaths.n)
-		lr_paths_release(&mq->lrpaths);
+		subpaths_release(&mq->lrpaths);
 
 	if (mq->subpath_set) {
 		li_free(mq->subpath_set, struct subpath_ele, ln, free(e));
@@ -246,7 +246,7 @@ void math_qry_print(struct math_qry* mq, int print_details)
 		optr_print(mq->optr, stdout);
 
 		printf("[leaf-root paths]\n");
-		lr_paths_print(&mq->lrpaths, stdout);
+		subpaths_print(&mq->lrpaths, stdout);
 
 		printf("[subpath set]\n");
 		print_subpath_set(mq->subpath_set);

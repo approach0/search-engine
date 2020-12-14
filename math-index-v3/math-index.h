@@ -57,7 +57,7 @@ struct math_invlist_entry_reader {
 struct math_invlist_entry_reader
 math_index_lookup(math_index_t, const char *);
 
-size_t math_index_add(math_index_t, uint32_t, exp_id_t, struct lr_paths);
+size_t math_index_add(math_index_t, uint32_t, exp_id_t, struct subpaths);
 
 /* utilities */
 int    mk_path_str(struct subpath*, int, char*);

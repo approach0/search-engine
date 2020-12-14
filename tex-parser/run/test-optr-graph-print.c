@@ -51,7 +51,7 @@ int main()
 				optr_release((struct optr_node*)ret.operator_tree);
 			}
 
-			lr_paths_release(&ret.lr_paths);
+			subpaths_release(&ret.lrpaths);
 		} else {
 			printf("error message:%s\n", ret.msg);
 		}

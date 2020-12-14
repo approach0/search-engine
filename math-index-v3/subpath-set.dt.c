@@ -239,7 +239,7 @@ static int interesting_token(enum token_id tokid)
 	return 1;
 }
 
-linkli_t subpath_set(struct lr_paths lrpaths, enum subpath_set_opt opt)
+linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 {
 	linkli_t set = NULL;
 	struct add_subpath_args args = {&set, 0, 0, 0};

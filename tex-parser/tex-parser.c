@@ -100,12 +100,12 @@ tex_parse(const char *tex_str)
 			}
 
 			max_path_id = optr_assign_values(grammar_optr_root);
-			ret.lr_paths = optr_lrpaths(grammar_optr_root);
+			ret.lrpaths = optr_lrpaths(grammar_optr_root);
 
 #if 0       /* print */
 			printf("tex: `%s', max_path_id: %u.\n", tex_str, max_path_id);
 			optr_print(grammar_optr_root, stdout);
-			lr_paths_print(&ret.lr_paths, stdout);
+			subpaths_print(&ret.lrpaths, stdout);
 #endif
 			if (max_path_id > MAX_SUBPATH_ID) {
 				ret.code = PARSER_RETCODE_WARN;

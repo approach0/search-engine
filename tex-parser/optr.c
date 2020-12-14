@@ -506,7 +506,7 @@ insert_lrpath_nodes(struct subpath *subpath, struct optr_node *p, enum token_id 
 
 static TREE_IT_CALLBK(gen_lrpaths)
 {
-	P_CAST(sp, struct lr_paths, pa_extra);
+	P_CAST(sp, struct subpaths, pa_extra);
 	TREE_OBJ(struct optr_node, p, tnd);
 	struct subpath   *subpath;
 
@@ -556,9 +556,9 @@ uint32_t optr_max_node_id(struct optr_node *optr)
 	return max_node_id;
 }
 
-struct lr_paths optr_lrpaths(struct optr_node* optr)
+struct subpaths optr_lrpaths(struct optr_node* optr)
 {
-	struct lr_paths lrpaths;
+	struct subpaths lrpaths;
 	LIST_CONS(lrpaths.li);
 	lrpaths.n = 0;
 	tree_foreach(&optr->tnd, &tree_post_order_DFS, &gen_lrpaths,
@@ -576,13 +576,13 @@ void subpath_free(struct subpath *subpath)
 	free(subpath);
 }
 
-LIST_DEF_FREE_FUN(_lr_paths_release, struct subpath, ln,
+LIST_DEF_FREE_FUN(_subpaths_release, struct subpath, ln,
 	subpath_free(p);
 );
 
-void lr_paths_release(struct lr_paths *lr_paths)
+void subpaths_release(struct subpaths *subpaths)
 {
-	_lr_paths_release(&lr_paths->li);
+	_subpaths_release(&subpaths->li);
 }
 
 static __inline__ char *subpath_type_str(enum subpath_type t)
@@ -642,9 +642,9 @@ static LIST_IT_CALLBK(print_subpath_list_item)
 	LIST_GO_OVER;
 }
 
-void lr_paths_print(struct lr_paths *lr_paths, FILE *fh)
+void subpaths_print(struct subpaths *subpaths, FILE *fh)
 {
-	list_foreach(&lr_paths->li, &print_subpath_list_item, fh);
+	list_foreach(&subpaths->li, &print_subpath_list_item, fh);
 }
 
 static TREE_IT_CALLBK(gen_idpos_map)

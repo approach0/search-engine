@@ -409,7 +409,7 @@ add_subpath_set(math_index_t index, linkli_t set,
 }
 
 size_t math_index_add(math_index_t index,
-	doc_id_t docID, exp_id_t expID, struct lr_paths lrpaths)
+	doc_id_t docID, exp_id_t expID, struct subpaths lrpaths)
 {
 	if (index->mode[0] != 'w') {
 		prerr("math_index_add needs writing permission.\n");

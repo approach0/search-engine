@@ -44,19 +44,19 @@ struct subpath {
 
 void subpath_free(struct subpath*);
 
-struct lr_paths {
+struct subpaths {
 	list      li;
 	uint32_t  n; /* number of leaf-root paths */
 };
 
+void subpaths_print(struct subpaths*, FILE*);
+void subpaths_release(struct subpaths*);
+
 struct tex_parse_ret {
 	uint32_t         code;
 	char             msg[MAX_PARSER_ERR_STR];
-	struct lr_paths  lr_paths;
+	struct subpaths  lrpaths;
 	void            *operator_tree;
 };
 
 struct tex_parse_ret tex_parse(const char *);
-
-void lr_paths_print(struct lr_paths*, FILE*);
-void lr_paths_release(struct lr_paths*);

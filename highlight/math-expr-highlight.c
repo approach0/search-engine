@@ -53,7 +53,7 @@ char *math_oprand_highlight(char* kw, uint64_t* mask, int k)
 	optr_release((struct optr_node*)ret.operator_tree);
 
 	/* no need to keep paths here */
-	lr_paths_release(&ret.lr_paths);
+	subpaths_release(&ret.lrpaths);
 
 	if (gen_map(idposmap, mask, k, begin_end_map, begin_color_map)) {
 		fprintf(stderr, "Error in gen_map() \n");
@@ -98,7 +98,7 @@ int math_tree_highlight(char *tex, uint32_t *map, int k, sds *o)
 		optr_graph_print(ret.operator_tree, colors, map, k, o);
 
 		optr_release(ret.operator_tree);
-		lr_paths_release(&ret.lr_paths);
+		subpaths_release(&ret.lrpaths);
 		return 0;
 	}
 

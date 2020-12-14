@@ -9,8 +9,8 @@ void test(const char *tex)
 	if (ret.code != PARSER_RETCODE_ERR) {
 		optr_print(ret.operator_tree, stdout);
 		optr_release(ret.operator_tree);
-		lr_paths_print(&ret.lr_paths, stdout);
-		lr_paths_release(&ret.lr_paths);
+		subpaths_print(&ret.lrpaths, stdout);
+		subpaths_release(&ret.lrpaths);
 	}
 
 	mhook_print_unfree();

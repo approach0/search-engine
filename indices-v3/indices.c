@@ -267,8 +267,8 @@ index_tex(math_index_t mi, char *tex, doc_id_t docID, uint32_t expID)
 			optr_release((struct optr_node*)ret.operator_tree);
 		}
 		/* add TeX into inverted index */
-		math_index_add(mi, docID, expID, ret.lr_paths);
-		lr_paths_release(&ret.lr_paths);
+		math_index_add(mi, docID, expID, ret.lrpaths);
+		subpaths_release(&ret.lrpaths);
 	}
 
 	return ret;

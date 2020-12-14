@@ -35,9 +35,9 @@ int main()
 			}
 			printf("\n");
 
-			printf("%u leaf-root paths\n", ret.lr_paths.n);
-			lr_paths_print(&ret.lr_paths, stdout);
-			lr_paths_release(&ret.lr_paths);
+			printf("%u leaf-root paths\n", ret.lrpaths.n);
+			subpaths_print(&ret.lrpaths, stdout);
+			subpaths_release(&ret.lrpaths);
 		} else {
 			printf("error message:%s\n", ret.msg);
 		}

@@ -69,13 +69,13 @@ int main()
 			optr_release(parse_ret.operator_tree);
 
 			/* print leaf-root paths */
-			lr_paths_print(&parse_ret.lr_paths, stdout);
+			subpaths_print(&parse_ret.lrpaths, stdout);
 
 			/* index the tex */
 			size_t flush_sz =
-			math_index_add(index, docID, expID, parse_ret.lr_paths);
+			math_index_add(index, docID, expID, parse_ret.lrpaths);
 			prinfo("flush %lu byte(s)\n", flush_sz);
-			lr_paths_release(&parse_ret.lr_paths);
+			subpaths_release(&parse_ret.lrpaths);
 			expID ++;
 		} else {
 			printf("parser error: %s\n", parse_ret.msg);
