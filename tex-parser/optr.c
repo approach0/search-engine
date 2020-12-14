@@ -355,7 +355,7 @@ int is_single_node(struct optr_node *p)
 	       p->tnd.father == NULL /* is root */);
 }
 
-static struct subpath *create_lrpath(struct optr_node *p)
+static struct subpath *new_subpath(struct optr_node *p)
 {
 	struct subpath *lrpath = malloc(sizeof(struct subpath));
 
@@ -493,13 +493,13 @@ static TREE_IT_CALLBK(gen_lrpaths)
 
 	/* create subpath from each leaf or gener node bottom up to root. */
 	if (is_leaf) {
-		/* start to create and generate a subpath */
-		subpath = create_lrpath(p);
-		/* generate nodes of this subpath */
+		/* construct a new subpath of this leaf */
+		subpath = new_subpath(p);
+		/* insert nodes from this leaf all alone to root */
 		insert_lrpath_nodes(subpath, p, p->token_id);
-		/* generate fingerprint of this subpath */
+		/* generate fingerprint for this path */
 		subpath->fingerprint = fingerprint(subpath, UINT32_MAX);
-		/* insert this new subpath to subpath list */
+		/* insert this new path to leaf-root path list */
 		list_insert_one_at_tail(&subpath->ln, &sp->li,
 								NULL, NULL);
 		sp->n ++; /* count total leaf-root paths generated. */

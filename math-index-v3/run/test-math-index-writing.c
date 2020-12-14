@@ -32,13 +32,14 @@ int main()
 
 	/* default test */
 	const char *test[] = {
-		"ab",             // expID = 0
-		"a+k(b+c)",       // expID = 1
-		"a+bc+xy",        // expID = 2
-		"a(b+cd)",        // expID = 3
-		"\\sqrt{pq + m}", // expID = 4
-		"pq + 1",         // expID = 5
-		"x + x + x +z + z + (a + a + b) c"
+//		"ab",             // expID = 0
+//		"a+k(b+c)",       // expID = 1
+//		"a+bc+xy",        // expID = 2
+//		"a(b+cd)",        // expID = 3
+//		"\\sqrt{pq + m}", // expID = 4
+//		"pq + 1",         // expID = 5
+//		"x + x + x +z + z + (a + a + b) c", // ...
+		"a + a + b/c + d ="
 	};
 
 	uint32_t docID = 1;
