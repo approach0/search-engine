@@ -503,7 +503,6 @@ static TREE_IT_CALLBK(gen_lrpaths)
 		list_insert_one_at_tail(&subpath->ln, &sp->li,
 								NULL, NULL);
 		sp->n ++; /* count total leaf-root paths generated. */
-		if (is_leaf) sp->n ++; /* count leaf-root paths */
 	}
 
 	LIST_GO_OVER;
