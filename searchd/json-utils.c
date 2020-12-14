@@ -28,6 +28,7 @@ parse_json_kw_ele(size_t i, JSON_Object *obj, struct query *qry)
 {
 	struct query_keyword kw = QUERY_NEW;
 	const char *type, *str;
+	char safe_str[MAX_QUERY_BYTES];
 
 	/* parsing keyword type */
 	if (!json_object_has_value_of_type(obj, "type", JSONString))
@@ -50,14 +51,16 @@ parse_json_kw_ele(size_t i, JSON_Object *obj, struct query *qry)
 		return PARSE_JSON_KW_ABSENT_KEY;
 
 	str = json_object_get_string(obj, "str");
-	// printf("kw[%ld]: %s\n", i, str);
+	strncpy(safe_str, str, MAX_QUERY_BYTES);
+	safe_str[MAX_QUERY_BYTES - 1] = '\0';
+	// printf("kw[%ld]: %s\n", i, safe_str);
 
 	if (kw.type == QUERY_KW_TERM) {
 		/* term */
-		query_digest_txt(qry, str);
+		query_digest_txt(qry, safe_str);
 	} else {
 		/* tex */
-		query_push_kw(qry, str, kw.type, kw.op);
+		query_push_kw(qry, safe_str, kw.type, kw.op);
 	}
 
 	return PARSE_JSON_KW_SUCC;
