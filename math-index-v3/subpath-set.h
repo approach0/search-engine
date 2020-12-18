@@ -29,8 +29,8 @@ struct subpath_ele {
 };
 
 enum subpath_set_opt {
-	SUBPATH_SET_DOC,
-	SUBPATH_SET_QUERY
+	SUBPATH_SET_FOR_INDEX,
+	SUBPATH_SET_FOR_QUERY
 };
 
 linkli_t subpath_set(struct subpaths, enum subpath_set_opt);

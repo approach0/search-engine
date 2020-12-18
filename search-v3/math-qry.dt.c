@@ -164,7 +164,7 @@ int math_qry_prepare(math_index_t mi, const char *tex, struct math_qry *mq)
 	/*
 	 * save subpath set
 	 */
-	mq->subpath_set = subpath_set(lrpaths, SUBPATH_SET_QUERY);
+	mq->subpath_set = subpath_set(lrpaths, SUBPATH_SET_FOR_QUERY);
 
 #ifdef DEBUG_PREPARE_MATH_QRY
 	print_subpath_set(mq->subpath_set);

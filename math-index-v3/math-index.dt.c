@@ -422,7 +422,7 @@ size_t math_index_add(math_index_t index,
 		return 0;
 	}
 
-	linkli_t set = subpath_set(lrpaths, SUBPATH_SET_DOC);
+	linkli_t set = subpath_set(lrpaths, SUBPATH_SET_FOR_INDEX);
 
 	/* for indexing, we do not accept wildcards */
 	remove_wildcards(&set);

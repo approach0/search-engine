@@ -265,8 +265,10 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
 		struct subpath *sp = ele->dup[0];
 		struct subpath_node *root = prefix_path_root(sp, ele->prefix_len);
-		if (!interesting_token(root->token_id) ||
-		    root->sons <= min_width) {
+		if (
+			!interesting_token(root->token_id) ||
+			(opt == SUBPATH_SET_FOR_INDEX && root->sons <= min_width)
+		) {
 			li_iter_remove(iter, &set);
 			free(ele);
 			args.n_uniq--;
