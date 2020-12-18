@@ -6,8 +6,8 @@
 int main()
 {
 	char test_tex[] = "abcdefabcd\\qvar{x} + \\mathfrak{Y}";
-	enum subpath_set_opt opt = SUBPATH_SET_FOR_INDEX;
-	//enum subpath_set_opt opt = SUBPATH_SET_FOR_QUERY;
+	//enum subpath_set_opt opt = SUBPATH_SET_FOR_INDEX;
+	enum subpath_set_opt opt = SUBPATH_SET_FOR_QUERY;
 
 	struct tex_parse_ret parse_ret = tex_parse(test_tex);
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
@@ -20,6 +20,7 @@ int main()
 
 		/* generate and print subpath set */
 		linkli_t set = subpath_set(parse_ret.lrpaths, opt);
+		printf("\n === Subpath Set === \n");
 		print_subpath_set(set);
 
 		li_free(set, struct subpath_ele, ln, free(e));

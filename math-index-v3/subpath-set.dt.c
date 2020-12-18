@@ -403,7 +403,7 @@ void print_subpath_set(linkli_t set)
 		printf(")\n");
 
 		for (int i = 0; i < ele->n_sects; i++) {
-			printf("\t qnode#%u/%u-%s{ ", ele->secttr[i].rootID,
+			printf("\t node#%u/%u-%s{ ", ele->secttr[i].rootID,
 				ele->secttr[i].width, optr_hash_str(ele->secttr[i].ophash));
 			//printf("%u\n", ele->n_splits[i]);
 			for (int j = 0; j < ele->n_splits[i]; j++) {
