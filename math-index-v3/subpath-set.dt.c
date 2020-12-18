@@ -256,7 +256,7 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 		if (!args.added) break;
 	}
 
-	/* remove non-interesing paths and statically prune small subpaths */
+	/* remove non-interesing paths and prune short paths and wildcards if it is for indexing */
 	float min_width = MATH_INDEX_STATIC_PRUNING_FACTOR * (float)lrpaths.n;
 #ifdef DEBUG_SUBPATH_SET
 	printf("statically pruning those whose width <= %.2f ...\n", min_width);
@@ -267,6 +267,7 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 		struct subpath_node *root = prefix_path_root(sp, ele->prefix_len);
 		if (
 			!interesting_token(root->token_id) ||
+			(opt == SUBPATH_SET_FOR_INDEX && sp->type == SUBPATH_TYPE_WILDCARD) ||
 			(opt == SUBPATH_SET_FOR_INDEX && root->sons <= min_width)
 		) {
 			li_iter_remove(iter, &set);

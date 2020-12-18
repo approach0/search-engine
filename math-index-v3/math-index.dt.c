@@ -178,17 +178,6 @@ void math_index_print(math_index_t index)
 	}
 }
 
-static void remove_wildcards(linkli_t *set)
-{
-	foreach (iter, li, *set) {
-		struct subpath_ele *ele = li_entry(ele, iter->cur, ln);
-		if (ele->dup[0]->type == SUBPATH_TYPE_WILDCARD) {
-			li_iter_remove(iter, set);
-			free(ele);
-		}
-	}
-}
-
 static LIST_IT_CALLBK(_mk_path_str)
 {
 	LIST_OBJ(struct subpath_node, sp_nd, ln);
@@ -423,9 +412,6 @@ size_t math_index_add(math_index_t index,
 	}
 
 	linkli_t set = subpath_set(lrpaths, SUBPATH_SET_FOR_INDEX);
-
-	/* for indexing, we do not accept wildcards */
-	remove_wildcards(&set);
 
 #ifdef DEBUG_SUBPATH_SET
 	printf("subpath set (size=%d) from %u leaf-root paths:\n", li_size(set), lrpaths.n);
