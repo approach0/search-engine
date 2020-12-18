@@ -79,7 +79,7 @@ int main()
 			subpaths_release(&parse_ret.lrpaths);
 			expID ++;
 		} else {
-			printf("parser error: %s\n", parse_ret.msg);
+			fprintf(stderr, "Parsing error: %s\n", parse_ret.msg);
 		}
 	}
 	}
