@@ -408,6 +408,8 @@ extern int lexer_warning_flag;
 κ                                          { RET_TOK(kappa, VAR, WC_NORMAL_LEAF, VAR); }
 λ                                         { RET_TOK(lambda, VAR, WC_NORMAL_LEAF, VAR); }
 φ                                            { RET_TOK(phi, VAR, WC_NORMAL_LEAF, VAR); }
+η                                            { RET_TOK(eta, VAR, WC_NORMAL_LEAF, VAR); }
+ξ                                             { RET_TOK(xi, VAR, WC_NORMAL_LEAF, VAR); }
 
 
  /* auto-generated discriminative tokens, where NIL is to be
