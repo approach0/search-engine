@@ -22,6 +22,7 @@ optr_alloc(enum symbol_id s_id, enum token_id t_id, bool comm)
 	n->token_id = t_id;
 	n->sons = 0;
 	n->rank = 0;
+	n->leaves = 0;
 	n->sum_class = 0;
 	n->tex_braced = 0;
 	n->subtr_hash = 0;
@@ -46,6 +47,7 @@ struct optr_node* optr_copy(struct optr_node *m)
 static __inline__ void attach_update(struct optr_node *c, struct optr_node *f)
 {
 	f->sons++;
+	f->leaves += (c->leaves > 0) ? c->leaves : 1;
 	c->rank = f->sons;
 }
 
@@ -128,7 +130,8 @@ print_node(FILE *fh, struct optr_node *p, bool is_leaf)
 		fprintf(fh, C_BROWN "%s" C_RST, trans_symbol(p->symbol_id));
 		fprintf(fh, ") ");
 
-		// fprintf(fh, "%u son(s), ", p->sons);
+//		fprintf(fh, "%u sons, ", p->sons);
+//		fprintf(fh, "%u leaves, ", p->leaves);
 	}
 
 	fprintf(fh, "#%u, ", p->node_id);
@@ -324,10 +327,11 @@ static TREE_IT_CALLBK(purne_nil_node)
 	if (p->tnd.sons.now == NULL /* is leaf */ &&
 	    p->tnd.father != NULL /* can be pruned */ &&
 	    p->token_id == T_NIL) {
-		/* decrement father sons counter */
+		/* decrement father sons/leaves counter */
 		struct optr_node *f;
 		f = MEMBER_2_STRUCT(p->tnd.father, struct optr_node, tnd);
 		f->sons -= 1;
+		f->leaves -= (p->leaves > 0) ? p->leaves : 1;
 
 		/* prune this NIL node */
 		res = tree_detach(&p->tnd, pa_now, pa_fwd);
@@ -377,7 +381,7 @@ static struct subpath *new_subpath(struct optr_node *p)
 static struct subpath_node *create_subpath_node(
 	enum symbol_id symbol_id,
 	enum token_id token_id,
-	uint32_t sons,
+	uint32_t leaves,
 	uint32_t node_id)
 {
 	struct subpath_node *nd;
@@ -385,7 +389,7 @@ static struct subpath_node *create_subpath_node(
 
 	nd->symbol_id = symbol_id;
 	nd->token_id = token_id;
-	nd->sons = sons;
+	nd->leaves = leaves;
 	nd->node_id = node_id;
 	LIST_NODE_CONS(nd->ln);
 
@@ -447,11 +451,9 @@ insert_lrpath_nodes(struct subpath *subpath, struct optr_node *p, enum token_id 
 
 		/* create and insert token node */
 		if (cnt == 0)
-			nd = create_subpath_node(p->symbol_id, first_tok,
-			                         p->sons, p->node_id);
+			nd = create_subpath_node(p->symbol_id, first_tok, p->leaves, p->node_id);
 		else
-			nd = create_subpath_node(p->symbol_id, p->token_id,
-			                         p->sons, p->node_id);
+			nd = create_subpath_node(p->symbol_id, p->token_id, p->leaves, p->node_id);
 		list_insert_one_at_tail(&nd->ln, &subpath->path_nodes, NULL, NULL);
 		cnt ++; // increment subpath nodes counter
 
@@ -464,7 +466,7 @@ insert_lrpath_nodes(struct subpath *subpath, struct optr_node *p, enum token_id 
 
 			nd = create_subpath_node(
 				S_NIL, T_MAX_RANK - (OPTR_INDEX_RANK_MAX - p->rank),
-				1 /* rank node has only one son */, rank_node_id
+				p->leaves, rank_node_id
 			);
 
 			list_insert_one_at_tail(&nd->ln, &subpath->path_nodes,

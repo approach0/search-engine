@@ -83,30 +83,30 @@ cmp_subpaths(struct subpath *sp1, struct subpath *sp2, int prefix_len)
 	}
 
 #ifdef DEBUG_SUBPATH_SET
-	printf("two compared paths ");
-	switch (arg.res) {
-	case 0:
-		printf("are the same.");
-		break;
-	case 1:
-		printf("are different. (the other is empty)");
-		break;
-	case 2:
-		printf("are different. (the other is shorter)");
-		break;
-	case 3:
-		printf("are different. (the other is longer)");
-		break;
-	case 4:
-		printf("are different. (node tokens do not match)");
-		break;
-	case 5:
-		printf("are different. (the other is not the same type)");
-		break;
-	default:
-		printf("unexpected res number.\n");
-	}
-	printf("\n");
+//	printf("two compared paths ");
+//	switch (arg.res) {
+//	case 0:
+//		printf("are the same.");
+//		break;
+//	case 1:
+//		printf("are different. (the other is empty)");
+//		break;
+//	case 2:
+//		printf("are different. (the other is shorter)");
+//		break;
+//	case 3:
+//		printf("are different. (the other is longer)");
+//		break;
+//	case 4:
+//		printf("are different. (node tokens do not match)");
+//		break;
+//	case 5:
+//		printf("are different. (the other is not the same type)");
+//		break;
+//	default:
+//		printf("unexpected res number.\n");
+//	}
+//	printf("\n");
 #endif
 
 	return arg.res;
@@ -259,6 +259,7 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 	/* remove non-interesing paths and prune short paths and wildcards if it is for indexing */
 	float min_width = MATH_INDEX_STATIC_PRUNING_FACTOR * (float)lrpaths.n;
 #ifdef DEBUG_SUBPATH_SET
+	print_subpath_set(set);
 	printf("statically pruning those whose width <= %.2f ...\n", min_width);
 #endif
 	foreach (iter, li, set) {
@@ -268,7 +269,7 @@ linkli_t subpath_set(struct subpaths lrpaths, enum subpath_set_opt opt)
 		if (
 			!interesting_token(root->token_id) ||
 			(opt == SUBPATH_SET_FOR_INDEX && sp->type == SUBPATH_TYPE_WILDCARD) ||
-			(opt == SUBPATH_SET_FOR_INDEX && root->sons <= min_width)
+			(opt == SUBPATH_SET_FOR_INDEX && root->leaves <= min_width)
 		) {
 			li_iter_remove(iter, &set);
 			free(ele);

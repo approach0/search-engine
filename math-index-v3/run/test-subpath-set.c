@@ -5,9 +5,12 @@
 
 int main()
 {
-	char test_tex[] = "abcdefabcd\\qvar{x} + \\mathfrak{Y}";
-	//enum subpath_set_opt opt = SUBPATH_SET_FOR_INDEX;
-	enum subpath_set_opt opt = SUBPATH_SET_FOR_QUERY;
+	//char test_tex[] = "abcdefabcd\\qvar{x} + \\mathfrak{Y}";
+	//char test_tex[] = "a^2+b^2=c^2";
+	char test_tex[] = "\\frac{a}{b+c} + \\frac{b}{a+c} + \\frac{c}{a+b} = 4";
+
+	enum subpath_set_opt opt = SUBPATH_SET_FOR_INDEX;
+	//enum subpath_set_opt opt = SUBPATH_SET_FOR_QUERY;
 
 	struct tex_parse_ret parse_ret = tex_parse(test_tex);
 	if (parse_ret.code != PARSER_RETCODE_ERR) {
@@ -16,6 +19,7 @@ int main()
 		optr_release(parse_ret.operator_tree);
 
 		/* print leaf-root paths */
+		printf("\n === Leaf-Root Paths === \n");
 		subpaths_print(&parse_ret.lrpaths, stdout);
 
 		/* generate and print subpath set */

@@ -22,7 +22,7 @@ struct subpath_node {
 	uint32_t         symbol_id;
 	uint32_t         token_id;
 	uint32_t         node_id;
-	uint32_t         sons;
+	uint32_t         leaves; /* number of leaf-root paths */
 	struct list_node ln;
 };
 
