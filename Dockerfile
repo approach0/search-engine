@@ -59,5 +59,6 @@ COPY --from=builder /code/a0/indexerd/scripts/vdisk-mount.sh /usr/bin/vdisk-moun
 COPY --from=builder /code/a0/indexerd/scripts/json-feeder.py /usr/bin/json-feeder.py
 COPY --from=builder /code/a0/searchd/scripts/test-query.sh  /usr/bin/test-query.sh
 COPY --from=builder /code/a0/searchd/tests/query-valid.json /tmp/test-query.json
+COPY --from=builder /code/a0/search-v3/run/test-search.out  /usr/bin/test-search.out
 
 CMD doc-lookup.out -h
