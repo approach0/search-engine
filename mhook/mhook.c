@@ -11,7 +11,7 @@ int64_t mhook_unfree()
 
 int64_t mhook_tot_allocs()
 {
-	return unfree;
+	return tot_allocs;
 }
 
 void mhook_print_unfree()
