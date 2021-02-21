@@ -65,6 +65,6 @@ $ sudo python3 -m pip install --user --upgrade twine
 
 Upload package in `dist` directory
 ```sh
-$ python3 -m twine upload --repository pya0 dist/*
+$ python3 -m twine upload --repository pypi dist/*
 ```
 (use username `__token__` and your created token on `https://pypi.org`)
