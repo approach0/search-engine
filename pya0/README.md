@@ -1,0 +1,65 @@
+## About
+**pya0** is a Python wrapper for Approach Zero search engine.
+It provides Python interface to make the search engine core easy to play with.
+
+### Quick Start
+Install `pya0` using pip
+```sh
+$ sudo pip3 install --upgrade pya0
+```
+
+Test a simple math token scanner:
+```py
+import pya0
+lst = pya0.lex('\\lim_{n \\to \\infty} (1 + 1/n)^n')
+print(lst)
+```
+Result:
+```
+[(269, 'LIM', 'lim'), (274, 'SUBSCRIPT', 'subscript'), (260, 'VAR', "normal`n'"), (270, 'ARROW', 'to'), (260, 'INFTY', 'infty'), (259, 'ONE', "`1'"), (261, 'ADD', 'plus'), (259, 'ONE', "`1'"), (264, 'FRAC', 'frac'), (260, 'VAR', "normal`n'"), (275, 'SUPSCRIPT', 'supscript'), (260, 'VAR', "normal`n'")]
+```
+
+### Supported Interfaces
+* `lexer.lex(a: str) -> list[tuple(tokID, token, symbol)]`
+
+### Local Build and Testing
+Ensure to include and prioritize local dist:
+```py
+import sys
+sys.path.insert(0, '.')
+```
+then run some test case, for example:
+```sh
+$ python3 tests/test-lexer.py
+```
+
+### Packaging
+Build and install package locally (for testing):
+```sh
+$ sudo python3 setup.py install
+```
+then, you can import as library from system path:
+```py
+import pya0
+print(dir(pya0))
+```
+
+Create a `pip` distribution package:
+```sh
+$ python3 -m pip3 install --upgrade build # install pip-build tool
+$ sudo python3 -m build
+```
+
+### Upload to Pip
+Install `twine`
+```sh
+$ sudo apt install rustc
+$ sudo python3 -m pip install setuptools_rust
+$ sudo python3 -m pip install --user --upgrade twine
+```
+
+Upload package in `dist` directory
+```sh
+$ python3 -m twine upload --repository pya0 dist/*
+```
+(use username `__token__` and your created token on `https://pypi.org`)

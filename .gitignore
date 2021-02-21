@@ -27,6 +27,8 @@ tmp/
 tmp
 build/
 .build/
+dist/
+*.egg-info/
 config.mk
 proj-dep.mk
 targets.mk

@@ -2,8 +2,8 @@ include ../config.mk
 include ../rules.mk
 include ../module.mk
 
-CFLAGS += `python-config --cflags`
-LDFLAGS += --shared `python-config --ldflags`
+CFLAGS += `python3-config --cflags`
+LDFLAGS += --shared `python3-config --ldflags`
 
 all: build/texlex.so
 

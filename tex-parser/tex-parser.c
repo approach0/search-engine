@@ -23,7 +23,7 @@ static void strip_newlines(char *str, size_t len)
  * (1) make a _EOL so that grammar can terminate,
  * (2) yy_scan_buffer() requires double-null string (YY_END_OF_BUFFER_CHAR).
  */
-static char *mk_scan_buf(const char *str, size_t *out_sz)
+char *mk_scan_buf(const char *str, size_t *out_sz)
 {
 	char *buf;
 	size_t len = strlen(str);
