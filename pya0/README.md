@@ -2,6 +2,11 @@
 **pya0** is a Python wrapper for Approach Zero search engine.
 It provides Python interface to make the search engine core easy to play with.
 
+### Install Necessary Dependencies (Ubuntu)
+```sh
+$ sudo apt install build-essential python-dev
+```
+
 ### Quick Start
 Install `pya0` using pip
 ```sh
@@ -53,7 +58,7 @@ $ sudo python3 -m build
 ### Upload to Pip
 Install `twine`
 ```sh
-$ sudo apt install rustc
+$ sudo apt install rustc libssl-dev libffi-dev
 $ sudo python3 -m pip install setuptools_rust
 $ sudo python3 -m pip install --user --upgrade twine
 ```
