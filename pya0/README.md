@@ -20,7 +20,7 @@ Result:
 ```
 
 ### Supported Interfaces
-* `lexer.lex(a: str) -> list[tuple(tokID, token, symbol)]`
+* `pya0.lex(a: str) -> list[tuple(tokID, token, symbol)]`
 
 ### Local Build and Testing
 Ensure to include and prioritize local dist:
