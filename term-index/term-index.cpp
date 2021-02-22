@@ -35,7 +35,9 @@ void *term_index_open(const char *path, enum term_index_open_flag flag)
 		return NULL;
 	}
 
-	ti->index = (*ti->repo.indexes())[0];
+	std::vector<indri::index::Index*> indexes;
+	indexes = *ti->repo.indexes();
+	ti->index = (indexes.size() > 0) ? indexes[0] : NULL;
 	ti->document.terms.clear();
 	ti->document.positions.clear();
 	ti->document.tags.clear();
@@ -136,13 +138,19 @@ doc_id_t term_index_doc_end(void *handle)
 uint32_t term_index_get_termN(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->uniqueTermCount();
+	if (ti->index == NULL)
+		return 0;
+	else
+		return ti->index->uniqueTermCount();
 }
 
 uint32_t term_index_get_docN(void *handle)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->documentCount();
+	if (ti->index == NULL)
+		return 0;
+	else
+		return ti->index->documentCount();
 }
 
 uint32_t term_index_get_docLen(void *handle, doc_id_t doc_id)
@@ -150,6 +158,8 @@ uint32_t term_index_get_docLen(void *handle, doc_id_t doc_id)
 	struct term_index *ti = (struct term_index*)handle;
 	uint32_t docN = term_index_get_docN(ti);
 	if (unlikely(doc_id > docN))
+		return 0;
+	else if (ti->index == NULL)
 		return 0;
 	else
 		return ti->index->documentLength(doc_id);
@@ -162,7 +172,8 @@ uint32_t term_index_get_avgDocLen(void *handle)
 
 	docN = term_index_get_docN(ti);
 	for (doci = 1; doci <= docN; doci++) {
-		doclen = ti->index->documentLength(doci);
+		doclen = (ti->index == NULL) ? 0 :
+			ti->index->documentLength(doci);
 		if (avgDocLen < UINT32_MAX - doclen)
 			avgDocLen += doclen;
 		else
@@ -180,25 +191,37 @@ uint32_t term_index_get_avgDocLen(void *handle)
 uint32_t term_index_get_df(void *handle, term_id_t term_id)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->documentCount(ti->index->term(term_id));
+	if (ti->index == NULL)
+		return 0;
+	else
+		return ti->index->documentCount(ti->index->term(term_id));
 }
 
 term_id_t term_lookup(void *handle, char *term)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->term(term);
+	if (ti->index == NULL)
+		return 0;
+	else
+		return ti->index->term(term);
 }
 
 char *term_lookup_r(void *handle, term_id_t term_id)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return strdup(ti->index->term(term_id).c_str());
+	if (ti->index == NULL)
+		return NULL;
+	else
+		return strdup(ti->index->term(term_id).c_str());
 }
 
 void *term_index_get_posting(void *handle, term_id_t term_id)
 {
 	struct term_index *ti = (struct term_index*)handle;
-	return ti->index->docListIterator(term_id);
+	if (ti->index == NULL)
+		return NULL;
+	else
+		return ti->index->docListIterator(term_id);
 }
 
 bool term_posting_start(void *posting)
