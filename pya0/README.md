@@ -31,7 +31,7 @@ Result:
 Ensure to include and prioritize local dist:
 ```py
 import sys
-sys.path.insert(0, '.')
+sys.path.insert(0, './lib')
 ```
 then run some test case, for example:
 ```sh
