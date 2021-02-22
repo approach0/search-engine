@@ -67,7 +67,7 @@ static int consider_index_maintain(struct indexer *indexer, int force)
 		printf("[flushing index ...]");
 		fflush(stdout);
 
-		indexer_spill(indexer);
+		indexer_flush(indexer);
 		sleep(2);
 	}
 

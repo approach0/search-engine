@@ -86,4 +86,4 @@ uint32_t        indexer_write_all_fields(struct indexer*);
 
 int indexer_maintain(struct indexer*);
 int indexer_should_maintain(struct indexer*);
-int indexer_spill(struct indexer*);
+int indexer_flush(struct indexer*);

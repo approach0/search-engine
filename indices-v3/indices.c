@@ -417,7 +417,7 @@ int indexer_should_maintain(struct indexer *indexer)
 	return term_index_should_maintain(indexer->indices->ti);
 }
 
-int indexer_spill(struct indexer *indexer)
+int indexer_flush(struct indexer *indexer)
 {
 	math_index_flush(indexer->indices->mi);
 	term_index_write(indexer->indices->ti);
