@@ -5,6 +5,7 @@ It provides Python interface to make the search engine core easy to play with.
 ### Install Necessary Dependencies (Ubuntu)
 ```sh
 $ sudo apt install build-essential python-dev
+$ make
 ```
 
 ### Quick Start
