@@ -126,3 +126,32 @@ PyObject *do_flush(PyObject *self, PyObject *args)
 
 	Py_RETURN_NONE;
 }
+
+static void copy_field(char *dest, const char *src, size_t n)
+{
+	strncpy(dest, src, n);
+	dest[n - 1] = '\0';
+}
+
+PyObject *add_document(PyObject *self, PyObject *args, PyObject* kwargs)
+{
+	PyObject *pyindexer;
+	const char *content, *url = NULL;
+	static char *kwlist[] = {"writer", "content", "url", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|s", kwlist,
+		&pyindexer, &content, &url)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTupleAndKeywords error");
+		return NULL;
+	}
+
+	struct indexer *indexer = PyLong_AsVoidPtr(pyindexer);
+	if (url == NULL) url = "(Empty URL)";
+
+	copy_field(indexer->url_field, url, sizeof(indexer->url_field));
+	copy_field(indexer->txt_field, content, sizeof(indexer->txt_field));
+
+	uint32_t n_doc;
+	n_doc = indexer_write_all_fields(indexer);
+	return PyLong_FromUnsignedLong(n_doc);
+}

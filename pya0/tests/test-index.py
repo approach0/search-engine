@@ -12,10 +12,20 @@ if not os.path.exists(index_path):
     ix = pya0.index_open(index_path)
 
     writer = pya0.index_writer(ix)
+    pya0.writer_add_doc(
+        writer,
+        "[imath]x^2 + y^2 = z^2[/imath] is called pythagreon therom"
+    )
+    pya0.writer_add_doc(
+        writer,
+        content="prove inequality by induction: " +
+        "[imath] (a + b)^n \geq a^n + b^n [/imath]",
+        url="https://math.stackexchange.com/questions/2528544"
+    )
     if pya0.writer_maintain(writer, force=True):
         print('index merged')
     pya0.writer_flush(writer);
-    pya0.close_writer(writer)
+    pya0.writer_close(writer)
 else:
     print('Open with read-only mode')
     HOME = os.getenv("HOME")

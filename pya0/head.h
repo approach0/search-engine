@@ -9,3 +9,4 @@ PyObject *indexer_new(PyObject*, PyObject*);
 PyObject *indexer_del(PyObject*, PyObject*);
 PyObject *do_maintain(PyObject*, PyObject*, PyObject*);
 PyObject *do_flush(PyObject*, PyObject*);
+PyObject *add_document(PyObject*, PyObject*, PyObject*);
