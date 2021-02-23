@@ -25,9 +25,9 @@ void term_qry_release(struct term_qry *term_qry)
 	free(term_qry->kw_str);
 }
 
-void term_qry_print(struct term_qry *term_qry)
+void term_qry_print(struct term_qry *term_qry, FILE *fh)
 {
-	printf("`%s' (id=%u, df=%u, qf=%.0f, idf=%.2f, upp=%.2f)\n",
+	fprintf(fh, "`%s' (id=%u, df=%u, qf=%.0f, idf=%.2f, upp=%.2f)\n",
 		term_qry->kw_str, term_qry->term_id, term_qry->df,
 		term_qry->qf, term_qry->idf, term_qry->upp);
 }

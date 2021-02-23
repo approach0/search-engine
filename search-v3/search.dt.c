@@ -26,7 +26,7 @@ typedef struct ms_merger *merger_set_iter_t;
 #define math_iter_read math_l2_invlist_iter_read;
 
 static int
-prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
+prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log_fh,
 	 struct merge_set *ms, indices_run_sync_t *sync, struct BM25_scorer *bm25,
 	 struct term_qry *term_qry, struct term_invlist_entry_reader *term_reader)
 {
@@ -75,7 +75,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 #ifdef PRINT_SEARCH_QUERIES
 	// printf("[BM25 parameters]\n");
 	// BM25_params_print(bm25);
-	printf("[inverted lists]\n");
+	fprintf(log_fh, "[inverted lists]\n");
 #endif
 
 	/* only generate iterators for unique keywords */
@@ -88,12 +88,12 @@ prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 		*reader = term_index_lookup(indices->ti, term_id);
 
 #ifdef PRINT_SEARCH_QUERIES
-		printf("[%d] ", n);
+		fprintf(log_fh, "[%d] ", n);
 #endif
 		/* push into merge set */
 		if (reader->inmemo_reader) {
 #ifdef PRINT_SEARCH_QUERIES
-			printf("(in memo) ");
+			fprintf(log_fh, "(in memo) ");
 #endif
 			ms->iter  [n] = reader->inmemo_reader;
 			ms->upp   [n] = term_qry[i].upp;
@@ -104,7 +104,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 			ms->read  [n] = (merger_callbk_read)invlist_iter_read;
 		} else if (reader->ondisk_reader) {
 #ifdef PRINT_SEARCH_QUERIES
-			printf("(on disk) ");
+			fprintf(log_fh, "(on disk) ");
 #endif
 			ms->iter  [n] = reader->ondisk_reader;
 			ms->upp   [n] = term_qry[i].upp;
@@ -115,7 +115,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 			ms->read  [n] = (merger_callbk_read)term_posting_read;
 		} else {
 #ifdef PRINT_SEARCH_QUERIES
-			printf("( empty ) ");
+			fprintf(log_fh, "( empty ) ");
 #endif
 			ms->iter  [n] = NULL;
 			ms->upp   [n] = 0;
@@ -127,8 +127,8 @@ prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 		}
 
 #ifdef PRINT_SEARCH_QUERIES
-		printf("%6.2f ", ms->upp[n]);
-		term_qry_print(term_qry + i);
+		fprintf(log_fh, "%6.2f ", ms->upp[n]);
+		term_qry_print(term_qry + i, log_fh);
 #endif
 		ms->n += 1;
 	}
@@ -137,7 +137,7 @@ prepare_term_keywords(struct indices *indices, struct query *qry, FILE *log,
 }
 
 static int prepare_math_keywords(struct indices *indices, struct query *qry,
-	FILE *log, struct merge_set *ms, indices_run_sync_t *sync,
+	FILE *log_fh, struct merge_set *ms, indices_run_sync_t *sync,
 	struct math_l2_invlist **m_invlist, math_l2_invlist_iter_t *m_iter,
 	float *math_th, float *dynm_th, float *math_weight)
 {
@@ -192,7 +192,7 @@ static int prepare_math_keywords(struct indices *indices, struct query *qry,
 		}
 
 #ifdef PRINT_SEARCH_QUERIES
-		printf("[%d] ", n);
+		fprintf(log_fh, "[%d] ", n);
 #endif
 		/* push into merge set */
 		if (minv == NULL || miter == NULL) {
@@ -204,7 +204,7 @@ static int prepare_math_keywords(struct indices *indices, struct query *qry,
 			ms->read  [n] = empty_invlist_read;
 
 #ifdef PRINT_SEARCH_QUERIES
-			printf("( empty ) `%s' (malformed TeX, upp=0)\n", kw_str);
+			fprintf(log_fh, "( empty ) `%s' (malformed TeX, upp=0)\n", kw_str);
 #endif
 		} else {
 			const float math_upp = math_l2_invlist_iter_upp(miter);
@@ -216,9 +216,9 @@ static int prepare_math_keywords(struct indices *indices, struct query *qry,
 			ms->read  [n] = (merger_callbk_read)math_iter_read;
 
 #ifdef PRINT_SEARCH_QUERIES
-			printf("(level 2) %6.2f `%s' (TeX, upp=%.2f, th=%.2f)\n",
+			fprintf(log_fh, "(level 2) %6.2f `%s' (TeX, upp=%.2f, th=%.2f)\n",
 				ms->upp[n], kw_str, math_upp, math_th[n_math]);
-			math_qry_print(&minv->mq, 0);
+			math_qry_print(&minv->mq, 0, log_fh);
 #endif
 		}
 
@@ -291,6 +291,7 @@ static int inspect(uint64_t d)
 }
 #endif
 
+/* To run in a single node, pass NULL to run_sync and 0 to dry_run. */
 ranked_results_t
 indices_run_query(struct indices* indices, struct query* qry,
                   indices_run_sync_t *run_sync, int dry_run, FILE *log)
@@ -529,7 +530,7 @@ skip_merge:
 
 #ifdef PRINT_MERGE_TIME
 	time_cost = timer_tot_msec(&timer);
-	printf("merge time cost: %ld msec.\n", time_cost);
+	fprintf(log, "merge time cost: %ld msec.\n", time_cost);
 #endif
 	
 	/*

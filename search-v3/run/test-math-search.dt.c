@@ -68,7 +68,7 @@ int main()
 	/*
 	 * Print participated path inverted lists
 	 */
-	math_qry_print(&minv->mq, 1);
+	math_qry_print(&minv->mq, 1, stdout);
 
 	/*
 	 * Create level-2 iterator

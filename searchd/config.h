@@ -15,7 +15,7 @@
 #define CLUSTER_MASTER_NODE 0
 #define CLUSTER_MAX_QRY_BUF_SZ 65530
 
-#define SEARCHD_LOG_FILE "searchd.log"
+#define SEARCHD_LOG_FILE "/dev/stdout" //"searchd.log"
 #define OUTPUT_TREC_FILE "trec-format-results.tmp"
 
 //#define DEBUG_LOG_STATS_SYNC

@@ -24,4 +24,4 @@ struct math_qry {
 
 int  math_qry_prepare(math_index_t, const char*, struct math_qry*);
 void math_qry_release(struct math_qry*);
-void math_qry_print(struct math_qry*, int);
+void math_qry_print(struct math_qry*, int, FILE*);

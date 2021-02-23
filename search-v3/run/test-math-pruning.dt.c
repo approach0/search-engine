@@ -42,7 +42,7 @@ int main()
 		goto skip;
 	}
 
-	math_qry_print(&mq, 1);
+	math_qry_print(&mq, 1, stdout);
 	printf("\n");
 
 	math_score_precalc(&msf);

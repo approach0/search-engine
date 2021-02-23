@@ -81,7 +81,7 @@ int main()
 	/* print prepared term queries */
 	BM25_params_print(&bm25);
 	for (int i = 0; i < qry_len; i++) {
-		term_qry_print(term_qry + i);
+		term_qry_print(term_qry + i, stdout);
 	}
 	printf("\n");
 

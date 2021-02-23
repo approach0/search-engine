@@ -190,8 +190,6 @@ reply:
 	query_delete(qry);
 
 	long time_cost = timer_tot_msec(&timer);
-	printf("Query handle cost: %ld msec.\n\n", time_cost);
-
 	fprintf(log_fh, "Query handle cost: %ld msec.\n", time_cost);
 	fprintf(log_fh, "unfree allocs: %ld.\n\n", mhook_unfree());
 	fflush(log_fh);

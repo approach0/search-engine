@@ -15,7 +15,7 @@ struct term_qry {
 
 int  term_qry_prepare(term_index_t, const char*, struct term_qry*);
 void term_qry_release(struct term_qry*);
-void term_qry_print(struct term_qry*);
+void term_qry_print(struct term_qry*, FILE*);
 
 /* merge duplicates query terms */
 int term_qry_array_merge(struct term_qry*, int);

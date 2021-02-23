@@ -239,19 +239,19 @@ void math_qry_release(struct math_qry *mq)
 		mnc_score_free(&mq->mnc);
 }
 
-void math_qry_print(struct math_qry* mq, int print_details)
+void math_qry_print(struct math_qry* mq, int print_details, FILE *fh)
 {
 	if (print_details) {
-		printf("[operator tree]\n");
-		optr_print(mq->optr, stdout);
+		fprintf(fh, "[operator tree]\n");
+		optr_print(mq->optr, fh);
 
-		printf("[leaf-root paths]\n");
-		subpaths_print(&mq->lrpaths, stdout);
+		fprintf(fh, "[leaf-root paths]\n");
+		subpaths_print(&mq->lrpaths, fh);
 
-		printf("[subpath set]\n");
+		fprintf(fh, "[subpath set]\n");
 		print_subpath_set(mq->subpath_set);
 
-		printf("[inverted lists]\n");
+		fprintf(fh, "[inverted lists]\n");
 	}
 
 	for (int i = 0; i < mq->merge_set.n; i++) {
@@ -276,7 +276,8 @@ void math_qry_print(struct math_qry* mq, int print_details)
 			medium_str = "unknown";
 		}
 
-		printf("\t[%3d] (%s) %s ", i, medium_str, path_key);
-		printf("(pf=%u, ipf=%.2f)\n", mq->entry[i].pf, mq->merge_set.upp[i]);
+		fprintf(fh, "\t[%3d] (%s) %s ", i, medium_str, path_key);
+		fprintf(fh, "(pf=%u, ipf=%.2f)\n",
+			mq->entry[i].pf, mq->merge_set.upp[i]);
 	}
 }
