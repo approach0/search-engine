@@ -25,8 +25,22 @@ Result:
 [(269, 'LIM', 'lim'), (274, 'SUBSCRIPT', 'subscript'), (260, 'VAR', "normal`n'"), (270, 'ARROW', 'to'), (260, 'INFTY', 'infty'), (259, 'ONE', "`1'"), (261, 'ADD', 'plus'), (259, 'ONE', "`1'"), (264, 'FRAC', 'frac'), (260, 'VAR', "normal`n'"), (275, 'SUPSCRIPT', 'supscript'), (260, 'VAR', "normal`n'")]
 ```
 
+Refer to `tests/` directory for more complete example usages.
+
 ### Supported Interfaces
-* `pya0.lex(a: str) -> list[tuple(tokID, token, symbol)]`
+* `lex(TeX: str) -> list[tuple(tokID, token, symbol)]`
+* `index_open(index_path: str, option: str, segment_dict: str) -> index_handler`
+* `index_close(ix: index_handler) -> None`
+* `index_memcache(ix: index_handler, term_cache: int, math_cache: int) -> None`
+* `index_print_summary(ix: index_handler) -> None`
+* `index_writer(ix: index_handler) -> index_writer`
+* `writer_close(writer: index_writer) -> None`
+* `writer_maintain(writer: index_writer, force: bool) -> bool`
+* `writer_flush(writer: index_writer) -> None`
+* `writer_add_doc(writer: index_writer, content: str, url: str) -> int`
+* `search(ix: index_handler, keywords: list[dict[str, str]], verbose: bool) -> str`
+
+(`lex` function can be useful to train a RNN and predict TeX tokens)
 
 ### Local Build and Testing
 Ensure to include and prioritize local dist:
