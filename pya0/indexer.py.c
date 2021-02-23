@@ -53,6 +53,41 @@ PyObject *index_close(PyObject *self, PyObject *args)
 	Py_RETURN_NONE;
 }
 
+PyObject *index_memcache(PyObject *self, PyObject *args, PyObject* kwargs)
+{
+	PyObject *pyindices;
+	int term_cache = 0, math_cache = 0; /* in MiB */
+	static char *kwlist[] = {"index", "term_cache", "math_cache", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|ii", kwlist,
+		&pyindices, &term_cache, &math_cache)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTupleAndKeywords error");
+		return NULL;
+	}
+
+	struct indices *indices = PyLong_AsVoidPtr(pyindices);
+	indices->ti_cache_limit = term_cache MB;
+	indices->mi_cache_limit = math_cache MB;
+	indices_cache(indices);
+
+	Py_RETURN_NONE;
+}
+
+PyObject *index_print_summary(PyObject *self, PyObject *args)
+{
+	PyObject *pyindices;
+	if (!PyArg_ParseTuple(args, "O", &pyindices)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTuple error");
+		return NULL;
+	}
+
+	struct indices *indices = PyLong_AsVoidPtr(pyindices);
+	indices_print_summary(indices);
+
+	Py_RETURN_NONE;
+}
+
 static int
 parser_exception(struct indexer *indexer, const char *tex, char *msg)
 {
