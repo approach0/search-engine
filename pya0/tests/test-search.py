@@ -17,8 +17,8 @@ ix = pya0.index_open(index_path, option="r")
 
 print('Searching ...')
 JSON = pya0.search(ix, [
-    { 'keyword': 'f(x)', 'type': 'tex'},
-    { 'keyword': 'find', 'type': 'term'}
+    { 'keyword': 'b^2', 'type': 'tex'},
+    { 'keyword': 'induction', 'type': 'term'}
 ], verbose = True)
 results = json.loads(JSON)
 print(json.dumps(results, indent=4))

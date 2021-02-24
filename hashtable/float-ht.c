@@ -53,17 +53,12 @@ void float_ht_free(struct float_ht *ht)
 	memset(ht, 0, sizeof(struct float_ht));
 }
 
-static __inline__ int probing(int key, int i)
+static __inline__ int probing(int hash, int i)
 {
 	/* in a form of "a * key + b", make sure sz
 	 * and a are co-prime in order to generate
 	 * a complete circle in mod sz. */
-	return key + i;
-}
-
-static __inline__ int keyhash(int key, int sz)
-{
-	return key % sz;
+	return hash + i;
 }
 
 float float_ht_lookup(struct float_ht *ht, int key)
@@ -72,7 +67,7 @@ float float_ht_lookup(struct float_ht *ht, int key)
 	struct float_ht_entry *table = ht->table;
 
 	for (int i = 0; i < sz; i++) {
-		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
+		int pos = probing(key, i) % sz;
 		if (table[pos].occupied) {
 			if (table[pos].key == key)
 				return table[pos].val;
@@ -95,7 +90,7 @@ float_ht_update(struct float_ht *ht, int key, float val)
 	struct float_ht_entry *table = ht->table;
 
 	for (int i = 0; i < sz; i++) {
-		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
+		int pos = probing(key, i) % sz;
 		if (0 == table[pos].occupied) {
 			table[pos].occupied = 1;
 			table[pos].key = key;
@@ -119,7 +114,7 @@ float float_ht_incr(struct float_ht *ht, int key, float incr)
 	float ret = -1.f;
 
 	for (int i = 0; i < sz; i++) {
-		int pos = (keyhash(key, sz) + probing(key, i)) % sz;
+		int pos = probing(key, i) % sz;
 		if (0 == table[pos].occupied) {
 			table[pos].occupied = 1;
 			table[pos].key = key;
