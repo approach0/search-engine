@@ -26,7 +26,7 @@ PyObject *index_open(PyObject *self, PyObject *args, PyObject* kwargs)
 
 	if (failed) {
 		free(indices);
-		Py_INCREF(Py_None);
+		Py_INCREF(Py_None); // return a new reference of Py_None
 		return Py_None;
 	}
 

@@ -36,7 +36,7 @@ PyObject *do_lexing(PyObject *self, PyObject *args)
 			symbol = trans_symbol(nd->symbol_id);
 			/* append item */
 			item = Py_BuildValue("lss", next, token, symbol);
-			PyList_Append(list, item);
+			PyList_Append(list, item); /* only lend the ref */
 			Py_DECREF(item);
 			/* release union */
 			optr_release(nd);
