@@ -16,10 +16,12 @@ HOME = os.getenv("HOME")
 ix = pya0.index_open(index_path, option="r")
 
 print('Searching ...')
+
 JSON = pya0.search(ix, [
     { 'keyword': 'b^2', 'type': 'tex'},
     { 'keyword': 'induction', 'type': 'term'}
-], verbose = True, topk= 10)
+], verbose = True, topk= 10, trec_output="./trec.out")
+
 results = json.loads(JSON)
 print(json.dumps(results, indent=4))
 

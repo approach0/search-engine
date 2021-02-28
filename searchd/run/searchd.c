@@ -153,7 +153,7 @@ httpd_on_recv(const char *req, void *arg_)
 
 	//////// TREC LOG ////////
 	if (args->trec_log)
-		search_results_trec_log(&res, args->indices);
+		search_results_trec_log(args->indices, &res, OUTPUT_TREC_FILE);
 	//////////////////////////
 
 	if (args->n_nodes > 1) {

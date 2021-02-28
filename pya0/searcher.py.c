@@ -5,6 +5,7 @@
 #include "txt-seg/lex.h"
 #include "search-v3/search.h"
 #include "searchd/json-utils.h"
+#include "searchd/trec-res.h"
 #include "head.h"
 
 PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
@@ -12,9 +13,10 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 	/* parse arguments */
 	PyObject *pyindices, *pylist;
 	int verbose = 0, topk = 20;
-	static char *kwlist[] = {"index", "keywords", "verbose", "topk", NULL};
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|pi", kwlist,
-		&pyindices, &pylist, &verbose, &topk)) {
+	const char *trec_output = NULL;
+	static char *kwlist[] = {"index", "keywords", "verbose", "topk", "trec_output", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|pis", kwlist,
+		&pyindices, &pylist, &verbose, &topk, &trec_output)) {
 		PyErr_Format(PyExc_RuntimeError,
 			"PyArg_ParseTupleAndKeywords error");
 		return NULL;
@@ -74,6 +76,11 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 		FILE *log_fh = fopen("/dev/null", "a");
 		srch_res = indices_run_query(indices, &qry, topk, NULL, 0, log_fh);
 		fclose(log_fh);
+	}
+
+	/* output TREC format file? */
+	if (trec_output) {
+		search_results_trec_log(indices, &srch_res, trec_output);
 	}
 
 	/* convert search results to JSON stringified */

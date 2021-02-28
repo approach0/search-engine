@@ -17,12 +17,13 @@ static void log_trec_res(struct rank_result* res, void* args)
 	free(url);
 }
 
-int search_results_trec_log(ranked_results_t *rk_res, struct indices *indices)
+int search_results_trec_log(struct indices *indices, ranked_results_t *rk_res,
+                            const char *output_file)
 {
 	struct rank_wind wind;
 	int tot_pages;
 	
-	fh_trec_output = fopen(OUTPUT_TREC_FILE, "w");
+	fh_trec_output = fopen(output_file, "w");
 	if (fh_trec_output == NULL)
 		return 1;
 
