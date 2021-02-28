@@ -33,6 +33,7 @@ Refer to `tests/` directory for more complete example usages.
 * `index_close(ix: index_handler) -> None`
 * `index_memcache(ix: index_handler, term_cache: int, math_cache: int) -> None`
 * `index_print_summary(ix: index_handler) -> None`
+* `index_lookup_doc(ix: index_handler, docid: int) -> tuple(str, str)`
 * `index_writer(ix: index_handler) -> index_writer`
 * `writer_close(writer: index_writer) -> None`
 * `writer_maintain(writer: index_writer, force: bool) -> bool`

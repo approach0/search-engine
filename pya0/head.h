@@ -8,6 +8,7 @@ PyObject *index_open(PyObject*, PyObject*, PyObject*);
 PyObject *index_close(PyObject*, PyObject*);
 PyObject *index_memcache(PyObject*, PyObject*, PyObject*);
 PyObject *index_print_summary(PyObject*, PyObject*);
+PyObject *index_lookup_doc(PyObject*, PyObject*);
 
 PyObject *indexer_new(PyObject*, PyObject*);
 PyObject *indexer_del(PyObject*, PyObject*);

@@ -88,6 +88,38 @@ PyObject *index_print_summary(PyObject *self, PyObject *args)
 	Py_RETURN_NONE;
 }
 
+PyObject *index_lookup_doc(PyObject *self, PyObject *args)
+{
+	unsigned int docid;
+	PyObject *pyindices;
+	if (!PyArg_ParseTuple(args, "OI", &pyindices, &docid)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTuple error");
+		return NULL;
+	}
+
+	if (docid == 0) {
+		PyErr_Format(PyExc_RuntimeError,
+			"docID #0 never exists");
+		return NULL;
+    }
+
+	char *url, *txt; size_t len;
+	struct indices *indices = PyLong_AsVoidPtr(pyindices);
+
+	url = get_blob_txt(indices->url_bi, docid, 0, &len);
+	txt = get_blob_txt(indices->txt_bi, docid, 1, &len);
+
+	PyObject *result = PyTuple_New(2);
+	// setter steals the reference
+	PyTuple_SetItem(result, 0, PyUnicode_FromString(url));
+	PyTuple_SetItem(result, 1, PyUnicode_FromString(txt));
+
+	free(url);
+	free(txt);
+	return result;
+}
+
 static int
 parser_exception(struct indexer *indexer, const char *tex, char *msg)
 {

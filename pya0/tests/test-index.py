@@ -38,6 +38,7 @@ else:
         option="r", segment_dict=f"{HOME}/cppjieba/dict")
 
     pya0.index_memcache(ix, term_cache = 3, math_cache = 5) # in MB
+    print(pya0.index_lookup_doc(ix, 2)) # test doc raw content lookup
     pya0.index_print_summary(ix)
 
 pya0.index_close(ix)
