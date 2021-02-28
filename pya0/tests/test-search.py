@@ -19,7 +19,7 @@ print('Searching ...')
 JSON = pya0.search(ix, [
     { 'keyword': 'b^2', 'type': 'tex'},
     { 'keyword': 'induction', 'type': 'term'}
-], verbose = True)
+], verbose = True, topk= 10)
 results = json.loads(JSON)
 print(json.dumps(results, indent=4))
 

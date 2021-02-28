@@ -38,7 +38,7 @@ Refer to `tests/` directory for more complete example usages.
 * `writer_maintain(writer: index_writer, force: bool) -> bool`
 * `writer_flush(writer: index_writer) -> None`
 * `writer_add_doc(writer: index_writer, content: str, url: str) -> int`
-* `search(ix: index_handler, keywords: list[dict[str, str]], verbose: bool) -> str`
+* `search(ix: index_handler, keywords: list[dict[str, str]], verbose: bool, topk: int) -> str`
 
 (`lex` function can be useful to train a RNN and predict TeX tokens)
 
