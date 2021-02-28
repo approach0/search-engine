@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
 	char indices_path[1024] = "./tmp";
 	struct query qry = QUERY_NEW;
 	int page = 1;
+	int topk = DEFAULT_K_TOP_RESULTS;
 	size_t ti_cache_limit = 0, mi_cache_limit = 0;
 
 	int opt;
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
 			       " -p <page> (0 for all pages) \n"
 			       " -c <term cache size (MB)> \n"
 			       " -C <math cache size (MB)> \n"
+			       " -k <keep top-K results> \n"
 			       "\n", argv[0], indices_path);
 			return 0;
 
@@ -62,6 +64,10 @@ int main(int argc, char *argv[])
 
 		case 'C':
 			sscanf(optarg, "%lu", &mi_cache_limit);
+			break;
+
+		case 'k':
+			sscanf(optarg, "%d", &topk);
 			break;
 
 		default:
@@ -99,7 +105,8 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	/* perform searching and print results */
-	ranked_results_t rk_res = indices_run_query(&indices, &qry, NULL, 0, NULL);
+	ranked_results_t rk_res;
+	rk_res = indices_run_query(&indices, &qry, topk, NULL, 0, NULL);
 	print_search_results(&indices, &rk_res, page);
 	priority_Q_free(&rk_res);
 

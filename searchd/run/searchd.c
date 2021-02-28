@@ -25,6 +25,7 @@ struct searchd_args {
 	struct indices *indices;
 	FILE *log_fh;
 	int trec_log;
+	int topk;
 };
 
 static void print_index_stats(indices_run_sync_t *stats, FILE *fh)
@@ -61,7 +62,7 @@ httpd_on_recv(const char *req, void *arg_)
 	const char      *ret = NULL;
 	struct query     qry = QUERY_NEW;
 	int              page;
-	ranked_results_t srch_res; /* search results */
+	ranked_results_t res; /* search results */
 	struct timer     timer;
 	FILE            *log_fh = args->log_fh;
 
@@ -116,8 +117,8 @@ httpd_on_recv(const char *req, void *arg_)
 	indices_run_sync_t sync = {0};
 	if (args->n_nodes > 1) {
 		/* get this node index stats */
-		srch_res = indices_run_query(args->indices, &qry, &sync, 1, log_fh);
-		free_ranked_results(&srch_res);
+		res = indices_run_query(args->indices, &qry, 1, &sync, 1, log_fh);
+		free_ranked_results(&res);
 #ifdef DEBUG_LOG_STATS_SYNC
 		fprintf(log_fh, "node[%d] stats: ", args->node_rank);
 		print_index_stats(&sync, log_fh);
@@ -148,23 +149,23 @@ httpd_on_recv(const char *req, void *arg_)
 	}
 
 	/* actually perform search */
-	srch_res = indices_run_query(args->indices, &qry, &sync, 0, log_fh);
+	res = indices_run_query(args->indices, &qry, args->topk, &sync, 0, log_fh);
 
 	//////// TREC LOG ////////
 	if (args->trec_log)
-		search_results_trec_log(&srch_res, args->indices);
+		search_results_trec_log(&res, args->indices);
 	//////////////////////////
 
 	if (args->n_nodes > 1) {
 		/* ask engine to return all top K results */
-		ret = search_results_json(&srch_res, -1, args->indices);
+		ret = search_results_json(&res, -1, args->indices);
 	} else {
 		/* generate response JSON for specific page only */
-		ret = search_results_json(&srch_res, page - 1, args->indices);
+		ret = search_results_json(&res, page - 1, args->indices);
 	}
 
 	/* since results are converted to JSON string, we can free them now. */
-	free_ranked_results(&srch_res);
+	free_ranked_results(&res);
 
 	/* is there a cluster? */
 	if (args->n_nodes > 1) {
@@ -249,6 +250,7 @@ int main(int argc, char *argv[])
 	unsigned short        port = SEARCHD_DEFAULT_PORT;
 	size_t                mi_cache_limit = DEFAULT_MATH_INDEX_CACHE_SZ;
 	size_t                ti_cache_limit = DEFAULT_TERM_INDEX_CACHE_SZ;
+	int                   topk = DEFAULT_K_TOP_RESULTS;
 
 	/* initialize MPI */
 	MPI_Init(&argc, &argv);
@@ -261,7 +263,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse program arguments */
-	while ((opt = getopt(argc, argv, "hTi:L:d:p:c:C:")) != -1) {
+	while ((opt = getopt(argc, argv, "hTi:L:d:p:c:C:k:")) != -1) {
 		switch (opt) {
 		case 'h':
 			printf("DESCRIPTION:\n");
@@ -277,6 +279,7 @@ int main(int argc, char *argv[])
 			       " -p <port> \n"
 			       " -c <term cache size (MB), default: %u MB> \n"
 			       " -C <math cache size (MB), default: %u MB> \n"
+			       " -k <keep top-K results> \n"
 			       "\n", argv[0],
 			       DEFAULT_TERM_INDEX_CACHE_SZ, DEFAULT_MATH_INDEX_CACHE_SZ);
 			goto exit;
@@ -307,6 +310,10 @@ int main(int argc, char *argv[])
 
 		case 'C':
 			sscanf(optarg, "%lu", &mi_cache_limit);
+			break;
+
+		case 'k':
+			sscanf(optarg, "%d", &topk);
 			break;
 
 		default:
@@ -360,6 +367,7 @@ int main(int argc, char *argv[])
 	searchd_args.indices  = &indices;
 	searchd_args.trec_log = trec_log;
 	searchd_args.log_fh   = log_fh;
+	searchd_args.topk     = topk;
 
 	/* should wait everyone before serving */
 	MPI_Barrier(MPI_COMM_WORLD);

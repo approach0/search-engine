@@ -55,7 +55,7 @@
 	(MAX_TOTAL_OCCURS * (MAX_TXT_SEG_BYTES + (SNIPPET_MAX_PADDING + 1) * 2))
 
 #define DEFAULT_K_TOP_RESULTS 20
-//#define DEFAULT_K_TOP_RESULTS (20 * 4)
+#define MAX_K_TOP_RESULTS   1000
 #define DEFAULT_RES_PER_PAGE  10
 
 #define SYMBOL_SUBSCORE_FULL 1.00f /* leaf and fingerprint match */

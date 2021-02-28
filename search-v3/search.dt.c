@@ -1,5 +1,6 @@
 #include <float.h> /* for FLT_MAX */
 #include <unistd.h> /* for sleep() */
+#include <assert.h>
 
 #include "mhook/mhook.h"
 #include "common/common.h"
@@ -293,7 +294,7 @@ static int inspect(uint64_t d)
 
 /* To run in a single node, pass NULL to run_sync and 0 to dry_run. */
 ranked_results_t
-indices_run_query(struct indices* indices, struct query* qry,
+indices_run_query(struct indices* indices, struct query* qry, int topk,
                   indices_run_sync_t *run_sync, int dry_run, FILE *log)
 {
 #ifdef PRINT_MERGE_TIME
@@ -303,7 +304,8 @@ indices_run_query(struct indices* indices, struct query* qry,
 
 	/* top-K results' heap */
 	ranked_results_t rk_res;
-	priority_Q_init(&rk_res, DEFAULT_K_TOP_RESULTS);
+	assert(0 < topk && topk <= MAX_K_TOP_RESULTS);
+	priority_Q_init(&rk_res, topk);
 
 	/* merge set */
 	struct merge_set merge_set = {0};
