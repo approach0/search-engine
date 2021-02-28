@@ -19,10 +19,10 @@ setup(
     python_requires='>=3.6',
     ext_modules = [
         Extension('pya0',
-            sources = ['lexer.py.c', 'main.py.c'],
+            sources = ['lexer.py.c', 'indexer.py.c', 'searcher.py.c', 'main.py.c'],
             include_dirs = [".."],
-            libraries=['tex-parser', 'fl'], # order matters
-            library_dirs=['../tex-parser/.build']
+            libraries=['searchd', 'search-v3', 'indices-v3', 'tex-parser', 'fl', 'stdc++'], # order matters
+            library_dirs=['../tex-parser/.build', '../indices-v3/.build', '../search-v3/.build', '../searchd/.build']
         )
     ]
 )

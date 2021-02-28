@@ -56,6 +56,7 @@ $ python3 tests/test-lexer.py
 ### Packaging
 Build and install package locally (for testing):
 ```sh
+$ make clean
 $ sudo python3 setup.py install
 ```
 then, you can import as library from system path:
