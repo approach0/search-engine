@@ -3,6 +3,7 @@ import os
 import json
 import csv
 import argparse
+import html
 from xmlr import xmliter
 from bs4 import BeautifulSoup
 
@@ -62,16 +63,15 @@ if __name__ == "__main__":
 					thread_id = line[2]
 					type_ = line[3]
 					visual_id = line[4]
-					latex = line[5]
+					latex = html.unescape(line[5])
+					useTEXT = False
 					if type_  == 'comment':
 						#print('skip comment')
 						continue
 					elif latex.isdigit():
-						#print('skip single number')
-						continue
+						useTEXT = True
 					elif len(latex) == 1:
-						#print('skip single letter TeX')
-						continue
+						useTEXT = True
 					#print(formulaID, topic_id, thread_id, latex)
 					folder = int(formulaID) % 1200
 					place = f'task2-corpus/{folder}'
@@ -79,9 +79,10 @@ if __name__ == "__main__":
 					place = f'{place}/{formulaID}.json'
 					with open(place, "w") as fh_out:
 						#print('json', place)
+						text_content = latex if useTEXT else '[imath]' + latex + '[/imath]'
 						fh_out.write(json.dumps({
 							"url": f"{formulaID},{topic_id},{thread_id}",
-							"text": '[imath]' + latex + '[/imath]'
+							"text": text_content
 						}, sort_keys=True))
 
 	if args['post_xml']:
