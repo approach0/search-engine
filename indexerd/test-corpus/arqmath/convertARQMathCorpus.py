@@ -51,28 +51,36 @@ if __name__ == "__main__":
 	if args['task2']:
 		for dirname, fname in each_file(args['task2'], 'tsv'):
 			fpath = f"{dirname}/{fname}"
+			print(f'Processing {fpath} ...')
 			with open(fpath) as tsvfile:
 				tsvreader = csv.reader(tsvfile, delimiter="\t")
 				for i, line in enumerate(tsvreader):
 					if i == 0:
 						continue
-					ID = line[0]
-					topic_id = line[1]
+					formulaID = line[0]
+					topic_id = line[1] # or PostID
 					thread_id = line[2]
 					type_ = line[3]
+					visual_id = line[4]
+					latex = line[5]
 					if type_  == 'comment':
-						print('skip comment')
+						#print('skip comment')
 						continue
-					latex = line[4:][0]
-					print(ID, topic_id, thread_id, latex)
-					folder = int(ID) % 1200
+					elif latex.isdigit():
+						#print('skip single number')
+						continue
+					elif len(latex) == 1:
+						#print('skip single letter TeX')
+						continue
+					#print(formulaID, topic_id, thread_id, latex)
+					folder = int(formulaID) % 1200
 					place = f'task2-corpus/{folder}'
 					os.system(f'mkdir -p {place}')
-					place = f'{place}/{ID}.json'
+					place = f'{place}/{formulaID}.json'
 					with open(place, "w") as fh_out:
-						print('json', place)
+						#print('json', place)
 						fh_out.write(json.dumps({
-							"url": f"{ID},{topic_id},{thread_id}",
+							"url": f"{formulaID},{topic_id},{thread_id}",
 							"text": '[imath]' + latex + '[/imath]'
 						}, sort_keys=True))
 
