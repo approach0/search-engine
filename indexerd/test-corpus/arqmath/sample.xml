@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<posts>
+   <row AcceptedAnswerId="9" AnswerCount="9" Body="&lt;p&gt;Can someone explain to me how there can be different kinds of infinities?&lt;/p&gt;
+
+&lt;p&gt;I was reading &quot;&lt;a href=&quot;http://en.wikipedia.org/wiki/The_Man_Who_Loved_Only_Numbers&quot; rel=&quot;noreferrer&quot;&gt;The man who loved only numbers&lt;/a&gt;&quot; by &lt;a href=&quot;http://en.wikipedia.org/wiki/Paul_Hoffman_(science_writer)&quot; rel=&quot;noreferrer&quot;&gt;Paul Hoffman&lt;/a&gt; and came across the concept of countable and uncountable infinities, but they're only words to me.&lt;/p&gt;
+
+&lt;p&gt;Any help would be appreciated.&lt;/p&gt;
+" CommentCount="0" CreationDate="2010-07-20T19:09:27.200" Id="1" OwnerUserId="10" PostTypeId="1" Score="147" Tags="&lt;elementary-set-theory&gt;&lt;intuition&gt;&lt;infinity&gt;&lt;faq&gt;" Title="What Does it Really Mean to Have Different Kinds of Infinities?" ViewCount="8068"/>
+   <row AnswerCount="19" Body="&lt;p&gt;&lt;a href=&quot;http://mathfactor.uark.edu/&quot;&gt;mathfactor&lt;/a&gt; is one I listen to.  Does anyone else have a recommendation?&lt;/p&gt;
+" CommentCount="3" CreationDate="2010-07-20T19:12:14.353" Id="3" OwnerUserId="29" PostTypeId="1" Score="106" Tags="&lt;soft-question&gt;&lt;big-list&gt;&lt;online-resources&gt;" Title="List of interesting math podcasts?" ViewCount="65669"/>
+   <row Body="&lt;p&gt;&lt;a href=&quot;http://www.bbc.co.uk/podcasts/series/moreorless&quot; rel=&quot;noreferrer&quot;&gt;More or Less&lt;/a&gt; is a BBC Radio 4 programme about maths and statistics in the news, and there is a free podcast. It's presented by &lt;a href=&quot;http://timharford.com/&quot; rel=&quot;noreferrer&quot;&gt;Tim Harford&lt;/a&gt;, the Undercover Economist from the &lt;a href=&quot;http://www.ft.com/home/uk&quot; rel=&quot;noreferrer&quot;&gt;Financial Times&lt;/a&gt;.&lt;/p&gt;
+" CommentCount="1" CreationDate="2010-07-20T19:14:10.603" Id="4" OwnerUserId="31" ParentId="3" PostTypeId="2" Score="8"/>
+   <row AcceptedAnswerId="7" AnswerCount="13" Body="&lt;p&gt;I have read a few proofs that &lt;span class=&quot;math-container&quot; id=&quot;39&quot;&gt;$\sqrt{2}$&lt;/span&gt; is irrational.&lt;/p&gt;
+
+&lt;p&gt;I have never, however, been able to really grasp what they were talking about.&lt;/p&gt;
+
+&lt;p&gt;Is there a simplified proof that &lt;span class=&quot;math-container&quot; id=&quot;40&quot;&gt;$\sqrt{2}$&lt;/span&gt; is irrational?&lt;/p&gt;
+" CommentCount="7" CreationDate="2010-07-20T19:18:01.250" Id="5" OwnerUserId="38" PostTypeId="1" Score="50" Tags="&lt;elementary-number-theory&gt;&lt;proof-writing&gt;&lt;radicals&gt;&lt;rationality-testing&gt;" Title="How can you prove that the square root of two is irrational?" ViewCount="11664"/>
+   <row AcceptedAnswerId="281" AnswerCount="7" Body="&lt;p&gt;I'm looking for a nice, quick online graphing tool. The ability to link to, or embed the output would be handy, too.&lt;/p&gt;
+" CommentCount="0" CreationDate="2010-07-20T19:20:00.543" Id="6" OwnerUserId="41" PostTypeId="1" Score="40" Tags="&lt;soft-question&gt;&lt;math-software&gt;" Title="What is your favorite online graphing tool?" ViewCount="4592"/>
+   <row Body="&lt;p&gt;You use a proof by contradiction. Basically, you suppose that &lt;span class=&quot;math-container&quot; id=&quot;63&quot;&gt;$\sqrt{2}$&lt;/span&gt; can be written as &lt;span class=&quot;math-container&quot; id=&quot;64&quot;&gt;$p/q$&lt;/span&gt;. Then you know that &lt;span class=&quot;math-container&quot; id=&quot;65&quot;&gt;$2q^2 = p^2$&lt;/span&gt;. However, both &lt;span class=&quot;math-container&quot; id=&quot;66&quot;&gt;$q^2$&lt;/span&gt; and &lt;span class=&quot;math-container&quot; id=&quot;67&quot;&gt;$p^2$&lt;/span&gt; have an even number of factors of two, so &lt;span class=&quot;math-container&quot; id=&quot;68&quot;&gt;$2q^2$&lt;/span&gt; has an odd number of factors of 2, which means it can't be equal to &lt;span class=&quot;math-container&quot; id=&quot;69&quot;&gt;$p^2$&lt;/span&gt;.&lt;/p&gt;
+" CommentCount="10" CreationDate="2010-07-20T19:21:52.240" Id="7" OwnerUserId="45" ParentId="5" PostTypeId="2" Score="74"/>
+   <row AcceptedAnswerId="17" AnswerCount="7" Body="&lt;p&gt;I was reading up on the Fibonacci Sequence,  &lt;span class=&quot;math-container&quot; id=&quot;336&quot;&gt;$\text {{1,1,2,3,5,8,13,....}}$&lt;/span&gt; when I've noticed some were able to calculate specific numbers. So far I've only figured out creating an array and counting to the value, which is incredibly simple, but I reckon I can't find any formula for calculating a Fibonacci number based on it's position.&lt;/p&gt;
+
+&lt;p&gt;Is there a way to do this? If so, how are we able to apply these formulas to arrays?&lt;/p&gt;
+" CommentCount="0" CreationDate="2010-07-20T19:22:12.190" Id="8" OwnerUserId="40" PostTypeId="1" Score="33" Tags="&lt;linear-algebra&gt;&lt;combinatorics&gt;&lt;generating-functions&gt;&lt;fibonacci-numbers&gt;" Title="How are we able to calculate specific numbers in the Fibonacci Sequence?" ViewCount="1705"/>
+   <row Body="&lt;p&gt;Suppose no one ever taught you the names for ordinary numbers.  Then suppose that you and I agreed that we would trade one bushel of corn for each of my sheep.  But there's a problem, we don't know how to count the bushels or the sheep!  So what do we do?&lt;/p&gt;
+
+&lt;p&gt;We form a &quot;bijection&quot; between the two sets.  That's just fancy language for saying you pair things up by putting one bushel next to each of the sheep.  When we're done we swap.  We've just proved that the number of sheep is the same as the number of bushels without actually counting.&lt;/p&gt;
+
+&lt;p&gt;We can try doing the same thing with infinite sets.  So suppose you have the set of positive integers and I have the set of rational numbers and you want to trade me one positive integer for each of my rationals.  Can you do so in a way that gets all of my rational numbers?&lt;/p&gt;
+
+&lt;p&gt;Perhaps surprisingly the answer is yes!  You make the rational numbers into a big square grid with the numerator and denominators as the two coordinates.  Then you start placing your &quot;bushels&quot; along diagonals of increasing size, &lt;a href=&quot;http://en.wikipedia.org/wiki/File:Pairing_natural.svg&quot; rel=&quot;noreferrer&quot;&gt;see wikipedia&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This says that the rational numbers are &quot;countable&quot; that is you can find a clever way to count them off in the above fashion.&lt;/p&gt;
+
+&lt;p&gt;The remarkable fact is that for the real numbers there's &lt;em&gt;no way at all&lt;/em&gt; to count them off in this way.  No matter how clever you are you won't be able to scam me out of all of my real numbers by placing a natural number next to each of them.  The proof of that is Cantor's clever &quot;&lt;a href=&quot;http://en.wikipedia.org/wiki/Cantor&amp;#39;s_diagonal_argument&quot; rel=&quot;noreferrer&quot;&gt;diagonal argument&lt;/a&gt;.&quot;&lt;/p&gt;
+" CommentCount="7" CreationDate="2010-07-20T19:22:20.193" Id="9" OwnerUserId="8" ParentId="1" PostTypeId="2" Score="168"/>
+   <row AcceptedAnswerId="49" AnswerCount="27" Body="&lt;p&gt;I'm told by &lt;em&gt;smart people&lt;/em&gt; that
+&lt;span class=&quot;math-container&quot; id=&quot;360&quot;&gt;$$0.999999999\dots=1$$&lt;/span&gt;
+and I believe them, but is there a proof that explains why this is?&lt;/p&gt;
+" CommentCount="1" CreationDate="2010-07-20T19:23:09.117" Id="11" OwnerUserId="41" PostTypeId="1" Score="267" Tags="&lt;real-analysis&gt;&lt;algebra-precalculus&gt;&lt;decimal-expansion&gt;" Title="Is it true that &lt;span class=&quot;math-container&quot; id=&quot;360&quot;&gt;$0.999999999\dots=1$&lt;/span&gt;?" ViewCount="40630"/>
+   <row Body="&lt;p&gt;The basic concept is thus:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A 'countable' infinity is one where you can give each item in the set an integer and 'count' them (even though there are an infinite number of them)&lt;/li&gt;
+&lt;li&gt;An 'uncountable' infinity defies this. You cannot assign an integer to each item in the set because you will miss items.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The key to seeing this is using the 'diagonal slash' argument as originally put forward by Cantor. With a countable infinity, you can create a list of all the items in the set and assign each one a different natural number. This can be done with the naturals (obviously) and the complete range of integers (including negative numbers) and even the rational numbers (so including fractions). It cannot be done with the reals due to the diagonal slash argument:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Create your list of all real numbers and assign each one an integer&lt;/li&gt;
+&lt;li&gt;Create a real number with the rule that the first digit after the decimal point is different from the first digit of your first number, the second digit is different from the second digit of your second number, and so on for all digits&lt;/li&gt;
+&lt;li&gt;Try and place this number in your list of all numbers... it can't be the first number, or the second or the third... and so on down the list. &lt;/li&gt;
+&lt;li&gt;Reductio Ad Absurdium, your number does not exist in your countable list of all real numbers and must be added on to create a new list. The same process can then be done again to show the list still isn't complete.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This shows a difference between two obviously infinite sets and leads to the somewhat scary conclusion that there are (at least) 2 different forms of infinity.&lt;/p&gt;
+" CommentCount="0" CreationDate="2010-07-20T19:23:17.570" Id="13" OwnerUserId="35" ParentId="1" PostTypeId="2" Score="6"/>
+   <row Body="&lt;p&gt;Just simple intuitive explanation.&lt;/p&gt;
+
+&lt;p&gt;How many Natural (Integers) Numbers could you count?
+There are infinitely many, yet you can count them.
+It's called &lt;a href=&quot;http://en.wikipedia.org/wiki/Countable_set&quot; rel=&quot;nofollow&quot;&gt;Countable Set&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;How many Real Numbers are there?
+Infinitely as well (Since at least every Natural Number is a Real Number).&lt;br&gt;
+Yet you won't be able to count them (Intuitively, Let's say you name a number the first, then find the second, I can, for sure, find a number in between, their average which is Real Number as well). 
+It's called &lt;a href=&quot;http://en.wikipedia.org/wiki/Uncountable_set&quot; rel=&quot;nofollow&quot;&gt;Uncountable Set&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;What you are after is how we define how big is a given set.&lt;br&gt;
+Then you should look for &lt;a href=&quot;http://en.wikipedia.org/wiki/Cardinality&quot; rel=&quot;nofollow&quot;&gt;Cardinality&lt;/a&gt;.&lt;/p&gt;
+" CommentCount="6" CreationDate="2010-07-20T19:23:20.317" Id="14" OwnerUserId="33" ParentId="1" PostTypeId="2" Score="-2"/>
+   <row Body="&lt;p&gt;Well, I am not sure where you want to embed the graphs, but &lt;a href=&quot;http://www.wolframalpha.com/input/?i=sin%28x%29&quot;&gt;Wolfram Alpha&lt;/a&gt; is pretty handy for graphing. It has most of the features of Mathematica, can handle 3D functions, and fancy scaling and such. I highly recommend it.&lt;/p&gt;
+" CommentCount="0" CreationDate="2010-07-20T19:23:21.220" Id="15" OwnerUserId="16" ParentId="6" PostTypeId="2" Score="18"/>
+   <row Body="&lt;p&gt;Consider this proof by contradiction:&lt;/p&gt;
+
+&lt;p&gt;Assume that &lt;span class=&quot;math-container&quot; id=&quot;150&quot;&gt;$\sqrt{2}$&lt;/span&gt; is rational. Then there exists some rational &lt;span class=&quot;math-container&quot; id=&quot;151&quot;&gt;$R=\sqrt{2}=\frac{Q}{D}$&lt;/span&gt;, where &lt;span class=&quot;math-container&quot; id=&quot;152&quot;&gt;$Q$&lt;/span&gt; and &lt;span class=&quot;math-container&quot; id=&quot;153&quot;&gt;$D$&lt;/span&gt; are positive integers and relatively prime (since &lt;span class=&quot;math-container&quot; id=&quot;154&quot;&gt;$R$&lt;/span&gt; can be expressed in simplified form).&lt;/p&gt;
+
+&lt;p&gt;Now consider &lt;span class=&quot;math-container&quot; id=&quot;155&quot;&gt;$R^2 = 2 = \frac{Q^2}{D^2}$&lt;/span&gt;. Since &lt;span class=&quot;math-container&quot; id=&quot;156&quot;&gt;$Q$&lt;/span&gt; and &lt;span class=&quot;math-container&quot; id=&quot;157&quot;&gt;$D$&lt;/span&gt; are relatively prime, this means that only &lt;span class=&quot;math-container&quot; id=&quot;158&quot;&gt;$Q^2$&lt;/span&gt; can have &lt;span class=&quot;math-container&quot; id=&quot;159&quot;&gt;$2$&lt;/span&gt; in its prime decomposition, and the exponent must be one. Thus, &lt;span class=&quot;math-container&quot; id=&quot;160&quot;&gt;$Q^2 = 2^1 x$&lt;/span&gt;, for some odd integer &lt;span class=&quot;math-container&quot; id=&quot;161&quot;&gt;$x$&lt;/span&gt;. But &lt;span class=&quot;math-container&quot; id=&quot;162&quot;&gt;$Q^2$&lt;/span&gt; is a square, and thus the exponents for all of its prime factors must be even. Here we have a contradiction.&lt;/p&gt;
+
+&lt;p&gt;Thus, &lt;span class=&quot;math-container&quot; id=&quot;163&quot;&gt;$\sqrt{2}$&lt;/span&gt; must be irrational.&lt;/p&gt;
+" CommentCount="1" CreationDate="2010-07-20T19:23:50.563" Id="16" OwnerUserId="48" ParentId="5" PostTypeId="2" Score="22"/>
+
+</posts>
