@@ -49,18 +49,17 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 		const char *type_str = PyUnicode_AsUTF8(py_type);
 		//printf("%s, %s\n", type_str, kw_str); /* for debug */
 
-		int type = QUERY_KW_INVALID;
 		if (0 == strcmp(type_str, "term")) {
-			type = QUERY_KW_TERM;
+			query_digest_txt(&qry, kw_str);
+
 		} else if (0 == strcmp(type_str, "tex")) {
-			type = QUERY_KW_TEX;
+			query_push_kw(&qry, kw_str, QUERY_KW_TEX, QUERY_OP_OR);
+
 		} else {
 			PyErr_Format(PyExc_RuntimeError,
 				"Bad query keyword type");
 			return NULL;
 		}
-
-		query_push_kw(&qry, kw_str, type, QUERY_OP_OR);
 	}
 
 	/* print query in verbose mode */
