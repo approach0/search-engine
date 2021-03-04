@@ -21,7 +21,7 @@ setup(
         Extension('pya0',
             sources = ['lexer.py.c', 'indexer.py.c', 'searcher.py.c', 'main.py.c'],
             include_dirs = [".."],
-            libraries=['searchd', 'search-v3', 'indices-v3', 'tex-parser', 'fl', 'stdc++'], # order matters
+            libraries=['searchd', 'search-v3', 'indices-v3', 'tex-parser', 'fl', 'xml2', 'z', 'stdc++'], # order matters
             library_dirs=['../tex-parser/.build', '../indices-v3/.build', '../search-v3/.build', '../searchd/.build']
         )
     ]
