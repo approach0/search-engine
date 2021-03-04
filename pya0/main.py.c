@@ -1,7 +1,7 @@
 #include "head.h"
 
 static PyMethodDef module_funcs[] = {
-	{"lex", do_lexing, METH_VARARGS, "scan tokens"},
+	{"tokenize", (PyCFunction)do_lexing, METH_VARARGS | METH_KEYWORDS, "scan LaTeX and produce tokenized tokens"},
 
 	{"index_open", (PyCFunction)index_open, METH_VARARGS | METH_KEYWORDS, "open index"},
 	{"index_close", index_close, METH_VARARGS, "close index"},

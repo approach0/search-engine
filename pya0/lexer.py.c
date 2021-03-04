@@ -5,12 +5,15 @@
 #include "tex-parser/head.h"
 #include "tex-parser/y.tab.h"
 
-PyObject *do_lexing(PyObject *self, PyObject *args)
+PyObject *do_lexing(PyObject *self, PyObject *args, PyObject* kwargs)
 {
 	char *string;
-	if (!PyArg_ParseTuple(args, "s", &string)) {
+	int include_syntatic_literal = 0;
+	static char *kwlist[] = {"latex", "include_syntatic_literal", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|p", kwlist,
+		&string, &include_syntatic_literal)) {
 		PyErr_Format(PyExc_RuntimeError,
-			"Expecting string argument");
+			"PyArg_ParseTupleAndKeywords error");
 		return NULL;
 	}
 
@@ -41,6 +44,11 @@ PyObject *do_lexing(PyObject *self, PyObject *args)
 			/* release union */
 			optr_release(nd);
 			yylval.nd = NULL;
+		} else if (include_syntatic_literal) {
+			Py_INCREF(Py_None);
+			item = Py_BuildValue("lOs", next, Py_None, yytext);
+			PyList_Append(list, item); /* only lend the ref */
+			Py_DECREF(item);
 		}
 	}
 
