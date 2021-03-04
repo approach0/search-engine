@@ -70,13 +70,19 @@ tex_parse(const char *tex_str)
 #ifdef TEX_PARSER_USE_LATEXML
 	if (grammar_err_flag) {
 		struct optr_node *mathml_root;
-		latexml_gen_mathml_file("math.xml.tmp", tex_str);
-		mathml_root = mathml_parse_file("math.xml.tmp");
-		// optr_print(mathml_root, stdout);
-		assert(NULL == grammar_optr_root);
+		if (latexml_gen_mathml_file("math.xml.tmp", tex_str) >= 0) {
+			mathml_root = mathml_parse_file("math.xml.tmp");
+			// optr_print(mathml_root, stdout);
+			assert(NULL == grammar_optr_root);
 
-		grammar_optr_root = mathml_root;
-		grammar_err_flag = 0;
+			grammar_optr_root = mathml_root;
+			grammar_err_flag = 0;
+
+		} else {
+			/* keep grammar error flag, since latexml also fails to
+			 * handle it for some reason. */
+			strcpy(grammar_last_err_str, "latexml failed.");
+		}
 	}
 #endif
 

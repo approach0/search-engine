@@ -7,7 +7,7 @@
 int latexml_gen_mathml_file(const char *fname, const char *tex)
 {
 	pid_t pid;
-	int status, timeout = 3;
+	int status, timeout = 6;
 	const char *argv[] = {
 		"/usr/bin/latexmlmath", tex,
 		"--presentationmathml", fname,
