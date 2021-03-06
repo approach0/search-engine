@@ -14,9 +14,9 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        'Operating System :: POSIX :: Linux',
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.5',
     ext_modules = [
         Extension('pya0',
             sources = ['lexer.py.c', 'indexer.py.c', 'searcher.py.c', 'main.py.c'],
