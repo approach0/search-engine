@@ -14,15 +14,15 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        'Operating System :: POSIX :: Linux',
+        "Operating System :: OS Independent",
     ],
     python_requires='>=3.5',
     ext_modules = [
         Extension('pya0',
-            sources = ['lexer.py.c', 'indexer.py.c', 'searcher.py.c', 'main.py.c'],
-            include_dirs = [".."],
+            sources = ['./pya0/' + _ for _ in ['lexer.py.c', 'indexer.py.c', 'searcher.py.c', 'main.py.c']],
+            include_dirs = ["."],
             libraries=['searchd', 'search-v3', 'indices-v3', 'tex-parser', 'fl', 'xml2', 'z', 'stdc++'], # order matters
-            library_dirs=['../tex-parser/.build', '../indices-v3/.build', '../search-v3/.build', '../searchd/.build']
+            library_dirs=['./tex-parser/.build', './indices-v3/.build', './search-v3/.build', './searchd/.build']
         )
     ]
 )

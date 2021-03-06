@@ -30,6 +30,7 @@ build/
 .build/
 dist/
 *.egg-info/
+wheelhouse/
 config.mk
 proj-dep.mk
 targets.mk
