@@ -77,7 +77,6 @@ $ sudo python3 -m build
 Install `twine`
 ```sh
 $ sudo apt install rustc libssl-dev libffi-dev
-$ sudo python3 -m pip install setuptools_rust
 $ sudo python3 -m pip install --user --upgrade twine
 ```
 
@@ -140,5 +139,6 @@ Fixed-up wheel written to /io/pya0/wheelhouse/pya0-0.1-cp35-cp35m-manylinux_2_24
 
 Then you should be able to upload to PIP:
 ```sh
-# python3 -m twine upload --repository pypi wheelhouse/pya0-0.1-cp35-cp35m-manylinux_2_24_x86_64.whl
+# cp ./dist/*.tar.gz wheelhouse/
+# python3 -m twine upload --repository pypi wheelhouse/*
 ```
