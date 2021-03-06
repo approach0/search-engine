@@ -69,6 +69,7 @@ print(dir(pya0))
 Create a `pip` distribution package:
 ```sh
 $ python3 -m pip install --upgrade build # install pip-build tool
+$ sudo apt install python3-venv python3-pip
 $ sudo python3 -m build
 ```
 
