@@ -2,6 +2,6 @@
 	"page": 1,
 	"kw": [
 		{"type": "tex", "str": "P(A|B)=(P(A) \\cap P(B))/P(B)"},
-		{"type": "term", "str": "conditional probability formula"},
+		{"type": "term", "str": "conditional probability formula"}
 	]
 }
