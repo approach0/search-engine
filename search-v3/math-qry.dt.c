@@ -51,7 +51,6 @@ static LIST_IT_CALLBK(cnt_same_symbol)
 	LIST_GO_OVER;
 }
 
-
 static LIST_IT_CALLBK(overwrite_pathID_to_bondvar_sz)
 {
 	struct list_it this_list;

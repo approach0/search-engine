@@ -61,3 +61,6 @@ struct tex_parse_ret {
 
 struct tex_parse_ret tex_parse(const char *);
 char *mk_scan_buf(const char*, size_t*);
+
+/* enable/disable fallback parser */
+void tex_parser_use_fallback(int);

@@ -20,8 +20,14 @@ print('Searching ...')
 JSON = pya0.search(ix, [
     { 'keyword': 'b^2', 'type': 'tex'},
     { 'keyword': 'induction', 'type': 'term'}
-], verbose = True, topk= 10, trec_output="./trec.out")
+], verbose = False, topk= 10, trec_output="./trec.out")
+results = json.loads(JSON)
+print(json.dumps(results, indent=4))
 
+print('Testing fallback parser ...')
+
+pya0.use_fallback_parser(True)
+JSON = pya0.search(ix, [ { 'keyword': '(b^2', 'type': 'tex'} ], verbose=True)
 results = json.loads(JSON)
 print(json.dumps(results, indent=4))
 

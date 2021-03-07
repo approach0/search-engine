@@ -1,6 +1,8 @@
 #include "head.h"
+#include "tex-parser/head.h"
 
 static PyMethodDef module_funcs[] = {
+	{"use_fallback_parser", use_fallback_parser, METH_VARARGS, "disable/enable using fallback TeX parser"},
 	{"tokenize", (PyCFunction)do_lexing, METH_VARARGS | METH_KEYWORDS, "scan LaTeX and produce tokenized tokens"},
 
 	{"index_open", (PyCFunction)index_open, METH_VARARGS | METH_KEYWORDS, "open index"},
@@ -30,4 +32,17 @@ static struct PyModuleDef module = {
 PyMODINIT_FUNC PyInit_pya0(void)
 {
 	return PyModule_Create(&module);
+}
+
+PyObject *use_fallback_parser(PyObject *self, PyObject *args)
+{
+	int use_fallback = 0;
+	if (!PyArg_ParseTuple(args, "p", &use_fallback)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTuple error");
+		return NULL;
+	}
+
+	tex_parser_use_fallback(use_fallback);
+	Py_RETURN_NONE;
 }

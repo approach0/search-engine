@@ -11,6 +11,3 @@
 #define MAX_SUBPATH_ID  64
 
 #define OPTR_TREE_NODE_COLOR_CSS_PREFIX "optr_color_"
-
-//#define TEX_PARSER_USE_LATEXML /* use LaTeXML as fallback parser */
-//#define TEX_PARSER_ALWAYS_LATEXML

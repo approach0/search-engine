@@ -1,14 +1,17 @@
 #include <assert.h>
 #include "head.h"
-
-#ifdef TEX_PARSER_USE_LATEXML
 #include "mathml-parser.h"
-#endif
 
 extern struct optr_node *grammar_optr_root;
 extern bool grammar_err_flag;
 extern char grammar_last_err_str[];
 extern int  lexer_warning_flag;
+
+static int tex_parser_use_latexml;
+void tex_parser_use_fallback(int val)
+{
+	tex_parser_use_latexml = val;
+}
 
 static void strip_newlines(char *str, size_t len)
 {
@@ -41,7 +44,6 @@ struct tex_parse_ret
 tex_parse(const char *tex_str)
 {
 	struct tex_parse_ret ret;
-#ifndef TEX_PARSER_ALWAYS_LATEXML
 	YY_BUFFER_STATE state_buf;
 	char *scan_buf;
 	size_t scan_buf_sz;
@@ -63,12 +65,9 @@ tex_parse(const char *tex_str)
 
 	/* avoid memory leakage */
 	yylex_destroy();
-#else
-	grammar_err_flag = 1;
-#endif
 
-#ifdef TEX_PARSER_USE_LATEXML
-	if (grammar_err_flag) {
+	/* should we fallback to latexml if there is grammar error? */
+	if (grammar_err_flag && tex_parser_use_latexml) {
 		struct optr_node *mathml_root;
 		if (latexml_gen_mathml_file("math.xml.tmp", tex_str) >= 0) {
 			mathml_root = mathml_parse_file("math.xml.tmp");
@@ -84,7 +83,6 @@ tex_parse(const char *tex_str)
 			strcpy(grammar_last_err_str, "latexml failed.");
 		}
 	}
-#endif
 
 	/* is there any grammar error? */
 	if (grammar_err_flag) {
