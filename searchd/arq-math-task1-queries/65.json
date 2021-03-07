@@ -1,7 +1,7 @@
 {	
 	"page": 1,
 	"kw": [
-		{"type": "tex", "str": "e^{x-1} \geq x"},
+		{"type": "tex", "str": "e^{x-1} \\geq x"},
 		{"type": "term", "str": "exponential growth decay"}
 	]
 }
