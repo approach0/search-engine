@@ -139,6 +139,35 @@ Fixed-up wheel written to /io/pya0/wheelhouse/pya0-0.1-cp35-cp35m-manylinux_2_24
 
 Then you should be able to upload to PIP:
 ```sh
-# cp ./dist/*.tar.gz wheelhouse/
-# python3 -m twine upload --repository pypi wheelhouse/*
+# python3 -m twine upload --repository pypi wheelhouse/*.whl
+```
+
+Use unzip to view and check if shared libraries are there in the manylinux wheel:
+```sh
+root@1c06f5c28b7b:/host/a0-engine/pya0# unzip -l wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
+Archive:  wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+      927  2021-03-08 19:00   setup.py
+  2065112  2021-03-08 19:01   pya0.libs/libxml2-bbd52ef6.so.2.9.4
+  2020736  2021-03-08 19:01   pya0.libs/libicuuc-5743fca1.so.57.1
+    43296  2021-03-08 19:01   pya0.libs/libltdl-e9c06fbe.so.7.3.1
+   272392  2021-03-08 19:01   pya0.libs/libhwloc-811858d2.so.5.7.2
+   312216  2021-03-08 19:01   pya0.libs/libevent-2-6d3aa264.0.so.5.1.9
+  3805032  2021-03-08 19:01   pya0.libs/libicui18n-03536ef3.so.57.1
+   159384  2021-03-08 19:01   pya0.libs/liblzma-5b8415cf.so.5.2.2
+   640624  2021-03-08 19:01   pya0.libs/libopen-rte-6abe1f34.so.20.1.0
+   108624  2021-03-08 19:01   pya0.libs/libz-7fd423a0.so.1.2.8
+  1079848  2021-03-08 19:01   pya0.libs/libmpi-69c5bc42.so.20.0.2
+   785248  2021-03-08 19:01   pya0.libs/libopen-pal-321722b9.so.20.2.0
+    48432  2021-03-08 19:01   pya0.libs/libnuma-c8473f23.so.1.0.0
+ 25678440  2021-03-08 19:01   pya0.libs/libicudata-79cf9efa.so.57.1
+        1  2021-03-08 19:01   pya0-0.1.7.dist-info/top_level.txt
+      133  2021-03-08 19:01   pya0-0.1.7.dist-info/WHEEL
+     5581  2021-03-08 19:01   pya0-0.1.7.dist-info/METADATA
+     1757  2021-03-08 19:01   pya0-0.1.7.dist-info/RECORD
+       24  2021-03-08 18:51   pya0/__init__.py
+ 75878488  2021-03-08 19:01   pya0/pya0.so
+---------                     -------
+112906295                     20 files
 ```
