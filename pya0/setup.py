@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name = 'pya0',
-    version = '0.1.3',
+    version = '0.1.5',
     author = 'Wei Zhong',
     author_email = "clock126@126.com",
     description = 'Approach Zero Python Interface',
