@@ -4,25 +4,32 @@ include ../module.mk
 
 .PHONY: dist
 
-LOCAL_DIST := lib
 MODULE_NAME := pya0
-PY_CONFIG=python3-config
-
+PY_CONFIG = python3-config
 CFLAGS += `$(PY_CONFIG) --cflags`
-LDFLAGS += --shared `$(PY_CONFIG) --ldflags`
+
+# Note that libpythonX.Y.so.1 is not on the list of libraries that a manylinux1
+# extension is allowed to link to.
+# See https://www.python.org/dev/peps/pep-0513/#libpythonx-y-so-1
+#
+#LDFLAGS += --shared `$(PY_CONFIG) --ldflags`
+
+LOCAL_OBJS := $(wildcard ./*.py.c)
+LOCAL_OBJS := $(addprefix ./$(BUILD_DIR)/, $(LOCAL_OBJS:.c=.o))
 
 all: dist
 
 dist: .build/$(MODULE_NAME).so
 	@ tput setaf 5 && echo '[binding] $^' && tput sgr0
-	@ mkdir -p $(LOCAL_DIST)
-	mv $< $(LOCAL_DIST)/
+	@ mkdir -p $(MODULE_NAME)
+	@ echo "from pya0.pya0 import *" > $(MODULE_NAME)/__init__.py
+	mv $< $(MODULE_NAME)/$(MODULE_NAME).so
 
-.build/$(MODULE_NAME).so: $(wildcard $(BUILD_DIR)/*.py.o)
+.build/$(MODULE_NAME).so: $(LOCAL_OBJS)
 	$(COLOR_LINK)
-	gcc $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" $(LDFLAGS) -o $@
+	gcc -shared $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" $(LDFLAGS) -o $@
 
 clean:
-	rm -rf $(LOCAL_DIST)
+	rm -rf $(MODULE_NAME)
 	rm -rf build dist *.egg-info
 	@ echo 'clean'
