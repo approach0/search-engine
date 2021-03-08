@@ -16,8 +16,6 @@ CFLAGS += `$(PY_CONFIG) --cflags`
 
 LOCAL_OBJS := $(wildcard ./*.py.c)
 LOCAL_OBJS := $(addprefix ./$(BUILD_DIR)/, $(LOCAL_OBJS:.c=.o))
-DEPENDENTS := ${DEP_LINKS:.mk=}
-DEPENDENTS := $(foreach dep_link, ${DEPENDENTS}, ${dep_link:$(DEP_DIR)/dep-%=-l%})
 
 all: dist
 
@@ -29,14 +27,7 @@ dist: .build/$(MODULE_NAME).so
 
 .build/$(MODULE_NAME).so: $(LOCAL_OBJS)
 	$(COLOR_LINK)
-	rm -f $(BUILD_DIR)/*.o 
-	ar x $(BUILD_DIR)/*.a
-	$(MV_DEP_OBJS)
-	rm -f $(BUILD_DIR)/*.a
-	rm -f $(BUILD_DIR)/*.main.o
-	ls $(BUILD_DIR)
-	gcc -shared -fPIC  $(BUILD_DIR)/*.o $(LDOBJS) -Xlinker "-(" $(DEPENDENTS) -Xlinker "-)" $(LDFLAGS) \
-		-Xlinker "-(" $(DEPENDENTS) -Xlinker "-)" -o $@
+	gcc -shared $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" $(LDFLAGS) -o $@
 
 clean:
 	rm -rf $(MODULE_NAME)
