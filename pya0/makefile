@@ -20,7 +20,7 @@ dist: .build/$(MODULE_NAME).so
 
 .build/$(MODULE_NAME).so: $(wildcard $(BUILD_DIR)/*.py.o)
 	$(COLOR_LINK)
-	$(LINK)
+	gcc $^ $(LDOBJS) -Xlinker "-(" $(LDLIBS) -Xlinker "-)" $(LDFLAGS) -o $@
 
 clean:
 	rm -rf $(LOCAL_DIST)

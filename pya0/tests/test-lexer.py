@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, './lib')
+#sys.path.insert(0, './lib')
 
 import pya0
 tokens = pya0.tokenize("1 + \\frac 1 {n + 1}",

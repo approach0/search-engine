@@ -58,3 +58,16 @@ PyObject *do_lexing(PyObject *self, PyObject *args, PyObject* kwargs)
 	yylex_destroy();
 	return list;
 }
+
+PyObject *use_fallback_parser(PyObject *self, PyObject *args)
+{
+	int use_fallback = 0;
+	if (!PyArg_ParseTuple(args, "p", &use_fallback)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTuple error");
+		return NULL;
+	}
+
+	tex_parser_use_fallback(use_fallback);
+	Py_RETURN_NONE;
+}
