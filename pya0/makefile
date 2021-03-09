@@ -35,5 +35,5 @@ dist: .build/$(MODULE_NAME).so
 
 clean:
 	rm -rf $(MODULE_NAME)
-	rm -rf build dist *.egg-info
+	rm -rf build dist *.egg-info wheelhouse
 	@ echo 'clean'

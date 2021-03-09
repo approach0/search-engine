@@ -19,7 +19,7 @@ If you encounter pip not being able to find package, update to the latest pip an
 ```sh
 $ sudo apt-get install curl python3-distutils
 $ curl https://bootstrap.pypa.io/get-pip.py | python3
-$ sudo pip install -i https://pypi.python.org/simple/ --trusted-host pypi.org pya0==0.1.91
+$ sudo pip install -i https://pypi.python.org/simple/ --trusted-host pypi.org pya0
 $ python3 -c 'import pya0'
 ```
 
@@ -104,8 +104,23 @@ which docker || curl -fsSL https://get.docker.com -o get-docker.sh
 which docker || sh get-docker.sh
 ```
 
-Pull and run a `Debian x86_64` image `quay.io/pypa/manylinux_2_24_x86_64`.
+Pull and run image `quay.io/pypa/manylinux_2_24_x86_64`:
+```sh
+docker run -it -v /root:/host -v /code:/code quay.io/pypa/manylinux_2_24_x86_64 bash
+```
+
 Inside docker container, build pya0 as instructed above, so that you have a linux wheel, e.g., `./dist/pya0-0.1-cp35-cp35m-linux_x86_64.whl`.
+
+Typical build process:
+```sh
+apt update
+apt install -y git build-essential g++ cmake wget flex bison python3
+apt install -y libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
+make clean && make
+apt install -y python3-pip python3-dev python3-venv
+python3 -m pip install --upgrade build # install pip-build tool
+```
+Use `docker commit $(docker ps -q | head -1) quickstart` to save the container for later re-use.
 
 Then inspect the wheel:
 ```sh
@@ -151,7 +166,7 @@ Then you should be able to upload to PIP:
 # python3 -m twine upload --repository pypi wheelhouse/*.whl
 ```
 
-Use unzip to view and check if shared libraries are there in the manylinux wheel:
+Use `unzip` to view and check if shared libraries are there in the manylinux wheel:
 ```sh
 root@1c06f5c28b7b:/host/a0-engine/pya0# unzip -l wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
 Archive:  wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
