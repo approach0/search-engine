@@ -20,9 +20,13 @@ LOCAL_OBJS := $(addprefix ./$(BUILD_DIR)/, $(LOCAL_OBJS:.c=.o))
 all: dist
 
 dist: .build/$(MODULE_NAME).so
-	@ tput setaf 5 && echo '[binding] $^' && tput sgr0
+	@ tput setaf 5 && echo '[packaging] $^' && tput sgr0
 	@ mkdir -p $(MODULE_NAME)
-	@ echo "from pya0.pya0 import *" > $(MODULE_NAME)/__init__.py
+	@ mkdir -p $(MODULE_NAME)/topics-and-qrels
+	rm -f $(MODULE_NAME)/*.py
+	cp ./utils/*.py $(MODULE_NAME)
+	rm -f $(MODULE_NAME)/topics-and-qrels/*
+	cp ./topics-and-qrels/* $(MODULE_NAME)/topics-and-qrels/
 	mv $< $(MODULE_NAME)/$(MODULE_NAME).so
 
 .build/$(MODULE_NAME).so: $(LOCAL_OBJS)

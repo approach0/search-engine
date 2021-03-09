@@ -14,6 +14,14 @@ Install `pya0` using pip
 $ sudo pip3 install --upgrade pya0
 ```
 
+If you encounter pip not being able to find package, update to the latest pip and try again:
+```sh
+$ sudo apt-get install curl python3-distutils
+$ curl https://bootstrap.pypa.io/get-pip.py | python3
+$ sudo pip install -i https://pypi.python.org/simple/ --trusted-host pypi.org pya0==0.1.91
+$ python3 -c 'import pya0'
+```
+
 Test a simple math token scanner:
 ```py
 import pya0
