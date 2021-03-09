@@ -4,8 +4,9 @@ It provides Python interface to make the search engine core easy to play with.
 
 ### Install Necessary Dependencies (Ubuntu)
 ```sh
-$ sudo apt install build-essential python-dev
+$ sudo apt install build-essential python-dev python3-pip
 $ make
+$ sudo pip3 install --upgrade tqdm pandas
 ```
 
 ### Quick Start
@@ -77,7 +78,7 @@ print(dir(pya0))
 Create a `pip` distribution package:
 ```sh
 $ python3 -m pip install --upgrade build # install pip-build tool
-$ sudo apt install python3-venv python3-pip
+$ sudo apt install python3-venv
 $ sudo python3 -m build
 ```
 
