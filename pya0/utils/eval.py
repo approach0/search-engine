@@ -71,10 +71,14 @@ def trec_eval(qrels: str, run: str, eval_args: str):
     extra_args = eval_args.split() if eval_args else []
     cmd = ['/usr/local/bin/trec_eval', qrels, run, *extra_args]
     print(f'Invoking trec_eval: {cmd}', end='')
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    print(stderr.decode("utf-8"), end='')
-    return stdout.decode("utf-8")
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        print(stderr.decode("utf-8"), end='')
+        return stdout.decode("utf-8")
+    except:
+        print('\n\n\t Please install trec_eval: https://github.com/approach0/trec_eval', end="\n\n")
+        quit(1)
 
 
 def run_topics(index, collection, output, topk=1000, verbose=False, trec_eval_args=[]):
