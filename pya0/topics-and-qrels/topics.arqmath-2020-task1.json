@@ -1,0 +1,1288 @@
+[
+    {
+        "page": 3,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f(x) = \\frac{x^2 + x + c}{x^2 + 2x + c}"
+            }
+        ],
+        "qid": 1
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f'(x)=f(x+1)"
+            }
+        ],
+        "qid": 2
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "bisection algorithm"
+            }
+        ],
+        "qid": 3
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{k=0}^{n} \\binom{n}{k} k"
+            }
+        ],
+        "qid": 4
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "P(A|B)=(P(A) \\cap P(B))/P(B)"
+            },
+            {
+                "type": "term",
+                "str": "conditional probability formula"
+            }
+        ],
+        "qid": 5
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "5^{133} \\mod 8 = 5"
+            },
+            {
+                "type": "term",
+                "str": "number mod with big exponent"
+            }
+        ],
+        "qid": 6
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "11^{10}-1 =\\equiv x \\pmod{100}"
+            },
+            {
+                "type": "term",
+                "str": "remainder using modulus"
+            }
+        ],
+        "qid": 7
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lim_{n\\rightarrow \\infty}\\sqrt[n]{\\frac{(27)^n(n!)^3}{(3n)!}}"
+            },
+            {
+                "type": "term",
+                "str": "finding value of limit"
+            }
+        ],
+        "qid": 8
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{n=0}^N nx^n"
+            },
+            {
+                "type": "term",
+                "str": "derivative geometric series"
+            }
+        ],
+        "qid": 9
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int_{0}^{\\infty}\\frac{\\sin x}{x^{a}}"
+            },
+            {
+                "type": "term",
+                "str": "improper integral sine function"
+            }
+        ],
+        "qid": 10
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "u \\times v"
+            },
+            {
+                "type": "tex",
+                "str": "\\mathbb{R}^2"
+            },
+            {
+                "type": "term",
+                "str": "cross product"
+            }
+        ],
+        "qid": 11
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(1+i\\sqrt{3})^{1/2}"
+            },
+            {
+                "type": "term",
+                "str": "roots of a complex number"
+            }
+        ],
+        "qid": 12
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "bf(b)-af(a)"
+            },
+            {
+                "type": "term",
+                "str": "sum of integrals of f and inverse"
+            }
+        ],
+        "qid": 13
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "y=xy'+ \\frac{1}{2}(y')^{2}"
+            }
+        ],
+        "qid": 14
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{i=1}^n ix^{i-1}"
+            },
+            {
+                "type": "term",
+                "str": "derivative geometric series"
+            }
+        ],
+        "qid": 15
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int_0^1\\frac{\\ln(1+x)\\ln(1-x)}{1+x}dx"
+            }
+        ],
+        "qid": 16
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int _{x=0}^{\\infty} \\frac{\\sin(x)}{x}"
+            },
+            {
+                "type": "tex",
+                "str": "sinx /x"
+            },
+            {
+                "type": "term",
+                "str": "contour integral"
+            }
+        ],
+        "qid": 17
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lim_{n \\rightarrow \\infty } \\frac {[(n+1)(n+2)\\cdots(n+n)]^{1/n}}{n}"
+            },
+            {
+                "type": "term",
+                "str": "Ces\u00e1ro-Stolz theorem"
+            }
+        ],
+        "qid": 18
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "p^4-1"
+            },
+            {
+                "type": "term",
+                "str": "greatest integer dividing"
+            }
+        ],
+        "qid": 19
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\phi(n)=40"
+            },
+            {
+                "type": "term",
+                "str": "euler-Totient Function"
+            }
+        ],
+        "qid": 20
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "9^{9^{9^{\u2026{^9}}}}"
+            },
+            {
+                "type": "term",
+                "str": "towers of 9 "
+            }
+        ],
+        "qid": 21
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "d, d+1, d+2... = N"
+            }
+        ],
+        "qid": 22
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "2^7 \\cdot 3^8 \\cdot 5^2 \\cdot 7^{11}"
+            },
+            {
+                "type": "term",
+                "str": "product integers find lcm"
+            }
+        ],
+        "qid": 23
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sqrt{2i-1}"
+            }
+        ],
+        "qid": 24
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "P(x^2+1)=(P(x))^2+1"
+            },
+            {
+                "type": "term",
+                "str": "polynomial functional equation"
+            }
+        ],
+        "qid": 25
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int_0^\\infty\\frac{\\sin x}{x}dx"
+            },
+            {
+                "type": "tex",
+                "str": "sin x/x"
+            },
+            {
+                "type": "term",
+                "str": "improper integral sin"
+            }
+        ],
+        "qid": 26
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "e^{3i \\pi /2}"
+            }
+        ],
+        "qid": 27
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sin(18^{\\circ})"
+            }
+        ],
+        "qid": 28
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "dividing Complex Numbers by Infinity"
+            }
+        ],
+        "qid": 29
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a^3+b^3+c^3-3abc"
+            }
+        ],
+        "qid": 30
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "Empty(x) \\iff \not \\exists y (y \\in x)"
+            },
+            {
+                "type": "term",
+                "str": "definitions axioms"
+            }
+        ],
+        "qid": 32
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\frac{\\partial^3 f}{\\partial t^3}"
+            },
+            {
+                "type": "term",
+                "str": "physical meaning of third derivative"
+            }
+        ],
+        "qid": 33
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "Knuth up-arrow notation"
+            }
+        ],
+        "qid": 34
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "function not have an antiderivative"
+            }
+        ],
+        "qid": 35
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lnot P  \\to A_1 \\to\\ ... \\ \\to A_n \\to P"
+            },
+            {
+                "type": "term",
+                "str": "proof by contradiction"
+            }
+        ],
+        "qid": 36
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f\\circ g = g \\circ f"
+            },
+            {
+                "type": "term",
+                "str": "non trivial examples commutativity composition"
+            }
+        ],
+        "qid": 37
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "applications ZFC axiom"
+            }
+        ],
+        "qid": 38
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\log 2019\\gt \\log 2018"
+            }
+        ],
+        "qid": 39
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a_1x_1+a_2x_2+a_3x_3+...+a_nx_n="
+            },
+            {
+                "type": "term",
+                "str": "meaning of linearity"
+            }
+        ],
+        "qid": 40
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{r=1}^n (-1)^{(n-r)} {n \\choose r}(r)^m"
+            },
+            {
+                "type": "term",
+                "str": "find number of onto functions"
+            }
+        ],
+        "qid": 41
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "x^2 + 1 = 0"
+            },
+            {
+                "type": "term",
+                "str": "emergence of complex numbers"
+            }
+        ],
+        "qid": 42
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{n\\geq1}\\frac1{n^2+1}=\\frac{\\pi\\coth\\pi-1}2"
+            },
+            {
+                "type": "term",
+                "str": "prove with Fourier series"
+            }
+        ],
+        "qid": 43
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "infinite order"
+            }
+        ],
+        "qid": 44
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sin(x) , \\sin(2x) , \\sin(3x) ,...,\\sin(nx)"
+            },
+            {
+                "type": "term",
+                "str": "prove independent in R"
+            }
+        ],
+        "qid": 45
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int x^k f(x) dx=0"
+            },
+            {
+                "type": "term",
+                "str": "lebesgue integrable function"
+            }
+        ],
+        "qid": 46
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "rq \\equiv 1 \\bmod p"
+            },
+            {
+                "type": "term",
+                "str": "Wilson's Theorem"
+            }
+        ],
+        "qid": 47
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(x+y)^k \\geq x^k + y^k"
+            }
+        ],
+        "qid": 48
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "{2n\\choose n}=\\sum_{k=0}^n{n\\choose k}^2"
+            },
+            {
+                "type": "term",
+                "str": "combinatoric interpretation identity"
+            }
+        ],
+        "qid": 49
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum{\\frac{1}{n^{2+\\cos{n}}}}"
+            },
+            {
+                "type": "term",
+                "str": "divergent series"
+            }
+        ],
+        "qid": 50
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\displaystyle \\sum_{r=0}^n {n+r\\choose r} \\frac{1}{2^{r}}= 2^{n}"
+            },
+            {
+                "type": "term",
+                "str": "Sum of series binomial coefficients"
+            }
+        ],
+        "qid": 51
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "n_i \\nmid n=n_1n_2...n_k+1"
+            },
+            {
+                "type": "term",
+                "str": "contradiction proof prime number"
+            }
+        ],
+        "qid": 52
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "AB = 1 \\Rightarrow BA = 1"
+            },
+            {
+                "type": "term",
+                "str": "inverse of a square matrix"
+            }
+        ],
+        "qid": 53
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "P(N) = (S|S \u2286 N)"
+            },
+            {
+                "type": "term",
+                "str": "diagonal argument for uncountable powerset"
+            }
+        ],
+        "qid": 54
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\frac{1}{\\sqrt{-1}}=\\sqrt{-1}"
+            },
+            {
+                "type": "term",
+                "str": "mistake in calculation"
+            }
+        ],
+        "qid": 55
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\exists p\\ \\bigl(\\text{$p$ is prime } \\rightarrow \\forall x  \\text{ ($x$ is prime)}\\bigr)"
+            },
+            {
+                "type": "term",
+                "str": "logical formula involving prime numbers"
+            }
+        ],
+        "qid": 56
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f^{-1} : f(X) \\mapsto X"
+            },
+            {
+                "type": "term",
+                "str": "continuous one-to-one function"
+            }
+        ],
+        "qid": 57
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "3\\arcsin \\frac{1}{4} + \\arccos \\frac {11}{16} = \\frac {\\pi}{2}"
+            },
+            {
+                "type": "term",
+                "str": "trigonometric functions proof"
+            }
+        ],
+        "qid": 58
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{d|n}{\\phi(d)}=n"
+            },
+            {
+                "type": "term",
+                "str": "Euler\u00e2\u0080\u0099s totient proof"
+            }
+        ],
+        "qid": 59
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a_{n} \\;=\\; \\left ( 1-\\frac{1}{\\sqrt{2}} \\right ) ... \\left ( 1- \\frac{1}{\\sqrt{n+1}} \\right )"
+            },
+            {
+                "type": "term",
+                "str": "limiting value of a sequence"
+            }
+        ],
+        "qid": 60
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "n=3i+5j"
+            }
+        ],
+        "qid": 61
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "|\\mathbb{Q}| = |\\mathbb{Z}|"
+            },
+            {
+                "type": "term",
+                "str": "rational integer numbers set cardinality"
+            }
+        ],
+        "qid": 62
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\text{lcm}(n_1,n_2)=\\frac{n_1 n_2}{\\gcd(n_1,n_2)}"
+            },
+            {
+                "type": "term",
+                "str": "gcd and lcm relationship"
+            }
+        ],
+        "qid": 63
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f([a, b]) \\subset [a, b]"
+            },
+            {
+                "type": "term",
+                "str": "mean value property"
+            }
+        ],
+        "qid": 64
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "e^{x-1} \\geq x"
+            },
+            {
+                "type": "term",
+                "str": "exponential growth decay"
+            }
+        ],
+        "qid": 65
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(x^TAh)^T = h^TA^Tx"
+            },
+            {
+                "type": "term",
+                "str": "transpose of product"
+            }
+        ],
+        "qid": 66
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\det{\\begin{bmatrix}A&B\\\\O&C\\end{bmatrix}}=\\det(A)\\det(C)"
+            },
+            {
+                "type": "term",
+                "str": "combination of matrixes"
+            }
+        ],
+        "qid": 67
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a^n+1"
+            },
+            {
+                "type": "term",
+                "str": "prove divisible"
+            }
+        ],
+        "qid": 68
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\ {s \\choose s} + {s+1 \\choose s} +...+ {n \\choose s} = {n+1 \\choose s+1}"
+            },
+            {
+                "type": "term",
+                "str": "induction with two variable parameters"
+            }
+        ],
+        "qid": 69
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{j=0}^{N-1}\\cos\\frac{\\left(2j+1\\right)\\pi}{2N}=0"
+            },
+            {
+                "type": "term",
+                "str": "Euler formula and geometric serie"
+            }
+        ],
+        "qid": 70
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "1^2 + 2^2 + .... + n^2 = \\frac{n(n+1)(2n+1)}{6}"
+            },
+            {
+                "type": "term",
+                "str": "sum of squares"
+            }
+        ],
+        "qid": 71
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\mathcal{X} = \\mathcal{Y}"
+            },
+            {
+                "type": "term",
+                "str": "axiom of regularity"
+            }
+        ],
+        "qid": 72
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\binom{n}{0}^2 + \\binom{n}{1}^2 + ... + \\binom{n}{n}^2 = \\binom{2n}{n}"
+            },
+            {
+                "type": "term",
+                "str": "binomial theorem proof"
+            }
+        ],
+        "qid": 73
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f(x)=x+\\dfrac{1}{x}"
+            },
+            {
+                "type": "term",
+                "str": "image of function interval"
+            }
+        ],
+        "qid": 74
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lim_{u\\to \\infty} \\frac{u^m}{e^u} = 0"
+            },
+            {
+                "type": "term",
+                "str": "polynomial over exponential"
+            }
+        ],
+        "qid": 75
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\bigcup_{i \\in \\mathbb{N}}(a_i+b_i\\mathbb{Z})=\\mathbb{Z}"
+            },
+            {
+                "type": "term",
+                "str": "covering Z by arithmetic progressions"
+            }
+        ],
+        "qid": 76
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(- 1) (- 1) = 1"
+            },
+            {
+                "type": "term",
+                "str": "distributive law"
+            }
+        ],
+        "qid": 77
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\displaystyle \\left \\vert{ \\frac {e^{-ixu}-1}{u}}\\right\\vert \\le \\vert x \\vert"
+            },
+            {
+                "type": "term",
+                "str": "inequality with complex exponential"
+            }
+        ],
+        "qid": 79
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\emptyset, \\{1\\}, \\{2\\}, \\{1, 2\\}, \\{3\\}, \\{1, 3\\}, \\{2, 3\\}, \\{1, 2, 3\\}, \\{4\\}, \\ldots"
+            },
+            {
+                "type": "term",
+                "str": "finite subsets of N"
+            }
+        ],
+        "qid": 80
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "countable subset infinite set"
+            }
+        ],
+        "qid": 81
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "definite integral periodic functions"
+            }
+        ],
+        "qid": 82
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "1, 1+\\frac{1}{2}, 1+\\frac{1}{2}+\\frac{1}{3}, 1+\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}, . . ."
+            },
+            {
+                "type": "term",
+                "str": "sequence sums inverse natural numbers"
+            }
+        ],
+        "qid": 83
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "Z[x]"
+            },
+            {
+                "type": "term",
+                "str": "principal ideals"
+            }
+        ],
+        "qid": 84
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "p_n = \\frac{1}{2}p_{n-1}"
+            },
+            {
+                "type": "term",
+                "str": "bug steps to reach N"
+            }
+        ],
+        "qid": 85
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{k=0}^{n}k\\cdot \\left(\\begin{array}{l}{n}\\\\{k}\\end{array}\\right)=O\\left(2 ^ {n\\log _{3}n}\\right)"
+            },
+            {
+                "type": "term",
+                "str": "combinatorial sum order estimate"
+            }
+        ],
+        "qid": 86
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\forall n \\in \\Bbb{N} : (\\sum_{i=1}^{n} a_{i} ) (\\sum_{i=1}^{n} \\frac{1}{a_{i}} ) \\ge n^2"
+            },
+            {
+                "type": "term",
+                "str": "AM-GM / Cauchy Schwarz inequality"
+            }
+        ],
+        "qid": 87
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "x^4+10x^2+1"
+            },
+            {
+                "type": "term",
+                "str": "reducible polynomial"
+            }
+        ],
+        "qid": 88
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "A^{2} + B^{2} = C^{2} + D^{2}"
+            },
+            {
+                "type": "term",
+                "str": "parametrization of pythagorean-like equation"
+            }
+        ],
+        "qid": 89
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "A^{-1}A=\\mathbb I_n \\ \\ \\land \\ \\ AA^{-1}=\\mathbb I_n \\ \\ \\ \\ (1)"
+            },
+            {
+                "type": "term",
+                "str": "definition of an Inverse matrix"
+            }
+        ],
+        "qid": 90
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "continuous each value twice"
+            }
+        ],
+        "qid": 91
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\mathbb F_q[X,Y]"
+            },
+            {
+                "type": "term",
+                "str": "principal maximal ideal"
+            }
+        ],
+        "qid": 92
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "det(xI - AB) = det(xI - BA)"
+            },
+            {
+                "type": "term",
+                "str": "characteristic polynomial"
+            }
+        ],
+        "qid": 93
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "2^{\\aleph_{0} }"
+            },
+            {
+                "type": "term",
+                "str": "natural numbers sets finite intersection"
+            }
+        ],
+        "qid": 94
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "term",
+                "str": "convex path sine limit"
+            }
+        ],
+        "qid": 95
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_i \\frac{a_i}{a_i+a_{i+1}+a_{i+2}+\\cdots}"
+            },
+            {
+                "type": "term",
+                "str": "convergent sum"
+            }
+        ],
+        "qid": 96
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\mathbb{R}"
+            },
+            {
+                "type": "term",
+                "str": "R dimension in vector space"
+            }
+        ],
+        "qid": 97
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "R^{n}(e^{2\\pi i x})=e^{2\\pi i(x+n\\alpha)}"
+            },
+            {
+                "type": "term",
+                "str": "irrational rotation and dense set"
+            }
+        ],
+        "qid": 98
+    },
+    {
+        "page": 1,
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f:\\mathbb{R}\\to\\mathbb{R}"
+            },
+            {
+                "type": "term",
+                "str": "set of continuities of function "
+            }
+        ],
+        "qid": 99
+    },
+	{
+		"page": 1,
+		"kw": [
+			{"type": "tex", "str": "E=(0,1]"},
+			{"type": "term", "str": "closed set"}
+		],
+        "qid": 100
+	}
+]

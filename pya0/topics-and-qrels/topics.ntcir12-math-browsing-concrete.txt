@@ -1,0 +1,20 @@
+NTCIR12-MathWiki-1	-0.026838601\ldots
+NTCIR12-MathWiki-2	\mathfrak{P}
+NTCIR12-MathWiki-3	N=\left\lfloor 0.5-\log_{2}\left(\frac{\text{Frequency of this item}}{\text{ Frequency of most common item}}\right)\right\rfloor
+NTCIR12-MathWiki-4	\mathbf{\nabla}\times\mathbf{B}=\mu_{0}\mathbf{J}+\underbrace{\mu_{0}\epsilon_{0}\frac{\partial}{\partial t}\mathbf{E}}_{\mathrm{Maxwell^{\prime}s\ term}}
+NTCIR12-MathWiki-5	1+\cfrac{1}{2+\cfrac{1}{5+\cfrac{1}{5+\cfrac{1}{4+\ddots}}}}
+NTCIR12-MathWiki-6	\,{}^{238}_{92}\mathrm{U}+\,^{64}_{28}\mathrm{Ni}\to\,^{302}_{120}\mathrm{Ubn}^{*}\to\ \mathit{fission\ only}
+NTCIR12-MathWiki-7	0\to G^{\wedge}\stackrel{\pi^{\wedge}}{\to}X^{\wedge}\stackrel{\imath^{\wedge}}{\to}H^{\wedge}\to 0
+NTCIR12-MathWiki-8	w=\begin{cases}w^{*}&\mbox{if }w^{*}>\frac{1}{2},\\ \frac{1}{2}&\mbox{if }w^{*}\leq\frac{1}{2}.\\ \end{cases}
+NTCIR12-MathWiki-9	\begin{bmatrix}V_{1}\\ I_{2}\end{bmatrix}=\begin{bmatrix}h_{11}&h_{12}\\ h_{21}&h_{22}\end{bmatrix}\begin{bmatrix}I_{1}\\ V_{2}\end{bmatrix}
+NTCIR12-MathWiki-10	L(\lambda,\alpha,s)=\sum_{n=0}^{\infty}\frac{\exp(2\pi i\lambda n)}{(n+\alpha)^{s}}.
+NTCIR12-MathWiki-11	\ ax^{2}+bx+c=0
+NTCIR12-MathWiki-12	O(mn\log m)
+NTCIR12-MathWiki-13	A\oplus B=(A^{c}\ominus B^{s})^{c}
+NTCIR12-MathWiki-14	\cos\alpha=-\cos\beta\cos\gamma+\sin\beta\sin\gamma\cosh\frac{a}{k},\,
+NTCIR12-MathWiki-15	\forall x,y\in A\;[x\neq y\rightarrow\neg\exists z\in X\;[z\leq x\land z\leq y]].
+NTCIR12-MathWiki-16	\tau_{\text{rms}}=\sqrt{\frac{\int_{0}^{\infty}(\tau-\overline{\tau})^{2}A_{c}(\tau)d\tau}{\int_{0}^{\infty}A_{c}(\tau)d\tau}}
+NTCIR12-MathWiki-17	x-1-\frac{1}{2}-\frac{1}{4}-\frac{1}{5}-\frac{1}{6}-\frac{1}{9}-\cdots=1
+NTCIR12-MathWiki-18	P_{i}^{x}=\frac{N!}{n_{x}!(N-n_{x})!}p_{x}^{n_{x}}(1-p_{x})^{N-n_{x}}
+NTCIR12-MathWiki-19	H_{ij}=\begin{bmatrix}{\partial^{2}V_{ij}\over\partial x_{i}\partial x_{j}}&{\partial^{2}V_{ij}\over\partial x_{i}\partial y_{j}}&{\partial^{2}V_{ij}\over\partial x_{i}\partial z_{j}}\\ {\partial^{2}V_{ij}\over\partial y_{i}\partial x_{j}}&{\partial^{2}V_{ij}\over\partial y_{i}\partial y_{j}}&{\partial^{2}V_{ij}\over\partial y_{i}\partial z_{j}}\\ {\partial^{2}V_{ij}\over\partial z_{i}\partial x_{j}}&{\partial^{2}V_{ij}\over\partial z_{i}\partial y_{j}}&{\partial^{2}V_{ij}\over\partial z_{i}\partial z_{j}}\end{bmatrix}
+NTCIR12-MathWiki-20	r_{xy}=\frac{\sum\limits_{i=1}^{n}(x_{i}-\bar{x})(y_{i}-\bar{y})}{(n-1)s_{x}s_{y}}=\frac{\sum\limits_{i=1}^{n}(x_{i}-\bar{x})(y_{i}-\bar{y})}{\sqrt{\sum\limits_{i=1}^{n}(x_{i}-\bar{x})^{2}\sum\limits_{i=1}^{n}(y_{i}-\bar{y})^{2}}},
