@@ -37,7 +37,9 @@ def gen_topics_queries(collection: str):
     func_name = '_topic_process__' + collection.replace('-', '_')
     handler = globals()[func_name] if func_name in globals() else None
     cache = get_cache_home()
-    prefix = f'./topics-and-qrels/topics.{collection}'
+    curdir = os.path.dirname(os.path.abspath(__file__))
+    prefix = f'{curdir}/topics-and-qrels/topics.{collection}'
+    print(f'Searching topics file at: ${prefix} ...')
     found = False
     for src in [f'{prefix}.{ent}' for ent in ['txt', 'json']]:
         if not os.path.exists(src):
@@ -60,7 +62,8 @@ def gen_topics_queries(collection: str):
 
 
 def get_qrels_filepath(collection: str):
-    path = f'./topics-and-qrels/qrels.{collection}.txt'
+    curdir = os.path.dirname(os.path.abspath(__file__))
+    path = f'{curdir}/topics-and-qrels/qrels.{collection}.txt'
     if os.path.exists(path):
         return path
     else:
