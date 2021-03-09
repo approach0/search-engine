@@ -1,15 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "mhook/mhook.h"
 
 #include "head.h"
 #include "completion.h"
 
-int main()
+int main(int argc, char *argv[])
 {
 	char *line;
 	struct tex_parse_ret ret;
+
+	if (argc > 1 && strcmp(argv[1], "--fallback") == 0)
+		tex_parser_use_fallback(1);
 
 	/* hook up completion callback */
 	linenoiseSetCompletionCallback(completion_callbk);
