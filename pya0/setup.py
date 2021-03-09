@@ -13,7 +13,7 @@ def copy_files():
 
 setup(
     name = 'pya0',
-    version = '0.2.0',
+    version = '0.2.2',
     author = 'Wei Zhong',
     author_email = "clock126@126.com",
     description = 'Approach Zero Python Interface',
@@ -29,7 +29,10 @@ setup(
     package_data={
         '': ['pya0', 'pya0/*'] + [f for f in copy_files()],
     },
-
+    install_requires=[
+        'tqdm==4.59.0',
+        'pandas==1.2.3'
+    ],
     native_module = [
         Extension(
             name='',
