@@ -5,6 +5,7 @@ PyMODINIT_FUNC PyInit_pya0();
 PyObject *use_fallback_parser(PyObject*, PyObject*);
 
 PyObject *do_lexing(PyObject*, PyObject*, PyObject*);
+PyObject *do_parsing(PyObject*, PyObject*, PyObject*);
 
 PyObject *index_open(PyObject*, PyObject*, PyObject*);
 PyObject *index_close(PyObject*, PyObject*);

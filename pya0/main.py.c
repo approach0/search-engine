@@ -3,6 +3,7 @@
 static PyMethodDef module_funcs[] = {
 	{"use_fallback_parser", use_fallback_parser, METH_VARARGS, "disable/enable using fallback TeX parser"},
 	{"tokenize", (PyCFunction)do_lexing, METH_VARARGS | METH_KEYWORDS, "scan LaTeX and produce tokenized tokens"},
+	{"parse", (PyCFunction)do_parsing, METH_VARARGS | METH_KEYWORDS, "parse LaTeX to OPT."},
 
 	{"index_open", (PyCFunction)index_open, METH_VARARGS | METH_KEYWORDS, "open index"},
 	{"index_close", index_close, METH_VARARGS, "close index"},
