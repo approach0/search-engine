@@ -2,6 +2,8 @@
 **pya0** is a Python wrapper for Approach Zero search engine.
 It provides Python interface to make the search engine core easy to play with.
 
+Source code of this Python binding can be found in this [repository](https://github.com/approach0/search-engine/tree/pya0/pya0).
+
 ### Install Necessary Dependencies (Ubuntu)
 ```sh
 $ sudo apt install build-essential python-dev python3-pip
