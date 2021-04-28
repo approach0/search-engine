@@ -1,0 +1,4 @@
+[submodule "pya0"]
+	path = pya0
+	url = git@github.com:approach0/pya0.git
+	branch = sigir2021
