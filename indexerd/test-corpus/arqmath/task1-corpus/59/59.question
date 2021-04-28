@@ -1,0 +1,3 @@
+Calculating an Angle from [imath]2[/imath] points in space
+
+Given two points [imath]$p_1$[/imath] , [imath]$p_2$[/imath] around the origin [imath](0,0)[/imath] in [imath]2D[/imath] space, how would you calculate the angle from [imath]p_1[/imath] to [imath]p_2[/imath]? How would this change in [imath]3D[/imath] space? 

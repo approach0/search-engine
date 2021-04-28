@@ -1,0 +1,1 @@
+You use a proof by contradiction. Basically, you suppose that [imath]\sqrt{2}[/imath] can be written as [imath]p/q[/imath]. Then you know that [imath]2q^2 = p^2[/imath]. However, both [imath]q^2[/imath] and [imath]p^2[/imath] have an even number of factors of two, so [imath]2q^2[/imath] has an odd number of factors of 2, which means it can't be equal to [imath]p^2[/imath]. 

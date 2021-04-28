@@ -1,0 +1,3 @@
+Why is the matrix-defined Cross Product of two 3D vectors always orthogonal?
+
+By matrix-defined, I mean [imath]\left<a,b,c\right>\times\left<d,e,f\right> = \left|     \begin{array}{ccc}  i & j & k\\  a & b & c\\  d & e & f  \end{array}    \right|[/imath] ...instead of the definition of the product of the magnitudes multiplied by the sign of their angle, in the direction orthogonal) If I try cross producting two vectors with no [imath]k[/imath] component, I get one with only [imath]k[/imath], which is expected. But why? As has been pointed out, I am asking why the algebraic definition lines up with the geometric definition. 
